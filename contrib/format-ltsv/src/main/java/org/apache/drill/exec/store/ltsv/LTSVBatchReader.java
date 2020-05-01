@@ -25,7 +25,7 @@ public class LTSVBatchReader extends EasyEVFBatchReader {
 
   public boolean open(FileSchemaNegotiator negotiator) {
     super.open(negotiator);
-    super.fileIterator = new LTSVRecordIterator(getRowWriter(), reader);
+    super.fileIterator = new LTSVRecordIterator(getRowWriter(), reader, errorContext);
     return true;
   }
 }

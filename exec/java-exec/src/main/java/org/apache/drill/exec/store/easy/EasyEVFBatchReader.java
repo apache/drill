@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.easy;
 
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
@@ -96,6 +97,8 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
 
   public BufferedReader reader;
 
+  protected CustomErrorContext errorContext;
+
   public RowSetLoader getRowWriter() {
     return rowWriter;
   }
@@ -105,6 +108,8 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
     this.split = negotiator.split();
     this.loader = negotiator.build();
     this.rowWriter = loader.writer();
+    this.errorContext = negotiator.parentErrorContext();
+
     try {
       this.fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
       this.reader = new BufferedReader(new InputStreamReader(fsStream, StandardCharsets.UTF_8));

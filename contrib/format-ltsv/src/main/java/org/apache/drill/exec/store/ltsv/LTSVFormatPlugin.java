@@ -42,11 +42,6 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
   private static final String DEFAULT_NAME = "ltsv";
 
   public static class LTSVReaderFactory extends FileReaderFactory {
-    private final LTSVFormatPluginConfig config;
-
-    public LTSVReaderFactory(LTSVFormatPluginConfig config) {
-      this.config = config;
-    }
 
     @Override
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
@@ -83,7 +78,7 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
   @Override
   protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new LTSVReaderFactory(formatConfig));
+    builder.setReaderFactory(new LTSVReaderFactory());
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     initScanBuilder(builder, scan);
     return builder;

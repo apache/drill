@@ -37,6 +37,7 @@ import java.nio.file.Paths;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.apache.drill.test.TestUtils.generateCompressedFile;
 
 @Category(RowSetTests.class)
 public class TestLTSVRecordReader extends ClusterTest {

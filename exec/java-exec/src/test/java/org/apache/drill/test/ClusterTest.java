@@ -141,30 +141,4 @@ public class ClusterTest extends DrillTest {
   public QueryBuilder queryBuilder( ) {
     return client.queryBuilder();
   }
-
-  /**
-   * Generates a compressed version of the file for testing
-   * @param fileName Name of the input file
-   * @param codecName The desired CODEC to be used.
-   * @param outFileName Name of generated compressed file
-   * @throws IOException If function cannot generate file, throws IOException
-   */
-  public void generateCompressedFile(String fileName, String codecName, String outFileName) throws IOException {
-    FileSystem fs = ExecTest.getLocalFileSystem();
-    Configuration conf = fs.getConf();
-    conf.set(CommonConfigurationKeys.IO_COMPRESSION_CODECS_KEY, ZipCodec.class.getCanonicalName());
-    CompressionCodecFactory factory = new CompressionCodecFactory(conf);
-
-    CompressionCodec codec = factory.getCodecByName(codecName);
-    assertNotNull(codecName + " is not found", codec);
-
-    Path outFile = new Path(dirTestWatcher.getRootDir().getAbsolutePath(), outFileName);
-    Path inFile = new Path(dirTestWatcher.getRootDir().getAbsolutePath(), fileName);
-
-    try (InputStream inputStream = new FileInputStream(inFile.toUri().toString());
-         OutputStream outputStream = codec.createOutputStream(fs.create(outFile))) {
-      IOUtils.copyBytes(inputStream, outputStream, fs.getConf(), false);
-    }
-  }
-
 }

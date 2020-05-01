@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.ltsv;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.store.easy.EasyEVFIterator;
@@ -35,13 +36,17 @@ public class LTSVRecordIterator implements EasyEVFIterator {
 
   private final BufferedReader reader;
 
+  private final CustomErrorContext errorContext;
+
   private String line;
 
-  private int recordCount;
+  private int lineNumber;
 
-  public LTSVRecordIterator(RowSetLoader rowWriter, BufferedReader reader) {
+
+  public LTSVRecordIterator(RowSetLoader rowWriter, BufferedReader reader, CustomErrorContext errorContext) {
     this.rowWriter = rowWriter;
     this.reader = reader;
+    this.errorContext = errorContext;
   }
 
   public boolean nextRow() {
@@ -49,8 +54,8 @@ public class LTSVRecordIterator implements EasyEVFIterator {
     try {
       line = reader.readLine();
 
-      // Increment record counter
-      recordCount++;
+      // Increment line number
+      lineNumber++;
 
       if (line == null) {
         return false;
@@ -62,11 +67,11 @@ public class LTSVRecordIterator implements EasyEVFIterator {
       throw UserException
         .dataReadError(e)
         .message("Error reading LTSV Data: %s", e.getMessage())
-        .addContext("Line %d: %s", recordCount, line)
+        .addContext("Line %d: %s", lineNumber, line)
+        .addContext(errorContext)
         .build(logger);
     }
 
-    // Process the row
     processRow();
 
     return true;
@@ -83,7 +88,8 @@ public class LTSVRecordIterator implements EasyEVFIterator {
       if (index <= 0) {
         throw UserException
           .dataReadError()
-          .message("Invalid LTSV format at line %d: %s", recordCount, line)
+          .message("Invalid LTSV format at line %d: %s", lineNumber, line)
+          .addContext(errorContext)
           .build(logger);
       }
 
