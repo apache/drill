@@ -187,6 +187,20 @@
 			  </executions>
 			</plugin>
 
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <inherited>true</inherited>
+        <configuration>
+          <excludes>
+            <exclude>**/*.txt</exclude>
+            <exclude>**/*.json</exclude>
+            <exclude>**/org.apache.drill.extn.MockProvider</exclude>
+            <exclude>**/README.md</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
 </project>
