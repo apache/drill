@@ -104,7 +104,7 @@
   <build>
     <plugins>
       <plugin>
-        <!-- Creating a test artifact because javadoc needs to be able to find test classes -->
+        <!-- Creating a test artifact because Javadoc needs to be able to find test classes -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
       </plugin>
@@ -117,7 +117,76 @@
           </additionalClasspathElements>
         </configuration>
       </plugin>
-    </plugins>
 
+			<plugin>
+        <!--  Creates a set of mock extension jars for testing. -->
+			  <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+         <!--  Prevent these jars from being installed. -->
+         <attach>false</attach>
+          <descriptors>
+            <!-- Yes, must list the assembly files twice. -->
+            <descriptor>src/assembly/mock1.xml</descriptor>
+            <descriptor>src/assembly/mock2.xml</descriptor>
+            <descriptor>src/assembly/mock3.xml</descriptor>
+            <descriptor>src/assembly/mock4.xml</descriptor>
+          </descriptors>
+          <outputDirectory>${project.build.directory}/test-jars</outputDirectory>
+        </configuration>
+			  <executions>
+			    <execution>
+			      <id>mock1</id>
+			      <!--  Use this phase to ensure jars are available for tests
+			            in the next phase. -->
+			      <phase>process-test-classes</phase>
+			      <goals>
+			        <goal>single</goal>
+			      </goals>
+			      <configuration>
+						  <descriptors>
+		            <descriptor>src/assembly/mock1.xml</descriptor>
+		          </descriptors>
+			      </configuration>
+			    </execution>
+        <execution>
+            <id>mock2</id>
+            <phase>process-test-classes</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/mock2.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        <execution>
+            <id>mock3</id>
+            <phase>process-test-classes</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/mock3.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        <execution>
+            <id>mock4</id>
+            <phase>process-test-classes</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+               <descriptors>
+                <descriptor>src/assembly/mock4.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+			  </executions>
+			</plugin>
+
+    </plugins>
   </build>
 </project>
