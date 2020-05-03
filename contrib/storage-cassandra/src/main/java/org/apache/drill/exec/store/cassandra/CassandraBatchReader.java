@@ -351,9 +351,14 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   public abstract static class CassandraColumnWriter {
 
-    protected String colName;
+    final String colName;
 
-    ScalarWriter columnWriter;
+    final ScalarWriter columnWriter;
+
+    public CassandraColumnWriter(String colName, ScalarWriter writer) {
+      this.colName = colName;
+      this.columnWriter = writer;
+    }
 
     public void load(Row row) {};
   }
@@ -361,8 +366,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class StringColumnWriter extends CassandraColumnWriter {
 
     StringColumnWriter(String colName, RowSetLoader rowWriter) {
-      this.colName = colName;
-      columnWriter = rowWriter.scalar(colName);
+      super(colName, rowWriter.scalar(colName));
     }
 
     @Override
@@ -379,8 +383,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class IntColumnWriter extends CassandraColumnWriter {
 
     IntColumnWriter(String colName, RowSetLoader rowWriter) {
-      this.colName = colName;
-      columnWriter = rowWriter.scalar(colName);
+      super(colName, rowWriter.scalar(colName));
     }
 
     @Override
@@ -393,8 +396,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class BigIntColumnWriter extends CassandraColumnWriter {
 
     BigIntColumnWriter(String colName, RowSetLoader rowWriter) {
-      this.colName = colName;
-      columnWriter = rowWriter.scalar(colName);
+      super(colName, rowWriter.scalar(colName));
     }
 
     @Override
@@ -407,8 +409,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class SmallIntColumnWriter extends CassandraColumnWriter {
 
     SmallIntColumnWriter(String colName, RowSetLoader rowWriter) {
-      this.colName = colName;
-      columnWriter = rowWriter.scalar(colName);
+      super(colName, rowWriter.scalar(colName));
     }
 
     @Override
@@ -421,8 +422,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class FloatColumnWriter extends CassandraColumnWriter {
 
     FloatColumnWriter(String colName, RowSetLoader rowWriter) {
-      this.colName = colName;
-      columnWriter = rowWriter.scalar(colName);
+      super(colName, rowWriter.scalar(colName));
     }
 
     @Override
@@ -434,8 +434,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class DoubleColumnWriter extends CassandraColumnWriter {
 
     DoubleColumnWriter(String colName, RowSetLoader rowWriter) {
-      this.colName = colName;
-      columnWriter = rowWriter.scalar(colName);
+      super(colName, rowWriter.scalar(colName));
     }
 
     @Override
@@ -448,8 +447,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class DecimalColumnWriter extends CassandraColumnWriter {
 
     DecimalColumnWriter(String colName, RowSetLoader rowWriter) {
-      this.colName = colName;
-      columnWriter = rowWriter.scalar(colName);
+      super(colName, rowWriter.scalar(colName));
     }
 
     @Override
@@ -462,8 +460,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class TimestampColumnWriter extends CassandraColumnWriter {
 
     TimestampColumnWriter(String colName, RowSetLoader rowWriter) {
-      this.colName = colName;
-      columnWriter = rowWriter.scalar(colName);
+      super(colName, rowWriter.scalar(colName));
     }
 
     @Override
@@ -476,8 +473,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class DateColumnWriter extends CassandraColumnWriter {
 
     DateColumnWriter(String colName, RowSetLoader rowWriter) {
-      this.colName = colName;
-      columnWriter = rowWriter.scalar(colName);
+      super(colName, rowWriter.scalar(colName));
     }
 
     @Override
@@ -491,8 +487,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class TimeColumnWriter extends CassandraColumnWriter {
 
     TimeColumnWriter(String colName, RowSetLoader rowWriter) {
-      this.colName = colName;
-      columnWriter = rowWriter.scalar(colName);
+      super(colName, rowWriter.scalar(colName));
     }
 
     @Override
@@ -505,8 +500,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class BooleanColumnWriter extends CassandraColumnWriter {
 
     BooleanColumnWriter(String colName, RowSetLoader rowWriter) {
-      this.colName = colName;
-      columnWriter = rowWriter.scalar(colName);
+      super(colName, rowWriter.scalar(colName));
     }
 
     @Override
