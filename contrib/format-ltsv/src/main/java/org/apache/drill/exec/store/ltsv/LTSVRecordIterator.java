@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.ltsv;
 
+import com.github.lolo.ltsv.LtsvParser;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
@@ -41,9 +42,19 @@ public class LTSVRecordIterator implements EasyEVFIterator {
   private String line;
 
   private int lineNumber;
+  
 
+  /*
+  InputStream in = new FileInputStream(new File("test.ltsv"));
+LtsvParser parser = LtsvParser.builder().withQuoteChar('`').withKvDelimiter('=').build();
+Iterator<Map<String, String>> entries = parser.parse(in);
+while (entries.hasNext()) {
+    Map<String, String> result = entries.next();
+    System.out.println(result.toString());
+}
+   */
 
-  public LTSVRecordIterator(RowSetLoader rowWriter, BufferedReader reader, CustomErrorContext errorContext) {
+  public LTSVRecordIterator(RowSetLoader rowWriter, BufferedReader reader, LtsvParser parser, CustomErrorContext errorContext) {
     this.rowWriter = rowWriter;
     this.reader = reader;
     this.errorContext = errorContext;

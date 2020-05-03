@@ -18,14 +18,16 @@
 
 package org.apache.drill.exec.store.ltsv;
 
+import com.github.lolo.ltsv.LtsvParser;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.store.easy.EasyEVFBatchReader;
 
-public class LTSVBatchReader extends EasyEVFBatchReader {
 
+public class LTSVBatchReader extends EasyEVFBatchReader {
   public boolean open(FileSchemaNegotiator negotiator) {
     super.open(negotiator);
-    super.fileIterator = new LTSVRecordIterator(getRowWriter(), reader, errorContext);
+    LtsvParser parser = LtsvParser.builder().withQuoteChar('`').withKvDelimiter('=').build();
+    super.fileIterator = new LTSVRecordIterator(getRowWriter(), reader, parser, errorContext);
     return true;
   }
 }
