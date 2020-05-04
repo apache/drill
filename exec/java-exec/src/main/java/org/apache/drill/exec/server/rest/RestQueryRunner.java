@@ -62,7 +62,7 @@ public class RestQueryRunner {
     this.options = webUserConnection.getSession().getOptions();
   }
 
-  public RestQueryRunner.QueryResult run() throws Exception {
+  public QueryResult run() throws Exception {
     applyUserName();
     applyOptions();
     applyDefaultSchema();
@@ -131,7 +131,7 @@ public class RestQueryRunner {
     return maxRows;
   }
 
-  public RestQueryRunner.QueryResult submitQuery(int maxRows) {
+  public QueryResult submitQuery(int maxRows) {
     final RunQuery runQuery = RunQuery.newBuilder()
         .setType(QueryType.valueOf(query.getQueryType()))
         .setPlan(query.getQuery())
@@ -161,7 +161,7 @@ public class RestQueryRunner {
       }
     } while (!isComplete && !nearlyOutOfHeapSpace);
 
-    //Fail if nearly out of heap space
+    // Fail if nearly out of heap space
     if (nearlyOutOfHeapSpace) {
       UserException almostOutOfHeapException = UserException.resourceError()
           .message("There is not enough heap memory to run this query using the web interface. ")
@@ -185,7 +185,7 @@ public class RestQueryRunner {
     return new QueryResult(queryId, webUserConnection, webUserConnection.results);
   }
 
-  //Detect possible excess heap
+  // Detect possible excess heap
   private float getHeapUsage() {
     return (float) memMXBean.getHeapMemoryUsage().getUsed() / memMXBean.getHeapMemoryUsage().getMax();
   }
@@ -198,15 +198,16 @@ public class RestQueryRunner {
     public final String queryState;
     public final int attemptedAutoLimit;
 
-    //DRILL-6847:  Modified the constructor so that the method has access to all the properties in webUserConnection
+    // DRILL-6847:  Modified the constructor so that the method has access
+    // to all the properties in webUserConnection
     public QueryResult(QueryId queryId, WebUserConnection webUserConnection, List<Map<String, String>> rows) {
-        this.queryId = QueryIdHelper.getQueryId(queryId);
-        this.columns = webUserConnection.columns;
-        this.metadata = webUserConnection.metadata;
-        this.queryState = webUserConnection.getQueryState();
-        this.rows = rows;
-        this.attemptedAutoLimit = webUserConnection.getAutoLimitRowCount();
-      }
+      this.queryId = QueryIdHelper.getQueryId(queryId);
+      this.columns = webUserConnection.columns;
+      this.metadata = webUserConnection.metadata;
+      this.queryState = webUserConnection.getQueryState();
+      this.rows = rows;
+      this.attemptedAutoLimit = webUserConnection.getAutoLimitRowCount();
+    }
 
     public String getQueryId() {
       return queryId;

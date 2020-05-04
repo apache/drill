@@ -25,14 +25,21 @@ import org.apache.drill.exec.rpc.ConnectionThrottle;
 public interface UserResultsListener {
 
   /**
-   * QueryId is available. Called when a query is successfully submitted to the server.
-   * @param queryId sent by the server along {@link org.apache.drill.exec.rpc.Acks.OK Acks.OK}
+   * QueryId is available. Called when a query is successfully submitted to the
+   * server.
+   *
+   * @param queryId
+   *          sent by the server along {@link org.apache.drill.exec.rpc.Acks.OK
+   *          Acks.OK}
    */
   void queryIdArrived(QueryId queryId);
 
   /**
-   * The query has failed. Most likely called when the server returns a FAILED query state. Can also be called if
-   * {@link #dataArrived(QueryDataBatch, ConnectionThrottle) dataArrived()} throws an exception
+   * The query has failed. Most likely called when the server returns a FAILED
+   * query state. Can also be called if
+   * {@link #dataArrived(QueryDataBatch, ConnectionThrottle) dataArrived()}
+   * throws an exception
+   *
    * @param ex exception describing the cause of the failure
    */
   void submissionFailed(UserException ex);
@@ -45,10 +52,9 @@ public interface UserResultsListener {
   void dataArrived(QueryDataBatch result, ConnectionThrottle throttle);
 
   /**
-   * The query has completed (successsful completion or cancellation). The listener will not receive any other
-   * data or result message. Called when the server returns a terminal-non failing- state (COMPLETED or CANCELLED)
-   * @param state
+   * The query has completed (successful completion or cancellation). The
+   * listener will not receive any other data or result message. Called when the
+   * server returns a terminal-non failing- state (COMPLETED or CANCELLED)
    */
   void queryCompleted(QueryState state);
-
 }

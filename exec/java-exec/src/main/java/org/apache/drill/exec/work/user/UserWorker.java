@@ -41,9 +41,11 @@ import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.metadata.MetadataProvider;
 import org.apache.drill.exec.work.metadata.ServerMetaProvider.ServerMetaWorker;
 import org.apache.drill.exec.work.prepare.PreparedStatementProvider.PreparedStatementWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UserWorker{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserWorker.class);
+  static final Logger logger = LoggerFactory.getLogger(UserWorker.class);
 
   private final WorkerBee bee;
   private final QueryCountIncrementer incrementer = new QueryCountIncrementer() {

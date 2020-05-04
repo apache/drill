@@ -31,6 +31,7 @@ import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.physical.impl.materialize.QueryDataPackage;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
@@ -63,6 +64,7 @@ import org.apache.drill.exec.work.user.UserWorker;
 import org.apache.hadoop.security.HadoopKerberosName;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLEngine;
 import javax.security.sasl.SaslException;
@@ -75,7 +77,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserServer.class);
+  private static final Logger logger = LoggerFactory.getLogger(UserServer.class);
   private static final String SERVER_NAME = "Apache Drill Server";
 
   private final UserConnectionConfig config;
@@ -84,7 +86,7 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
   private final UserWorker userWorker;
   private static final ConcurrentHashMap<BitToUserConnection, BitToUserConnectionConfig> userConnectionMap;
 
-  //Initializing the singleton map during startup
+  // Initialize the singleton map during startup
   static {
     userConnectionMap = new ConcurrentHashMap<>();
   }
@@ -195,11 +197,13 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
   }
 
   /**
-   * It represents a client connection accepted by Foreman Drillbit's UserServer from a DrillClient. This connection
-   * is used to get hold of {@link UserSession} which stores all session related information like session options
-   * changed over the lifetime of this connection. There is a 1:1 mapping between a BitToUserConnection and a
-   * UserSession. This connection object is also used to send query data and result back to the client submitted as part
-   * of the session tied to this connection.
+   * Represents a client connection accepted by Foreman Drillbit's UserServer
+   * from a DrillClient. This connection is used to get hold of
+   * {@link UserSession} which stores all session related information like
+   * session options changed over the lifetime of this connection. There is a
+   * 1:1 mapping between a BitToUserConnection and a UserSession. This
+   * connection object is also used to send query data and result back to the
+   * client submitted as part of the session tied to this connection.
    */
   public class BitToUserConnection extends AbstractServerConnection<BitToUserConnection>
       implements UserClientConnection {
@@ -240,7 +244,6 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
      * Sets the user on the session, and finalizes the session.
      *
      * @param userName user name to set on the session
-     *
      */
     void finalizeSession(String userName) {
       // create a session
@@ -262,9 +265,10 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
     }
 
     @Override
-    public UserSession getSession(){
-      return session;
-    }
+    public UserSession getSession() { return session; }
+
+    @Override
+    protected Logger getLogger() { return logger; }
 
     @Override
     public void sendResult(final RpcOutcomeListener<Ack> listener, final QueryResult result) {
@@ -273,14 +277,10 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
     }
 
     @Override
-    public void sendData(final RpcOutcomeListener<Ack> listener, final QueryWritableBatch result) {
+    public void sendData(final RpcOutcomeListener<Ack> listener, final QueryDataPackage data) {
+      QueryWritableBatch result = data.toWritableBatch();
       logger.trace("Sending data to client with {}", result);
       send(listener, this, RpcType.QUERY_DATA, result.getHeader(), Ack.class, false, result.getBuffers());
-    }
-
-    @Override
-    protected Logger getLogger() {
-      return logger;
     }
 
     @Override
@@ -504,10 +504,10 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
    * User Connection's config for System Table access
    */
   public class BitToUserConnectionConfig {
-    private DateTime established;
-    private boolean isAuthEnabled;
-    private boolean isEncryptionEnabled;
-    private boolean isSSLEnabled;
+    private final DateTime established;
+    private final boolean isAuthEnabled;
+    private final boolean isEncryptionEnabled;
+    private final boolean isSSLEnabled;
 
     public BitToUserConnectionConfig() {
       established = new DateTime(); //Current Joda-based Time

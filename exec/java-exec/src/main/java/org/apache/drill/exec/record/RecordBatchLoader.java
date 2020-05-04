@@ -51,7 +51,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
   private final static Logger logger = LoggerFactory.getLogger(RecordBatchLoader.class);
 
   private final BufferAllocator allocator;
-  private VectorContainer container = new VectorContainer();
+  private VectorContainer container;
   private int valueCount;
   private BatchSchema schema;
 
@@ -60,6 +60,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
    */
   public RecordBatchLoader(BufferAllocator allocator) {
     this.allocator = Preconditions.checkNotNull(allocator);
+    this.container = new VectorContainer(allocator);
   }
 
   public BufferAllocator allocator() { return allocator; }
@@ -116,12 +117,10 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
           vector = TypeHelper.getNewVector(fieldDef, allocator);
 
         // If the field is a map or a dict, check if the schema changed.
-
         } else if ((vector.getField().getType().getMinorType() == MinorType.MAP || vector.getField().getType().getMinorType() == MinorType.DICT) &&
                    ! isSameSchema(vector.getField().getChildren(), field.getChildList())) {
 
           // The schema changed. Discard the old one and create a new one.
-
           schemaChanged = true;
           vector.clear();
           vector = TypeHelper.getNewVector(fieldDef, allocator);
@@ -155,8 +154,8 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
       container = newVectors;
       container.setRecordCount(valueCount);
     } catch (final Throwable cause) {
-      // We have to clean up new vectors created here and pass over the actual cause. It is upper layer who should
-      // adjudicate to call upper layer specific clean up logic.
+      // We have to clean up new vectors created here and pass over the actual cause.
+      // It is upper layer who should adjudicate to call upper layer specific clean up logic.
       VectorAccessibleUtilities.clear(newVectors);
       throw cause;
     } finally {
@@ -190,7 +189,6 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
 
     // Column order can permute (see DRILL-5828). So, use a map
     // for matching.
-
     Map<String, MaterializedField> childMap = CaseInsensitiveMap.newHashMap();
     for (MaterializedField currentChild : currentChildren) {
       childMap.put(currentChild.getName(), currentChild);
@@ -199,13 +197,11 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
       MaterializedField currentChild = childMap.get(newChild.getNamePart().getName());
 
       // New map member?
-
       if (currentChild == null) {
         return false;
       }
 
       // Changed data type?
-
       if (! currentChild.getType().equals(newChild.getMajorType())) {
         return false;
       }
@@ -223,7 +219,6 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     }
 
     // Everything matches.
-
     return true;
   }
 
@@ -231,20 +226,6 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
   public TypedFieldId getValueVectorId(SchemaPath path) {
     return container.getValueVectorId(path);
   }
-
-//
-//  @SuppressWarnings("unchecked")
-//  public <T extends ValueVector> T getValueVectorId(int fieldId, Class<?> clazz) {
-//    ValueVector v = container.get(fieldId);
-//    assert v != null;
-//    if (v.getClass() != clazz){
-//      logger.warn(String.format(
-//          "Failure while reading vector.  Expected vector class of %s but was holding vector class %s.",
-//          clazz.getCanonicalName(), v.getClass().getCanonicalName()));
-//      return null;
-//    }
-//    return (T) v;
-//  }
 
   @Override
   public int getRecordCount() { return valueCount; }

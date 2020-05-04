@@ -22,6 +22,7 @@ import org.apache.drill.exec.rpc.NonTransientRpcException;
 /**
  * Exception for malformed connection string from client
  */
+@SuppressWarnings("serial")
 public class InvalidConnectionInfoException extends NonTransientRpcException {
 
   public InvalidConnectionInfoException(String message) {

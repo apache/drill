@@ -27,13 +27,11 @@ public interface RpcOutcomeListener<V> {
    */
   void failed(RpcException ex);
 
-
   void success(V value, ByteBuf buffer);
 
   /**
-   * Called when the sending thread is interrupted. Possible when the fragment is cancelled due to query cancellations or
-   * failures.
+   * Called when the sending thread is interrupted. Possible when the fragment
+   * is cancelled due to query cancellations or failures.
    */
   void interrupted(final InterruptedException e);
-
 }

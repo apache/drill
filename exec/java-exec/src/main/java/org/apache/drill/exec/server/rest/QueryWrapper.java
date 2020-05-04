@@ -22,6 +22,7 @@ import java.util.Map;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.shaded.guava.com.google.common.base.CharMatcher;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.parquet.Strings;
@@ -98,7 +99,7 @@ public class QueryWrapper {
   public static final class RestQueryBuilder {
 
     private String query;
-    private String queryType = "SQL";
+    private String queryType = QueryType.SQL.name();
     private int rowLimit;
     private String userName;
     private String defaultSchema;

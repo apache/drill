@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.ops;
 
-import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
+import org.apache.drill.exec.physical.impl.materialize.QueryDataPackage;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.UserClientConnection;
@@ -31,14 +31,15 @@ public class AccountingUserConnection {
   private final SendingAccountor sendingAccountor;
   private final RpcOutcomeListener<Ack> statusHandler;
 
-  public AccountingUserConnection(UserClientConnection connection, SendingAccountor sendingAccountor, RpcOutcomeListener<Ack> statusHandler) {
+  public AccountingUserConnection(UserClientConnection connection, SendingAccountor sendingAccountor,
+      RpcOutcomeListener<Ack> statusHandler) {
     this.connection = connection;
     this.sendingAccountor = sendingAccountor;
     this.statusHandler = statusHandler;
   }
 
-  public void sendData(QueryWritableBatch batch) {
+  public void sendData(QueryDataPackage data) {
     sendingAccountor.increment();
-    connection.sendData(statusHandler, batch);
+    connection.sendData(statusHandler, data);
   }
 }

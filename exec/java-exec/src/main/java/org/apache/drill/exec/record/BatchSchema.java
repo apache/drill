@@ -30,7 +30,6 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
  * {@link org.apache.drill.exec.record.metadata.TupleMetadata} instead.
  */
 public class BatchSchema implements Iterable<MaterializedField> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchSchema.class);
 
   private final SelectionVectorMode selectionVectorMode;
   private final List<MaterializedField> fields;

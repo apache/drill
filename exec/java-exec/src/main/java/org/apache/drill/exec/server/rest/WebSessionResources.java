@@ -22,22 +22,23 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.ChannelClosedException;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
 
 /**
- * Class holding all the resources required for Web User Session. This class is responsible for the proper cleanup of
- * all the resources.
+ * Holds the resources required for Web User Session. This class is responsible
+ * for the proper cleanup of all the resources.
  */
 public class WebSessionResources implements AutoCloseable {
+  private static final Logger logger = LoggerFactory.getLogger(WebSessionResources.class);
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebSessionResources.class);
-
-  private BufferAllocator allocator;
+  private final BufferAllocator allocator;
 
   private final SocketAddress remoteAddress;
 
-  private UserSession webUserSession;
+  private final UserSession webUserSession;
 
   private ChannelPromise closeFuture;
 

@@ -24,7 +24,6 @@ import java.util.Arrays;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 
 public class QueryWritableBatch {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWritableBatch.class);
 
   private final QueryData header;
   private final ByteBuf[] buffers;

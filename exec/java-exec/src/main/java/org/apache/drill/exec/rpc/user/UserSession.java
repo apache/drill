@@ -49,11 +49,13 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UserSession implements AutoCloseable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserSession.class);
+  private static final Logger logger = LoggerFactory.getLogger(UserSession.class);
 
-  private boolean supportComplexTypes = false;
+  private boolean supportComplexTypes;
   private UserCredentials credentials;
   private DrillProperties properties;
   private SessionOptionManager sessionOptions;
