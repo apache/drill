@@ -59,7 +59,7 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
     this.extensions = extensions == null ? DEFAULT_EXTS : ImmutableList.copyOf(extensions);
     this.lenientMode = lenientMode;
     this.quoteCharacter = quoteCharacter;
-    
+
 
 
 
