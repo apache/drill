@@ -26,7 +26,13 @@ import org.apache.drill.exec.store.easy.EasyEVFBatchReader;
 public class LTSVBatchReader extends EasyEVFBatchReader {
   public boolean open(FileSchemaNegotiator negotiator) {
     super.open(negotiator);
-    LtsvParser parser = LtsvParser.builder().withQuoteChar('`').withKvDelimiter('=').build();
+
+
+
+    LtsvParser parser = LtsvParser.builder()
+      .withQuoteChar('`')
+      .withKvDelimiter('=')
+      .build();
     super.fileIterator = new LTSVRecordIterator(getRowWriter(), reader, parser, errorContext);
     return true;
   }

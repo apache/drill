@@ -35,11 +35,35 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
 
   private final List<String> extensions;
 
+  private final boolean lenientMode;
+
+  private final String quoteCharacter;
+
+  private final String kvDelimiter;
+
+  private final String escapeCharacter;
+
+  private final String entryDelimiter;
+
+  private final String lineEnding;
+
+
   @JsonCreator
-  public LTSVFormatPluginConfig(
-      @JsonProperty("extensions") List<String> extensions) {
-    this.extensions = extensions == null ?
-        DEFAULT_EXTS : ImmutableList.copyOf(extensions);
+  public LTSVFormatPluginConfig(@JsonProperty("extensions") List<String> extensions,
+                                @JsonProperty("lenientMode") boolean lenientMode,
+                                @JsonProperty("quoteCharacter") String quoteCharacter,
+                                @JsonProperty("kvDelimiter") String kvDelimiter,
+                                @JsonProperty("escapeCharacter") String escapeCharacter,
+                                @JsonProperty("entryDelimiter") String entryDelimiter,
+                                @JsonProperty("lineEnding") String lineEnding) {
+    this.extensions = extensions == null ? DEFAULT_EXTS : ImmutableList.copyOf(extensions);
+    this.lenientMode = lenientMode;
+    this.quoteCharacter = quoteCharacter;
+    
+
+
+
+
   }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -65,8 +89,6 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
 
   @Override
   public String toString() {
-    return new PlanStringBuilder(this)
-        .field("extensions", extensions)
-        .toString();
+    return new PlanStringBuilder(this).field("extensions", extensions).toString();
   }
 }

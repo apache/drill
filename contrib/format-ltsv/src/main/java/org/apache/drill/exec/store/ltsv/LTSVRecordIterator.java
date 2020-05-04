@@ -42,18 +42,6 @@ public class LTSVRecordIterator implements EasyEVFIterator {
   private String line;
 
   private int lineNumber;
-  
-
-  /*
-  InputStream in = new FileInputStream(new File("test.ltsv"));
-LtsvParser parser = LtsvParser.builder().withQuoteChar('`').withKvDelimiter('=').build();
-Iterator<Map<String, String>> entries = parser.parse(in);
-while (entries.hasNext()) {
-    Map<String, String> result = entries.next();
-    System.out.println(result.toString());
-}
-   */
-
   public LTSVRecordIterator(RowSetLoader rowWriter, BufferedReader reader, LtsvParser parser, CustomErrorContext errorContext) {
     this.rowWriter = rowWriter;
     this.reader = reader;
