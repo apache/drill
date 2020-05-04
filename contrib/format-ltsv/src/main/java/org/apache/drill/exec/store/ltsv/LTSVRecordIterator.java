@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.ltsv;
 
-import com.github.lolo.ltsv.LtsvParser;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
@@ -26,8 +25,9 @@ import org.apache.drill.exec.store.easy.EasyEVFIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
 
 public class LTSVRecordIterator implements EasyEVFIterator {
 
@@ -35,69 +35,37 @@ public class LTSVRecordIterator implements EasyEVFIterator {
 
   private final RowSetLoader rowWriter;
 
-  private final BufferedReader reader;
-
   private final CustomErrorContext errorContext;
 
-  private String line;
+  private final Iterator<Map<String, String>> ltsvIterator;
 
   private int lineNumber;
-  public LTSVRecordIterator(RowSetLoader rowWriter, BufferedReader reader, LtsvParser parser, CustomErrorContext errorContext) {
+  public LTSVRecordIterator(RowSetLoader rowWriter, Iterator<Map<String, String>> ltsvIterator, CustomErrorContext errorContext) {
     this.rowWriter = rowWriter;
-    this.reader = reader;
     this.errorContext = errorContext;
+    this.ltsvIterator = ltsvIterator;
   }
 
   public boolean nextRow() {
-    // Get the line
-    try {
-      line = reader.readLine();
-
-      // Increment line number
-      lineNumber++;
-
-      if (line == null) {
-        return false;
-      } else if (line.trim().length() == 0) {
-        // Skip empty lines
-        return true;
-      }
-    } catch (IOException e) {
-      throw UserException
-        .dataReadError(e)
-        .message("Error reading LTSV Data: %s", e.getMessage())
-        .addContext("Line %d: %s", lineNumber, line)
-        .addContext(errorContext)
-        .build(logger);
+    if (ltsvIterator.hasNext()) {
+      processRow(ltsvIterator.next());
+      return true;
+    } else {
+      return false;
     }
-
-    processRow();
-
-    return true;
   }
 
   /**
    * Function processes one row of data, splitting it up first by tabs then splitting the key/value pairs
    * finally recording it in the current Drill row.
    */
-  private void processRow() {
-
-    for (String field : line.split("\t")) {
-      int index = field.indexOf(":");
-      if (index <= 0) {
-        throw UserException
-          .dataReadError()
-          .message("Invalid LTSV format at line %d: %s", lineNumber, line)
-          .addContext(errorContext)
-          .build(logger);
-      }
-
-      String fieldName = field.substring(0, index);
-      String fieldValue = field.substring(index + 1);
-
-      LTSVBatchReader.writeStringColumn(rowWriter, fieldName, fieldValue);
+  private void processRow(Map<String, String> row) {
+    for (Map.Entry<String,String> field : row.entrySet()) {
+      LTSVBatchReader.writeStringColumn(rowWriter, field.getKey(), field.getValue());
+      logger.debug("Mapping {} to {}", field.getKey(), field.getValue());
     }
 
+    lineNumber++;
     // End the row
     rowWriter.save();
   }

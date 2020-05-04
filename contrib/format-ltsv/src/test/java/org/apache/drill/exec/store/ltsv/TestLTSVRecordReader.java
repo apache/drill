@@ -44,10 +44,7 @@ public class TestLTSVRecordReader extends ClusterTest {
 
   @BeforeClass
   public static void setup() throws Exception {
-    startCluster(ClusterFixture.builder(dirTestWatcher));
-
-    LTSVFormatPluginConfig formatConfig = new LTSVFormatPluginConfig(null);
-    cluster.defineFormat("dfs", "ltsv", formatConfig);
+    ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
     // Needed for compressed file unit test
     dirTestWatcher.copyResourceToRoot(Paths.get("ltsv/"));
@@ -60,17 +57,18 @@ public class TestLTSVRecordReader extends ClusterTest {
     RowSet results = q.rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("host",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("forwardedfor",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("req",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("status",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("size",  TypeProtos.MinorType.VARCHAR)
       .addNullable("referer",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("ua",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("vhost",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("size",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("forwardedfor",  TypeProtos.MinorType.VARCHAR)
       .addNullable("reqtime",  TypeProtos.MinorType.VARCHAR)
       .addNullable("apptime",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("vhost",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("host",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("ua",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("req",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("status",  TypeProtos.MinorType.VARCHAR)
       .buildSchema();
+
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .addRow("xxx.xxx.xxx.xxx", "-", "GET /v1/xxx HTTP/1.1", "200", "4968", "-", "Java/1.8.0_131", "2.532", "2.532", "api.example.com")
@@ -107,16 +105,16 @@ public class TestLTSVRecordReader extends ClusterTest {
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("host",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("forwardedfor",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("req",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("status",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("size",  TypeProtos.MinorType.VARCHAR)
       .addNullable("referer",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("ua",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("vhost",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("size",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("forwardedfor",  TypeProtos.MinorType.VARCHAR)
       .addNullable("reqtime",  TypeProtos.MinorType.VARCHAR)
       .addNullable("apptime",  TypeProtos.MinorType.VARCHAR)
-      .addNullable("vhost",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("host",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("ua",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("req",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("status",  TypeProtos.MinorType.VARCHAR)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -137,7 +135,7 @@ public class TestLTSVRecordReader extends ClusterTest {
       run("SELECT * FROM dfs.`ltsv/invalid.ltsv`");
       fail();
     } catch (UserException e) {
-      assertEquals(UserBitShared.DrillPBError.ErrorType.DATA_READ, e.getErrorType());
+      assertEquals(UserBitShared.DrillPBError.ErrorType.EXECUTION_ERROR, e.getErrorType());
       assertTrue(e.getMessage().contains("Invalid LTSV format at line 1: time:30/Nov/2016:00:55:08 +0900"));
     }
   }

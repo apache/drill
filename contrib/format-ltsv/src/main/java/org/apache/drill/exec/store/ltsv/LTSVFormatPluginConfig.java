@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.ltsv;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.exec.store.ltsv.LTSVBatchReader.LTSVReaderConfig;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,33 +39,32 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
 
   private final boolean lenientMode;
 
-  private final String quoteCharacter;
+  private final char quoteCharacter;
 
-  private final String kvDelimiter;
+  private final char kvDelimiter;
 
-  private final String escapeCharacter;
+  private final char escapeCharacter;
 
-  private final String entryDelimiter;
+  private final char entryDelimiter;
 
-  private final String lineEnding;
+  private final char lineEnding;
 
 
   @JsonCreator
   public LTSVFormatPluginConfig(@JsonProperty("extensions") List<String> extensions,
                                 @JsonProperty("lenientMode") boolean lenientMode,
-                                @JsonProperty("quoteCharacter") String quoteCharacter,
-                                @JsonProperty("kvDelimiter") String kvDelimiter,
-                                @JsonProperty("escapeCharacter") String escapeCharacter,
-                                @JsonProperty("entryDelimiter") String entryDelimiter,
-                                @JsonProperty("lineEnding") String lineEnding) {
+                                @JsonProperty("quoteCharacter") char quoteCharacter,
+                                @JsonProperty("kvDelimiter") char kvDelimiter,
+                                @JsonProperty("escapeCharacter") char escapeCharacter,
+                                @JsonProperty("entryDelimiter") char entryDelimiter,
+                                @JsonProperty("lineEnding") char lineEnding) {
     this.extensions = extensions == null ? DEFAULT_EXTS : ImmutableList.copyOf(extensions);
     this.lenientMode = lenientMode;
     this.quoteCharacter = quoteCharacter;
-
-
-
-
-
+    this.kvDelimiter = kvDelimiter == '\u0000' ? '=' : kvDelimiter;
+    this.escapeCharacter = escapeCharacter;
+    this.entryDelimiter = entryDelimiter;
+    this.lineEnding = lineEnding;
   }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -71,9 +72,44 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
     return extensions;
   }
 
+  @JsonProperty("lenientMode")
+  public boolean getLenientMode() {
+    return lenientMode;
+  }
+
+  @JsonProperty("quoteCharacter")
+  public char getQuoteCharacter() {
+    return quoteCharacter;
+  }
+
+  @JsonProperty("kvDelimiter")
+  public char getKvDelimiter() {
+    return quoteCharacter;
+  }
+
+  @JsonProperty("escapeCharacter")
+  public char getEscapeCharacter() {
+    return escapeCharacter;
+  }
+
+  @JsonProperty("entryDelimiter")
+  public char getEntryDelimiter() {
+    return entryDelimiter;
+  }
+
+  @JsonProperty("lineEnding")
+  public char getLineEnding() {
+    return lineEnding;
+  }
+
+  @JsonIgnore
+  public LTSVReaderConfig getReaderConfig(LTSVFormatPlugin plugin) {
+    return new LTSVReaderConfig(plugin);
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(extensions);
+    return Objects.hash(extensions, lenientMode, quoteCharacter, kvDelimiter, escapeCharacter, entryDelimiter, lineEnding);
   }
 
   @Override
@@ -84,11 +120,25 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
       return false;
     }
     LTSVFormatPluginConfig that = (LTSVFormatPluginConfig) obj;
-    return Objects.equals(extensions, that.extensions);
+    return Objects.equals(extensions, that.extensions) &&
+      Objects.equals(lenientMode, that.lenientMode) &&
+      Objects.equals(quoteCharacter, that.quoteCharacter) &&
+      Objects.equals(kvDelimiter, that.kvDelimiter) &&
+      Objects.equals(escapeCharacter, that.escapeCharacter) &&
+      Objects.equals(entryDelimiter, that.entryDelimiter) &&
+      Objects.equals(lineEnding, that.lineEnding);
   }
 
   @Override
   public String toString() {
-    return new PlanStringBuilder(this).field("extensions", extensions).toString();
+    return new PlanStringBuilder(this)
+      .field("extensions", extensions)
+      .field("lenientMode", lenientMode)
+      .field("quoteCharacter", quoteCharacter)
+      .field("kvDelimiter", kvDelimiter)
+      .field("escapeCharacter", escapeCharacter)
+      .field("entryDelimiter", entryDelimiter)
+      .field("lineEnding", lineEnding)
+      .toString();
   }
 }

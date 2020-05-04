@@ -30,6 +30,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
+import org.apache.drill.exec.store.ltsv.LTSVBatchReader.LTSVReaderConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
 
@@ -43,9 +44,14 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
 
   public static class LTSVReaderFactory extends FileReaderFactory {
 
+    private final LTSVReaderConfig readerConfig;
+
+    public LTSVReaderFactory(LTSVReaderConfig config) {
+      readerConfig = config;
+    }
     @Override
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new LTSVBatchReader();
+      return new LTSVBatchReader(readerConfig);
     }
   }
 
@@ -72,13 +78,14 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
 
   @Override
   public ManagedReader<?extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options) {
-    return new LTSVBatchReader();
+    return new LTSVBatchReader(formatConfig.getReaderConfig(this));
   }
 
   @Override
   protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new LTSVReaderFactory());
+    LTSVReaderConfig readerConfig = new LTSVReaderConfig(this);
+    builder.setReaderFactory(new LTSVReaderFactory(readerConfig));
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     initScanBuilder(builder, scan);
     return builder;
