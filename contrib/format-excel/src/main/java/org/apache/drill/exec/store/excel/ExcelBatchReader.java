@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.store.excel;
 
 import com.github.pjfanning.xlsx.StreamingReader;
@@ -39,10 +38,10 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.joda.time.Instant;
 import org.slf4j.Logger;
 
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Iterator;
 import java.io.IOException;
@@ -52,64 +51,39 @@ import java.util.NoSuchElementException;
 import java.util.TimeZone;
 
 public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
-
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(ExcelBatchReader.class);
 
   private static final String SAFE_WILDCARD = "_$";
-
   private static final String SAFE_SEPARATOR = "_";
-
   private static final String PARSER_WILDCARD = ".*";
-
   private static final String HEADER_NEW_LINE_REPLACEMENT = "__";
-
   private static final String MISSING_FIELD_NAME_HEADER = "field_";
-
   private static final int ROW_CACHE_SIZE = 100;
-
   private static final int BUFFER_SIZE = 4096;
 
   private final ExcelReaderConfig readerConfig;
-
   private Sheet sheet;
-
   private Row currentRow;
-
   private Workbook workbook;
-
   private InputStream fsStream;
-
   private List<String> excelFieldNames;
-
   private List<ScalarWriter> columnWriters;
-
   private List<CellWriter> cellWriterArray;
-
   private Iterator<Row> rowIterator;
-
   private RowSetLoader rowWriter;
-
   private int totalColumnCount;
-
   private boolean firstLine;
-
   private FileSplit split;
-
   private int recordCount;
 
   static class ExcelReaderConfig {
     final ExcelFormatPlugin plugin;
 
     final int headerRow;
-
     final int lastRow;
-
     final int firstColumn;
-
     final int lastColumn;
-
     final boolean allTextMode;
-
     final String sheetName;
 
     ExcelReaderConfig(ExcelFormatPlugin plugin) {
@@ -456,6 +430,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       super(columnWriter);
     }
 
+    @Override
     public void load(Cell cell) {
       if (cell == null) {
         columnWriter.setNull();
@@ -474,6 +449,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       super(columnWriter);
     }
 
+    @Override
     public void load(Cell cell) {
       if (cell == null) {
         columnWriter.setNull();
@@ -489,6 +465,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       super(columnWriter);
     }
 
+    @Override
     public void load(Cell cell) {
       if (cell == null) {
         columnWriter.setNull();
@@ -504,13 +481,14 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       super(columnWriter);
     }
 
+    @Override
     public void load(Cell cell) {
       if (cell == null) {
         columnWriter.setNull();
       } else {
         logger.debug("Cell value: {}", cell.getNumericCellValue());
         Date dt = DateUtil.getJavaDate(cell.getNumericCellValue(), TimeZone.getTimeZone("UTC"));
-        Instant timeStamp = new Instant(dt.toInstant().getEpochSecond() * 1000);
+        Instant timeStamp = Instant.ofEpochMilli(dt.toInstant().getEpochSecond() * 1000);
         columnWriter.setTimestamp(timeStamp);
       }
     }

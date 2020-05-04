@@ -127,7 +127,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     assertNull(rowSet);
 
     // Try again with COUNT(*)
-
     long count = client.queryBuilder().sql(COUNT_STAR, EMPTY_FILE).singletonLong();
     assertEquals(0, count);
   }

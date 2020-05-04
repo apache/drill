@@ -23,10 +23,10 @@ import org.apache.drill.exec.record.metadata.DictColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.BaseTest;
-import org.joda.time.LocalDate;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -427,7 +427,7 @@ public class TestSchemaParser extends BaseTest {
     TupleMetadata schema = SchemaExprParser.parseSchema(value);
     ColumnMetadata columnMetadata = schema.metadata("a");
     assertTrue(columnMetadata.decodeDefaultValue() instanceof LocalDate);
-    assertEquals(new LocalDate(2018, 12, 31), columnMetadata.decodeDefaultValue());
+    assertEquals(LocalDate.of(2018, 12, 31), columnMetadata.decodeDefaultValue());
     assertEquals("2018-12-31", columnMetadata.defaultValue());
     assertEquals(value, columnMetadata.columnString());
   }

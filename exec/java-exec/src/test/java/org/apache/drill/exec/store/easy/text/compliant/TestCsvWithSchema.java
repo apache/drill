@@ -22,6 +22,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.Iterator;
 
 import org.apache.drill.categories.EvfTests;
@@ -35,9 +40,6 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.joda.time.Instant;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.joda.time.Period;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -130,7 +132,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .add("missing", MinorType.VARCHAR) // No data, no schema, default type
           .buildSchema();
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(10, new LocalDate(2019, 3, 20), "it works!", 1234.5D, 20L, "")
+          .addRow(10, LocalDate.of(2019, 3, 20), "it works!", 1234.5D, 20L, "")
           .build();
       RowSetUtilities.verify(expected, actual);
     } finally {
@@ -189,7 +191,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .addNullable("date", MinorType.DATE)
           .buildSchema();
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(-1, "dino", new LocalDate(2018, 9, 1))
+          .addRow(-1, "dino", LocalDate.of(2018, 9, 1))
           .build();
       RowSetUtilities.verify(expected, actual);
     } finally {
@@ -219,7 +221,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .add("date", MinorType.DATE)
           .buildSchema();
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(0, "dino", new LocalDate(2001, 2, 3))
+          .addRow(0, "dino", LocalDate.of(2001, 2, 3))
           .build();
       RowSetUtilities.verify(expected, actual);
     } finally {
@@ -258,12 +260,12 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .add("comment", MinorType.VARCHAR)
           .buildSchema();
       expected1 = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(1, "wilma", new LocalDate(2019, 1, 18), "female", "ABC")
-          .addRow(2, "fred", new LocalDate(2019, 1, 19), "male", "ABC")
-          .addRow(4, "betty", new LocalDate(2019, 5, 4), "NA", "ABC")
+          .addRow(1, "wilma", LocalDate.of(2019, 1, 18), "female", "ABC")
+          .addRow(2, "fred", LocalDate.of(2019, 1, 19), "male", "ABC")
+          .addRow(4, "betty", LocalDate.of(2019, 5, 4), "NA", "ABC")
           .build();
       expected2 = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(3, "barney", new LocalDate(2001, 1, 16), "NA", "ABC")
+          .addRow(3, "barney", LocalDate.of(2001, 1, 16), "NA", "ABC")
           .build();
 
       // Loop 10 times so that, as the two reader fragments read the two
@@ -448,11 +450,11 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .add("comment", MinorType.VARCHAR)
           .buildSchema();
       expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(0, "dino", new LocalDate(2018, 9, 1), "NA", "ABC")
-          .addRow(1, "wilma", new LocalDate(2019, 1, 18), "female", "ABC")
-          .addRow(2, "fred", new LocalDate(2019, 1, 19), "male", "ABC")
-          .addRow(3, "barney", new LocalDate(2001, 1, 16), "NA", "ABC")
-          .addRow(4, "betty", new LocalDate(2019, 5, 4), "NA", "ABC")
+          .addRow(0, "dino", LocalDate.of(2018, 9, 1), "NA", "ABC")
+          .addRow(1, "wilma", LocalDate.of(2019, 1, 18), "female", "ABC")
+          .addRow(2, "fred", LocalDate.of(2019, 1, 19), "male", "ABC")
+          .addRow(3, "barney", LocalDate.of(2001, 1, 16), "NA", "ABC")
+          .addRow(4, "betty", LocalDate.of(2019, 5, 4), "NA", "ABC")
           .build();
 
       // Loop 10 times so that, as the two reader fragments read the two
@@ -498,10 +500,10 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .buildSchema();
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
           .addRow(0, null, "NA", "ABC", "dino")
-          .addRow(1, new LocalDate(2019, 1, 18), "female", "ABC", "wilma")
-          .addRow(2, new LocalDate(2019, 1, 19), "male", "ABC", "fred")
-          .addRow(3, new LocalDate(2001, 1, 16), "NA", "ABC", "barney")
-          .addRow(4, new LocalDate(2019, 5, 4), "NA", "ABC", "betty")
+          .addRow(1, LocalDate.of(2019, 1, 18), "female", "ABC", "wilma")
+          .addRow(2, LocalDate.of(2019, 1, 19), "male", "ABC", "fred")
+          .addRow(3, LocalDate.of(2001, 1, 16), "NA", "ABC", "barney")
+          .addRow(4, LocalDate.of(2019, 5, 4), "NA", "ABC", "betty")
           .build();
       RowSetUtilities.verify(expected, actual);
     } finally {
@@ -535,10 +537,10 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .buildSchema();
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
           .addRow(0, null, "NA", "ABC")
-          .addRow(1, new LocalDate(2019, 1, 18), "female", "ABC")
-          .addRow(2, new LocalDate(2019, 1, 19), "male", "ABC")
-          .addRow(3, new LocalDate(2001, 1, 16), "NA", "ABC")
-          .addRow(4, new LocalDate(2019, 5, 4), "NA", "ABC")
+          .addRow(1, LocalDate.of(2019, 1, 18), "female", "ABC")
+          .addRow(2, LocalDate.of(2019, 1, 19), "male", "ABC")
+          .addRow(3, LocalDate.of(2001, 1, 16), "NA", "ABC")
+          .addRow(4, LocalDate.of(2019, 5, 4), "NA", "ABC")
           .build();
       RowSetUtilities.verify(expected, actual);
     } finally {
@@ -575,10 +577,10 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .buildSchema();
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
           .addRow(0, null, "NA", "ABC")
-          .addRow(1, new LocalDate(2019, 1, 18), "female", "ABC")
-          .addRow(2, new LocalDate(2019, 1, 19), "male", "ABC")
-          .addRow(3, new LocalDate(2001, 1, 16), "NA", "ABC")
-          .addRow(4, new LocalDate(2019, 5, 4), "NA", "ABC")
+          .addRow(1, LocalDate.of(2019, 1, 18), "female", "ABC")
+          .addRow(2, LocalDate.of(2019, 1, 19), "male", "ABC")
+          .addRow(3, LocalDate.of(2001, 1, 16), "NA", "ABC")
+          .addRow(4, LocalDate.of(2019, 5, 4), "NA", "ABC")
           .build();
       RowSetUtilities.verify(expected, actual);
     } finally {
@@ -1049,9 +1051,9 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .add("col_timestamp", MinorType.TIMESTAMP)
           .add("id", MinorType.VARCHAR)
           .buildSchema();
-      LocalTime lt = new LocalTime(12, 34, 56);
-      LocalDate ld = new LocalDate(2019, 3, 28);
-      Instant ts = ld.toDateTime(lt).toInstant();
+      LocalTime lt = LocalTime.of(12, 34, 56);
+      LocalDate ld = LocalDate.of(2019, 3, 28);
+      Instant ts = LocalDateTime.of(ld, lt).toInstant(ZoneOffset.UTC);
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
           .addRow(10, 10L, 10.5, 10.5D, "foo", true, new Period(0).plusDays(10),
               lt, ld, ts, "1")
@@ -1093,7 +1095,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .addNullable("start_date", MinorType.DATE)
           .buildSchema();
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(1, 20, new LocalDate(2019, 1, 1))
+          .addRow(1, 20, LocalDate.of(2019, 1, 1))
           .addRow(2, null, null)
           .addRow(3, 30, null)
           .build();
@@ -1171,7 +1173,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .addNullable("start_date", MinorType.DATE)
           .buildSchema();
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(1, 20, new LocalDate(2019, 1, 1))
+          .addRow(1, 20, LocalDate.of(2019, 1, 1))
           .addRow(2, 0, null)
           .addRow(3, 30, null)
           .build();
@@ -1205,7 +1207,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .addNullable("start_date", MinorType.DATE)
           .buildSchema();
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(1, 20, new LocalDate(2019, 1, 1))
+          .addRow(1, 20, LocalDate.of(2019, 1, 1))
           .addRow(2, null, null)
           .addRow(3, 30, null)
           .build();
@@ -1239,7 +1241,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .addNullable("start_date", MinorType.DATE)
           .buildSchema();
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(1, 20, new LocalDate(2019, 1, 1))
+          .addRow(1, 20, LocalDate.of(2019, 1, 1))
           .addRow(2, -1, null)
           .addRow(3, 30, null)
           .build();

@@ -18,6 +18,9 @@
 package org.apache.drill.exec.vector.accessor.writer.dummy;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.BaseDataValueVector;
@@ -25,9 +28,6 @@ import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriterImpl;
-import org.joda.time.Instant;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 /**

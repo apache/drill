@@ -49,7 +49,6 @@ import org.junit.experimental.categories.Category;
  * Note that this test also has the handy side-effect of testing
  * null handling in the accessor classes.
  */
-
 @Category(RowSetTests.class)
 public class TestFillEmpties extends SubOperatorTest {
 
@@ -62,7 +61,6 @@ public class TestFillEmpties extends SubOperatorTest {
    * the alternatives which are either 1) leave the value as
    * garbage, or 2) raise an exception about the missing value.
    */
-
   @Test
   public void testFillEmptiesRequired() {
     testFillEmpties(DataMode.REQUIRED);
@@ -73,7 +71,6 @@ public class TestFillEmpties extends SubOperatorTest {
    * "natural" type for omitted values.
    * Nullable vectors fill empties with nulls.
    */
-
   @Test
   public void testFillEmptiesNullable() {
     testFillEmpties(DataMode.OPTIONAL);
@@ -84,7 +81,6 @@ public class TestFillEmpties extends SubOperatorTest {
    * Drill defines a null (omitted) array as the same thing as
    * a zero-length array.
    */
-
   @Test
   public void testFillEmptiesRepeated() {
     testFillEmpties(DataMode.REPEATED);
@@ -190,14 +186,14 @@ public class TestFillEmpties extends SubOperatorTest {
       assertTrue(reader.next());
       if (i % 5 != 0) {
         if (nullable) {
-          // Nullable types fill with nulls.
 
+          // Nullable types fill with nulls.
           assertTrue(colReader.isNull());
           continue;
         }
         if (isVariable) {
-          // Variable width types fill with a zero-length value.
 
+          // Variable width types fill with a zero-length value.
           assertEquals(0, colReader.getBytes().length);
           continue;
         }
@@ -205,7 +201,6 @@ public class TestFillEmpties extends SubOperatorTest {
 
       // All other types fill with zero-bytes, interpreted as some form
       // of zero for each type.
-
       Object actual = colReader.getObject();
       Object expected = RowSetUtilities.testDataFromInt(valueType, majorType,
           i % 5 == 0 ? i : 0);
@@ -226,8 +221,8 @@ public class TestFillEmpties extends SubOperatorTest {
     ValueType valueType = colWriter.valueType();
     for (int i = 0; i < ROW_COUNT; i++) {
       if (i % 5 == 0) {
-        // Write two values so we can exercise a bit of the array logic.
 
+        // Write two values so we can exercise a bit of the array logic.
         colWriter.setObject(RowSetUtilities.testDataFromInt(valueType, majorType, i));
         colWriter.setObject(RowSetUtilities.testDataFromInt(valueType, majorType, i+1));
       }
@@ -240,8 +235,8 @@ public class TestFillEmpties extends SubOperatorTest {
     for (int i = 0; i < ROW_COUNT; i++) {
       assertTrue(reader.next());
       if (i % 5 != 0) {
-        // Empty arrays are defined to be the same as a zero-length array.
 
+        // Empty arrays are defined to be the same as a zero-length array.
         assertEquals(0, aReader.size());
       } else {
         for (int j = 0; j < 2; j++) {
@@ -263,7 +258,6 @@ public class TestFillEmpties extends SubOperatorTest {
    * the default value to string, which is awkward for some types when
    * using the generic "test value from int" tool.
    */
-
   @Test
   public void testDefaultValue() {
     doTestDefaultValue(Types.required(MinorType.VARCHAR));
@@ -327,7 +321,6 @@ public class TestFillEmpties extends SubOperatorTest {
    * for the column writer from the (properly formed) default value in the
    * column metadata.
    */
-
   @Test
   public void testDefaultInSchema() {
     TupleMetadata schema = new SchemaBuilder()

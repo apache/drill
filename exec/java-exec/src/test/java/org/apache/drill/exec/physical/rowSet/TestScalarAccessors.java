@@ -26,6 +26,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 
 import org.apache.drill.categories.RowSetTests;
@@ -58,10 +63,6 @@ import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.joda.time.DateTimeZone;
-import org.joda.time.Instant;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.joda.time.Period;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -1698,7 +1699,7 @@ public class TestScalarAccessors extends SubOperatorTest {
         .add("col", MinorType.DATE)
         .buildSchema();
 
-    LocalDate v1 = new LocalDate(2019, 3, 24);
+    LocalDate v1 = LocalDate.of(2019, 3, 24);
 
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(v1)
@@ -1722,7 +1723,7 @@ public class TestScalarAccessors extends SubOperatorTest {
         .add("col", MinorType.TIME)
         .buildSchema();
 
-    LocalTime v1 = new LocalTime(12, 13, 14);
+    LocalTime v1 = LocalTime.of(12, 13, 14);
 
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(v1)
@@ -1746,9 +1747,9 @@ public class TestScalarAccessors extends SubOperatorTest {
         .add("col", MinorType.TIMESTAMP)
         .buildSchema();
 
-    LocalDate dt = new LocalDate(2019, 3, 24);
-    LocalTime lt = new LocalTime(12, 13, 14);
-    Instant v1 = dt.toDateTime(lt, DateTimeZone.UTC).toInstant();
+    LocalDate dt = LocalDate.of(2019, 3, 24);
+    LocalTime lt = LocalTime.of(12, 13, 14);
+    Instant v1 = LocalDateTime.of(dt, lt).toInstant(ZoneOffset.UTC);
 
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(v1)

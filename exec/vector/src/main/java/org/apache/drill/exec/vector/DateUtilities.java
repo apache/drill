@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.vector;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 import org.joda.time.Period;
@@ -195,7 +197,27 @@ public class DateUtilities {
    * @param localTime Java local time
    * @return Drill form of the time
    */
-  public static int toTime(LocalTime localTime) {
+  public static int toDrillTime(LocalTime localTime) {
     return (int) ((localTime.toNanoOfDay() + 500_000L) / 1_000_000L); // round to milliseconds
+  }
+
+  public static LocalTime fromDrillTime(int value) {
+    return LocalTime.ofNanoOfDay(value * 1_000_000L);
+  }
+
+  public static long toDrillDate(LocalDate localDate) {
+    return localDate.toEpochDay() * daysToStandardMillis;
+  }
+
+  public static LocalDate fromDrillDate(long value) {
+    return LocalDate.ofEpochDay(value / daysToStandardMillis);
+  }
+
+  public static long toDrillTimestamp(Instant instant) {
+    return instant.toEpochMilli();
+  }
+
+  public static Instant fromDrillTimestamp(long value) {
+    return Instant.ofEpochMilli(value);
   }
 }

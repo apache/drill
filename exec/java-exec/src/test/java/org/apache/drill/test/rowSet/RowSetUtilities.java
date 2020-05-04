@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -30,19 +31,15 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetWriter;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
-import org.bouncycastle.util.Arrays;
 import org.joda.time.Duration;
-import org.joda.time.Instant;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 /**
  * Various utilities useful for working with row sets, especially for testing.
  */
-
 public class RowSetUtilities {
 
   private RowSetUtilities() { }
@@ -52,7 +49,6 @@ public class RowSetUtilities {
    * and easy way to reverse the sort order of an expected-value row set.
    * @param sv2 the SV2 which is reversed in place
    */
-
   public static void reverse(SelectionVector2 sv2) {
     int count = sv2.getCount();
     for (int i = 0; i < count / 2; i++) {
@@ -113,11 +109,11 @@ public class RowSetUtilities {
     case PERIOD:
       return periodFromInt(dataType.getMinorType(), value);
     case DATE:
-      return new LocalDate(value);
+      return DateUtilities.fromDrillDate(value);
     case TIME:
-      return new LocalTime(value);
+      return DateUtilities.fromDrillTime(value);
     case TIMESTAMP:
-      return new Instant(value);
+      return DateUtilities.fromDrillTimestamp(value);
     default:
       throw new IllegalStateException("Unknown writer type: " + valueType);
     }
@@ -161,7 +157,7 @@ public class RowSetUtilities {
         byte[] expected = (byte[]) expectedObj;
         byte[] actual = (byte[]) actualObj;
         assertEquals(msg + " - byte lengths differ", expected.length, actual.length);
-        assertTrue(msg, Arrays.areEqual(expected, actual));
+        assertTrue(msg, Arrays.equals(expected, actual));
         break;
      }
      case DOUBLE:
@@ -267,6 +263,10 @@ public class RowSetUtilities {
    */
   public static void verify(RowSet expected, RowSet actual) {
     new RowSetComparison(expected).verifyAndClearAll(actual);
+  }
+
+  public static void verify(RowSet expected, RowSet actual, int rowCount) {
+    new RowSetComparison(expected).span(rowCount).verifyAndClearAll(actual);
   }
 
   public static BigDecimal dec(String value) {

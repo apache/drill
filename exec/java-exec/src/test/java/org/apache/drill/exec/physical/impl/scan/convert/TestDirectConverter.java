@@ -23,6 +23,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,18 +52,14 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueWriter;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.joda.time.DateTimeZone;
-import org.joda.time.Instant;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.joda.time.Period;
 import org.junit.Test;
 
 public class TestDirectConverter extends SubOperatorTest {
 
   /**
-   * Mock column conversion factory that takes an input schema, matches it against
-   * the given writer, and inserts a standard type conversion shim.
+   * Mock column conversion factory that takes an input schema, matches it
+   * against the given writer, and inserts a standard type conversion shim.
    */
   private static class ConversionTestFixture {
 
@@ -483,17 +485,14 @@ public class TestDirectConverter extends SubOperatorTest {
     ConversionTestFixture testFixture = new ConversionTestFixture(fixture.allocator(), outputSchema);
     testFixture.createConvertersFor(inputSchema);
     RowSet actual = testFixture
-        .addRow("2019-03-28", "12:34:56", "2019-03-28T12:34:56Z")
-        .addRow("2019-03-28", "12:34:56", "2019-03-28T12:34:56Z")
+        .addRow("2019-03-28", "12:34:56", "2019-03-28T12:34:56")
         .build();
 
-    LocalTime lt = new LocalTime(12, 34, 56);
-    LocalDate ld = new LocalDate(2019, 3, 28);
-    Instant ts = ld.toDateTime(lt, DateTimeZone.UTC).toInstant();
+    LocalTime lt = LocalTime.of(12, 34, 56);
+    LocalDate ld = LocalDate.of(2019, 3, 28);
+    Instant ts = LocalDateTime.of(ld, lt).toInstant(ZoneOffset.UTC);
     final SingleRowSet expected = fixture.rowSetBuilder(outputSchema)
         .addRow(ld, lt, ts)
-        .addRow(ld.toDateTimeAtStartOfDay(DateTimeZone.UTC).toInstant().getMillis(),
-                lt.getMillisOfDay(), ts.getMillis())
         .build();
 
     RowSetUtilities.verify(expected, actual);
@@ -510,7 +509,7 @@ public class TestDirectConverter extends SubOperatorTest {
 
     outputSchema.metadata("date").setFormat("M/d/yyyy");
     outputSchema.metadata("time").setFormat("hh:mm:ss a");
-    outputSchema.metadata("ts").setFormat("M/d/yyyy hh:mm:ss a Z");
+    outputSchema.metadata("ts").setFormat("M/d/yyyy hh:mm:ss a VV");
 
     TupleMetadata inputSchema = new SchemaBuilder()
         .add("date", MinorType.VARCHAR)
@@ -522,16 +521,13 @@ public class TestDirectConverter extends SubOperatorTest {
     testFixture.createConvertersFor(inputSchema);
     RowSet actual = testFixture
         .addRow("3/28/2019", "12:34:56 PM", "3/28/2019 12:34:56 PM Z")
-        .addRow("3/28/2019", "12:34:56 PM", "3/28/2019 12:34:56 PM Z")
         .build();
 
-    LocalTime lt = new LocalTime(12, 34, 56);
-    LocalDate ld = new LocalDate(2019, 3, 28);
-    Instant ts = ld.toDateTime(lt, DateTimeZone.UTC).toInstant();
+    LocalTime lt = LocalTime.of(12, 34, 56);
+    LocalDate ld = LocalDate.of(2019, 3, 28);
+    Instant ts = LocalDateTime.of(ld, lt).toInstant(ZoneOffset.UTC);
     final SingleRowSet expected = fixture.rowSetBuilder(outputSchema)
         .addRow(ld, lt, ts)
-        .addRow(ld.toDateTimeAtStartOfDay(DateTimeZone.UTC).toInstant().getMillis(),
-                lt.getMillisOfDay(), ts.getMillis())
         .build();
 
     RowSetUtilities.verify(expected, actual);
@@ -552,9 +548,9 @@ public class TestDirectConverter extends SubOperatorTest {
         .add("ts", MinorType.TIMESTAMP)
         .buildSchema();
 
-    LocalTime lt = new LocalTime(12, 34, 56);
-    LocalDate ld = new LocalDate(2019, 3, 28);
-    Instant ts = ld.toDateTime(lt, DateTimeZone.UTC).toInstant();
+    LocalTime lt = LocalTime.of(12, 34, 56);
+    LocalDate ld = LocalDate.of(2019, 3, 28);
+    Instant ts = LocalDateTime.of(ld, lt).atZone(ZoneId.systemDefault()).toInstant();
     ConversionTestFixture testFixture = new ConversionTestFixture(fixture.allocator(), outputSchema);
     testFixture.createConvertersFor(inputSchema);
     RowSet actual = testFixture
@@ -562,7 +558,7 @@ public class TestDirectConverter extends SubOperatorTest {
         .build();
 
     final SingleRowSet expected = fixture.rowSetBuilder(outputSchema)
-        .addRow("2019-03-28", "12:34:56.000", "2019-03-28T12:34:56.000Z")
+        .addRow("2019-03-28", "12:34:56", "2019-03-28T12:34:56")
         .build();
 
     RowSetUtilities.verify(expected, actual);
@@ -571,7 +567,6 @@ public class TestDirectConverter extends SubOperatorTest {
   /**
    * Test conversion to/from Java-style Booleans.
    */
-
   @Test
   public void testBooleanToFromString() {
 

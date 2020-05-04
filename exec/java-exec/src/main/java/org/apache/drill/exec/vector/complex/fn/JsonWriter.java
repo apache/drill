@@ -23,28 +23,29 @@ import java.io.OutputStream;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 public class JsonWriter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonWriter.class);
+  static final Logger logger = LoggerFactory.getLogger(JsonWriter.class);
 
   private final JsonFactory factory = new JsonFactory();
   private final JsonOutput gen;
 
-  public JsonWriter(OutputStream out, boolean pretty, boolean useExtendedOutput) throws IOException{
-    JsonGenerator writer = factory.configure(JsonGenerator.Feature.QUOTE_NON_NUMERIC_NUMBERS, false).createJsonGenerator(out);
-    if(pretty){
+  public JsonWriter(OutputStream out, boolean pretty, boolean useExtendedOutput) throws IOException {
+    JsonGenerator writer = factory.configure(JsonGenerator.Feature.QUOTE_NON_NUMERIC_NUMBERS, false).createGenerator(out);
+    if (pretty) {
       writer = writer.useDefaultPrettyPrinter();
     }
-    if(useExtendedOutput){
+    if (useExtendedOutput) {
       gen = new ExtendedJsonOutput(writer);
-    }else{
+    } else {
       gen = new BasicJsonOutput(writer);
     }
-
   }
 
   public JsonWriter(JsonOutput gen) {
@@ -63,7 +64,6 @@ public class JsonWriter {
     switch(m){
     case OPTIONAL:
     case REQUIRED:
-
 
       switch (mt) {
       case FLOAT4:
@@ -147,7 +147,6 @@ public class JsonWriter {
       case VARCHAR:
         gen.writeVarChar(reader);
         break;
-
       }
       break;
 
@@ -158,7 +157,6 @@ public class JsonWriter {
         for(int i = 0; i < reader.size(); i++){
           gen.writeFloat(i, reader);
         }
-
         break;
       case FLOAT8:
         for(int i = 0; i < reader.size(); i++){
@@ -270,7 +268,5 @@ public class JsonWriter {
       gen.writeEndArray();
       break;
     }
-
   }
-
 }

@@ -18,12 +18,12 @@
 
 package org.apache.drill.exec.store.pcap.decoder;
 
-import org.joda.time.Instant;
 import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -240,7 +240,7 @@ public class TcpSession {
   }
 
   public Instant getSessionStartTime() {
-    return new Instant(startTime);
+    return Instant.ofEpochMilli(startTime);
   }
 
   public Period getSessionDuration() {
@@ -252,7 +252,7 @@ public class TcpSession {
   }
 
   public Instant getSessionEndTime() {
-    return new Instant(endTime);
+    return Instant.ofEpochMilli(endTime);
   }
 
   public String getSrcMac() {

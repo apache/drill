@@ -35,12 +35,8 @@ import org.apache.drill.exec.store.esri.ShpBatchReader.ShpReaderConfig;
 import org.apache.hadoop.conf.Configuration;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
-
-  private static final Logger logger = LoggerFactory.getLogger(ShpFormatPlugin.class);
 
   public static final String PLUGIN_NAME = "shp";
 

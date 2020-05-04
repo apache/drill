@@ -18,15 +18,19 @@
 package org.apache.drill.exec.physical.impl.scan.convert;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Factory for standard conversions as outlined in the package header.
@@ -55,6 +59,7 @@ import org.apache.drill.exec.vector.accessor.ValueWriter;
  * conversion factory.
  */
 public class StandardConversions {
+  private static final Logger logger = LoggerFactory.getLogger(StandardConversions.class);
 
   /**
    * Indicates the type of conversion needed.
@@ -166,6 +171,12 @@ public class StandardConversions {
     try {
       final Constructor<? extends DirectConverter> ctor = conversionClass.getDeclaredConstructor(ScalarWriter.class, Map.class);
       return ctor.newInstance(baseWriter, properties);
+    } catch (final InvocationTargetException e) {
+      throw UserException.validationError(e.getTargetException())
+        .addContext("Converter setup failed")
+        .addContext("Conversion class" + conversionClass.getName())
+        // .addContext(errorContext) // Add after merge
+        .build(logger);
     } catch (final ReflectiveOperationException e) {
       // Ignore
     }
