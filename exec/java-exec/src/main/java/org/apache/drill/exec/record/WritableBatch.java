@@ -19,6 +19,7 @@ package org.apache.drill.exec.record;
 
 import io.netty.buffer.DrillBuf;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -28,7 +29,6 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.ValueVector;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * A specialized version of record batch that can moves out buffers and preps
@@ -52,7 +52,7 @@ public class WritableBatch implements AutoCloseable {
   }
 
   public WritableBatch transfer(BufferAllocator allocator) {
-    List<DrillBuf> newBuffers = Lists.newArrayList();
+    List<DrillBuf> newBuffers = new ArrayList<>();
     for (DrillBuf buf : buffers) {
       int writerIndex = buf.writerIndex();
       DrillBuf newBuf = buf.transferOwnership(allocator).buffer;
@@ -135,7 +135,7 @@ public class WritableBatch implements AutoCloseable {
   }
 
   public static WritableBatch getBatchNoHVWrap(int recordCount, Iterable<VectorWrapper<?>> vws, boolean isSV2) {
-    List<ValueVector> vectors = Lists.newArrayList();
+    List<ValueVector> vectors = new ArrayList<>();
     for (VectorWrapper<?> vw : vws) {
       Preconditions.checkArgument(!vw.isHyper());
       vectors.add(vw.getValueVector());
@@ -144,8 +144,8 @@ public class WritableBatch implements AutoCloseable {
   }
 
   public static WritableBatch getBatchNoHV(int recordCount, Iterable<ValueVector> vectors, boolean isSV2) {
-    List<DrillBuf> buffers = Lists.newArrayList();
-    List<SerializedField> metadata = Lists.newArrayList();
+    List<DrillBuf> buffers = new ArrayList<>();
+    List<SerializedField> metadata = new ArrayList<>();
 
     for (ValueVector vv : vectors) {
       metadata.add(vv.getMetadata());

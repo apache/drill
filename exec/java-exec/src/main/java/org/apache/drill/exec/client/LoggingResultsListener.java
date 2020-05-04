@@ -36,11 +36,13 @@ import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.util.VectorUtil;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.netty.buffer.DrillBuf;
 
 public class LoggingResultsListener implements UserResultsListener {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LoggingResultsListener.class);
+  private static Logger logger = LoggerFactory.getLogger(LoggingResultsListener.class);
 
   private final AtomicInteger count = new AtomicInteger();
   private final Stopwatch w = Stopwatch.createUnstarted();

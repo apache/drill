@@ -78,5 +78,4 @@ public class AwaitableUserResultsListener implements UserResultsListener {
     }
     return count.get();
   }
-
 }

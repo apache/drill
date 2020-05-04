@@ -25,7 +25,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
  * Implements an AbstractUnaryRecordBatch where the incoming record batch is
  * known at the time of creation
  *
- * @param <T>
+ * @param <T> the plan definition of the operator
  */
 public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> extends AbstractUnaryRecordBatch<T> {
 
@@ -43,12 +43,15 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   }
 
   /**
-   * Based on lastKnownOutcome and if there are more records to be output for current record boundary detected by
-   * EMIT outcome, this method returns EMIT or OK outcome.
+   * Based on lastKnownOutcome and if there are more records to be output for
+   * current record boundary detected by EMIT outcome, this method returns EMIT
+   * or OK outcome.
+   *
    * @param hasMoreRecordInBoundary
-   * @return - EMIT - If the lastknownOutcome was EMIT and output records corresponding to all the incoming records in
-   * current record boundary is already produced.
-   *         - OK - otherwise
+   * @return EMIT - If the lastknownOutcome was EMIT and output records
+   *         corresponding to all the incoming records in current record
+   *         boundary is already produced.
+   *         OK - otherwise
    */
   protected IterOutcome getFinalOutcome(boolean hasMoreRecordInBoundary) {
     final IterOutcome lastOutcome = getLastKnownOutcome();

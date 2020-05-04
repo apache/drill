@@ -18,6 +18,8 @@
 package org.apache.drill.exec.rpc;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -29,13 +31,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Helps to run a query and await on the results. All the inheriting sub-class manages the session/connection
- * state and submits query with respect to that state. The subclass instance lifetime is per query lifetime
- * and is not re-used.
+ * Helps to run a query and await on the results. All the inheriting sub-class
+ * manages the session/connection state and submits query with respect to that
+ * state. The subclass instance lifetime is per query lifetime and is not
+ * re-used.
  */
 public abstract class AbstractDisposableUserClientConnection implements UserClientConnection {
-  private static final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(AbstractDisposableUserClientConnection.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(AbstractDisposableUserClientConnection.class);
 
   protected final CountDownLatch latch = new CountDownLatch(1);
 
@@ -72,7 +75,8 @@ public abstract class AbstractDisposableUserClientConnection implements UserClie
     final QueryId queryId = result.getQueryId();
 
     if (logger.isDebugEnabled()) {
-      logger.debug("Result arrived for QueryId: {} with QueryState: {}", QueryIdHelper.getQueryId(queryId), state);
+      logger.debug("Result arrived for QueryId: {} with QueryState: {}",
+          QueryIdHelper.getQueryId(queryId), state);
     }
 
     switch (state) {

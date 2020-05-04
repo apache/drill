@@ -21,6 +21,8 @@ import com.codahale.metrics.Gauge;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.common.SelfCleaningRunnable;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -60,11 +62,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Manages the running fragments in a Drillbit. Periodically requests run-time stats updates from fragments
- * running elsewhere.
+ * Manages the running fragments in a Drillbit. Periodically requests run-time
+ * stats updates from fragments running elsewhere.
  */
 public class WorkManager implements AutoCloseable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkManager.class);
+  private static final Logger logger = LoggerFactory.getLogger(WorkManager.class);
 
   private static final int EXIT_TIMEOUT_MS = 5000;
 

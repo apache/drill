@@ -93,6 +93,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.shaded.guava.com.google.common.util.concurrent.SettableFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.netty.channel.EventLoopGroup;
 
@@ -101,16 +103,15 @@ import io.netty.channel.EventLoopGroup;
  * String into ByteBuf.
  */
 public class DrillClient implements Closeable, ConnectionThrottle {
+  private static Logger logger = LoggerFactory.getLogger(DrillClient.class);
   public static final String DEFAULT_CLIENT_NAME = "Apache Drill Java client";
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClient.class);
-
   private static final ObjectMapper objectMapper = new ObjectMapper();
+
   private final DrillConfig config;
   private UserClient client;
   private DrillProperties properties;
   private volatile ClusterCoordinator clusterCoordinator;
-  private volatile boolean connected = false;
+  private volatile boolean connected;
   private final BufferAllocator allocator;
   private final int reconnectTimes;
   private final int reconnectDelay;
@@ -199,10 +200,12 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   /**
-   * Sets whether the application is willing to accept complex types (Map, Arrays) in the returned result set.
-   * Default is {@code true}. If set to {@code false}, the complex types are returned as JSON encoded VARCHAR type.
+   * Sets whether the application is willing to accept complex types (Map,
+   * Arrays) in the returned result set. Default is {@code true}. If set to
+   * {@code false}, the complex types are returned as JSON encoded VARCHAR type.
    *
-   * @throws IllegalStateException if called after a connection has been established.
+   * @throws IllegalStateException
+   *           if called after a connection has been established.
    */
   public void setSupportComplexTypes(boolean supportComplexTypes) {
     if (connected) {
@@ -468,10 +471,10 @@ public class DrillClient implements Closeable, ConnectionThrottle {
    */
   @Override
   public void close() {
-    if (this.client != null) {
-      this.client.close();
+    if (client != null) {
+      client.close();
     }
-    if (this.ownsAllocator && allocator != null) {
+    if (ownsAllocator && allocator != null) {
       DrillAutoCloseables.closeNoChecked(allocator);
     }
     if (ownsZkConnection) {
@@ -486,18 +489,16 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     }
     if (eventLoopGroup != null) {
       eventLoopGroup.shutdownGracefully();
+      eventLoopGroup = null;
     }
 
     if (executor != null) {
       executor.shutdownNow();
+      executor = null;
     }
 
-    // TODO:  Did DRILL-1735 changes cover this TODO?:
-    // TODO: fix tests that fail when this is called.
-    //allocator.close();
     connected = false;
   }
-
 
   /**
    * Return the server infos. Only available after connecting
@@ -585,11 +586,15 @@ public class DrillClient implements Closeable, ConnectionThrottle {
 
   /**
    * API to just plan a query without execution
+   *
    * @param type
    * @param query
-   * @param isSplitPlan - option to tell whether to return single or split plans for a query
-   * @return list of PlanFragments that can be used later on in {@link #runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType, java.util.List, org.apache.drill.exec.rpc.user.UserResultsListener)}
-   * to run a query without additional planning
+   * @param isSplitPlan
+   *          option to tell whether to return single or split plans for a query
+   * @return list of PlanFragments that can be used later on in
+   *         {@link #runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType,
+   *         java.util.List, org.apache.drill.exec.rpc.user.UserResultsListener)}
+   *         to run a query without additional planning
    */
   public DrillRpcFuture<QueryPlanFragments> planQuery(QueryType type, String query, boolean isSplitPlan) {
     GetQueryPlanFragments runQuery = GetQueryPlanFragments.newBuilder().setQuery(query).setType(type).setSplitPlan(isSplitPlan).build();
@@ -632,7 +637,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     client.submitQuery(resultsListener, query);
   }
 
-  /*
+  /**
    * Helper method to generate the UserCredentials message from the properties.
    */
   private UserBitShared.UserCredentials getUserCredentials() {
@@ -660,10 +665,10 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   /**
-   * Get the list of catalogs in <code>INFORMATION_SCHEMA.CATALOGS</code> table satisfying the given filters.
+   * Get the list of catalogs in {@code INFORMATION_SCHEMA.CATALOGS} table satisfying the given filters.
    *
-   * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
-   * @return The list of catalogs in <code>INFORMATION_SCHEMA.CATALOGS</code> table satisfying the given filters.
+   * @param catalogNameFilter Filter on {@code catalog name}. Pass null to apply no filter.
+   * @return The list of catalogs in {@code INFORMATION_SCHEMA.CATALOGS} table satisfying the given filters.
    */
   public DrillRpcFuture<GetCatalogsResp> getCatalogs(LikeFilter catalogNameFilter) {
     final GetCatalogsReq.Builder reqBuilder = GetCatalogsReq.newBuilder();
@@ -675,11 +680,11 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   /**
-   * Get the list of schemas in <code>INFORMATION_SCHEMA.SCHEMATA</code> table satisfying the given filters.
+   * Get the list of schemas in {@code INFORMATION_SCHEMA.SCHEMATA} table satisfying the given filters.
    *
-   * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
-   * @param schemaNameFilter Filter on <code>schema name</code>. Pass null to apply no filter.
-   * @return The list of schemas in <code>INFORMATION_SCHEMA.SCHEMATA</code> table satisfying the given filters.
+   * @param catalogNameFilter Filter on {@code catalog name}. Pass null to apply no filter.
+   * @param schemaNameFilter Filter on {@code schema name}. Pass null to apply no filter.
+   * @return The list of schemas in {@code INFORMATION_SCHEMA.SCHEMATA} table satisfying the given filters.
    */
   public DrillRpcFuture<GetSchemasResp> getSchemas(LikeFilter catalogNameFilter, LikeFilter schemaNameFilter) {
     final GetSchemasReq.Builder reqBuilder = GetSchemasReq.newBuilder();
@@ -695,13 +700,13 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   /**
-   * Get the list of tables in <code>INFORMATION_SCHEMA.TABLES</code> table satisfying the given filters.
+   * Get the list of tables in {@code INFORMATION_SCHEMA.TABLES} table satisfying the given filters.
    *
-   * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
-   * @param schemaNameFilter Filter on <code>schema name</code>. Pass null to apply no filter.
-   * @param tableNameFilter Filter in <code>table name</code>. Pass null to apply no filter.
-   * @param tableTypeFilter Filter in <code>table type</code>. Pass null to apply no filter
-   * @return The list of tables in <code>INFORMATION_SCHEMA.TABLES</code> table satisfying the given filters.
+   * @param catalogNameFilter Filter on {@code catalog name}. Pass null to apply no filter.
+   * @param schemaNameFilter Filter on {@code schema name}. Pass null to apply no filter.
+   * @param tableNameFilter Filter in {@code table name}. Pass null to apply no filter.
+   * @param tableTypeFilter Filter in {@code table type}. Pass null to apply no filter
+   * @return The list of tables in {@code INFORMATION_SCHEMA.TABLES} table satisfying the given filters.
    */
   public DrillRpcFuture<GetTablesResp> getTables(LikeFilter catalogNameFilter, LikeFilter schemaNameFilter,
       LikeFilter tableNameFilter, List<String> tableTypeFilter) {
@@ -726,13 +731,13 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   /**
-   * Get the list of columns in <code>INFORMATION_SCHEMA.COLUMNS</code> table satisfying the given filters.
+   * Get the list of columns in {@code INFORMATION_SCHEMA.COLUMNS} table satisfying the given filters.
    *
-   * @param catalogNameFilter Filter on <code>catalog name</code>. Pass null to apply no filter.
-   * @param schemaNameFilter Filter on <code>schema name</code>. Pass null to apply no filter.
-   * @param tableNameFilter Filter in <code>table name</code>. Pass null to apply no filter.
-   * @param columnNameFilter Filter in <code>column name</code>. Pass null to apply no filter.
-   * @return The list of columns in <code>INFORMATION_SCHEMA.COLUMNS</code> table satisfying the given filters.
+   * @param catalogNameFilter Filter on {@code catalog name}. Pass null to apply no filter.
+   * @param schemaNameFilter Filter on {@code schema name}. Pass null to apply no filter.
+   * @param tableNameFilter Filter in {@code table name}. Pass null to apply no filter.
+   * @param columnNameFilter Filter in {@code column name}. Pass null to apply no filter.
+   * @return The list of columns in {@code INFORMATION_SCHEMA.COLUMNS} table satisfying the given filters.
    */
   public DrillRpcFuture<GetColumnsResp> getColumns(LikeFilter catalogNameFilter, LikeFilter schemaNameFilter,
       LikeFilter tableNameFilter, LikeFilter columnNameFilter) {
@@ -757,10 +762,10 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   }
 
   /**
-   * Create a prepared statement for given the <code>query</code>.
+   * Create a prepared statement for given the {@code query}.
    *
    * @param query
-   * @return The prepared statement for given the <code>query</code>.
+   * @return The prepared statement for given the {@code query}.
    */
   public DrillRpcFuture<CreatePreparedStatementResp> createPreparedStatement(final String query) {
     final CreatePreparedStatementReq req =

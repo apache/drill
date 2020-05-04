@@ -19,17 +19,14 @@ package org.apache.drill.exec.physical.impl;
 
 import java.util.List;
 
-import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingUserConnection;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.RootFragmentContext;
 import org.apache.drill.exec.physical.config.Screen;
-import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
-import org.apache.drill.exec.physical.impl.materialize.RecordMaterializer;
+import org.apache.drill.exec.physical.impl.materialize.QueryDataPackage.DataPackage;
+import org.apache.drill.exec.physical.impl.materialize.QueryDataPackage.EmptyResultsPackage;
 import org.apache.drill.exec.physical.impl.materialize.VectorRecordMaterializer;
-import org.apache.drill.exec.proto.UserBitShared.QueryData;
-import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.testing.ControlsInjector;
@@ -49,13 +46,18 @@ public class ScreenCreator implements RootCreator<Screen> {
     return new ScreenRoot(context, children.iterator().next(), config);
   }
 
+  /**
+   * Transfer batches to a user connection. The user connection is typically a
+   * network connection, but may be internal for a web or REST client. Data is
+   * sent as a "package", allowing the network client to request serialization,
+   * and the internal client to just transfer buffer ownership.
+   */
   public static class ScreenRoot extends BaseRootExec {
     private static final Logger logger = LoggerFactory.getLogger(ScreenRoot.class);
     private final RecordBatch incoming;
     private final RootFragmentContext context;
     private final AccountingUserConnection userConnection;
-    private RecordMaterializer materializer;
-
+    private DataPackage dataPackage;
     private boolean firstBatch = true;
 
     public enum Metric implements MetricDef {
@@ -67,15 +69,11 @@ public class ScreenCreator implements RootCreator<Screen> {
       }
     }
 
-    public ScreenRoot(RootFragmentContext context, RecordBatch incoming, Screen config) throws OutOfMemoryException {
+    public ScreenRoot(RootFragmentContext context, RecordBatch incoming, Screen config) {
       super(context, config);
       this.context = context;
       this.incoming = incoming;
-      userConnection = context.getUserDataTunnel();
-    }
-
-    public RootFragmentContext getContext() {
-      return context;
+      this.userConnection = context.getUserDataTunnel();
     }
 
     @Override
@@ -85,53 +83,40 @@ public class ScreenCreator implements RootCreator<Screen> {
       switch (outcome) {
         case NONE:
           if (firstBatch) {
-            // this is the only data message sent to the client and may contain the schema
-            QueryWritableBatch batch;
-            QueryData header = QueryData.newBuilder()
-              .setQueryId(context.getHandle().getQueryId())
-              .setRowCount(0)
-              .setDef(RecordBatchDef.getDefaultInstance())
-              .build();
-            batch = new QueryWritableBatch(header);
 
             stats.startWait();
             try {
-              userConnection.sendData(batch);
+              // This is the only data message sent to the client and does not contain the schema
+              userConnection.sendData(new EmptyResultsPackage(context.getHandle().getQueryId()));
             } finally {
               stats.stopWait();
             }
             firstBatch = false; // we don't really need to set this. But who knows!
           }
-
           return false;
+
         case OK_NEW_SCHEMA:
-          materializer = new VectorRecordMaterializer(context, oContext, incoming);
+          dataPackage = new DataPackage(new VectorRecordMaterializer(context, oContext, incoming), stats);
           //$FALL-THROUGH$
         case OK:
           injector.injectPause(context.getExecutionControls(), "sending-data", logger);
-          final QueryWritableBatch batch = materializer.convertNext();
-          updateStats(batch);
           stats.startWait();
           try {
-            userConnection.sendData(batch);
+            // Stats updated if connection serializes the batch
+            userConnection.sendData(dataPackage);
           } finally {
             stats.stopWait();
           }
           firstBatch = false;
-
           return true;
+
         default:
           throw new UnsupportedOperationException(outcome.name());
       }
     }
 
-    public void updateStats(QueryWritableBatch queryBatch) {
-      stats.addLongStat(Metric.BYTES_SENT, queryBatch.getByteCount());
-    }
-
-    RecordBatch getIncoming() {
-      return incoming;
-    }
+    public RootFragmentContext getContext() { return context; }
+    protected RecordBatch getIncoming() { return incoming; }
 
     @Override
     public void close() throws Exception {

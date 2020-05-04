@@ -23,6 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.carrotsearch.hppc.IntObjectHashMap;
 import com.carrotsearch.hppc.procedures.IntObjectProcedure;
@@ -38,7 +40,7 @@ import io.netty.channel.ChannelFuture;
  * else works via Atomic variables.
  */
 class RequestIdMap {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RequestIdMap.class);
+  private static final Logger logger = LoggerFactory.getLogger(RequestIdMap.class);
 
   private final AtomicInteger lastCoordinationId = new AtomicInteger();
   private final AtomicBoolean isOpen = new AtomicBoolean(true);
@@ -72,9 +74,9 @@ class RequestIdMap {
 
     @Override
     public void apply(int key, RpcOutcome<?> value) {
-      try{
+      try {
         value.setException(exception);
-      }catch (final Exception e){
+      } catch (final Exception e){
         logger.warn("Failure while attempting to fail rpc response.", e);
       }
     }
@@ -158,6 +160,7 @@ class RequestIdMap {
     return rpc;
   }
 
+  @SuppressWarnings("unchecked")
   public <V> RpcOutcome<V> getAndRemoveRpcOutcome(int rpcType, int coordinationId, Class<V> clazz) {
 
     final RpcOutcome<?> rpc = removeFromMap(coordinationId);
@@ -172,16 +175,10 @@ class RequestIdMap {
           clazz.getCanonicalName(), rpcType, outcomeClass.getCanonicalName()));
     }
 
-    @SuppressWarnings("unchecked")
-    final
-    RpcOutcome<V> crpc = (RpcOutcome<V>) rpc;
-
-    // logger.debug("Returning casted future");
-    return crpc;
+    return (RpcOutcome<V>) rpc;
   }
 
   public void recordRemoteFailure(int coordinationId, DrillPBError failure) {
-    // logger.debug("Updating failed future.");
     try {
       final RpcOutcome<?> rpc = removeFromMap(coordinationId);
       rpc.setException(new UserRemoteException(failure));

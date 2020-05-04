@@ -201,7 +201,5 @@ public class QuerySubmitter {
       watch.reset();
     }
     return 0;
-
   }
-
 }

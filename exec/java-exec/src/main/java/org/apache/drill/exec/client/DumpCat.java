@@ -250,7 +250,7 @@ public class DumpCat {
       System.out.println(getBatchMetaInfo(vcSerializable).toString());
 
       System.out.println("Schema Information");
-      for (final VectorWrapper w : vectorContainer) {
+      for (final VectorWrapper<?> w : vectorContainer) {
         final MaterializedField field = w.getValueVector().getField();
         System.out.println (String.format("name : %s, minor_type : %s, data_mode : %s",
                                           field.getName(),
@@ -279,7 +279,7 @@ public class DumpCat {
       selectedRows = vcSerializable.getSv2().getCount();
     }
 
-    for (final VectorWrapper w : vectorContainer) {
+    for (final VectorWrapper<?> w : vectorContainer) {
        totalDataSize += w.getValueVector().getBufferSize();
     }
 

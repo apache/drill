@@ -42,8 +42,9 @@ import org.slf4j.LoggerFactory;
 import io.netty.util.internal.PlatformDependent;
 
 /**
- * Drill data structure for accessing and manipulating data buffers. This class is integrated with the
- * Drill memory management layer for quota enforcement and buffer sharing.
+ * Drill data structure for accessing and manipulating data buffers. This class
+ * is integrated with the Drill memory management layer for quota enforcement
+ * and buffer sharing.
  */
 @SuppressWarnings("unused")
 public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
@@ -121,18 +122,22 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   /**
-   * Create a new DrillBuf that is associated with an alternative allocator for the purposes of memory ownership and
-   * accounting. This has no impact on the reference counting for the current DrillBuf except in the situation where the
-   * passed in Allocator is the same as the current buffer.
+   * Create a new DrillBuf that is associated with an alternative allocator for
+   * the purposes of memory ownership and accounting. This has no impact on the
+   * reference counting for the current DrillBuf except in the situation where
+   * the passed in Allocator is the same as the current buffer.
    *
-   * This operation has no impact on the reference count of this DrillBuf. The newly created DrillBuf with either have a
-   * reference count of 1 (in the case that this is the first time this memory is being associated with the new
-   * allocator) or the current value of the reference count + 1 for the other AllocationManager/BufferLedger combination
-   * in the case that the provided allocator already had an association to this underlying memory.
+   * This operation has no impact on the reference count of this DrillBuf. The
+   * newly created DrillBuf with either have a reference count of 1 (in the case
+   * that this is the first time this memory is being associated with the new
+   * allocator) or the current value of the reference count + 1 for the other
+   * AllocationManager/BufferLedger combination in the case that the provided
+   * allocator already had an association to this underlying memory.
    *
    * @param target
    *          The target allocator to create an association with.
-   * @return A new DrillBuf which shares the same underlying memory as this DrillBuf.
+   * @return A new DrillBuf which shares the same underlying memory as this
+   *         DrillBuf.
    */
   public DrillBuf retain(BufferAllocator target) {
 
@@ -148,28 +153,35 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   /**
-   * Transfer the memory accounting ownership of this DrillBuf to another allocator. This will generate a new DrillBuf
-   * that carries an association with the underlying memory of this DrillBuf. If this DrillBuf is connected to the
-   * owning BufferLedger of this memory, that memory ownership/accounting will be transferred to the target allocator. If
-   * this DrillBuf does not currently own the memory underlying it (and is only associated with it), this does not
-   * transfer any ownership to the newly created DrillBuf.
+   * Transfer the memory accounting ownership of this DrillBuf to another
+   * allocator. This will generate a new DrillBuf that carries an association
+   * with the underlying memory of this DrillBuf. If this DrillBuf is connected
+   * to the owning BufferLedger of this memory, that memory ownership/accounting
+   * will be transferred to the target allocator. If this DrillBuf does not
+   * currently own the memory underlying it (and is only associated with it),
+   * this does not transfer any ownership to the newly created DrillBuf.
    * <p>
-   * This operation has no impact on the reference count of this DrillBuf. The newly created DrillBuf with either have a
-   * reference count of 1 (in the case that this is the first time this memory is being associated with the new
-   * allocator) or the current value of the reference count for the other AllocationManager/BufferLedger combination in
-   * the case that the provided allocator already had an association to this underlying memory.
+   * This operation has no impact on the reference count of this DrillBuf. The
+   * newly created DrillBuf with either have a reference count of 1 (in the case
+   * that this is the first time this memory is being associated with the new
+   * allocator) or the current value of the reference count for the other
+   * AllocationManager/BufferLedger combination in the case that the provided
+   * allocator already had an association to this underlying memory.
    * <p>
-   * Transfers will always succeed, even if that puts the other allocator into an overlimit situation. This is possible
-   * due to the fact that the original owning allocator may have allocated this memory out of a local reservation
-   * whereas the target allocator may need to allocate new memory from a parent or RootAllocator. This operation is done
-   * in a mostly-lockless but consistent manner. As such, the overlimit==true situation could occur slightly prematurely
-   * to an actual overlimit==true condition. This is simply conservative behavior which means we may return overlimit
-   * slightly sooner than is necessary.
+   * Transfers will always succeed, even if that puts the other allocator into
+   * an overlimit situation. This is possible due to the fact that the original
+   * owning allocator may have allocated this memory out of a local reservation
+   * whereas the target allocator may need to allocate new memory from a parent
+   * or RootAllocator. This operation is done in a mostly-lockless but
+   * consistent manner. As such, the overlimit==true situation could occur
+   * slightly prematurely to an actual overlimit==true condition. This is simply
+   * conservative behavior which means we may return overlimit slightly sooner
+   * than is necessary.
    *
    * @param target
    *          The allocator to transfer ownership to.
-   * @return A new transfer result with the impact of the transfer (whether it was overlimit) as well as the newly
-   *         created DrillBuf.
+   * @return A new transfer result with the impact of the transfer (whether it
+   *         was overlimit) as well as the newly created DrillBuf.
    */
   public TransferResult transferOwnership(BufferAllocator target) {
 

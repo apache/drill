@@ -237,9 +237,7 @@ public class DrillRestServer extends ResourceConfig {
     }
 
     @Override
-    public void dispose(WebUserConnection instance) {
-
-    }
+    public void dispose(WebUserConnection instance) { }
   }
 
   public static class AnonWebUserConnectionProvider implements Factory<WebUserConnection> {
@@ -300,14 +298,14 @@ public class DrillRestServer extends ResourceConfig {
     }
 
     @Override
-    public void dispose(WebUserConnection instance) {
-
-    }
+    public void dispose(WebUserConnection instance) { }
 
     /**
-     * Creates session user principal. If impersonation is enabled without authentication and User-Name header is present and valid,
-     * will create session user principal with provided user name, otherwise anonymous user name will be used.
-     * In both cases session user principal will have admin rights.
+     * Creates session user principal. If impersonation is enabled without
+     * authentication and User-Name header is present and valid, will create
+     * session user principal with provided user name, otherwise anonymous user
+     * name will be used. In both cases session user principal will have admin
+     * rights.
      *
      * @param config drill config
      * @param request client request
@@ -322,10 +320,12 @@ public class DrillRestServer extends ResourceConfig {
       }
       return new AnonDrillUserPrincipal();
     }
-
   }
 
-  // Provider which injects DrillUserPrincipal directly instead of getting it from SecurityContext and typecasting
+  /**
+   * Provider which injects DrillUserPrincipal directly instead of getting it
+   * from SecurityContext and typecasting
+   */
   public static class DrillUserPrincipalProvider implements Factory<DrillUserPrincipal> {
 
     @Inject HttpServletRequest request;
@@ -336,9 +336,7 @@ public class DrillRestServer extends ResourceConfig {
     }
 
     @Override
-    public void dispose(DrillUserPrincipal principal) {
-      // No-Op
-    }
+    public void dispose(DrillUserPrincipal principal) { }
   }
 
   // Provider which creates and cleanups DrillUserPrincipal for anonymous (auth disabled) mode

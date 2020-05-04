@@ -150,7 +150,7 @@ public class LogsResources {
   private File getFileByName(File folder, final String name) {
     File[] files = folder.listFiles((dir, fileName) -> fileName.equals(name));
     if (files.length == 0) {
-      throw new DrillRuntimeException (name + " doesn't exist");
+      throw new DrillRuntimeException(name + " doesn't exist");
     }
     return files[0];
   }
@@ -159,9 +159,9 @@ public class LogsResources {
   @XmlRootElement
   public class Log implements Comparable<Log> {
 
-    private String name;
-    private long size;
-    private DateTime lastModified;
+    private final String name;
+    private final long size;
+    private final DateTime lastModified;
 
     @JsonCreator
     public Log (@JsonProperty("name") String name, @JsonProperty("size") long size, @JsonProperty("lastModified") long lastModified) {
@@ -190,9 +190,9 @@ public class LogsResources {
 
   @XmlRootElement
   public class LogContent {
-    private String name;
-    private Collection<String> lines;
-    private int maxLines;
+    private final String name;
+    private final Collection<String> lines;
+    private final int maxLines;
 
     @JsonCreator
     public LogContent (@JsonProperty("name") String name, @JsonProperty("lines") Collection<String> lines, @JsonProperty("maxLines") int maxLines) {
