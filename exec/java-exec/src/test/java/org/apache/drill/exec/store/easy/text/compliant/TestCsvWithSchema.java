@@ -29,7 +29,6 @@ import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -321,8 +320,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           RowSet result = client.queryBuilder().sql(sql).rowSet();
           assertEquals(4, result.rowCount());
           result.clear();
-        } catch (RpcException e) {
-          assertTrue(e.getCause() instanceof UserRemoteException);
+        } catch (UserRemoteException e) {
           sawError = true;
           break;
         }
