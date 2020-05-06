@@ -47,6 +47,7 @@
         <include>org.apache.drill.contrib:drill-format-hdf5:jar</include>
         <include>org.apache.drill.contrib:drill-format-ltsv:jar</include>
         <include>org.apache.drill.contrib:drill-format-excel:jar</include>
+        <include>org.apache.drill.contrib:drill-format-spss:jar</include>
         <include>org.apache.drill.contrib:drill-jdbc-storage:jar</include>
         <include>org.apache.drill.contrib:drill-kudu-storage:jar</include>
         <include>org.apache.drill.contrib:drill-storage-kafka:jar</include>

@@ -20,41 +20,27 @@ package org.apache.drill.exec.store.excel;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
-import org.apache.drill.exec.store.dfs.ZipCodec;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.CommonConfigurationKeys;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 
-import java.io.FileInputStream;
 import java.nio.file.Paths;
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.apache.drill.categories.RowSetTests;
-import org.apache.hadoop.io.compress.CompressionCodecFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 
 @Category(RowSetTests.class)
 public class TestExcelFormat extends ClusterTest {
@@ -398,23 +384,5 @@ public class TestExcelFormat extends ClusterTest {
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
-  }
-
-  private void generateCompressedFile(String fileName, String codecName, String outFileName) throws IOException {
-    FileSystem fs = ExecTest.getLocalFileSystem();
-    Configuration conf = fs.getConf();
-    conf.set(CommonConfigurationKeys.IO_COMPRESSION_CODECS_KEY, ZipCodec.class.getCanonicalName());
-    CompressionCodecFactory factory = new CompressionCodecFactory(conf);
-
-    CompressionCodec codec = factory.getCodecByName(codecName);
-    assertNotNull(codecName + " is not found", codec);
-
-    Path outFile = new Path(dirTestWatcher.getRootDir().getAbsolutePath(), outFileName);
-    Path inFile = new Path(dirTestWatcher.getRootDir().getAbsolutePath(), fileName);
-
-    try (InputStream inputStream = new FileInputStream(inFile.toUri().toString());
-         OutputStream outputStream = codec.createOutputStream(fs.create(outFile))) {
-      IOUtils.copyBytes(inputStream, outputStream, fs.getConf(), false);
-    }
   }
 }

@@ -17,7 +17,10 @@
  */
 package org.apache.drill.test;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.util.List;
@@ -27,6 +30,7 @@ import java.util.regex.Pattern;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.client.LoggingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
@@ -43,9 +47,20 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.exec.store.dfs.ZipCodec;
 import org.apache.drill.exec.util.VectorUtil;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.drill.test.ClusterTest.dirTestWatcher;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Utilities useful for tests that issue SQL queries.
@@ -311,5 +326,30 @@ public class QueryTestUtil {
 
     throw new BindException(String.format("Free port could not be found in the range [%s-%s].\n" +
         "Please release any of used ports in this range.", portNumber, portNumber + numberOfAttempts));
+  }
+
+  /**
+   * Generates a compressed version of the file for testing
+   * @param fileName Name of the input file
+   * @param codecName The desired CODEC to be used.
+   * @param outFileName Name of generated compressed file
+   * @throws IOException If function cannot generate file, throws IOException
+   */
+  public static void generateCompressedFile(String fileName, String codecName, String outFileName) throws IOException {
+    FileSystem fs = ExecTest.getLocalFileSystem();
+    Configuration conf = fs.getConf();
+    conf.set(CommonConfigurationKeys.IO_COMPRESSION_CODECS_KEY, ZipCodec.class.getCanonicalName());
+    CompressionCodecFactory factory = new CompressionCodecFactory(conf);
+
+    CompressionCodec codec = factory.getCodecByName(codecName);
+    assertNotNull(codecName + " is not found", codec);
+
+    Path outFile = new Path(dirTestWatcher.getRootDir().getAbsolutePath(), outFileName);
+    Path inFile = new Path(dirTestWatcher.getRootDir().getAbsolutePath(), fileName);
+
+    try (InputStream inputStream = new FileInputStream(inFile.toUri().toString());
+         OutputStream outputStream = codec.createOutputStream(fs.create(outFile))) {
+      IOUtils.copyBytes(inputStream, outputStream, fs.getConf(), false);
+    }
   }
 }

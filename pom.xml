@@ -170,7 +170,7 @@
     <repository>
       <id>conjars</id>
       <name>Conjars</name>
-      <url>http://conjars.org/repo</url>
+      <url>https://conjars.org/repo</url>
       <layout>default</layout>
       <releases>
         <enabled>true</enabled>
@@ -359,6 +359,7 @@
             <exclude>**/*.pcap</exclude>
             <exclude>**/*.log1</exclude>
             <exclude>**/*.log2</exclude>
+            <exclude>**/*.sav</exclude>
             <exclude>**/*.h5</exclude>
             <exclude>**/*.sqllog</exclude>
             <exclude>**/*.sqllog2</exclude>
@@ -665,6 +666,7 @@
               <exclude>**/*.woff2</exclude>
               <exclude>**/*.ks</exclude>
               <exclude>**/*.pcap</exclude>
+              <exclude>**/*.sav</exclude>
               <exclude>**/*.log1</exclude>
               <exclude>**/*.log2</exclude>
               <exclude>**/*.h5</exclude>

@@ -390,6 +390,7 @@ enum CoreOperatorType : int {
   SHP_SUB_SCAN = 65,
   METADATA_HANDLER = 66,
   METADATA_CONTROLLER = 67,
+  SPSS_SUB_SCAN = 69,
   HTTP_SUB_SCAN = 70
 };
 bool CoreOperatorType_IsValid(int value);
