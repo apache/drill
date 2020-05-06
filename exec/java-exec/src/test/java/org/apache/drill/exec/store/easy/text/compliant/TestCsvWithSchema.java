@@ -321,8 +321,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           RowSet result = client.queryBuilder().sql(sql).rowSet();
           assertEquals(4, result.rowCount());
           result.clear();
-        } catch (RpcException e) {
-          assertTrue(e.getCause() instanceof UserRemoteException);
+        } catch (UserRemoteException e) {
           sawError = true;
           break;
         }

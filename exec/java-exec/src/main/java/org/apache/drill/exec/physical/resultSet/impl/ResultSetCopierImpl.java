@@ -18,14 +18,12 @@
 package org.apache.drill.exec.physical.resultSet.impl;
 
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.physical.impl.protocol.BatchAccessor;
+import org.apache.drill.exec.physical.resultSet.PullResultSetReader;
 import org.apache.drill.exec.physical.resultSet.ResultSetCopier;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.physical.resultSet.ResultSetReader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
@@ -40,6 +38,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
     BATCH_ACTIVE,
     NEW_SCHEMA,
     SCHEMA_PENDING,
+    END_OF_INPUT,
     CLOSED
   }
 
@@ -69,7 +68,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
   // Input state
 
   private int currentSchemaVersion = -1;
-  private final ResultSetReader resultSetReader;
+  private final PullResultSetReader resultSetReader;
   protected RowSetReader rowReader;
 
   // Output state
@@ -85,14 +84,14 @@ public class ResultSetCopierImpl implements ResultSetCopier {
   private CopyPair[] projection;
   private CopyAll activeCopy;
 
-  public ResultSetCopierImpl(BufferAllocator allocator, BatchAccessor inputBatch) {
-    this(allocator, inputBatch, new ResultSetOptionBuilder());
+  public ResultSetCopierImpl(BufferAllocator allocator, PullResultSetReader source) {
+    this(allocator, source, new ResultSetOptionBuilder());
   }
 
-  public ResultSetCopierImpl(BufferAllocator allocator, BatchAccessor inputBatch,
+  public ResultSetCopierImpl(BufferAllocator allocator, PullResultSetReader source,
       ResultSetOptionBuilder outputOptions) {
     this.allocator = allocator;
-    resultSetReader = new ResultSetReaderImpl(inputBatch);
+    resultSetReader = source;
     writerOptions = outputOptions;
     writerOptions.vectorCache(new ResultVectorCacheImpl(allocator));
     state = State.START;
@@ -104,7 +103,6 @@ public class ResultSetCopierImpl implements ResultSetCopier {
 
       // No schema yet. Defer real batch start until we see an input
       // batch.
-
       state = State.NO_SCHEMA;
       return;
     }
@@ -112,7 +110,6 @@ public class ResultSetCopierImpl implements ResultSetCopier {
     if (state == State.SCHEMA_PENDING) {
 
       // We have a pending new schema. Create new writers to match.
-
       createProjection();
     }
     resultSetWriter.startBatch();
@@ -120,67 +117,58 @@ public class ResultSetCopierImpl implements ResultSetCopier {
     if (isCopyPending()) {
 
       // Resume copying if a copy is active.
-
       copyBlock();
     }
   }
 
   @Override
-  public void startInputBatch() {
+  public boolean nextInputBatch() {
+    if (state == State.END_OF_INPUT) {
+      return false;
+    }
     Preconditions.checkState(state == State.NO_SCHEMA || state == State.NEW_SCHEMA ||
                              state == State.BATCH_ACTIVE,
         "Can only start input while in an output batch");
     Preconditions.checkState(!isCopyPending(),
         "Finish the pending copy before changing input");
 
-    bindInput();
+    if (!resultSetReader.next()) {
+      state = State.END_OF_INPUT;
+      return false;
+    }
+    rowReader = resultSetReader.reader();
 
     if (state == State.BATCH_ACTIVE) {
 
       // If no schema change, we are ready to copy.
-
-      if (currentSchemaVersion == resultSetReader.inputBatch().schemaVersion()) {
-        return;
+      if (currentSchemaVersion == resultSetReader.schemaVersion()) {
+        return true;
       }
 
       // The schema has changed. Handle it now or later.
-
       if (hasOutputRows()) {
 
         // Output batch has rows. Can't switch and bind inputs
         // until current batch is sent downstream.
-
         state = State.NEW_SCHEMA;
-        return;
+        return true;
       }
     }
 
     // The schema changed: first schema, or a change while a bath
     // is active, but is empty.
-
     if (state == State.NO_SCHEMA) {
       state = State.BATCH_ACTIVE;
     } else {
 
       // Discard the unused empty batch
-
       harvest().zeroVectors();
     }
     createProjection();
     resultSetWriter.startBatch();
 
     // Stay in the current state.
-  }
-
-  protected void bindInput() {
-    resultSetReader.start();
-    rowReader = resultSetReader.reader();
-  }
-
-  @Override
-  public void releaseInputBatch() {
-    Preconditions.checkState(state != State.CLOSED);
-    resultSetReader.release();
+    return true;
   }
 
   private void createProjection() {
@@ -190,14 +178,13 @@ public class ResultSetCopierImpl implements ResultSetCopier {
       // will tear down the whole show. But, the vector cache will
       // ensure that the new writer reuses any matching vectors from
       // the prior batch to provide vector persistence as Drill expects.
-
       resultSetWriter.close();
     }
-    TupleMetadata schema = MetadataUtils.fromFields(resultSetReader.inputBatch().schema());
+    TupleMetadata schema = resultSetReader.schema();
     writerOptions.readerSchema(schema);
     resultSetWriter = new ResultSetLoaderImpl(allocator, writerOptions.build());
     rowWriter = resultSetWriter.writer();
-    currentSchemaVersion = resultSetReader.inputBatch().schemaVersion();
+    currentSchemaVersion = resultSetReader.schemaVersion();
 
     int colCount = schema.size();
     projection = new CopyPair[colCount];
@@ -225,6 +212,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
     case BATCH_ACTIVE:
       return rowWriter.isFull();
     case NEW_SCHEMA:
+    case END_OF_INPUT:
       return true;
     default:
       return false;
@@ -288,7 +276,8 @@ public class ResultSetCopierImpl implements ResultSetCopier {
 
   @Override
   public VectorContainer harvest() {
-    Preconditions.checkState(state == State.BATCH_ACTIVE || state == State.NEW_SCHEMA);
+    Preconditions.checkState(state == State.BATCH_ACTIVE || state == State.NEW_SCHEMA ||
+                             state == State.END_OF_INPUT);
     VectorContainer output = resultSetWriter.harvest();
     state = (state == State.BATCH_ACTIVE)
         ? State.BETWEEN_BATCHES : State.SCHEMA_PENDING;

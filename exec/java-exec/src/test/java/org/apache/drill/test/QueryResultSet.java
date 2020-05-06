@@ -30,15 +30,14 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
  * a very easy way for tests to work with query data using the
  * row set tools.
  */
-
 public class QueryResultSet {
   private final BufferingQueryEventListener listener;
   private boolean eof;
-  private int recordCount = 0;
-  private int batchCount = 0;
-  private QueryId queryId = null;
+  private int recordCount;
+  private int batchCount;
+  private QueryId queryId;
   @SuppressWarnings("unused")
-  private QueryState state = null;
+  private QueryState state;
   final RecordBatchLoader loader;
 
   public QueryResultSet(BufferingQueryEventListener listener, BufferAllocator allocator) {
@@ -53,7 +52,6 @@ public class QueryResultSet {
    * @return the next batch as a row set, or null if EOF
    * @throws Exception on a server error
    */
-
   public DirectRowSet next() throws Exception {
     if (eof) {
       return null;
