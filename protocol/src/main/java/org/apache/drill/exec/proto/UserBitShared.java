@@ -686,6 +686,10 @@ public final class UserBitShared {
      */
     METADATA_CONTROLLER(67),
     /**
+     * <code>SPSS_SUB_SCAN = 69;</code>
+     */
+    SPSS_SUB_SCAN(69),
+    /**
      * <code>HTTP_SUB_SCAN = 70;</code>
      */
     HTTP_SUB_SCAN(70),
@@ -964,6 +968,10 @@ public final class UserBitShared {
      */
     public static final int METADATA_CONTROLLER_VALUE = 67;
     /**
+     * <code>SPSS_SUB_SCAN = 69;</code>
+     */
+    public static final int SPSS_SUB_SCAN_VALUE = 69;
+    /**
      * <code>HTTP_SUB_SCAN = 70;</code>
      */
     public static final int HTTP_SUB_SCAN_VALUE = 70;
@@ -1057,6 +1065,7 @@ public final class UserBitShared {
         case 65: return SHP_SUB_SCAN;
         case 66: return METADATA_HANDLER;
         case 67: return METADATA_CONTROLLER;
+        case 69: return SPSS_SUB_SCAN;
         case 70: return HTTP_SUB_SCAN;
         default: return null;
       }
@@ -29037,7 +29046,7 @@ public final class UserBitShared {
       "ATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000" +
       "\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014" +
       "\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022" +
-      "\032\n\026CANCELLATION_REQUESTED\020\006*\367\n\n\020CoreOper" +
+      "\032\n\026CANCELLATION_REQUESTED\020\006*\212\013\n\020CoreOper" +
       "atorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST" +
       "_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020" +
       "\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH" +
@@ -29072,11 +29081,12 @@ public final class UserBitShared {
       "MERGE\020=\022\021\n\rLTSV_SUB_SCAN\020>\022\021\n\rHDF5_SUB_S" +
       "CAN\020?\022\022\n\016EXCEL_SUB_SCAN\020@\022\020\n\014SHP_SUB_SCA" +
       "N\020A\022\024\n\020METADATA_HANDLER\020B\022\027\n\023METADATA_CO" +
-      "NTROLLER\020C\022\021\n\rHTTP_SUB_SCAN\020F*g\n\nSaslSta" +
-      "tus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n" +
-      "\020SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n" +
-      "\013SASL_FAILED\020\004B.\n\033org.apache.drill.exec." +
-      "protoB\rUserBitSharedH\001"
+      "NTROLLER\020C\022\021\n\rSPSS_SUB_SCAN\020E\022\021\n\rHTTP_SU" +
+      "B_SCAN\020F*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000" +
+      "\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020" +
+      "\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org" +
+      ".apache.drill.exec.protoB\rUserBitSharedH" +
+      "\001"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,

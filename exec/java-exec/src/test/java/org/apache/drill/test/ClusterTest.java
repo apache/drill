@@ -17,11 +17,11 @@
  */
 package org.apache.drill.test;
 
-import java.io.IOException;
-
 import org.apache.drill.common.AutoCloseables;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
+
+import java.io.IOException;
 
 /**
  * Base class for tests that use a single cluster fixture for a set of
