@@ -22,11 +22,11 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.schema.impl.AbstractSchema;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -46,12 +47,14 @@ import java.util.List;
 public class DynamicRootSchema extends DynamicSchema {
   private static final Logger logger = LoggerFactory.getLogger(DynamicRootSchema.class);
 
+  private static final String ROOT_SCHEMA_NAME = "";
+
   private final SchemaConfig schemaConfig;
   private final StoragePluginRegistry storages;
 
   /** Creates a root schema. */
   DynamicRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig) {
-    super(null, new RootSchema(), "");
+    super(null, new RootSchema(), ROOT_SCHEMA_NAME);
     this.schemaConfig = schemaConfig;
     this.storages = storages;
   }
@@ -131,6 +134,16 @@ public class DynamicRootSchema extends DynamicSchema {
   }
 
   static class RootSchema extends AbstractSchema {
+
+    public RootSchema() {
+      super(Collections.emptyList(), ROOT_SCHEMA_NAME);
+    }
+
+    @Override
+    public String getTypeName() {
+      return ROOT_SCHEMA_NAME;
+    }
+
     @Override public Expression getExpression(SchemaPlus parentSchema,
                                               String name) {
       return Expressions.call(

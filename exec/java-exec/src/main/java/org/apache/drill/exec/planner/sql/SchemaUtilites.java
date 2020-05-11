@@ -216,7 +216,7 @@ public class SchemaUtilites {
       throwSchemaNotFoundException(defaultSchema, SCHEMA_PATH_JOINER.join(schemaPath));
     }
 
-    if (isRootSchema(schema)) {
+    if (checkMutable && isRootSchema(schema)) {
       throw UserException.validationError()
           .message("Root schema is immutable. Drill does not allow creating or deleting tables or views in the root schema. " +
               "Select a schema using 'USE schema' command.")
@@ -224,7 +224,7 @@ public class SchemaUtilites {
     }
 
     final AbstractSchema drillSchema = unwrapAsDrillSchemaInstance(schema);
-    if (!drillSchema.isMutable()) {
+    if (checkMutable && !drillSchema.isMutable()) {
       throw UserException.validationError()
           .message("Unable to create or drop objects. Schema [%s] is immutable.", getSchemaPath(schema))
           .build(logger);
