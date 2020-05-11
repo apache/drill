@@ -32,7 +32,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
     <jar.finalName>${project.name}</jar.finalName>
     <custom.buildDirectory>${project.basedir}/target</custom.buildDirectory>
-    <drill.version>1.13.0</drill.version>
+    <drill.version>1.17.0</drill.version>
     <include.files>**/*.java</include.files>
     <include.resources>**/*.conf</include.resources>
   </properties>
