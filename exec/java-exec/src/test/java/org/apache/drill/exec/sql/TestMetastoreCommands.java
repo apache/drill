@@ -73,11 +73,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @Category({SlowTest.class, MetastoreTest.class})
 public class TestMetastoreCommands extends ClusterTest {
@@ -3493,6 +3496,39 @@ public class TestMetastoreCommands extends ClusterTest {
 
     thrown.expect(UserRemoteException.class);
     run("analyze table table(dfs.tmp.`%s` (type => 'parquet', autoCorrectCorruptDates => false, enableStringsSignedMinMax=>false)) DROP METADATA", tableName);
+  }
+
+  @Test
+  public void testAnalyzeWithClassPathSystem() throws Exception {
+    try {
+      run("analyze table cp.`employee.json` refresh metadata");
+      fail();
+    } catch (UserRemoteException e) {
+      assertThat(e.getMessage(), containsString("ClassPathFileSystem doesn't currently support listing files"));
+    }
+  }
+
+  @Test
+  public void testAnalyzeWithRootSchema() throws Exception {
+    try {
+      run("analyze table t refresh metadata");
+      fail();
+    } catch (UserRemoteException e) {
+      assertThat(e.getMessage(), containsString("VALIDATION ERROR: No table with given name [t] exists in schema []"));
+    }
+  }
+
+  @Test
+  public void testAnalyzeWithNonWritableWorkspace() throws Exception {
+    String tableName = "alltypes_optional";
+    String workspaceName = "immutable";
+    File table = dirTestWatcher.copyResourceToRoot(
+        Paths.get("parquet", "alltypes_optional.parquet"), Paths.get(workspaceName, tableName));
+
+    cluster.defineImmutableWorkspace("dfs", workspaceName,
+        table.getAbsoluteFile().getParent(), null, null);
+
+    run("analyze table dfs.%s.%s refresh metadata", workspaceName, tableName);
   }
 
   public static <T> ColumnStatistics<T> getColumnStatistics(T minValue, T maxValue,

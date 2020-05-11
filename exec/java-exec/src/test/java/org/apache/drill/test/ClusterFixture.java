@@ -481,9 +481,19 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   public void defineWorkspace(String pluginName, String schemaName, String path,
       String defaultFormat, FormatPluginConfig format) {
+    defineWorkspace(pluginName, schemaName, path, defaultFormat, format, true);
+  }
+
+  public void defineImmutableWorkspace(String pluginName, String schemaName, String path,
+      String defaultFormat, FormatPluginConfig format) {
+    defineWorkspace(pluginName, schemaName, path, defaultFormat, format, false);
+  }
+
+  private void defineWorkspace(String pluginName, String schemaName, String path,
+      String defaultFormat, FormatPluginConfig format, boolean writable) {
     for (Drillbit bit : drillbits()) {
       try {
-        defineWorkspace(bit, pluginName, schemaName, path, defaultFormat, format);
+        defineWorkspace(bit, pluginName, schemaName, path, defaultFormat, format, writable);
       } catch (PluginException e) {
         // This functionality is supposed to work in tests. Change
         // exception to unchecked to make test code simpler.
@@ -496,11 +506,11 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   }
 
   private void defineWorkspace(Drillbit drillbit, String pluginName,
-      String schemaName, String path, String defaultFormat, FormatPluginConfig format)
+      String schemaName, String path, String defaultFormat, FormatPluginConfig format, boolean writable)
       throws PluginException {
     final StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
     final FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getStoredConfig(pluginName);
-    final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(path, true, defaultFormat, false);
+    final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(path, writable, defaultFormat, false);
 
     Map<String, WorkspaceConfig> newWorkspaces = new HashMap<>();
     Optional.ofNullable(pluginConfig.getWorkspaces())
