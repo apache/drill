@@ -17,13 +17,14 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Clause;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -34,17 +35,14 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JacksonInject;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 @JsonTypeName("cassandra-subscan")
@@ -60,6 +58,9 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
   @JsonProperty
   private final List<CassandraSubScanSpec> chunkScanSpecList;
 
+  @JsonProperty
+  private final int maxRecords;
+
   @JsonIgnore
   private final CassandraStoragePlugin cassandraStoragePlugin;
 
@@ -74,29 +75,34 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
   public CassandraSubScan(@JacksonInject("registry") StoragePluginRegistry registry,
                           @JsonProperty("cassandraPluginConfig") StoragePluginConfig cassandraPluginConfig,
                           @JsonProperty("chunkScanSpecList") LinkedList<CassandraSubScanSpec> chunkScanSpecList,
-                          @JsonProperty("columns") List<SchemaPath> columns
+                          @JsonProperty("columns") List<SchemaPath> columns,
+                          @JsonProperty("maxRecords") int maxRecords
                           ) throws ExecutionSetupException {
 
     this.columns = columns;
     this.cassandraPluginConfig = (CassandraStoragePluginConfig) cassandraPluginConfig;
     this.cassandraStoragePlugin = (CassandraStoragePlugin) registry.getPlugin(cassandraPluginConfig);
     this.chunkScanSpecList = chunkScanSpecList;
-  }
-
-  public CassandraSubScan(CassandraStoragePlugin storagePlugin,
-                          CassandraStoragePluginConfig storagePluginConfig,
-                          List<CassandraSubScanSpec> chunkScanSpecList,
-                          List<SchemaPath> columns) {
-    this.cassandraStoragePlugin = storagePlugin;
-    this.cassandraPluginConfig = storagePluginConfig;
-    this.columns = columns;
-    this.chunkScanSpecList = chunkScanSpecList;
+    this.maxRecords = maxRecords;
   }
 
   public CassandraSubScan(CassandraStoragePlugin storagePlugin,
                           CassandraStoragePluginConfig storagePluginConfig,
                           List<CassandraSubScanSpec> chunkScanSpecList,
                           List<SchemaPath> columns,
+                          int maxRecords) {
+    this.cassandraStoragePlugin = storagePlugin;
+    this.cassandraPluginConfig = storagePluginConfig;
+    this.columns = columns;
+    this.chunkScanSpecList = chunkScanSpecList;
+    this.maxRecords = maxRecords;
+  }
+
+  public CassandraSubScan(CassandraStoragePlugin storagePlugin,
+                          CassandraStoragePluginConfig storagePluginConfig,
+                          List<CassandraSubScanSpec> chunkScanSpecList,
+                          List<SchemaPath> columns,
+                          int maxRecords,
                           Cluster cluster,
                           Session session) {
     this.cassandraStoragePlugin = storagePlugin;
@@ -105,6 +111,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
     this.chunkScanSpecList = chunkScanSpecList;
     this.cluster = cluster;
     this.session = session;
+    this.maxRecords = maxRecords;
   }
 
   @Override
@@ -133,7 +140,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    return new CassandraSubScan(cassandraStoragePlugin, cassandraPluginConfig, chunkScanSpecList, columns, cluster, session);
+    return new CassandraSubScan(cassandraStoragePlugin, cassandraPluginConfig, chunkScanSpecList, columns, maxRecords,cluster, session);
   }
 
   @Override
@@ -148,7 +155,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
 
   public static class CassandraSubScanSpec  {
 
-    public  String keyspace;
+    public String keyspace;
 
     public String table;
 
@@ -159,6 +166,8 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
     public String startToken;
 
     public String endToken;
+
+    public int maxRecords;
 
     @JsonIgnore
     protected Cluster cluster;
@@ -177,6 +186,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
                                 @JsonProperty("startToken") String startToken,
                                 @JsonProperty("endToken") String endToken,
                                 @JacksonInject("filter") List<Clause> filter,
+                                @JsonProperty("maxRecords") int maxRecords,
                                 @JacksonInject Cluster cluster,
                                 @JacksonInject Session session) {
       this.keyspace = keyspace;
@@ -188,6 +198,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
       this.filter = filter;
       this.session = session;
       this.cluster = cluster;
+      this.maxRecords = maxRecords;
     }
 
     // Needed for Group Scan
@@ -223,6 +234,8 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
     public int getPort() {
       return port;
     }
+
+    public int getMaxRecords() { return  maxRecords;}
 
     public CassandraSubScanSpec setPort(int port) {
       this.port = port;
@@ -275,12 +288,13 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
         .field("startToken", startToken)
         .field("endToken", endToken)
         .field("filter", filter)
+        .field("maxRecords", maxRecords)
         .toString();
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(keyspace, table, hosts, port, startToken, endToken, filter);
+      return Objects.hash(keyspace, table, hosts, port, startToken, endToken, filter, maxRecords);
     }
 
     @Override
@@ -296,6 +310,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
         && Objects.equals(table, other.table)
         && Objects.equals(hosts, other.hosts)
         && Objects.equals(port, other.port)
+        && Objects.equals(maxRecords, other.maxRecords)
         && Objects.equals(startToken, other.startToken)
         && Objects.equals(endToken, other.endToken)
         && Objects.equals(filter, other.filter);

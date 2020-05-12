@@ -18,6 +18,40 @@
 
 package org.apache.drill.exec.store.cassandra;
 
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Host;
+import com.datastax.driver.core.Metadata;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.EndpointAffinity;
+import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.cassandra.CassandraSubScan.CassandraSubScanSpec;
+import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.StandardCharsets;
@@ -33,42 +67,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Host;
-import com.datastax.driver.core.Metadata;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-
-import org.apache.drill.common.PlanStringBuilder;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.ScanStats;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.cassandra.CassandraSubScan.CassandraSubScanSpec;
-
-import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JacksonInject;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
-
 @JsonTypeName("cassandra-scan")
 public class CassandraGroupScan extends AbstractGroupScan implements DrillCassandraConstants {
   private static final Logger logger = LoggerFactory.getLogger(CassandraGroupScan.class);
@@ -81,44 +79,30 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
   };
 
   private static final Comparator<List<CassandraSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
-
   private String userName;
-
   private CassandraStoragePluginConfig storagePluginConfig;
-
   private List<SchemaPath> columns;
-
   private CassandraScanSpec cassandraScanSpec;
-
   private CassandraStoragePlugin storagePlugin;
-
   private Stopwatch watch = Stopwatch.createUnstarted();
-
   private Map<Integer, List<CassandraSubScanSpec>> endpointFragmentMapping;
-
   private Set<Host> keyspaceHosts;
-
   private int totalAssignmentsTobeDone;
-
   private boolean filterPushedDown = false;
-
   private Map<String, CassandraPartitionToken> hostTokenMapping = new HashMap<>();
-
   private long scanSizeInBytes = 0;
-
   private Metadata metadata;
-
   private Cluster cluster;
-
   private Session session;
-
   private ResultSet rs;
+  private int maxResults;
 
   @JsonCreator
   public CassandraGroupScan(@JsonProperty("userName") String userName,
                             @JsonProperty("cassandraScanSpec") CassandraScanSpec cassandraScanSpec,
                             @JsonProperty("storage") CassandraStoragePluginConfig storagePluginConfig,
                             @JsonProperty("columns") List<SchemaPath> columns,
+                            @JsonProperty("maxResults") int maxResults,
                             @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this(userName, (CassandraStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), cassandraScanSpec, columns);
   }
@@ -129,6 +113,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
     this.storagePluginConfig = storagePlugin.getConfig();
     this.cassandraScanSpec = scanSpec;
     this.columns = columns == null || columns.size() == 0 ? ALL_COLUMNS : columns;
+    this.maxResults = maxResults;
     init();
   }
 
@@ -150,6 +135,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
     this.totalAssignmentsTobeDone = that.totalAssignmentsTobeDone;
     this.hostTokenMapping = that.hostTokenMapping;
     this.scanSizeInBytes = that.scanSizeInBytes;
+    this.maxResults = that.maxResults;
   }
 
   @Override
@@ -349,7 +335,8 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
 
 
     /* no slot should be empty at this point */
-    assert (minHeap.peek() == null || minHeap.peek().size() > 0) : String.format("Unable to assign tasks to some endpoints.\nEndpoints: {}.\nAssignment Map: {}.", incomingEndpoints, endpointFragmentMapping.toString());
+    assert (minHeap.peek() == null || minHeap.peek().size() > 0) :
+      String.format("Unable to assign tasks to some endpoints.\nEndpoints: {}.\nAssignment Map: {}.", incomingEndpoints, endpointFragmentMapping.toString());
 
     logger.debug("Built assignment map in {} µs.\nEndpoints: {}.\nAssignment Map: {}", watch.elapsed(TimeUnit.NANOSECONDS) / 1000, incomingEndpoints, endpointFragmentMapping.toString());
 
@@ -371,14 +358,10 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
 
   }
 
-  private boolean isNullOrEmpty(byte[] key) {
-    return key == null || key.length == 0;
-  }
-
   @Override
   public CassandraSubScan getSpecificScan(int minorFragmentId) {
     assert minorFragmentId < endpointFragmentMapping.size() : String.format("Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(), minorFragmentId);
-    return new CassandraSubScan(storagePlugin, storagePluginConfig, endpointFragmentMapping.get(minorFragmentId), columns, cluster, session);
+    return new CassandraSubScan(storagePlugin, storagePluginConfig, endpointFragmentMapping.get(minorFragmentId), columns, maxResults, cluster, session);
   }
 
   @Override
@@ -452,6 +435,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
     return new PlanStringBuilder(this)
       .field("CassandraScanSpec", cassandraScanSpec)
       .field("columns", columns)
+      .field("maxResults", maxResults)
       .toString();
   }
 
@@ -468,6 +452,26 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
   @JsonProperty
   public CassandraScanSpec getCassandraScanSpec() {
     return cassandraScanSpec;
+  }
+
+  @JsonProperty("maxResults")
+  public int getMaxResults() {
+    return maxResults;
+  }
+
+  @Override
+  public boolean supportsLimitPushdown() {
+    return true;
+  }
+
+  /**
+   * By default, return null to indicate row count based prune is not supported.
+   * Each group scan subclass should override, if it supports row count based prune.
+   */
+  @Override
+  public GroupScan applyLimit(int maxResults) {
+    this.maxResults = maxResults;
+    return null;
   }
 
   @Override

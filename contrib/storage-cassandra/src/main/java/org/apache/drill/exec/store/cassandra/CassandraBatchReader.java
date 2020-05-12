@@ -235,6 +235,13 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
         where = where.and(filter);
       }
     }
+
+    // Push down limit
+    if (subScanSpec.maxRecords > 0) {
+      logger.debug("Applying limit {}", subScanSpec.maxRecords);
+      where.limit(subScanSpec.maxRecords);
+    }
+
     return where;
   }
 
@@ -355,12 +362,14 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
     final ScalarWriter columnWriter;
 
+    int columnIndex;  // TODO Add column index
+
     public CassandraColumnWriter(String colName, ScalarWriter writer) {
       this.colName = colName;
       this.columnWriter = writer;
     }
 
-    public void load(Row row) {};
+    public void load(Row row) {}
   }
 
   public static class StringColumnWriter extends CassandraColumnWriter {
