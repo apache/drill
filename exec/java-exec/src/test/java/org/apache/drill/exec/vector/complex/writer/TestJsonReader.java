@@ -782,4 +782,26 @@ public class TestJsonReader extends BaseTestQuery {
       resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
     }
   }
+
+  @Test
+  public void testConvertFromJson() throws Exception {
+    String fileName = "table.tsv";
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), fileName)))) {
+      for (int i = 0; i < JSONRecordReader.DEFAULT_ROWS_PER_BATCH; i++) {
+        writer.write("{\"id\":\"1\"}\n");
+      }
+      writer.write("{\"id\":\"2\",\"v\":[\"abc\"]}");
+    }
+
+    String sql = "SELECT t.m.id AS id, t.m.v[0] v FROM \n" +
+        "(SELECT convert_from(columns[0], 'json') AS m FROM dfs.`%s`) t\n" +
+        "where t.m.id='2'";
+
+    testBuilder()
+        .sqlQuery(sql, fileName)
+        .unOrdered()
+        .baselineColumns("id", "v")
+        .baselineValues("2", "abc")
+        .go();
+  }
 }
