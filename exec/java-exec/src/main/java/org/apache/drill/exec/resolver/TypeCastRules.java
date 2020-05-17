@@ -877,8 +877,10 @@ public class TypeCastRules {
       for (int i = varArgIndex; i < numOfArgs; i++) {
         if (holder.isFieldReader(varArgIndex)) {
           break;
-        } else if (holder.getParamMajorType(varArgIndex).getMode() != argumentTypes.get(i).getMode()) {
+        } else if (holder.getParamMajorType(varArgIndex).getMode() == DataMode.REQUIRED
+            && holder.getParamMajorType(varArgIndex).getMode() != argumentTypes.get(i).getMode()) {
           // prohibit using vararg functions for types with different nullability
+          // if function accepts required arguments, but provided optional
           return -1;
         }
       }

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.fn.impl;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -99,10 +98,22 @@ public class TestVarArgFunctions extends ClusterTest {
 
   @Test
   public void testVarargUdfWithDifferentDataModes() throws Exception {
-    thrown.expect(UserException.class);
-    thrown.expectMessage(containsString("Missing function implementation: [concat_varchar"));
-    run("SELECT concat_varchar(first_name, ' ', last_name) as c1\n" +
-        "from cp.`employee.json` limit 10");
+    testBuilder()
+        .sqlQuery("SELECT concat_varchar(first_name, ' ', last_name) as c1\n" +
+          "from cp.`employee.json` limit 10")
+        .unOrdered()
+        .baselineColumns("c1")
+        .baselineValues("Sheri Nowmer")
+        .baselineValues("Derrick Whelply")
+        .baselineValues("Michael Spence")
+        .baselineValues("Maya Gutierrez")
+        .baselineValues("Roberta Damstra")
+        .baselineValues("Rebecca Kanagaki")
+        .baselineValues("Kim Brunner")
+        .baselineValues("Brenda Blumberg")
+        .baselineValues("Darren Stanz")
+        .baselineValues("Jonathan Murraiin")
+        .go();
   }
 
   @Test

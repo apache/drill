@@ -465,7 +465,7 @@ public class ExpressionTreeMaterializer {
       for (int i = 0; i < call.argCount(); ++i) {
         LogicalExpression currentArg = call.arg(i);
 
-        TypeProtos.MajorType parmType = matchedFuncHolder.getParamMajorType(i);
+        TypeProtos.MajorType paramType = matchedFuncHolder.getParamMajorType(i);
 
         // Case 1: If  1) the argument is NullExpression
         //             2) the minor type of parameter of matchedFuncHolder is not LATE
@@ -473,24 +473,27 @@ public class ExpressionTreeMaterializer {
         //             3) the parameter of matchedFuncHolder allows null input, or func's null_handling
         //                is NULL_IF_NULL (means null and non-null are exchangeable).
         //         then replace NullExpression with a TypedNullConstant
-        if (currentArg.equals(NullExpression.INSTANCE) && !MinorType.LATE.equals(parmType.getMinorType()) &&
-            (TypeProtos.DataMode.OPTIONAL.equals(parmType.getMode()) ||
+        if (currentArg.equals(NullExpression.INSTANCE) && !MinorType.LATE.equals(paramType.getMinorType()) &&
+            (TypeProtos.DataMode.OPTIONAL.equals(paramType.getMode()) ||
             matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL)) {
           // Case 1: argument is a null expression, convert it to a typed null
-          argsWithCast.add(new TypedNullConstant(parmType));
-        } else if (Types.softEquals(parmType, currentArg.getMajorType(),
+          argsWithCast.add(new TypedNullConstant(paramType));
+        } else if (Types.softEquals(paramType, currentArg.getMajorType(),
             matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) ||
                    matchedFuncHolder.isFieldReader(i)) {
+          currentArg = addNullableCast(currentArg, paramType, functionLookupContext);
           // Case 2: argument and parameter matches, or parameter is FieldReader.  Do nothing.
           argsWithCast.add(currentArg);
         } else {
           // Case 3: insert cast if param type is different from arg type.
-          if (Types.isDecimalType(parmType)) {
+          if (Types.isDecimalType(paramType)) {
             // We are implicitly promoting a decimal type, set the required scale and precision
-            parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
+            paramType = MajorType.newBuilder().setMinorType(paramType.getMinorType()).setMode(paramType.getMode()).
                 setScale(currentArg.getMajorType().getScale()).setPrecision(computePrecision(currentArg)).build();
           }
-          argsWithCast.add(addCastExpression(currentArg, parmType, functionLookupContext, errorCollector));
+          LogicalExpression castExpression = addCastExpression(currentArg, paramType, functionLookupContext, errorCollector);
+          castExpression = addNullableCast(castExpression, paramType, functionLookupContext);
+          argsWithCast.add(castExpression);
         }
       }
 
@@ -509,6 +512,27 @@ public class ExpressionTreeMaterializer {
         return addCastExpression(funcExpr, majorType, functionLookupContext, errorCollector);
       }
       return funcExpr;
+    }
+
+    /**
+     * Adds cast to {@code DataMode.OPTIONAL} data mode if specified {@code LogicalExpression argument}
+     * has {@code DataMode.REQUIRED} data mode and specified {@code MajorType targetParamType}
+     * has {@code DataMode.OPTIONAL} one.
+     *
+     * @param argument              argument expression
+     * @param functionParamType     type of function argument
+     * @param functionLookupContext function lookup context
+     * @return expression with the added cast to {@code DataMode.OPTIONAL} data mode if required,
+     * otherwise unchanged {@code LogicalExpression argument}
+     */
+    private LogicalExpression addNullableCast(LogicalExpression argument, MajorType functionParamType,
+        FunctionLookupContext functionLookupContext) {
+      if (functionParamType.getMode() == DataMode.OPTIONAL
+          && argument.getMajorType().getMode() == DataMode.REQUIRED) {
+        // convert argument to nullable type if function require nullable argument
+        argument = convertToNullableType(argument, functionParamType.getMinorType(), functionLookupContext, errorCollector);
+      }
+      return argument;
     }
 
     private LogicalExpression bindNonDrillFunc(FunctionCall call,
