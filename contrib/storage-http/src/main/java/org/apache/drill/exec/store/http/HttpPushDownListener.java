@@ -17,12 +17,6 @@
  */
 package org.apache.drill.exec.store.http;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.common.map.CaseInsensitiveMap;
@@ -30,12 +24,18 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.http.filter.ExprNode;
-import org.apache.drill.exec.store.http.filter.ExprNode.AndNode;
-import org.apache.drill.exec.store.http.filter.ExprNode.ColRelOpConstNode;
-import org.apache.drill.exec.store.http.filter.ExprNode.OrNode;
-import org.apache.drill.exec.store.http.filter.FilterPushDownListener;
-import org.apache.drill.exec.store.http.filter.FilterPushDownStrategy;
+import org.apache.drill.exec.store.base.filter.ExprNode;
+import org.apache.drill.exec.store.base.filter.ExprNode.AndNode;
+import org.apache.drill.exec.store.base.filter.ExprNode.ColRelOpConstNode;
+import org.apache.drill.exec.store.base.filter.ExprNode.OrNode;
+import org.apache.drill.exec.store.base.filter.FilterPushDownListener;
+import org.apache.drill.exec.store.base.filter.FilterPushDownStrategy;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The HTTP storage plugin accepts filters which are:

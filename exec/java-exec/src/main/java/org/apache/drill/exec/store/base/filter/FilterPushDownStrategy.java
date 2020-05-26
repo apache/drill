@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.http.filter;
+package org.apache.drill.exec.store.base.filter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,8 +42,8 @@ import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.FilterPrel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.http.filter.ExprNode.AndNode;
-import org.apache.drill.exec.store.http.filter.FilterPushDownListener.ScanPushDownListener;
+import org.apache.drill.exec.store.base.filter.ExprNode.AndNode;
+import org.apache.drill.exec.store.base.filter.FilterPushDownListener.ScanPushDownListener;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 /**
