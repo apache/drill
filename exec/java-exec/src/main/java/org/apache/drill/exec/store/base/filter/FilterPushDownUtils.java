@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.http.filter;
+package org.apache.drill.exec.store.base.filter;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,9 +41,9 @@ import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.planner.PlannerPhase;
-import org.apache.drill.exec.store.http.filter.ExprNode.AndNode;
-import org.apache.drill.exec.store.http.filter.ExprNode.ColRelOpConstNode;
-import org.apache.drill.exec.store.http.filter.ExprNode.OrNode;
+import org.apache.drill.exec.store.base.filter.ExprNode.AndNode;
+import org.apache.drill.exec.store.base.filter.ExprNode.ColRelOpConstNode;
+import org.apache.drill.exec.store.base.filter.ExprNode.OrNode;
 
 public class FilterPushDownUtils {
 

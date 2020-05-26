@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.http.filter;
+package org.apache.drill.exec.store.base.filter;
 
 import java.util.List;
 
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.store.http.filter.ExprNode.AndNode;
+import org.apache.drill.exec.store.base.filter.ExprNode.AndNode;
 
 /**
  * Call-back (listener) implementation for a push-down filter.

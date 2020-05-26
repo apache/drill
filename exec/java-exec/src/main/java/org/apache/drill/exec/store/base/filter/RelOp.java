@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.http.filter;
+package org.apache.drill.exec.store.base.filter;
 
 /**
  * Fixed set of Drill relational operators, using well-defined
