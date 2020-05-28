@@ -23,10 +23,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.StoragePluginConfigBase;
+import org.apache.drill.shaded.guava.com.google.common.base.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.List;
-import org.apache.drill.shaded.guava.com.google.common.base.Objects;
 
 @JsonTypeName(CassandraStoragePluginConfig.NAME)
 public class CassandraStoragePluginConfig extends StoragePluginConfigBase {
@@ -96,7 +97,7 @@ public class CassandraStoragePluginConfig extends StoragePluginConfigBase {
       .field("hosts", hosts)
       .field("port", port)
       .field("username", username)
-      .field("password", password)  // This doesn't seem like a good idea to be able to view unmasked creds via DESCRIBE queries
+      .maskedField("password", password)
       .toString();
   }
 }

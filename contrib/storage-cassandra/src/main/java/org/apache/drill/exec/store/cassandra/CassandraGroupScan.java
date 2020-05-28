@@ -355,7 +355,6 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
       .setPort(storagePluginConfig.getPort())
       .setStartToken(token != null ? token.getLow() : null)
       .setEndToken(token != null ? token.getHigh() : null);
-
   }
 
   @Override

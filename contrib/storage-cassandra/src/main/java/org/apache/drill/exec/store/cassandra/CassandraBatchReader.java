@@ -54,27 +54,16 @@ import java.util.List;
 public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private static final Logger logger = LoggerFactory.getLogger(CassandraBatchReader.class);
-
   private final CassandraStoragePluginConfig config;
-
   private final CassandraStoragePlugin plugin;
-
   private final CassandraSubScan subScan;
-
   private final List<SchemaPath> projectedColumns;
-
   private final List<CassandraColumnWriter> cassandraColumnWriters;
-
   private Cluster cluster;
-
   private Session session;
-
   private CassandraSubScanSpec subScanSpec;
-
   private RowSetLoader rowWriter;
-
   private ResultSet cassandraResultset;
-
   private Row firstRow;
 
 
@@ -359,9 +348,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   public abstract static class CassandraColumnWriter {
 
     final String colName;
-
     final ScalarWriter columnWriter;
-
     int columnIndex;  // TODO Add column index
 
     public CassandraColumnWriter(String colName, ScalarWriter writer) {
