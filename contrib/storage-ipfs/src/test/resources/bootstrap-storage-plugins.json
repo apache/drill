@@ -1,0 +1,29 @@
+{
+  "storage": {
+    "ipfs": {
+      "type": "ipfs",
+      "host": "127.0.0.1",
+      "port": 5001,
+      "max-nodes-per-leaf": 1,
+      "ipfs-timeouts": {
+        "find-provider": 1,
+        "find-peer-info": 1,
+        "fetch-data": 1
+      },
+      "ipfs-caches": {
+        "peer": {
+          "size": 2,
+          "ttl": 30
+        },
+        "provider": {
+          "size": 2,
+          "ttl": 30
+        }
+      },
+      "groupscan-worker-threads": 5,
+      "formats": null,
+      "enabled": true
+    }
+  }
+}
+  
