@@ -37,23 +37,14 @@ import java.util.Objects;
 @JsonTypeName(HttpStoragePluginConfig.NAME)
 public class HttpStoragePluginConfig extends StoragePluginConfigBase {
   private static final Logger logger = LoggerFactory.getLogger(HttpStoragePluginConfig.class);
-
   public static final String NAME = "http";
-
   public final Map<String, HttpApiConfig> connections;
-
   public final boolean cacheResults;
-
   public final String proxyHost;
-
   public final int proxyPort;
-
   public final String proxyType;
-
   public final String proxyUsername;
-
   public final String proxyPassword;
-
   /**
    * Timeout in seconds.
    */

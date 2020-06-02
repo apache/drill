@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.http;
 
-import java.util.List;
-
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -35,6 +33,8 @@ import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+
+import java.util.List;
 
 public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
@@ -92,11 +92,18 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
     @Override
     public ManagedReader<SchemaNegotiator> next() {
 
+      // Get the expected input type
+      String inputType = subScan.tableSpec().connectionConfig().inputType();
+
       // Only a single scan (in a single thread)
       if (count++ == 0) {
-        return new HttpBatchReader(subScan);
-      } else {
-        return null;
+        if (inputType.equalsIgnoreCase("csv")) {
+          return new HttpCSVBatchReader(subScan);
+        } else {
+          return new HttpBatchReader(subScan);
+        }
       }
+      return null;
     }
-  }}
+  }
+}
