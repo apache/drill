@@ -17,11 +17,9 @@
  */
 package org.apache.drill.exec.store.http;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-
+import com.typesafe.config.Config;
+import okhttp3.HttpUrl;
+import okhttp3.HttpUrl.Builder;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
@@ -35,10 +33,10 @@ import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 
-import com.typesafe.config.Config;
-
-import okhttp3.HttpUrl;
-import okhttp3.HttpUrl.Builder;
+import java.io.File;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
 public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   private final HttpSubScan subScan;
@@ -95,7 +93,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     return true; // Please read the first batch
   }
 
-  private HttpUrl buildUrl() {
+  protected HttpUrl buildUrl() {
     HttpApiConfig apiConfig = subScan.tableSpec().connectionConfig();
     String baseUrl = apiConfig.url();
 
@@ -115,7 +113,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
    * Convert equality filter conditions into HTTP query parameters
    * Parameters must appear in the order defined in the config.
    */
-  private void addFilters(Builder urlBuilder, List<String> params,
+  protected void addFilters(Builder urlBuilder, List<String> params,
       Map<String, String> filters) {
     for (String param : params) {
       String value = filters.get(param);
@@ -125,7 +123,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  private HttpProxyConfig proxySettings(Config drillConfig, HttpUrl url) {
+  protected HttpProxyConfig proxySettings(Config drillConfig, HttpUrl url) {
     final HttpStoragePluginConfig config = subScan.tableSpec().config();
     final ProxyBuilder builder = HttpProxyConfig.builder()
         .fromConfigForURL(drillConfig, url.toString());
@@ -141,7 +139,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     return builder.build();
   }
 
- @Override
+  @Override
   public boolean next() {
     return jsonLoader.readBatch();
   }

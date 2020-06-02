@@ -67,6 +67,8 @@ public class HttpApiConfig {
   private final String authType;
   private final String userName;
   private final String password;
+  private final String inputType;
+
 
   public enum HttpMethod {
     /**
@@ -88,7 +90,8 @@ public class HttpApiConfig {
                        @JsonProperty("postBody") String postBody,
                        @JsonProperty("params") List<String> params,
                        @JsonProperty("dataPath") String dataPath,
-                       @JsonProperty("requireTail") Boolean requireTail) {
+                       @JsonProperty("requireTail") Boolean requireTail,
+                       @JsonProperty("inputType") String inputType) {
 
     this.headers = headers;
     this.method = Strings.isNullOrEmpty(method)
@@ -125,6 +128,9 @@ public class HttpApiConfig {
 
     // Default to true for backward compatibility with first PR.
     this.requireTail = requireTail == null ? true : requireTail;
+
+    this.inputType = inputType == null
+      ? "json" : inputType.trim().toLowerCase();
   }
 
   @JsonProperty("url")
@@ -162,10 +168,13 @@ public class HttpApiConfig {
     return HttpMethod.valueOf(this.method());
   }
 
+  @JsonProperty("inputType")
+  public String inputType() { return inputType; }
+
   @Override
   public int hashCode() {
     return Objects.hash(url, method, requireTail, params, headers,
-        authType, userName, password, postBody);
+        authType, userName, password, postBody, inputType);
   }
 
   @Override
@@ -181,6 +190,7 @@ public class HttpApiConfig {
       .maskedField("password", password)
       .field("postBody", postBody)
       .field("filterFields", params)
+      .field("inputType", inputType)
       .toString();
   }
 
@@ -202,6 +212,7 @@ public class HttpApiConfig {
       && Objects.equals(postBody, other.postBody)
       && Objects.equals(params, other.params)
       && Objects.equals(dataPath, other.dataPath)
-      && Objects.equals(requireTail, other.requireTail);
+      && Objects.equals(requireTail, other.requireTail)
+      && Objects.equals(inputType, other.inputType);
   }
 }

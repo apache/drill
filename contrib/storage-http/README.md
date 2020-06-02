@@ -500,7 +500,7 @@ ORDER BY issue_count DESC
    supported). Join pushdown has the potential to improve performance if you use the HTTP service
    joined to another table.
 
-4. This plugin only reads JSON responses.
+4. This plugin only reads JSON and CSV responses.
 
 5. `POST` bodies can only be in the format of key/value pairs. Some APIs accept
     JSON based `POST` bodies but this is not currently supported.
