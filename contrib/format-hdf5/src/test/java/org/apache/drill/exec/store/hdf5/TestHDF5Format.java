@@ -20,15 +20,15 @@ package org.apache.drill.exec.store.hdf5;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.test.ClusterFixtureBuilder;
-import org.apache.drill.test.ClusterTest;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
-import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -37,10 +37,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import static org.apache.drill.test.TestUtils.generateCompressedFile;
 
-import static org.junit.Assert.assertEquals;
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
+import static org.junit.Assert.assertEquals;
 
 @Category(RowSetTests.class)
 public class TestHDF5Format extends ClusterTest {

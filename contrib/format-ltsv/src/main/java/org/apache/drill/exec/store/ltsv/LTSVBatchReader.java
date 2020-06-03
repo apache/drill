@@ -17,7 +17,7 @@
  */
 
 package org.apache.drill.exec.store.ltsv;
-import com.github.lonely-lockley.ltsv-parser.LtsvParser;
+import com.github.lolo.ltsv.LtsvParser;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.store.easy.EasyEVFBatchReader;
 import java.util.Iterator;

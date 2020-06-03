@@ -37,7 +37,7 @@ import java.nio.file.Paths;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.apache.drill.test.TestUtils.generateCompressedFile;
+import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 
 @Category(RowSetTests.class)
 public class TestLTSVRecordReader extends ClusterTest {
@@ -71,8 +71,8 @@ public class TestLTSVRecordReader extends ClusterTest {
 
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("xxx.xxx.xxx.xxx", "-", "GET /v1/xxx HTTP/1.1", "200", "4968", "-", "Java/1.8.0_131", "2.532", "2.532", "api.example.com")
-      .addRow("xxx.xxx.xxx.xxx", "-", "GET /v1/yyy HTTP/1.1", "200", "412", "-", "Java/1.8.0_201", "3.580", "3.580", "api.example.com")
+      .addRow("-", "api.example.com", "4968", "-", "2.532", "2.532", "xxx.xxx.xxx.xxx", "Java/1.8.0_131", "GET /v1/xxx HTTP/1.1", "200")
+      .addRow("-", "api.example.com", "412", "-", "3.580", "3.580", "xxx.xxx.xxx.xxx", "Java/1.8.0_201", "GET /v1/yyy HTTP/1.1", "200")
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
@@ -118,7 +118,7 @@ public class TestLTSVRecordReader extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("xxx.xxx.xxx.xxx", "-", "GET /v1/yyy HTTP/1.1", "200", "412", "-", "Java/1.8.0_201", "3.580", "3.580", "api.example.com")
+      .addRow( "-", "api.example.com", "412", "-", "3.580", "3.580", "xxx.xxx.xxx.xxx", "Java/1.8.0_201", "GET /v1/yyy HTTP/1.1", "200" )
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
@@ -156,6 +156,7 @@ public class TestLTSVRecordReader extends ClusterTest {
 
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
+    results.print();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("ua",  TypeProtos.MinorType.VARCHAR)

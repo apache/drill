@@ -84,19 +84,12 @@ import java.nio.charset.StandardCharsets;
 public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private static final Logger logger = LoggerFactory.getLogger(EasyEVFBatchReader.class);
-
   public FileSplit split;
-
   public EasyEVFIterator fileIterator;
-
   public ResultSetLoader loader;
-
   private RowSetLoader rowWriter;
-
   public InputStream fsStream;
-
   public BufferedReader reader;
-
   protected CustomErrorContext errorContext;
 
   public RowSetLoader getRowWriter() {
@@ -118,6 +111,7 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
         .dataReadError(e)
         .message(String.format("Failed to open input file: %s", split.getPath()))
         .addContext(e.getMessage())
+        .addContext(errorContext)
         .build(logger);
     }
     return true;

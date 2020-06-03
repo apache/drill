@@ -36,19 +36,12 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
   private static final List<String> DEFAULT_EXTS = ImmutableList.of("ltsv");
 
   private final List<String> extensions;
-
   private final boolean lenientMode;
-
   private final char quoteCharacter;
-
   private final char kvDelimiter;
-
   private final char escapeCharacter;
-
   private final char entryDelimiter;
-
   private final char lineEnding;
-
 
   @JsonCreator
   public LTSVFormatPluginConfig(@JsonProperty("extensions") List<String> extensions,

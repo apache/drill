@@ -19,13 +19,11 @@
 package org.apache.drill.exec.store.ltsv;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.store.easy.EasyEVFIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -60,6 +58,10 @@ public class LTSVRecordIterator implements EasyEVFIterator {
    * finally recording it in the current Drill row.
    */
   private void processRow(Map<String, String> row) {
+    if (row.isEmpty()) {
+      return;
+    }
+
     for (Map.Entry<String,String> field : row.entrySet()) {
       LTSVBatchReader.writeStringColumn(rowWriter, field.getKey(), field.getValue());
       logger.debug("Mapping {} to {}", field.getKey(), field.getValue());
