@@ -150,9 +150,8 @@ public class TestLTSVRecordReader extends ClusterTest {
 
   @Test
   public void testSelectColumnWithCompressedFile() throws Exception {
-    generateCompressedFile("ltsv/simple.ltsv", "zip", "ltsv/simple.ltsv.zip" );
-
-    String sql = "SELECT ua, reqtime FROM dfs.`ltsv/simple.ltsv.zip`";
+    generateCompressedFile("ltsv/compressed.ltsv", "zip", "ltsv/compressed.ltsv.zip");
+    String sql = "SELECT ua, reqtime FROM dfs.`ltsv/compressed.ltsv.zip`";
 
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
@@ -188,6 +187,6 @@ public class TestLTSVRecordReader extends ClusterTest {
       .addRow("Java/1.8.0_201", "3.580")
       .build();
 
-    new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 }

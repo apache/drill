@@ -30,11 +30,8 @@ import java.util.Map;
 public class LTSVRecordIterator implements EasyEVFIterator {
 
   private static final Logger logger = LoggerFactory.getLogger(LTSVRecordIterator.class);
-
   private final RowSetLoader rowWriter;
-
   private final CustomErrorContext errorContext;
-
   private final Iterator<Map<String, String>> ltsvIterator;
 
   private int lineNumber;
@@ -45,8 +42,7 @@ public class LTSVRecordIterator implements EasyEVFIterator {
   }
 
   public boolean nextRow() {
-    if (ltsvIterator.hasNext()) {
-      processRow(ltsvIterator.next());
+    if (processRow(ltsvIterator.next())) {
       return true;
     } else {
       return false;
@@ -57,9 +53,9 @@ public class LTSVRecordIterator implements EasyEVFIterator {
    * Function processes one row of data, splitting it up first by tabs then splitting the key/value pairs
    * finally recording it in the current Drill row.
    */
-  private void processRow(Map<String, String> row) {
+  private boolean processRow(Map<String, String> row) {
     if (row.isEmpty()) {
-      return;
+      return false;
     }
 
     for (Map.Entry<String,String> field : row.entrySet()) {
@@ -70,5 +66,6 @@ public class LTSVRecordIterator implements EasyEVFIterator {
     lineNumber++;
     // End the row
     rowWriter.save();
+    return true;
   }
 }

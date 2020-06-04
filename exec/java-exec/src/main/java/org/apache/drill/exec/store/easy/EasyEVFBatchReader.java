@@ -37,12 +37,9 @@ import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 
 
 /**
@@ -89,7 +86,6 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
   public ResultSetLoader loader;
   private RowSetLoader rowWriter;
   public InputStream fsStream;
-  public BufferedReader reader;
   protected CustomErrorContext errorContext;
 
   public RowSetLoader getRowWriter() {
@@ -105,7 +101,6 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
 
     try {
       this.fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
-      this.reader = new BufferedReader(new InputStreamReader(fsStream, StandardCharsets.UTF_8));
     } catch (IOException e) {
       throw UserException
         .dataReadError(e)
@@ -130,7 +125,7 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
   @Override
   public void close() {
     try {
-      AutoCloseables.close(reader, fsStream);
+      AutoCloseables.close(fsStream);
     } catch (Exception e) {
       logger.warn("Error closing Input Streams.");
     }
