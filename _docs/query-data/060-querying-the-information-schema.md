@@ -73,7 +73,7 @@ type) for each column in each table or view.
 
 The VIEWS table returns the name and definition for each view in your
 databases. Note that file schemas are the canonical repository for views in
-Drill. Depending on how you create a view, the may only be displayed in Drill
+Drill. Depending on how you create a view, they may only be displayed in Drill
 after it has been used.
 
 ## PARTITIONS
