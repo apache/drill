@@ -18,29 +18,29 @@
 
 package org.apache.drill.exec.store.excel;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.apache.drill.exec.record.metadata.SchemaBuilder;
-
-import java.nio.file.Paths;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.apache.drill.categories.RowSetTests;
 
+import java.nio.file.Paths;
+
+import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 
 @Category(RowSetTests.class)
 public class TestExcelFormat extends ClusterTest {
@@ -93,6 +93,41 @@ public class TestExcelFormat extends ClusterTest {
       .addRow(3.0, "Waiter", "Sherel", "wsherel2@utexas.edu", "Male", "3/12/1961", 172.36, 17.0, 10.13882353)
       .addRow(4.0, "Cicely", "Lyver", "clyver3@mysql.com", "Female", "5/4/2000", 987.39, 6.0, 164.565)
       .addRow(5.0, "Dorie", "Doe", "ddoe4@spotify.com", "Female", "12/28/1955", 852.48, 17.0, 50.14588235)
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+
+  @Test
+  public void testExplicitMetadataQuery() throws RpcException {
+    String sql =
+      "SELECT _category, _content_status, _content_type, _creator, _description, _identifier, _keywords, _last_modified_by_user, _revision, _subject, _title, _created," +
+        "_last_printed, _modified FROM cp.`excel/test_data.xlsx` LIMIT 1";
+
+    QueryBuilder q = client.queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("_category", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_content_status", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_content_type", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_creator", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_description", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_identifier", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_keywords", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_last_modified_by_user", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_revision", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_subject", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_title", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_created", TypeProtos.MinorType.TIMESTAMP)
+      .addNullable("_last_printed", TypeProtos.MinorType.TIMESTAMP)
+      .addNullable("_modified", TypeProtos.MinorType.TIMESTAMP)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("test_category", null, null, "test_author", null, null, "test_keywords", "Microsoft Office User", null, "test_subject", "test_title",
+        1571602578000L, null,1588212319000L)
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);

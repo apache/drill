@@ -48,6 +48,27 @@ INNER JOIN table( dfs.`test_data.xlsx` (type => 'excel', sheetName => 'thirdShee
 ON t1.id = t2.id
 ```
 
+### Implicit Columns
+Drill includes several columns of file metadata in the query results. These fields are **not** included in star queries and thus must be explicitly listed in a query. 
+
+The fields are:
+
+    _category
+    _content_status
+    _content_type;
+    _creator
+    _description
+    _identifier
+    _keywords
+    _last_modified_by_user
+    _revision
+    _subject
+    _title
+    _created
+    _last_printed
+    _modified
+
+
 ### Known Limitations:
 At present, Drill requires that all columns be of the same data type. If they are not, Drill will throw an exception upon trying to read a column of mixed data type. If you are
  trying to query data with heterogenoeus columns, it will be necessary to set `allTextMode` to `true`. 
