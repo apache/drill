@@ -19,7 +19,6 @@
 -->
 <#include "*/generic.ftl">
 <#macro page_head>
-  <meta http-equiv="refresh" content="${model.getRefreshSecs( )}" >
 </#macro>
 
 <#macro page_body>
