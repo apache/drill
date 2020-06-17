@@ -23,18 +23,23 @@ import io.netty.handler.ssl.SslProvider;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.TrustManagerFactory;
+import java.io.IOException;
 import java.util.Properties;
 
 public class SSLConfigClient extends SSLConfig {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SSLConfigClient.class);
+  private static final Logger logger = LoggerFactory.getLogger(SSLConfigClient.class);
 
   private final Properties properties;
+  private final Configuration hadoopConfig;
   private final boolean userSslEnabled;
   private final String trustStoreType;
   private final String trustStorePath;
@@ -46,19 +51,22 @@ public class SSLConfigClient extends SSLConfig {
   private final int handshakeTimeout;
   private final String provider;
 
-  private final String emptyString = new String();
+  private final String emptyString = "";
 
-  public SSLConfigClient(Properties properties) throws DrillException {
+  public SSLConfigClient(Properties properties, Configuration hadoopConfig) throws DrillException {
     this.properties = properties;
+    this.hadoopConfig = hadoopConfig;
     userSslEnabled = getBooleanProperty(DrillProperties.ENABLE_TLS);
     SSLCredentialsProvider credentialsProvider = SSLCredentialsProvider.getSSLCredentialsProvider(
         this::getStringProperty,
-        Mode.CLIENT,
+        this::getPasswordStringProperty,
+        getMode(),
         getBooleanProperty(DrillProperties.USE_MAPR_SSL_CONFIG)
     );
     trustStoreType = credentialsProvider.getTrustStoreType(DrillProperties.TRUSTSTORE_TYPE, "JKS");
     trustStorePath = credentialsProvider.getTrustStoreLocation(DrillProperties.TRUSTSTORE_PATH, "");
-    trustStorePassword = credentialsProvider.getTrustStorePassword(DrillProperties.TRUSTSTORE_PASSWORD, "");
+    trustStorePassword = credentialsProvider.getTrustStorePassword(DrillProperties.TRUSTSTORE_PASSWORD,
+        resolveHadoopPropertyName(HADOOP_SSL_TRUSTSTORE_PASSWORD_TPL_KEY, getMode()));
     disableHostVerification = getBooleanProperty(DrillProperties.DISABLE_HOST_VERIFICATION);
     disableCertificateVerification = getBooleanProperty(DrillProperties.DISABLE_CERT_VERIFICATION);
     useSystemTrustStore = getBooleanProperty(DrillProperties.USE_SYSTEM_TRUSTSTORE);
@@ -96,6 +104,26 @@ public class SSLConfigClient extends SSLConfig {
     return value;
   }
 
+  private String getPasswordStringProperty(String name, String hadoopName) {
+    String value = null;
+    if (hadoopConfig != null) {
+      try {
+        char[] password = hadoopConfig.getPassword(hadoopName);
+        if (password != null) {
+          value = String.valueOf(password);
+        }
+      } catch (IOException e) {
+        logger.warn("Unable to obtain password {} from CredentialProvider API: {}", hadoopName, e.getMessage());
+        // fallthrough
+      }
+    }
+
+    if (value == null) {
+      value = getStringProperty(name, "");
+    }
+    return value;
+  }
+
   private int getIntProperty(String name, int defaultValue) {
     int value = defaultValue;
     if (properties != null) {
@@ -107,8 +135,8 @@ public class SSLConfigClient extends SSLConfig {
     return value;
   }
 
+  @Override
   public void validateKeyStore() throws DrillException {
-
   }
 
   @Override
@@ -282,5 +310,4 @@ public class SSLConfigClient extends SSLConfig {
   public boolean isSslValid() {
     return true;
   }
-
 }

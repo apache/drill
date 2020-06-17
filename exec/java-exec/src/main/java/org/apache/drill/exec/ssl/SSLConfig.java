@@ -22,6 +22,8 @@ import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -30,10 +32,11 @@ import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.KeyStore;
+import java.text.MessageFormat;
 
 public abstract class SSLConfig {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SSLConfig.class);
+  private static final Logger logger = LoggerFactory.getLogger(SSLConfig.class);
 
   public static final String DEFAULT_SSL_PROVIDER = "JDK"; // JDK or OPENSSL
   public static final String DEFAULT_SSL_PROTOCOL = "TLSv1.2";
@@ -60,7 +63,7 @@ public abstract class SSLConfig {
   // copy of Hadoop's SSLFactory.Mode. Done so that we do not
   // need to include hadoop-common as a dependency in
   // jdbc-all-jar.
-  public enum Mode { CLIENT, SERVER };
+  public enum Mode { CLIENT, SERVER }
 
 
   public SSLConfig() {
@@ -228,6 +231,10 @@ public abstract class SSLConfig {
       }
     }
     return engine;
+  }
+
+  String resolveHadoopPropertyName(String nameTemplate, Mode mode) {
+    return MessageFormat.format(nameTemplate, mode.toString().toLowerCase());
   }
 
   @Override

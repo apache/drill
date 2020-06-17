@@ -42,12 +42,12 @@ public class SSLConfigBuilder {
     if (mode == SSLConfig.Mode.SERVER) {
       sslConfig = new SSLConfigServer(config, hadoopConfig);
     } else {
-      sslConfig = new SSLConfigClient(properties);
+      sslConfig = new SSLConfigClient(properties, hadoopConfig);
     }
-    if(validateKeyStore){
+    if (validateKeyStore) {
       sslConfig.validateKeyStore();
     }
-    if(initializeSSLContext){
+    if (initializeSSLContext) {
       sslConfig.initContext();
     }
     return sslConfig;
