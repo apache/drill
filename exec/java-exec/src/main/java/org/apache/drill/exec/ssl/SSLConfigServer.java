@@ -33,7 +33,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManagerFactory;
-import java.io.IOException;
 
 public class SSLConfigServer extends SSLConfig {
 
@@ -231,18 +230,7 @@ public class SSLConfigServer extends SSLConfig {
   }
 
   private String getPasswordConfigParam(String name, String hadoopName) {
-    String value = null;
-    if (hadoopConfig != null) {
-      try {
-        char[] password = hadoopConfig.getPassword(hadoopName);
-        if (password != null) {
-          value = String.valueOf(password);
-        }
-      } catch (IOException e) {
-        logger.warn("Unable to obtain password {} from CredentialProvider API: {}", hadoopName, e.getMessage());
-        // fallthrough
-      }
-    }
+    String value = getPassword(hadoopName);
 
     if (value == null) {
       value = getConfigParam(name, hadoopName);
@@ -341,7 +329,13 @@ public class SSLConfigServer extends SSLConfig {
     return false; // Client only, notsupported by the server
   }
 
+  @Override
   public boolean isSslValid() {
     return !keyStorePath.isEmpty() && !keyStorePassword.isEmpty();
+  }
+
+  @Override
+  Configuration getHadoopConfig() {
+    return hadoopConfig;
   }
 }

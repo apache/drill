@@ -22,6 +22,7 @@ import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.text.MessageFormat;
@@ -64,7 +66,6 @@ public abstract class SSLConfig {
   // need to include hadoop-common as a dependency in
   // jdbc-all-jar.
   public enum Mode { CLIENT, SERVER }
-
 
   public SSLConfig() {
   }
@@ -231,6 +232,24 @@ public abstract class SSLConfig {
       }
     }
     return engine;
+  }
+
+  abstract Configuration getHadoopConfig();
+
+  String getPassword(String hadoopName) {
+    String value = null;
+    if (getHadoopConfig() != null) {
+      try {
+        char[] password = getHadoopConfig().getPassword(hadoopName);
+        if (password != null) {
+          value = String.valueOf(password);
+        }
+      } catch (IOException e) {
+        logger.warn("Unable to obtain password {} from CredentialProvider API: {}", hadoopName, e.getMessage());
+        // fallthrough
+      }
+    }
+    return value;
   }
 
   String resolveHadoopPropertyName(String nameTemplate, Mode mode) {
