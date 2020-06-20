@@ -43,14 +43,19 @@ abstract class SSLCredentialsProvider {
    *                            <li>String parameter2 - default value</li>
    *                            <li>returns the property value or default value</li>
    *                          </ul>
+   * @param getPasswordPropertyMethod the same as {@code getPropertyMethod} but used to
+   *                          retrieve sensible data, such as keystore password,
+   *                          using Hadoop's CredentialProvider API with fallback
+   *                          to standard means as is used for {@code getPropertyMethod}
    * @param mode              CLIENT or SERVER
    * @param useMapRSSLConfig  use a MapR credential provider
    * @return concrete implementation of SSLCredentialsProvider
    */
-  static SSLCredentialsProvider getSSLCredentialsProvider(BiFunction<String, String, String> getPropertyMethod, SSLConfig.Mode mode, boolean useMapRSSLConfig) {
+  static SSLCredentialsProvider getSSLCredentialsProvider(BiFunction<String, String, String> getPropertyMethod,
+      BiFunction<String, String, String> getPasswordPropertyMethod, SSLConfig.Mode mode, boolean useMapRSSLConfig) {
     return useMapRSSLConfig ? getMaprCredentialsProvider(mode)
-        .orElseGet(() -> new SSLCredentialsProviderImpl(getPropertyMethod)) :
-        new SSLCredentialsProviderImpl(getPropertyMethod);
+        .orElseGet(() -> new SSLCredentialsProviderImpl(getPropertyMethod, getPasswordPropertyMethod)) :
+        new SSLCredentialsProviderImpl(getPropertyMethod, getPasswordPropertyMethod);
   }
 
   private static Optional<SSLCredentialsProvider> getMaprCredentialsProvider(SSLConfig.Mode mode) {
@@ -95,9 +100,12 @@ abstract class SSLCredentialsProvider {
   private static class SSLCredentialsProviderImpl extends SSLCredentialsProvider {
 
     private final BiFunction<String, String, String> getPropertyMethod;
+    private final BiFunction<String, String, String> getPasswordPropertyMethod;
 
-    private SSLCredentialsProviderImpl(BiFunction<String, String, String> getPropertyMethod) {
+    private SSLCredentialsProviderImpl(BiFunction<String, String, String> getPropertyMethod,
+                                       BiFunction<String, String, String> getPasswordPropertyMethod) {
       this.getPropertyMethod = getPropertyMethod;
+      this.getPasswordPropertyMethod = getPasswordPropertyMethod;
     }
 
     @Override
@@ -112,7 +120,7 @@ abstract class SSLCredentialsProvider {
 
     @Override
     String getTrustStorePassword(String propertyName, String defaultValue) {
-      return getPropertyMethod.apply(propertyName, defaultValue);
+      return getPasswordPropertyMethod.apply(propertyName, defaultValue);
     }
 
     @Override
@@ -127,12 +135,12 @@ abstract class SSLCredentialsProvider {
 
     @Override
     String getKeyStorePassword(String propertyName, String defaultValue) {
-      return getPropertyMethod.apply(propertyName, defaultValue);
+      return getPasswordPropertyMethod.apply(propertyName, defaultValue);
     }
 
     @Override
     String getKeyPassword(String propertyName, String defaultValue) {
-      return getPropertyMethod.apply(propertyName, defaultValue);
+      return getPasswordPropertyMethod.apply(propertyName, defaultValue);
     }
   }
 }

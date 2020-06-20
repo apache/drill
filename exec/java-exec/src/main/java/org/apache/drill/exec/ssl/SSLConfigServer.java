@@ -26,16 +26,17 @@ import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManagerFactory;
-import java.text.MessageFormat;
 
 public class SSLConfigServer extends SSLConfig {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SSLConfigServer.class);
+  private static final Logger logger = LoggerFactory.getLogger(SSLConfigServer.class);
 
   private final DrillConfig config;
   private final Configuration hadoopConfig;
@@ -76,6 +77,7 @@ public class SSLConfigServer extends SSLConfig {
         config.hasPath(ExecConstants.USER_SSL_ENABLED) && config.getBoolean(ExecConstants.USER_SSL_ENABLED);
     SSLCredentialsProvider credentialsProvider = SSLCredentialsProvider.getSSLCredentialsProvider(
         this::getConfigParam,
+        this::getPasswordConfigParam,
         Mode.SERVER,
         config.getBoolean(ExecConstants.SSL_USE_MAPR_CONFIG));
     trustStoreType = credentialsProvider.getTrustStoreType(
@@ -106,6 +108,7 @@ public class SSLConfigServer extends SSLConfig {
     provider = config.getString(ExecConstants.SSL_PROVIDER);
   }
 
+  @Override
   public void validateKeyStore() throws DrillException {
     //HTTPS validates the keystore is not empty. User Server SSL context initialization also validates keystore, but
     // much more strictly. User Client context initialization does not validate keystore.
@@ -226,11 +229,15 @@ public class SSLConfigServer extends SSLConfig {
     return value;
   }
 
-  private String resolveHadoopPropertyName(String nameTemplate, Mode mode) {
-    return MessageFormat.format(nameTemplate, mode.toString().toLowerCase());
+  private String getPasswordConfigParam(String name, String hadoopName) {
+    String value = getPassword(hadoopName);
+
+    if (value == null) {
+      value = getConfigParam(name, hadoopName);
+    }
+
+    return value;
   }
-
-
 
   @Override
   public boolean isUserSslEnabled() {
@@ -322,8 +329,13 @@ public class SSLConfigServer extends SSLConfig {
     return false; // Client only, notsupported by the server
   }
 
+  @Override
   public boolean isSslValid() {
     return !keyStorePath.isEmpty() && !keyStorePassword.isEmpty();
   }
 
+  @Override
+  Configuration getHadoopConfig() {
+    return hadoopConfig;
+  }
 }
