@@ -197,6 +197,7 @@ public class TestParquetComplex extends BaseTestQuery {
         .run();
   }
 
+  @Test
   public void testReadRepeatedDecimals() throws Exception {
 
     JsonStringArrayList<BigDecimal> ints = new JsonStringArrayList<>();

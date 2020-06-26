@@ -240,5 +240,14 @@ public class TestUntypedNull extends ClusterTest {
         .baselineValuesForSingleColumn(null, null, null, null, null)
         .go();
   }
+
+  @Test
+  public void testValueIsNotReferencedOnUntypedNullHolderInstance() throws Exception {
+    testBuilder()
+        .physicalPlanFromFile("physical_untyped_null.json")
+        .unOrdered()
+        .expectsEmptyResultSet()
+        .go();
+  }
 }
 
