@@ -1039,7 +1039,12 @@ public class EvaluationVisitor {
 
         JBlock earlyExit = null;
         if (arg.isOptional()) {
-          earlyExit = eval._if(arg.getIsSet().eq(JExpr.lit(1)).cand(arg.getValue().ne(JExpr.lit(1))))._then();
+          JExpression expr1 = arg.getIsSet().eq(JExpr.lit(1));
+          // UntypedNullHolder does not have `value` field
+          if (arg.getMinorType() != TypeProtos.MinorType.NULL) {
+            expr1 = expr1.cand(arg.getValue().ne(JExpr.lit(1)));
+          }
+          earlyExit = eval._if(expr1)._then();
           if (e == null) {
             e = arg.getIsSet();
           } else {
