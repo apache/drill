@@ -136,7 +136,9 @@ public abstract class FilePushDownFilter extends StoragePluginOptimizerRule {
 
     // get a conjunctions of the filter condition. For each conjunction, if it refers to ITEM or FLATTEN expression
     // then we could not pushed down. Otherwise, it's qualified to be pushed down.
-    final List<RexNode> predList = RelOptUtil.conjunctions(RexUtil.toCnf(filter.getCluster().getRexBuilder(), condition));
+    // Limits the number of nodes that can be created out of the conversion to avoid
+    // exponential growth of nodes count and further OOM
+    final List<RexNode> predList = RelOptUtil.conjunctions(RexUtil.toCnf(filter.getCluster().getRexBuilder(), 100, condition));
 
     final List<RexNode> qualifiedPredList = new ArrayList<>();
 
