@@ -221,6 +221,14 @@ public class MongoCompareFunctionProcessor extends
       return true;
     }
 
+    //To support Drill Timestamp converter 
+    if (valueArg instanceof TimeStampExpression) {
+     Long unixseconds = ((TimeStampExpression) valueArg).getTimeStamp();
+     this.value = new Date(unixseconds);
+     this.path = path;
+     return true;
+     }
+
     // Mongo does not support decimals, therefore double value is used.
     // See list of supported types in BsonValueCodecProvider.
     if (valueArg instanceof VarDecimalExpression) {
