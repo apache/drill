@@ -179,6 +179,23 @@ public class MongoCompareFunctionProcessor extends
   @Override
   public Boolean visitUnknown(LogicalExpression e, LogicalExpression valueArg)
       throws RuntimeException {
+    if (e instanceof FunctionCall){
+
+      String name  = ((FunctionCall) e).getName();
+      //handle strpos function in Drill
+      if (name.equals("strpos")){
+        LogicalExpression  arg_0 =  ((FunctionCall) e).arg(0);
+        LogicalExpression  arg_1 =  ((FunctionCall) e).arg(1);
+        QuotedString arg_1qs = (QuotedString) arg_1;
+
+        this.functionName = name;
+        this.path = (SchemaPath) arg_0;
+        this.value = arg_1qs.getString();
+        return true;
+      }
+
+    }
+
     return false;
   }
 
@@ -221,7 +238,7 @@ public class MongoCompareFunctionProcessor extends
       return true;
     }
 
-    //To support Drill Timestamp converter 
+    //To support Drill Timestamp converter
     if (valueArg instanceof TimeStampExpression) {
      Long unixseconds = ((TimeStampExpression) valueArg).getTimeStamp();
      this.value = new Date(unixseconds);

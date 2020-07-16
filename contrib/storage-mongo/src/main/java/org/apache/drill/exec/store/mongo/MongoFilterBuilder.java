@@ -195,6 +195,10 @@ public class MongoFilterBuilder extends
     case "is not null":
       compareOp = MongoCompareOp.IFNOTNULL;
       break;
+    case "strpos":
+      compareOp = MongoCompareOp.REGEX;
+      break;
+  
     }
 
     if (compareOp != null) {
