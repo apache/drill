@@ -198,7 +198,10 @@ public class MongoFilterBuilder extends
     case "strpos":
       compareOp = MongoCompareOp.REGEX;
       break;
-  
+    case "position":
+      compareOp = MongoCompareOp.IN;
+      break;
+
     }
 
     if (compareOp != null) {

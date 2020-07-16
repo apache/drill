@@ -182,7 +182,7 @@ public class MongoCompareFunctionProcessor extends
     if (e instanceof FunctionCall){
 
       String name  = ((FunctionCall) e).getName();
-      //handle strpos function in Drill
+      //handle Drill STRPOS function
       if (name.equals("strpos")){
         LogicalExpression  arg_0 =  ((FunctionCall) e).arg(0);
         LogicalExpression  arg_1 =  ((FunctionCall) e).arg(1);
@@ -193,6 +193,20 @@ public class MongoCompareFunctionProcessor extends
         this.value = arg_1qs.getString();
         return true;
       }
+      //handle Drill POSITION function
+      if (name.equals("position")){
+
+         LogicalExpression  arg_0 =  ((FunctionCall) e).arg(0);
+         LogicalExpression  arg_1 =  ((FunctionCall) e).arg(1);
+         QuotedString arg_0qs = (QuotedString) arg_0;
+         String arg0_unsplit = arg_0qs.getString();
+         List<String> arg0_splitted = Arrays.asList(arg0_unsplit.split(","));
+
+         this.functionName = name;
+         this.path = (SchemaPath) arg_1;
+         this.value = arg0_splitted;
+         return true;
+       }
 
     }
 
