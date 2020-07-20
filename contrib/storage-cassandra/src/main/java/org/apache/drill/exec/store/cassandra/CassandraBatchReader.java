@@ -59,6 +59,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   private final CassandraSubScan subScan;
   private final List<SchemaPath> projectedColumns;
   private final List<CassandraColumnWriter> cassandraColumnWriters;
+  private CustomErrorContext errorContext;
   private Cluster cluster;
   private Session session;
   private CassandraSubScanSpec subScanSpec;
@@ -80,7 +81,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   @Override
   public boolean open(SchemaNegotiator negotiator) {
-    CustomErrorContext parentErrorContext = negotiator.parentErrorContext();
+    errorContext = negotiator.parentErrorContext();
 
     // Set up the Cassandra Cluster
     setupCluster();

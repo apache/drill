@@ -156,17 +156,11 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
   public static class CassandraSubScanSpec  {
 
     public String keyspace;
-
     public String table;
-
     public List<String> hosts;
-
     public int port;
-
     public String startToken;
-
     public String endToken;
-
     public int maxRecords;
 
     @JsonIgnore

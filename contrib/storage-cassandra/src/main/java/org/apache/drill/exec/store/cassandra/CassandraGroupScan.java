@@ -233,9 +233,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
     return Lists.newArrayList(affinityMap.values());
   }
 
-  /**
-   * @param incomingEndpoints
-   */
+
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
     watch.reset();
@@ -376,6 +374,8 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
 
   @Override
   public ScanStats getScanStats() {
+    // TODO Add limit to scan stats
+
     if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
       cluster = CassandraConnectionManager.getCluster(storagePluginConfig);
       session = cluster.connect();
@@ -463,10 +463,8 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
     return true;
   }
 
-  /**
-   * By default, return null to indicate row count based prune is not supported.
-   * Each group scan subclass should override, if it supports row count based prune.
-   */
+
+  // TODO Fix this... This will result in infinite looping
   @Override
   public GroupScan applyLimit(int maxResults) {
     this.maxResults = maxResults;

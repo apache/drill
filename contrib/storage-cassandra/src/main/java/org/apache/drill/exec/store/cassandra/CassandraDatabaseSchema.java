@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -29,17 +25,18 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 public class CassandraDatabaseSchema extends AbstractSchema {
   private static final Logger logger = LoggerFactory.getLogger(CassandraDatabaseSchema.class);
 
   private final DrillCassandraSchema drillCassandraSchema;
-
   private final CassandraStoragePlugin plugin;
-
   private final Set<String> tables;
-
   private final String pluginName;
-
   private final String keyspaceName;
 
   private final Map<String, DynamicDrillTable> activeTables = new HashMap<>();

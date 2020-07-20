@@ -33,15 +33,10 @@ import java.util.List;
 public class CassandraStoragePluginConfig extends StoragePluginConfigBase {
 
   private static final Logger logger = LoggerFactory.getLogger(CassandraStoragePluginConfig.class);
-
   public static final String NAME = "cassandra";
-
   public final List<String> hosts;
-
   public final String username;
-
   public final String password;
-
   public final int port;
 
   @JsonCreator
