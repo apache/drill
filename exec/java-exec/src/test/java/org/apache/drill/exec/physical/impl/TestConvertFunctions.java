@@ -617,6 +617,11 @@ public class TestConvertFunctions extends BaseTestQuery {
     }
   }
 
+  @Test // DRILL-7773
+  public void testTimeEpochBE() throws Throwable {
+    verifyPhysicalPlan("cast(convert_from(convert_to('23:30:21', 'TIME_EPOCH_BE'), 'TIME_EPOCH_BE') as time)", LocalTime.of(23, 30, 21));
+  }
+
   protected <T> void verifySQL(String sql, T expectedResults) throws Throwable {
     verifyResults(sql, expectedResults, getRunResult(QueryType.SQL, sql));
   }
