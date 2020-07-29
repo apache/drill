@@ -48,7 +48,7 @@ public class TimeEpochBEConvertTo implements DrillSimpleFunc {
   @Override
   public void eval() {
     buffer.clear();
-    buffer.writeLong(Integer.reverseBytes(in.value));
+    buffer.writeLong(Long.reverseBytes(in.value));
     out.buffer = buffer;
     out.start = 0;
     out.end = 8;
