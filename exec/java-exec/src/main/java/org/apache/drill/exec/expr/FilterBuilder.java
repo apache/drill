@@ -304,7 +304,9 @@ public class FilterBuilder extends AbstractExprVisitor<LogicalExpression, Set<Lo
     }
     LogicalExpression arg = functionHolderExpression.args.get(0);
 
-    return IsPredicate.createIsPredicate(funcName, arg.accept(this, value));
+    LogicalExpression expression = arg.accept(this, value);
+
+    return expression == null ? null : IsPredicate.createIsPredicate(funcName, expression);
   }
 
   private static boolean isCompareFunction(String funcName) {
