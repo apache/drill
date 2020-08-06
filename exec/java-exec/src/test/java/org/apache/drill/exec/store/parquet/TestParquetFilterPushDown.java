@@ -684,6 +684,19 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   }
 
   @Test
+  public void tesNonDeterministicIsNotNullWithNonExistingColumn() throws Exception {
+    String query = "select count(*) as cnt from cp.`tpch/nation.parquet`\n" +
+        "where (case when random() = 1 then true else null end * t) is not null";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(0L)
+        .go();
+  }
+
+  @Test
   public void testParquetSingleRowGroupFilterRemoving() throws Exception {
     test("create table dfs.tmp.`singleRowGroupTable` as select * from cp.`tpch/nation.parquet`");
 
