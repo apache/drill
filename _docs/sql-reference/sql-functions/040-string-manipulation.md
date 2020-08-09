@@ -38,7 +38,7 @@ As with indexes througout SQL, indexes into character strings are 1-based.
 {% include endnote.html %}
 
 ## BYTE_SUBSTR
-Returns in binary format a substring of a string.
+Returns in binary format a substring of the input string.
 
 ### BYTE_SUBSTR Syntax
 
@@ -74,7 +74,7 @@ A composite HBase row key consists of strings followed by a reverse timestamp (l
     1 rows selected (0.271 seconds)
 
 ## CHAR_LENGTH 
-Returns the number of characters in a string.
+Returns the number of characters in the input string.
 
 ### CHAR_LENGTH Syntax
 
@@ -115,7 +115,7 @@ Concatenates arguments.
 Alternatively, you can use the [string concatenation operation]({{ site.baseurl }}/docs/operators/#string-concatenate-operator) to concatenate strings.
 
 ## ILIKE
-Performs a case-insensitive comparison of a string with a pattern and returns
+Performs a case-insensitive comparison of the input string with a pattern and returns
 true in the case of a match.
 
 ### ILIKE Syntax
@@ -196,7 +196,7 @@ Returns the number of characters in the string.
     4 rows selected (0.259 seconds)
 
 ## LIKE
-Performs a case-sensitive comparison of a string with a pattern and returns
+Performs a case-sensitive comparison of the input string with a pattern and returns
 true in the case of a match.
 
 ### LIKE Syntax
@@ -230,7 +230,7 @@ Alternatively, you can use the [like operator]({{ site.baseurl }}/docs/operators
 
 
 ## LOWER
-Converts the characters in a string to lowercase.
+Converts the characters in the input string to lowercase.
 
 ### LOWER Syntax
 
@@ -294,7 +294,7 @@ Removes any characters from the beginning of string1 that match the characters i
     1 row selected (0.1 seconds)
 
 ## POSITION
-Returns the location of the first occurrence of a substring of a string, or 0 if the substring does not occur.
+Returns the location of the first occurrence of a substring of the input string, or 0 if the substring does not occur.
 
 ### POSITION Syntax
 
@@ -408,7 +408,7 @@ Extract the text inside double quotes using a capturing group.
 
 ## REPEAT
 
-Returns a string repeated a specified number of times.
+Returns the input string repeated the specified number of times.
 
 ### REPEAT Syntax
 
@@ -425,7 +425,7 @@ Returns a string repeated a specified number of times.
 
 ## REPLACE
 
-Replaces all occurrences of a specified substring with another specified substring.
+Replaces all occurrences of the specified substring with another specified substring.
 
 ### REPLACE Syntax
 
@@ -441,7 +441,7 @@ Replaces all occurrences of a specified substring with another specified substri
     |-------------------------------|
 
 ## REVERSE
-Returns the reverse of a string.
+Returns the reverse of the input string.
 
 ### REVERSE Syntax
 
@@ -500,7 +500,7 @@ Removes any characters from the end of string1 that match the characters in stri
     1 row selected (0.102 seconds)
 
 ## SPLIT
-Splits a string into a list of substrings using a specified delimiter character.
+Splits the input string into a list of substrings using the specified delimiter character.
 
 ### SPLIT Syntax
     SPLIT(string, delimiter)
@@ -519,7 +519,7 @@ The _delimiter_ must not be null and must contain a single character.
     |------------------------------------|
 
 ## STRPOS
-Returns the location of the first occurrence of a substring of a string, or 0 if the substring does not occur.
+Returns the location of the first occurrence of a substring of the input string, or 0 if the substring does not occur.
 
 ### STRPOS Syntax
 
@@ -537,15 +537,21 @@ STRPOS(string, substring)
     1 row selected (0.22 seconds)
 
 ## SUBSTR
-Returns the substring of a string starting the specified location and optionally having the specified length.
+Returns
+
+- the substring of the input string starting the specified location and optionally having the specified length or
+- the first substring of the input string matching the specified regular expression.
 
 ### SUBSTR Syntax
 
+    SUBSTR(string, start)
     SUBSTR(string, start, length)
+    SUBSTR(string, regexp)
 
 ### SUBSTR Usage Notes
 1. If *start* specifies a location outside of *string* or if *length* < 1 then the empty string `''` is returned.
 2. If *length* is unspecified or if it specifies a substring that extends beyond the end of *string* then the returned substring extends to the end of the string.
+4. If _regexp_ does not match a substring of _string_ then NULL is returned.
 3. You can use the alias SUBSTRING for this function.
 
 
@@ -569,10 +575,18 @@ Returns the substring of a string starting the specified location and optionally
     |--------|
     1 row selected (0.129 seconds)
 
-<!-- this function appears to be pointless because its input, being a VARCHAR, must already be in UTF-8
+    SELECT SUBSTR('On 1970-01-01 the quick brown fox jumped...', '[\d-]+')
+
+    |------------|
+    | EXPR$0     |
+    |------------|
+    | 1970-01-01 |
+    |------------|
+
+<!-- this function appears to be pointless because, from what I can tell, its VARCHAR input must already be in UTF-8
 
 ## TOASCII
-Transcodes a string from a specified input encoding to UTF-8.
+Transcodes the input string from the specified input encoding to UTF-8.
 
 ### TOASCII Syntax
  
@@ -623,7 +637,7 @@ Removes any characters from the beginning, end, or both sides of string2 that ma
     1 row selected (0.101 seconds)
 
 ## UPPER
-Converts the characters in a string to uppercase.
+Converts the characters in the input string to uppercase.
 
 ### UPPER Syntax
 
