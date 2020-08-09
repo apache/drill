@@ -6,8 +6,7 @@ parent: "SQL Functions"
 
 ## Aggregate Functions
 
-The following tables list the aggregate and aggregate statistical functions that you can use in 
-Drill queries:  
+The following table lists the aggregate functions that you can use in Drill queries.
 
 | **Function**                              | **Argument Type**                                                                                                                       | **Return Type**                                                                                                                    |
 |-------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
@@ -260,7 +259,7 @@ Use a correlated subquery to find the names and salaries of the lowest paid empl
     | Laurie Anderson | 20.0   |
     . . .
 
-## SUM Function
+## SUM
 Returns the sum of a numerical expresion.
 
 ### SUM syntax
@@ -295,19 +294,92 @@ Returns the sum of a numerical expresion.
 
 ## Aggregate Statistical Functions
 
-Drill provides following aggregate statistical functions:
+The following table lists the aggregate statistical functions that you can use in Drill queries.
 
-* stddev(expression)  
-  An alias for stddev_samp
-* stddev_pop(expression)
-  Population standard deviate of input values
-* stddev_samp(expression)
-  Sample standard deviate of input values
-* variance(expression)
-  An alias for var_samp
-* var_pop(expression)
-  Population variance of input values (the population standard deviated squared)
-* var_samp(expression)
-  Sample variance of input values (sample standard deviation squared)
-  
-These functions take a SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, or DECIMAL expression as the argument. The functions return DECIMAL for DECIMAL arguments and DOUBLE for all other arguments.
+| **Function**           | **Argument Type**                                 | **Return Type**                                 |
+|------------------------|---------------------------------------------------|-------------------------------------------------|
+| STDDEV(expression)     | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
+| STDDEV_POP(expression) | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
+| VARIANCE(expression)   | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
+| VAR_POP(expression)    | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
+
+## STDDEV
+
+Returns the sample standard deviation.
+
+### STDDEV Syntax
+
+    STDDEV(expression)
+
+### STDDEV Examples
+
+    SELECT STDDEV(salary) from cp.`employee.json`;
+
+    |-------------------|
+    | EXPR$0            |
+    |-------------------|
+    | 5371.847873988941 |
+    |-------------------|
+
+### STDDEV Usage Notes
+
+1. Aliases: STDDEV_SAMP
+
+## STDDEV_POP
+
+Returns the estimate of the population standard deviation obtained by applying Bessel's correction to the sample standard deviation.
+
+### STDDEV_POP Syntax
+
+    STDDEV_POP(expression)
+
+### STDDEV_POP Examples
+
+    SELECT STDDEV_POP(salary) from cp.`employee.json`;
+
+    |-------------------|
+    | EXPR$0            |
+    |-------------------|
+    | 5369.521895151171 |
+    |-------------------|
+
+## VARIANCE
+
+Returns the sample variance.
+
+### VARIANCE Syntax
+
+    VARIANCE(expression)
+
+### VARIANCE Examples
+
+    SELECT VARIANCE(salary) from cp.`employee.json`;
+
+    |--------------------|
+    | EXPR$0             |
+    |--------------------|
+    | 28856749.581279505 |
+    |--------------------|
+
+### VARIANCE Usage Notes
+
+1. Aliases: VAR_SAMP
+
+## VAR_POP
+
+Returns the estimate of the population variance obtained by applying Bessel's correction to the sample variance.
+
+### VAR_POP Syntax
+
+    VAR_POP(expression)
+
+### VAR_POP Examples
+
+    SELECT VAR_POP(salary) from cp.`employee.json`;
+
+    |--------------------|
+    | EXPR$0             |
+    |--------------------|
+    | 28831765.382507823 |
+    |--------------------|
+
