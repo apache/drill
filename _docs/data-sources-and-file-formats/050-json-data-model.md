@@ -1,6 +1,6 @@
 ---
 title: "JSON Data Model"
-date: 2018-01-30 18:38:55 UTC
+date: 2020-08-08
 parent: "Data Sources and File Formats"
 ---
 Drill supports [JSON (JavaScript Object Notation)](http://www.json.org/), a self-describing data format. The data itself implies its schema and has the following characteristics:
@@ -191,12 +191,12 @@ This example uses the following data that represents unit sales of tickets to ev
 
 Take a look at the data in Drill:
 
-    +---------+---------+---------------------------------------------------------------+
+    |---------|---------|---------------------------------------------------------------|
     |  type   |  venue  |                             sales                             |
-    +---------+---------+---------------------------------------------------------------+
+    |---------|---------|---------------------------------------------------------------|
     | ticket  | 123455  | {"12-10":532806,"12-11":112889,"12-19":898999,"12-21":10875}  |
     | ticket  | 123456  | {"12-10":87350,"12-19":49999,"12-21":857475,"12-15":972880}   |
-    +---------+---------+---------------------------------------------------------------+
+    |---------|---------|---------------------------------------------------------------|
     2 rows selected (1.343 seconds)
 
 
@@ -204,12 +204,12 @@ Take a look at the data in Drill:
 Continuing with the data from [previous example]({{site.baseurl}}/docs/json-data-model/#example:-flatten-and-generate-key-values-for-complex-json), use the KVGEN (Key Value Generator) function to generate key/value pairs from complex data. Generating key/value pairs is often helpful when working with data that contains arbitrary maps consisting of dynamic and unknown element names, such as the ticket sales data in this example. For example purposes, take a look at how kvgen breaks the sales data into keys and values representing the key dates and number of tickets sold:
 
     SELECT KVGEN(tkt.sales) AS `key dates:tickets sold` FROM dfs.`/Users/drilluser/ticket_sales.json` tkt;
-    +---------------------------------------------------------------------------------------------------------------------------------------+
+    |---------------------------------------------------------------------------------------------------------------------------------------|
     |                                                        key dates:tickets sold                                                         |
-    +---------------------------------------------------------------------------------------------------------------------------------------+
+    |---------------------------------------------------------------------------------------------------------------------------------------|
     | [{"key":"12-10","value":"532806"},{"key":"12-11","value":"112889"},{"key":"12-19","value":"898999"},{"key":"12-21","value":"10875"}] |
     | [{"key":"12-10","value":"87350"},{"key":"12-19","value":"49999"},{"key":"12-21","value":"857475"},{"key":"12-15","value":"972880"}] |
-    +---------------------------------------------------------------------------------------------------------------------------------------+
+    |---------------------------------------------------------------------------------------------------------------------------------------|
     2 rows selected (0.106 seconds)
 
 KVGEN allows queries against maps where the keys themselves represent data rather than a schema, as shown in the next example.
@@ -221,9 +221,9 @@ FLATTEN breaks the list of key-value pairs into separate rows on which you can a
     SELECT FLATTEN(kvgen(sales)) Sales
     FROM dfs.`/Users/drilluser/drill/ticket_sales.json`;
 
-    +--------------------------------+
+    |--------------------------------|
     |           Sales                |
-    +--------------------------------+
+    |--------------------------------|
     | {"key":"12-10","value":532806} |
     | {"key":"12-11","value":112889} |
     | {"key":"12-19","value":898999} |
@@ -232,7 +232,7 @@ FLATTEN breaks the list of key-value pairs into separate rows on which you can a
     | {"key":"12-19","value":49999}  |
     | {"key":"12-21","value":857475} |
     | {"key":"12-15","value":972880} |
-    +--------------------------------+
+    |--------------------------------|
     8 rows selected (0.171 seconds)
 
 ### Example: Aggregate Loosely Structured Data
@@ -244,11 +244,11 @@ Sum the ticket sales by combining the `SUM`, `FLATTEN`, and `KVGEN` functions in
 
     SELECT SUM(tkt.tot_sales.`value`) AS TicketSold FROM (SELECT flatten(kvgen(sales)) tot_sales FROM dfs.`/Users/drilluser/ticket_sales.json`) tkt;
 
-    +--------------+
+    |--------------|
     | TicketsSold  |
-    +--------------+
+    |--------------|
     | 3523273.0    |
-    +--------------+
+    |--------------|
     1 row selected (0.244 seconds)
 
 ### Example: Aggregate and Sort Data
@@ -262,15 +262,15 @@ Sum and group the ticket sales by date and sort in ascending order of total tick
     GROUP BY `right`(tkt.tot_sales.key,2)
     ORDER BY TotalSales;
 
-    +----------------+-------------+
+    |----------------|-------------|
     | December Date  | TotalSales  |
-    +----------------+-------------+
+    |----------------|-------------|
     | 11             | 112889.0    |
     | 10             | 620156.0    |
     | 21             | 868350.0    |
     | 19             | 948998.0    |
     | 15             | 972880.0    |
-    +----------------+-------------+
+    |----------------|-------------|
     5 rows selected (0.252 seconds)
 
 ### Example: Access a Map Field in an Array
@@ -311,22 +311,22 @@ This example shows how to drill down using array notation plus dot notation in f
 
     SELECT features[0].properties.MAPBLKLOT, FROM dfs.`/Users/drilluser/citylots.json`;
 
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 0001001    |
-    +------------+
+    |------------|
     1 row selected (0.163 seconds)
 
 To access the second geometry coordinate of the first city lot in the San Francisco city lots, use array indexing notation for the coordinates as well as the features:
 
     SELECT features[0].geometry.coordinates[0][1]
     FROM dfs.`/Users/drilluser/citylots.json`;
-    +-------------------+
+    |-------------------|
     |      EXPR$0       |
-    +-------------------+
+    |-------------------|
     | 37.80848009696725 |
-    +-------------------+
+    |-------------------|
     1 row selected (0.19 seconds)
 
 More examples of workarounds for drilling down into the city lots data are presented in the following sections:
@@ -345,11 +345,11 @@ By flattening the following JSON file, which contains an array of maps, you can 
 
     SELECT flat.fill FROM (SELECT FLATTEN(t.fillings) AS fill FROM dfs.flatten.`test.json` t) flat WHERE flat.fill.cal  > 300;
 
-    +----------------------------+
+    |----------------------------|
     |           fill             |
-    +----------------------------+
+    |----------------------------|
     | {"name":"sugar","cal":500} |
-    +----------------------------+
+    |----------------------------|
     1 row selected (0.421 seconds)
 
 Use a table alias for column fields and functions when working with complex data sets. Currently, you must use a subquery when operating on a flattened column. Eliminating the subquery and table alias in the WHERE clause, for example `flat.fillings[0].cal > 300`, does not evaluate all records of the flattened data against the predicate and produces the wrong results.
@@ -396,11 +396,11 @@ Use dot notation, for example `t.birth.lastname` and `t.birth.bearer.max_hdl` to
     FROM dfs.`Users/drilluser/vitalstat.json` t
     WHERE t.birth.bearer.max_hdl < 160;
 
-    +----------------+------------+
+    |----------------|------------|
     |    Name        |   Weight   |
-    +----------------+------------+
+    |----------------|------------|
     | Thongneoupeanu | CATEGORY_2 |
-    +----------------+------------+
+    |----------------|------------|
     1 row selected (0.142 seconds)
 
 ## Limitations and Workarounds
@@ -457,11 +457,11 @@ After deleting the commas, the following query works:
       lots.geometry.coordinates[0][0][2] altitude 
     FROM dfs.`/Users/drilluser/citylots.json` lots LIMIT 1;
 
-    +-----------------------+---------------------+-----------+
+    |-----------------------|---------------------|-----------|
     |       longitude       |      latitude       | altitude  |
-    +-----------------------+---------------------+-----------+
+    |-----------------------|---------------------|-----------|
     | -122.422003528252475  | 37.808480096967251  | 0.0       |
-    +-----------------------+---------------------+-----------+
+    |-----------------------|---------------------|-----------|
     1 row selected (0.618 seconds)
 
 ### Irregular data
@@ -482,11 +482,11 @@ Workaround: None, per se, but if you avoid querying the multi-polygon lines (120
       MAX(altitude) 
     FROM tbl;
 
-    +---------------------+--------------------+---------+
+    |---------------------|--------------------|---------|
     |       EXPR$0        |       EXPR$1       | EXPR$2  |
-    +---------------------+--------------------+---------+
+    |---------------------|--------------------|---------|
     | -122.4379846573301  | 37.75844260679518  | 0.0     |
-    +---------------------+--------------------+---------+
+    |---------------------|--------------------|---------|
     1 row selected (6.64 seconds)
     
 Another option is to use the experimental union type.

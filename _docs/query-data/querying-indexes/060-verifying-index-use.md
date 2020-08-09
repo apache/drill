@@ -1,6 +1,6 @@
 ---
 title: "Verifying Index Use"
-date: 2018-12-18
+date: 2020-08-08
 parent: "Querying Indexes"
 ---  
 
@@ -33,9 +33,9 @@ In the plan, you can see that Drill scanned the index, `l_single_c_5`, instead o
 Alternatively, you can issue the [EXPLAIN command]({{site.baseurl}}/docs/explain/) to see how Drill executes a query. You can see the chosen physical execution plan for a query without running the query, by issuing the [EXPLAIN PLAN FOR command]({{site.baseurl}}/docs/explain/#explain-for-physical-plans). The output of the command shows you if Drill plans to use the index when executing the query, as shown:    
 
 	EXPLAIN PLAN FOR SELECT L_SHIPDate FROM lineitem WHERE L_QUANTITY = 5 LIMIT 10;
-	+------+------+
+	|------|------|
 	| text | json |
-	+------+------+
+	|------|------|
 	| 00-00    Screen
 	00-01      Project(L_SHIPDate=[$0])
 	00-02        SelectionVectorRemover
@@ -54,9 +54,9 @@ You can compare the full table scan plan against the index-based plan to compare
 In the following example, the indexing feature is enabled, and Drill generated a plan using the index:  
 
 	EXPLAIN PLAN FOR SELECT L_SHIPDate FROM lineitem WHERE L_QUANTITY = 5 LIMIT 10;
-	+------+------+
+	|------|------|
 	| text | json |
-	+------+------+
+	|------|------|
 	| 00-00    Screen
 	00-01      Project(L_SHIPDate=[$0])
 	00-02        SelectionVectorRemover
@@ -72,9 +72,9 @@ Turning the option off, as shown:
 And running the EXPLAIN PLAN FOR command again shows the plan with a full table scan:  
 
 	EXPLAIN PLAN FOR SELECT L_SHIPDate FROM lineitem WHERE L_QUANTITY = 5 LIMIT 10;
-	+------+------+
+	|------|------|
 	| text | json |
-	+------+------+
+	|------|------|
 	| 00-00    Screen
 	00-01      Project(L_SHIPDate=[$0])
 	00-02        SelectionVectorRemover

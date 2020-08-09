@@ -1,6 +1,6 @@
 ---
 title: "CREATE VIEW"
-date: 2019-01-07
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 The CREATE VIEW command creates a virtual structure for the result set of a
@@ -104,67 +104,68 @@ Complete the following steps to create a view in Drill:
   2. Run SHOW DATABASES to verify that Drill recognizes the workspace.  
 
         0: jdbc:drill:zk=local> show databases;
-        +-------------+
-        | SCHEMA_NAME |
-        +-------------+
-        | dfs.default |
-        | dfs.root  |
-        | dfs.donuts  |
-        | dfs.tmp   |
-        | cp.default  |
-        | sys       |
+        |--------------------|
+        | SCHEMA_NAME        |
+        |--------------------|
+        | dfs.default        |
+        | dfs.root           |
+        | dfs.donuts         |
+        | dfs.tmp            |
+        | cp.default         |
+        | sys                |
         | INFORMATION_SCHEMA |
-        +-------------+
+        |--------------------|
 
   3. Use the writable workspace.  
 
         0: jdbc:drill:zk=local> use dfs.donuts;
-        +------------+------------+
-        |     ok    |  summary   |
-        +------------+------------+
-        | true      | Default schema changed to 'dfs.donuts' |
-        +------------+------------+
+        |------|----------------------------------------|
+        | ok   | summary                                |
+        |------|----------------------------------------|
+        | true | Default schema changed to 'dfs.donuts' |
+        |------|----------------------------------------|
 
   4. Test run the query that you plan to use with the CREATE VIEW command.  
 
         0: jdbc:drill:zk=local> select id, type, name, ppu from `donuts.json`;
-        +------------+------------+------------+------------+
-        |     id    |   type    |   name    |    ppu    |
-        +------------+------------+------------+------------+
-        | 0001      | donut      | Cake     | 0.55      |
-        +------------+------------+------------+------------+
+        |------|-------|------|------|
+        | id   | type  | name | ppu  |
+        |------|-------|------|------|
+        | 0001 | donut | Cake | 0.55 |
+        |------|-------|------|------|
 
   5. Run the CREATE VIEW command with the query.  
 
         0: jdbc:drill:zk=local> create view mydonuts as select id, type, name, ppu from `donuts.json`;
-        +------------+------------+
-        |     ok    |  summary   |
-        +------------+------------+
-        | true      | View 'mydonuts' created successfully in 'dfs.donuts' schema |
-        +------------+------------+
+        |------|-------------------------------------------------------------|
+        | ok   | summary                                                     |
+        |------|-------------------------------------------------------------|
+        | true | View 'mydonuts' created successfully in 'dfs.donuts' schema |
+        |------|-------------------------------------------------------------|
 
   6. Create a new view in another workspace from the current workspace.  
 
         0: jdbc:drill:zk=local> create view dfs.tmp.yourdonuts as select id, type, name from `donuts.json`;
-        +------------+------------+
-        |   ok  |  summary   |
-        +------------+------------+
-        | true      | View 'yourdonuts' created successfully in 'dfs.tmp' schema |
-        +------------+------------+
+        |------|------------------------------------------------------------|
+        | ok   | summary                                                    |
+        |------|------------------------------------------------------------|
+        | true | View 'yourdonuts' created successfully in 'dfs.tmp' schema |
+        |------|------------------------------------------------------------|
 
   7. Query the view created in both workspaces.
 
         0: jdbc:drill:zk=local> select * from mydonuts;
-        +------------+------------+------------+------------+
-        |     id    |   type    |   name    |    ppu    |
-        +------------+------------+------------+------------+
-        | 0001      | donut      | Cake     | 0.55      |
-        +------------+------------+------------+------------+
+        |------|-------|------|------|
+        | id   | type  | name | ppu  |
+        |------|-------|------|------|
+        | 0001 | donut | Cake | 0.55 |
+        |------|-------|------|------|
          
          
         0: jdbc:drill:zk=local> select * from dfs.tmp.yourdonuts;
-        +------------+------------+------------+
-        |   id  |   type    |   name    |
-        +------------+------------+------------+
-        | 0001      | donut     | Cake      |
-        +------------+------------+------------+
+        |------|-------|------|
+        | id   | type  | name |
+        |------|-------|------|
+        | 0001 | donut | Cake |
+        |------|-------|------|
+

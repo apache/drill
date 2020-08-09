@@ -1,6 +1,6 @@
 ---
 title: "CREATE TABLE AS (CTAS)"
-date: 2019-01-07
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 Use the CREATE TABLE AS (CTAS) command to create tables in Drill.
@@ -84,11 +84,11 @@ The following query returns one row from a JSON file that [you can download]({{s
 
 	0: jdbc:drill:zk=local> SELECT id, type, name, ppu
 	FROM dfs.`/Users/brumsby/drill/donuts.json`;
-	+------------+------------+------------+------------+
+	|------------|------------|------------|------------|
 	|     id     |    type    |    name    |    ppu     |
-	+------------+------------+------------+------------+
+	|------------|------------|------------|------------|
 	| 0001       | donut      | Cake       | 0.55       |
-	+------------+------------+------------+------------+
+	|------------|------------|------------|------------|
 	1 row selected (0.248 seconds)
 
 To create and verify the contents of a table that contains this row:
@@ -115,22 +115,22 @@ The following sqlline output captures this sequence of steps.
 ### USE Command
 
 	0: jdbc:drill:zk=local> USE dfs.tmp;
-	+------------+------------+
-	|     ok     |  summary   |
-	+------------+------------+
-	| true       | Default schema changed to 'dfs.tmp' |
-	+------------+------------+
+	|------|-------------------------------------|
+	| ok   | summary                             |
+	|------|-------------------------------------|
+	| true | Default schema changed to 'dfs.tmp' |
+	|------|-------------------------------------|
 	1 row selected (0.03 seconds)
 
 ### CTAS Command
 
 	0: jdbc:drill:zk=local> CREATE TABLE donuts_json AS
 	SELECT id, type, name, ppu FROM dfs.`/Users/brumsby/drill/donuts.json`;
-	+------------+---------------------------+
+	|------------|---------------------------|
 	|  Fragment  | Number of records written |
-	+------------+---------------------------+
+	|------------|---------------------------|
 	| 0_0        | 1                         |
-	+------------+---------------------------+
+	|------------|---------------------------|
 	1 row selected (0.107 seconds)
 
 ### File Contents
@@ -149,11 +149,11 @@ The following sqlline output captures this sequence of steps.
 ### Query Against New Table
 
 	0: jdbc:drill:zk=local> SELECT * FROM donuts_json;
-	+------------+------------+------------+------------+
+	|------------|------------|------------|------------|
 	|     id     |    type    |    name    |    ppu     |
-	+------------+------------+------------+------------+
+	|------------|------------|------------|------------|
 	| 0001       | donut      | Cake       | 0.55       |
-	+------------+------------+------------+------------+
+	|------------|------------|------------|------------|
 	1 row selected (0.053 seconds)
 
 ### Use a Different Output Format

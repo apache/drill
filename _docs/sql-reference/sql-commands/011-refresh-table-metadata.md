@@ -1,6 +1,6 @@
 ---
 title: "REFRESH TABLE METADATA"
-date: 2019-05-31
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 Run the REFRESH TABLE METADATA command on Parquet tables and directories to generate a metadata cache file. REFRESH TABLE METADATA collects metadata from the footers of Parquet files and writes the metadata to a metadata file (`.drill.parquet_file_metadata.v4`) and a summary file (`.drill.parquet_summary_metadata.v4`). The planner uses the metadata cache file to prune extraneous data during the query planning phase. Run the REFRESH TABLE METADATA command if planning time is a significant percentage of the total elapsed time of the query.   
@@ -100,21 +100,21 @@ These examples use a schema, `dfs.samples`, which points to the `/tmp` directory
 Change to the `dfs.samples` schema: 
 
 	use dfs.samples;
-	+-------+------------------------------------------+
+	|-------|------------------------------------------|
 	|  ok   |                 summary        	      |
-	+-------+------------------------------------------+
+	|-------|------------------------------------------|
 	| true  | Default schema changed to [dfs.samples]  |
-	+-------+------------------------------------------+  
+	|-------|------------------------------------------|  
 
 ### Running REFRESH TABLE METADATA on a Directory
 Running the REFRESH TABLE METADATA command on the “parquet1” directory generates metadata cache files at each directory level.
 
 	apache drill (dfs.samples)> REFRESH TABLE METADATA parquet1;
-	+------+---------------------------------------------------+
+	|------|---------------------------------------------------|
 	|  ok  |                      summary                      |
-	+------+---------------------------------------------------+
+	|------|---------------------------------------------------|
 	| true | Successfully updated metadata for table parquet1. |
-	+------+---------------------------------------------------+
+	|------|---------------------------------------------------|
 
 When looking at the “parquet1” directory and subdirectories, you can see that a metadata cache and summary (hidden) files were created at each level:
 
@@ -270,9 +270,9 @@ Looking at the `.drill.parquet_summary_metadata.v4` file in the `parquet1` direc
 When the planner uses metadata cache files, the query plan includes the `usedMetadataFile` flag. You can access the query plan in the Drill Web UI, by clicking on the query in the Profiles page, or by running the EXPLAIN PLAN FOR command, as shown:
 
 	apache drill (dfs.samples)> explain plan for select * from parquet1;
-	+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+
+	|----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
 	|                                       text                                       |                                       json                                       |
-	+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+
+	|----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
 	| 00-00    Screen
 	00-01      Project(**=[$0])
 	00-02        Scan(table=[[dfs, samples, parquet1]], groupscan=[ParquetGroupScan [entries=[ReadEntryWithPath [path=/tmp/parquet1]], selectionRoot=/tmp/parquet1, numFiles=1, numRowGroups=2, usedMetadataFile=true, cacheFileRoot=/tmp/parquet1, columns=[`**`]]])  
@@ -281,9 +281,9 @@ When the planner uses metadata cache files, the query plan includes the `usedMet
 When you run the EXPLAIN command with a COUNT() query, as shown, you can see that the query planner uses the summary cache file and avoids reading the larger metadata cache file. The query plan includes the `usedMetadataSummaryFile` flag.
 
 	apache drill (dfs.samples)> explain plan for select count(*) from parquet1;
-	+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+
+	|----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
 	|                                       text                                       |                                       json                                       |
-	+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+
+	|----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
 	| 00-00    Screen
 	00-01      Project(EXPR$0=[$0])
 	00-02        DirectScan(groupscan=[files = [file:/tmp/parquet1/.drill.parquet_summary_metadata.v4], numFiles = 1, usedMetadataSummaryFile = true, DynamicPojoRecordReader{records = [[50]]}])

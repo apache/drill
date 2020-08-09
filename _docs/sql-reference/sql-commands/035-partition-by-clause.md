@@ -1,6 +1,6 @@
 ---
 title: "PARTITION BY Clause"
-date: 2018-11-02
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 The PARTITION BY clause in the CTAS command partitions data, which Drill [prunes]({{site.baseurl}}/docs/partition-pruning/) to improve performance when you query the data. (Drill 1.1.0)
@@ -92,22 +92,22 @@ a file to have this extension.
         CREATE TABLE by_yr (yr, ngram, occurrances) PARTITION BY (yr) AS SELECT columns[1] yr, columns[0] ngram, columns[2] occurrances FROM `googlebooks-eng-all-5gram-20120701-zo.tsv` LIMIT 100;
     Output is:  
 
-        +-----------+----------------------------+
+        |-----------|----------------------------|
         | Fragment  | Number of records written  |
-        +-----------+----------------------------+
+        |-----------|----------------------------|
         | 0_0       | 100                        |
-        +-----------+----------------------------+
+        |-----------|----------------------------|
         1 row selected (5.775 seconds)
     Distributed mode:  
 
         CREATE TABLE by_yr (yr, ngram, occurrances) PARTITION BY (yr) AS SELECT columns[1] yr, columns[0] ngram, columns[2] occurrances FROM `googlebooks-eng-all-5gram-20120701-zo.tsv`;
     Output is:
 
-        +-----------+----------------------------+
+        |-----------|----------------------------|
         | Fragment  | Number of records written  |
-        +-----------+----------------------------+
+        |-----------|----------------------------|
         | 0_0       | 1773829                    |
-        +-----------+----------------------------+
+        |-----------|----------------------------|
         1 row selected (54.159 seconds)
 
     Drill writes more than 1.7M rows of data to the table. The files look something like this:
@@ -121,29 +121,29 @@ a file to have this extension.
    `SELECT * FROM by_yr LIMIT 100;`  
    The output looks something like this:
 
-        +-------+------------------------------------------------------------+--------------+
-        |  yr   |                           ngram                            | occurrances  |
-        +-------+------------------------------------------------------------+--------------+
-        | 1737  | Zone_NOUN ,_. and_CONJ the_DET Tippet_NOUN                 | 1            |
-        | 1737  | Zones_NOUN of_ADP the_DET Earth_NOUN ,_.                   | 2            |
-        . . .
-        | 1737  | Zobah , David slew of                                      | 1            |
-        | 1966  | zone by virtue of the  | 1           |
-        +-------+------------------------+-------------+
+        |------|--------------------------------------------|-------------|
+        | yr   | ngram                                      | occurrences |
+        |------|--------------------------------------------|-------------|
+        | 1737 | Zone_NOUN ,_. and_CONJ the_DET Tippet_NOUN | 1           |
+        | 1737 | Zones_NOUN of_ADP the_DET Earth_NOUN ,_.   | 2           |
+        | ...  |                                            |             |
+        | 1737 | Zobah , David slew of                      | 1           |
+        | 1966 | zone by virtue of the                      | 1           |
+        |------|--------------------------------------------|-------------|
         100 rows selected (2.184 seconds)
    Files are partitioned by year. The output is not expected to be in perfect sorted order because Drill reads files sequentially. 
 8. Distributed mode: Query the data to find all ngrams in 1993.
 
         SELECT * FROM by_yr WHERE yr=1993;
-        +-------+-------------------------------------------------------------+--------------+
-        |  yr   |                            ngram                            | occurrances  |
-        +-------+-------------------------------------------------------------+--------------+
-        | 1993  | zoom out , click the                                        | 1            |
-        | 1993  | zones on earth . _END_                                          | 4           |
-        . . .
-        | 1993  | zoology at Oxford University ,                                  | 5           |
-        | 1993  | zones_NOUN ,_. based_VERB mainly_ADV on_ADP  | 2           |
-        +-------+----------------------------------------------+-------------+
+        |------|---------------------------------------------|-------------|
+        | yr   | ngram                                       | occurrences |
+        |------|---------------------------------------------|-------------|
+        | 1993 | zoom out , click the                        | 1           |
+        | 1993 | zones on earth . _END_                      | 4           |
+        | ...  |                                             |             |
+        | 1993 | zoology at Oxford University ,              | 5           |
+        | 1993 | zones_NOUN ,_. based_VERB mainly_ADV on_ADP | 2           |
+        |------|---------------------------------------------|-------------|
         31,100 rows selected (5.45 seconds)
 
     Drill performs partition pruning when you query partitioned data, which improves performance. Performance can be improved further by casting the yr and occurrances columns to INTEGER, as described in section ["Tips for Performant Querying"](/docs/text-files-csv-tsv-psv/#tips-for-performant-querying).
@@ -152,14 +152,14 @@ a file to have this extension.
         SELECT * FROM `/googlebooks-eng-all-5gram-20120701-zo.tsv` WHERE (columns[1] = '1993');
 
         SELECT * FROM `googlebooks-eng-all-5gram-20120701-zo.tsv` WHERE (columns[1] = '1993');
-        +--------------------------------------------------------------------------------+
-        |                                    columns                                     |
-        +--------------------------------------------------------------------------------+
-        | ["Zone , the government of","1993","1","1"]                                    |
-        | ["Zone : Fragments for a","1993","7","7"]                                      |
-        . . .
-        | ["zooxanthellae_NOUN and_CONJ the_DET evolution_NOUN of_ADP","1993","4","3"]  |
-        +-------------------------------------------------------------------------------+
+        |------------------------------------------------------------------------------|
+        | columns                                                                      |
+        |------------------------------------------------------------------------------|
+        | ["Zone , the government of","1993","1","1"]                                  |
+        | ["Zone : Fragments for a","1993","7","7"]                                    |
+        | ...                                                                          |
+        | ["zooxanthellae_NOUN and_CONJ the_DET evolution_NOUN of_ADP","1993","4","3"] |
+        |------------------------------------------------------------------------------|
         31,100 rows selected (8.389 seconds)
 
     The larger the data set you query, the greater the performance benefit from partition pruning. 

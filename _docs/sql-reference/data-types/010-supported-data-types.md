@@ -1,25 +1,25 @@
 ---
 title: "Supported Data Types"
-date: 2018-06-29 22:31:50 UTC
+date: 2020-08-08
 parent: "Data Types"
 ---
 Drill reads from and writes to data sources having a wide variety of types. 
 
-| SQL Data Type                                        | Description                                                                                                            | Example                                                                        |
-|------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| BIGINT                                               | 8-byte signed integer in the range -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807                             | 9223372036854775807                                                            |
-| BINARY                                               | Variable-length byte string                                                                                            | B@e6d9eb7                                                                      |
-| BOOLEAN                                              | True or false                                                                                                          | true                                                                           |
-| DATE                                                 | Years, months, and days in YYYY-MM-DD format since 4713 BC                                                             | 2015-12-30                                                                     |
-| DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)*             | 38-digit precision number, precision is p, and scale is s                                                              | DECIMAL(6,2) is 1234.56,  4 digits before and 2 digits after the decimal point |
-| FLOAT                                                | 4-byte floating point number                                                                                           | 0.456                                                                          |
-| DOUBLE, DOUBLE PRECISION                             | 8-byte floating point number, precision-scalable                                                                       | 0.456                                                                          |
-| INTEGER or INT                                       | 4-byte signed integer in the range -2,147,483,648 to 2,147,483,647                                                     | 2147483646                                                                     |
-| INTERVAL**                                           | A day-time or year-month interval                                                                                      | '1 10:20:30.123' (day-time) or '1-2' year to month (year-month)                |
-| SMALLINT***                                          | 2-byte signed integer in the range -32,768 to 32,767                                                                   | 32000                                                                          |
-| TIME                                                 | 24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss                         | 22:55:55.23                                                                    |
-| TIMESTAMP                                            | JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS    | 2015-12-30 22:55:55.23                                                         |
-| CHARACTER VARYING, CHARACTER, CHAR,**** or VARCHAR   | UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647.   | CHAR(30) casts data to a 30-character string maximum.                          |
+| SQL Data Type                                      | Description                                                                                                          | Example                                                                        |
+|----------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| BIGINT                                             | 8-byte signed integer in the range -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807                           | 9223372036854775807                                                            |
+| BINARY                                             | Variable-length byte string                                                                                          | B@e6d9eb7                                                                      |
+| BOOLEAN                                            | True or false                                                                                                        | true                                                                           |
+| DATE                                               | Years, months, and days in YYYY-MM-DD format since 4713 BC                                                           | 2015-12-30                                                                     |
+| DECIMAL(p,s), or DEC(p,s), NUMERIC(p,s)*           | 38-digit precision number, precision is p, and scale is s                                                            | DECIMAL(6,2) is 1234.56,  4 digits before and 2 digits after the decimal point |
+| FLOAT                                              | 4-byte floating point number                                                                                         | 0.456                                                                          |
+| DOUBLE, DOUBLE PRECISION                           | 8-byte floating point number, precision-scalable                                                                     | 0.456                                                                          |
+| INTEGER or INT                                     | 4-byte signed integer in the range -2,147,483,648 to 2,147,483,647                                                   | 2147483646                                                                     |
+| INTERVAL**                                         | A day-time or year-month interval                                                                                    | '1 10:20:30.123' (day-time) or '1-2' year to month (year-month)                |
+| SMALLINT***                                        | 2-byte signed integer in the range -32,768 to 32,767                                                                 | 32000                                                                          |
+| TIME                                               | 24-hour based time before or after January 1, 2001 in hours, minutes, seconds format: HH:mm:ss                       | 22:55:55.23                                                                    |
+| TIMESTAMP                                          | JDBC timestamp in year, month, date hour, minute, second, and optional milliseconds format: yyyy-MM-dd HH:mm:ss.SSS  | 2015-12-30 22:55:55.23                                                         |
+| CHARACTER VARYING, CHARACTER, CHAR,**** or VARCHAR | UTF8-encoded variable-length string. The default limit is 1 character. The maximum character limit is 2,147,483,647. | CHAR(30) casts data to a 30-character string maximum.                          |
 
 
 \* Starting in Drill 1.14, the DECIMAL data type is enabled by default.  
@@ -138,19 +138,19 @@ As shown in the table, Drill can cast a NULL value, which has the lowest precede
 
 ### Casting Precedence
 
-| Precedence | Data Type              | Precedence | Data Type      |
-|------------|------------------------|------------|----------------|
-| 1          | INTERVALYEAR (highest) | 12         | UINT2          |
-| 2          | INTERVALDAY            | 13         | SMALLINT*      |
-| 3          | TIMESTAMP              | 14         | UINT1          |
-| 4          | DATE                   | 15         | VAR16CHAR      |
-| 5          | TIME                   | 16         | FIXED16CHAR    |
-| 6          | DOUBLE                 | 17         | VARCHAR        |
-| 7          | DECIMAL                | 18         | CHAR           |
-| 8          | UINT8                  | 19         | VARBINARY      |
-| 9          | BIGINT                 | 20         | FIXEDBINARY    |
-| 10         | UINT4                  | 21         | NULL (lowest)  |
-| 11         | INT                    |            |                |
+| Precedence | Data Type              | Precedence | Data Type     |
+|------------|------------------------|------------|---------------|
+| 1          | INTERVALYEAR (highest) | 12         | UINT2         |
+| 2          | INTERVALDAY            | 13         | SMALLINT*     |
+| 3          | TIMESTAMP              | 14         | UINT1         |
+| 4          | DATE                   | 15         | VAR16CHAR     |
+| 5          | TIME                   | 16         | FIXED16CHAR   |
+| 6          | DOUBLE                 | 17         | VARCHAR       |
+| 7          | DECIMAL                | 18         | CHAR          |
+| 8          | UINT8                  | 19         | VARBINARY     |
+| 9          | BIGINT                 | 20         | FIXEDBINARY   |
+| 10         | UINT4                  | 21         | NULL (lowest) |
+| 11         | INT                    |            |               |
 
 \* Not supported in this release.
 
@@ -160,8 +160,8 @@ In a textual file, such as CSV, Drill interprets every field as a VARCHAR, as pr
 
 * [CAST]({{ site.baseurl }}/docs/data-type-conversion/#cast)  
   Casts data from one data type to another.
-* CONVERT_TO and CONVERT_FROM functions
-  Converts data, including binary data, from one data type to another using ["CONVERT_TO and CONVERT_FROM data types"]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions)  
+* [CONVERT_TO and CONVERT_FROM]({{ site.baseurl }})/docs/data-type-conversion/#convert_to-and-convert_from)
+  Convert data, including binary data, from one data type to another using ["CONVERT_TO and CONVERT_FROM data types"]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions)  
 * [TO_CHAR]({{ site.baseurl }}/docs/data-type-conversion/#to_char)  
   Converts a TIMESTAMP, INTERVALDAY/INTERVALYEAR, INTEGER, DOUBLE, or DECIMAL to a string.
 * [TO_DATE]({{ site.baseurl }}/docs/data-type-conversion/#to_date)  
@@ -228,32 +228,32 @@ The [CONVERT_TO function]({{site.baseurl}}/docs/data-type-conversion/#convert_to
 The following table lists the data types you can use with the CONVERT_TO
 and CONVERT_FROM functions:
 
-**Type**| **Input Type**| **Output Type**  
----|---|---  
-JSON | bytes | varchar
-BOOLEAN_BYTE| bytes(1)| BOOLEAN  
-TINYINT_BE| bytes(1)| TINYINT  
-TINYINT| bytes(1)| TINYINT  
-SMALLINT_BE| bytes(2)| SMALLINT  
-SMALLINT| bytes(2)| SMALLINT  
-INT_BE| bytes(4)| INT  
-INT| bytes(4)| INT  
-BIGINT_BE| bytes(8)| BIGINT  
-BIGINT| bytes(8)| BIGINT  
-FLOAT| bytes(4)| FLOAT (float4)  
-DOUBLE| bytes(8)| DOUBLE (float8)  
-INT_HADOOPV| bytes(1-9)| INT  
-BIGINT_HADOOPV| BYTES(1-9)| BIGINT  
-DATE_EPOCH_BE| bytes(8)| DATE  
-DATE_EPOCH| bytes(8)| DATE  
-TIME_EPOCH_BE| bytes(8)| TIME  
-TIME_EPOCH| bytes(8)| TIME  
-TIMESTAMP_EPOCH| bytes(8)| TIMESTAMP
-TIMESTAMP_IMPALA*| bytes(12)| TIMESTAMP
-UTF8| bytes| VARCHAR  
-UTF16| bytes| VAR16CHAR  
-UINT8| bytes(8)| UINT8  
-UINT8_BE| bytes(8)| UINT8
+| **Type**          | **Input Type** | **Output Type** |
+|-------------------|----------------|-----------------|
+| JSON              | bytes          | varchar         |
+| BOOLEAN_BYTE      | bytes(1)       | BOOLEAN         |
+| TINYINT_BE        | bytes(1)       | TINYINT         |
+| TINYINT           | bytes(1)       | TINYINT         |
+| SMALLINT_BE       | bytes(2)       | SMALLINT        |
+| SMALLINT          | bytes(2)       | SMALLINT        |
+| INT_BE            | bytes(4)       | INT             |
+| INT               | bytes(4)       | INT             |
+| BIGINT_BE         | bytes(8)       | BIGINT          |
+| BIGINT            | bytes(8)       | BIGINT          |
+| FLOAT             | bytes(4)       | FLOAT (float4)  |
+| DOUBLE            | bytes(8)       | DOUBLE (float8) |
+| INT_HADOOPV       | bytes(1-9)     | INT             |
+| BIGINT_HADOOPV    | BYTES(1-9)     | BIGINT          |
+| DATE_EPOCH_BE     | bytes(8)       | DATE            |
+| DATE_EPOCH        | bytes(8)       | DATE            |
+| TIME_EPOCH_BE     | bytes(8)       | TIME            |
+| TIME_EPOCH        | bytes(8)       | TIME            |
+| TIMESTAMP_EPOCH   | bytes(8)       | TIMESTAMP       |
+| TIMESTAMP_IMPALA* | bytes(12)      | TIMESTAMP       |
+| UTF8              | bytes          | VARCHAR         |
+| UTF16             | bytes          | VAR16CHAR       |
+| UINT8             | bytes(8)       | UINT8           |
+| UINT8_BE          | bytes(8)       | UINT8           |
 
 \* In Drill 1.2 and later, use the TIMESTAMP_IMPALA type with the CONVERT_FROM function to decode a timestamp from Hive or Impala, as shown in the section, ["About INT96 Support"]({{site.baseurl}}/docs/parquet-format/#about-int96-support).
 

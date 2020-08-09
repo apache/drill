@@ -1,6 +1,6 @@
 ---
 title: "Lexical Structure"
-date: 2018-09-06 17:58:43 UTC
+date: 2020-08-08
 parent: "SQL Reference"
 ---
 
@@ -124,15 +124,15 @@ Table and column names are case-insensitive. Use identifier quotes to enclose na
 The following example shows the keyword Year enclosed in identifier quotes. Because the column alias contains the special space character, also enclose the alias in backticks, as shown in the following example:
 
     SELECT extract(year from transdate) AS `Year`, t.user_info.cust_id AS `Customer Number` FROM dfs.tmp.`sampleparquet` t;
-    +------------+-----------------+
+    |------------|-----------------|
     |    Year    | Customer Number |
-    +------------+-----------------+
+    |------------|-----------------|
     | 2013       | 28              |
     | 2013       | 86623           |
     | 2013       | 11              |
     | 2013       | 666             |
     | 2013       | 999             |
-    +------------+-----------------+
+    |------------|-----------------|
     5 rows selected (0.051 seconds)  
 
 
@@ -149,7 +149,7 @@ The following table lists the supported identifier quotes with their correspondi
 |----------------------|-----------------------------------------------------------------------|
 | Backticks            | 'GRAVE   ACCENT' (U+0060)                                             |
 | Double quotes        | 'QUOTATION   MARK' (U+0022)                                           |
-| Square brackets      | 'LEFT   SQUARE BRACKET' (U+005B) and 'RIGHT SQUARE BRACKET' (U+005D) |  
+| Square brackets      | 'LEFT   SQUARE BRACKET' (U+005B) and 'RIGHT SQUARE BRACKET' (U+005D)  |  
 
 Alternatively, you can set the type of identifier using the `quoting_identifiers` property in the jdbc connection URL, as shown:  
  
@@ -160,27 +160,28 @@ Alternatively, you can set the type of identifier using the `quoting_identifiers
 The following queries show the use of each type of identifier quotes:  
 
        0: jdbc:drill:zk=local> select `employee_id`, `full_name` from cp.`employee.json` limit 1;
-       +--------------+---------------+
-       | employee_id  |   full_name   |
-       +--------------+---------------+
-       | 1            | Sheri Nowmer  |
-       +--------------+---------------+
+
+       |-------------|--------------|
+       | employee_id | full_name    |
+       |-------------|--------------|
+       | 1           | Sheri Nowmer |
+       |-------------|--------------|
        1 row selected (0.148 seconds)  
 
        0: jdbc:drill:zk=local> select "employee_id", "full_name" from cp."employee.json" limit 1;
-       +--------------+---------------+
-       | employee_id  |   full_name   |
-       +--------------+---------------+
-       | 1            | Sheri Nowmer  |
-       +--------------+---------------+
+       |-------------|--------------|
+       | employee_id | full_name    |
+       |-------------|--------------|
+       | 1           | Sheri Nowmer |
+       |-------------|--------------|
        1 row selected (0.129 seconds)  
 
        0: jdbc:drill:zk=local> select [employee_id], [full_name] from cp.[employee.json] limit 1;
-       +--------------+---------------+
-       | employee_id  |   full_name   |
-       +--------------+---------------+
-       | 1            | Sheri Nowmer  |
-       +--------------+---------------+
+       |-------------|--------------|
+       | employee_id | full_name    |
+       |-------------|--------------|
+       | 1           | Sheri Nowmer |
+       |-------------|--------------|
        1 row selected (0.14 seconds)  
 
 ### Dots in Column Names  
@@ -188,11 +189,11 @@ As of Drill 1.12, Drill supports dots in column names if the data source itself 
 
        SELECT * FROM `test.json`;
        
-       +--------------------------------------------------------+----------------------------------------------------------+
-       |                      0.0.1                             |                      0.1.2                               |             
-       +--------------------------------------------------------+----------------------------------------------------------+
-       | {"version":"0.0.1","date_created":"2014-03-15"}        | {"version":"0.1.2","date_created":"2014-05-21"}          |
-       +--------------------------------------------------------+----------------------------------------------------------+  
+       |-------------------------------------------------|-------------------------------------------------|
+       | 0.0.1                                           | 0.1.2                                           |
+       |-------------------------------------------------|-------------------------------------------------|
+       | {"version":"0.0.1","date_created":"2014-03-15"} | {"version":"0.1.2","date_created":"2014-05-21"} |
+       |-------------------------------------------------|-------------------------------------------------|
 
 When referencing column names with dots in queries, you must escape the dots with [identifier quotes]({{site.baseurl}}/docs/lexical-structure/#identifier-quotes), as shown in the following query:  
 
@@ -233,11 +234,11 @@ Numeric constants include integers, floats, and values in E notation.
 
         SELECT sum(amount) FROM dfs.`/Users/drilluser/sample2.json`;
 
-        +------------+
-        |   EXPR$0   |
-        +------------+
+        |--------------|
+        | EXPR$0       |
+        |--------------|
         | -7.146447E37 |
-        +------------+
+        |--------------|
         1 row selected (0.044 seconds)
 
 Drill represents invalid values, such as the square root of a negative number, as NaN.
@@ -245,12 +246,12 @@ Drill represents invalid values, such as the square root of a negative number, a
 ### String
 Strings are characters enclosed in single quotation marks. To use a single quotation mark itself (apostrophe) in a string, escape it using a single quotation mark. For example, the value Martha's Vineyard in the SOURCE column in the `vitalstat.json` file contains an apostrophe:
 
-    +------------+
-    |   SOURCE   |
-    +------------+
+    |-------------------|
+    | SOURCE            |
+    |-------------------|
     | Martha's Vineyard |
-    | Monroe County |
-    +------------+
+    | Monroe County     |
+    |-------------------|
     2 rows selected (0.053 seconds)
 
 To refer to the string Martha's Vineyard in a query, use single quotation marks to enclose the string and escape the apostophe using a single quotation mark:

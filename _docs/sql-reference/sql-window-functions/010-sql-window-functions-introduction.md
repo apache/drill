@@ -1,6 +1,6 @@
 ---
 title: "SQL Window Functions Introduction"
-date: 2016-03-16 00:27:40 UTC
+date: 2020-08-08
 parent: "SQL Window Functions"
 ---
 
@@ -10,15 +10,15 @@ When you use a window function in a query, define the window using the OVER() cl
 
 The OVER() clause has the following capabilities:  
 
-* Defines window partitions to form groups of rows. (PARTITION BY clause)  
-* Orders rows within a partition. (ORDER BY clause)
+* Defines window partitions to form groups of rows (PARTITION BY clause).
+* Orders rows within a partition (ORDER BY clause).
 
 For example, the following query uses the AVG() window function to calculate the average sales for employees in Q1:  
 
        select emp_name, dealer_id, sales, avg(sales) over() as avgsales from q1_sales;
-       +-----------------+------------+--------+-----------+
+       |-----------------|------------|--------|-----------|
        |    emp_name     | dealer_id  | sales  | avgsales  |
-       +-----------------+------------+--------+-----------+
+       |-----------------|------------|--------|-----------|
        | Beverly Lang    | 2          | 16233  | 13631     |
        | Kameko French   | 2          | 16233  | 13631     |
        | Ursa George     | 3          | 15427  | 13631     |
@@ -29,7 +29,7 @@ For example, the following query uses the AVG() window function to calculate the
        | Jack Salazar    | 1          | 9710   | 13631     |
        | May Stout       | 3          | 9308   | 13631     |
        | Haviva Montoya  | 2          | 9308   | 13631     |
-       +-----------------+------------+--------+-----------+
+       |-----------------|------------|--------|-----------|
        10 rows selected (0.213 seconds)
 
 
@@ -37,11 +37,11 @@ The AVG() window function operates on the rows defined in the window and returns
 To compare, you can run a query using the AVG() function as a standard set function:  
 
        select avg(sales) as avgsales from q1_sales;
-       +-----------+
+       |-----------|
        | avgsales  |
-       +-----------+
+       |-----------|
        | 13630.5   |
-       +-----------+
+       |-----------|
        1 row selected (0.131 seconds)
   
 
@@ -52,9 +52,9 @@ You can also include the optional PARTITION BY and ORDER BY clauses in a query. 
 The following query uses the AVG() window function with the PARTITION BY clause to determine the average car sales for each dealer in Q1:  
 
        select emp_name, dealer_id, sales, avg(sales) over (partition by dealer_id) as avgsales from q1_sales;
-       +-----------------+------------+--------+-----------+
+       |-----------------|------------|--------|-----------|
        |    emp_name     | dealer_id  | sales  | avgsales  |
-       +-----------------+------------+--------+-----------+
+       |-----------------|------------|--------|-----------|
        | Ferris Brown    | 1          | 19745  | 14357     |
        | Noel Meyer      | 1          | 19745  | 14357     |
        | Raphael Hull    | 1          | 8227   | 14357     |
@@ -65,15 +65,15 @@ The following query uses the AVG() window function with the PARTITION BY clause 
        | Ursa George     | 3          | 15427  | 12368     |
        | Abel Kim        | 3          | 12369  | 12368     |
        | May Stout       | 3          | 9308   | 12368     |
-       +-----------------+------------+--------+-----------+
+       |-----------------|------------|--------|-----------|
        10 rows selected (0.215 seconds)  
 
 The following query uses the AVG() and ROW_NUM() window functions to determine the average car sales for each dealer in Q1 and assign a row number to each row in a partition:  
 
        select dealer_id, sales, emp_name,row_number() over (partition by dealer_id order by sales) as `row`,avg(sales) over (partition by dealer_id) as avgsales from q1_sales;
-       +------------+--------+-----------------+------+---------------+
+       |------------|--------|-----------------|------|---------------|
        | dealer_id  | sales  |    emp_name     | row  |      avgsales |
-       +------------+--------+-----------------+------+---------------+
+       |------------|--------|-----------------|------|---------------|
        | 1          | 8227   | Raphael Hull    | 1    | 14356         |
        | 1          | 9710   | Jack Salazar    | 2    | 14356         |
        | 1          | 19745  | Ferris Brown    | 3    | 14356         |
@@ -84,7 +84,7 @@ The following query uses the AVG() and ROW_NUM() window functions to determine t
        | 3          | 9308   | May Stout       | 1    | 12368         |
        | 3          | 12369  | Abel Kim        | 2    | 12368         |
        | 3          | 15427  | Ursa George     | 3    | 12368         |
-       +------------+--------+-----------------+------+---------------+
+       |------------|--------|-----------------|------|---------------|
        10 rows selected (0.37 seconds)  
 
 

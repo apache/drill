@@ -1,6 +1,6 @@
 ---
 title: "Aggregate and Aggregate Statistical"
-date: 2019-01-15
+date: 2020-08-08
 parent: "SQL Functions"
 ---
 
@@ -35,30 +35,30 @@ ANY_VALUE( [ ALL | DISTINCT ] value)
 
 ###ANY_VALUE Examples  
 	SELECT ANY_VALUE(employee_id) AS anyemp FROM cp.`employee.json`;
-	+---------+
+	|---------|
 	| anyemp  |
-	+---------+
+	|---------|
 	| 1156    |
-	+---------+  
+	|---------|  
 
 	SELECT ANY_VALUE(ALL employee_id) AS anyemp FROM cp.`employee.json`;
-	+---------+
+	|---------|
 	| anyemp  |
-	+---------+
+	|---------|
 	| 1156    |
-	+---------+
+	|---------|
 
 	SELECT ANY_VALUE(DISTINCT employee_id) AS anyemp FROM cp.`employee.json`;
-	+---------+
+	|---------|
 	| anyemp  |
-	+---------+
+	|---------|
 	| 1156    |
-	+---------+  
+	|---------|  
 
 	SELECT ANY_VALUE(employee_id) as anyemp, salary as empsal FROM cp.`employee.json` GROUP BY salary;
-	+---------+----------+
+	|---------|----------|
 	| anyemp  |  empsal  |
-	+---------+----------+
+	|---------|----------|
 	| 1155    | 20.0     |
 	| 197     | 3700.0   |
 	| 1115    | 4200.0   |
@@ -107,12 +107,12 @@ ANY_VALUE( [ ALL | DISTINCT ] value)
 	| 36      | 45000.0  |
 	| 10      | 50000.0  |
 	| 1       | 80000.0  |
-	+---------+----------+  
+	|---------|----------|  
 
 	SELECT ANY_VALUE(employee_id) as anyemp FROM cp.`employee.json` GROUP BY salary ORDER BY anyemp;
-	+-----------+
+	|-----------|
 	| anyemp    |
-	+-----------+
+	|-----------|
 	| 1         |
 	| 4         |
 	| 6         |
@@ -161,7 +161,7 @@ ANY_VALUE( [ ALL | DISTINCT ] value)
 	| 1141      |
 	| 1144      |
 	| 1155      |
-	+-----------+  
+	|-----------|  
 
 
 ## AVG 
@@ -186,11 +186,11 @@ Expressions listed within the AVG function and must be included in the GROUP BY 
 
 ```
 ALTER SESSION SET `store.json.all_text_mode` = false;
-+-------+------------------------------------+
+|-------|------------------------------------|
 |  ok   |              summary               |
-+-------+------------------------------------+
+|-------|------------------------------------|
 | true  | store.json.all_text_mode updated.  |
-+-------+------------------------------------+
+|-------|------------------------------------|
 1 row selected (0.073 seconds)
 ```
 
@@ -198,52 +198,52 @@ Take a look at the salaries of employees having IDs 1139, 1140, and 1141. These 
 
 ```
 SELECT * FROM cp.`employee.json` WHERE employee_id IN (1139, 1140, 1141);
-+--------------+------------------+-------------+------------+--------------+--------------------------+-----------+----------------+-------------+------------------------+-------------+----------------+------------------+-----------------+---------+-----------------------+
+|--------------|------------------|-------------|------------|--------------|--------------------------|-----------|----------------|-------------|------------------------|-------------|----------------|------------------|-----------------|---------|-----------------------|
 | employee_id  |    full_name     | first_name  | last_name  | position_id  |      position_title      | store_id  | department_id  | birth_date  |       hire_date        |   salary    | supervisor_id  | education_level  | marital_status  | gender  |    management_role    |
-+--------------+------------------+-------------+------------+--------------+--------------------------+-----------+----------------+-------------+------------------------+-------------+----------------+------------------+-----------------+---------+-----------------------+
+|--------------|------------------|-------------|------------|--------------|--------------------------|-----------|----------------|-------------|------------------------|-------------|----------------|------------------|-----------------|---------|-----------------------|
 | 1139         | Jeanette Belsey  | Jeanette    | Belsey     | 12           | Store Assistant Manager  | 18        | 11             | 1972-05-12  | 1998-01-01 00:00:00.0  | 10000.0000  | 17             | Graduate Degree  | S               | M       | Store Management      |
 | 1140         | Mona Jaramillo   | Mona        | Jaramillo  | 13           | Store Shift Supervisor   | 18        | 11             | 1961-09-24  | 1998-01-01 00:00:00.0  | 8900.0000   | 1139           | Partial College  | S               | M       | Store Management      |
 | 1141         | James Compagno   | James       | Compagno   | 15           | Store Permanent Checker  | 18        | 15             | 1914-02-02  | 1998-01-01 00:00:00.0  | 6400.0000   | 1139           | Graduate Degree  | S               | M       | Store Full Time Staf  |
-+--------------+------------------+-------------+------------+--------------+--------------------------+-----------+----------------+-------------+------------------------+-------------+----------------+------------------+-----------------+---------+-----------------------+
+|--------------|------------------|-------------|------------|--------------|--------------------------|-----------|----------------|-------------|------------------------|-------------|----------------|------------------|-----------------|---------|-----------------------|
 3 rows selected (0.284 seconds)
 ```
 
 ```
 SELECT AVG(salary) FROM cp.`employee.json` WHERE employee_id IN (1139, 1140, 1141);
-+--------------------+
+|--------------------|
 |       EXPR$0       |
-+--------------------+
+|--------------------|
 | 8433.333333333334  |
-+--------------------+
+|--------------------|
 1 row selected (0.208 seconds)
 
 SELECT AVG(ALL salary) FROM cp.`employee.json` WHERE employee_id IN (1139, 1140, 1141);
-+--------------------+
+|--------------------|
 |       EXPR$0       |
-+--------------------+
+|--------------------|
 | 8433.333333333334  |
-+--------------------+
+|--------------------|
 1 row selected (0.17 seconds)
 
 SELECT AVG(DISTINCT salary) FROM cp.`employee.json`;
-+---------------------+
+|---------------------|
 |       EXPR$0        |
-+---------------------+
+|---------------------|
 | 12773.333333333334  |
-+---------------------+
+|---------------------|
 1 row selected (0.384 seconds)
 ```
 
     SELECT education_level, AVG(salary) FROM cp.`employee.json` GROUP BY education_level;
-    +----------------------+---------------------+
+    |----------------------|---------------------|
     |   education_level    |       EXPR$1        |
-    +----------------------+---------------------+
+    |----------------------|---------------------|
     | Graduate Degree      | 4392.823529411765   |
     | Bachelors Degree     | 4492.404181184669   |
     | Partial College      | 4047.1180555555557  |
     | High School Degree   | 3516.1565836298932  |
     | Partial High School  | 3511.0852713178297  |
-    +----------------------+---------------------+
+    |----------------------|---------------------|
     5 rows selected (0.495 seconds)
 
 ## COUNT
@@ -267,35 +267,35 @@ Returns the number of rows that match the given criteria.
 ### COUNT Examples
 
     SELECT COUNT(DISTINCT salary) FROM cp.`employee.json`;
-    +---------+
+    |---------|
     | EXPR$0  |
-    +---------+
+    |---------|
     | 48      |
-    +---------+
+    |---------|
     1 row selected (0.159 seconds)
 
     SELECT COUNT(ALL salary) FROM cp.`employee.json`;
-    +---------+
+    |---------|
     | EXPR$0  |
-    +---------+
+    |---------|
     | 1155    |
-    +---------+
+    |---------|
     1 row selected (0.106 seconds)
 
     SELECT COUNT(salary) FROM cp.`employee.json`;
-    +---------+
+    |---------|
     | EXPR$0  |
-    +---------+
+    |---------|
     | 1155    |
-    +---------+
+    |---------|
     1 row selected (0.102 seconds)
 
     SELECT COUNT(*) FROM cp.`employee.json`;
-    +---------+
+    |---------|
     | EXPR$0  |
-    +---------+
+    |---------|
     | 1155    |
-    +---------+
+    |---------|
     1 row selected (0.174 seconds)
 
 ## MIN and MAX Functions
@@ -310,19 +310,19 @@ MAX(column)
 
 ```
 SELECT MIN(salary) FROM cp.`employee.json`;
-+---------+
+|---------|
 | EXPR$0  |
-+---------+
+|---------|
 | 20.0    |
-+---------+
+|---------|
 1 row selected (0.138 seconds)
 
 SELECT MAX(salary) FROM cp.`employee.json`;
-+----------+
+|----------|
 |  EXPR$0  |
-+----------+
+|----------|
 | 80000.0  |
-+----------+
+|----------|
 1 row selected (0.139 seconds)
 ```
 
@@ -330,9 +330,9 @@ Use a correlated subquery to find the names and salaries of the lowest paid empl
 
 ```
 SELECT full_name, SALARY FROM cp.`employee.json` WHERE salary = (SELECT MIN(salary) FROM cp.`employee.json`);
-+------------------------+---------+
+|------------------------|---------|
 |       full_name        | SALARY  |
-+------------------------+---------+
+|------------------------|---------|
 | Leopoldo Renfro        | 20.0    |
 | Donna Brockett         | 20.0    |
 | Laurie Anderson        | 20.0    |
@@ -350,27 +350,27 @@ Returns the total of a numeric column.
 
 ```
 SELECT SUM(ALL salary) FROM cp.`employee.json`;
-+------------+
+|------------|
 |   EXPR$0   |
-+------------+
+|------------|
 | 4642640.0  |
-+------------+
+|------------|
 1 row selected (0.123 seconds)
 
 SELECT SUM(DISTINCT salary) FROM cp.`employee.json`;
-+-----------+
+|-----------|
 |  EXPR$0   |
-+-----------+
+|-----------|
 | 613120.0  |
-+-----------+
+|-----------|
 1 row selected (0.309 seconds)
 
 SELECT SUM(salary) FROM cp.`employee.json` WHERE employee_id IN (1139, 1140, 1141);
-+----------+
+|----------|
 |  EXPR$0  |
-+----------+
+|----------|
 | 25300.0  |
-+----------+
+|----------|
 1 row selected (1.995 seconds)
 ```
 

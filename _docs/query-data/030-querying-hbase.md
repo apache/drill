@@ -1,6 +1,6 @@
 ---
 title: "Querying HBase"
-date: 2016-07-22 00:36:27 UTC
+date: 2020-08-08
 parent: "Query Data"
 ---
 
@@ -124,14 +124,14 @@ steps:
     
     The query returns results that are not useable. In the next step, you convert the data from byte arrays to UTF8 types that are meaningful.
   
-        +-------------+-----------------------+---------------------------------------------------------------------------+
+        |-------------|-----------------------|---------------------------------------------------------------------------|
         |  row_key    |  account              |                                address                                    |
-        +-------------+-----------------------+---------------------------------------------------------------------------+
+        |-------------|-----------------------|---------------------------------------------------------------------------|
         | [B@e6d9eb7  | {"name":"QWxpY2U="}   | {"state":"Q0E=","street":"MTIzIEJhbGxtZXIgQXY=","zipcode":"MTIzNDU="}     |
         | [B@2823a2b4 | {"name":"Qm9i"}       | {"state":"Q0E=","street":"MSBJbmZpbml0ZSBMb29w","zipcode":"MTIzNDU="}     |
         | [B@3b8eec02 | {"name":"RnJhbms="}   | {"state":"Q0E=","street":"NDM1IFdhbGtlciBDdA==","zipcode":"MTIzNDU="}     |
         | [B@242895da | {"name":"TWFyeQ=="}   | {"state":"Q0E=","street":"NTYgU291dGhlcm4gUGt3eQ==","zipcode":"MTIzNDU="} |
-        +-------------+-----------------------+---------------------------------------------------------------------------+
+        |-------------|-----------------------|---------------------------------------------------------------------------|
         4 rows selected (1.335 seconds)
 
 3. Issue the following query, that includes the CONVERT_FROM function, to convert the `students` table to typed data:
@@ -148,14 +148,14 @@ steps:
 
     The query returns results that look much better:
 
-        +------------+------------+------------+------------------+------------+
+        |------------|------------|------------|------------------|------------|
         | studentid  |    name    |   state    |       street     |  zipcode   |
-        +------------+------------+------------+------------------+------------+
+        |------------|------------|------------|------------------|------------|
         | student1   | Alice      | CA         | 123 Ballmer Av   | 12345      |
         | student2   | Bob        | CA         | 1 Infinite Loop  | 12345      |
         | student3   | Frank      | CA         | 435 Walker Ct    | 12345      |
         | student4   | Mary       | CA         | 56 Southern Pkwy | 12345      |
-        +------------+------------+------------+------------------+------------+
+        |------------|------------|------------|------------------|------------|
         4 rows selected (0.504 seconds)
 
 4. Query the clicks table to see which students visited google.com:
@@ -166,13 +166,13 @@ steps:
                CONVERT_FROM(clicks.clickinfo.url, 'UTF8') AS url 
         FROM clicks WHERE clicks.clickinfo.url LIKE '%google%'; 
 
-        +------------+------------+--------------------------+-----------------------+
+        |------------|------------|--------------------------|-----------------------|
         |  clickid   | studentid  |           time           |         url           |
-        +------------+------------+--------------------------+-----------------------+
+        |------------|------------|--------------------------|-----------------------|
         | click1     | student1   | 2014-01-01 12:01:01.0001 | http://www.google.com |
         | click3     | student2   | 2014-01-01 01:02:01.0001 | http://www.google.com |
         | click6     | student3   | 2013-02-01 12:01:01.0001 | http://www.google.com |
-        +------------+------------+--------------------------+-----------------------+
+        |------------|------------|--------------------------|-----------------------|
         3 rows selected (0.294 seconds)
 
 5. Query the clicks table to get the studentid of the student having 100 items. Use CONVERT_FROM to convert the textual studentid and itemtype data, but use CAST to convert the integer quantity.
@@ -182,11 +182,11 @@ steps:
                CAST(tbl.iteminfo.quantity AS INT) AS items 
         FROM clicks tbl WHERE tbl.iteminfo.quantity=100;
 
-        +------------+------------+------------+
+        |------------|------------|------------|
         | studentid  |   EXPR$1   |   items    |
-        +------------+------------+------------+
+        |------------|------------|------------|
         | student2   | text       | 100        |
-        +------------+------------+------------+
+        |------------|------------|------------|
         1 row selected (0.656 seconds)
 
 

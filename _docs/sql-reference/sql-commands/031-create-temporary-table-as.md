@@ -1,6 +1,6 @@
 ---
 title: "CREATE TEMPORARY TABLE AS (CTTAS)"
-date: 2018-12-08
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 As of Drill 1.10, you can use the CREATE TEMPORARY TABLE AS (CTTAS) command to store the results of a query in a temporary table. You can reference the temporary table in subsequent queries within the same session, thereby improving query performance. Data written to the temporary table is not permanently stored on the filesystem. Drill automatically drops the temporary table once the session ends or the Drillbit process fails. Therefore, you do not have to manually drop the table.
@@ -101,11 +101,11 @@ In the following example, cust_promotions is the name of a persistent table unde
 
 	USE dfs.json; 
 	DROP TABLE cust_promotions; 
-	+-------+-----------------------------------------------------+
+	|-------|-----------------------------------------------------|
 	|  ok   |                     summary                         |
-	+-------+-----------------------------------------------------+
+	|-------|-----------------------------------------------------|
 	| true  |      Temporary table [cust_promotions] dropped      |
-	+-------+-----------------------------------------------------+
+	|-------|-----------------------------------------------------|
 
 Even though the workspace was set to dfs.json, the temporary table from dfs.tmp was dropped.
 
@@ -124,11 +124,11 @@ The user wants to create a temporary table which sums the amount of sales with a
 
 	CREATE TEMPORARY TABLE total_amount_by_discount as SELECT cast(columns[3] as boolean) discount, sum(cast(columns[2] as double)) total_amount FROM dfs.`/emp/amount.csv` GROUP BY columns[3];
 		
-    +--------------+-------------------------------------+ 
-	|   Fragment   |      Number of records written      | 
-	+-------------+--------------------------------------+ 
-	| 0_0          |  2                                  | 
-	+-------------+--------------------------------------+
+	|----------|---------------------------|
+	| Fragment | Number of records written |
+	|----------|---------------------------|
+	| 0_0      | 2                         |
+	|----------|---------------------------|
 
 The temporary table `total_amount_by_discount` was created in the default temporary workspace with the default storage format.
 
@@ -136,11 +136,11 @@ To view the temporary table, the user can issue a SELECT statement on the entire
 
 	select * from total_amount_by_discount;
 
-	+-----------+-------------------+ 
-	| discount  | total_amount      |
-	+-----------+-------------------+ 
-	| false    | 220.0              |
-	| true      | 650.0             | 
-	+-----------+-------------------+
+	|----------|--------------|
+	| discount | total_amount |
+	|----------|--------------|
+	| false    | 220.0        |
+	| true     | 650.0        |
+	|----------|--------------|
 
 Within this session, the user can also query data from this temporary table using SELECT statements.

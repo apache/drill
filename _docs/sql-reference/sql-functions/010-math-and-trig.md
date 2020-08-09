@@ -1,6 +1,6 @@
 ---
 title: "Math and Trig"
-date: 2019-01-11
+date: 2020-08-08
 parent: "SQL Functions"
 ---
 Drill supports the math functions shown in the following table of math functions plus trig functions listed at the end of this section. Most math functions and all trig functions take these input types:
@@ -71,26 +71,26 @@ Get the absolute value of the integer key in `input2.json`. The following snippe
 
 The output shows values not shown in the snippet. You can take a look at all the values in the input2.json file.
 
-    +------------+
+    |------------|
     |  integer   |
-    +------------+
+    |------------|
     | 2010       |
     | -2002      |
     | 2001       |
     | 6005       |
-    +------------+
+    |------------|
     4 rows selected (0.113 seconds)
 
     SELECT ABS(`integer`) FROM dfs.`/Users/drill/input2.json`;
 
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 2010       |
     | 2002       |
     | 2001       |
     | 6005       |
-    +------------+
+    |------------|
     4 rows selected (0.357 seconds)
 
 ### CEIL Example
@@ -103,14 +103,14 @@ Get the ceiling of float key values in input2.json. The input2.json file contain
 
         SELECT CEIL(`float`) FROM dfs.`/Users/drill/input2.json`;
 
-        +------------+
+        |------------|
         |   EXPR$0   |
-        +------------+
+        |------------|
         | 18.0       |
         | -1.0       |
         | 2.0        |
         | 2.0        |
-        +------------+
+        |------------|
         4 rows selected (0.647 seconds)
 
 ### FLOOR Example
@@ -118,14 +118,14 @@ Get the floor of float key values in input2.json.
 
     SELECT FLOOR(`float`) FROM dfs.`/Users/drill/input2.json`;
 
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 17.0       |
     | -2.0       |
     | 1.0        |
     | 1.0        |
-    +------------+
+    |------------|
     4 rows selected (0.11 seconds)
 
 ### ROUND Examples
@@ -136,26 +136,26 @@ Open input2.json and change the first float value from 17.4 to 3.14159. Get valu
 
         SELECT ROUND(`float`) FROM dfs.`/Users/drill/input2.json`;
 
-        +------------+
+        |------------|
         |   EXPR$0   |
-        +------------+
+        |------------|
         | 3.0        |
         | -1.0       |
         | 1.0        |
         | 1.0        |
-        +------------+
+        |------------|
         4 rows selected (0.061 seconds)
 
         SELECT ROUND(`float`, 4) FROM dfs.`/Users/drill/input2.json`;
 
-        +------------+
+        |------------|
         |   EXPR$0   |
-        +------------+
+        |------------|
         | 3.1416     |
         | -1.2       |
         | 1.2        |
         | 1.2        |
-        +------------+
+        |------------|
         4 rows selected (0.059 seconds)
 
 ### LOG Examples
@@ -164,33 +164,33 @@ Get the base 2 log of 64.
 
     SELECT LOG(2, 64) FROM (VALUES(1));
 
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 6.0        |
-    +------------+
+    |------------|
     1 row selected (0.069 seconds)
 
 Get the common log of 100.
 
     SELECT LOG10(100) FROM (VALUES(1));
 
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 2.0        |
-    +------------+
+    |------------|
     1 row selected (0.203 seconds)
 
 Get the natural log of 7.5.
 
     SELECT LOG(7.5) FROM (VALUES(1));
 
-    +---------------------+
+    |---------------------|
     |       EXPR$0        |
-    +---------------------+
+    |---------------------|
     | 2.0149030205422647  |
-    +---------------------+
+    |---------------------|
     1 row selected (0.139 seconds)
 
 ## Trig Functions
@@ -230,27 +230,27 @@ Find the sine and tangent of a 45 degree angle. First convert degrees to radians
 
     SELECT RADIANS(30) AS Degrees FROM (VALUES(1));
 
-    +------------+
+    |------------|
     |  Degrees   |
-    +------------+
+    |------------|
     | 0.7853981633974483 |
-    +------------+
+    |------------|
     1 row selected (0.045 seconds)
 
     SELECT SIN(0.7853981633974483) AS `Sine of 30 degrees` FROM (VALUES(1));
 
-    +-----------------------+
+    |-----------------------|
     |  Sine of 45 degrees   |
-    +-----------------------+
+    |-----------------------|
     |  0.7071067811865475   |
-    +-----------------------+
+    |-----------------------|
     1 row selected (0.059 seconds)
 
     SELECT TAN(0.7853981633974483) AS `Tangent of 30 degrees` from (VALUES(1));
 
-    +-----------------------+
+    |-----------------------|
     | Tangent of 45 degrees |
-    +-----------------------+
+    |-----------------------|
     | 0.9999999999999999    |
-    +-----------------------+
+    |-----------------------|
 

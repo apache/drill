@@ -1,6 +1,6 @@
 ---
 title: "Text Files: CSV, TSV, PSV"
-date: 2018-02-09 00:15:59 UTC
+date: 2020-08-08
 parent: "Data Sources and File Formats"
 ---
 
@@ -95,9 +95,9 @@ The examples in this section show the results of querying CSV files that use and
 ![CSV with header]({{ site.baseurl }}/docs/img/csv_with_header.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_with_header.csv2`;
-    +------------------------+
+    |------------------------|
     |        columns         |
-    +------------------------+
+    |------------------------|
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
@@ -105,7 +105,7 @@ The examples in this section show the results of querying CSV files that use and
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
-    +------------------------+
+    |------------------------|
     7 rows selected (0.112 seconds)
     
 **Using a Header in a File**
@@ -123,9 +123,9 @@ The examples in this section show the results of querying CSV files that use and
 ![CSV with header]({{ site.baseurl }}/docs/img/csv_with_header.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_with_header.csv2`;
-    +-------+------+------+------+
+    |-------|------|------|------|
     | name  | num1 | num2 | num3 |
-    +-------+------+------+------+
+    |-------|------|------|------|
     | hello |   1  |   2  |   3  |
     | hello |   1  |   2  |   3  |
     | hello |   1  |   2  |   3  |
@@ -133,7 +133,7 @@ The examples in this section show the results of querying CSV files that use and
     | hello |   1  |   2  |   3  |
     | hello |   1  |   2  |   3  |
     | hello |   1  |   2  |   3  |
-    +-------+------+------+------+
+    |-------|------|------|------|
     7 rows selected (0.12 seconds)
 
 **File with no Header**
@@ -151,9 +151,9 @@ The examples in this section show the results of querying CSV files that use and
 ![CSV no header]({{ site.baseurl }}/docs/img/csv_no_header.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_no_header.csv`;
-    +------------------------+
+    |------------------------|
     |        columns         |
-    +------------------------+
+    |------------------------|
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
@@ -161,7 +161,7 @@ The examples in this section show the results of querying CSV files that use and
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
-    +------------------------+
+    |------------------------|
     7 rows selected (0.112 seconds)
 
 **Escaping a Character in a File**
@@ -169,9 +169,9 @@ The examples in this section show the results of querying CSV files that use and
 ![CSV with escape]({{ site.baseurl }}/docs/img/csv_with_escape.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_with_escape.csv`;
-    +------------------------------------------------------------------------+
+    |------------------------------------------------------------------------|
     |                                columns                                 |
-    +------------------------------------------------------------------------+
+    |------------------------------------------------------------------------|
     | ["hello","1","2","3 \" double quote is the default escape character"]  |
     | ["hello","1","2","3"]                                                  |
     | ["hello","1","2","3"]                                                  |
@@ -179,7 +179,7 @@ The examples in this section show the results of querying CSV files that use and
     | ["hello","1","2","3"]                                                  |
     | ["hello","1","2","3"]                                                  |
     | ["hello","1","2","3"]                                                  |
-    +------------------------------------------------------------------------+
+    |------------------------------------------------------------------------|
     7 rows selected (0.104 seconds)
 
 **Adding Comments to a File**
@@ -187,9 +187,9 @@ The examples in this section show the results of querying CSV files that use and
 ![CSV with comments]({{ site.baseurl }}/docs/img/csv_with_comments.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_with_comments.csv2`;
-    +------------------------+
+    |------------------------|
     |        columns         |
-    +------------------------+
+    |------------------------|
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
@@ -197,7 +197,7 @@ The examples in this section show the results of querying CSV files that use and
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
     | ["hello","1","2","3"]  |
-    +------------------------+
+    |------------------------|
     7 rows selected (0.111 seconds)
 
 ## Strategies for Using Attributes
@@ -287,9 +287,9 @@ This example uses the [Passenger Dataset](http://media.flysfo.com/media/sfo/medi
         WHERE CAST(columns[11] AS DOUBLE) < 5
         ;
 
-        +---------+-----------------------------------+------------------+
+        |---------|-----------------------------------|------------------|
         |  DATE   |              AIRLINE              | PASSENGER_COUNT  |
-        +---------+-----------------------------------+------------------+
+        |---------|-----------------------------------|------------------|
         | 200610  | United Airlines - Pre 07/01/2013  | 2.0              |
         ...
         ...

@@ -1,6 +1,6 @@
 ---
 title: "Lesson 1: Learn about the Data Set"
-date: 2018-12-08
+date: 2020-08-08
 parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal
@@ -41,19 +41,19 @@ This tutorial uses the DECIMAL data type in some examples. The DECIMAL data type
 
     alter session set `planner.enable_decimal_data_type`=true;
 
-    +-------+--------------------------------------------+
+    |-------|--------------------------------------------|
     |  ok   |                  summary                   |
-    +-------+--------------------------------------------+
+    |-------|--------------------------------------------|
     | true  | planner.enable_decimal_data_type updated.  |
-    +-------+--------------------------------------------+
+    |-------|--------------------------------------------|
     1 row selected 
 
 ### List the available workspaces and databases:
 
     0: jdbc:drill:> show databases;
-    +---------------------+
+    |---------------------|
     |     SCHEMA_NAME     |
-    +---------------------+
+    |---------------------|
     | INFORMATION_SCHEMA  |
     | cp.default          |
     | dfs.clicks          |
@@ -65,7 +65,7 @@ This tutorial uses the DECIMAL data type in some examples. The DECIMAL data type
     | hive.default        |
     | maprdb              |
     | sys                 |
-    +---------------------+
+    |---------------------|
 
 This command exposes all the metadata available from the storage
 plugins configured with Drill as a set of schemas. The Hive and
@@ -82,11 +82,11 @@ MapR file system. The orders table contains 122,000 rows.
 ### Set the schema to hive:
 
     0: jdbc:drill:> use hive.`default`;
-    +-------+-------------------------------------------+
+    |-------|-------------------------------------------|
     |  ok   |                  summary                  |
-    +-------+-------------------------------------------+
+    |-------|-------------------------------------------|
     | true  | Default schema changed to [hive.default]  |
-    +-------+-------------------------------------------+
+    |-------|-------------------------------------------|
     1 row selected
 
 You will run the USE command throughout this tutorial. The USE command sets
@@ -98,16 +98,16 @@ You can use the DESCRIBE command to show the columns and data types for a Hive
 table:
 
     0: jdbc:drill:> describe orders;
-    +-------------+------------+-------------+
+    |-------------|------------|-------------|
     | COLUMN_NAME | DATA_TYPE  | IS_NULLABLE |
-    +-------------+------------+-------------+
+    |-------------|------------|-------------|
     | order_id    | BIGINT     | YES         |
     | month       | VARCHAR    | YES         |
     | cust_id     | BIGINT     | YES         |
     | state       | VARCHAR    | YES         |
     | prod_id     | BIGINT     | YES         |
     | order_total | INTEGER    | YES         |
-    +-------------+------------+-------------+
+    |-------------|------------|-------------|
 
 The DESCRIBE command returns complete schema information for Hive tables based
 on the metadata available in the Hive metastore.
@@ -115,15 +115,15 @@ on the metadata available in the Hive metastore.
 ### Select 5 rows from the orders table:
 
     0: jdbc:drill:> select * from orders limit 5;
-    +------------+------------+------------+------------+------------+-------------+
+    |------------|------------|------------|------------|------------|-------------|
     |  order_id  |   month    |  cust_id   |   state    |  prod_id   | order_total |
-    +------------+------------+------------+------------+------------+-------------+
+    |------------|------------|------------|------------|------------|-------------|
     | 67212      | June       | 10001      | ca         | 909        | 13          |
     | 70302      | June       | 10004      | ga         | 420        | 11          |
     | 69090      | June       | 10011      | fl         | 44         | 76          |
     | 68834      | June       | 10012      | ar         | 0          | 81          |
     | 71220      | June       | 10018      | az         | 411        | 24          |
-    +------------+------------+------------+------------+------------+-------------+
+    |------------|------------|------------|------------|------------|-------------|
 
 Because orders is a Hive table, you can query the data in the same way that
 you would query the columns in a relational database table. Note the use of
@@ -172,34 +172,34 @@ The customers table contains 993 rows.
 ### Set the workspace to maprdb:
 
     use maprdb;
-    +-------+-------------------------------------+
+    |-------|-------------------------------------|
     |  ok   |               summary               |
-    +-------+-------------------------------------+
+    |-------|-------------------------------------|
     | true  | Default schema changed to [maprdb]  |
-    +-------+-------------------------------------+
+    |-------|-------------------------------------|
     1 row selected
 
 ### Describe the tables:
 
     0: jdbc:drill:> describe customers;
-    +--------------+------------------------+--------------+
+    |--------------|------------------------|--------------|
     | COLUMN_NAME  |       DATA_TYPE        | IS_NULLABLE  |
-    +--------------+------------------------+--------------+
+    |--------------|------------------------|--------------|
     | row_key      | ANY                    | NO           |
     | address      | (VARCHAR(1), ANY) MAP  | NO           |
     | loyalty      | (VARCHAR(1), ANY) MAP  | NO           |
     | personal     | (VARCHAR(1), ANY) MAP  | NO           |
-    +--------------+------------------------+--------------+
+    |--------------|------------------------|--------------|
     4 rows selected 
  
     0: jdbc:drill:> describe products;
-    +--------------+------------------------+--------------+
+    |--------------|------------------------|--------------|
     | COLUMN_NAME  |       DATA_TYPE        | IS_NULLABLE  |
-    +--------------+------------------------+--------------+
+    |--------------|------------------------|--------------|
     | row_key      | ANY                    | NO           |
     | details      | (VARCHAR(1), ANY) MAP  | NO           |
     | pricing      | (VARCHAR(1), ANY) MAP  | NO           |
-    +--------------+------------------------+--------------+
+    |--------------|------------------------|--------------|
     3 rows selected 
 
 Unlike the Hive example, the DESCRIBE command does not return the full schema
@@ -216,15 +216,15 @@ ANY.
 ### Select 5 rows from the products table:
 
     0: jdbc:drill:> select * from products limit 5;
-    +--------------+----------------------------------------------------------------------------------------------------------------+-------------------+
+    |--------------|----------------------------------------------------------------------------------------------------------------|-------------------|
     |   row_key    |                                                    details                                                     |      pricing      |
-    +--------------+----------------------------------------------------------------------------------------------------------------+-------------------+
+    |--------------|----------------------------------------------------------------------------------------------------------------|-------------------|
     | [B@b01c5f8   | {"category":"bGFwdG9w","name":"U29ueSBub3RlYm9vaw=="}                                                          | {"price":"OTU5"}  |
     | [B@5edfe5ad  | {"category":"RW52ZWxvcGVz","name":"IzEwLTQgMS84IHggOSAxLzIgUHJlbWl1bSBEaWFnb25hbCBTZWFtIEVudmVsb3Blcw=="}      | {"price":"MTY="}  |
     | [B@3d5ff184  | {"category":"U3RvcmFnZSAmIE9yZ2FuaXphdGlvbg==","name":"MjQgQ2FwYWNpdHkgTWF4aSBEYXRhIEJpbmRlciBSYWNrc1BlYXJs"}  | {"price":"MjEx"}  |
     | [B@65e93096  | {"category":"TGFiZWxz","name":"QXZlcnkgNDk4"}                                                                  | {"price":"Mw=="}  |
     | [B@3074fc1f  | {"category":"TGFiZWxz","name":"QXZlcnkgNDk="}                                                                  | {"price":"Mw=="}  |
-    +--------------+----------------------------------------------------------------------------------------------------------------+-------------------+
+    |--------------|----------------------------------------------------------------------------------------------------------------|-------------------|
     5 rows selected 
 
 Given that Drill requires no up front schema definitions indicating data
@@ -238,15 +238,15 @@ In Lesson 2, you will use CAST functions to return typed data for each column.
 
 
     +0: jdbc:drill:> select * from customers limit 5;
-    +--------------+-----------------------+-------------------------------------------------+---------------------------------------------------------------------------------------+
+    |--------------|-----------------------|-------------------------------------------------|---------------------------------------------------------------------------------------|
     |   row_key    |        address        |                     loyalty                     |                                       personal                                        |
-    +--------------+-----------------------+-------------------------------------------------+---------------------------------------------------------------------------------------+
+    |--------------|-----------------------|-------------------------------------------------|---------------------------------------------------------------------------------------|
     | [B@3ed2649e  | {"state":"InZhIg=="}  | {"agg_rev":"MTk3","membership":"InNpbHZlciI="}  | {"age":"IjE1LTIwIg==","gender":"IkZFTUFMRSI=","name":"IkNvcnJpbmUgTWVjaGFtIg=="}      |
     | [B@66cbe14a  | {"state":"ImluIg=="}  | {"agg_rev":"MjMw","membership":"InNpbHZlciI="}  | {"age":"IjI2LTM1Ig==","gender":"Ik1BTEUi","name":"IkJyaXR0YW55IFBhcmsi"}              |
     | [B@5333f5ff  | {"state":"ImNhIg=="}  | {"agg_rev":"MjUw","membership":"InNpbHZlciI="}  | {"age":"IjI2LTM1Ig==","gender":"Ik1BTEUi","name":"IlJvc2UgTG9rZXki"}                  |
     | [B@785b6305  | {"state":"Im1lIg=="}  | {"agg_rev":"MjYz","membership":"InNpbHZlciI="}  | {"age":"IjUxLTEwMCI=","gender":"IkZFTUFMRSI=","name":"IkphbWVzIEZvd2xlciI="}          |
     | [B@37c21afe  | {"state":"Im1uIg=="}  | {"agg_rev":"MjAy","membership":"InNpbHZlciI="}  | {"age":"IjUxLTEwMCI=","gender":"Ik9USEVSIg==","name":"Ikd1aWxsZXJtbyBLb2VobGVyIg=="}  |
-    +--------------+-----------------------+-------------------------------------------------+---------------------------------------------------------------------------------------+
+    |--------------|-----------------------|-------------------------------------------------|---------------------------------------------------------------------------------------|
     5 rows selected
 
 Again, the table returns byte data that needs to be cast to readable data
@@ -285,11 +285,11 @@ setup beyond the definition of a workspace.
 ### Set the workspace to dfs.clicks:
 
     0: jdbc:drill:> use dfs.clicks;
-    +-------+-----------------------------------------+
+    |-------|-----------------------------------------|
     |  ok   |                 summary                 |
-    +-------+-----------------------------------------+
+    |-------|-----------------------------------------|
     | true  | Default schema changed to [dfs.clicks]  |
-    +-------+-----------------------------------------+
+    |-------|-----------------------------------------|
     1 row selected
 
 In this case, setting the workspace is a mechanism for making queries easier
@@ -307,12 +307,12 @@ is directly below the nested directory.
 ### Select 2 rows from the clicks.json file:
 
     0: jdbc:drill:> select * from `clicks/clicks.json` limit 2;
-    +-----------+-------------+-----------+---------------------------------------------------+-------------------------------------------+
+    |-----------|-------------|-----------|---------------------------------------------------|-------------------------------------------|
     | trans_id  |    date     |   time    |                     user_info                     |                trans_info                 |
-    +-----------+-------------+-----------+---------------------------------------------------+-------------------------------------------+
+    |-----------|-------------|-----------|---------------------------------------------------|-------------------------------------------|
     | 31920     | 2014-04-26  | 12:17:12  | {"cust_id":22526,"device":"IOS5","state":"il"}    | {"prod_id":[174,2],"purch_flag":"false"}  |
     | 31026     | 2014-04-20  | 13:50:29  | {"cust_id":16368,"device":"AOS4.2","state":"nc"}  | {"prod_id":[],"purch_flag":"false"}       |
-    +-----------+-------------+-----------+---------------------------------------------------+-------------------------------------------+
+    |-----------|-------------|-----------|---------------------------------------------------|-------------------------------------------|
     2 rows selected 
 
 The FROM clause reference points to a specific file. Drill expands
@@ -326,12 +326,12 @@ or characters.
 ### Select 2 rows from the campaign.json file:
 
     0: jdbc:drill:> select * from `clicks/clicks.campaign.json` limit 2;
-    +-----------+-------------+-----------+---------------------------------------------------+---------------------+----------------------------------------+
+    |-----------|-------------|-----------|---------------------------------------------------|---------------------|----------------------------------------|
     | trans_id  |    date     |   time    |                     user_info                     |       ad_info       |               trans_info               |
-    +-----------+-------------+-----------+---------------------------------------------------+---------------------+----------------------------------------+
+    |-----------|-------------|-----------|---------------------------------------------------|---------------------|----------------------------------------|
     | 35232     | 2014-05-10  | 00:13:03  | {"cust_id":18520,"device":"AOS4.3","state":"tx"}  | {"camp_id":"null"}  | {"prod_id":[7,7],"purch_flag":"true"}  |
     | 31995     | 2014-05-22  | 16:06:38  | {"cust_id":17182,"device":"IOS6","state":"fl"}    | {"camp_id":"null"}  | {"prod_id":[],"purch_flag":"false"}    |
-    +-----------+-------------+-----------+---------------------------------------------------+---------------------+----------------------------------------+
+    |-----------|-------------|-----------|---------------------------------------------------|---------------------|----------------------------------------|
     2 rows selected 
 
 Notice that with a select * query, any complex data types such as maps and
@@ -359,22 +359,22 @@ data source, or to query a subset of the files.
 ### Set the workspace to dfs.logs:
 
     0: jdbc:drill:> use dfs.logs;
-    +-------+---------------------------------------+
+    |-------|---------------------------------------|
     |  ok   |                summary                |
-    +-------+---------------------------------------+
+    |-------|---------------------------------------|
     | true  | Default schema changed to [dfs.logs]  |
-    +-------+---------------------------------------+
+    |-------|---------------------------------------|
     1 row selected
 
 ### Select 2 rows from the logs directory:
 
     0: jdbc:drill:> select * from logs limit 2;
-    +-------+-------+-----------+-------------+-----------+----------+---------+--------+----------+-----------+----------+-------------+
+    |-------|-------|-----------|-------------|-----------|----------|---------|--------|----------|-----------|----------|-------------|
     | dir0  | dir1  | trans_id  |    date     |   time    | cust_id  | device  | state  | camp_id  | keywords  | prod_id  | purch_flag  |
-    +-------+-------+-----------+-------------+-----------+----------+---------+--------+----------+-----------+----------+-------------+
+    |-------|-------|-----------|-------------|-----------|----------|---------|--------|----------|-----------|----------|-------------|
     | 2012  | 8     | 109       | 08/07/2012  | 20:33:13  | 144618   | IOS5    | ga     | 4        | hey       | 6        | false       |
     | 2012  | 8     | 119       | 08/19/2012  | 03:37:50  | 17       | IOS5    | tx     | 16       | and       | 50       | false       |
-    +-------+-------+-----------+-------------+-----------+----------+---------+--------+----------+-----------+----------+-------------+
+    |-------|-------|-----------|-------------|-----------|----------|---------|--------|----------|-----------|----------|-------------|
     2 rows selected 
 
 Note that this is flat JSON data. The dfs.clicks workspace location property
@@ -389,11 +389,11 @@ queries that leverage these dynamic variables.
 ### Find the total number of rows in the logs directory (all files):
 
     0: jdbc:drill:> select count(*) from logs;
-    +---------+
+    |---------|
     | EXPR$0  |
-    +---------+
+    |---------|
     | 48000   |
-    +---------+
+    |---------|
     1 row selected 
 
 This query traverses all of the files in the logs directory and its

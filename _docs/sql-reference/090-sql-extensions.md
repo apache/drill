@@ -1,6 +1,6 @@
 ---
 title: "SQL Extensions"
-date: 2018-11-02
+date: 2020-08-08
 parent: "SQL Reference"
 ---
 Drill extends SQL to explore smaller-scale data in ways not possible with SQL. Using intuitive SQL extensions you work with self-describing data and complex data types. Extensions to SQL include capabilities for exploring self-describing data, such as files and HBase, directly in the native format.
@@ -38,16 +38,16 @@ Drill provides the following functions for analyzing nested data.
 The [`sys` tables](/docs/querying-system-tables/) provide port, version, and option information.  For example, Drill connects to a random node. You query the sys table to know where you are connected:
 
     SELECT host FROM sys.drillbits WHERE `current` = true;
-    +------------+
+    |------------|
     |    host    |
-    +------------+
+    |------------|
     | 10.1.1.109 |
-    +------------+
+    |------------|
 
     SELECT commit_id FROM sys.version;
-    +-------------------------------------------+
+    |-------------------------------------------|
     |                 commit_id                 |
-    +-------------------------------------------+
+    |-------------------------------------------|
     | e3fc7e97bfe712dc09d43a8a055a5135c96b7344  |
-    +-------------------------------------------+
+    |-------------------------------------------|
     1 row selected (0.105 seconds)

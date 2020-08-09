@@ -1,6 +1,6 @@
 ---
 title: "DROP VIEW"
-date: 2019-01-07
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 
@@ -45,46 +45,46 @@ Complete the following steps to drop a view in Drill:
 Use the writable workspace from which the view was created.
 
     0: jdbc:drill:zk=local> use dfs.donuts;
-    +------------+------------+
-    |     ok    |  summary   |
-    +------------+------------+
-    | true      | Default schema changed to 'dfs.donuts' |
-    +------------+------------+
+    |------|----------------------------------------|
+    | ok   | summary                                |
+    |------|----------------------------------------|
+    | true | Default schema changed to 'dfs.donuts' |
+    |------|----------------------------------------|
  
 Use the DROP VIEW command to remove a view created in the current workspace.
 
     0: jdbc:drill:zk=local> drop view mydonuts;
-    +------------+------------+
-    |     ok    |  summary   |
-    +------------+------------+
-    | true      | View 'mydonuts' deleted successfully from 'dfs.donuts' schema |
-    +------------+------------+
+    |------|---------------------------------------------------------------|
+    | ok   | summary                                                       |
+    |------|---------------------------------------------------------------|
+    | true | View 'mydonuts' deleted successfully from 'dfs.donuts' schema |
+    |------|---------------------------------------------------------------|
 
 Use the DROP VIEW command to remove a view created in another workspace.
 
     0: jdbc:drill:zk=local> drop view dfs.tmp.yourdonuts;
-    +------------+------------+
-    |   ok  |  summary   |
-    +------------+------------+
-    | true      | View 'yourdonuts' deleted successfully from 'dfs.tmp' schema |  
-    +------------+------------+  
+    |------|--------------------------------------------------------------|
+    | ok   | summary                                                      |
+    |------|--------------------------------------------------------------|
+    | true | View 'yourdonuts' deleted successfully from 'dfs.tmp' schema |
+    |------|--------------------------------------------------------------|
 
 Use the DROP VIEW command with or without the IF EXISTS parameter to remove a view created in the current workspace.  
 
     0: jdbc:drill:zk=local> drop view if exists mydonuts;
-    +------------+--------------------------------------------------------------+
+    |------------|--------------------------------------------------------------|
     |     ok     | summary                                                      |
-    +------------+--------------------------------------------------------------+
+    |------------|--------------------------------------------------------------|
     | true       | View 'mydonuts' deleted successfully from 'dfs.donuts' schema|
-    +------------+--------------------------------------------------------------+
+    |------------|--------------------------------------------------------------|
 
 Use the DROP VIEW command with the IF EXISTS parameter to remove a view that does not exist in the current workspace, either because it was never created or it was already removed.
 
     0: jdbc:drill:zk=local> drop view if exists mydonuts;
-    +-------+---------------------------------------------------+
-    |  ok   |                   summary                         |
-    +-------+---------------------------------------------------+
-    | true  | View 'mydonuts' not found in schema 'dfs.donuts'  |
-    +-------+---------------------------------------------------+
+    |------|--------------------------------------------------|
+    | ok   | summary                                          |
+    |------|--------------------------------------------------|
+    | true | View 'mydonuts' not found in schema 'dfs.donuts' |
+    |------|--------------------------------------------------|
     1 row selected (0.085 seconds)
 

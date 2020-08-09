@@ -1,6 +1,6 @@
 ---
 title: "Dynamic UDFs"
-date: 2016-11-22 00:38:20 UTC
+date: 2020-08-08
 parent: "Adding Custom Functions to Drill"
 ---
 
@@ -42,10 +42,10 @@ The following table describes the configuration properties and UDF directories, 
 
 The following table lists optional directories that you can add:  
 
-|       Property                | Description                                                                                                                                                                                                                                                                                                                                 |
+| Property                      | Description                                                                                                                                                                                                                                                                                                                                 |
 |-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | drill.exec.udf.directory.fs   | Changes the file system from the   default. If there are multiple drillbits in the cluster, and the default file   system is not distributed, you must include this property, and set it to a   distributed file system. For example, file:///, hdfs:///, or maprfs:///, as   shown below:          drill.exec.udf.directory.fs: "hdfs:///" |
-| drill.exec.udf.directory.root | Changes   the root directory for remote UDF directories. By default, this property is   set to the home directory of the user that started the drillbit. For example,   on Linux the location is /home/some_user. On DFS, the location is   /user/<user_name>. And, on Windows, the location is   /C:/User/<user_name>.                     |  
+| drill.exec.udf.directory.root | Changes   the root directory for remote UDF directories. By default, this property is   set to the home directory of the user that started the drillbit. For example,   on Linux the location is /home/some_user. On DFS, the location is   /user/<user_name>. And, on Windows, the location is   /C:/User/<user_name>.                     |
 
 ##Security and Authentication Impact
 Currently, any user can register UDFs if they
@@ -87,11 +87,11 @@ When you issue the command, Drill uses the JAR file name to register the JAR nam
 
 Upon successful registration, Drill returns a message with a list of registered UDFs:  
 
-       +---------------+-----------------------------------------------------------------------------------------------------------+
-       | ok    	      |    summary        	          	                                                                   |
-       +---------------+-----------------------------------------------------------------------------------------------------------+
-       | true          | The following UDFs in jar %s have been registered: %s                           |
-       +---------------+-----------------------------------------------------------------------------------------------------------+  
+        |------|-------------------------------------------------------|
+        | ok   | summary                                               |
+        |------|-------------------------------------------------------|
+        | true | The following UDFs in jar %s have been registered: %s |
+        |------|-------------------------------------------------------|
 
 ##Unregistering a UDF
 Issue the DROP FUNCTION USING JAR command to unregister a UDF, as follows:  
@@ -102,11 +102,11 @@ When you issue the command, Drill unregisters UDFs based on the JAR file name an
 
 Drill returns a message with the list of unregistered UDFs:  
 
-       +---------------+-----------------------------------------------------------------------------------------------------------+
-       | ok    	      |    summary        	          	                                                                   |
-       +---------------+-----------------------------------------------------------------------------------------------------------+
-       | true          | The following UDFs in jar %s have been unregistered: %s                          |
-       +---------------+-----------------------------------------------------------------------------------------------------------+  
+       |------|---------------------------------------------------------|
+       | ok   | summary                                                 |
+       |------|---------------------------------------------------------|
+       | true | The following UDFs in jar %s have been unregistered: %s |
+       |------|---------------------------------------------------------|
 
 ##Migrating UDFs from Dynamic to Built-In  
  

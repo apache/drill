@@ -1,6 +1,6 @@
 ---
 title: "Parquet Format"
-date: 2018-08-08 20:15:20 UTC
+date: 2020-08-08
 parent: "Data Sources and File Formats"
 ---
 [Apache Parquet](http://parquet.incubator.apache.org/documentation/latest) has the following characteristics:
@@ -113,11 +113,11 @@ The following example shows a CTAS query that creates a table from JSON data sho
         
 The CTAS query does not specify a file name extension for the output. Drill creates a parquet file by default, as indicated by the file name in the output:
 
-    +------------+---------------------------+
+    |------------|---------------------------|
     |  Fragment  | Number of records written |
-    +------------+---------------------------+
+    |------------|---------------------------|
     | 0_0        | 5                         |
-    +------------+---------------------------+
+    |------------|---------------------------|
     1 row selected (1.369 seconds)
 
 You can query the Parquet file to verify that Drill now interprets the converted string as a date.
@@ -125,15 +125,15 @@ You can query the Parquet file to verify that Drill now interprets the converted
     SELECT extract(year from transdate) AS `Year`, t.user_info.cust_id AS Customer 
     FROM dfs.tmp.`sampleparquet` t;
 
-    +------------+------------+
+    |------------|------------|
     |    Year    |  Customer  |
-    +------------+------------+
+    |------------|------------|
     | 2013       | 28         |
     | 2013       | 86623      |
     | 2013       | 11         |
     | 2013       | 666        |
     | 2013       | 999        |
-    +------------+------------+
+    |------------|------------|
     5 rows selected (0.039 seconds)
 
 For more examples of and information about using Parquet data, see ["Evolving Parquet as self-describing data format – New paradigms for consumerization of Hadoop data"](https://www.mapr.com/blog/evolving-parquet-self-describing-data-format-new-paradigms-consumerization-hadoop-data#.VNeqQbDF_8f).

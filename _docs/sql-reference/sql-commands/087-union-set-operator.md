@@ -1,6 +1,6 @@
 ---
 title: "UNION Set Operator"
-date: 2018-04-19 01:45:27 UTC
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 The UNION set operator combines the result sets of two separate query expressions. The result set of each query must have the same number of columns and compatible data types. UNION automatically removes duplicate records from the result set. UNION ALL returns all duplicate records.
@@ -33,15 +33,15 @@ The following example uses the UNION ALL set operator to combine click activity 
        FROM `clicks/clicks.campaign.json` t 
        UNION ALL
        SELECT u.trans_id, u.user_info.cust_id FROM `clicks/clicks.json` u LIMIT 5;
-       +-------------+------------+
+       |-------------|------------|
        | transaction |  customer  |
-       +-------------+------------+
+       |-------------|------------|
        | 35232       | 18520      |
        | 31995       | 17182      |
        | 35760       | 18228      |
        | 37090       | 17015      |
        | 37838       | 18737      |
-       +-------------+------------+
+       |-------------|------------|
 
 This UNION ALL query returns rows that exist in two files (and includes any duplicate rows from those files): `clicks.campaign.json` and `clicks.json`  
 

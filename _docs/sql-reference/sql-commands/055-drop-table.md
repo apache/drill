@@ -1,6 +1,6 @@
 ---
 title: "DROP TABLE"
-date: 2019-01-07
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 
@@ -83,29 +83,29 @@ The `"donuts"` workspace is configured within the following DFS configuration:
 Issuing the USE command changes the schema to the `dfs.donuts` schema before dropping the `donuts_json` table.
 
        0: jdbc:drill:zk=local> use dfs.donuts;
-       +-------+-----------------------------------------+
+       |-------|-----------------------------------------|
        |  ok   |                 summary                 |
-       +-------+-----------------------------------------+
+       |-------|-----------------------------------------|
        | true  | Default schema changed to [dfs.donuts]  |
-       +-------+-----------------------------------------+
+       |-------|-----------------------------------------|
        1 row selected (0.096 seconds)
         
        0: jdbc:drill:zk=local> drop table donuts_json;
-       +-------+------------------------------+
+       |-------|------------------------------|
        |  ok   |           summary            |
-       +-------+------------------------------+
+       |-------|------------------------------|
        | true  | Table [donuts_json] dropped  |
-       +-------+------------------------------+
+       |-------|------------------------------|
        1 row selected (0.094 seconds) 
 
 Alternatively, instead of issuing the USE command to change the schema, you can include the schema name when you drop the table.
 
        0: jdbc:drill:zk=local> drop table dfs.donuts.donuts_json;
-       +-------+------------------------------+
+       |-------|------------------------------|
        |  ok   |           summary            |
-       +-------+------------------------------+
+       |-------|------------------------------|
        | true  | Table [donuts_json] dropped  |
-       +-------+------------------------------+
+       |-------|------------------------------|
        1 row selected (1.189 seconds)
 
 If you do not identify the schema prior to issuing the DROP TABLE command, Drill returns the following error:
@@ -135,21 +135,21 @@ Running an `ls` on `/donuts_json` lists the files in the directory.
 Issuing the USE command changes the schema to `dfs.tmp`.  
 
        0: jdbc:drill:zk=local> use dfs.tmp;
-       +-------+-----------------------------------------+
-       |  ok   |                 summary            	 |
-       +-------+-----------------------------------------+
-       | true  | Default schema changed to [dfs.tmp]  |
-       +-------+-----------------------------------------+
+       |------|-------------------------------------|
+       | ok   | summary                             |
+       |------|-------------------------------------|
+       | true | Default schema changed to [dfs.tmp] |
+       |------|-------------------------------------|
        1 row selected (0.085 seconds)  
 
 Running the `DROP TABLE` command removes the table from the `dfs.tmp` schema.
        
        0: jdbc:drill:zk=local> drop table donuts_json;
-       +-------+------------------------------+
+       |-------|------------------------------|
        |  ok   |           summary            |
-       +-------+------------------------------+
+       |-------|------------------------------|
        | true  | Table [donuts_json] dropped  |
-       +-------+------------------------------+
+       |-------|------------------------------|
        1 row selected (0.107 seconds)  
 
 ###Example 3: Dropping a table created as a directory  
@@ -162,18 +162,18 @@ Issuing the USE command changes the schema to the `dfs` schema.
 Issuing the CTAS command creates a `tmp.name_key` table.
 
        0: jdbc:drill:zk=local> CREATE TABLE tmp.`name_key` (N_NAME, N_NATIONKEY) AS SELECT N_NATIONKEY, N_NAME FROM dfs.`/Users/drilluser/apache-drill-1.2.0/sample-data/nation.parquet`;
-       +-----------+----------------------------+
+       |-----------|----------------------------|
        | Fragment  | Number of records written  |
-       +-----------+----------------------------+
+       |-----------|----------------------------|
        | 0_0       | 25                         |
-       +-----------+----------------------------+
+       |-----------|----------------------------|
 
 Querying the directory shows the data. 
 
        0: jdbc:drill:zk=local> select * from tmp.`name_key`;
-       +---------+-----------------+
+       |---------|-----------------|
        | N_NAME  |   N_NATIONKEY   |
-       +---------+-----------------+
+       |---------|-----------------|
        | 0       | ALGERIA         |
        | 1       | ARGENTINA       |
        | 2       | BRAZIL          |
@@ -199,28 +199,28 @@ Querying the directory shows the data.
        | 22      | RUSSIA          |
        | 23      | UNITED KINGDOM  |
        | 24      | UNITED STATES   |
-       +---------+-----------------+
+       |---------|-----------------|
        25 rows selected (0.183 seconds)
 
 Issuing the DROP TABLE command against the directory removes the directory and deletes all the files and subdirectories that existed within the directory.
 
        0: jdbc:drill:zk=local> drop table name_key;
-       +-------+---------------------------+
+       |-------|---------------------------|
        |  ok   |          summary          |
-       +-------+---------------------------+
+       |-------|---------------------------|
        | true  | Table [name_key] dropped  |
-       +-------+---------------------------+
+       |-------|---------------------------|
        1 row selected (0.086 seconds)
 
 ###Example 4: Dropping a table that does not exist
 The following example shows the result of dropping a table that does not exist because it was either already dropped or never existed. 
 
        0: jdbc:drill:zk=local> use dfs.tmp;
-       +-------+--------------------------------------+
+       |-------|--------------------------------------|
        |  ok   |               summary                |
-       +-------+--------------------------------------+
+       |-------|--------------------------------------|
        | true  | Default schema changed to [dfs.tmp]  |
-       +-------+--------------------------------------+
+       |-------|--------------------------------------|
        1 row selected (0.289 seconds)
        
        0: jdbc:drill:zk=local> drop table name_key;
@@ -232,19 +232,19 @@ The following example shows the result of dropping a table that does not exist b
 The following example shows the result of dropping a table that does not exist (because it was already dropped or never existed) using the IF EXISTS parameter with the DROP TABLE command:  
 
        0: jdbc:drill:zk=local> use dfs.tmp;
-       +-------+--------------------------------------+
+       |-------|--------------------------------------|
        |  ok   |               summary                |
-       +-------+--------------------------------------+
+       |-------|--------------------------------------|
        | true  | Default schema changed to 'dfs.tmp'  |
-       +-------+--------------------------------------+
+       |-------|--------------------------------------|
        1 row selected (0.289 seconds)  
 
        0: jdbc:drill:zk=local> drop table if exists name_key;
-       +-------+-----------------------------+
+       |-------|-----------------------------|
        |  ok   |         summary             |
-       +-------+-----------------------------+
+       |-------|-----------------------------|
        | true  | Table 'name_key' not found  |
-       +-------+-----------------------------+
+       |-------|-----------------------------|
        1 row selected (0.083 seconds)  
 
 ### Example 6: Dropping a table that exists using the IF EXISTS parameter  
@@ -252,19 +252,19 @@ The following example shows the result of dropping a table that does not exist (
 The following example shows the result of dropping a table that exists using the IF EXISTS parameter with the DROP TABLE command.  
 
        0: jdbc:drill:zk=local> use dfs.tmp;
-       +-------+--------------------------------------+
+       |-------|--------------------------------------|
        |  ok   |               summary                |
-       +-------+--------------------------------------+
+       |-------|--------------------------------------|
        | true  | Default schema changed to 'dfs.tmp'  |
-       +-------+--------------------------------------+
+       |-------|--------------------------------------|
        1 row selected (0.289 seconds)
        
        0: jdbc:drill:zk=local> drop table if exists name_key;
-       +-------+---------------------------+
+       |-------|---------------------------|
        |  ok   |        summary            |
-       +-------+---------------------------+
+       |-------|---------------------------|
        | true  | Table 'name_key' dropped  |
-       +-------+---------------------------+  
+       |-------|---------------------------|  
        
 ###Example 7: Dropping a table without permissions 
 The following example shows the result of dropping a table without the appropriate permissions in the file system.
@@ -283,11 +283,11 @@ The following example shows the result of dropping a table and issuing a query a
 **User 1 issues the DROP TABLE command.**  
        
        0: jdbc:drill:zk=local> drop table name_key;
-       +-------+------------------------------+
+       |-------|------------------------------|
        |  ok   |           summary            |
-       +-------+------------------------------+
+       |-------|------------------------------|
        | true  | Table [droptable34] dropped  |
-       +-------+------------------------------+
+       |-------|------------------------------|
        1 row selected (12.35 seconds)
 
 **User 2 issues a query against the table.**  

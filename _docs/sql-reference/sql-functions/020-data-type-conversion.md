@@ -1,6 +1,6 @@
 ---
 title: "Data Type Conversion"
-date: 2019-05-24
+date: 2020-08-08
 parent: "SQL Functions"
 ---
 Drill supports the following functions for casting and converting data types:
@@ -13,11 +13,11 @@ Drill supports the following functions for casting and converting data types:
 Starting in Drill 1.15, all cast and data type conversion functions return null for an empty string ('') when the `drill.exec.functions.cast_empty_string_to_null` option is enabled, for example:    
 
 	SELECT CAST('' AS DATE), TO_TIMESTAMP('', 'yyyy-MM-dd HH:mm:ss') FROM (VALUES(2));
-	+---------+---------+
+	|---------|---------|
 	| EXPR$0  | EXPR$1  |
-	+---------+---------+
+	|---------|---------|
 	| null    | null    |
-	+---------+---------+
+	|---------|---------|
 
 Prior to 1.15, casting an empty string to null only worked for numeric types; in Drill 1.15 and later casting an empty string to null also works for date and time data types, including DATE, TIME, TIMESTAMP, INTERVAL YEAR, INTERVAL MONTH, and INTERVAL DAY.
 
@@ -61,29 +61,29 @@ You cannot cast a character string that includes a decimal point to an INT or BI
 The following example shows how to cast a character to a DECIMAL having two decimal places.
 
     SELECT CAST('1' as DECIMAL(28, 2)) FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 1.00       |
-    +------------+
+    |------------|
 
 ### Casting a Number to a Character String
 The first example shows Drill casting a number to a VARCHAR having a length of 3 bytes: The result is a 3-character string, 456. Drill supports the CHAR and CHARACTER VARYING alias.
 
     SELECT CAST(456 as VARCHAR(3)) FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 456        |
-    +------------+
+    |------------|
     1 row selected (0.08 seconds)
 
     SELECT CAST(456 as CHAR(3)) FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 456        |
-    +------------+
+    |------------|
     1 row selected (0.093 seconds)
 
 ### Casting from One Type of Number to Another
@@ -91,11 +91,11 @@ The first example shows Drill casting a number to a VARCHAR having a length of 3
 Cast an integer to a decimal.
 
     SELECT CAST(-2147483648 AS DECIMAL(28,8)) FROM (VALUES(1));
-    +-----------------+
+    |-----------------|
     |     EXPR$0      |
-    +-----------------+
+    |-----------------|
     | -2.147483648E9  |
-    +-----------------+  
+    |-----------------|  
 
 
 
@@ -119,11 +119,11 @@ Create a table in Parquet from the interval data in the `intervals.json` file.
 
         ALTER SESSION SET `store.format` = 'parquet';
 
-        +-------+------------------------+
+        |-------|------------------------|
         |  ok   |        summary         |
-        +-------+------------------------+
+        |-------|------------------------|
         | true  | store.format updated.  |
-        +-------+------------------------+
+        |-------|------------------------|
         1 row selected (0.072 seconds)
 
 2. Use a CTAS statement to cast text from a JSON file to year and day intervals and to write the data to a Parquet table:
@@ -137,13 +137,13 @@ Create a table in Parquet from the interval data in the `intervals.json` file.
 3. Take a look at what Drill wrote to the Parquet file:
 
         SELECT * FROM dfs.`tmp`.parquet_intervals;
-        +-------------------+------------------+---------------+
+        |-------------------|------------------|---------------|
         | INTERVALYEAR_col  | INTERVALDAY_col  | INTERVAL_col  |
-        +-------------------+------------------+---------------+
+        |-------------------|------------------|---------------|
         | P12M              | P1D              | P1DT3660S     |
         | P24M              | P2D              | P2DT7320S     |
         | P36M              | P3D              | P3DT10980S    |
-        +-------------------+------------------+---------------+
+        |-------------------|------------------|---------------|
         3 rows selected (0.082 seconds)
 
 Because you cast the INTERVAL_col to INTERVAL SECOND, Drill returns the interval data representing the year, month, day, hour, minute, and second. 
@@ -195,14 +195,14 @@ This example shows how to use the CONVERT_FROM function to convert HBase data to
 
     SELECT * FROM students;
         
-    +-------------+---------------------+---------------------------------------------------------------------------+
+    |-------------|---------------------|---------------------------------------------------------------------------|
     |   row_key   |  account            |                               address                                     |
-    +-------------+---------------------+---------------------------------------------------------------------------+
+    |-------------|---------------------|---------------------------------------------------------------------------|
     | [B@e6d9eb7  | {"name":"QWxpY2U="} | {"state":"Q0E=","street":"MTIzIEJhbGxtZXIgQXY=","zipcode":"MTIzNDU="}     |
     | [B@2823a2b4 | {"name":"Qm9i"}     | {"state":"Q0E=","street":"MSBJbmZpbml0ZSBMb29w","zipcode":"MTIzNDU="}     |
     | [B@3b8eec02 | {"name":"RnJhbms="} | {"state":"Q0E=","street":"NDM1IFdhbGtlciBDdA==","zipcode":"MTIzNDU="}     |
     | [B@242895da | {"name":"TWFyeQ=="} | {"state":"Q0E=","street":"NTYgU291dGhlcm4gUGt3eQ==","zipcode":"MTIzNDU="} |
-    +-------------+---------------------+---------------------------------------------------------------------------+
+    |-------------|---------------------|---------------------------------------------------------------------------|
     4 rows selected (1.335 seconds)
 
 You use the CONVERT_FROM function to decode the binary data, selecting a data type to use from the [list of supported types]({{ site.baseurl }}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions). JSON supports strings. To convert bytes to strings, use the UTF8 type:
@@ -213,44 +213,44 @@ You use the CONVERT_FROM function to decode the binary data, selecting a data ty
            CONVERT_FROM(students.address.street, 'UTF8') AS street, 
            CONVERT_FROM(students.address.zipcode, 'UTF8') AS zipcode FROM students;
 
-    +------------+------------+------------+------------------+------------+
+    |------------|------------|------------|------------------|------------|
     | studentid  |    name    |   state    |      street      |  zipcode   |
-    +------------+------------+------------+------------------+------------+
+    |------------|------------|------------|------------------|------------|
     | student1   | Alice      | CA         | 123 Ballmer Av   | 12345      |
     | student2   | Bob        | CA         | 1 Infinite Loop  | 12345      |
     | student3   | Frank      | CA         | 435 Walker Ct    | 12345      |
     | student4   | Mary       | CA         | 56 Southern Pkwy | 12345      |
-    +------------+------------+------------+------------------+------------+
+    |------------|------------|------------|------------------|------------|
     4 rows selected (0.504 seconds)
 
 This example converts VARCHAR data to a JSON map:
 
     SELECT CONVERT_FROM('{x:100, y:215.6}' ,'JSON') AS MYCOL FROM (VALUES(1));
-    +----------------------+
+    |----------------------|
     |        MYCOL         |
-    +----------------------+
+    |----------------------|
     | {"x":100,"y":215.6}  |
-    +----------------------+
+    |----------------------|
     1 row selected (0.163 seconds)
 
 This example uses a list of BIGINT data as input and returns a repeated list of vectors:
 
     SELECT CONVERT_FROM('[ [1, 2], [3, 4], [5]]' ,'JSON') AS MYCOL1 FROM (VALUES(1));
-    +------------+
+    |------------|
     |   mycol1   |
-    +------------+
+    |------------|
     | [[1,2],[3,4],[5]] |
-    +------------+
+    |------------|
     1 row selected (0.054 seconds)
 
 This example uses a map as input to return a repeated list vector (JSON).  
 
 	SELECT CONVERT_FROM('[{a : 100, b: 200}, {a:300, b: 400}]' ,'JSON') AS MYCOL1  FROM (VALUES(1));
-	+----------------------------------------+
+	|----------------------------------------|
 	|                 MYCOL1                 |
-	+----------------------------------------+
+	|----------------------------------------|
 	| [{"a":100,"b":200},{"a":300,"b":400}]  |
-	+----------------------------------------+
+	|----------------------------------------|
 
 ### Set Up a Storage Plugin for Working with HBase
 
@@ -307,11 +307,11 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CT
             CONVERT_FROM(students.address.zipcode, 'UTF8') AS zipcode 
         FROM root.`students`;
 
-        +------------+---------------------------+
+        |------------|---------------------------|
         |  Fragment  | Number of records written |
-        +------------+---------------------------+
+        |------------|---------------------------|
         | 0_0        | 4                         |
-        +------------+---------------------------+
+        |------------|---------------------------|
         1 row selected (0.41 seconds)
 4. Navigate to the output. 
 
@@ -352,11 +352,11 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CT
 6. Set up Drill to store data in Parquet format.
 
         ALTER SESSION SET `store.format`='parquet';
-        +-------+------------------------+
+        |-------|------------------------|
         |  ok   |        summary         |
-        +-------+------------------------+
+        |-------|------------------------|
         | true  | store.format updated.  |
-        +-------+------------------------+
+        |-------|------------------------|
         1 row selected (0.07 seconds)
 
 7. Use CONVERT_TO to convert the JSON data to a binary format in the Parquet file.
@@ -369,23 +369,23 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CT
             CONVERT_TO(zipcode, 'UTF8') AS zip 
         FROM tmp.`to_json`;
 
-        +------------+---------------------------+
+        |------------|---------------------------|
         |  Fragment  | Number of records written |
-        +------------+---------------------------+
+        |------------|---------------------------|
         | 0_0        | 4                         |
-        +------------+---------------------------+
+        |------------|---------------------------|
         1 row selected (0.414 seconds)
 8. Take a look at the meaningless output from sqlline:
 
         SELECT * FROM tmp.`json2parquet`;
-        +-------------+-------------+-------------+-------------+-------------+
+        |-------------|-------------|-------------|-------------|-------------|
         |      id     |    name     |    state    |   street    |     zip     |
-        +-------------+-------------+-------------+-------------+-------------+
+        |-------------|-------------|-------------|-------------|-------------|
         | [B@224388b2 | [B@7fc36fb0 | [B@77d9cd57 | [B@7c384839 | [B@530dd5e5 |
         | [B@3155d7fc | [B@7ad6fab1 | [B@37e4b978 | [B@94c91f3  | [B@201ed4a  |
         | [B@4fb2c078 | [B@607a2f28 | [B@75ae1c93 | [B@79d63340 | [B@5dbeed3d |
         | [B@2fcfec74 | [B@7baccc31 | [B@d91e466  | [B@6529eb7f | [B@232412bc |
-        +-------------+-------------+-------------+-------------+-------------+
+        |-------------|-------------|-------------|-------------|-------------|
         4 rows selected (0.12 seconds)
 
 9. Use CONVERT_FROM to read the Parquet data:
@@ -397,14 +397,14 @@ First, you set the storage format to JSON. Next, you use the CREATE TABLE AS (CT
                CONVERT_FROM(zip, 'UTF8') AS zip 
         FROM tmp.`json2parquet2`;
 
-        +------------+------------+------------+------------------+------------+
+        |------------|------------|------------|------------------|------------|
         |     id     |    name    |   state    |  address         |    zip     |
-        +------------+------------+------------+------------------+------------+
+        |------------|------------|------------|------------------|------------|
         | student1   | Alice      | CA         | 123 Ballmer Av   | 12345      |
         | student2   | Bob        | CA         | 1 Infinite Loop  | 12345      |
         | student3   | Frank      | CA         | 435 Walker Ct    | 12345      |
         | student4   | Mary       | CA         | 56 Southern Pkwy | 12345      |
-        +------------+------------+------------+------------------+------------+
+        |------------|------------|------------|------------------|------------|
         4 rows selected (0.182 seconds)
 
 ## STRING_BINARY function
@@ -434,11 +434,11 @@ FROM (VALUES (1));
 Output is:
 
 ```
-+-------------------+-------------------+-----------------------------------+-----------------------------------+--------+
+|-------------------|-------------------|-----------------------------------|-----------------------------------|--------|
 |         i         |       i_be        |                 l                 |               l_be                | l_be0  |
-+-------------------+-------------------+-----------------------------------+-----------------------------------+--------+
+|-------------------|-------------------|-----------------------------------|-----------------------------------|--------|
 | \x01\x00\x00\x00  | \x00\x00\x00\x01  | \x01\x00\x00\x00\x00\x00\x00\x00  | \x01\x00\x00\x00\x00\x00\x00\x00  | \x01   |
-+-------------------+-------------------+-----------------------------------+-----------------------------------+--------+
+|-------------------|-------------------|-----------------------------------|-----------------------------------|--------|
 1 row selected (0.323 seconds)
 ```
 Encode 'hello' in UTF-8 and UTF-16 VARBINARY encoding and return the results as a VARCHAR.
@@ -451,11 +451,11 @@ FROM (VALUES (1));
 ```
 
 ```
-+--------+------------------------------------+
+|--------|------------------------------------|
 |   u8   |                u16                 |
-+--------+------------------------------------+
+|--------|------------------------------------|
 | hello  | \xFE\xFF\x00h\x00e\x00l\x00l\x00o  |
-+--------+------------------------------------+
+|--------|------------------------------------|
 1 row selected (0.168 seconds)
 ```
 
@@ -495,11 +495,11 @@ FROM (VALUES (1));
 Output is:
 
 ```
-+--------+
+|--------|
 | cnvrt  |
-+--------+
+|--------|
 | 200    |
-+--------+
+|--------|
 1 row selected (0.133 seconds)
 ```
 
@@ -512,11 +512,11 @@ SELECT CONVERT_FROM(BINARY_STRING('\x00\x00\x00\xC8'), 'INT') AS cnvrt FROM (VAL
 Output is:
 
 ```
-+-------------+
+|-------------|
 |    cnvrt    |
-+-------------+
+|-------------|
 | -939524096  |
-+-------------+
+|-------------|
 1 row selected (0.133 seconds)
 ```
 
@@ -525,19 +525,19 @@ Convert a hexadecimal number BEBAFECA to its decimal equivalent and then to its 
 ```
 SELECT CONVERT_FROM(BINARY_STRING('\xBE\xBA\xFE\xCA'), 'INT_BE') FROM (VALUES (1));
 
-+--------------+
+|--------------|
 |    EXPR$0    |
-+--------------+
+|--------------|
 | -1095041334  |
-+--------------+
+|--------------|
 
 SELECT CONVERT_TO(-1095041334, 'INT_BE') FROM (VALUES (1));
 
-+--------------+
+|--------------|
 |    EXPR$0    |
-+--------------+
+|--------------|
 | [B@10c24faf  |
-+--------------+
+|--------------|
 1 row selected (0.161 seconds)
 ```
 
@@ -639,52 +639,52 @@ You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make
 Convert a FLOAT to a character string. The format specifications use a comma to separate thousands and round-off to three decimal places.
 
     SELECT TO_CHAR(1256.789383, '#,###.###') FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 1,256.789  |
-    +------------+
+    |------------|
     1 row selected (1.767 seconds)
 
 Convert an integer to a character string.
 
     SELECT TO_CHAR(125677.4567, '#,###.###') FROM (VALUES(1));
-    +--------------+
+    |--------------|
     |    EXPR$0    |
-    +--------------+
+    |--------------|
     | 125,677.457  |
-    +--------------+
+    |--------------|
     1 row selected (0.083 seconds)
 
 Convert a date to a character string.
 
     SELECT TO_CHAR((CAST('2008-2-23' AS DATE)), 'yyyy-MMM-dd') FROM (VALUES(1));
-    +--------------+
+    |--------------|
     |    EXPR$0    |
-    +--------------+
+    |--------------|
     | 2008-Feb-23  |
-    +--------------+
+    |--------------|
     1 row selected (0.166 seconds)
 
 Convert a time to a string.
 
     SELECT TO_CHAR(CAST('12:20:30' AS TIME), 'HH mm ss') FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 12 20 30   |
-    +------------+
+    |------------|
     1 row selected (0.07 seconds)
 
 
 Convert a timestamp to a string.
 
     SELECT TO_CHAR(CAST('2015-2-23 12:00:00' AS TIMESTAMP), 'yyyy MMM dd HH:mm:ss') FROM (VALUES(1));
-    +-----------------------+
+    |-----------------------|
     |        EXPR$0         |
-    +-----------------------+
+    |-----------------------|
     | 2015 Feb 23 12:00:00  |
-    +-----------------------+
+    |-----------------------|
     1 row selected (0.142 seconds)
 
 ## TO_DATE
@@ -709,56 +709,56 @@ For example:
 
     SELECT TO_DATE(`date`, 'yyyy-MM-dd') FROM `sample.json`;
 
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 2013-07-26 |
     | 2013-05-16 |
     | 2013-06-09 |
     | 2013-07-19 |
     | 2013-07-21 |
-    +------------+
+    |------------|
     5 rows selected (0.134 seconds)
 
     SELECT TO_DATE(`date`, 'yyyy-MM-dd') FROM `sample.json` WHERE TO_DATE(`date`, 'yyyy-MM-dd') < TO_DATE('2013-07-20', 'yyyy-MM-dd');
     
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 2013-05-16 |
     | 2013-06-09 |
     | 2013-07-19 |
-    +------------+
+    |------------|
     3 rows selected (0.177 seconds)
 
 ### TO_DATE Examples
 The first example converts a character string to a date. The second example extracts the year to verify that Drill recognizes the date as a date type. 
 
     SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 2015-02-23 |
-    +------------+
+    |------------|
     1 row selected (0.077 seconds)
 
     SELECT EXTRACT(year from mydate) `extracted year` FROM (SELECT TO_DATE('2015-FEB-23', 'yyyy-MMM-dd') AS mydate FROM (VALUES(1)));
 
-    +------------+
+    |------------|
     |   myyear   |
-    +------------+
+    |------------|
     | 2015       |
-    +------------+
+    |------------|
     1 row selected (0.128 seconds)
 
 The following example converts a UNIX epoch timestamp to a date.
 
     SELECT TO_DATE(1427849046000) FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 2015-04-01 |
-    +------------+
+    |------------|
     1 row selected (0.082 seconds)
 
 ## TO_NUMBER
@@ -795,26 +795,26 @@ The data type of the output of TO_NUMBER is a numeric. You can use the following
 ### TO_NUMBER Examples
 
     SELECT TO_NUMBER('987,966', '######') FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 987.0      |
-    +------------+
+    |------------|
 
     SELECT TO_NUMBER('987.966', '###.###') FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 987.966    |
-    +------------+
+    |------------|
     1 row selected (0.063 seconds)
 
     SELECT TO_NUMBER('12345', '##0.##E0') FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 12345.0    |
-    +------------+
+    |------------|
     1 row selected (0.069 seconds)
 
 ## TO_TIME
@@ -834,21 +834,21 @@ Specify a format using patterns defined in [Joda DateTimeFormat class](http://jo
 ### TO_TIME Examples
 
     SELECT TO_TIME('12:20:30', 'HH:mm:ss') FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 12:20:30   |
-    +------------+
+    |------------|
     1 row selected (0.067 seconds)
 
 Convert 828550000 milliseconds (23 hours 55 seconds) to the time.
 
     SELECT to_time(82855000) FROM (VALUES(1));
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 23:00:55   |
-    +------------+
+    |------------|
     1 row selected (0.086 seconds)
 
 ## TO_TIMESTAMP
@@ -869,21 +869,21 @@ Specify a format using patterns defined in [Joda DateTimeFormat class](http://jo
 Convert a date to a timestamp. 
 
     SELECT TO_TIMESTAMP('2008-2-23 12:00:00', 'yyyy-MM-dd HH:mm:ss') FROM (VALUES(1));
-    +------------------------+
+    |------------------------|
     |         EXPR$0         |
-    +------------------------+
+    |------------------------|
     | 2008-02-23 12:00:00.0  |
-    +------------------------+
+    |------------------------|
     1 row selected (0.126 seconds)
 
 Convert Unix Epoch time to a timestamp.
 
     SELECT TO_TIMESTAMP(1427936330) FROM (VALUES(1));
-    +------------------------+
+    |------------------------|
     |         EXPR$0         |
-    +------------------------+
+    |------------------------|
     | 2015-04-01 17:58:50.0  |
-    +------------------------+
+    |------------------------|
     1 row selected (0.114 seconds)
 
 Convert a UTC date to a timestamp offset from the UTC time zone code.
@@ -892,11 +892,11 @@ Convert a UTC date to a timestamp offset from the UTC time zone code.
            TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS New_TZ 
     FROM (VALUES(1));
 
-    +------------------------+---------+
+    |------------------------|---------|
     |        Original        | New_TZ  |
-    +------------------------+---------+
+    |------------------------|---------|
     | 2015-03-30 20:49:00.0  | UTC     |
-    +------------------------+---------+
+    |------------------------|---------|
     1 row selected (0.148 seconds)  
 
 ## Enabling Time Zone Offset   
@@ -946,11 +946,11 @@ Drill does not support conversion of a date, time, or timestamp from one time zo
 
         SELECT TIMEOFDAY() FROM (VALUES(1));
 
-        +----------------------------------------------+
+        |----------------------------------------------|
         |                    EXPR$0                    |
-        +----------------------------------------------+
+        |----------------------------------------------|
         | 2015-05-17 22:37:29.516 America/Los_Angeles  |
-        +----------------------------------------------+
+        |----------------------------------------------|
         1 row selected (0.108 seconds)
 
 2. Configure the default time zone format in <drill installation directory>/conf/drill-env.sh by adding `-Duser.timezone=UTC` to DRILL_JAVA_OPTS. For example:
@@ -963,11 +963,11 @@ Drill does not support conversion of a date, time, or timestamp from one time zo
 
         SELECT TIMEOFDAY() FROM (VALUES(1));
 
-        +----------------------------------------------+
+        |----------------------------------------------|
         |                    EXPR$0                    |
-        +----------------------------------------------+
+        |----------------------------------------------|
         | 2015-05-17 22:37:57.082 America/Los_Angeles  |
-        +----------------------------------------------+
+        |----------------------------------------------|
         1 row selected (0.087 seconds)
 
 You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make sure the timestamp has the timezone in it. Also, use the ‘z’ option to identify the time zone in a timestamp using the TO_CHAR function. For example:
@@ -976,11 +976,11 @@ You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make
            TO_CHAR(TO_TIMESTAMP('2015-03-30 20:49:59.0 UTC', 'YYYY-MM-dd HH:mm:ss.s z'), 'z') AS TimeZone 
            FROM (VALUES(1));
 
-    +------------------------+-----------+
+    |------------------------|-----------|
     |        Original        | TimeZone  |
-    +------------------------+-----------+
+    |------------------------|-----------|
     | 2015-03-30 20:49:00.0  | UTC       |
-    +------------------------+-----------+
+    |------------------------|-----------|
     1 row selected (0.097 seconds)  
 
 

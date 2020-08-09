@@ -1,6 +1,6 @@
 ---
 title: "Hive-to-Drill Data Type Mapping"
-date: 2017-04-05 00:09:55 UTC
+date: 2020-08-08
 parent: "Data Sources and File Formats"
 ---
 Using Drill you can read tables created in Hive that use data types compatible with Drill. Drill currently does not support writing Hive tables. The map of SQL types and Hive types shows that several Hive types need to be cast to the supported SQL type in a Drill query:
@@ -16,23 +16,23 @@ Using Drill you can read tables created in Hive that use data types compatible w
 ## Map of SQL and Hive Types
 <!-- See DRILL-1570 -->
 
-| Supported SQL Type | Hive Type               | Description                                                |
-|--------------------|-------------------------|------------------------------------------------------------|
-| BIGINT             | BIGINT                  | 8-byte signed integer                                      |
-| BOOLEAN            | BOOLEAN                 | TRUE (1) or FALSE (0)                                      |
-| VARCHAR            | CHAR                    | Character string, fixed-length max 255                     |
-| DATE               | DATE                    | Years months and days in the form in the form YYYY-­MM-­DD   |
-| DECIMAL*           | DECIMAL                 | 38-digit precision                                         |
-| FLOAT              | FLOAT                   | 4-byte single precision floating point number              |
-| DOUBLE             | DOUBLE                  | 8-byte double precision floating point number              |
-| INTEGER            | INT, TINYINT, SMALLINT  | 1-, 2-, or 4-byte signed integer                           |
-| INTERVAL           | N/A                     | A day-time or year-month interval                          |
-| TIME               | N/A                     | Hours minutes seconds 24-hour basis                        |
-| N/A                | TIMESTAMP               | Conventional UNIX Epoch timestamp.                         |
-| TIMESTAMP          | TIMESTAMP               | JDBC timestamp in yyyy-mm-dd hh:mm:ss format               |
-| None               | STRING                  | Binary string (16)                                         |
-| VARCHAR            | VARCHAR                 | Character string variable length                           |
-| VARBINARY          | BINARY                  | Binary string                                              |
+| Supported SQL Type | Hive Type              | Description                                                |
+|--------------------|------------------------|------------------------------------------------------------|
+| BIGINT             | BIGINT                 | 8-byte signed integer                                      |
+| BOOLEAN            | BOOLEAN                | TRUE (1) or FALSE (0)                                      |
+| VARCHAR            | CHAR                   | Character string, fixed-length max 255                     |
+| DATE               | DATE                   | Years months and days in the form in the form YYYY-­MM-­DD |
+| DECIMAL*           | DECIMAL                | 38-digit precision                                         |
+| FLOAT              | FLOAT                  | 4-byte single precision floating point number              |
+| DOUBLE             | DOUBLE                 | 8-byte double precision floating point number              |
+| INTEGER            | INT, TINYINT, SMALLINT | 1-, 2-, or 4-byte signed integer                           |
+| INTERVAL           | N/A                    | A day-time or year-month interval                          |
+| TIME               | N/A                    | Hours minutes seconds 24-hour basis                        |
+| N/A                | TIMESTAMP              | Conventional UNIX Epoch timestamp.                         |
+| TIMESTAMP          | TIMESTAMP              | JDBC timestamp in yyyy-mm-dd hh:mm:ss format               |
+| None               | STRING                 | Binary string (16)                                         |
+| VARCHAR            | VARCHAR                | Character string variable length                           |
+| VARBINARY          | BINARY                 | Binary string                                              |
 
 \* In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. To enable the DECIMAL type, set the `planner.enable_decimal_data_type` option to `true`.
 
@@ -96,29 +96,29 @@ You check that Hive mapped the data from the CSV to the typed values as as expec
 In Drill, you use the [Hive storage plugin]({{site.baseurl}}/docs/hive-storage-plugin). Using the Hive storage plugin connects Drill to the Hive metastore containing the data.
 	
 	0: jdbc:drill:> USE hive;
-	+------------+------------+
-	|     ok     |  summary   |
-	+------------+------------+
-	| true       | Default schema changed to 'hive' |
-	+------------+------------+
+	|------|----------------------------------|
+	| ok   | summary                          |
+	|------|----------------------------------|
+	| true | Default schema changed to 'hive' |
+	|------|----------------------------------|
 	1 row selected (0.067 seconds)
 	
 The data in the Hive table shows the expected values.
 	
 	0: jdbc:drill:> SELECT * FROM hive.`types_demo`;
-	+---------------------+------+------+---------+------+----+------------+------------+-----------+
-	|   a                 |   b  |  c   |     d   |  e   | f  |     g      |     h      |     i     |
-	+---------------------+---------+---------+------+----+------------+------------+-----------+
+	|---------------------|------|------|---------|------|----|------------|------------|-----------------------|
+	| a                   | b    | c    | d       | e    | f  | g          | h          | i                     |
+	|---------------------|------|------|---------|------|----|------------|------------|-----------------------|
 	| 8223372036854775807 | true | 3.50 | -1231.4 | 3.14 | 42 | "SomeText" | 2015-03-25 | 2015-03-25 01:23:15.0 |
-	+---------------------+------+------+---------+------+----+------------+------------+-----------+
+	|---------------------|------|------|---------|------|----|------------|------------|-----------------------|
 	1 row selected (1.262 seconds)
 	
 To validate that Drill interprets the timestamp in column i correctly, use the extract function to extract part of the date:
 
     0: jdbc:drill:> select extract(year from i) from hive.`types_demo`;
-    +------------+
-    |   EXPR$0   |
-    +------------+
-    | 2015       |
-    +------------+
+    |--------|
+    | EXPR$0 |
+    |--------|
+    | 2015   |
+    |--------|
     1 row selected (0.387 seconds)

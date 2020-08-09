@@ -1,6 +1,6 @@
 ---
 title: "SHOW DATABASES and SHOW SCHEMAS"
-date: 2018-11-02
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 The SHOW DATABASES and SHOW SCHEMAS commands generate a list of available Drill schemas that you can query.
@@ -28,34 +28,34 @@ You can configure and use multiple storage plugins and workspaces in Drill.  See
 The following example uses the SHOW DATABASES and SHOW SCHEMAS commands to generate a list of the available schemas in Drill. Some of the results that display are specific to all Drill installations, such as `cp.default` and `dfs.default`, while others vary based on your specific storage plugin and workspace configurations.
 
 	0: jdbc:drill:zk=local> show databases;
-	+-------------+
-	| SCHEMA_NAME |
-	+-------------+
-	| dfs.default |
-	| dfs.root  |
-	| dfs.donuts  |
-	| dfs.tmp   |
-	| dfs.customers |
-	| dfs.yelp  |
-	| cp.default  |
-	| sys       |
+	|--------------------|
+	| SCHEMA_NAME        |
+	|--------------------|
+	| dfs.default        |
+	| dfs.root           |
+	| dfs.donuts         |
+	| dfs.tmp            |
+	| dfs.customers      |
+	| dfs.yelp           |
+	| cp.default         |
+	| sys                |
 	| INFORMATION_SCHEMA |
-	+-------------+
+	|--------------------|
 	9 rows selected (0.07 seconds)
 	 
 	 
 	0: jdbc:drill:zk=local> show schemas;
-	+-------------+
-	| SCHEMA_NAME |
-	+-------------+
-	| dfs.default |
-	| dfs.root  |
-	| dfs.donuts  |
-	| dfs.tmp   |
-	| dfs.customers |
-	| dfs.yelp  |
-	| cp.default  |
-	| sys       |
+	|--------------------|
+	| SCHEMA_NAME        |
+	|--------------------|
+	| dfs.default        |
+	| dfs.root           |
+	| dfs.donuts         |
+	| dfs.tmp            |
+	| dfs.customers      |
+	| dfs.yelp           |
+	| cp.default         |
+	| sys                |
 	| INFORMATION_SCHEMA |
-	+-------------+
+	|--------------------|
 	9 rows selected (0.058 seconds)

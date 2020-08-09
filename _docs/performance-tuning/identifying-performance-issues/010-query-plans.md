@@ -1,6 +1,6 @@
 ---
 title: "Query Plans"
-date: 2018-12-08
+date: 2020-08-08
 parent: "Identifying Performance Issues"
 ---
 If you experience performance issues in Drill, you can typically identify the source of the issues in the query plans or profiles. This section describes the logical plan and physical plans.
@@ -43,9 +43,9 @@ If you view the plan with costing information, you can see where the majority of
   
 
        0: jdbc:drill:zk=local> explain plan for select type t, count(distinct id) from dfs.`/home/donuts/donuts.json` where type='donut' group by type;
-       +------------+------------+
+       |------------|------------|
        |   text    |   json    |
-       +------------+------------+
+       |------------|------------|
        | 00-00 Screen
        00-01   Project(t=[$0], EXPR$1=[$1])
        00-02       Project(t=[$0], EXPR$1=[$1])

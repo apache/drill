@@ -1,6 +1,6 @@
 ---
 title: "HAVING Clause"
-date: 2018-11-02
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 The HAVING clause filters group rows created by the GROUP BY clause. The HAVING clause is applied to each group of the grouped table, much as a WHERE clause is applied to a select list. If there is no GROUP BY clause, the HAVING clause is applied to the entire result as a single group. The SELECT clause cannot refer directly to any column that does not have a GROUP BY clause.
@@ -36,16 +36,16 @@ The following example query uses the HAVING clause to constrain an aggregate res
        0: jdbc:drill:> select t.user_info.device, count(*) from \`clicks/clicks.json\` t 
        group by t.user_info.device having count(*) > 1000;  
        
-       +------------+------------+
+       |------------|------------|
        |   EXPR$0   |   EXPR$1   |
-       +------------+------------+
+       |------------|------------|
        | IOS5       | 11814      |
        | AOS4.2     | 5986       |
        | IOS6       | 4464       |
        | IOS7       | 3135       |
        | AOS4.4     | 1562       |
        | AOS4.3     | 3039       |
-       +------------+------------+  
+       |------------|------------|  
 
 The aggregate is a count of the records for each different mobile device in the clickstream data. Only the activity for the devices that registered more than 1000 transactions qualify for the result set.
 

@@ -1,6 +1,6 @@
 ---
 title: "Aggregate Window Functions"
-date: 2018-06-26 01:02:27 UTC
+date: 2020-08-08
 parent: "SQL Window Functions"
 ---
 
@@ -58,9 +58,9 @@ The following examples show queries that use each of the aggregate window functi
 The following query uses the AVG() window function with the PARTITION BY clause to calculate the average sales for each car dealer in Q1.  
 
        select dealer_id, sales, avg(sales) over (partition by dealer_id) as avgsales from q1_sales;
-       +------------+--------+-----------+
+       |------------|--------|-----------|
        | dealer_id  | sales  | avgsales  |
-       +------------+--------+-----------+
+       |------------|--------|-----------|
        | 1          | 19745  | 14357     |
        | 1          | 19745  | 14357     |
        | 1          | 8227   | 14357     |
@@ -71,16 +71,16 @@ The following query uses the AVG() window function with the PARTITION BY clause 
        | 3          | 15427  | 12368     |
        | 3          | 12369  | 12368     |
        | 3          | 9308   | 12368     |
-       +------------+--------+-----------+
+       |------------|--------|-----------|
        10 rows selected (0.455 seconds)
 
 ### COUNT()  
 The following query uses the COUNT (*) window function to count the number of sales in Q1, ordered by dealer_id. The word count is enclosed in back ticks (``) because it is a reserved keyword in Drill.  
 
        select dealer_id, sales, count(*) over(order by dealer_id) as `count` from q1_sales;
-       +------------+--------+--------+
+       |------------|--------|--------|
        | dealer_id  | sales  | count  |
-       +------------+--------+--------+
+       |------------|--------|--------|
        | 1          | 19745  | 4      |
        | 1          | 19745  | 4      |
        | 1          | 8227   | 4      |
@@ -91,15 +91,15 @@ The following query uses the COUNT (*) window function to count the number of sa
        | 3          | 15427  | 10     |
        | 3          | 12369  | 10     |
        | 3          | 9308   | 10     |
-       +------------+--------+--------+
+       |------------|--------|--------|
        10 rows selected (0.215 seconds) 
 
 The following query uses the COUNT() window function to count the total number of sales for each dealer in Q1. 
 
        select dealer_id, sales, count(sales) over(partition by dealer_id) as `count` from q1_sales;
-       +------------+--------+--------+
+       |------------|--------|--------|
        | dealer_id  | sales  | count  |
-       +------------+--------+--------+
+       |------------|--------|--------|
        | 1          | 19745  | 4      |
        | 1          | 19745  | 4      |
        | 1          | 8227   | 4      |
@@ -110,7 +110,7 @@ The following query uses the COUNT() window function to count the total number o
        | 3          | 15427  | 3      |
        | 3          | 12369  | 3      |
        | 3          | 9308   | 3      |
-       +------------+--------+--------+
+       |------------|--------|--------|
        10 rows selected (0.249 seconds)
 
 
@@ -118,9 +118,9 @@ The following query uses the COUNT() window function to count the total number o
 The following query uses the MAX() window function with the PARTITION BY clause to identify the employee with the maximum number of car sales in Q1 at each dealership. The word max is a reserved keyword in Drill and must be enclosed in back ticks (``).  
 
        select emp_name, dealer_id, sales, max(sales) over(partition by dealer_id) as `max` from q1_sales;
-       +-----------------+------------+--------+--------+
+       |-----------------|------------|--------|--------|
        |    emp_name     | dealer_id  | sales  |  max   |
-       +-----------------+------------+--------+--------+
+       |-----------------|------------|--------|--------|
        | Ferris Brown    | 1          | 19745  | 19745  |
        | Noel Meyer      | 1          | 19745  | 19745  |
        | Raphael Hull    | 1          | 8227   | 19745  |
@@ -131,7 +131,7 @@ The following query uses the MAX() window function with the PARTITION BY clause 
        | Ursa George     | 3          | 15427  | 15427  |
        | Abel Kim        | 3          | 12369  | 15427  |
        | May Stout       | 3          | 9308   | 15427  |
-       +-----------------+------------+--------+--------+
+       |-----------------|------------|--------|--------|
        10 rows selected (0.402 seconds)
 
 
@@ -140,9 +140,9 @@ The following query uses the MAX() window function with the PARTITION BY clause 
 The following query uses the MIN() window function with the PARTITION BY clause to identify the employee with the minimum number of car sales in Q1 at each dealership. The word min is a reserved keyword in Drill and must be enclosed in back ticks (``).  
 
        select emp_name, dealer_id, sales, min(sales) over(partition by dealer_id) as `min` from q1_sales;
-       +-----------------+------------+--------+-------+
+       |-----------------|------------|--------|-------|
        |    emp_name     | dealer_id  | sales  |  min  |
-       +-----------------+------------+--------+-------+
+       |-----------------|------------|--------|-------|
        | Ferris Brown    | 1          | 19745  | 8227  |
        | Noel Meyer      | 1          | 19745  | 8227  |
        | Raphael Hull    | 1          | 8227   | 8227  |
@@ -153,16 +153,16 @@ The following query uses the MIN() window function with the PARTITION BY clause 
        | Ursa George     | 3          | 15427  | 9308  |
        | Abel Kim        | 3          | 12369  | 9308  |
        | May Stout       | 3          | 9308   | 9308  |
-       +-----------------+------------+--------+-------+
+       |-----------------|------------|--------|-------|
        10 rows selected (0.194 seconds)
 
 ### SUM()  
 The following query uses the SUM() window function to total the amount of sales for each dealer in Q1. The word sum is a reserved keyword in Drill and must be enclosed in back ticks (``).  
 
        select dealer_id, emp_name, sales, sum(sales) over(partition by dealer_id) as `sum` from q1_sales;
-       +------------+-----------------+--------+--------+
+       |------------|-----------------|--------|--------|
        | dealer_id  |    emp_name     | sales  |  sum   |
-       +------------+-----------------+--------+--------+
+       |------------|-----------------|--------|--------|
        | 1          | Ferris Brown    | 19745  | 57427  |
        | 1          | Noel Meyer      | 19745  | 57427  |
        | 1          | Raphael Hull    | 8227   | 57427  |
@@ -173,7 +173,7 @@ The following query uses the SUM() window function to total the amount of sales 
        | 3          | Ursa George     | 15427  | 37104  |
        | 3          | Abel Kim        | 12369  | 37104  |
        | 3          | May Stout       | 9308   | 37104  |
-       +------------+-----------------+--------+--------+
+       |------------|-----------------|--------|--------|
        10 rows selected (0.198 seconds)
        
 

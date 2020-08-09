@@ -1,6 +1,6 @@
 ---
 title: "Data Type Functions"
-date: 2018-06-20 17:37:51 UTC
+date: 2020-08-08
 parent: "SQL Functions"
 ---
 
@@ -38,11 +38,11 @@ This example shows the Drill internal type, nullable int, for a missing column:
 
        SELECT sqlTypeOf(a) AS a_type, modeOf(a) AS a_mode FROM `json/all-null.json`;
        
-       +----------+-----------+
+       |----------|-----------|
        |  a_type  |  a_mode   |
-       +----------+-----------+
+       |----------|-----------|
        | INTEGER  | NULLABLE  |
-       +----------+-----------+
+       |----------|-----------|
 
 **Example 2**  
 This example shows arrays (repeated) types:  
@@ -50,18 +50,18 @@ This example shows arrays (repeated) types:
        SELECT sqlTypeOf(columns) as col_type, modeOf(columns) as col_mode
        FROM `csv/cust.csv`;
        
-       +--------------------+-----------+
+       |--------------------|-----------|
        |      col_type      | col_mode  |
-       +--------------------+-----------+
+       |--------------------|-----------|
        | CHARACTER VARYING  | ARRAY     |
-       +--------------------+-----------+
+       |--------------------|-----------|
        Example 3: This example shows non-null types:
        SELECT sqlTypeOf(`name`) AS name_type, 
        modeOf(`name`) AS name_mode FROM `csvh/cust.csvh`;
        
-       +--------------------+------------+
+       |--------------------|------------|
        |     name_type      | name_mode  |
-       +--------------------+------------+
+       |--------------------|------------|
        | CHARACTER VARYING  | NOT NULL   |
-       +--------------------+------------+
+       |--------------------|------------|
 

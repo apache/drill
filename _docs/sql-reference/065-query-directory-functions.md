@@ -1,6 +1,6 @@
 ---
 title: "Query Directory Functions"
-date: 2016-06-29 01:29:06 UTC
+date: 2020-08-08
 parent: "SQL Reference"
 ---
 You can use the following query directory functions when [querying multiple files or directories]({{site.baseurl}}/docs/querying-directories):
@@ -36,19 +36,19 @@ This example creates a top-level directory called `querylogs` in the `/tmp` dire
 In each subdirectory, you create a CSV file that contains arbitrary log data. Issue MAXDIR and MINDIR queries to exercise the query directory functions:
 
     SELECT * FROM dfs.tmp.`querylogs` WHERE dir0 = MAXDIR('dfs.tmp','querylogs');
-    +------------+------------+
-    |  columns   |    dir0    |
-    +------------+------------+
-    | ["2015","some arbitrary data"] | 2015       |
-    +------------+------------+
+    |--------------------------------|------|
+    | columns                        | dir0 |
+    |--------------------------------|------|
+    | ["2015","some arbitrary data"] | 2015 |
+    |--------------------------------|------|
     1 row selected (0.112 seconds)
 
     SELECT * FROM dfs.tmp.`querylogs` WHERE dir0 = MINDIR('dfs.tmp','querylogs');
-    +------------+------------+
-    |  columns   |    dir0    |
-    +------------+------------+
-    | ["2013","even more data"] | 2013       |
-    +------------+------------+
+    |---------------------------|------|
+    | columns                   | dir0 |
+    |---------------------------|------|
+    | ["2013","even more data"] | 2013 |
+    |---------------------------|------|
     1 row selected (0.119 seconds)
 
 In this example, using any variable other than dir0 does not return results because the subdirectory level nesting is only one level deep.

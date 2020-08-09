@@ -1,6 +1,6 @@
 ---
 title: "Querying the INFORMATION SCHEMA"
-date: 2020-01-30
+date: 2020-08-08
 parent: "Query Data"
 ---  
 
@@ -26,9 +26,9 @@ maximum flexibility inside BI tools, the only catalog that Drill supports is
 `DRILL`.
 
     SELECT CATALOG_NAME, SCHEMA_NAME as all_my_data_sources FROM INFORMATION_SCHEMA.SCHEMATA ORDER BY SCHEMA_NAME;
-    +--------------+---------------------+
+    |--------------|---------------------|
     | CATALOG_NAME | all_my_data_sources |
-    +--------------+---------------------+
+    |--------------|---------------------|
     | DRILL        | INFORMATION_SCHEMA  |
     | DRILL        | cp.default          |
     | DRILL        | dfs.default         |
@@ -37,15 +37,15 @@ maximum flexibility inside BI tools, the only catalog that Drill supports is
     | DRILL        | HiveTest.SalesDB    |
     | DRILL        | maprfs.logs         |
     | DRILL        | sys                 |
-    +--------------+---------------------+
+    |--------------|---------------------|
 
 The INFORMATION_SCHEMA name and associated keywords are case-insensitive. You
 can also return a list of schemas by running the SHOW DATABASES command:
 
     SHOW DATABASES;
-    +-------------+
+    |-------------|
     | SCHEMA_NAME |
-    +-------------+
+    |-------------|
     | dfs.default |
     | dfs.root    |
     | dfs.tmp     |
@@ -131,106 +131,106 @@ This example demonstrates how to use the FILES table to explore workspaces and i
 For this example, S3 buckets were configured as data sources in Drill. Storage plugins were configured to connect Drill to each of the S3 buckets. The storage plugin named `s3_home_bucket` contains personal files, and the storage plugin named `s3_work_bucket` contains work files. Naming the storage plugins with the s3 prefix simplifies the listing of available schemas in the SCHEMATA table, as shown:  
 
 	0: jdbc:drill:zk=local> select * from information_schema.schemata where schema_name like 's3%';
-	+---------------+--------------------------+---------------+-------+-------------+
+	|---------------|--------------------------|---------------|-------|-------------|
 	| CATALOG_NAME  |       SCHEMA_NAME        | SCHEMA_OWNER  | TYPE  | IS_MUTABLE  |
-	+---------------+--------------------------+---------------+-------+-------------+
+	|---------------|--------------------------|---------------|-------|-------------|
 	| DRILL         | s3_home_bucket.default   | <owner>       | file  | NO          |
 	| DRILL         | s3_home_bucket.root      | <owner>       | file  | NO          |
 	| DRILL         | s3_work_bucket.default   | <owner>       | file  | NO          |
 	| DRILL         | s3_work_bucket.root      | <owner>       | file  | NO          |
 	| DRILL         | s3_years_bucket.default  | <owner>       | file  | NO          |
 	| DRILL         | s3_years_bucket.root     | <owner>       | file  | NO          |
-	+---------------+--------------------------+---------------+-------+-------------+  
+	|---------------|--------------------------|---------------|-------|-------------|  
 
 Querying the FILES table and filtering on the SCHEMA_NAME provides information about the files that exist within a workspace:  
 
 **Note:** The word “files” is a reserved word in Drill and requires backticks (``).   
 
 	0: jdbc:drill:zk=local> select * from information_schema.`files` where schema_name = 's3_home_bucket.root';
-	+----------------------+-------------------+-----------------+-----------------------------+-----------------------------+---------------+----------+---------+--------+--------+-------------+------------------------+------------------------+
+	|----------------------|-------------------|-----------------|-----------------------------|-----------------------------|---------------|----------|---------|--------|--------|-------------|------------------------|------------------------|
 	|     SCHEMA_NAME      | ROOT_SCHEMA_NAME  | WORKSPACE_NAME  |          FILE_NAME          |        RELATIVE_PATH        | IS_DIRECTORY  | IS_FILE  | LENGTH  | OWNER  | GROUP  | PERMISSION  |      ACCESS_TIME       |   MODIFICATION_TIME    |
-	+----------------------+-------------------+-----------------+-----------------------------+-----------------------------+---------------+----------+---------+--------+--------+-------------+------------------------+------------------------+
+	|----------------------|-------------------|-----------------|-----------------------------|-----------------------------|---------------|----------|---------|--------|--------|-------------|------------------------|------------------------|
 	| s3_home_bucket.root  | s3_home_bucket    | root            | date_dim.txt                | date_dim.txt                | false         | true     | 0       | root   | root   | rw-r--r--   | 1969-12-31 16:00:00.0  | 2018-11-06 16:38:16.0  |
 	| s3_home_bucket.root  | s3_home_bucket    | root            | household_demographics.txt  | household_demographics.txt  | false         | true     | 0       | root   | root   | rw-r--r--   | 1969-12-31 16:00:00.0  | 2018-11-06 16:38:28.0  |
 	| s3_home_bucket.root  | s3_home_bucket    | root            | promotion.txt               | promotion.txt               | false         | true     | 0       | root   | root   | rw-r--r--   | 1969-12-31 16:00:00.0  | 2018-11-06 16:38:35.0  |
 	| s3_home_bucket.root  | s3_home_bucket    | root            | time_dim.txt                | time_dim.txt                | false         | true     | 0       | root   | root   | rw-r--r--   | 1969-12-31 16:00:00.0  | 2018-11-06 16:38:43.0  |
-	+----------------------+-------------------+-----------------+-----------------------------+-----------------------------+---------------+----------+---------+--------+--------+-------------+------------------------+------------------------+  
+	|----------------------|-------------------|-----------------|-----------------------------|-----------------------------|---------------|----------|---------|--------|--------|-------------|------------------------|------------------------|  
 
 	0: jdbc:drill:zk=local> select * from information_schema.`files` where schema_name = 's3_work_bucket.root';
-	+----------------------+-------------------+-----------------+-----------------------------+-----------------------------+---------------+----------+---------+--------+--------+-------------+------------------------+------------------------+
+	|----------------------|-------------------|-----------------|-----------------------------|-----------------------------|---------------|----------|---------|--------|--------|-------------|------------------------|------------------------|
 	|     SCHEMA_NAME      | ROOT_SCHEMA_NAME  | WORKSPACE_NAME  |          FILE_NAME          |        RELATIVE_PATH        | IS_DIRECTORY  | IS_FILE  | LENGTH  | OWNER  | GROUP  | PERMISSION  |      ACCESS_TIME       |   MODIFICATION_TIME    |
-	+----------------------+-------------------+-----------------+-----------------------------+-----------------------------+---------------+----------+---------+--------+--------+-------------+------------------------+------------------------+
+	|----------------------|-------------------|-----------------|-----------------------------|-----------------------------|---------------|----------|---------|--------|--------|-------------|------------------------|------------------------|
 	| s3_work_bucket.root  | s3_work_bucket    | root            | customer.txt                | customer.txt                | false         | true     | 0       | root   | root   | rw-r--r--   | 1969-12-31 16:00:00.0  | 2018-11-06 16:55:36.0  |
 	| s3_work_bucket.root  | s3_work_bucket    | root            | household_demographics.txt  | household_demographics.txt  | false         | true     | 0       | root   | root   | rw-r--r--   | 1969-12-31 16:00:00.0  | 2018-11-06 16:55:59.0  |
 	| s3_work_bucket.root  | s3_work_bucket    | root            | item.txt                    | item.txt                    | false         | true     | 0       | root   | root   | rw-r--r--   | 1969-12-31 16:00:00.0  | 2018-11-06 16:56:13.0  |
 	| s3_work_bucket.root  | s3_work_bucket    | root            | promotion.txt               | promotion.txt               | false         | true     | 0       | root   | root   | rw-r--r--   | 1969-12-31 16:00:00.0  | 2018-11-06 16:56:29.0  |
-	+----------------------+-------------------+-----------------+-----------------------------+-----------------------------+---------------+----------+---------+--------+--------+-------------+------------------------+------------------------+
+	|----------------------|-------------------|-----------------|-----------------------------|-----------------------------|---------------|----------|---------|--------|--------|-------------|------------------------|------------------------|
 
 Notice that the FILE\_NAME column lists the files stored in the workspaces. You can see that duplicate files exist in the work and home buckets. Alternatively, you can see the duplicate files by querying the FILE\_NAME column directly and filtering on SCHEMA\_NAME and IS\_FILE, as shown:  
 
 	0: jdbc:drill:zk=local> select file_name from information_schema.`files` where schema_name = 's3_home_bucket.root' and is_file is true;
-	+-----------------------------+
+	|-----------------------------|
 	|          file_name          |
-	+-----------------------------+
+	|-----------------------------|
 	| date_dim.txt                |
 	| household_demographics.txt  |
 	| promotion.txt               |
 	| time_dim.txt                |
-	+-----------------------------+
+	|-----------------------------|
 
 	0: jdbc:drill:zk=local> Select file_name from information_schema.`files` where schema_name = 's3_work_bucket.root' and is_file is true;
-	+-----------------------------+
+	|-----------------------------|
 	|          file_name          |
-	+-----------------------------+
+	|-----------------------------|
 	| customer.txt                |
 	| household_demographics.txt  |
 	| item.txt                    |
 	| promotion.txt               |
-	+-----------------------------+  
+	|-----------------------------|  
 
 Issuing a slightly more complex query on the FILES table reveals the duplicate files across the two schemas:  
 
 	0: jdbc:drill:zk=local> select file_name from information_schema.`files` where schema_name in ('s3_work_bucket.root', 's3_home_bucket.root') and is_file is true group by file_name having count(file_name) > 1;
-	+-----------------------------+
+	|-----------------------------|
 	|          file_name          |
-	+-----------------------------+
+	|-----------------------------|
 	| household_demographics.txt  |
 	| promotion.txt               |
-	+-----------------------------+  
+	|-----------------------------|  
 
 By default, the FILES table does not list the files recursively. Another schema named `s3_years_bucket.root` contains three folders with files in it, as shown:  
 
 	0: jdbc:drill:zk=local> Select file_name, is_directory from information_schema.`files` where schema_name = 's3_years_bucket.root';
-	+------------+---------------+
+	|------------|---------------|
 	| file_name  | is_directory  |
-	+------------+---------------+
+	|------------|---------------|
 	| 2016       | true          |
 	| 2017       | true          |
 	| 2018       | true          |
-	+------------+---------------+  
+	|------------|---------------|  
 
 Though the folders contain files, the FILES table does not list the files nested inside the folders unless we enable the `storage.list_files_recursively` option, as shown:  
 
 	0: jdbc:drill:zk=local> SET `storage.list_files_recursively` = true;
-	+-------+------------------------------------------+
+	|-------|------------------------------------------|
 	|  ok   |                 summary                  |
-	+-------+------------------------------------------+
+	|-------|------------------------------------------|
 	| true  | storage.list_files_recursively updated.  |
-	+-------+------------------------------------------+  
+	|-------|------------------------------------------|  
 
 With recursive listing enabled, you can see that the same query run against the schema reveals the nested files in the folders:  
 
 	0: jdbc:drill:zk=local> select file_name, relative_path, is_directory, is_file from information_schema.`files` where schema_name = 's3_years_bucket.root';
-	+--------------------------+-------------------------------+---------------+----------+
+	|--------------------------|-------------------------------|---------------|----------|
 	|        file_name         |         relative_path         | is_directory  | is_file  |
-	+--------------------------+-------------------------------+---------------+----------+
+	|--------------------------|-------------------------------|---------------|----------|
 	| 2016                     | 2016                          | true          | false    |
 	| profile_2016_01_01.json  | 2016/profile_2016_01_01.json  | false         | true     |
 	| 2017                     | 2017                          | true          | false    |
 	| profile_2017_01_01.json  | 2017/profile_2017_01_01.json  | false         | true     |
 	| 2018                     | 2018                          | true          | false    |
 	| profile_2018_01_01.json  | 2018/profile_2018_01_01.json  | false         | true     |
-	+--------------------------+-------------------------------+---------------+----------+
+	|--------------------------|-------------------------------|---------------|----------|
 
 ### TABLES Queries
 
@@ -262,9 +262,9 @@ of those columns:
     SELECT COLUMN_NAME, DATA_TYPE 
     FROM INFORMATION_SCHEMA.COLUMNS 
     WHERE TABLE_NAME = 'Orders' AND TABLE_SCHEMA = 'HiveTest.SalesDB' AND COLUMN_NAME LIKE '%Total';
-    +-------------+------------+
+    |-------------|------------|
     | COLUMN_NAME | DATA_TYPE  |
-    +-------------+------------+
+    |-------------|------------|
     | OrderTotal  | Decimal    |
-    +-------------+------------+  
+    |-------------|------------|  
 

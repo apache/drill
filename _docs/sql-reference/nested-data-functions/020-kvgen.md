@@ -1,6 +1,6 @@
 ---
 title: "KVGEN"
-date: 2018-11-02
+date: 2020-08-08
 parent: "Nested Data Functions"
 ---
 Returns a list of the keys that exist in the map.
@@ -50,19 +50,19 @@ To list the users that interact most, you need to use a subquery; otherwise, Dri
 
     SELECT t.flat_interactions.key, t.flat_interactions.`value` from (select flatten(kvgen(user_interactions)) as flat_interactions from dfs.`/drilluser/user_table.json`) as t order by t.flat_interactions.`value` DESC;
 
-    +------------+------------+
-	|   EXPR$0   |   EXPR$1   |
-	+------------+------------+
-	| 27569      | 104        |
-	| 93033      | 52         |
-	| 25678      | 25         |
-	| 12345      | 25         |
-	| 37886      | 14         |
-	| 12633      | 10         |
-	| 12345      | 10         |
-	| 11111      | 5          |
-	| 87394      | 5          |
-	+------------+------------+
+	|--------|--------|
+	| EXPR$0 | EXPR$1 |
+	|--------|--------|
+	| 27569  | 104    |
+	| 93033  | 52     |
+	| 25678  | 25     |
+	| 12345  | 25     |
+	| 37886  | 14     |
+	| 12633  | 10     |
+	| 12345  | 10     |
+	| 11111  | 5      |
+	| 87394  | 5      |
+	|--------|--------|
 	9 rows selected (0.093 seconds)
 
 
@@ -85,12 +85,12 @@ For example, assume that a JSON file named `simplemaps.json` contains this data:
 KVGEN would operate on this data as follows:
 
 	SELECT KVGEN(rec1) FROM `simplemaps.json`;
-	+------------+
-	|   EXPR$0   |
-	+------------+
+	|---------------------------------------------------------|
+	| EXPR$0                                                  |
+	|---------------------------------------------------------|
 	| [{"key":"a","value":"valA"},{"key":"b","value":"valB"}] |
 	| [{"key":"c","value":"valC"},{"key":"d","value":"valD"}] |
-	+------------+
+	|---------------------------------------------------------|
 	2 rows selected (0.201 seconds)
 
 Applying the FLATTEN function to this data would return:
@@ -174,44 +174,44 @@ A SELECT * query against this specific record returns the following row:
 
     0: jdbc:drill:zk=local> select * from dfs.`kvgendata.json` where rownum=1;
  
-	+------------+---------------+------------+------------+------------+------------+
-	|   rownum   | bigintegercol | varcharcol |  boolcol   | float8col  |  complex   |
-	+------------+---------------+------------+------------+------------+------------+
-	| 1          | {"int_1":1,"int_2":2,"int_3":3} | {"varchar_1":"abc","varchar_2":"def","varchar_3":"xyz"} | {"boolean_1":true,"boolean_2":false,"boolean_3":true} | {"f8_1":1.1,"f8_2":2.2} | [{"col1":3},{"col2":2,"col3":1},{"col1":7}] |
-	+------------+---------------+------------+------------+------------+------------+
+	|--------|---------------------------------|---------------------------------------------------------|-------------------------------------------------------|-------------------------|---------------------------------------------|
+	| rownum | bigintegercol                   | varcharcol                                              | boolcol                                               | float8col               | complex                                     |
+	|--------|---------------------------------|---------------------------------------------------------|-------------------------------------------------------|-------------------------|---------------------------------------------|
+	| 1      | {"int_1":1,"int_2":2,"int_3":3} | {"varchar_1":"abc","varchar_2":"def","varchar_3":"xyz"} | {"boolean_1":true,"boolean_2":false,"boolean_3":true} | {"f8_1":1.1,"f8_2":2.2} | [{"col1":3},{"col2":2,"col3":1},{"col1":7}] |
+	|--------|---------------------------------|---------------------------------------------------------|-------------------------------------------------------|-------------------------|---------------------------------------------|
 	1 row selected (0.122 seconds)
 
 You can use the KVGEN function to turn the maps in this data into key-value
 pairs. For example:
 
 	0: jdbc:drill:zk=local> select kvgen(varcharcol) from dfs.yelp.`kvgendata.json`;
-	+------------+
-	|   EXPR$0   |
-	+------------+
-	| [{"key":"varchar_1","value":"abc"},{"key":"varchar_2","value":"def"},{"key":"varchar_3","value":"xyz"}] |
-	| [{"key":"varchar_1","value":"abcd"}] |
+	|------------------------------------------------------------------------------------------------------------|
+	| EXPR$0                                                                                                     |
+	|------------------------------------------------------------------------------------------------------------|
+	| [{"key":"varchar_1","value":"abc"},{"key":"varchar_2","value":"def"},{"key":"varchar_3","value":"xyz"}]    |
+	| [{"key":"varchar_1","value":"abcd"}]                                                                       |
 	| [{"key":"varchar_1","value":"abcde"},{"key":"varchar_3","value":"xyz"},{"key":"varchar_4","value":"xyz2"}] |
-	| [{"key":"varchar_1","value":"abc"},{"key":"varchar_2","value":"def"}] |
-	+------------+
+	| [{"key":"varchar_1","value":"abc"},{"key":"varchar_2","value":"def"}]                                      |
+	|------------------------------------------------------------------------------------------------------------|
 	4 rows selected (0.091 seconds)
 
 Now you can apply the FLATTEN function to break out the key-value pairs into
 distinct rows:
 
 	0: jdbc:drill:zk=local> select flatten(kvgen(varcharcol)) from dfs.yelp.`kvgendata.json`;
-	+------------+
-	|   EXPR$0   |
-	+------------+
-	| {"key":"varchar_1","value":"abc"} |
-	| {"key":"varchar_2","value":"def"} |
-	| {"key":"varchar_3","value":"xyz"} |
-	| {"key":"varchar_1","value":"abcd"} |
+	|-------------------------------------|
+	| EXPR$0                              |
+	|-------------------------------------|
+	| {"key":"varchar_1","value":"abc"}   |
+	| {"key":"varchar_2","value":"def"}   |
+	| {"key":"varchar_3","value":"xyz"}   |
+	| {"key":"varchar_1","value":"abcd"}  |
 	| {"key":"varchar_1","value":"abcde"} |
-	| {"key":"varchar_3","value":"xyz"} |
-	| {"key":"varchar_4","value":"xyz2"} |
-	| {"key":"varchar_1","value":"abc"} |
-	| {"key":"varchar_2","value":"def"} |
-	+------------+
+	| {"key":"varchar_3","value":"xyz"}   |
+	| {"key":"varchar_4","value":"xyz2"}  |
+	| {"key":"varchar_1","value":"abc"}   |
+	| {"key":"varchar_2","value":"def"}   |
+	|-------------------------------------|
 	9 rows selected (0.151 seconds)
 
 

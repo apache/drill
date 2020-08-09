@@ -1,6 +1,6 @@
 ---
 title: "Selecting Multiple Columns Within Nested Data"
-date: 2018-11-02
+date: 2020-08-08
 parent: "Querying Complex Data"
 ---
 The following query goes one step further to extract the JSON data, selecting
@@ -10,11 +10,11 @@ the `id` and `type` values as separate columns.
 
     0: jdbc:drill:zk=local> select tbl.topping[3].id as record, tbl.topping[3].type as first_topping
     from dfs.`/Users/brumsby/drill/donuts.json` as tbl;
-    +------------+---------------+
+    |------------|---------------|
     |   record   | first_topping |
-    +------------+---------------+
+    |------------|---------------|
     | 5007       | Powdered Sugar |
-    +------------+---------------+
+    |------------|---------------|
     1 row selected (0.133 seconds)
 
 This query also introduces a typical requirement for queries against nested

@@ -1,6 +1,6 @@
 ---
 title: "LIMIT Clause"
-date: 2019-04-18
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 The LIMIT clause limits the result set to the specified number of rows. You can use LIMIT with or without an ORDER BY clause.  
@@ -88,9 +88,9 @@ The following example query includes the ORDER BY and LIMIT clauses and returns 
        0: jdbc:drill:> SELECT `month`, state, SUM(order_total)
        AS sales FROM orders GROUP BY `month`, state
        ORDER BY 3 DESC LIMIT 20;
-       +------------+------------+------------+
+       |------------|------------|------------|
        |   month    |   state    |   sales    |
-       +------------+------------+------------+
+       |------------|------------|------------|
        | May        | ca         | 119586     |
        | June       | ca         | 116322     |
        | April      | ca         | 101363     |
@@ -111,6 +111,6 @@ The following example query includes the ORDER BY and LIMIT clauses and returns 
        | October    | tx         | 55076      |
        | March      | fl         | 54867      |
        | March      | ny         | 52101      |
-       +------------+------------+------------+
+       |------------|------------|------------|
        20 rows selected
 

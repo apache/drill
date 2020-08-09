@@ -1,6 +1,6 @@
 ---
 title: "REPEATED_CONTAINS"
-date: 2018-11-02
+date: 2020-08-08
 parent: "Nested Data Functions"
 ---
 REPEATED CONTAINS searches for a keyword in an array. 
@@ -46,45 +46,45 @@ Which donuts have glazed or glaze toppings?
 
 		SELECT name, REPEATED_CONTAINS(topping, 'Glaze?') AS `Glazed?` FROM  dfs.`/Users/drilluser/testRepeatedWrite.json` WHERE type='donut';
 
-		+------------+------------+
-		|    name    |  Glazed?   |
-		+------------+------------+
-		| Cake       | true       |
-		| Raised     | true       |
-		| Old Fashioned | true       |
-		| Filled     | true       |
-		| Apple Fritter | true       |
-		+------------+------------+
+		|---------------|---------|
+		| name          | Glazed? |
+		|---------------|---------|
+		| Cake          | true    |
+		| Raised        | true    |
+		| Old Fashioned | true    |
+		| Filled        | true    |
+		| Apple Fritter | true    |
+		|---------------|---------|
 		5 rows selected (0.072 seconds)
 
 Which objects have powdered sugar toppings? Use the asterisk wildcard instead of typing the entire keyword pair.
 
     SELECT name, REPEATED_CONTAINS(topping, 'P*r') AS `Powdered Sugar?` FROM  dfs.`/Users/drilluser/testRepeatedWrite.json` WHERE type='donut';
 
-	+------------+-----------------+
-	|    name    | Powdered Sugar? |
-	+------------+-----------------+
-	| Cake       | true            |
-	| Raised     | true            |
+	|---------------|-----------------|
+	| name          | Powdered Sugar? |
+	|---------------|-----------------|
+	| Cake          | true            |
+	| Raised        | true            |
 	| Old Fashioned | false           |
-	| Filled     | true            |
+	| Filled        | true            |
 	| Apple Fritter | false           |
-	+------------+-----------------+
+	|---------------|-----------------|
 	5 rows selected (0.089 seconds)
 
 Which donuts have toppings beginning with the letters "Map" and ending in any two letters?
 
 	SELECT name, REPEATED_CONTAINS(topping, 'Map..') AS `Maple?` FROM  dfs.`/Users/drilluser/testRepeatedWrite.json` WHERE type='donut';
 
-	+------------+------------+
-	|    name    |   Maple?   |
-	+------------+------------+
-	| Cake       | true       |
-	| Raised     | true       |
-	| Old Fashioned | true       |
-	| Filled     | true       |
-	| Apple Fritter | false      |
-	+------------+------------+
+	|---------------|--------|
+	| name          | Maple? |
+	|---------------|--------|
+	| Cake          | true   |
+	| Raised        | true   |
+	| Old Fashioned | true   |
+	| Filled        | true   |
+	| Apple Fritter | false  |
+	|---------------|--------|
 	5 rows selected (0.085 seconds)
 
 

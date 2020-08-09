@@ -1,6 +1,6 @@
 ---
 title: "ANALYZE TABLE COMPUTE STATISTICS"
-date: 2019-05-31
+date: 2020-08-08
 parent: "SQL Commands"
 ---  
 
@@ -183,32 +183,32 @@ The `/parquet`directory contains a table named “customer.”
 Switch schema to `dfs.drilltestdir`:
  
 	use dfs.drilltestdir;
-	+------+----------------------------------------------+
+	|------|----------------------------------------------|
 	|  ok  |               	summary                	      |
-	+------+----------------------------------------------+
+	|------|----------------------------------------------|
 	| true | Default schema changed to [dfs.drilltestdir] |
-	+------+----------------------------------------------+
+	|------|----------------------------------------------|
  
 The following query shows the columns and types of data in the “customer” table:  
 
 	apache drill (dfs.drilltestdir)> select * from `table_stats/Tpch0.01/parquet/customer` limit 2;
-	+-----------+--------------------+--------------------------------+-------------+-----------------+-----------+--------------+-----------------------------------------------------------------+
+	|-----------|--------------------|--------------------------------|-------------|-----------------|-----------|--------------|-----------------------------------------------------------------|
 	| c_custkey |       c_name       |           c_address            | c_nationkey |     c_phone     | c_acctbal | c_mktsegment |                            c_comment                            |
-	+-----------+--------------------+--------------------------------+-------------+-----------------+-----------+--------------+-----------------------------------------------------------------+
+	|-----------|--------------------|--------------------------------|-------------|-----------------|-----------|--------------|-----------------------------------------------------------------|
 	| 1         | Customer#000000001 | IVhzIApeRb ot,c,E              | 15          | 25-989-741-2988 | 711.56    | BUILDING     | to the even, regular platelets. regular, ironic epitaphs nag e  |
 	| 2         | Customer#000000002 | XSTf4,NCwDVaWNe6tEgvwfmRchLXak | 13          | 23-768-687-3665 | 121.65    | AUTOMOBILE   | l accounts. blithely ironic theodolites integrate boldly: caref |
-	+-----------+--------------------+--------------------------------+-------------+-----------------+-----------+--------------+-----------------------------------------------------------------+
+	|-----------|--------------------|--------------------------------|-------------|-----------------|-----------|--------------|-----------------------------------------------------------------|
 
  
 ###Enabling Statistics for Query Planning
 You can run the ANALYZE TABLE COMPUTE STATISTICS statement at any time to compute statistics; however, you must enable the following option if you want Drill to use statistics during query planning:
  
 	set `planner.statistics.use`=true;
-	+------+---------------------------------+
+	|------|---------------------------------|
 	|  ok  |             summary         	 |
-	+------+---------------------------------+
+	|------|---------------------------------|
 	| true | planner.statistics.use updated. |
-	+------+---------------------------------+
+	|------|---------------------------------|
  
 ###Computing Statistics
 You can compute statistics on directories with Parquet data or on Parquet tables.
@@ -216,20 +216,20 @@ You can compute statistics on directories with Parquet data or on Parquet tables
 You can run the ANALYZE TABLE COMPUTE STATISTICS statement on a subset of columns to generate statistics for those columns only, as shown:
  
 	analyze table `table_stats/Tpch0.01/parquet/customer` compute statistics (c_custkey, c_nationkey, c_acctbal);
-	+----------+---------------------------+
+	|----------|---------------------------|
 	| Fragment | Number of records written |
-	+----------+---------------------------+
+	|----------|---------------------------|
 	| 0_0      | 3                         |
-	+----------+---------------------------+
+	|----------|---------------------------|
  
 Or, you can run the ANALYZE TABLE COMPUTE STATISTICS statement on the entire table/directory if you want statistics generated for all the columns:
  
 	analyze table `table_stats/Tpch0.01/parquet/customer` compute statistics;
-	+----------+---------------------------+
+	|----------|---------------------------|
 	| Fragment | Number of records written |
-	+----------+---------------------------+
+	|----------|---------------------------|
 	| 0_0      | 8                         |
-	+----------+---------------------------+
+	|----------|---------------------------|
 
 
  
@@ -237,11 +237,11 @@ Or, you can run the ANALYZE TABLE COMPUTE STATISTICS statement on the entire tab
 You can also run ANALYZE TABLE COMPUTE STATISTICS on a percentage of the data using the SAMPLE command, as shown:
  
 	ANALYZE TABLE `table_stats/Tpch0.01/parquet/customer` COMPUTE STATISTICS SAMPLE 50 PERCENT;
-	+----------+---------------------------+
+	|----------|---------------------------|
 	| Fragment | Number of records written |
-	+----------+---------------------------+
+	|----------|---------------------------|
 	| 0_0      | 8                         |
-	+----------+---------------------------+
+	|----------|---------------------------|
 
  
 ###Storing Statistics
@@ -255,18 +255,18 @@ You can query the statistics file to see the statistics generated for each colum
 
  
 	select * from `table_stats/Tpch0.01/parquet/customer/.stats.drill`;
-	+--------------------+----------------------------------------------------------------------------------+
+	|--------------------|----------------------------------------------------------------------------------|
 	| statistics_version |                                   directories                                    |
-	+--------------------+----------------------------------------------------------------------------------+
+	|--------------------|----------------------------------------------------------------------------------|
 	| v1                 | [{"computed":"2019-04-30","columns":[{"column":"`c_custkey`","majortype":{"type":"INT","mode":"REQUIRED"},"schema":1.0,"rowcount":1500.0,"nonnullrowcount":1500.0,"ndv":1500,"avgwidth":4.0,"histogram":{"category":"numeric-equi-depth","numRowsPerBucket":150,"buckets":[2.0,149.0,299.0,450.99999999999994,599.0,749.0,900.9999999999999,1049.0,1199.0,1349.0,1500.0]}},{"column":"`c_name`","majortype":{"type":"VARCHAR","mode":"REQUIRED"},"schema":1.0,"rowcount":1500.0,"nonnullrowcount":1500.0,"ndv":1500,"avgwidth":18.0,"histogram":{"buckets":[]}},{"column":"`c_address`","majortype":{"type":"VARCHAR","mode":"REQUIRED"},"schema":1.0,"rowcount":1500.0,"nonnullrowcount":1500.0,"ndv":1500,"avgwidth":24.726666666666667,"histogram":{"buckets":[]}},{"column":"`c_nationkey`","majortype":{"type":"INT","mode":"REQUIRED"},"schema":1.0,"rowcount":1500.0,"nonnullrowcount":1500.0,"ndv":25,"avgwidth":4.0,"histogram":{"category":"numeric-equi-depth","numRowsPerBucket":150,"buckets":[0.0,2.0,4.0,7.0,9.0,12.0,15.199999999999978,17.0,19.0,22.0,24.0]}},{"column":"`c_phone`","majortype":{"type":"VARCHAR","mode":"REQUIRED"},"schema":1.0,"rowcount":1500.0,"nonnullrowcount":1500.0,"ndv":1500,"avgwidth":15.0,"histogram":{"buckets":[]}},{"column":"`c_acctbal`","majortype":{"type":"FLOAT8","mode":"REQUIRED"},"schema":1.0,"rowcount":1500.0,"nonnullrowcount":1500.0,"ndv":1499,"avgwidth":8.0,"histogram":{"category":"numeric-equi-depth","numRowsPerBucket":150,"buckets":[-986.9599781036377,70.38335235292713,1315.592873527358,2308.3286817409094,3224.126201901585,4309.92251900211,5536.811312470584,6568.307274272932,7763.991209015995,8865.61001733318,9987.710018221289]}},{"column":"`c_mktsegment`","majortype":{"type":"VARCHAR","mode":"REQUIRED"},"schema":1.0,"rowcount":1500.0,"nonnullrowcount":1500.0,"ndv":5,"avgwidth":8.976666666666667,"histogram":{"buckets":[]}},{"column":"`c_comment`","majortype":{"type":"VARCHAR","mode":"REQUIRED"},"schema":1.0,"rowcount":1500.0,"nonnullrowcount":1500.0,"ndv":1500,"avgwidth":73.2,"histogram":{"buckets":[]}}]}] |
-	+--------------------+--------------------------------------------------------------------------------------+  
+	|--------------------|--------------------------------------------------------------------------------------|  
 
 	SELECT t.directories.columns[0].ndv as ndv, t.directories.columns[0].rowcount as rc, t.directories.columns[0].nonnullrowcount AS nnrc, t.directories.columns[0].histogram as histogram FROM `table_stats/Tpch0.01/parquet/customer/.stats.drill` t;
-	+------+--------+--------+----------------------------------------------------------------------------------+
+	|------|--------|--------|----------------------------------------------------------------------------------|
 	| ndv  |   rc   |  nnrc  |                                    histogram                                     |
-	+------+--------+--------+----------------------------------------------------------------------------------+
+	|------|--------|--------|----------------------------------------------------------------------------------|
 	| 1500 | 1500.0 | 1500.0 | {"category":"numeric-equi-depth","numRowsPerBucket":150,"buckets":[2.0,149.0,299.0,450.99999999999994,599.0,749.0,900.9999999999999,1049.0,1199.0,1349.0,1500.0]}             |
-	+------+--------+--------+----------------------------------------------------------------------------------+
+	|------|--------|--------|----------------------------------------------------------------------------------|
 
 
 
@@ -277,21 +277,21 @@ If you want to compute statistics on a table or directory that you have already 
 The following example demonstrates how to drop statistics on a table:
  
 	DROP TABLE `table_stats/Tpch0.01/parquet/customer/.stats.drill`;
-	+------+--------------------------------------------------------------------+
+	|------|--------------------------------------------------------------------|
 	|  ok  |                              summary                               |
-	+------+--------------------------------------------------------------------+
+	|------|--------------------------------------------------------------------|
 	| true | Table [table_stats/Tpch0.01/parquet/customer/.stats.drill] dropped |
-	+------+--------------------------------------------------------------------+
+	|------|--------------------------------------------------------------------|
 
 
 The following example demonstrates how to drop statistics on a directory, assuming that “customer” is a directory that contains Parquet files:
  
 	DROP TABLE `table_stats/Tpch0.01/parquet/customer.stats.drill`;
-	+-------+------------------------------------+
+	|-------|------------------------------------|
 	|  ok   | 	         summary     	         |
-	+-------+------------------------------------+
+	|-------|------------------------------------|
 	| true  | Table [customer.stats.drill] dropped|
-	+-------+------------------------------------+
+	|-------|------------------------------------|
  
 When you drop statistics, the statistics directory no longer exists for the table:
 
@@ -308,18 +308,18 @@ Typical errors you may get when running ANALYZE TABLE COMPUTE STATISTICS result 
 **Running ANALYZE TABLE COMPUTE STATISTICS on a file.**  
   
 	ANALYZE TABLE `/parquet/nation.parquet` COMPUTE STATISTICS;
-	+--------+----------------------------------------------------------------------------------+
+	|--------|----------------------------------------------------------------------------------|
 	|   ok   |                                     summary                                      |
-	+--------+----------------------------------------------------------------------------------+
+	|--------|----------------------------------------------------------------------------------|
 	| false  | Table /parquet/nation.parquet is not supported by ANALYZE. Support is currently limited to directory-based Parquet tables. |
-	+--------+----------------------------------------------------------------------------------+
+	|--------|----------------------------------------------------------------------------------|
 
 
 **Running ANALYZE TABLE COMPUTE STATISTICS on a data source other than Parquet.**
 
 	ANALYZE TABLE nation1_json COMPUTE STATISTICS;
-	+--------+----------------------------------------------------------------------------------+
+	|--------|----------------------------------------------------------------------------------|
 	|   ok   |                                     summary                                      |
-	+--------+----------------------------------------------------------------------------------+
+	|--------|----------------------------------------------------------------------------------|
 	| false  | Table nation1_json is not supported by ANALYZE. Support is currently limited to directory-based Parquet tables. |
-	+--------+----------------------------------------------------------------------------------+
+	|--------|----------------------------------------------------------------------------------|

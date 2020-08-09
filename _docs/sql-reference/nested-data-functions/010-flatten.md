@@ -1,6 +1,6 @@
 ---
 title: "FLATTEN"
-date: 2018-11-02
+date: 2020-08-08
 parent: "Nested Data Functions"
 ---
 FLATTEN separates the elements in a repeated field into individual records.
@@ -30,7 +30,7 @@ into three distinct records:
 
     SELECT FLATTEN(z) FROM table;
     | x           | y              | z         |
-    +-------------+----------------+-----------+
+    |-------------|----------------|-----------|
     | 5           | "a string"     | 1         |
     | 5           | "a string"     | 2         |
     | 5           | "a string"     | 3         |
@@ -53,9 +53,9 @@ row contains an array of four categories:
     0: jdbc:drill:zk=local> select distinct name, hours, categories 
     from dfs.yelp.`yelp_academic_dataset_business.json` 
     where name ='zpizza';
-    +------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+    |------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|
     |    name    |   hours                                                                                                                                                                                                                                                                                                         | categories                                    |
-    +------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+    |------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|
     | zpizza     | {"Tuesday":{"close":"22:00","open":"10:00"},"Friday":{"close":"23:00","open":"10:00"},"Monday":{"close":"22:00","open":"10:00"},"Wednesday":{"close":"22:00","open":"10:00"},"Thursday":{"close":"22:00","open":"10:00"},"Sunday":{"close":"22:00","open":"10:00"},"Saturday":{"close":"23:00","open":"10:00"}} | ["Gluten-Free","Pizza","Vegan","Restaurants"] |
 
 The FLATTEN function can operate on this single row and return multiple rows,
@@ -64,14 +64,14 @@ one for each category:
     0: jdbc:drill:zk=local> select distinct name, flatten(categories) as categories 
     from dfs.yelp.`yelp_academic_dataset_business.json` 
     where name ='zpizza' order by 2;
-    +------------+-------------+
+    |------------|-------------|
     |    name    | categories  |
-    +------------+-------------+
+    |------------|-------------|
     | zpizza     | Gluten-Free |
     | zpizza     | Pizza       |
     | zpizza     | Restaurants |
     | zpizza     | Vegan       |
-    +------------+-------------+
+    |------------|-------------|
     4 rows selected (2.797 seconds)
 
 Having used the FLATTEN function to break down arrays into distinct rows, you
@@ -88,15 +88,15 @@ the categories array, then run a COUNT function on the flattened result:
     group by celltbl.catl 
     order by count(celltbl.catl) desc limit 5;
  
-    +---------------+------------+
+    |---------------|------------|
     |    catl       |  catcount  |
-    +---------------+------------+
+    |---------------|------------|
     | Restaurants   | 14303      |
     | Shopping      | 6428       |
     | Food          | 5209       |
     | Beauty & Spas | 3421       |
     | Nightlife     | 2870       |
-    +---------------|------------+
+    |---------------|------------|
 
 A common use case for FLATTEN is its use in conjunction with the
 KVGEN function as shown in the section, ["JSON Data Model"]({{ site.baseurl }}/docs/json-data-model/).

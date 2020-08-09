@@ -1,6 +1,6 @@
 ---
 title: "ORDER BY Clause"
-date: 2018-11-02
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 The ORDER BY clause sorts the result set of a query.
@@ -52,20 +52,20 @@ The following example query returns sales totals for each month in descending or
 
        0: jdbc:drill:> select `month`, sum(order_total)
        from orders group by `month` order by 2 desc;
-       +------------+------------+
-       | month | EXPR$1 |
-       +------------+------------+
-       | June | 950481 |
-       | May | 947796 |
-       | March | 836809 |
-       | April | 807291 |
-       | July | 757395 |
-       | October | 676236 |
-       | August | 572269 |
-       | February | 532901 |
+       |-----------|--------|
+       | month     | EXPR$1 |
+       |-----------|--------|
+       | June      | 950481 |
+       | May       | 947796 |
+       | March     | 836809 |
+       | April     | 807291 |
+       | July      | 757395 |
+       | October   | 676236 |
+       | August    | 572269 |
+       | February  | 532901 |
        | September | 373100 |
-       | January | 346536 |
-       +------------+------------+
+       | January   | 346536 |
+       |-----------|--------|
 
 
 

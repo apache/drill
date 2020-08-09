@@ -1,6 +1,6 @@
 ---
 title: "Tutorial: Develop a Simple Function"
-date: 2016-11-18 21:59:16 UTC
+date: 2020-08-08
 parent: "Develop Custom Functions"
 ---
 
@@ -229,13 +229,13 @@ Add the JAR files to Drill, by copying them to the following location:
 Restart drill and run the following query on the [`employee.json`]({{site.baseurl}}/docs/querying-json-files/) file installed with Drill:
 
     SELECT MASK(first_name, '*' , 3) FIRST , MASK(last_name, '#', 7) LAST  FROM cp.`employee.json` LIMIT 5;
-    +----------+------------+
+    |----------|------------|
     |  FIRST   |    LAST    |
-    +----------+------------+
+    |----------|------------|
     | ***ri    | ######     |
     | ***rick  | #######    |
     | ***hael  | ######     |
     | ***a     | #######ez  |
     | ***erta  | #######    |
-    +----------+------------+
+    |----------|------------|
     5 rows selected (2.259 seconds)

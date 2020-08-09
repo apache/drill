@@ -1,6 +1,6 @@
 ---
 title: "CASE"
-date: 2018-11-02
+date: 2020-08-08
 parent: "SQL Conditional Expressions"
 ---
 Executes statements based on one or more equality conditions.
@@ -40,11 +40,11 @@ The employee having an ID of 99 is Elizabeth Horne. The employee having a ID of 
       WHERE employee_id = 99 
         OR employee_id = 100 
         OR employee_id = 101;
-    +-------------+------------+
-    | employee_id |   EXPR$1   |
-    +-------------+------------+
-    | 99          | Elizabeth  |
-    | 100         | Hunt       |
+    |-------------|-------------|
+    | employee_id | EXPR$1      |
+    |-------------|-------------|
+    | 99          | Elizabeth   |
+    | 100         | Hunt        |
     | 101         | ID too high |
-    +-------------+------------+
+    |-------------|-------------|
     3 rows selected (0.199 seconds)

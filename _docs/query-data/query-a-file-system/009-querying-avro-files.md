@@ -1,6 +1,6 @@
 ---
 title: "Querying Avro Files"
-date: 2019-04-16
+date: 2020-08-08
 parent: "Querying a File System"
 ---
 
@@ -23,9 +23,9 @@ select * from dfs.tmp.`map_string_to_long.avro`
 The query returns the following results:
 
 ```
-+-----------------+
+|-----------------|
 |      mapf       |
-+-----------------+
+|-----------------|
 | {"ki":1,"ka":2} |
-+-----------------+
+|-----------------|
 ```

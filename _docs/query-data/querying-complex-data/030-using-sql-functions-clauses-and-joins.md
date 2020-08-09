@@ -1,6 +1,6 @@
 ---
 title: "Using SQL Functions, Clauses, and Joins"
-date: 2018-11-02
+date: 2020-08-08
 parent: "Querying Complex Data"
 ---
 You can use standard SQL clauses, such as WHERE and ORDER BY, to elaborate on
@@ -10,11 +10,11 @@ this kind of simple query:
     where id>0
     order by id limit 1;
   
-    +------------+------------+
+    |------------|------------|
     |     id     |    type    |
-    +------------+------------+
+    |------------|------------|
     | 0001       | donut      |
-    +------------+------------+
+    |------------|------------|
   
     1 row selected (0.318 seconds)
 
@@ -26,11 +26,11 @@ syntax:
     dfs.`/Users/brumsby/drill/moredonuts.json` as tbl2
     on tbl1.id=tbl2.id;
   
-    +------------+------------+
+    |------------|------------|
     |     id     |    type    |
-    +------------+------------+
+    |------------|------------|
     | 0001       | donut      |
-    +------------+------------+
+    |------------|------------|
   
     1 row selected (0.395 seconds)
 
@@ -40,20 +40,20 @@ Standard aggregate functions work against JSON data. For example:
 
     0: jdbc:drill:zk=local> select type, avg(ppu) as ppu_sum from dfs.`/Users/brumsby/drill/donuts.json` group by type;
   
-    +------------+------------+
+    |------------|------------|
     |    type    |  ppu_sum   |
-    +------------+------------+
+    |------------|------------|
     | donut      | 0.55       |
-    +------------+------------+
+    |------------|------------|
   
     1 row selected (0.216 seconds)
   
     0: jdbc:drill:zk=local> select type, sum(sales) as sum_by_type from dfs.`/Users/brumsby/drill/moredonuts.json` group by type;
   
-    +------------+-------------+
+    |------------|-------------|
     |    type    | sum_by_type |
-    +------------+-------------+
+    |------------|-------------|
     | donut      | 1194        |
-    +------------+-------------+
+    |------------|-------------|
   
     1 row selected (0.389 seconds)

@@ -1,6 +1,6 @@
 ---
 title: "Querying a File System Introduction"
-date: 2017-03-13 22:49:09 UTC
+date: 2020-08-08
 parent: "Querying a File System"
 ---
 Files and directories are like standard SQL tables to Drill. You can specify a
@@ -51,11 +51,11 @@ To access implicit columns, you must explicitly include the columns in a query, 
 
        0: jdbc:drill:zk=local> SELECT fqn, filepath, filename, suffix FROM dfs.`/dev/data/files/test.csvh` LIMIT 1;  
        
-       +-------------------------------------+--------------------------+---------------+----------------+
+       |-------------------------------------|--------------------------|---------------|----------------|
        |             fqn                     |      filepath            |  filename     | suffix         |
-       +-------------------------------------+--------------------------+---------------+----------------+
+       |-------------------------------------|--------------------------|---------------|----------------|
        | /dev/data/files/test.csvh           | /dev/data/files          | test.csvh     | csvh           |
-       +-------------------------------------+--------------------------+---------------+----------------+   
+       |-------------------------------------|--------------------------|---------------|----------------|   
 
 {% include startnote.html %}If a table has a column with the same name as an implicit column, such as “suffix,” the implicit column overrides the table column.{% include endnote.html %} 
 

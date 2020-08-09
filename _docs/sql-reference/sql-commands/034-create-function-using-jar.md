@@ -1,6 +1,6 @@
 ---
 title: "CREATE FUNCTION USING JAR"
-date: 2019-01-07
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 The CREATE FUNCTION USING JAR command registers UDFs in Drill. See [Dynamic UDFs]({{site.baseurl}}/docs/dynamic-udfs/) for more information.   
@@ -27,10 +27,10 @@ The name of the JAR file that contains the UDFs.
 
 ## Example  
        0: jdbc:drill:zk=local> CREATE FUNCTION USING JAR 'simple_functions.jar';  
-       +---------------+--------------------------------------------------------------------------------------------------------------+
-       | ok   	
-       |summary
-       +---------------+--------------------------------------------------------------------------------------------------------------+
+       |
+       | ok
+       | summary
+       |
        | true
-       | The following UDFs in jar simple_function.jar have been registered: ...                        |
-       +---------------+--------------------------------------------------------------------------------------------------------------+          
+       | The following UDFs in jar simple_function.jar have been registered: ... |
+       |-------------------------------------------------------------------------|

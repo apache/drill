@@ -1,6 +1,6 @@
 ---
 title: "FROM Clause"
-date: 2018-12-08
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 The FROM clause lists the references (tables, views, and subqueries) that data is selected from. Drill expands the traditional concept of a “table reference” in a standard SQL FROM clause to refer to files and directories in a local or distributed file system.
@@ -121,11 +121,11 @@ Starting in Drill 1.15, Drill supports cross joins. A cross join returns the car
 To enable cross joins, disable the `planner.enable_nljoin_for_scalar_only` option, as shown:  
 
 	set `planner.enable_nljoin_for_scalar_only` = false;  
-	+-------+-------------------------------------------------+
-	|  ok   |                 	summary                 	  | 
-	+-------+-------------------------------------------------+
-	| true  | planner.enable_nljoin_for_scalar_only updated.  |
-	+-------+-------------------------------------------------+  
+	|------|------------------------------------------------|
+	| ok   | summary                                        |
+	|------|------------------------------------------------|
+	| true | planner.enable_nljoin_for_scalar_only updated. |
+	|------|------------------------------------------------|
 
 Before you enable the cross join functionality, verify that Drill has enough memory to process the query. Also note the following limitation related to the use of aggregate functions with cross joins.
 
@@ -149,11 +149,11 @@ The following example joins two tables on the table id:
        dfs.`/Users/brumsby/drill/moredonuts.json` as tbl2
        ON tbl1.id=tbl2.id;
        
-       +------------+------------+
+       |------------|------------|
        |     id     |    type    |
-       +------------+------------+
+       |------------|------------|
        | 0001       | donut      |
-       +------------+------------+  
+       |------------|------------|  
   
 
 In the following example, assume you have the following two tables that you want to join using a cross join:
@@ -161,39 +161,39 @@ In the following example, assume you have the following two tables that you want
 **Note:** These tables were created from the region.parquet and nation.parquet files in the sample-data folder included with the Drill installation.
 
 	SELECT * FROM tmp.`n_name`;
-	+----------+-----------------------+
-	|  R_NAME  |       R_COMMENT   	|
-	+----------+-----------------------+
-	| AFRICA   | lar deposits. blithe  |
-	| AMERICA  | hs use ironic, even   |
-	| ASIA 	| ges. thinly even pin  |
-	+----------+-----------------------+
+	|---------|----------------------|
+	| R_NAME  | R_COMMENT            |
+	|---------|----------------------|
+	| AFRICA  | lar deposits. blithe |
+	| AMERICA | hs use ironic, even  |
+	| ASIA    | ges. thinly even pin |
+	|---------|----------------------|
 	 
 	SELECT * FROM tmp.`n_key`;
-	+---------+--------------+
-	| N_NAME  | N_NATIONKEY  |
-	+---------+--------------+
-	| 0   	  | ALGERIA  	 |
-	| 1   	  | ARGENTINA	 |
-	| 2   	  | BRAZIL   	 |
-	+---------+--------------+
+	|--------|-------------|
+	| N_NAME | N_NATIONKEY |
+	|--------|-------------|
+	| 0      | ALGERIA     |
+	| 1      | ARGENTINA   |
+	| 2      | BRAZIL      |
+	|--------|-------------|
  
 Using CROSS JOIN to join the two tables produces the following results:
  
 	SELECT * FROM tmp.`n_key` CROSS JOIN tmp.`n_name`;
-	+---------+--------------+----------+----------------------------+
-	| N_NAME  | N_NATIONKEY  |  R_NAME  |   	R_COMMENT   	     |
-	+---------+--------------+----------+----------------------------+
-	| 0   	  | ALGERIA  	 | AFRICA   | lar deposits. blithe       |
-	| 0   	  | ALGERIA  	 | AMERICA  | hs use ironic, even        |
-	| 0   	  | ALGERIA  	 | ASIA     | ges. thinly even pin       |
-	| 1   	  | ARGENTINA	 | AFRICA   | lar deposits. blithe       |
-	| 1   	  | ARGENTINA	 | AMERICA  | hs use ironic, even        |
-	| 1   	  | ARGENTINA	 | ASIA     | ges. thinly even pin       |
-	| 2   	  | BRAZIL   	 | AFRICA   | lar deposits. blithe       |
-	| 2   	  | BRAZIL   	 | AMERICA  | hs use ironic, even        |
-	| 2   	  | BRAZIL   	 | ASIA 	| ges. thinly even pin       |
-	+---------+--------------+----------+----------------------------+
+	|--------|-------------|---------|----------------------|
+	| N_NAME | N_NATIONKEY | R_NAME  | R_COMMENT            |
+	|--------|-------------|---------|----------------------|
+	| 0      | ALGERIA     | AFRICA  | lar deposits. blithe |
+	| 0      | ALGERIA     | AMERICA | hs use ironic, even  |
+	| 0      | ALGERIA     | ASIA    | ges. thinly even pin |
+	| 1      | ARGENTINA   | AFRICA  | lar deposits. blithe |
+	| 1      | ARGENTINA   | AMERICA | hs use ironic, even  |
+	| 1      | ARGENTINA   | ASIA    | ges. thinly even pin |
+	| 2      | BRAZIL      | AFRICA  | lar deposits. blithe |
+	| 2      | BRAZIL      | AMERICA | hs use ironic, even  |
+	| 2      | BRAZIL      | ASIA    | ges. thinly even pin |
+	|--------|-------------|---------|----------------------|
 	  
 
 

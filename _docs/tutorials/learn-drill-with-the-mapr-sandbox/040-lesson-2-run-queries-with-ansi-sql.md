@@ -1,6 +1,6 @@
 ---
 title: "Lesson 2: Run Queries with ANSI SQL"
-date: 2018-11-02
+date: 2020-08-08
 parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal
@@ -29,20 +29,20 @@ statement.
 ### Set the schema to hive:
 
     0: jdbc:drill:> use hive.`default`;
-    +-------+-------------------------------------------+
+    |-------|-------------------------------------------|
     |  ok   |                  summary                  |
-    +-------+-------------------------------------------+
+    |-------|-------------------------------------------|
     | true  | Default schema changed to [hive.default]  |
-    +-------+-------------------------------------------+
+    |-------|-------------------------------------------|
     1 row selected 
 
 ### Return sales totals by month:
 
     0: jdbc:drill:> select `month`, sum(order_total)
     from orders group by `month` order by 2 desc;
-    +------------+---------+
+    |------------|---------|
     |   month    | EXPR$1  |
-    +------------+---------+
+    |------------|---------|
     | June       | 950481  |
     | May        | 947796  |
     | March      | 836809  |
@@ -53,7 +53,7 @@ statement.
     | February   | 532901  |
     | September  | 373100  |
     | January    | 346536  |
-    +------------+---------+
+    |------------|---------|
     10 rows selected 
 
 Drill supports SQL aggregate functions such as SUM, MAX, AVG, and MIN.
@@ -67,9 +67,9 @@ is a reserved word in SQL.
 
     0: jdbc:drill:> select `month`, state, sum(order_total) as sales from orders group by `month`, state
     order by 3 desc limit 20;
-    +-----------+--------+---------+
+    |-----------|--------|---------|
     |   month   | state  |  sales  |
-    +-----------+--------+---------+
+    |-----------|--------|---------|
     | May       | ca     | 119586  |
     | June      | ca     | 116322  |
     | April     | ca     | 101363  |
@@ -90,7 +90,7 @@ is a reserved word in SQL.
     | October   | tx     | 55076   |
     | March     | fl     | 54867   |
     | March     | ny     | 52101   |
-    +-----------+--------+---------+
+    |-----------|--------|---------|
     20 rows selected 
 
 Note the alias for the result of the SUM function. Drill supports column
@@ -103,11 +103,11 @@ This query uses the HAVING clause to constrain an aggregate result.
 ### Set the workspace to dfs.clicks
 
     0: jdbc:drill:> use dfs.clicks;
-    +-------+-----------------------------------------+
+    |-------|-----------------------------------------|
     |  ok   |                 summary                 |
-    +-------+-----------------------------------------+
+    |-------|-----------------------------------------|
     | true  | Default schema changed to [dfs.clicks]  |
-    +-------+-----------------------------------------+
+    |-------|-----------------------------------------|
     1 row selected
 
 ### Return total number of clicks for devices that indicate high click-throughs:
@@ -115,16 +115,16 @@ This query uses the HAVING clause to constrain an aggregate result.
     0: jdbc:drill:> select t.user_info.device, count(*) from `clicks/clicks.json` t 
     group by t.user_info.device
     having count(*) > 1000;
-    +---------+---------+
+    |---------|---------|
     | EXPR$0  | EXPR$1  |
-    +---------+---------+
+    |---------|---------|
     | IOS5    | 11814   |
     | AOS4.2  | 5986    |
     | IOS6    | 4464    |
     | IOS7    | 3135    |
     | AOS4.4  | 1562    |
     | AOS4.3  | 3039    |
-    +---------+---------+
+    |---------|---------|
     6 rows selected
 
 The aggregate is a count of the records for each different mobile device in
@@ -140,15 +140,15 @@ Use the same workspace as before (dfs.clicks).
     0: jdbc:drill:> select t.trans_id transaction, t.user_info.cust_id customer from `clicks/clicks.campaign.json` t 
     union all 
     select u.trans_id, u.user_info.cust_id  from `clicks/clicks.json` u limit 5;
-    +-------------+------------+
+    |-------------|------------|
     | transaction |  customer  |
-    +-------------+------------+
+    |-------------|------------|
     | 35232       | 18520      |
     | 31995       | 17182      |
     | 35760       | 18228      |
     | 37090       | 17015      |
     | 37838       | 18737      |
-    +-------------+------------+
+    |-------------|------------|
 
 This UNION ALL query returns rows that exist in two files (and includes any
 duplicate rows from those files): `clicks.campaign.json` and `clicks.json`.
@@ -158,11 +158,11 @@ duplicate rows from those files): `clicks.campaign.json` and `clicks.json`.
 ### Set the workspace to hive:
 
     0: jdbc:drill:> use hive.`default`;
-    +-------+-------------------------------------------+
+    |-------|-------------------------------------------|
     |  ok   |                  summary                  |
-    +-------+-------------------------------------------+
+    |-------|-------------------------------------------|
     | true  | Default schema changed to [hive.default]  |
-    +-------+-------------------------------------------+
+    |-------|-------------------------------------------|
     1 row selected
     
 ### Compare order totals across states:
@@ -175,9 +175,9 @@ duplicate rows from those files): `clicks.campaign.json` and `clicks.json`.
     on ny_sales.cust_id = ca_sales.cust_id
     order by ny_sales.cust_id
     limit 20;
-    +------------+------------+------------+
+    |------------|------------|------------|
     |  cust_id   |  ny_sales  |  ca_sales  |
-    +------------+------------+------------+
+    |------------|------------|------------|
     | 1001       | 72         | 47         |
     | 1002       | 108        | 198        |
     | 1003       | 83         | null       |
@@ -198,7 +198,7 @@ duplicate rows from those files): `clicks.campaign.json` and `clicks.json`.
     | 1022       | 124        | null       |
     | 1023       | 166        | 149        |
     | 1024       | 233        | null       |
-    +------------+------------+------------+
+    |------------|------------|------------|
 
 This example demonstrates Drill support for subqueries. 
 
@@ -207,11 +207,11 @@ This example demonstrates Drill support for subqueries.
 ### Use the maprdb workspace:
 
     0: jdbc:drill:> use maprdb;
-    +-------+-------------------------------------+
+    |-------|-------------------------------------|
     |  ok   |               summary               |
-    +-------+-------------------------------------+
+    |-------|-------------------------------------|
     | true  | Default schema changed to [maprdb]  |
-    +-------+-------------------------------------+
+    |-------|-------------------------------------|
     1 row selected (0.088 seconds)
 
 ### Return customer data with appropriate data types
@@ -221,15 +221,15 @@ This example demonstrates Drill support for subqueries.
     cast(t.address.state as varchar(4)) as state, cast(t.loyalty.agg_rev as dec(7,2)) as agg_rev, 
     cast(t.loyalty.membership as varchar(20)) as membership
     from customers t limit 5;
-    +----------+----------------------+-----------+-----------+--------+----------+-------------+
+    |----------|----------------------|-----------|-----------|--------|----------|-------------|
     | cust_id  |         name         |  gender   |    age    | state  | agg_rev  | membership  |
-    +----------+----------------------+-----------+-----------+--------+----------+-------------+
+    |----------|----------------------|-----------|-----------|--------|----------|-------------|
     | 10001    | "Corrine Mecham"     | "FEMALE"  | "15-20"   | "va"   | 197.00   | "silver"    |
     | 10005    | "Brittany Park"      | "MALE"    | "26-35"   | "in"   | 230.00   | "silver"    |
     | 10006    | "Rose Lokey"         | "MALE"    | "26-35"   | "ca"   | 250.00   | "silver"    |
     | 10007    | "James Fowler"       | "FEMALE"  | "51-100"  | "me"   | 263.00   | "silver"    |
     | 10010    | "Guillermo Koehler"  | "OTHER"   | "51-100"  | "mn"   | 202.00   | "silver"    |
-    +----------+----------------------+-----------+-----------+--------+----------+-------------+
+    |----------|----------------------|-----------|-----------|--------|----------|-------------|
 
 Note the following features of this query:
 
@@ -245,21 +245,21 @@ of “va”:
 
     0: jdbc:drill:> select cast(row_key as int), regexp_replace(cast(t.address.state as varchar(10)),'"','')
     from customers t limit 1;
-    +------------+------------+
+    |------------|------------|
     |   EXPR$0   |   EXPR$1   |
-    +------------+------------+
+    |------------|------------|
     | 10001      | va         |
-    +------------+------------+
+    |------------|------------|
     1 row selected
 
 ## CREATE VIEW Command
 
     0: jdbc:drill:> use dfs.views;
-    +-------+----------------------------------------+
+    |-------|----------------------------------------|
     |  ok   |                summary                 |
-    +-------+----------------------------------------+
+    |-------|----------------------------------------|
     | true  | Default schema changed to [dfs.views]  |
-    +-------+----------------------------------------+
+    |-------|----------------------------------------|
     1 row selected
 
 ### Use a mutable workspace:
@@ -278,11 +278,11 @@ can create Drill views and tables in mutable workspaces.
     cast(t.loyalty.agg_rev as dec(7,2)) as agg_rev,
     cast(t.loyalty.membership as varchar(20)) as membership
     from maprdb.customers t;
-    +-------+-------------------------------------------------------------+
+    |-------|-------------------------------------------------------------|
     |  ok   |                           summary                           |
-    +-------+-------------------------------------------------------------+
+    |-------|-------------------------------------------------------------|
     | true  | View 'custview' created successfully in 'dfs.views' schema  |
-    +-------+-------------------------------------------------------------+
+    |-------|-------------------------------------------------------------|
     1 row selected
 
 Drill provides CREATE OR REPLACE VIEW syntax similar to relational databases
@@ -305,11 +305,11 @@ supports the creation of metadata in the file system.
 ### Query data from the view:
 
     0: jdbc:drill:> select * from custview limit 1;
-    +----------+-------------------+-----------+----------+--------+----------+-------------+
+    |----------|-------------------|-----------|----------|--------|----------|-------------|
     | cust_id  |       name        |  gender   |   age    | state  | agg_rev  | membership  |
-    +----------+-------------------+-----------+----------+--------+----------+-------------+
+    |----------|-------------------|-----------|----------|--------|----------|-------------|
     | 10001    | "Corrine Mecham"  | "FEMALE"  | "15-20"  | "va"   | 197.00   | "silver"    |
-    +----------+-------------------+-----------+----------+--------+----------+-------------+
+    |----------|-------------------|-----------|----------|--------|----------|-------------|
     1 row selected
 
 Once the users know what data is available by exploring it directly from the file system, views can be used as a way to read the data into downstream tools such as Tableau and MicroStrategy for analysis and visualization. For these tools, a view appears simply as a “table” with selectable “columns” in it.
@@ -323,13 +323,13 @@ Continue using `dfs.views` for this query.
     0: jdbc:drill:> select membership, sum(order_total) as sales from hive.orders, custview
     where orders.cust_id=custview.cust_id
     group by membership order by 2;
-    +------------+------------+
+    |------------|------------|
     | membership |   sales    |
-    +------------+------------+
+    |------------|------------|
     | "basic"    | 380665     |
     | "silver"   | 708438     |
     | "gold"     | 2787682    |
-    +------------+------------+
+    |------------|------------|
     3 rows selected
 
 In this query, we are reading data from a MapR-DB table (represented by
@@ -351,13 +351,13 @@ Do not use a semicolon for this SET command.
     dfs.`/mapr/demo.mapr.com/data/nested/clicks/clicks.json` c 
     where orders.cust_id=custview.cust_id and orders.cust_id=c.user_info.cust_id 
     group by custview.membership order by 2;
-    +------------+------------+
+    |------------|------------|
     | membership |   sales    |
-    +------------+------------+
+    |------------|------------|
     | "basic"    | 372866     |
     | "silver"   | 728424     |
     | "gold"     | 7050198    |
-    +------------+------------+
+    |------------|------------|
     3 rows selected
 
 This three-way join selects from three different data sources in one query:

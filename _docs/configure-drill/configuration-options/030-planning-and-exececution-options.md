@@ -1,6 +1,6 @@
 ---
 title: "Planning and Execution Options"
-date: 2019-05-07
+date: 2020-08-08
 parent: "Configuration Options"
 ---
 You can set Drill query planning and execution options per cluster, at the
@@ -27,11 +27,11 @@ You can run the following query to see a list of options:
 The query returns a table that lists options with descriptions and other details. As of Drill 1.15, there are 179 options:  
 
 	SELECT COUNT() AS num_of_sysopts FROM sys.options;
-	+-----------------+
+	|-----------------|
 	| num_of_sysopts  |
-	+-----------------+
+	|-----------------|
 	| 179             |
-	+-----------------+  
+	|-----------------|  
 
 See [Querying the Options Table]({{site.baseurl}}/docs/querying-system-tables/#querying-the-options-table).   
 

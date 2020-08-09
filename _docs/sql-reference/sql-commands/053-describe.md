@@ -1,6 +1,6 @@
 ---
 title: "DESCRIBE"
-date: 2018-12-08
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 The DESCRIBE command returns information about columns in a table, view, or schema.
@@ -68,67 +68,67 @@ Complete the following steps to use the DESCRIBE command:
   1. Issue the USE command to switch to a particular schema.
 
         0: jdbc:drill:zk=drilldemo:5181> use hive;
-        +------------+------------+
-        |   ok  |  summary   |
-        +------------+------------+
-        | true      | Default schema changed to 'hive' |
-        +------------+------------+
+        |------|----------------------------------|
+        | ok   | summary                          |
+        |------|----------------------------------|
+        | true | Default schema changed to 'hive' |
+        |------|----------------------------------|
         1 row selected (0.025 seconds)
 
   2. Issue the SHOW TABLES command to see the existing tables in the schema.
 
         0: jdbc:drill:zk=drilldemo:5181> show tables;
-        +--------------+------------+
+        |--------------|------------|
         | TABLE_SCHEMA | TABLE_NAME |
-        +--------------+------------+
+        |--------------|------------|
         | hive.default | orders     |
         | hive.default | products   |
-        +--------------+------------+
+        |--------------|------------|
         2 rows selected (0.438 seconds)
 
   3. Issue the DESCRIBE command on a table.
 
         0: jdbc:drill:zk=drilldemo:5181> describe orders;
-        +-------------+------------+-------------+
-        | COLUMN_NAME | DATA_TYPE  | IS_NULLABLE |
-        +-------------+------------+-------------+
-        | order_id  | BIGINT    | YES       |
-        | month     | VARCHAR   | YES       |
-        | purchdate   | TIMESTAMP  | YES        |
-        | cust_id   | BIGINT    | YES       |
-        | state     | VARCHAR   | YES       |
-        | prod_id   | BIGINT    | YES       |
-        | order_total | INTEGER | YES       |
-        +-------------+------------+-------------+
+        |-------------|-----------|-------------|
+        | COLUMN_NAME | DATA_TYPE | IS_NULLABLE |
+        |-------------|-----------|-------------|
+        | order_id    | BIGINT    | YES         |
+        | month       | VARCHAR   | YES         |
+        | purchdate   | TIMESTAMP | YES         |
+        | cust_id     | BIGINT    | YES         |
+        | state       | VARCHAR   | YES         |
+        | prod_id     | BIGINT    | YES         |
+        | order_total | INTEGER   | YES         |
+        |-------------|-----------|-------------|
         7 rows selected (0.64 seconds)
 
   4. Issue the DESCRIBE command on a table in another schema from the current schema.
 
         0: jdbc:drill:zk=drilldemo:5181> describe hbase.customers;
-        +-------------+------------+-------------+
-        | COLUMN_NAME | DATA_TYPE  | IS_NULLABLE |
-        +-------------+------------+-------------+
-        | row_key   | ANY       | NO        |
-        | address   | (VARCHAR(1), ANY) MAP | NO        |
-        | loyalty   | (VARCHAR(1), ANY) MAP | NO        |
-        | personal  | (VARCHAR(1), ANY) MAP | NO        |
-        +-------------+------------+-------------+
+        |-------------|-----------------------|-------------|
+        | COLUMN_NAME | DATA_TYPE             | IS_NULLABLE |
+        |-------------|-----------------------|-------------|
+        | row_key     | ANY                   | NO          |
+        | address     | (VARCHAR(1), ANY) MAP | NO          |
+        | loyalty     | (VARCHAR(1), ANY) MAP | NO          |
+        | personal    | (VARCHAR(1), ANY) MAP | NO          |
+        |-------------|-----------------------|-------------|
         4 rows selected (0.671 seconds)
 
   5. Issue the DESCRIBE command on a view in another schema from the current schema.
 
         0: jdbc:drill:zk=drilldemo:5181> describe dfs.views.customers_vw;
-        +-------------+------------+-------------+
-        | COLUMN_NAME | DATA_TYPE  | IS_NULLABLE |
-        +-------------+------------+-------------+
-        | cust_id   | BIGINT    | NO        |
-        | name      | VARCHAR   | NO        |
-        | address   | VARCHAR   | NO        |
-        | gender    | VARCHAR   | NO        |
-        | age       | VARCHAR   | NO        |
-        | agg_rev   | VARCHAR   | NO        |
-        | membership  | VARCHAR | NO        |
-        +-------------+------------+-------------+
+        |-------------|-----------|-------------|
+        | COLUMN_NAME | DATA_TYPE | IS_NULLABLE |
+        |-------------|-----------|-------------|
+        | cust_id     | BIGINT    | NO          |
+        | name        | VARCHAR   | NO          |
+        | address     | VARCHAR   | NO          |
+        | gender      | VARCHAR   | NO          |
+        | age         | VARCHAR   | NO          |
+        | agg_rev     | VARCHAR   | NO          |
+        | membership  | VARCHAR   | NO          |
+        |-------------|-----------|-------------|
         7 rows selected (0.403 seconds)  
  
 6. Issue the DESCRIBE SCHEMA command on `dfs.tmp` (the `dfs` schema and `tmp` workspace configured within the `dfs` schema) from the current schema.  

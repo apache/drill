@@ -1,6 +1,6 @@
 ---
 title: "WITH Clause"
-date: 2017-04-05 00:09:58 UTC
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 The WITH clause is an optional clause used to contain one or more common table
@@ -78,9 +78,9 @@ duration of the query.
        0: jdbc:drill:zk=local> WITH emp_data AS (SELECT * FROM cp.`employee.json`) 
        SELECT full_name, position_title, salary, hire_date 
        FROM emp_data ORDER BY hire_date LIMIT 10;
-    +------------------+-------------------------+------------+-----------------------+
+    |------------------|-------------------------|------------|-----------------------|
     | full_name        | position_title          |   salary   | hire_date             |
-    +------------------+-------------------------+------------+-----------------------+
+    |------------------|-------------------------|------------|-----------------------|
     | Bunny McCown     | Store Assistant Manager | 8000.0     | 1993-05-01 00:00:00.0 |
     | Danielle Johnson | Store Assistant Manager | 8000.0     | 1993-05-01 00:00:00.0 |
     | Dick Brummer     | Store Assistant Manager | 7900.0     | 1993-05-01 00:00:00.0 |
@@ -91,4 +91,4 @@ duration of the query.
     | Shauna Wyro      | Store Manager           | 15000.0    | 1994-12-01 00:00:00.0 |
     | Roberta Damstra  | VP Information Systems  | 25000.0    | 1994-12-01 00:00:00.0 |
     | Pedro Castillo   | VP Country Manager      | 35000.0    | 1994-12-01 00:00:00.0 |
-    +------------+----------------+--------------+------------------------------------+
+    |------------|----------------|--------------|------------------------------------|

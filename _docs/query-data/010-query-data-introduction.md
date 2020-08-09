@@ -1,6 +1,6 @@
 ---
 title: "Query Data Introduction"
-date: 2019-04-18
+date: 2020-08-08
 parent: "Query Data"
 ---
 You can submit SQL queries against various data sources from the [Drill shell (SQLLine)]({{site.baseurl}}/docs/configuring-the-drill-shell/), [Drill Web UI]({{site.baseurl}}/docs/starting-the-web-ui/), [REST API]({{site.baseurl}}/docs/rest-api/), and tools that connect to Drill via [ODBC or JDBC]({{site.baseurl}}/docs/odbc-jdbc-interfaces/). Drill has [several storage and format plugins]({{site.baseurl}}/docs/connect-a-data-source-introduction/) that enable queries against multiple data sources and data formats, including [complex data]({{site.baseurl}}/docs/querying-complex-data). 
@@ -14,33 +14,33 @@ The following query was run before switching to the dfs.schema. A workspace name
 
 
 	apache drill> select * from dfs.samples.`nation1`;
-	+-------------+----------------+-------------+----------------------+
+	|-------------|----------------|-------------|----------------------|
 	| N_NATIONKEY |     N_NAME     | N_REGIONKEY |      N_COMMENT       |
-	+-------------+----------------+-------------+----------------------+
+	|-------------|----------------|-------------|----------------------|
 	| 0           | ALGERIA        | 0           |  haggle. carefully f |
 	| 1           | ARGENTINA      | 1           | al foxes promise sly |
 	...
-	+-------------+----------------+-------------+----------------------+
+	|-------------|----------------|-------------|----------------------|
 
 Running USE to switch to the `dfs.samples` schema: 
 
 	apache drill> use dfs.samples;
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	|  ok  |                 summary                 |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	| true | Default schema changed to [dfs.samples] |
-	+------+-----------------------------------------+  
+	|------|-----------------------------------------|  
 
 Query written without identifying the schema (without dot notation or back ticks):
 
 	apache drill (dfs.samples)> select * from nation1;
-	+-------------+----------------+-------------+----------------------+
+	|-------------|----------------|-------------|----------------------|
 	| N_NATIONKEY |     N_NAME     | N_REGIONKEY |      N_COMMENT       |
-	+-------------+----------------+-------------+----------------------+
+	|-------------|----------------|-------------|----------------------|
 	| 0           | ALGERIA        | 0           |  haggle. carefully f |
 	| 1           | ARGENTINA      | 1           | al foxes promise sly |
 	...
-	+-------------+----------------+-------------+----------------------+
+	|-------------|----------------|-------------|----------------------|
 
 
 ## Casting Data

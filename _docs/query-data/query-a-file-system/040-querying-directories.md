@@ -1,6 +1,6 @@
 ---
 title: "Querying Directories"
-date: 2019-04-16
+date: 2020-08-08
 parent: "Querying a File System"
 ---
 You can store multiple files in a directory and query them as if they were a
@@ -16,9 +16,9 @@ the "union" of the two files, ordered by the first column:
     0: jdbc:drill:zk=local> SELECT COLUMNS[0] AS `Year`, COLUMNS[1] AS Play 
     FROM dfs.`/Users/brumsby/drill/testdata` order by 1;
  
-    +------------+------------------------+
+    |------------|------------------------|
     |    Year    |          Play          |
-    +------------+------------------------+
+    |------------|------------------------|
     | 1594       | Comedy of Errors       |
     | 1595       | Romeo and Juliet       |
     | 1596       | The Merchant of Venice |
@@ -29,7 +29,7 @@ the "union" of the two files, ordered by the first column:
     | 1606       | King Lear              |
     | 1609       | The Winter's Tale      |
     | 1610       | The Tempest            |
-    +------------+------------------------+
+    |------------|------------------------|
     10 rows selected (0.296 seconds)
 
 You can drill down further and automatically query subdirectories as well. For
@@ -50,11 +50,11 @@ once in a Drill query. For example, the following query counts the number of
 records in all of the files inside the `2013` directory:
 
     0: jdbc:drill:> SELECT COUNT(*) FROM MFS.`/mapr/drilldemo/labs/clicks/logs/2013` ;
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 24000      |
-    +------------+
+    |------------|
     1 row selected (2.607 seconds)  
 
 ## Querying Partitioned Directories  
@@ -80,33 +80,33 @@ to the /tmp directory in the file system. The /tmp directory contains a /logs di
 with the same subdirectories shown in the example image above. You can query the data in the /logs directory using variables, as shown in the following examples:  
 
 	use dfs.logs;
-	+------+--------------------------------------+
+	|------|--------------------------------------|
 	|  ok  |               summary                |
-	+------+--------------------------------------+
+	|------|--------------------------------------|
 	| true | Default schema changed to [dfs.logs] |
-	+------+--------------------------------------+  
+	|------|--------------------------------------|  
 
 	//The following query constrains files inside the subdirectory named 2013. The variable dir0 refers to the first level down from logs (root directory).  
 
 	select * from logs where dir0='2013' limit 3;
-	+------+------+--------------------------------------+----+------------+-----------+-------------------------+--------+----------------+------------------+-----------+-----------+-----------+---------------------+----------+
+	|------|------|--------------------------------------|----|------------|-----------|-------------------------|--------|----------------|------------------|-----------|-----------|-----------|---------------------|----------|
 	| dir0 | dir1 |          registration_dttm           | id | first_name | last_name |          email          | gender |   ip_address   |        cc        |  country  | birthdate |  salary   |        title        | comments |
-	+------+------+--------------------------------------+----+------------+-----------+-------------------------+--------+----------------+------------------+-----------+-----------+-----------+---------------------+----------+
+	|------|------|--------------------------------------|----|------------|-----------|-------------------------|--------|----------------|------------------|-----------|-----------|-----------|---------------------|----------|
 	| 2013 | 1    | \x00*\xE9l\xF2\x19\x00\x00N\x7F%\x00 | 1  | Amanda     | Jordan    | ajordan0@com.com        | Female | 1.197.201.2    | 6759521864920116 | Indonesia | 3/8/1971  | 49756.53  | Internal Auditor    | 1E+02    |
 	| 2013 | 1    | \x00^0\xD0\xE17\x00\x00N\x7F%\x00    | 2  | Albert     | Freeman   | afreeman1@is.gd         | Male   | 218.111.175.34 |                  | Canada    | 1/16/1968 | 150280.17 | Accountant IV       |          |
 	| 2013 | 1    | \x00.\xF9"\xCB\x03\x00\x00N\x7F%\x00 | 3  | Evelyn     | Morgan    | emorgan2@altervista.org | Female | 7.161.136.94   | 6767119071901597 | Russia    | 2/1/1960  | 144972.51 | Structural Engineer |          |
-	+------+------+--------------------------------------+----+------------+-----------+-------------------------+--------+----------------+------------------+-----------+-----------+-----------+---------------------+----------+  
+	|------|------|--------------------------------------|----|------------|-----------|-------------------------|--------|----------------|------------------|-----------|-----------|-----------|---------------------|----------|  
 
 	//The following query constrains files inside the subdirectory named 1. The variable dir0 refers to the first level down from 2013 (the root directory now).  
 
 	select * from `logs/2013` where dir0='1' limit 3;
-	+------+--------------------------------------+----+------------+-----------+-------------------------+--------+----------------+------------------+-----------+-----------+-----------+---------------------+----------+
+	|------|--------------------------------------|----|------------|-----------|-------------------------|--------|----------------|------------------|-----------|-----------|-----------|---------------------|----------|
 	| dir0 |          registration_dttm           | id | first_name | last_name |          email          | gender |   ip_address   |        cc        |  country  | birthdate |  salary   |        title        | comments |
-	+------+--------------------------------------+----+------------+-----------+-------------------------+--------+----------------+------------------+-----------+-----------+-----------+---------------------+----------+
+	|------|--------------------------------------|----|------------|-----------|-------------------------|--------|----------------|------------------|-----------|-----------|-----------|---------------------|----------|
 	| 1    | \x00*\xE9l\xF2\x19\x00\x00N\x7F%\x00 | 1  | Amanda     | Jordan    | ajordan0@com.com        | Female | 1.197.201.2    | 6759521864920116 | Indonesia | 3/8/1971  | 49756.53  | Internal Auditor    | 1E+02    |
 	| 1    | \x00^0\xD0\xE17\x00\x00N\x7F%\x00    | 2  | Albert     | Freeman   | afreeman1@is.gd         | Male   | 218.111.175.34 |                  | Canada    | 1/16/1968 | 150280.17 | Accountant IV       |          |
 	| 1    | \x00.\xF9"\xCB\x03\x00\x00N\x7F%\x00 | 3  | Evelyn     | Morgan    | emorgan2@altervista.org | Female | 7.161.136.94   | 6767119071901597 | Russia    | 2/1/1960  | 144972.51 | Structural Engineer |          |
-	+------+--------------------------------------+----+------------+-----------+-------------------------+--------+----------------+------------------+-----------+-----------+-----------+---------------------+----------+   
+	|------|--------------------------------------|----|------------|-----------|-------------------------|--------|----------------|------------------|-----------|-----------|-----------|---------------------|----------|   
 
 Starting in Drill 1.16, Drill uses a Value operator instead of a Scan operator to read data when a query selects on partitioned columns (dir0, dir1, …dirN) only and also has a DISTINCT or GROUP BY operation. Instead of scanning all directory columns, Drill either reads the specified column from the metadata cache file (if one exists) or Drill selects directly from the directory (partition location). The presence of the Values operator (instead of the Scan operator) in the query plan indicates that Drill is using this optimization, as shown in the following examples:  
 
@@ -120,9 +120,9 @@ Starting in Drill 1.16, Drill uses a Value operator instead of a Scan operator t
 	------
 	
 	explain plan for select distinct dir0 from `/logs`;
-	------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 	text	json
-	------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 	00-00 Screen
 	00-01 Project(dir0=[$0])
 	00-02 StreamAgg(group=[{0}])
@@ -140,9 +140,9 @@ Starting in Drill 1.16, Drill uses a Value operator instead of a Scan operator t
 
 	explain plan for select dir0 from `/logs` group by dir0;
 	
-	------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 	| text | json |
-	------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 	| 00-00 Screen
 	00-01 Project(dir0=[$0])
 	00-02 StreamAgg(group=[{0}])

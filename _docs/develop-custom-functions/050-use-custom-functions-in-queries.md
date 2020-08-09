@@ -1,6 +1,6 @@
 ---
 title: "Using Custom Functions in Queries"
-date: 2018-11-02
+date: 2020-08-08
 parent: "Develop Custom Functions"
 ---
 When you issue a query with a custom function to Drill, Drill searches the
@@ -24,11 +24,11 @@ data within the `employee.json` file:
 
 The query returns the following results:
 
-	| employee_id | full_name    | first_name | last_name  | position_id | position_title          |  store_id  | department_id | birth_da |
-	+-------------+------------+------------+------------+-------------+----------------+------------+---------------+----------+-----------
-	| 1101        | Steve Eurich | Steve      | Eurich     | 16          | Store Temporary Checker | 12         | 16            |
-	| 1102        | Mary Pierson | Mary       | Pierson    | 16          | Store Temporary Checker | 12         | 16            |
-	| 1103        | Leo Jones    | Leo        | Jones      | 16          | Store Temporary Checker | 12         | 16            |
+  | employee_id   | full_name    | first_name   | last_name    | position_id   | position_title          | store_id     | department_id   | birth_da   |
+	| ------------- | ------------ | ------------ | ------------ | ------------- | ----------------        | ------------ | --------------- | ---------- | -----------
+	| 1101          | Steve Eurich | Steve        | Eurich       | 16            | Store Temporary Checker | 12           | 16              |
+	| 1102          | Mary Pierson | Mary         | Pierson      | 16            | Store Temporary Checker | 12           | 16              |
+	| 1103          | Leo Jones    | Leo          | Jones        | 16            | Store Temporary Checker | 12           | 16              |
 	…
 
 Since the `postion_id` and `store_id` columns contain integers, you can issue
@@ -46,11 +46,11 @@ values.
 
 The query returns the following results:
 
-	+------------+
-	|   EXPR$0   |
-	+------------+
-	| 28         |
-	| 28         |
-	| 36         |
-	+------------+
+	|--------|
+	| EXPR$0 |
+	|--------|
+	| 28     |
+	| 28     |
+	| 36     |
+	|--------|
 	…

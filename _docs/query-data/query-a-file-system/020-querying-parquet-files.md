@@ -1,6 +1,6 @@
 ---
 title: "Querying Parquet Files"
-date: 2016-11-21 22:14:44 UTC
+date: 2020-08-08
 parent: "Querying a File System"
 ---
 
@@ -20,15 +20,15 @@ To view the data in the `region.parquet` file, issue the following query:
 
 The query returns the following results:
 
-    +--------------+--------------+-----------------------+
+    |--------------|--------------|-----------------------|
     | R_REGIONKEY  |    R_NAME    |       R_COMMENT       |
-    +--------------+--------------+-----------------------+
+    |--------------|--------------|-----------------------|
     | 0            | AFRICA       | lar deposits. blithe  |
     | 1            | AMERICA      | hs use ironic, even   |
     | 2            | ASIA         | ges. thinly even pin  |
     | 3            | EUROPE       | ly final courts cajo  |
     | 4            | MIDDLE EAST  | uickly special accou  |
-    +--------------+--------------+-----------------------+
+    |--------------|--------------|-----------------------|
     5 rows selected (0.272 seconds)
 
 ## Nation File
@@ -44,9 +44,9 @@ your operating system:
 
 The query returns the following results:
 
-    +--------------+-----------------+--------------+-----------------------+
+    |--------------|-----------------|--------------|-----------------------|
     | N_NATIONKEY  |     N_NAME      | N_REGIONKEY  |       N_COMMENT       |
-    +--------------+-----------------+--------------+-----------------------+
+    |--------------|-----------------|--------------|-----------------------|
     | 0            | ALGERIA         | 0            |  haggle. carefully f  |
     | 1            | ARGENTINA       | 1            | al foxes promise sly  |
     | 2            | BRAZIL          | 1            | y alongside of the p  |
@@ -72,5 +72,5 @@ The query returns the following results:
     | 22           | RUSSIA          | 3            |  requests against th  |
     | 23           | UNITED KINGDOM  | 3            | eans boost carefully  |
     | 24           | UNITED STATES   | 1            | y final packages. sl  |
-    +--------------+-----------------+--------------+-----------------------+
+    |--------------|-----------------|--------------|-----------------------|
     25 rows selected (0.102 seconds)

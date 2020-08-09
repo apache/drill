@@ -1,6 +1,6 @@
 ---
 title: "Querying JSON Files"
-date: 2016-11-21 22:14:43 UTC
+date: 2020-08-08
 parent: "Querying a File System"
 ---
 To query complex JSON files, you need to understand the ["JSON Data Model"]({{site.baseurl}}/docs/json-data-model/). This section provides a trivial example of querying a sample file that Drill installs. 
@@ -27,9 +27,9 @@ Start the Drill shell, and select five rows of data from the `employee.json` fil
 
 The query returns the following results:
 
-    +--------------+----------------------------+---------------------+---------------+--------------+----------------------------+-----------+----------------+-------------+------------------------+----------+----------------+----------------------+-----------------+---------+-----------------------+
+    |--------------|----------------------------|---------------------|---------------|--------------|----------------------------|-----------|----------------|-------------|------------------------|----------|----------------|----------------------|-----------------|---------|-----------------------|
     | employee_id  |         full_name          |     first_name      |   last_name   | position_id  |       position_title       | store_id  | department_id  | birth_date  |       hire_date        |  salary  | supervisor_id  |   education_level    | marital_status  | gender  |    management_role    |
-    +--------------+----------------------------+---------------------+---------------+--------------+----------------------------+-----------+----------------+-------------+------------------------+----------+----------------+----------------------+-----------------+---------+-----------------------+
+    |--------------|----------------------------|---------------------|---------------|--------------|----------------------------|-----------|----------------|-------------|------------------------|----------|----------------|----------------------|-----------------|---------|-----------------------|
     | 1            | Sheri Nowmer               | Sheri               | Nowmer        | 1            | President                  | 0         | 1              | 1961-08-26  | 1994-12-01 00:00:00.0  | 80000.0  | 0              | Graduate Degree      | S               | F       | Senior Management     |
     | 2            | Derrick Whelply            | Derrick             | Whelply       | 2            | VP Country Manager         | 0         | 1              | 1915-07-03  | 1994-12-01 00:00:00.0  | 40000.0  | 1              | Graduate Degree      | M               | M       | Senior Management     |
     | 4            | Michael Spence             | Michael             | Spence        | 2            | VP Country Manager         | 0         | 1              | 1969-06-20  | 1998-01-01 00:00:00.0  | 40000.0  | 1              | Graduate Degree      | S               | M       | Senior Management     |

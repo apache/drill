@@ -1,6 +1,6 @@
 ---
 title: "Optimizing Parquet Metadata Reading"
-date: 2019-05-31
+date: 2020-08-08
 parent: "Performance Tuning"
 ---
 
@@ -35,11 +35,11 @@ The elapsed time of the first query that triggers regeneration of metadata can b
 
 
        0: jdbc:drill:schema=dfs> REFRESH TABLE METADATA t1;
-       +-------+----------------------------------------------+
+       |-------|----------------------------------------------|
        |  ok   |                   summary                    |
-       +-------+----------------------------------------------+
+       |-------|----------------------------------------------|
        | true  | Successfully updated metadata for table t1.  |
-       +-------+----------------------------------------------+
+       |-------|----------------------------------------------|
        1 row selected (0.445 seconds)  
   
 

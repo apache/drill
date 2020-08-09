@@ -1,6 +1,6 @@
 ---
 title: "MongoDB Storage Plugin"
-date: 2018-12-08
+date: 2020-08-08
 parent: "Connect a Data Source"
 ---
 ## Overview
@@ -53,9 +53,9 @@ Drill data sources, including MongoDB.
 
         SHOW DATABASES;
    
-        +---------------------+
+        |---------------------|
         |     SCHEMA_NAME     |
-        +---------------------+
+        |---------------------|
         | INFORMATION_SCHEMA  |
         | cp.default          |
         | dfs.default         |
@@ -64,39 +64,39 @@ Drill data sources, including MongoDB.
         | mongo.local         |
         | mongo.test          |
         | sys                 |
-        +---------------------+
+        |---------------------|
         8 rows selected (1.385 seconds)
     
 2. Change the schema to mongo.text.
 
         USE mongo.test;
 
-        +-------+-----------------------------------------+
+        |-------|-----------------------------------------|
         |  ok   |                 summary                 |
-        +-------+-----------------------------------------+
+        |-------|-----------------------------------------|
         | true  | Default schema changed to [mongo.test]  |
-        +-------+-----------------------------------------+
+        |-------|-----------------------------------------|
 
 3. List the tables and verify that the `zips` collection appears:
 
         SHOW TABLES;
 
-        +---------------+-----------------+
+        |---------------|-----------------|
         | TABLE_SCHEMA  |   TABLE_NAME    |
-        +---------------+-----------------+
+        |---------------|-----------------|
         | mongo.test    | system.indexes  |
         | mongo.test    | zips            |
-        +---------------+-----------------+
+        |---------------|-----------------|
         2 rows selected (0.187 seconds)
 
 4. Set the option to read numbers as doubles instead of as text;
 
         ALTER SYSTEM SET `store.mongo.read_numbers_as_double` = true;
-        +-------+----------------------------------------------+
+        |-------|----------------------------------------------|
         |  ok   |                   summary                    |
-        +-------+----------------------------------------------+
+        |-------|----------------------------------------------|
         | true  | store.mongo.read_numbers_as_double updated.  |
-        +-------+----------------------------------------------+
+        |-------|----------------------------------------------|
         1 row selected (0.078 seconds)
 
 
@@ -107,9 +107,9 @@ Drill data sources, including MongoDB.
 
     SELECT * FROM zips LIMIT 10;
 
-    +---------------+-------------------------+--------+--------+
+    |---------------|-------------------------|--------|--------|
     |     city      |           loc           |  pop   | state  |
-    +---------------+-------------------------+--------+--------+
+    |---------------|-------------------------|--------|--------|
     | AGAWAM        | [-72.622739,42.070206]  | 15338  | MA     |
     | CUSHMAN       | [-72.51565,42.377017]   | 36963  | MA     |
     | BELCHERTOWN   | [-72.410953,42.275103]  | 10579  | MA     |
@@ -120,7 +120,7 @@ Drill data sources, including MongoDB.
     | CHICOPEE      | [-72.607962,42.162046]  | 23396  | MA     |
     | CHICOPEE      | [-72.576142,42.176443]  | 31495  | MA     |
     | CHESTER       | [-72.988761,42.279421]  | 1688   | MA     |
-    +---------------+-------------------------+--------+--------+
+    |---------------|-------------------------|--------|--------|
     10 rows selected (0.444 seconds)
 
 
@@ -129,9 +129,9 @@ Drill data sources, including MongoDB.
 ```
 SELECT city, avg(pop) FROM zips GROUP BY city LIMIT 10; 
 
-+---------------+---------------------+
+|---------------|---------------------|
 |     city      |       EXPR$1        |
-+---------------+---------------------+
+|---------------|---------------------|
 | AGAWAM        | 15338.0             |
 | CUSHMAN       | 18649.5             |
 | BELCHERTOWN   | 10579.0             |
@@ -142,16 +142,16 @@ SELECT city, avg(pop) FROM zips GROUP BY city LIMIT 10;
 | CHICOPEE      | 27445.5             |
 | CHESTER       | 7285.0952380952385  |
 | WESTOVER AFB  | 1764.0              |
-+---------------+---------------------+
+|---------------|---------------------|
 10 rows selected (1.664 seconds)
 ```
 
 **Example 3: Nested Data Column Array**
 
     0: jdbc:drill:zk=local> SELECT loc FROM zips LIMIT 10;
-    +------------------------+
+    |------------------------|
     |    loc                 |
-    +------------------------+
+    |------------------------|
     | [-72.622739,42.070206] |
     | [-72.51565,42.377017]  |
     | [-72.108354,42.409698] |
@@ -162,12 +162,12 @@ SELECT city, avg(pop) FROM zips GROUP BY city LIMIT 10;
     | [-72.833309,42.38167]  |
     | [-72.607962,42.162046] |
     | [-72.576142,42.176443] |
-    +------------------------+
+    |------------------------|
         
     0: jdbc:drill:zk=local> SELECT loc[0] FROM zips LIMIT 10;
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | -72.622739 |
     | -72.51565  |
     | -72.108354 |
@@ -178,7 +178,7 @@ SELECT city, avg(pop) FROM zips GROUP BY city LIMIT 10;
     | -72.833309 |
     | -72.607962 |
     | -72.576142 |
-    +------------+
+    |------------|
 
 ## Using ODBC/JDBC Drivers
 

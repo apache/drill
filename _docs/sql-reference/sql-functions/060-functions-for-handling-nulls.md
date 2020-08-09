@@ -1,6 +1,6 @@
 ---
 title: "Functions for Handling Nulls"
-date: 2018-11-02
+date: 2020-08-08
 parent: "SQL Functions"
 ---
 
@@ -36,22 +36,22 @@ This function returns the same type as the first expression.
 ### NULLIF Examples
 
     SELECT d9, d18 FROM alltypes LIMIT 1;
-    +------------+------------+
+    |------------|------------|
     |     d9     |    d18     |
-    +------------+------------+
+    |------------|------------|
     | 1032.65    | 1032.6516  |
-    +------------+------------+
+    |------------|------------|
     1 row selected (0.081 seconds)
 
     SELECT NULLIF(d9, d18) FROM alltypes limit 1;
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|
     | 1032.65    |
-    +------------+
+    |------------|
     1 row selected (0.079 seconds)
 
     SELECT NULLIF(d9, d9) FROM alltypes limit 1;
-    +------------+
+    |------------|
     |   EXPR$0   |
-    +------------+
+    |------------|

@@ -1,6 +1,6 @@
 ---
 title: "Value Window Functions"
-date: 2018-11-02
+date: 2020-08-08
 parent: "SQL Window Functions"
 ---
 Window functions operate on a set of rows and return a single value for each row from the underlying query. The OVER() clause differentiates window functions from other analytical and reporting functions. See [SQL Window Functions Introduction]({{ site.baseurl }}/docs/sql-window-functions-introduction/).
@@ -53,24 +53,24 @@ The following example uses the LAG window function to show the quantity of recor
 
        select cust_id, `date`, qty_sold, lag(qty_sold,1) over (order by cust_id, `date`) as prev_qtysold from sales where cust_id = 8 order by cust_id, `date`;  
        
-       +----------+-------------+-----------+---------------+
+       |----------|-------------|-----------|---------------|
        | cust_id  |    date     | qty_sold  | prev_qtysold  |
-       +----------+-------------+-----------+---------------+
+       |----------|-------------|-----------|---------------|
        | 8        | 1976-01-25  | 2         | null          |
        | 8        | 1981-02-04  | 5         | 2             |
        | 8        | 1982-08-09  | 2         | 5             |
        | 8        | 1983-02-12  | 1         | 2             |
        | 8        | 1984-02-10  | 9         | 1             |
-       +----------+-------------+-----------+---------------+
+       |----------|-------------|-----------|---------------|
        5 rows selected (0.331 seconds)
  
 ###LEAD()  
 The following example uses the LEAD window function to provide the commission for concert tickets with show ID 172 and the next commission for subsequent ticket sales. Since there is no commission after 40.00, the last next_comm value is null. Note that the term "date" in the query is enclosed in back ticks because it is a reserved keyword in Drill.  
 
        select show_id, `date`, commission, lead(commission,1) over (order by `date`) as next_comm from commission where show_id = 172;
-       +----------+-------------+-------------+------------+
+       |----------|-------------|-------------|------------|
        | show_id  |    date     | commission  | next_comm  |
-       +----------+-------------+-------------+------------+
+       |----------|-------------|-------------|------------|
        | 172      | 1979-01-01  | 29.20       | 29.50      |
        | 172      | 1979-01-01  | 29.50       | 8.25       |
        | 172      | 1979-01-01  | 8.25        | 15.50      |
@@ -83,16 +83,16 @@ The following example uses the LEAD window function to provide the commission fo
        | 172      | 1979-01-02  | 50.00       | 20.20      |
        | 172      | 1979-01-02  | 20.20       | 40.00      |
        | 172      | 1979-01-02  | 40.00       | null       |
-       +----------+-------------+-------------+------------+
+       |----------|-------------|-------------|------------|
        12 rows selected (0.241 seconds)
       
 ###FIRST_VALUE() 
 The following example uses the FIRST_VALUE window function to identify the employee with the lowest sales for each dealer in Q1:
 
        select emp_name, dealer_id, sales, first_value(sales) over (partition by dealer_id order by sales) as dealer_low from q1_sales;
-       +-----------------+------------+--------+-------------+
+       |-----------------|------------|--------|-------------|
        |    emp_name     | dealer_id  | sales  | dealer_low  |
-       +-----------------+------------+--------+-------------+
+       |-----------------|------------|--------|-------------|
        | Raphael Hull    | 1          | 8227   | 8227        |
        | Jack Salazar    | 1          | 9710   | 8227        |
        | Ferris Brown    | 1          | 19745  | 8227        |
@@ -103,7 +103,7 @@ The following example uses the FIRST_VALUE window function to identify the emplo
        | May Stout       | 3          | 9308   | 9308        |
        | Abel Kim        | 3          | 12369  | 9308        |
        | Ursa George     | 3          | 15427  | 9308        |
-       +-----------------+------------+--------+-------------+
+       |-----------------|------------|--------|-------------|
        10 rows selected (0.299 seconds)
 
 
@@ -111,9 +111,9 @@ The following example uses the FIRST_VALUE window function to identify the emplo
 The following example uses the LAST_VALUE window function to identify the last car sale each employee made at each dealership in 2013:
 
        select emp_name, dealer_id, sales, `year`, last_value(sales) over (partition by  emp_name order by `year`) as last_sale from emp_sales where `year` = 2013;
-       +-----------------+------------+--------+-------+------------+
+       |-----------------|------------|--------|-------|------------|
        |    emp_name     | dealer_id  | sales  | year  | last_sale  |
-       +-----------------+------------+--------+-------+------------+
+       |-----------------|------------|--------|-------|------------|
        | Beverly Lang    | 2          | 5324   | 2013  | 5324       |
        | Ferris Brown    | 1          | 22003  | 2013  | 22003      |
        | Haviva Montoya  | 2          | 6345   | 2013  | 13100      |
@@ -126,7 +126,7 @@ The following example uses the LAST_VALUE window function to identify the last c
        | Raphael Hull    | 1          | -4000  | 2013  | 14000      |
        | Raphael Hull    | 1          | 14000  | 2013  | 14000      |
        | Ursa George     | 1          | 10865  | 2013  | 10865      |
-       +-----------------+------------+--------+-------+------------+
+       |-----------------|------------|--------|-------|------------|
        12 rows selected (0.284 seconds)
 
 

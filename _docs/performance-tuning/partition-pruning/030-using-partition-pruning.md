@@ -1,6 +1,6 @@
 ---
 title: "How to Partition Data"
-date: 2016-11-21 22:14:42 UTC
+date: 2020-08-08
 parent: "Partition Pruning"
 --- 
 
@@ -50,19 +50,19 @@ This creates a Parquet file with the log data for Q1 1994 in the current workspa
 Now you can define views on the parquet files and query the views.  
 
        0: jdbc:drill:zk=local> create view vv1 as select `dir0` as `year`, `dir1` as `qtr` from dfs.`/Users/max/data/multilevel/parquet`;
-       +------------+------------+
+       |------------|------------|
        |     ok     |  summary   |
-       +------------+------------+
+       |------------|------------|
        | true       | View 'vv1' created successfully in 'dfs.tmp' schema |
-       +------------+------------+
+       |------------|------------|
        1 row selected (0.16 seconds)  
 
 Query the view to see all of the logs.  
 
        0: jdbc:drill:zk=local> select * from dfs.tmp.vv1;
-       +------------+------------+
+       |------------|------------|
        |    year    |    qtr     |
-       +------------+------------+
+       |------------|------------|
        | 1994       | Q1         |
        | 1994       | Q3         |
        | 1994       | Q3         |
@@ -90,16 +90,16 @@ Query the view to see all of the logs.
        | 1996       | Q3         |
        | 1996       | Q3         |
        | 1996       | Q3         |
-       +------------+------------+
+       |------------|------------|
        ...
 
 
 When you query the view, Drill can apply partition pruning and read only the files and directories required to return query results.
 
        0: jdbc:drill:zk=local> explain plan for select * from dfs.tmp.vv1 where `year` = 1996 and qtr = 'Q2';
-       +------------+------------+
+       |------------|------------|
        |    text    |    json    |
-       +------------+------------+
+       |------------|------------|
        | 00-00    Screen
        00-01      Project(year=[$0], qtr=[$1])
        00-02        Scan(groupscan=[ParquetGroupScan [entries=[ReadEntryWithPath [path=file:/Users/maxdata/multilevel/parquet/1996/Q2/orders_96_q2.parquet]], selectionRoot=/Users/max/data/multilevel/parquet, numFiles=1, columns=[`dir0`, `dir1`]]])

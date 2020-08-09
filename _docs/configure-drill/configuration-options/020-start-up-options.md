@@ -1,6 +1,6 @@
 ---
 title: "Start-Up Options"
-date: 2018-12-28
+date: 2020-08-08
 parent: "Configuration Options"
 ---
 The start-up options for Drill reside in a [HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) configuration file format, which is a hybrid between a properties file and a JSON file. Drill start-up options consist of a group of files with a nested relationship. At the bottom of the file hierarchy are the default files that Drill provides, starting with `drill-default.conf`. 
@@ -50,11 +50,11 @@ The summary of start-up options, also known as boot options, lists default value
   Introduced in Drill 1.15. Sets batch sizing (number of rows per batch) for the Parquet reader. The default value is 4,000 rows. If rows are large and queries return out-of-memory errors, reduce the value. You can set this option at the system level in `<drill_home>/conf/drill-override.conf` or at the session level using the SET command, as shown:  
 
 		SET `store.parquet.complex.batch.num_records`=2000;
-		+-------+---------------------------------------------------+
+		|-------|---------------------------------------------------|
 		|  ok   |                      summary                      |
-		+-------+---------------------------------------------------+
+		|-------|---------------------------------------------------|
 		| true  | store.parquet.complex.batch.num_records updated.  |
-		+-------+---------------------------------------------------+
+		|-------|---------------------------------------------------|
 
 * **drill.exec.http.ssl_enabled**  
   Introduced in Drill 1.2. Enables or disables [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/#https-support). Settings are TRUE and FALSE, respectively. The default is FALSE.  

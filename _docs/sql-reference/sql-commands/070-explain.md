@@ -1,6 +1,6 @@
 ---
 title: "EXPLAIN"
-date: 2018-02-09 00:16:06 UTC
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 EXPLAIN is a useful tool for examining the steps that a query goes through
@@ -71,9 +71,9 @@ COUNT(DISTINCT) query on a JSON file:
 
     0: jdbc:drill:zk=local> !set maxwidth 10000
 	0: jdbc:drill:zk=local> explain plan for select type t, count(distinct id) from dfs.`/home/donuts/donuts.json` where type='donut' group by type;
-	+------------+------------+
-	|   text    |   json    |
-	+------------+------------+
+	|------------|------------|
+	|   text     |   json     |
+	|------------|------------|
 	| 00-00 Screen
 	00-01   Project(t=[$0], EXPR$1=[$1])
 	00-02       Project(t=[$0], EXPR$1=[$1])
@@ -113,9 +113,9 @@ estimates for the query plan. For example:
 
 	0: jdbc:drill:zk=local> !set maxwidth 10000
 	0: jdbc:drill:zk=local> explain plan including all attributes for select * from dfs.`/home/donuts/donuts.json` where type='donut';
-	+------------+------------+
-	|   text    |   json    |
-	+------------+------------+
+	|------------|------------|
+	|   text     |   json     |
+	|------------|------------|
 	| 00-00 Screen: rowcount = 1.0, cumulative cost = {5.1 rows, 21.1 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 889
 	00-01   Project(*=[$0]): rowcount = 1.0, cumulative cost = {5.0 rows, 21.0 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 888
 	00-02       Project(T1¦¦*=[$0]): rowcount = 1.0, cumulative cost = {4.0 rows, 17.0 cpu, 0.0 io, 0.0 network, 0.0 memory}, id = 887
@@ -134,9 +134,9 @@ query), use the EXPLAIN PLAN WITHOUT IMPLEMENTATION syntax:
 For example:
 
 	0: jdbc:drill:zk=local> explain plan without implementation for select type t, count(distinct id) from dfs.`/home/donuts/donuts.json` where type='donut' group by type;
-	+------------+------------+
-	|   text    |   json    |
-	+------------+------------+
+	|------------|------------|
+	|   text     |   json     |
+	|------------|------------|
 	| DrillScreenRel
 	  DrillProjectRel(t=[$0], EXPR$1=[$1])
 	    DrillAggregateRel(group=[{0}], EXPR$1=[COUNT($1)])

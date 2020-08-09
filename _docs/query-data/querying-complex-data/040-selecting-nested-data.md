@@ -1,6 +1,6 @@
 ---
 title: "Selecting Nested Data for a Column"
-date: 2018-11-02
+date: 2020-08-08
 parent: "Querying Complex Data"
 ---
 The following queries show how to access the nested data inside the parts of
@@ -11,11 +11,11 @@ the _fourth_ element in the array under `topping`, not the third.
 
     0: jdbc:drill:zk=local> select topping[3] as top from dfs.`/Users/brumsby/drill/donuts.json`;
   
-    +------------+
+    |------------|
     |    top     |
-    +------------+
+    |------------|
     | {"id":"5007","type":"Powdered Sugar"} |
-    +------------
+    |------------
     1 row selected (0.137 seconds)
 
 Note that this query produces _one column for all of the data_ that is nested

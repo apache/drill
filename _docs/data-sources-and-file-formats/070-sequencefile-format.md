@@ -1,6 +1,6 @@
 ---
 title: "Sequence Files"
-date: 2018-02-09 00:15:59 UTC
+date: 2020-08-08
 parent: "Data Sources and File Formats"
 ---
 
@@ -24,11 +24,11 @@ Drill projects sequence files as table with two columns - 'binary_key', 'binary_
     SELECT *
     FROM dfs.tmp.`simple.seq`
     LIMIT 1;
-    +--------------+---------------+
+    |--------------|---------------|
     |  binary_key  | binary_value  |
-    +--------------+---------------+
+    |--------------|---------------|
     | [B@70828f46  | [B@b8c765f    |
-    +--------------+---------------+
+    |--------------|---------------|
 
 
 simple.seq contains byte serialized strings as keys and values, we can convert them to strings.
@@ -38,8 +38,8 @@ simple.seq contains byte serialized strings as keys and values, we can convert t
     FROM dfs.tmp.`simple.seq`
     LIMIT 1
     ;
-    +-----------+-------------+
+    |-----------|-------------|
     |  EXPR$0   |   EXPR$1    |
-    +-----------+-------------+
+    |-----------|-------------|
     | key0      |   value0    |
-    +-----------+-------------+
+    |-----------|-------------|

@@ -1,6 +1,6 @@
 ---
 title: "SELECT List"
-date: 2018-11-02
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 
@@ -37,28 +37,28 @@ A temporary name for a column in the final result set. The AS keyword is optiona
 The following example shows a query with a scalar subquery expression:  
 
        SELECT a1, (SELECT MAX(a2) FROM t2) AS max_a2 FROM t1;       
-       +-----+-------+
+       |------|--------|
        | a1   | max_a2 |
-       +-----+-------+
-       | 1    | 9 |
-       | 2    | 9 |
-       | 3    | 9 |
-       | 4    | 9 |
-       | 5    | 9 |
-       | 6    | 9 |
-       | 7    | 9 |
-       | null | 9 |
-       | 9    | 9 |
-       | 10   | 9 |
-       +-----+-------+
+       |------|--------|
+       | 1    | 9      |
+       | 2    | 9      |
+       | 3    | 9      |
+       | 4    | 9      |
+       | 5    | 9      |
+       | 6    | 9      |
+       | 7    | 9      |
+       | null | 9      |
+       | 9    | 9      |
+       | 10   | 9      |
+       |------|--------|
        10 rows selected (0.244 seconds)
 
 The following example shows a query with array columns that return rows in column format for easier readability:  
 
        SELECT COLUMNS[0], COLUMNS[1] FROM dfs.`/Users/brumsby/drill/plays.csv`;       
-       +------------+------------------------+
+       |------------|------------------------|
        |   EXPR$0   |         EXPR$1         |
-       +------------+------------------------+
+       |------------|------------------------|
        | 1599       | As You Like It         |
        | 1601       | Twelfth Night          |
        | 1594       | Comedy of Errors       |
@@ -66,7 +66,7 @@ The following example shows a query with array columns that return rows in colum
        | 1596       | The Merchant of Venice |
        | 1610       | The Tempest            |
        | 1599       | Hamlet                 |
-       +------------+------------------------+
+       |------------|------------------------|
        7 rows selected (0.137 seconds)
        
 

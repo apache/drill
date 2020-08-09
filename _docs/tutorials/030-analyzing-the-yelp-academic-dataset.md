@@ -1,6 +1,6 @@
 ---
 title: "Analyzing the Yelp Academic Dataset"
-date: 2018-11-02
+date: 2020-08-08
 parent: "Tutorials"
 ---
 Apache Drill is one of the fastest growing open source projects, with the community making rapid progress with monthly releases. The key difference is Drill’s agility and flexibility.
@@ -45,11 +45,11 @@ analysis extremely easy.
         dfs.`<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json`
         limit 1;
 
-    +------------------------+----------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+--------------------------------+---------+--------------+-------------------+-------------+-------+-------+-----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+----------+---------------+
+    |------------------------|----------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------|--------------------------------|---------|--------------|-------------------|-------------|-------|-------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|---------------|
     | business_id            | full_address                                       | hours                                                                                                                                                                                                                                                      | open | categories                     | city    | review_count | name              | longitude   | state | stars | latitude  | attributes                                                                                                                                                   | type     | neighborhoods |
-    +------------------------+----------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+--------------------------------+---------+--------------+-------------------+-------------+-------+-------+-----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+----------+---------------+
+    |------------------------|----------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------|--------------------------------|---------|--------------|-------------------|-------------|-------|-------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|---------------|
     | vcNAWiLM4dR7D2nwwJ7nCA | 4840 E Indian School Rd Ste 101, Phoenix, AZ 85018 | fill in{"Tuesday":{"close":"17:00","open":"08:00"},"Friday":{"close":"17:00","open":"08:00"},"Monday":{"close":"17:00","open":"08:00"},"Wednesday":{"close":"17:00","open":"08:00"},"Thursday":{"close":"17:00","open":"08:00"},"Sunday":{},"Saturday":{}} | true | ["Doctors","Health & Medical"] | Phoenix | 7            | Eric Goldberg, MD | -111.983758 | AZ    | 3.5   | 33.499313 | {"By Appointment Only":true,"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}} | business | []            |
-    +------------------------+----------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+--------------------------------+---------+--------------+-------------------+-------------+-------+-------+-----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+----------+---------------+
+    |------------------------|----------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------|--------------------------------|---------|--------------|-------------------|-------------|-------|-------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|---------------|
 
 {% include startnote.html %}This document aligns Drill output for example purposes. Drill output is not aligned in this case.{% include endnote.html %}
 
@@ -62,11 +62,11 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     0: jdbc:drill:zk=local> select sum(review_count) as totalreviews 
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json`;
 
-    +--------------+
+    |--------------|
     | totalreviews |
-    +--------------+
+    |--------------|
     | 1236445      |
-    +--------------+
+    |--------------|
 
 #### Top states and cities in total number of reviews
 
@@ -74,9 +74,9 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` 
     group by state, city order by count(*) desc limit 10;
 
-    +------------+------------+--------------+
+    |------------|------------|--------------|
     |   state    |    city    | totalreviews |
-    +------------+------------+--------------+
+    |------------|------------|--------------|
     | NV         | Las Vegas  | 12021        |
     | AZ         | Phoenix    | 7499         |
     | AZ         | Scottsdale | 3605         |
@@ -87,7 +87,7 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     | AZ         | Chandler   | 1637         |
     | WI         | Madison    | 1630         |
     | AZ         | Glendale   | 1196         |
-    +------------+------------+--------------+
+    |------------|------------|--------------|
 
 #### Average number of reviews per business star rating
 
@@ -95,9 +95,9 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json`
     group by stars order by stars desc;
 
-    +------------+------------+
+    |------------|------------|
     |   stars    | reviewsavg |
-    +------------+------------+
+    |------------|------------|
     | 5.0        | 8.0        |
     | 4.5        | 28.0       |
     | 4.0        | 48.0       |
@@ -107,7 +107,7 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     | 2.0        | 11.0       |
     | 1.5        | 9.0        |
     | 1.0        | 4.0        |
-    +------------+------------+
+    |------------|------------|
 
 #### Top businesses with high review counts (> 1000)
 
@@ -115,9 +115,9 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json`
     where review_count > 1000 order by `review_count` desc limit 10;
 
-    +-------------------------------+-------------+------------+---------------+
+    |-------------------------------|-------------|------------|---------------|
     |           name                |   state     |    city    |  review_count |
-    +-------------------------------+-------------+------------+---------------+
+    |-------------------------------|-------------|------------|---------------|
     | Mon Ami Gabi                  | NV          | Las Vegas  | 4084          |
     | Earl of Sandwich              | NV          | Las Vegas  | 3655          |
     | Wicked Spoon                  | NV          | Las Vegas  | 3408          |
@@ -128,7 +128,7 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     | Bacchanal Buffet              | NV          | Las Vegas  | 2369          |
     | The Cosmopolitan of Las Vegas | NV          | Las Vegas  | 2253          |
     | Aria Hotel & Casino           | NV          | Las Vegas  | 2224          |
-    +-------------------------------+-------------+----------------------------+
+    |-------------------------------|-------------|----------------------------|
 
 #### Saturday open and close times for a few businesses
 
@@ -138,9 +138,9 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json`
     b limit 10;
 
-    +----------------------------+------------+------------+
+    |----------------------------|------------|------------|
     |    name                    |   EXPR$1   |   EXPR$2   |
-    +----------------------------+------------+------------+
+    |----------------------------|------------|------------|
     | Eric Goldberg, MD          | 08:00      | 17:00      |
     | Pine Cone Restaurant       | null       | null       |
     | Deforest Family Restaurant | 06:00      | 22:00      |
@@ -151,7 +151,7 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     | McFarland Public Library   | 09:00      | 20:00      |
     | Green Lantern Restaurant   | 06:00      | 02:00      |
     | Spartan Animal Hospital    | 07:30      | 18:00      |
-    +----------------------------+------------+------------+
+    |----------------------------|------------|------------|
 
 Note how Drill can traverse and refer through multiple levels of nesting.
 
@@ -166,19 +166,19 @@ First, change Drill to work in all text mode (so we can take a look at all of
 the data).
 
     0: jdbc:drill:zk=local> alter system set `store.json.all_text_mode` = true;
-    +------------+-----------------------------------+
+    |------------|-----------------------------------|
     |     ok     |  summary                          |
-    +------------+-----------------------------------+
+    |------------|-----------------------------------|
     | true       | store.json.all_text_mode updated. |
-    +------------+-----------------------------------+
+    |------------|-----------------------------------|
 
 Then, query the attribute’s data.
 
     0: jdbc:drill:zk=local> select attributes from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` limit 10;
 
-    +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
     |                                                     attributes                                                                                                                    |
-    +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
     | {"By Appointment Only":"true","Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}}                    |
     | {"Take-out":"true","Good For":{"dessert":"false","latenight":"false","lunch":"true","dinner":"false","breakfast":"false","brunch":"false"},"Caters":"false","Noise Level":"averag |
     | {"Take-out":"true","Good For":{"dessert":"false","latenight":"false","lunch":"false","dinner":"false","breakfast":"false","brunch":"true"},"Caters":"false","Noise Level":"quiet" |
@@ -189,7 +189,7 @@ Then, query the attribute’s data.
     | {"Good For":{},"Ambience":{},"Parking":{},"Wi-Fi":"free","Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}}                                  |
     | {"Take-out":"true","Good For":{"dessert":"false","latenight":"false","lunch":"false","dinner":"true","breakfast":"false","brunch":"false"},"Noise Level":"average"                |
     | {"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}}                                                 |
-    +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 {% include startnote.html %}This document aligns Drill output for example purposes. Drill output is not aligned in this case.{% include endnote.html %}
 
@@ -197,30 +197,30 @@ Turn off the all text mode so we can continue to perform arithmetic operations
 on data.
 
     0: jdbc:drill:zk=local> alter system set `store.json.all_text_mode` = false;
-    +-------+------------------------------------+
+    |-------|------------------------------------|
     |  ok   |              summary               |
-    +-------+------------------------------------+
+    |-------|------------------------------------|
     | true  | store.json.all_text_mode updated.  |
-    +-------+------------------------------------+
+    |-------|------------------------------------|
 
 ### 4\. Explore the restaurant businesses in the data set
 
 #### Number of restaurants in the data set
 
     0: jdbc:drill:zk=local> select count(*) as TotalRestaurants from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants');
-    +------------------+
+    |------------------|
     | TotalRestaurants |
-    +------------------+
+    |------------------|
     | 14303            |
-    +------------------+
+    |------------------|
 
 #### Top restaurants in number of reviews
 
     0: jdbc:drill:zk=local> select name,state,city,`review_count` from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants') order by `review_count` desc limit 10;
 
-    +------------------------+-------+-----------+--------------+
+    |------------------------|-------|-----------|--------------|
     |          name          | state |    city   | review_count |
-    +------------------------+-------+-----------+--------------+
+    |------------------------|-------|-----------|--------------|
     | Mon Ami Gabi           | NV    | Las Vegas | 4084         |
     | Earl of Sandwich       | NV    | Las Vegas | 3655         |
     | Wicked Spoon           | NV    | Las Vegas | 3408         |
@@ -231,15 +231,15 @@ on data.
     | Bacchanal Buffet       | NV    | Las Vegas | 2369         |
     | Hash House A Go Go     | NV    | Las Vegas | 2201         |
     | Mesa Grill             | NV    | Las Vegas | 2004         |
-    +------------------------+-------+-----------+--------------+
+    |------------------------|-------|-----------|--------------|
 
 #### Top restaurants in number of listed categories
 
     0: jdbc:drill:zk=local> select name,repeated_count(categories) as categorycount, categories from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants') order by repeated_count(categories) desc limit 10;
 
-    +---------------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------------------+
+    |---------------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
     | name                            | categorycount | categories                                                                                                                                        |
-    +---------------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------------------+
+    |---------------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
     | Binion's Hotel & Casino         | 10            | ["Arts &,Entertainment","Restaurants","Bars","Casinos","Event,Planning &,Services","Lounges","Nightlife","Hotels &,Travel","American]             |
     | Stage Deli                      | 10            | ["Arts &,Entertainment","Food","Hotels","Desserts","Delis","Casinos","Sandwiches","Hotels,& Travel","Restaurants","Event Planning &,Services"]    |
     | Jillian's                       | 9             | ["Arts &,Entertainment","American (Traditional)","Music,Venues","Bars","Dance,Clubs","Nightlife","Bowling","Active,Life","Restaurants"]           |
@@ -250,7 +250,7 @@ on data.
     | Costa Del Sol At Sunset Station | 8             | ["Steakhouses","Mexican","Seafood","Event,Planning & Services","Hotels &,Travel","Italian","Restaurants","Hotels"]                                |
     | Scottsdale Silverado Golf Club  | 8             | ["Fashion","Shopping","Sporting,Goods","Active Life","Golf","American,(New)","Sports Wear","Restaurants"]                                         |
     | House of Blues                  | 8             | ["Arts & Entertainment","Music Venues","Restaurants","Hotels","Event Planning & Services","Hotels & Travel","American (New)","Nightlife"]         |
-    +---------------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------------------+
+    |---------------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
 
 {% include startnote.html %}This document aligns Drill output for example purposes. Drill output is not aligned in this case.{% include endnote.html %}
 
@@ -261,9 +261,9 @@ on data.
     group by categories[0] 
     order by count(categories[0]) desc limit 10;
 
-    +----------------------+---------------+
+    |----------------------|---------------|
     | EXPR$0               | categorycount |
-    +----------------------+---------------+
+    |----------------------|---------------|
     | Food                 | 4294          |
     | Shopping             | 1885          |
     | Active Life          | 1676          |
@@ -274,7 +274,7 @@ on data.
     | Fast Food            | 963           |
     | Arts & Entertainment | 906           |
     | Hair Salons          | 901           |
-    +----------------------+---------------+
+    |----------------------|---------------|
 
 ### 5\. Explore the Yelp reviews dataset and combine with the businesses.
 
@@ -282,11 +282,11 @@ on data.
 
     0: jdbc:drill:zk=local> select * 
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_review.json` limit 1;
-    +---------------------------------+------------------------+------------------------+-------+------------+----------------------------------------------------------------------+--------+------------------------+
+    |---------------------------------|------------------------|------------------------|-------|------------|----------------------------------------------------------------------|--------|------------------------|
     | votes                           | user_id                | review_id              | stars | date       | text                                                                 | type   | business_id            |
-    +---------------------------------+------------------------+------------------------+-------+------------+----------------------------------------------------------------------+--------+------------------------+
+    |---------------------------------|------------------------|------------------------|-------|------------|----------------------------------------------------------------------|--------|------------------------|
     | {"funny":0,"useful":2,"cool":1} | Xqd0DzHaiyRqVH3WRG7hzg | 15SdjuK7DmYqUAj6rjGowg | 5     | 2007-05-17 | dr. goldberg offers everything i look for in a general practitioner. | review | vcNAWiLM4dR7D2nwwJ7nCA |
-    +---------------------------------+------------------------+------------------------+-------+------------+----------------------------------------------------------------------+--------+------------------------+
+    |---------------------------------|------------------------|------------------------|-------|------------|----------------------------------------------------------------------|--------|------------------------|
 
 #### Top businesses with cool rated reviews
 
@@ -300,14 +300,14 @@ of the reviews themselves.
     FROM dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_review.json` r
     GROUP BY r.business_id having sum(r.votes.cool) > 2000 
     order by sum(r.votes.cool)  desc);
-    +-------------------------------+
+    |-------------------------------|
     |             name              |
-    +-------------------------------+
+    |-------------------------------|
     | Earl of Sandwich              |
     | XS Nightclub                  |
     | The Cosmopolitan of Las Vegas |
     | Wicked Spoon                  |
-    +-------------------------------+
+    |-------------------------------|
 
 #### Create a view with the combined business and reviews data sets
 
@@ -321,20 +321,20 @@ instead of in a logical view, you can use CREATE TABLE AS syntax.
     Select b.name,b.stars,b.state,b.city,r.votes.funny,r.votes.useful,r.votes.cool, r.`date` 
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` b, dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_review.json` r 
     where r.business_id=b.business_id
-    +------------+-----------------------------------------------------------------+
+    |------------|-----------------------------------------------------------------|
     |     ok     |                           summary                               |
-    +------------+-----------------------------------------------------------------+
+    |------------|-----------------------------------------------------------------|
     | true       | View 'businessreviews' created successfully in 'dfs.tmp' schema |
-    +------------+-----------------------------------------------------------------+
+    |------------|-----------------------------------------------------------------|
 
 Let’s get the total number of records from the view.
 
     0: jdbc:drill:zk=local> select count(*) as Total from dfs.tmp.businessreviews;
-    +------------+
+    |------------|
     |   Total    |
-    +------------+
+    |------------|
     | 1125458    |
-    +------------+
+    |------------|
 
 In addition to these queries, you can get many deep insights using
 Drill’s [SQL functionality]({{ site.baseurl }}/docs/sql-reference). If you are not comfortable with writing queries manually, you
@@ -354,9 +354,9 @@ data so you can apply even deeper SQL functionality. Here is a sample query:
 
     0: jdbc:drill:zk=local> select name, flatten(categories) as category 
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json`  limit 20;
-    +-----------------------------+---------------------------------+
+    |-----------------------------|---------------------------------|
     | name                        | category                        |
-    +-----------------------------+---------------------------------+
+    |-----------------------------|---------------------------------|
     | Eric Goldberg, MD           | Doctors                         |
     | Eric Goldberg, MD           | Health & Medical                |
     | Pine Cone Restaurant        | Restaurants                     |
@@ -377,7 +377,7 @@ data so you can apply even deeper SQL functionality. Here is a sample query:
     | Green Lantern Restaurant    | American (Traditional)          |
     | Green Lantern Restaurant    | Restaurants                     |
     | Spartan Animal Hospital     | Veterinarians                   |
-    +-----------------------------+---------------------------------+
+    |-----------------------------|---------------------------------|
 
 #### Top categories used in business reviews
 
@@ -385,9 +385,9 @@ data so you can apply even deeper SQL functionality. Here is a sample query:
     from (select flatten(categories) catl from dfs.`/yelp_academic_dataset_business.json` ) celltbl 
     group by celltbl.catl 
     order by count(celltbl.catl) desc limit 10 ;
-    +------------------+-------------+
+    |------------------|-------------|
     | catl             | categorycnt |
-    +------------------+-------------+
+    |------------------|-------------|
     | Restaurants      | 14303       |
     | Shopping         | 6428        |
     | Food             | 5209        |
@@ -398,7 +398,7 @@ data so you can apply even deeper SQL functionality. Here is a sample query:
     | Automotive       | 2241        |
     | Home Services    | 1957        |
     | Fashion          | 1897        |
-    +------------------+-------------+
+    |------------------|-------------|
 
 Stay tuned for more features and upcoming activities in the Drill community.
 

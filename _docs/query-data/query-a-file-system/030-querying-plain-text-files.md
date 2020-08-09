@@ -1,6 +1,6 @@
 ---
 title: "Querying Plain Text Files"
-date: 2016-11-21 22:14:45 UTC
+date: 2020-08-08
 parent: "Querying a File System"
 ---
 You can use Drill to access structured file types and plain text files
@@ -51,9 +51,9 @@ each row.
 
     0: jdbc:drill:zk=local> select * from dfs.`/Users/brumsby/drill/plays.csv`;
  
-    +-----------------------------------+
+    |-----------------------------------|
     |              columns              |
-    +-----------------------------------+
+    |-----------------------------------|
     | ["1599","As You Like It"]         |
     | ["1601","Twelfth Night"]          |
     | ["1594","Comedy of Errors"]       |
@@ -61,7 +61,7 @@ each row.
     | ["1596","The Merchant of Venice"] |
     | ["1610","The Tempest"]            |
     | ["1599","Hamlet"]                 |
-    +-----------------------------------+
+    |-----------------------------------|
     7 rows selected (0.089 seconds)
 
 ## Columns[n] Syntax
@@ -72,9 +72,9 @@ based index, so the first column is column `0`.)
 
     0: jdbc:drill:zk=local> select columns[0], columns[1] from dfs.`/Users/brumsby/drill/plays.csv`;
  
-    +------------+------------------------+
+    |------------|------------------------|
     |   EXPR$0   |         EXPR$1         |
-    +------------+------------------------+
+    |------------|------------------------|
     | 1599       | As You Like It         |
     | 1601       | Twelfth Night          |
     | 1594       | Comedy of Errors       |
@@ -82,7 +82,7 @@ based index, so the first column is column `0`.)
     | 1596       | The Merchant of Venice |
     | 1610       | The Tempest            |
     | 1599       | Hamlet                 |
-    +------------+------------------------+
+    |------------|------------------------|
     7 rows selected (0.137 seconds)
 
 You can use aliases to return meaningful column names. Note that `YEAR` is a
@@ -91,9 +91,9 @@ reserved word, so the `Year` alias must be enclosed by back ticks.
     0: jdbc:drill:zk=local> select columns[0] as `Year`, columns[1] as Play 
     from dfs.`/Users/brumsby/drill/plays.csv`;
  
-    +------------+------------------------+
+    |------------|------------------------|
     |    Year    |    Play                |
-    +------------+------------------------+
+    |------------|------------------------|
     | 1599       | As You Like It         |
     | 1601       | Twelfth Night          |
     | 1594       | Comedy of Errors       |
@@ -101,7 +101,7 @@ reserved word, so the `Year` alias must be enclosed by back ticks.
     | 1596       | The Merchant of Venice |
     | 1610       | The Tempest            |
     | 1599       | Hamlet                 |
-    +------------+------------------------+
+    |------------|------------------------|
     7 rows selected (0.113 seconds)
 
 You cannot refer to the aliases in subsequent clauses of the query. Use the
@@ -111,12 +111,12 @@ example:
     0: jdbc:drill:zk=local> select columns[0] as `Year`, columns[1] as Play 
     from dfs.`/Users/brumsby/drill/plays.csv` where columns[0]>1599;
  
-    +------------+---------------+
+    |------------|---------------|
     |    Year    |      Play     |
-    +------------+---------------+
+    |------------|---------------|
     | 1601       | Twelfth Night |
     | 1610       | The Tempest   |
-    +------------+---------------+
+    |------------|---------------|
     2 rows selected (0.201 seconds)
 
 Note that the restriction with the use of aliases applies to queries against
@@ -184,15 +184,15 @@ times a year in the books that Google scans.
 
      The output is:
 
-         +------------------------------------+-------------------+------------+
+         |------------------------------------|-------------------|------------|
          |               Ngram                | Publication_Date  | Frequency  |
-         +------------------------------------+-------------------+------------+
+         |------------------------------------|-------------------|------------|
          | Zoological Journal of the Linnean  | 1993              | 297        |
          | Zoological Journal of the Linnean  | 1997              | 255        |
          | Zoological Journal of the Linnean  | 2003              | 254        |
          | Zoological Journal of the Linnean  | 2007              | 284        |
          | Zoological Journal of the Linnean  | 2008              | 257        |
-         +------------------------------------+-------------------+------------+
+         |------------------------------------|-------------------|------------|
          5 rows selected (1.175 seconds)
 
 The Drill default storage plugins support common file formats. 

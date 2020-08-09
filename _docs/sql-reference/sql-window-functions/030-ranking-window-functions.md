@@ -1,6 +1,6 @@
 ---
 title: "Ranking Window Functions"
-date: 2018-11-02
+date: 2020-08-08
 parent: "SQL Window Functions"
 ---
 
@@ -47,9 +47,9 @@ The following examples show queries that use each of the ranking window function
 The following query uses the CUME_DIST() window function to calculate the cumulative distribution of sales for each dealer in Q1.  
 
        select dealer_id, sales, cume_dist() over(order by sales) as cumedist from q1_sales;
-       +------------+--------+-----------+
+       |------------|--------|-----------|
        | dealer_id  | sales  | cumedist  |
-       +------------+--------+-----------+
+       |------------|--------|-----------|
        | 1          | 8227   | 0.1       |
        | 3          | 9308   | 0.3       |
        | 2          | 9308   | 0.3       |
@@ -60,7 +60,7 @@ The following query uses the CUME_DIST() window function to calculate the cumula
        | 2          | 16233  | 0.8       |
        | 1          | 19745  | 1.0       |
        | 1          | 19745  | 1.0       |
-       +------------+--------+-----------+
+       |------------|--------|-----------|
        10 rows selected (0.241 seconds)  
 
 ### DENSE_RANK  
@@ -68,9 +68,9 @@ The following query uses the CUME_DIST() window function to calculate the cumula
 The following query uses the DENSE_RANK() window function to rank the employee sales in Q1.  
 
        select dealer_id, emp_name, sales, dense_rank() over(order by sales) as denserank from q1_sales; 
-       +------------+-----------------+--------+------------+
+       |------------|-----------------|--------|------------|
        | dealer_id  |    emp_name     | sales  | denserank  |
-       +------------+-----------------+--------+------------+
+       |------------|-----------------|--------|------------|
        | 1          | Raphael Hull    | 8227   | 1          |
        | 3          | May Stout       | 9308   | 2          |
        | 2          | Haviva Montoya  | 9308   | 2          |
@@ -81,7 +81,7 @@ The following query uses the DENSE_RANK() window function to rank the employee s
        | 2          | Kameko French   | 16233  | 6          |
        | 1          | Ferris Brown    | 19745  | 7          |
        | 1          | Noel Meyer      | 19745  | 7          |
-       +------------+-----------------+--------+------------+
+       |------------|-----------------|--------|------------|
        10 rows selected (0.198 seconds)  
 
 ###NTILE()  
@@ -89,9 +89,9 @@ The following query uses the DENSE_RANK() window function to rank the employee s
 The following example uses the NTILE window function to divide the Q1 sales into five groups and list the sales in ascending order.
 
        select emp_mgr, sales, ntile(5) over(order by sales) as ntilerank from q1_sales;
-       +-----------------+--------+------------+
+       |-----------------|--------|------------|
        |     emp_mgr     | sales  | ntilerank  |
-       +-----------------+--------+------------+
+       |-----------------|--------|------------|
        | Kari Phelps     | 8227   | 1          |
        | Rich Hernandez  | 9308   | 1          |
        | Kari Phelps     | 9710   | 2          |
@@ -102,15 +102,15 @@ The following example uses the NTILE window function to divide the Q1 sales into
        | Mike Palomino   | 16233  | 4          |
        | Dan Brodi       | 19745  | 5          |
        | Mike Palomino   | 23176  | 5          |
-       +-----------------+--------+------------+
+       |-----------------|--------|------------|
        10 rows selected (0.149 seconds)
 
 The following example partitions sales by dealer_id and uses the NTILE window function to divide the rows in each partition into three groups; dealer 1 had one remainder which was added to the first group.
 
        select emp_mgr, dealer_id, sales, ntile(3) over(partition by dealer_id order by sales) as ntilerank from q1_sales;
-       +-----------------+------------+--------+------------+
+       |-----------------|------------|--------|------------|
        |     emp_mgr     | dealer_id  | sales  | ntilerank  |
-       +-----------------+------------+--------+------------+
+       |-----------------|------------|--------|------------|
        | Kari Phelps     | 1          | 8227   | 1          |
        | Kari Phelps     | 1          | 9710   | 1          |
        | Kari Phelps     | 1          | 15547  | 2          |
@@ -121,7 +121,7 @@ The following example partitions sales by dealer_id and uses the NTILE window fu
        | Rich Hernandez  | 3          | 9308   | 1          |
        | Rich Hernandez  | 3          | 12369  | 2          |
        | Rich Hernandez  | 3          | 15427  | 3          |
-       +-----------------+------------+--------+------------+
+       |-----------------|------------|--------|------------|
        10 rows selected (0.312 seconds)
 
 
@@ -130,9 +130,9 @@ The following example partitions sales by dealer_id and uses the NTILE window fu
 The following query uses the PERCENT_RANK() window function to calculate the percent rank for employee sales in Q1.  
 
        select dealer_id, emp_name, sales, percent_rank() over(order by sales) as perrank from q1_sales; 
-       +------------+-----------------+--------+---------------------+
+       |------------|-----------------|--------|---------------------|
        | dealer_id  |    emp_name     | sales  |       perrank       |
-       +------------+-----------------+--------+---------------------+
+       |------------|-----------------|--------|---------------------|
        | 1          | Raphael Hull    | 8227   | 0.0                 |
        | 3          | May Stout       | 9308   | 0.1111111111111111  |
        | 2          | Haviva Montoya  | 9308   | 0.1111111111111111  |
@@ -143,7 +143,7 @@ The following query uses the PERCENT_RANK() window function to calculate the per
        | 2          | Kameko French   | 16233  | 0.6666666666666666  |
        | 1          | Ferris Brown    | 19745  | 0.8888888888888888  |
        | 1          | Noel Meyer      | 19745  | 0.8888888888888888  |
-       +------------+-----------------+--------+---------------------+
+       |------------|-----------------|--------|---------------------|
        10 rows selected (0.169 seconds)
 
 ### RANK()  
@@ -151,9 +151,9 @@ The following query uses the PERCENT_RANK() window function to calculate the per
 The following query uses the RANK() window function to rank the employee sales for Q1. The word rank in Drill is a reserved keyword and must be enclosed in back ticks (``).
  
        select dealer_id, emp_name, sales, rank() over(order by sales) as `rank` from q1_sales;
-       +------------+-----------------+--------+-------+
+       |------------|-----------------|--------|-------|
        | dealer_id  |    emp_name     | sales  | rank  |
-       +------------+-----------------+--------+-------+
+       |------------|-----------------|--------|-------|
        | 1          | Raphael Hull    | 8227   | 1     |
        | 3          | May Stout       | 9308   | 2     |
        | 2          | Haviva Montoya  | 9308   | 2     |
@@ -164,7 +164,7 @@ The following query uses the RANK() window function to rank the employee sales f
        | 2          | Kameko French   | 16233  | 7     |
        | 1          | Ferris Brown    | 19745  | 9     |
        | 1          | Noel Meyer      | 19745  | 9     |
-       +------------+-----------------+--------+-------+
+       |------------|-----------------|--------|-------|
        10 rows selected (0.174 seconds)
 
 ### ROW_NUMBER()  
@@ -172,9 +172,9 @@ The following query uses the RANK() window function to rank the employee sales f
 The following query uses the ROW_NUMBER() window function to number the sales for each dealer_id. The word rownum contains the reserved keyword row and must be enclosed in back ticks (``).  
 
         select dealer_id, emp_name, sales, row_number() over(partition by dealer_id order by sales) as `rownum` from q1_sales;
-       +------------+-----------------+--------+---------+
+       |------------|-----------------|--------|---------|
        | dealer_id  |    emp_name     | sales  | rownum  |
-       +------------+-----------------+--------+---------+
+       |------------|-----------------|--------|---------|
        | 1          | Raphael Hull    | 8227   | 1       |
        | 1          | Jack Salazar    | 9710   | 2       |
        | 1          | Ferris Brown    | 19745  | 3       |
@@ -185,7 +185,7 @@ The following query uses the ROW_NUMBER() window function to number the sales fo
        | 3          | May Stout       | 9308   | 1       |
        | 3          | Abel Kim        | 12369  | 2       |
        | 3          | Ursa George     | 15427  | 3       |
-       +------------+-----------------+--------+---------+
+       |------------|-----------------|--------|---------|
        10 rows selected (0.241 seconds)
               
        

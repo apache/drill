@@ -1,6 +1,6 @@
 ---
 title: "CREATE OR REPLACE SCHEMA"
-date: 2019-05-31
+date: 2020-08-08
 parent: "SQL Commands"
 ---
 
@@ -88,18 +88,18 @@ You can enable these options, as shown:
 
  
 	set `exec.storage.enable_v3_text_reader` = true;
-	+------+---------------------------------------------+
+	|------|---------------------------------------------|
 	|  ok  |                   summary                   |
-	+------+---------------------------------------------+
+	|------|---------------------------------------------|
 	| true | exec.storage.enable_v3_text_reader updated. |
-	+------+---------------------------------------------+
+	|------|---------------------------------------------|
 	
 	set `store.table.use_schema_file` = true;
-	+------+--------------------------------------+
+	|------|--------------------------------------|
 	|  ok  |               summary                |
-	+------+--------------------------------------+
+	|------|--------------------------------------|
 	| true | store.table.use_schema_file updated. |
-	+------+--------------------------------------+ 
+	|------|--------------------------------------| 
 
 ## Related Properties   
 
@@ -155,9 +155,9 @@ When you query the text_table, all blank values in the “id” column return a 
 The defined schema and configured properties are stored and reflected in the schema file, `.drill.schema`, which you can see when you run DESCRIBE SCHEMA FOR TABLE. 
 
 	describe schema for table dfs.tmp.`text_table`;
-	+----------------------------------------------------------------------------------+
+	|----------------------------------------------------------------------------------|
 	|                            	      schema                                  	|
-	+----------------------------------------------------------------------------------+
+	|----------------------------------------------------------------------------------|
 	| {
 	  "table" : "dfs.tmp.`text_table`",
 	  "schema" : {
@@ -186,7 +186,7 @@ The defined schema and configured properties are stored and reflected in the sch
 	  },
 	  "version" : 1
 	} |
-	+----------------------------------------------------------------------------------+  
+	|----------------------------------------------------------------------------------|  
 
 
 ## Related Commands 
@@ -245,22 +245,22 @@ The schema mode determines the set of columns returned for wildcard (*) queries 
 Columns defined in the schema are projected in the defined order. Columns not defined in the schema are appended to the defined columns, as shown:  
 
 	create or replace schema (id int, start_date date format 'yyyy-MM-dd') for table dfs.tmp.`text_table` properties ('drill.strict' = 'false');
-	+------+-----------------------------------------+
-	|  ok  |       	      summary             	|
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
+	| ok   | summary                                 |
+	|------|-----------------------------------------|
 	| true | Created schema for [dfs.tmp.text_table] |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	 
 	select * from dfs.tmp.`text_table`;
-	+------+------------+---------+
-	|  id  | start_date |  name   |
-	+------+------------+---------+
-	| 1	| 2019-02-01 | Fred	|
-	| 2	| 2018-11-30 | Wilma   |
-	| 3	| 2016-01-01 | Pebbles |
-	| 4	| null       | Barney  |
-	| null | null   	| Dino	|
-	+------+------------+---------+
+	|------|------------|---------|
+	| id   | start_date | name    |
+	|------|------------|---------|
+	| 1    | 2019-02-01 | Fred    |
+	| 2    | 2018-11-30 | Wilma   |
+	| 3    | 2016-01-01 | Pebbles |
+	| 4    | null       | Barney  |
+	| null | null       | Dino    |
+	|------|------------|---------|
  
 Note that the “name” column, which was not included in the schema was appended to the end of the table.
 
@@ -268,22 +268,22 @@ Note that the “name” column, which was not included in the schema was append
 Setting the `drill.strict` property  to “true” changes the schema mode to strict, which means that the reader ignores any columns NOT included in the schema. The query only returns the columns defined in the schema, as shown:
  
 	create or replace schema (id int, start_date date format 'yyyy-MM-dd') for table dfs.tmp.`text_table` properties ('drill.strict' = 'true');
-	+------+-----------------------------------------+
-	|  ok  |             	summary             	|
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
+	| ok   | summary                                 |
+	|------|-----------------------------------------|
 	| true | Created schema for [dfs.tmp.text_table] |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	 
 	select * from dfs.tmp.`text_table`;
-	+------+------------+
+	|------|------------|
 	|  id  | start_date |
-	+------+------------+
-	| 1	| 2019-02-01 |
-	| 2	| 2018-11-30 |
-	| 3	| 2016-01-01 |
-	| 4	| null       |
-	| null | null   	|
-	+------+------------+  
+	|------|------------|
+	| 1    | 2019-02-01 |
+	| 2    | 2018-11-30 |
+	| 3    | 2016-01-01 |
+	| 4    | null       |
+	| null | null       |
+	|------|------------|  
 
 Note that the “name” column, which was not included in the schema was ignored and not returned in the result set.  
 
@@ -295,24 +295,24 @@ When you create a schema, you can include columns that do not exist in the table
 For example, the “comment” column is not in the text_table, but added when creating the schema:  
 
 	create or replace schema (id int, start_date date format 'yyyy-MM-dd', comment varchar) for table dfs.tmp.`text_table`;
-	+------+-----------------------------------------+
-	|  ok  |             	summary             	 |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
+	| ok   | summary                                 |
+	|------|-----------------------------------------|
 	| true | Created schema for [dfs.tmp.text_table] |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 
 You can see the “comment” column returned in the result set.  
 
 	select * from dfs.tmp.`text_table`;  
-	+------+------------+---------+---------+
-	|  id  | start_date | comment |  name   |
-	+------+------------+---------+---------+
-	| 1	   | 2019-02-01 |  null   | Fred	|
-	| 2	   | 2018-11-30 |  null   | Wilma   |
-	| 3	   | 2016-01-01 |  null   | Pebbles |
-	| 4	   | null   	|  null   | Barney  |
-	| null | null   	|  null   | Dino	|
-	+------+------------+---------+---------+    
+	|------|------------|---------|---------|
+	| id   | start_date | comment | name    |
+	|------|------------|---------|---------|
+	| 1    | 2019-02-01 | null    | Fred    |
+	| 2    | 2018-11-30 | null    | Wilma   |
+	| 3    | 2016-01-01 | null    | Pebbles |
+	| 4    | null       | null    | Barney  |
+	| null | null       | null    | Dino    |
+	|------|------------|---------|---------|
 
 
 
@@ -322,44 +322,44 @@ If a column in the schema is nullable (allows null values), and the column has a
 For example, if you create a strict schema with two nullable columns (id and start_date), you can see that the missing values in both cases are null.
 
 	create or replace schema (id int, start_date date format 'yyyy-MM-dd') for table dfs.tmp.`text_table` properties ('drill.strict' = 'true');
-	+------+-----------------------------------------+
-	|  ok  |             	summary             	|
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
+	| ok   | summary                                 |
+	|------|-----------------------------------------|
 	| true | Created schema for [dfs.tmp.text_table] |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	 
 	select * from dfs.tmp.`text_table`;
-	+------+------------+
-	|  id  | start_date |
-	+------+------------+
-	| 1	| 2019-02-01 |
-	| 2	| 2018-11-30 |
-	| 3	| 2016-01-01 |
-	| 4	| null   	|
-	| null | null   	|
-	+------+------------+
+	|------|------------|
+	| id   | start_date |
+	|------|------------|
+	| 1    | 2019-02-01 |
+	| 2    | 2018-11-30 |
+	| 3    | 2016-01-01 |
+	| 4    | null       |
+	| null | null       |
+	|------|------------|
  
 Updating the strict schema to have two required columns (id and start_date), you can see that the natural default was applied; 0 for id and 1970-01-01 for start_date.
  
 	create or replace schema (id
 	int not null, start_date date not null format 'yyyy-MM-dd') for table
 	dfs.tmp.`text_table` properties ('drill.strict' = 'true');
-	+------+-----------------------------------------+
-	|  ok  |             	summary             	|
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
+	| ok   | summary                                 |
+	|------|-----------------------------------------|
 	| true | Created schema for [dfs.tmp.text_table] |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	 
 	select * from dfs.tmp.`text_table`;
-	+----+------------+
+	|----|------------|
 	| id | start_date |
-	+----+------------+
+	|----|------------|
 	| 1  | 2019-02-01 |
 	| 2  | 2018-11-30 |
 	| 3  | 2016-01-01 |
 	| 4  | 1970-01-01 |
 	| 0  | 1970-01-01 |
-	+----+------------+
+	|----|------------|
 
 Adding a default for each of these columns (-1 for id and 2017-01-01 for start_date),  you can see that the columns return the defined default value instead of the natural default.
  
@@ -367,55 +367,55 @@ Adding a default for each of these columns (-1 for id and 2017-01-01 for start_d
 	int not null default '-1', start_date date not null format 'yyyy-MM-dd' default
 	'2017-01-01') for table dfs.tmp.`text_table` properties ('drill.strict' =
 	'true');
-	+------+-----------------------------------------+
-	|  ok  |             	summary             	|
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
+	| ok   | summary                                 |
+	|------|-----------------------------------------|
 	| true | Created schema for [dfs.tmp.text_table] |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	 
 	select * from dfs.tmp.`text_table`;
-	+----+------------+
+	|----|------------|
 	| id | start_date |
-	+----+------------+
+	|----|------------|
 	| 1  | 2019-02-01 |
 	| 2  | 2018-11-30 |
 	| 3  | 2016-01-01 |
 	| 4  | 2017-01-01 |
 	| -1 | 2017-01-01 |
-	+----+------------+  
+	|----|------------|  
 
 ## Handling Policy for Blank Column Values
 It is common for CSV files to have blank column values. The default
 output for blank column values are empty strings (''), as shown:  
 
 	select * from dfs.tmp.`text_blank`;
-	+----+--------+------------+
+	|----|--------|------------|
 	| id | amount | start_date |
-	+----+--------+------------+
-	| 1  | 20 	  | 2019-01-01 |
-	| 2  |    	  |        	   |
-	| 3  | 30 	  |            |
-	+----+--------+------------+
+	|----|--------|------------|
+	| 1  | 20     | 2019-01-01 |
+	| 2  |        |            |
+	| 3  | 30     |            |
+	|----|--------|------------|
 
 When a schema is defined for columns, the default blank handling policy is `skip` which treats blank values as null, as shown:  
 
 	create or replace schema (id
 	int, amount double, start_date date format 'yyyy-MM-dd') for table
 	dfs.tmp.`text_blank`;
-	+------+-----------------------------------------+
-	|  ok  |             	summary             	|
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
+	| ok   | summary                                 |
+	|------|-----------------------------------------|
 	| true | Created schema for [dfs.tmp.text_blank] |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	 
 	select * from dfs.tmp.`text_blank`;
-	+----+--------+------------+
+	|----|--------|------------|
 	| id | amount | start_date |
-	+----+--------+------------+
+	|----|--------|------------|
 	| 1  | 20.0   | 2019-01-01 |
 	| 2  | null   | null       |
 	| 3  | 30.0   | null       |
-	+----+--------+------------+
+	|----|--------|------------|
 
 If a column is absent in the schema, the blank handling policy is default. Note that the blank handling policy is not applicable to varchar columns since they do not go through the type conversion logic.
 
@@ -424,20 +424,20 @@ You can configure how Drill handles blank column values through the `drill.blank
 In the following example, you can see the blank handling policy for the defined schema with the `drill.blank-as` property set to `0` on the “amount” column:
  
 	create or replace schema (id int, amount double properties {'drill.blank-as' = '0'}, start_date date format 'yyyy-MM-dd') for table dfs.tmp.`text_blank`;
-	+------+-----------------------------------------+
-	|  ok  |             	summary             	|
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
+	| ok   | summary                                 |
+	|------|-----------------------------------------|
 	| true | Created schema for [dfs.tmp.text_blank] |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	 
 	select * from dfs.tmp.`text_blank`;
-	+----+--------+------------+
+	|----|--------|------------|
 	| id | amount | start_date |
-	+----+--------+------------+
+	|----|--------|------------|
 	| 1  | 20.0   | 2019-01-01 |
-	| 2  | 0.0	| null       |
+	| 2  | 0.0    | null       |
 	| 3  | 30.0   | null       |
-	+----+--------+------------+  
+	|----|--------|------------|
 
 ## Format for Date, Time Conversion 
 When you convert string values to date and time data types, include the format for proper conversion. 
@@ -452,18 +452,18 @@ Alternatively, you can include the format in the column properties, as shown:
 
 Note that date, time type conversion uses the Joda time library, thus the format pattern must comply with the [Joda time supported format pattern](https://www.joda.org/joda-time/key_format.html). If the format is not indicated, ISO datetime formats are used:  
 
-| **Type**  | **Accepted Format**                                                      |
-|-----------|--------------------------------------------------------------------------|
-| [Timestamp](https://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTimeNoMillis--) | yyyy-MM-dd'T'HH:mm:ssZZ                                                  |
-| [Date](https://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#localDateParser--)      | date-element = std-date-element |   ord-date-element | week-date-element |
-|           | std-date-element  = yyyy ['-' MM ['-' dd]]                               |
-|           | ord-date-element  = yyyy ['-' DDD]                                       |
-|           | week-date-element = xxxx '-W' ww ['-' e]                                 |
-| [Time](https://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#localTimeParser--)      | time = ['T'] time-element                                                |
-|           | time-element = HH [minute-element] | [fraction]                          |
-|           | minute-element = ':' mm [second-element] |   [fraction]                  |
-|           | second-element = ':' ss [fraction]                                       |
-|           | fraction       =   ('.' | ',') digit+                                    |
+| **Type**                                                                                                           | **Accepted Format**                        |
+|--------------------------------------------------------------------------------------------------------------------|--------------------------------------------|
+| [Timestamp](https://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTimeNoMillis--) | yyyy-MM-dd'T'HH:mm:ssZZ                    |
+| [Date](https://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#localDateParser--)       | date-element = std-date-element            | ord-date-element | week-date-element |
+|                                                                                                                    | std-date-element  = yyyy ['-' MM ['-' dd]] |
+|                                                                                                                    | ord-date-element  = yyyy ['-' DDD]         |
+|                                                                                                                    | week-date-element = xxxx '-W' ww ['-' e]   |
+| [Time](https://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#localTimeParser--)       | time = ['T'] time-element                  |
+|                                                                                                                    | time-element = HH [minute-element]         | [fraction]       |
+|                                                                                                                    | minute-element = ':' mm [second-element]   | [fraction]       |
+|                                                                                                                    | second-element = ':' ss [fraction]         |
+|                                                                                                                    | fraction       =   ('.'                    | ',') digit+      |
 
 
 ## Limitations
@@ -507,15 +507,15 @@ Examples throughout this topic use the files and directories described in the fo
 Query the directory text_table. 
 
 	select * from dfs.tmp.`text_table`;
-	+----+---------+------------+
+	|----|---------|------------|
 	| id |  name   | start_date |
-	+----+---------+------------+
+	|----|---------|------------|
 	| 1  | Fred    | 2019-02-01 |
 	| 2  | Wilma   | 2018-11-30 |
 	| 3  | Pebbles | 2016-01-01 |
 	| 4  | Barney  |            |
 	|    | Dino    |            |
-	+----+---------+------------+
+	|----|---------|------------|
 
 Notice that the query plan contains a scan and project:
 	
@@ -526,11 +526,11 @@ Notice that the query plan contains a scan and project:
 Using the sqltypeof and modeof functions, you can see that each column is defined as a non-nullable string (varchar), and missing columns are defined as empty strings:  
  
 	select sqltypeof(id), modeof(id) from dfs.tmp.`text_table` limit 1;
-	+-------------------+----------+
-	|      EXPR$0       |  EXPR$1  |
-	+-------------------+----------+
+	|-------------------|----------|
+	| EXPR$0            | EXPR$1   |
+	|-------------------|----------|
 	| CHARACTER VARYING | NOT NULL |
-	+-------------------+----------+  
+	|-------------------|----------|
 
 ### Creating a Schema
 Create a defined schema for the text_table directory. When you define schema, you do not have to enumerate all columns. The columns in the defined schema are not required to be in the same order as the data file. Note that the name of the columns must match, but can differ in case.
@@ -538,11 +538,11 @@ Create a defined schema for the text_table directory. When you define schema, yo
 Define schema for the id column:
 	 
 	create schema (id int) for table dfs.tmp.`text_table`;
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	|  ok  |                 summary                 |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	| true | Created schema for [dfs.tmp.text_table] |
-	+------+-----------------------------------------+  
+	|------|-----------------------------------------|  
 
 After you define a schema, you can see the schema file (stored in JSON format) in the root table directory: 
 
@@ -566,24 +566,24 @@ After you define a schema, you can see the schema file (stored in JSON format) i
 Query the text_table directory to see how the schema is applied:
 
 	select * from dfs.tmp.`text_table`;
-	+------+---------+------------+
+	|------|---------|------------|
 	|  id  |  name   | start_date |
-	+------+---------+------------+
+	|------|---------|------------|
 	| 1    | Fred    | 2019-02-01 |
 	| 2    | Wilma   | 2018-11-30 |
 	| 3    | Pebbles | 2016-01-01 |
 	| 4    | Barney  |            |
 	| null | Dino    |            |
-	+------+---------+------------+  
+	|------|---------|------------|  
 
 After defining the schema on the id column, you can see that the `id` column type and mode is defined as a nullable integer, while other columns types were inferred as non-nullable VarChar:
 
 	select sqltypeof(id), modeof(id) from dfs.tmp.`text_table` limit 1;
-	+---------+----------+
+	|---------|----------|
 	| EXPR$0  |  EXPR$1  |
-	+---------+----------+
+	|---------|----------|
 	| INTEGER | NULLABLE |
-	+---------+----------+
+	|---------|----------|
 
 Running EXPLAIN PLAN, you can see that type conversion was done while reading data from source; no additional plan stages were added:
 
@@ -596,9 +596,9 @@ Running EXPLAIN PLAN, you can see that type conversion was done while reading da
 You can verify the provided schema using the [`DESCRIBE SCHEMA FOR TABLE` command](#related-commands). This command can format the schema in two formats. The `JSON` format is the same as the contents of the `.drill.schema` file stored in your table directory.
 
 	describe schema for table dfs.tmp.`text_table` as JSON;
-	+----------------------------------------------------------------------------------+
+	|----------------------------------------------------------------------------------|
 	|                                      schema                                      |
-	+----------------------------------------------------------------------------------+
+	|----------------------------------------------------------------------------------|
 	| {
 	  "table" : "dfs.tmp.`text_table`",
 	  "schema" : {
@@ -612,21 +612,21 @@ You can verify the provided schema using the [`DESCRIBE SCHEMA FOR TABLE` comman
 	  },
 	  "version" : 1
 	} |
-	+----------------------------------------------------------------------------------+
+	|----------------------------------------------------------------------------------|
 
 You can also use the `STATEMENT` format to recover the SQL statement to recreate the schema. You can easily copy, reuse or edit this statement to change the schema or reuse the statement for other files.
 
 	describe schema for table dfs.tmp.`text_table` as statement;
-	+--------------------------------------------------------------------------+
+	|--------------------------------------------------------------------------|
 	|                                  schema                                  |
-	+--------------------------------------------------------------------------+
+	|--------------------------------------------------------------------------|
 	| CREATE OR REPLACE SCHEMA
 	(
 	`id` INT
 	)
 	FOR TABLE dfs.tmp.`text_table`
 	 |
-	+--------------------------------------------------------------------------+
+	|--------------------------------------------------------------------------|
 
 ### Altering Schema for a Table
 Use the `ALTER SCHEMA` command to update your table schema. The command can add or replace columns.
@@ -659,18 +659,18 @@ The command fails if the schema file does not exist. The command silently ignore
 You can easily drop the schema for a table using the ``DROP SCHEMA [IF EXISTS] FOR TABLE `table_name` `` command, as shown:
 
 	use dfs.tmp;
-	+------+-------------------------------------+
+	|------|-------------------------------------|
 	|  ok  |               summary               |
-	+------+-------------------------------------+
+	|------|-------------------------------------|
 	| true | Default schema changed to [dfs.tmp] |
-	+------+-------------------------------------+
+	|------|-------------------------------------|
 	
 	drop schema for table `text_table`;
-	+------+---------------------------------------+
+	|------|---------------------------------------|
 	|  ok  |                summary                |
-	+------+---------------------------------------+
+	|------|---------------------------------------|
 	| true | Dropped schema for table [text_table] |
-	+------+---------------------------------------+
+	|------|---------------------------------------|
 	
 
 ##Troubleshooting 
@@ -680,11 +680,11 @@ You can easily drop the schema for a table using the ``DROP SCHEMA [IF EXISTS] F
 Assume that you defined schema on the “name” column as integer, as shown:  
   
 	create or replace schema (name int) for table dfs.tmp.`text_table`;
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	|  ok  |                 summary                 |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 	| true | Created schema for [dfs.tmp.text_table] |
-	+------+-----------------------------------------+
+	|------|-----------------------------------------|
 
 Because the column does not contain integers, a query issued against the directory returns the DATA_READ_ERROR. The error message includes the line and value causing the issue:  
 
@@ -715,26 +715,5 @@ A schema file already exists for the table. Use the DROP SCHEMA command to remov
 
 **Lack of permissions**  
 Unable to create schema file in the directory. Verify that you have write permission on the table’s root directory or the directory specified. If not, indicate the directory on which you write permissions in the command syntax.
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-  
-
-
-
-
-
 
 

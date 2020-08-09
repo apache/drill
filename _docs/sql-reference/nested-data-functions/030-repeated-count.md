@@ -1,6 +1,6 @@
 ---
 title: "REPEATED_COUNT"
-date: 2018-11-02
+date: 2020-08-08
 parent: "Nested Data Functions"
 ---
 This function counts the values in an array. 
@@ -27,9 +27,9 @@ file. The counts are restricted to rows that contain the string `pizza`.
 	FROM   dfs.yelp.`yelp_academic_dataset_business.json` 
 	WHERE  name LIKE '%pizza%';
 	 
-	+---------------+------------+
+	|---------------|------------|
 	|    name       |   EXPR$1   |
-	+---------------+------------+
+	|---------------|------------|
 	| Villapizza    | 2          |
 	| zpizza        | 4          |
 	| zpizza        | 4          |
@@ -37,7 +37,7 @@ file. The counts are restricted to rows that contain the string `pizza`.
 	| Zpizza        | 2          |
 	| S2pizzabar    | 4          |
 	| Dominos pizza | 5          |
-	+---------------+------------+
+	|---------------|------------|
 	 
 	7 rows selected (2.03 seconds)
 

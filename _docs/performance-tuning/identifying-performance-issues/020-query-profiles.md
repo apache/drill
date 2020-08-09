@@ -1,6 +1,6 @@
 ---
 title: "Query Profiles"
-date: 2019-04-26
+date: 2020-08-08
 parent: "Identifying Performance Issues"
 ---
 
@@ -131,16 +131,16 @@ The Max Records number for each minor fragment should be almost equivalent. If o
 The following query was run against TPC-DS data:
 
        0: jdbc:drill:zk=local> select ss_customer_sk, count(*) as cnt from store_sales where ss_customer_sk is null or ss_customer_sk in (1, 2, 3, 4, 5) group by ss_customer_sk;
-       +-----------------+---------+
+       |-----------------|---------|
        | ss_customer_sk  |   cnt   |
-       +-----------------+---------+
+       |-----------------|---------|
        | null            | 129752  |
        | 5               | 47      |
        | 1               | 9       |
        | 2               | 43      |
        | 4               | 10      |
        | 3               | 11      |
-       +-----------------+---------+
+       |-----------------|---------|
        6 rows selected
  
 In the result set, notice that the 'null' group has 129752 values while others have roughly similar values.  

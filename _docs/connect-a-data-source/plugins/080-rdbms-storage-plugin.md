@@ -1,6 +1,6 @@
 ---
 title: "RDBMS Storage Plugin"
-date: 2020-03-17
+date: 2020-08-08
 parent: "Connect a Data Source"
 ---
 Apache Drill supports querying a number of RDBMS instances. This allows you to connect your traditional databases to your Drill cluster so you can have a single view of both your relational and NoSQL datasources in a single system. 
@@ -58,13 +58,13 @@ To configure the JDBC storage plugin:
 You can use the performance_schema database, which is installed with MySQL to query your MySQL performance_schema database. Include the names of the storage plugin configuration, the database, and table in dot notation the FROM clause as follows:
 
       0: jdbc:drill:zk=local> select * from myplugin.performance_schema.accounts;
-      +--------+------------+----------------------+--------------------+
+      |--------|------------|----------------------|--------------------|
       |  USER  |    HOST    | CURRENT_CONNECTIONS  | TOTAL_CONNECTIONS  |
-      +--------+------------+----------------------+--------------------+
+      |--------|------------|----------------------|--------------------|
       | null   | null       | 18                   | 20                 |
       | jdoe   | localhost  | 0                    | 813                |
       | root   | localhost  | 3                    | 5                  |
-      +--------+------------+----------------------+--------------------+
+      |--------|------------|----------------------|--------------------|
       3 rows selected (0.171 seconds)
 
 
@@ -131,28 +131,28 @@ Drill is tested with the Postgres driver version [42.2.11](https://mvnrepository
 You may need to qualify a table name with a schema name for Drill to return data. For example, when querying a table named ips, you must issue the query against public.ips, as shown in the following example:  
 
        0: jdbc:drill:zk=local> use pgdb;          
-       +-------+-----------------------------------+
+       |-------|-----------------------------------|
        |  ok   |          	summary          	|
-       +-------+-----------------------------------+
+       |-------|-----------------------------------|
        | true  | Default schema changed to [pgdb]  |
-       +-------+-----------------------------------+
+       |-------|-----------------------------------|
         
        0: jdbc:drill:zk=local> show tables;          
-       +---------------+--------------------------+
+       |---------------|--------------------------|
        | TABLE_SCHEMA  |        TABLE_NAME    	|
-       +---------------+--------------------------+
+       |---------------|--------------------------|
        | pgdb.test 	| ips                  	|
        | pgdb.test 	| pg_aggregate         	|
        | pgdb.test 	| pg_am                	| 
        …  
 
        0: jdbc:drill:zk=local> select * from public.ips;          
-       +-------+----------+
+       |-------|----------|
        | ipid  | ipv4dot  |
-       +-------+----------+
+       |-------|----------|
        | 1 	| 1.2.3.4  |
        | 2 	| 1.2.3.5  |
-       +-------+----------+
+       |-------|----------|
 
 ### Example of Postgres Configuration with `sourceParameters` configuration property
 

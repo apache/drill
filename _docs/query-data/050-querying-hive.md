@@ -1,6 +1,6 @@
 ---
 title: "Querying Hive"
-date: 2019-04-16
+date: 2020-08-08
 parent: "Query Data"
 ---
 This is a simple exercise that provides steps for creating a Hive table and
@@ -40,9 +40,9 @@ To create a Hive table and query it with Drill, complete the following steps:
 
      The query returns the following results:
      
-        +------------+------------+
+        |------------|------------|
         | firstname  |  lastname  |
-        +------------+------------+
+        |------------|------------|
         | Essie      | Vaill      |
         | Cruz       | Roudabush  |
         | Billie     | Tinnes     |
@@ -53,7 +53,7 @@ To create a Hive table and query it with Drill, complete the following steps:
         | Valerie    | Pou        |
         | Lashawn    | Hasty      |
         | Marianne   | Earman     |
-        +------------+------------+
+        |------------|------------|
         10 rows selected (1.5 seconds)
         0: jdbc:drill:schema=hiveremote>
 
