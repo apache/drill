@@ -1,6 +1,6 @@
 ---
 title: "Aggregate and Aggregate Statistical"
-date: 2020-08-09
+date: 2020-08-10
 parent: "SQL Functions"
 ---
 
@@ -175,7 +175,7 @@ Returns the number of rows that match the given criteria.
 
 ### COUNT Syntax
 
-    SELECT COUNT([DISTINCT | ALL] expression) FROM . . . 
+    SELECT COUNT([ALL | DISTINCT] expression) FROM . . . 
     SELECT COUNT(*) FROM . . .
 
 * expression  
@@ -296,12 +296,63 @@ Returns the sum of a numerical expresion.
 
 The following table lists the aggregate statistical functions that you can use in Drill queries.
 
-| **Function**           | **Argument Type**                                 | **Return Type**                                 |
-|------------------------|---------------------------------------------------|-------------------------------------------------|
-| STDDEV(expression)     | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
-| STDDEV_POP(expression) | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
-| VARIANCE(expression)   | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
-| VAR_POP(expression)    | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
+| **Function**                  | **Argument Type**                                 | **Return Type**                                 |
+|-------------------------------|---------------------------------------------------|-------------------------------------------------|
+| APPROX_COUNT_DUPS(expression) | any                                               | BIGINT                                          |
+| STDDEV(expression)            | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
+| STDDEV_POP(expression)        | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
+| VARIANCE(expression)          | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
+| VAR_POP(expression)           | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL | DECIMAL for DECIMAL arguments, otherwise DOUBLE |
+
+## APPROX_COUNT_DUPS
+
+Returns an approximate count of the values that are duplicates (not unique).
+
+### APPROX_COUNT_DUPS Syntax
+
+    APPROX_COUNT_DUPS( expression )
+
+### APPROX_COUNT_DUPS Examples
+
+    select
+      COUNT(*),
+      APPROX_COUNT_DUPS(e1.employee_id),
+      APPROX_COUNT_DUPS(e1.gender)
+    FROM cp.`employee.json` e1
+
+    |--------|--------|--------|
+    | EXPR$0 | EXPR$1 | EXPR$2 |
+    | ------ | ------ | ------ |
+    | 1155   | 0      | 1153   |
+    |--------|--------|--------|
+
+Use COUNT - APPROX_COUNT_DUPS to approximate a distinct count.
+
+    select
+      COUNT(*),
+      COUNT(salary) - APPROX_COUNT_DUPS(salary),
+      COUNT(distinct salary)
+    from cp.`employee.json`;
+
+    |--------|--------|--------|
+    | EXPR$0 | EXPR$1 | EXPR$2 |
+    |--------|--------|--------|
+    | 1155   | 48     | 48     |
+    |--------|--------|--------|
+
+### APPROX_COUNT_DUPS Usage Notes
+
+The underlying Bloom filter is a probabilistic data structure that may return a false positive when an element is tested for duplication.  Consequently, the approximate count returned _overestimates_ the true duplicate count.  In return for this inaccuracy, Bloom filters are highly space- and time-efficient at large scales with the specifics determined by the parameters of the filter (see below).
+
+### Configuration options
+
+{% include startnote.html %}
+The APPROX_COUNT_DUPS function is used internally by Drill when it computes table statistics.  As a result, setting configuration options that affect it in the global configuration scope will affect the computation of table statistics accordingly.
+{% include endnote.html %}
+
+- exec.statistics.ndv_extrapolation_bf_elements
+- exec.statistics.ndv_extrapolation_bf_fpprobability
+
 
 ## STDDEV
 
