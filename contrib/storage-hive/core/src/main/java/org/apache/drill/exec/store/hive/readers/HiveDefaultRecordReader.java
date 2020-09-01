@@ -271,10 +271,13 @@ public class HiveDefaultRecordReader extends AbstractRecordReader {
         this.partitionToTableSchemaConverter = (obj) -> obj;
         this.finalObjInspector = tableObjInspector;
 
+        HiveUtilities.addConfToJob(job, hiveTableProperties);
         job.setInputFormat(HiveUtilities.getInputFormatClass(job, hiveTable.getSd(), hiveTable));
         HiveUtilities.verifyAndAddTransactionalProperties(job, hiveTable.getSd());
       } else {
-        this.partitionDeserializer = createDeserializer(job, partition.getSd(), HiveUtilities.getPartitionMetadata(partition, hiveTable));
+        Properties partitionProperties = HiveUtilities.getPartitionMetadata(partition, hiveTable);
+        HiveUtilities.addConfToJob(job, partitionProperties);
+        this.partitionDeserializer = createDeserializer(job, partition.getSd(), partitionProperties);
         this.partitionObjInspector = getStructOI(partitionDeserializer);
 
         this.finalObjInspector = (StructObjectInspector) ObjectInspectorConverters.getConvertedOI(partitionObjInspector, tableObjInspector);
