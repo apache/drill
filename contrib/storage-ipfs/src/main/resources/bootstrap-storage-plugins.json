@@ -5,6 +5,7 @@
       "host": "127.0.0.1",
       "port": 5001,
       "max-nodes-per-leaf": 3,
+      "distributed-mode": false,
       "ipfs-timeouts": {
         "find-provider": 4,
         "find-peer-info": 4,

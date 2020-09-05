@@ -46,6 +46,9 @@ public class IPFSStoragePluginConfig extends StoragePluginConfigBase {
   @JsonProperty("max-nodes-per-leaf")
   private final int maxNodesPerLeaf;
 
+  @JsonProperty("distributed-mode")
+  private final boolean distributedMode;
+
   @JsonProperty("ipfs-timeouts")
   private final Map<IPFSTimeOut, Integer> ipfsTimeouts;
 
@@ -156,6 +159,7 @@ public class IPFSStoragePluginConfig extends StoragePluginConfigBase {
       @JsonProperty("host") String host,
       @JsonProperty("port") int port,
       @JsonProperty("max-nodes-per-leaf") int maxNodesPerLeaf,
+      @JsonProperty("distributed-mode") boolean distributedMode,
       @JsonProperty("ipfs-timeouts") Map<IPFSTimeOut, Integer> ipfsTimeouts,
       @JsonProperty("ipfs-caches") Map<IPFSCacheType, IPFSCache> ipfsCaches,
       @JsonProperty("groupscan-worker-threads") int numWorkerThreads,
@@ -163,6 +167,7 @@ public class IPFSStoragePluginConfig extends StoragePluginConfigBase {
     this.host = host;
     this.port = port;
     this.maxNodesPerLeaf = maxNodesPerLeaf > 0 ? maxNodesPerLeaf : 1;
+    this.distributedMode = distributedMode;
     this.ipfsTimeouts = applyDefaultMap(ipfsTimeouts, ipfsTimeoutDefaults);
     this.ipfsCaches = applyDefaultMap(ipfsCaches, ipfsCacheDefaults);
     this.numWorkerThreads = numWorkerThreads > 0 ? numWorkerThreads : 1;
@@ -194,6 +199,11 @@ public class IPFSStoragePluginConfig extends StoragePluginConfigBase {
   @JsonProperty("max-nodes-per-leaf")
   public int getMaxNodesPerLeaf() {
     return maxNodesPerLeaf;
+  }
+
+  @JsonProperty("distributed-mode")
+  public boolean isDistributedMode() {
+    return distributedMode;
   }
 
   @JsonIgnore
@@ -228,7 +238,7 @@ public class IPFSStoragePluginConfig extends StoragePluginConfigBase {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(host, port, maxNodesPerLeaf, ipfsTimeouts, ipfsCaches, formats);
+    return Objects.hashCode(host, port, maxNodesPerLeaf, distributedMode, ipfsTimeouts, ipfsCaches, formats);
   }
 
   @Override
@@ -246,6 +256,7 @@ public class IPFSStoragePluginConfig extends StoragePluginConfigBase {
         && Objects.equal(ipfsCaches, other.ipfsTimeouts)
         && port == other.port
         && maxNodesPerLeaf == other.maxNodesPerLeaf
+        && distributedMode == other.distributedMode
         && numWorkerThreads == other.numWorkerThreads;
   }
 }

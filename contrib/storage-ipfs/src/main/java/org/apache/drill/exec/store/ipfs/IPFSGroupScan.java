@@ -55,13 +55,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -116,34 +118,21 @@ public class IPFSGroupScan extends AbstractGroupScan {
 
     Multihash topHash = ipfsScanSpec.getTargetHash(ipfsHelper);
     try {
-      Map<Multihash, String> leafAddrMap = getLeafAddrMappings(topHash);
-      logger.debug("Iterating on {} leaves...", leafAddrMap.size());
-      ClusterCoordinator coordinator = ipfsContext.getStoragePlugin().getContext().getClusterCoordinator();
-      for (Multihash leaf : leafAddrMap.keySet()) {
-        String peerHostname = leafAddrMap.get(leaf);
+      Map<Multihash, IPFSPeer> leafPeerMap = getLeafPeerMappings(topHash);
+      logger.debug("Iterating on {} leaves...", leafPeerMap.size());
 
-        Optional<DrillbitEndpoint> oep = coordinator.getAvailableEndpoints()
-            .stream()
-            .filter(a -> a.getAddress().equals(peerHostname))
-            .findAny();
+      ClusterCoordinator coordinator = ipfsContext.getStoragePlugin().getContext().getClusterCoordinator();
+      for (Multihash leaf : leafPeerMap.keySet()) {
         DrillbitEndpoint ep;
-        if (oep.isPresent()) {
-          ep = oep.get();
-          logger.debug("Using existing endpoint {}", ep.getAddress());
+        if (config.isDistributedMode()) {
+          String peerHostname = leafPeerMap
+              .get(leaf)
+              .getDrillbitAddress()
+              .orElseThrow(() -> new RuntimeException("Chosen IPFS peer does not have drillbit address"));
+          ep = registerEndpoint(coordinator, peerHostname);
         } else {
-          logger.debug("created new endpoint on the fly {}", peerHostname);
-          //DRILL-7754: read ports & version info from IPFS instead of hard-coded
-          ep = DrillbitEndpoint.newBuilder()
-              .setAddress(peerHostname)
-              .setUserPort(DEFAULT_USER_PORT)
-              .setControlPort(DEFAULT_CONTROL_PORT)
-              .setDataPort(DEFAULT_DATA_PORT)
-              .setHttpPort(DEFAULT_HTTP_PORT)
-              .setVersion(DrillVersionInfo.getVersion())
-              .setState(DrillbitEndpoint.State.ONLINE)
-              .build();
-          //DRILL-7777: how to safely remove endpoints that are no longer needed once the query is completed?
-          ClusterCoordinator.RegistrationHandle handle = coordinator.register(ep);
+          // the foreman is used to execute the plan
+          ep = ipfsContext.getStoragePlugin().getContext().getEndpoint();
         }
 
         IPFSWork work = new IPFSWork(leaf);
@@ -161,15 +150,56 @@ public class IPFSGroupScan extends AbstractGroupScan {
     }
   }
 
-  Map<Multihash, String> getLeafAddrMappings(Multihash topHash) {
+  private DrillbitEndpoint registerEndpoint(ClusterCoordinator coordinator, String peerHostname) {
+    Optional<DrillbitEndpoint> oep = coordinator.getAvailableEndpoints()
+        .stream()
+        .filter(ep -> ep.getAddress().equals(peerHostname))
+        .findAny();
+    DrillbitEndpoint ep;
+    if (oep.isPresent()) {
+      ep = oep.get();
+      logger.debug("Using existing endpoint {}", ep.getAddress());
+    } else {
+      logger.debug("created new endpoint on the fly {}", peerHostname);
+      //DRILL-7754: read ports & version info from IPFS instead of hard-coded
+      ep = DrillbitEndpoint.newBuilder()
+          .setAddress(peerHostname)
+          .setUserPort(DEFAULT_USER_PORT)
+          .setControlPort(DEFAULT_CONTROL_PORT)
+          .setDataPort(DEFAULT_DATA_PORT)
+          .setHttpPort(DEFAULT_HTTP_PORT)
+          .setVersion(DrillVersionInfo.getVersion())
+          .setState(DrillbitEndpoint.State.ONLINE)
+          .build();
+      //DRILL-7777: how to safely remove endpoints that are no longer needed once the query is completed?
+      ClusterCoordinator.RegistrationHandle handle = coordinator.register(ep);
+    }
+
+    return ep;
+  }
+
+  Map<Multihash, IPFSPeer> getLeafPeerMappings(Multihash topHash) {
     logger.debug("start to recursively expand nested IPFS hashes, topHash={}", topHash);
     Stopwatch watch = Stopwatch.createStarted();
     ForkJoinPool forkJoinPool = new ForkJoinPool(config.getNumWorkerThreads());
-    IPFSTreeFlattener topTask = new IPFSTreeFlattener(topHash, false, ipfsContext);
-    Map<Multihash, String> leafAddrMap = forkJoinPool.invoke(topTask);
+    IPFSTreeFlattener topTask = new IPFSTreeFlattener(topHash, ipfsContext);
+    List<Multihash> leaves = forkJoinPool.invoke(topTask);
     logger.debug("Took {} ms to expand hash leaves", watch.elapsed(TimeUnit.MILLISECONDS));
 
-    return leafAddrMap;
+    logger.debug("Start to resolve providers");
+    watch.reset().start();
+    Map<Multihash, IPFSPeer> leafPeerMap;
+    if (config.isDistributedMode()) {
+      leafPeerMap = forkJoinPool.invoke(new IPFSProviderResolver(leaves, ipfsContext));
+    } else {
+      leafPeerMap = new HashMap<>();
+      for (Multihash leaf : leaves) {
+        leafPeerMap.put(leaf, ipfsContext.getMyself());
+      }
+    }
+    logger.debug("Took {} ms to resolve providers", watch.elapsed(TimeUnit.MILLISECONDS));
+
+    return leafPeerMap;
   }
 
   private IPFSGroupScan(IPFSGroupScan that) {
@@ -330,50 +360,93 @@ public class IPFSGroupScan extends AbstractGroupScan {
     }
   }
 
-  //DRILL-7756: detect and warn about loops/recursions in case of a malformed tree
-  static class IPFSTreeFlattener extends RecursiveTask<Map<Multihash, String>> {
-    private final Multihash hash;
-    private final boolean isProvider;
-    private final Map<Multihash, String> ret = new LinkedHashMap<>();
+  static class IPFSProviderResolver extends RecursiveTask<Map<Multihash, IPFSPeer>> {
+    private final List<Multihash> leaves;
+    private final Map<Multihash, IPFSPeer> ret = new LinkedHashMap<>();
     private final IPFSPeer myself;
     private final IPFSHelper helper;
     private final LoadingCache<Multihash, IPFSPeer> peerCache;
     private final LoadingCache<Multihash, List<Multihash>> providerCache;
 
-    public IPFSTreeFlattener(Multihash hash, boolean isProvider, IPFSContext context) {
-      this(
-          hash,
-          isProvider,
-          context.getMyself(),
-          context.getIPFSHelper(),
-          context.getIPFSPeerCache(),
-          context.getProviderCache()
-      );
+    public IPFSProviderResolver(List<Multihash> leaves, IPFSContext context) {
+      this(leaves, context.getMyself(), context.getIPFSHelper(), context.getIPFSPeerCache(), context.getProviderCache());
     }
 
-    IPFSTreeFlattener(Multihash hash, boolean isProvider, IPFSPeer myself, IPFSHelper ipfsHelper,
-                      LoadingCache<Multihash, IPFSPeer> peerCache, LoadingCache<Multihash, List<Multihash>> providerCache) {
-      this.hash = hash;
-      this.isProvider = isProvider;
+    public IPFSProviderResolver(IPFSProviderResolver reference, List<Multihash> leaves) {
+      this(leaves, reference.myself, reference.helper, reference.peerCache, reference.providerCache);
+    }
+
+    IPFSProviderResolver(List<Multihash> leaves, IPFSPeer myself, IPFSHelper helper, LoadingCache<Multihash, IPFSPeer> peerCache, LoadingCache<Multihash, List<Multihash>> providerCache) {
+      this.leaves = leaves;
       this.myself = myself;
-      this.helper = ipfsHelper;
+      this.helper = helper;
       this.peerCache = peerCache;
       this.providerCache = providerCache;
     }
 
-    public IPFSTreeFlattener(IPFSTreeFlattener reference, Multihash hash, boolean isProvider) {
-      this(hash, isProvider, reference.myself, reference.helper, reference.peerCache, reference.providerCache);
+    @Override
+    protected Map<Multihash, IPFSPeer> compute() {
+      int totalLeaves = leaves.size();
+      if (totalLeaves == 1) {
+        Multihash hash = leaves.get(0);
+        List<IPFSPeer> providers = providerCache.getUnchecked(hash).parallelStream()
+            .map(peerCache::getUnchecked)
+            .filter(IPFSPeer::isDrillReady)
+            .filter(IPFSPeer::hasDrillbitAddress)
+            .collect(Collectors.toList());
+        if (providers.size() < 1) {
+          logger.warn("No drill-ready provider found for leaf {}, adding foreman as the provider", hash);
+          providers.add(myself);
+        }
+        logger.debug("Got {} providers for {} from IPFS", providers.size(), hash);
+
+        //DRILL-7753: better peer selection algorithm
+        Random random = new Random();
+        IPFSPeer chosenPeer = providers.get(random.nextInt(providers.size()));
+        ret.put(hash, chosenPeer);
+        logger.debug("Use peer {} for leaf {}", chosenPeer, hash);
+        return ret;
+      }
+
+      int firstHalf = totalLeaves / 2;
+      ImmutableList<IPFSProviderResolver> resolvers = ImmutableList.of(
+        new IPFSProviderResolver(this, leaves.subList(0, firstHalf)),
+        new IPFSProviderResolver(this, leaves.subList(firstHalf, totalLeaves))
+      );
+      resolvers.forEach(ForkJoinTask::fork);
+      resolvers.reverse().forEach(resolver -> ret.putAll(resolver.join()));
+      return ret;
+    }
+  }
+
+  //DRILL-7756: detect and warn about loops/recursions in case of a malformed tree
+  static class IPFSTreeFlattener extends RecursiveTask<List<Multihash>> {
+    private final Multihash hash;
+    private final List<Multihash> ret = new LinkedList<>();
+    private final IPFSPeer myself;
+    private final IPFSHelper helper;
+
+    public IPFSTreeFlattener(Multihash hash, IPFSContext context) {
+      this(
+          hash,
+          context.getMyself(),
+          context.getIPFSHelper()
+      );
+    }
+
+    IPFSTreeFlattener(Multihash hash, IPFSPeer myself, IPFSHelper ipfsHelper) {
+      this.hash = hash;
+      this.myself = myself;
+      this.helper = ipfsHelper;
+    }
+
+    public IPFSTreeFlattener(IPFSTreeFlattener reference, Multihash hash) {
+      this(hash, reference.myself, reference.helper);
     }
 
     @Override
-    public Map<Multihash, String> compute() {
+    public List<Multihash> compute() {
       try {
-        if (isProvider) {
-          IPFSPeer peer = peerCache.getUnchecked(hash);
-          ret.put(hash, peer.getDrillbitAddress().orElse(null));
-          return ret;
-        }
-
         MerkleNode metaOrSimpleNode = helper.getObjectLinksTimeout(hash);
         if (metaOrSimpleNode.links.size() > 0) {
           logger.debug("{} is a meta node", hash);
@@ -382,68 +455,19 @@ public class IPFSGroupScan extends AbstractGroupScan {
 
           ImmutableList.Builder<IPFSTreeFlattener> builder = ImmutableList.builder();
           for (Multihash intermediate : intermediates.subList(1, intermediates.size())) {
-            builder.add(new IPFSTreeFlattener(this, intermediate, false));
+            builder.add(new IPFSTreeFlattener(this, intermediate));
           }
           ImmutableList<IPFSTreeFlattener> subtasks = builder.build();
           subtasks.forEach(IPFSTreeFlattener::fork);
 
-          IPFSTreeFlattener first = new IPFSTreeFlattener(this, intermediates.get(0), false);
-          ret.putAll(first.compute());
+          IPFSTreeFlattener first = new IPFSTreeFlattener(this, intermediates.get(0));
+          ret.addAll(first.compute());
           subtasks.reverse().forEach(
-              subtask -> ret.putAll(subtask.join())
+              subtask -> ret.addAll(subtask.join())
           );
         } else {
           logger.debug("{} is a simple node", hash);
-          List<IPFSPeer> providers = providerCache.getUnchecked(hash).stream()
-              .map(peerCache::getUnchecked)
-              .collect(Collectors.toList());
-          providers = providers.stream()
-              .filter(IPFSPeer::isDrillReady)
-              .collect(Collectors.toList());
-          if (providers.size() < 1) {
-            logger.warn("No drill-ready provider found for leaf {}, adding foreman as the provider", hash);
-            providers.add(myself);
-          }
-
-          logger.debug("Got {} providers for {} from IPFS", providers.size(), hash);
-          ImmutableList.Builder<IPFSTreeFlattener> builder = ImmutableList.builder();
-          for (IPFSPeer provider : providers.subList(1, providers.size())) {
-            builder.add(new IPFSTreeFlattener(this, provider.getId(), true));
-          }
-          ImmutableList<IPFSTreeFlattener> subtasks = builder.build();
-          subtasks.forEach(IPFSTreeFlattener::fork);
-
-          List<String> possibleAddrs = new ArrayList<>();
-          Multihash firstProvider = providers.get(0).getId();
-          IPFSTreeFlattener firstTask = new IPFSTreeFlattener(this, firstProvider, true);
-          String firstAddr = firstTask.compute().get(firstProvider);
-          if (firstAddr != null) {
-            possibleAddrs.add(firstAddr);
-          }
-
-          subtasks.reverse().forEach(
-              subtask -> {
-                String addr = subtask.join().get(subtask.hash);
-                if (addr != null) {
-                  possibleAddrs.add(addr);
-                }
-              }
-          );
-
-          if (possibleAddrs.size() < 1) {
-            logger.error("All attempts to find an appropriate provider address for {} have failed", hash);
-            throw UserException
-                .planError()
-                .message("No address found for any provider for leaf " + hash)
-                .build(logger);
-          } else {
-            //DRILL-7753: better peer selection algorithm
-            Random random = new Random();
-            String chosenAddr = possibleAddrs.get(random.nextInt(possibleAddrs.size()));
-            ret.clear();
-            ret.put(hash, chosenAddr);
-            logger.debug("Got peer host {} for leaf {}", chosenAddr, hash);
-          }
+          ret.add(hash);
         }
       } catch (IOException e) {
         throw UserException.planError(e).message("Exception during planning").build(logger);

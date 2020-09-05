@@ -130,9 +130,9 @@ public class TestIPFSGroupScan extends IPFSTestBase implements IPFSTestConstants
 
       IPFSContext context = plugin.getIPFSContext();
       IPFSGroupScan groupScan = new IPFSGroupScan(context, new IPFSScanSpec(context, IPFSTestConstants.getQueryPath(SIMPLE_DATASET_MULTIHASH)), null);
-      Map<Multihash, String> map = groupScan.getLeafAddrMappings(SIMPLE_DATASET_MULTIHASH);
+      Map<Multihash, IPFSPeer> map = groupScan.getLeafPeerMappings(SIMPLE_DATASET_MULTIHASH);
       assertEquals(map.keySet().size(), 1);
-      assertEquals(map.get(SIMPLE_DATASET_MULTIHASH), MOCK_NODE_ADDR);
+      assertEquals(map.get(SIMPLE_DATASET_MULTIHASH), myself);
     } catch (Exception e) {
       fail(e.getMessage());
     }
@@ -154,10 +154,10 @@ public class TestIPFSGroupScan extends IPFSTestBase implements IPFSTestConstants
 
       IPFSContext context = plugin.getIPFSContext();
       IPFSGroupScan groupScan = new IPFSGroupScan(context, new IPFSScanSpec(context, IPFSTestConstants.getQueryPath(SIMPLE_DATASET_MULTIHASH)), null);
-      Map<Multihash, String> map = groupScan.getLeafAddrMappings(CHUNKED_DATASET_MULTIHASH);
+      Map<Multihash, IPFSPeer> map = groupScan.getLeafPeerMappings(CHUNKED_DATASET_MULTIHASH);
       assertEquals(map.keySet().size(), 3);
       for (Map.Entry<String, Multihash> entry : CHUNKS_MULTIHASH.entrySet()) {
-        assertEquals(map.get(entry.getValue()), MOCK_NODE_ADDR);
+        assertEquals(map.get(entry.getValue()), myself);
       }
     } catch (Exception e) {
       fail(e.getMessage());
