@@ -17,27 +17,25 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
-import java.util.List;
-
 import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 
 public class CassandraFilterBuilder extends AbstractExprVisitor<CassandraScanSpec, Void, RuntimeException> implements DrillCassandraConstants {
   private static final Logger logger = LoggerFactory.getLogger(CassandraFilterBuilder.class);
 
   final CassandraGroupScan groupScan;
-
   final LogicalExpression le;
-
   private boolean allExpressionsConverted = true;
 
   public CassandraFilterBuilder(CassandraGroupScan groupScan, LogicalExpression conditionExp) {
@@ -50,7 +48,7 @@ public class CassandraFilterBuilder extends AbstractExprVisitor<CassandraScanSpe
     CassandraScanSpec parsedSpec = le.accept(this, null);
 
     if (parsedSpec != null) {
-      parsedSpec = mergeScanSpecs("booleanAnd", groupScan.getCassandraScanSpec(), parsedSpec);
+      parsedSpec = mergeScanSpecs("booleanAnd", groupScan.scanSpec(), parsedSpec);
     }
     return parsedSpec;
   }
@@ -68,7 +66,7 @@ public class CassandraFilterBuilder extends AbstractExprVisitor<CassandraScanSpe
           newFilters.addAll(rightScanSpec.getFilters());
         }
 
-        scanSpec = new CassandraScanSpec(groupScan.getCassandraScanSpec().getKeyspace(), groupScan.getCassandraScanSpec().getTable(), newFilters);
+        scanSpec = new CassandraScanSpec(groupScan.scanSpec().getKeyspace(), groupScan.scanSpec().getTable(), newFilters, groupScan.config());
         break;
     }
 
@@ -184,7 +182,7 @@ public class CassandraFilterBuilder extends AbstractExprVisitor<CassandraScanSpe
     if (clause != null) {
       List<Clause> filters = Lists.newArrayList();
       filters.add(clause);
-      return new CassandraScanSpec(groupScan.getCassandraScanSpec().getKeyspace(), groupScan.getCassandraScanSpec().getTable(), filters);
+      return new CassandraScanSpec(groupScan.scanSpec().getKeyspace(), groupScan.scanSpec().getTable(), filters, groupScan.config());
     }
     // else
     return null;

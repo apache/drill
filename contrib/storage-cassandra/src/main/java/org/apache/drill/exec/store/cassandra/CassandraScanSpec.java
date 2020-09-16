@@ -27,36 +27,45 @@ import java.util.List;
 
 public class CassandraScanSpec {
   protected final String keyspace;
-
   protected final String table;
+  private final CassandraStoragePluginConfig config;
 
   @JsonIgnore
   protected List<Clause> filters;
 
   @JsonCreator
   public CassandraScanSpec(@JsonProperty("keyspace") String keyspace,
-                           @JsonProperty("table") String table) {
+                           @JsonProperty("table") String table,
+                           @JsonProperty("config") CassandraStoragePluginConfig config) {
     this.keyspace = keyspace;
     this.table = table;
+    this.config = config;
   }
 
-  public CassandraScanSpec(String keyspace, String table, List<Clause> filters) {
+  public CassandraScanSpec(String keyspace, String table, List<Clause> filters, CassandraStoragePluginConfig config) {
     this.keyspace = keyspace;
     this.table = table;
     this.filters = filters;
+    this.config = config;
   }
 
+  @JsonProperty("keyspace")
   public String getKeyspace() {
     return keyspace;
   }
 
+  @JsonProperty("table")
   public String getTable() {
     return table;
   }
 
+  @JsonProperty("filters")
   public List<Clause> getFilters() {
     return filters;
   }
+
+  @JsonProperty("config")
+  public CassandraStoragePluginConfig getConfig() {return config;}
 
   @Override
   public String toString() {
@@ -64,6 +73,7 @@ public class CassandraScanSpec {
       .field("keyspace", keyspace)
       .field("table", table)
       .field("filters", filters)
+      .field("config", config)
       .toString();
   }
 }

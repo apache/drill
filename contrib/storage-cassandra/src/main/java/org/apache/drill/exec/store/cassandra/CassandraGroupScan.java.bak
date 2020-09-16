@@ -29,20 +29,23 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
-import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.base.filter.ExprNode;
 import org.apache.drill.exec.store.cassandra.CassandraSubScan.CassandraSubScanSpec;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
-import org.apache.drill.exec.util.Utilities;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
@@ -62,10 +65,12 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-public class CassandraGroupScan extends AbstractGroupScan implements DrillCassandraConstants{
-
+@JsonTypeName("cassandra-scan")
+public class CassandraGroupScan extends AbstractGroupScan implements DrillCassandraConstants {
   private static final Logger logger = LoggerFactory.getLogger(CassandraGroupScan.class);
+
   private static final Comparator<List<CassandraSubScanSpec>> LIST_SIZE_COMPARATOR = new Comparator<List<CassandraSubScanSpec>>() {
     @Override
     public int compare(List<CassandraSubScanSpec> list1, List<CassandraSubScanSpec> list2) {
@@ -74,260 +79,97 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
   };
 
   private static final Comparator<List<CassandraSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
-  private final CassandraStoragePluginConfig config;
-  private final List<SchemaPath> columns;
-  private final CassandraScanSpec scanSpec;
-  private final Map<String, ExprNode.ColRelOpConstNode> filters;
-  private final ScanStats scanStats;
-  private final double filterSelectivity;
-  private final int maxRecords;
+  private String userName;
+  private Map<String, String> filters;
+  private double filterSelectivity;
+  private CassandraStoragePluginConfig storagePluginConfig;
+  private List<SchemaPath> columns;
+  private CassandraScanSpec cassandraScanSpec;
   private CassandraStoragePlugin storagePlugin;
+  private Stopwatch watch = Stopwatch.createUnstarted();
+  private Map<Integer, List<CassandraSubScanSpec>> endpointFragmentMapping;
+  private Set<Host> keyspaceHosts;
+  private int totalAssignmentsTobeDone;
+  private boolean filterPushedDown = false;
+  private Map<String, CassandraPartitionToken> hostTokenMapping = new HashMap<>();
+  private long scanSizeInBytes = 0;
   private Metadata metadata;
   private Cluster cluster;
   private Session session;
-  private Map<Integer, List<CassandraSubScanSpec>> endpointFragmentMapping;
-  private Set<Host> keyspaceHosts;
-  private final Map<String, CassandraPartitionToken> hostTokenMapping = new HashMap<>();
-  private int totalAssignmentsTobeDone;
   private ResultSet rs;
-  private int hashCode;
 
+  private int maxResults;
 
-  public CassandraGroupScan (CassandraScanSpec scanSpec) {
-    super(scanSpec.getConfig().username);
-    this.scanSpec = scanSpec;
-    this.config = scanSpec.getConfig();
-    this.columns = ALL_COLUMNS;
-    this.filters = null;
+  @JsonCreator
+  public CassandraGroupScan(@JsonProperty("userName") String userName,
+                            @JsonProperty("cassandraScanSpec") CassandraScanSpec cassandraScanSpec,
+                            @JsonProperty("storage") CassandraStoragePluginConfig storagePluginConfig,
+                            @JsonProperty("columns") List<SchemaPath> columns,
+                            @JsonProperty("maxResults") int maxResults,
+                            @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
+    this(userName, (CassandraStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), cassandraScanSpec, columns, maxResults);
+  }
+
+  public CassandraGroupScan(String userName, CassandraStoragePlugin storagePlugin, CassandraScanSpec scanSpec, List<SchemaPath> columns, int maxResults) {
+    super(userName);
+    this.storagePlugin = storagePlugin;
+    this.storagePluginConfig = storagePlugin.getConfig();
+    this.cassandraScanSpec = scanSpec;
+    this.columns = columns == null || columns.size() == 0 ? ALL_COLUMNS : columns;
+    this.maxResults = maxResults;
     this.filterSelectivity = 0.0;
-    this.maxRecords = -1;
-    this.scanStats = computeScanStats();
     init();
-  }
-
-  /**
-   * Copies the group scan during many stages of Calcite operation.
-   */
-  public CassandraGroupScan(CassandraGroupScan that) {
-    super(that);
-    this.config = that.config;
-    this.scanSpec = that.scanSpec;
-    this.columns = that.columns;
-    this.filters = that.filters;
-    this.filterSelectivity = that.filterSelectivity;
-    this.maxRecords = that.maxRecords;
-
-    // Calcite makes many copies in the later stage of planning
-    // without changing anything. Retain the previous stats.
-    this.scanStats = that.scanStats;
-    init();
-  }
-
-  /**
-   * Applies columns. Oddly called multiple times, even when
-   * the scan already has columns.
-   */
-  public CassandraGroupScan(CassandraGroupScan that, List<SchemaPath> columns) {
-    super(that);
-    this.columns = columns;
-    this.scanSpec = that.scanSpec;
-    this.config = that.config;
-
-    // Oddly called later in planning, after earlier assigning columns,
-    // to again assign columns. Retain filters, but compute new stats.
-    this.filters = that.filters;
-    this.filterSelectivity = that.filterSelectivity;
-    this.maxRecords = that.maxRecords;
-    this.scanStats = computeScanStats();
   }
 
   /**
    * Adds a filter to the scan.
    */
-  public CassandraGroupScan(CassandraGroupScan that, Map<String, ExprNode.ColRelOpConstNode> filters,
-                         double filterSelectivity) {
+  public CassandraGroupScan(CassandraGroupScan that, Map<String, String> filters, double filterSelectivity) {
     super(that);
     this.columns = that.columns;
-    this.scanSpec = that.scanSpec;
-    this.config = that.config;
+    this.cassandraScanSpec = that.cassandraScanSpec;
 
     // Applies a filter.
     this.filters = filters;
     this.filterSelectivity = filterSelectivity;
-    this.maxRecords = that.maxRecords;
     this.scanStats = computeScanStats();
-    init();
   }
 
   /**
-   * Adds a limit to the group scan
-   * @param that Previous SplunkGroupScan
-   * @param maxRecords the limit pushdown
+   * Private constructor, used for cloning.
+   *
+   * @param that The CassandraGroupScan to clone
    */
-  public CassandraGroupScan(CassandraGroupScan that, int maxRecords) {
+  private CassandraGroupScan(CassandraGroupScan that) {
     super(that);
     this.columns = that.columns;
-    // Apply the limit
-    this.maxRecords = maxRecords;
-    this.scanSpec = that.scanSpec;
-    this.config = that.config;
-    this.filters = that.filters;
+    this.cassandraScanSpec = that.cassandraScanSpec;
+    this.endpointFragmentMapping = that.endpointFragmentMapping;
+    this.keyspaceHosts = that.keyspaceHosts;
+    this.metadata = that.metadata;
+    this.storagePlugin = that.storagePlugin;
+    this.storagePluginConfig = that.storagePluginConfig;
+    this.filterPushedDown = that.filterPushedDown;
+    this.totalAssignmentsTobeDone = that.totalAssignmentsTobeDone;
+    this.hostTokenMapping = that.hostTokenMapping;
+    this.scanSizeInBytes = that.scanSizeInBytes;
+    this.maxResults = that.maxResults;
     this.filterSelectivity = that.filterSelectivity;
-    this.scanStats = computeScanStats();
-    init();
-  }
-
-  /**
-   * Deserialize a group scan. Not called in normal operation. Probably used
-   * only if Drill executes a logical plan.
-   */
-  @JsonCreator
-  public CassandraGroupScan(
-    @JsonProperty("config") CassandraStoragePluginConfig config,
-    @JsonProperty("columns") List<SchemaPath> columns,
-    @JsonProperty("splunkScanSpec") CassandraScanSpec splunkScanSpec,
-    @JsonProperty("filters") Map<String, ExprNode.ColRelOpConstNode> filters,
-    @JsonProperty("filterSelectivity") double selectivity,
-    @JsonProperty("maxRecords") int maxRecords,
-    @JacksonInject StoragePluginRegistry pluginRegistry
-  ) {
-    super("no-user");
-    this.config = config;
-    this.columns = columns;
-    this.scanSpec = splunkScanSpec;
-    this.filters = filters;
-    this.filterSelectivity = selectivity;
-    this.maxRecords = maxRecords;
-    this.scanStats = computeScanStats();
-    this.storagePlugin = pluginRegistry.resolve(config, CassandraStoragePlugin.class);
-  }
-
-  @JsonProperty("config")
-  public CassandraStoragePluginConfig config() { return config; }
-
-  @JsonProperty("columns")
-  public List<SchemaPath> columns() { return columns; }
-
-  @JsonProperty("scanSpec")
-  public CassandraScanSpec scanSpec() { return scanSpec; }
-
-  @JsonProperty("filters")
-  public Map<String, ExprNode.ColRelOpConstNode> filters() { return filters; }
-
-  @JsonProperty("maxRecords")
-  public int maxRecords() { return maxRecords; }
-
-  @JsonProperty("filterSelectivity")
-  public double selectivity() { return filterSelectivity; }
-
-
-  @Override
-  public boolean canPushdownProjects(List<SchemaPath> columns) {
-    return true;
-  }
-
-  @Override
-  public boolean supportsLimitPushdown() {
-    return true;
-  }
-
-  @Override
-  public GroupScan applyLimit(int maxRecords) {
-    if (maxRecords == this.maxRecords) {
-      return null;
-    }
-    return new CassandraGroupScan(this, maxRecords);
-  }
-
-  @Override
-  public String getDigest() {
-    return toString();
-  }
-
-  @Override
-  public ScanStats getScanStats() {
-
-    // Since this class is immutable, compute stats once and cache
-    // them. If the scan changes (adding columns, adding filters), we
-    // get a new scan without cached stats.
-    return scanStats;
-  }
-
-  private ScanStats computeScanStats() {
-
-    // If this config allows filters, then make the default
-    // cost very high to force the planner to choose the version
-    // with filters.
-    if (allowsFilters() && !hasFilters() && !hasLimit()) {
-      return new ScanStats(ScanStats.GroupScanProperty.ESTIMATED_TOTAL_COST,
-        1E9, 1E112, 1E12);
-    }
-
-    // No good estimates at all, just make up something.
-    double estRowCount = 100_000;
-
-    // NOTE this was important! if the predicates don't make the query more
-    // efficient they won't get pushed down
-    if (hasFilters()) {
-      estRowCount *= filterSelectivity;
-    }
-
-    if (maxRecords > 0) {
-      estRowCount = estRowCount / 2;
-    }
-
-    double estColCount = Utilities.isStarQuery(columns) ? DrillScanRel.STAR_COLUMN_COST : columns.size();
-    double valueCount = estRowCount * estColCount;
-    double cpuCost = valueCount;
-    double ioCost = valueCount;
-
-    // Force the caller to use our costs rather than the
-    // defaults (which sets IO cost to zero).
-    return new ScanStats(ScanStats.GroupScanProperty.ESTIMATED_TOTAL_COST,
-      estRowCount, cpuCost, ioCost);
-  }
-
-  @JsonIgnore
-  public boolean hasFilters() {
-    return filters != null;
-  }
-
-  @JsonIgnore
-  public boolean hasLimit() { return maxRecords == -1; }
-
-  @JsonIgnore
-  public boolean allowsFilters() {
-    return true;
   }
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
-    return new CassandraGroupScan(this, columns);
-  }
-
-  @Override
-  public int getMaxParallelizationWidth() {
-    if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
-      cluster = CassandraConnectionManager.getCluster(config);
-    } else {
-      cluster = storagePlugin.getCluster();
-    }
-    return cluster.getMetadata().getAllHosts().size();
-  }
-
-  @Override
-  @JsonIgnore
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    Preconditions.checkArgument(children.isEmpty());
-    return new CassandraGroupScan(this);
+    CassandraGroupScan newScan = new CassandraGroupScan(this);
+    newScan.columns = columns;
+    return newScan;
   }
 
   private void init() {
     try {
-      logger.debug(String.format("Getting cassandra session from host %s, port: %s.", config.getHosts(), config.getPort()));
+      logger.debug(String.format("Getting cassandra session from host %s, port: %s.", storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
 
       if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
-        cluster = CassandraConnectionManager.getCluster(config);
+        cluster = CassandraConnectionManager.getCluster(storagePluginConfig);
         session = cluster.connect();
       } else {
         cluster = storagePlugin.getCluster();
@@ -344,8 +186,8 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
       logger.debug("KeySpace hosts for Cassandra : {}", keyspaceHosts);
 
       if (null == keyspaceHosts) {
-        logger.error(String.format("No Keyspace Hosts Found for Cassandra %s:%s .", config.getHosts(), config.getPort()));
-        throw new DrillRuntimeException(String.format("No Keyspace Hosts Found for Cassandra %s:%s .", config.getHosts(), config.getPort()));
+        logger.error(String.format("No Keyspace Hosts Found for Cassandra %s:%s .", storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
+        throw new DrillRuntimeException(String.format("No Keyspace Hosts Found for Cassandra %s:%s .", storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
       }
 
       String[] tokens = CassandraUtil.getPartitionTokens(metadata.getPartitioner(), keyspaceHosts.size());
@@ -362,7 +204,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
       }
       logger.debug("Host token mapping: {}", hostTokenMapping);
 
-      Statement q = QueryBuilder.select().all().from(scanSpec.getKeyspace(), scanSpec.getTable());
+      Statement q = QueryBuilder.select().all().from(cassandraScanSpec.getKeyspace(), cassandraScanSpec.getTable());
 
       if (session.isClosed()) {
         logger.error("Error in initializing CasandraGroupScan. Session Closed.");
@@ -379,7 +221,43 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
   }
 
   @Override
+  public List<EndpointAffinity> getOperatorAffinity() {
+    watch.reset();
+    watch.start();
+    Map<String, DrillbitEndpoint> endpointMap = new HashMap<>();
+    for (DrillbitEndpoint ep : storagePlugin.getContext().getBits()) {
+      endpointMap.put(ep.getAddress(), ep);
+    }
+
+    logger.debug("Building affinity map. Endpoints: {}, KeyspaceHosts: {}", endpointMap, keyspaceHosts);
+
+    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<>();
+    for (Host host : keyspaceHosts) {
+      DrillbitEndpoint ep = endpointMap.get(host.getAddress().getHostName());
+      if (ep != null) {
+        EndpointAffinity affinity = affinityMap.get(ep);
+        if (affinity == null) {
+          affinityMap.put(ep, new EndpointAffinity(ep, 1));
+        } else {
+          affinity.addAffinity(1);
+        }
+      }
+    }
+
+    logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS) / 1000);
+
+    if (null == affinityMap || affinityMap.size() == 0) {
+      logger.debug("Affinity map is empty for CassandraGroupScan {}:{}", storagePluginConfig.getHosts(), storagePluginConfig.getPort());
+    }
+    return Lists.newArrayList(affinityMap.values());
+  }
+
+
+  @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
+    watch.reset();
+    watch.start();
+
     final int numSlots = incomingEndpoints.size();
 
     Preconditions.checkArgument(numSlots <= totalAssignmentsTobeDone, String.format("Incoming endpoints %d is greater than number of chunks %d", numSlots, totalAssignmentsTobeDone));
@@ -415,7 +293,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
       if (endpointIndexlist != null) {
         Integer slotIndex = endpointIndexlist.poll();
         List<CassandraSubScanSpec> endpointSlotScanList = endpointFragmentMapping.get(slotIndex);
-        endpointSlotScanList.add(hostToSubScanSpec(hostEntry, config.getHosts()));
+        endpointSlotScanList.add(hostToSubScanSpec(hostEntry, storagePluginConfig.getHosts()));
         // add to the tail of the slot list, to add more later in round robin fashion
         endpointIndexlist.offer(slotIndex);
         // this region has been assigned
@@ -442,7 +320,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
     if (hostsToAssignSet.size() > 0) {
       for (Host hostEntry : hostsToAssignSet) {
         List<CassandraSubScanSpec> smallestList = minHeap.poll();
-        smallestList.add(hostToSubScanSpec(hostEntry, config.getHosts()));
+        smallestList.add(hostToSubScanSpec(hostEntry, storagePluginConfig.getHosts()));
         if (smallestList.size() < maxPerEndpointSlot) {
           minHeap.offer(smallestList);
         }
@@ -476,12 +354,12 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
     assert (minHeap.peek() == null || minHeap.peek().size() > 0) :
       String.format("Unable to assign tasks to some endpoints.\nEndpoints: {}.\nAssignment Map: {}.", incomingEndpoints, endpointFragmentMapping.toString());
 
-    logger.debug("Built assignment map.\nEndpoints: {}.\nAssignment Map: {}", incomingEndpoints, endpointFragmentMapping.toString());
+    logger.debug("Built assignment map in {} µs.\nEndpoints: {}.\nAssignment Map: {}", watch.elapsed(TimeUnit.NANOSECONDS) / 1000, incomingEndpoints, endpointFragmentMapping.toString());
 
   }
 
   public CassandraSubScanSpec hostToSubScanSpec(Host host, List<String> contactPoints) {
-    CassandraScanSpec spec = scanSpec;
+    CassandraScanSpec spec = cassandraScanSpec;
     CassandraPartitionToken token = hostTokenMapping.get(host.getEndPoint().resolve().getHostName());
 
     return new CassandraSubScanSpec()
@@ -490,7 +368,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
       .setFilter(spec.getFilters())
       .setHosts(contactPoints)
       .setCluster(cluster)
-      .setPort(config.getPort())
+      .setPort(storagePluginConfig.getPort())
       .setStartToken(token != null ? token.getLow() : null)
       .setEndToken(token != null ? token.getHigh() : null);
   }
@@ -498,6 +376,152 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
   @Override
   public CassandraSubScan getSpecificScan(int minorFragmentId) {
     assert minorFragmentId < endpointFragmentMapping.size() : String.format("Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(), minorFragmentId);
-    return new CassandraSubScan(storagePlugin, config, endpointFragmentMapping.get(minorFragmentId), columns, maxRecords, cluster, session);
+    return new CassandraSubScan(storagePlugin, storagePluginConfig, endpointFragmentMapping.get(minorFragmentId), columns, maxResults, cluster, session);
   }
+
+  @Override
+  public int getMaxParallelizationWidth() {
+    if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
+      cluster = CassandraConnectionManager.getCluster(storagePluginConfig);
+    } else {
+      cluster = storagePlugin.getCluster();
+    }
+    return cluster.getMetadata().getAllHosts().size();
+  }
+
+  @JsonIgnore
+  public boolean hasFilters() {
+    return filters != null;
+  }
+
+  @Override
+  public ScanStats getScanStats() {
+    // TODO Add limit to scan stats
+
+    if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
+      cluster = CassandraConnectionManager.getCluster(storagePluginConfig);
+      session = cluster.connect();
+    } else {
+      cluster = storagePlugin.getCluster();
+      session = storagePlugin.getSession();
+    }
+
+    // Get the number of columns in the keyspace
+    int numColumns = cluster
+      .getMetadata()
+      .getKeyspace(cassandraScanSpec.getKeyspace())
+      .getTable(cassandraScanSpec.getTable())
+      .getColumns()
+      .size();
+
+    // Guess on the per record size in bytes
+    int ESTIMATED_DATA_SIZE = 18700;
+
+    long estimatedRowCount = 100000;
+
+    // If filters are applied, reduce the cost by half
+    if (cassandraScanSpec.getFilters() != null) {
+      estimatedRowCount = (long) (estimatedRowCount * 0.5);
+    }
+
+    double diskCost = ESTIMATED_DATA_SIZE * numColumns * estimatedRowCount;
+    return new ScanStats(ScanStats.GroupScanProperty.NO_EXACT_ROW_COUNT, estimatedRowCount, 1, diskCost);
+  }
+
+  @Override
+  @JsonIgnore
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
+    Preconditions.checkArgument(children.isEmpty());
+    return new CassandraGroupScan(this);
+  }
+
+  @JsonIgnore
+  public CassandraStoragePlugin getStoragePlugin() {
+    return storagePlugin;
+  }
+
+  @JsonIgnore
+  public String getTableName() {
+    return getCassandraScanSpec().getTable();
+  }
+
+  @Override
+  public String getDigest() {
+    return toString();
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("CassandraScanSpec", cassandraScanSpec)
+      .field("columns", columns)
+      .field("maxResults", maxResults)
+      .toString();
+  }
+
+  @JsonProperty("storage")
+  public CassandraStoragePluginConfig getStorageConfig() {
+    return this.storagePluginConfig;
+  }
+
+  @JsonProperty
+  public List<SchemaPath> getColumns() {
+    return columns;
+  }
+
+  @JsonProperty
+  public CassandraScanSpec getCassandraScanSpec() {
+    return cassandraScanSpec;
+  }
+
+  @JsonProperty("maxResults")
+  public int getMaxResults() {
+    return maxResults;
+  }
+
+  @Override
+  public boolean supportsLimitPushdown() {
+    return true;
+  }
+
+
+  // TODO Fix this... This will result in infinite looping
+  @Override
+  public GroupScan applyLimit(int maxResults) {
+    this.maxResults = maxResults;
+    return null;
+  }
+
+  @Override
+  @JsonIgnore
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return true;
+  }
+
+  @JsonIgnore
+  public void setFilterPushedDown(boolean b) {
+    this.filterPushedDown = true;
+  }
+
+  @JsonIgnore
+  public boolean isFilterPushedDown() {
+    return filterPushedDown;
+  }
+
+  /**
+   * Empty constructor, do not use, only for testing.
+   */
+  @VisibleForTesting
+  public CassandraGroupScan() {
+    super((String) null);
+  }
+
+  /**
+   * Do not use, only for testing.
+   */
+  @VisibleForTesting
+  public void setCassandraScanSpec(CassandraScanSpec cassandraScanSpec) {
+    this.cassandraScanSpec = cassandraScanSpec;
+  }
+
 }

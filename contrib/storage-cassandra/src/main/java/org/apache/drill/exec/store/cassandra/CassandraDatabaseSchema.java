@@ -56,7 +56,7 @@ public class CassandraDatabaseSchema extends AbstractSchema {
     if (table != null) {
       return table;
     } else {
-      return registerTable(tableName, new DynamicDrillTable(plugin, pluginName, new CassandraScanSpec(keyspaceName, tableName)));
+      return registerTable(tableName, new DynamicDrillTable(plugin, pluginName, new CassandraScanSpec(keyspaceName, tableName, plugin.getConfig())));
     }
   }
 

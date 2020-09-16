@@ -185,7 +185,7 @@ public class DrillCassandraSchemaFactory extends AbstractSchemaFactory {
     }
 
     DrillTable getDrillTable(String dbName, String tableName) {
-      CassandraScanSpec cassandraScanSpec = new CassandraScanSpec(dbName, tableName);
+      CassandraScanSpec cassandraScanSpec = new CassandraScanSpec(dbName, tableName, plugin.getConfig());
       return new DynamicDrillTable(plugin, schemaName, cassandraScanSpec);
     }
 

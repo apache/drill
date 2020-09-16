@@ -17,35 +17,32 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
-import java.io.IOException;
-import java.util.Set;
-
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
-import org.apache.drill.exec.ops.OptimizerRulesContext;
-import org.apache.drill.exec.planner.PlannerPhase;
-import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
+import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.drill.exec.store.base.filter.FilterPushDownUtils;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+
+import java.io.IOException;
+import java.util.Set;
 
 public class CassandraStoragePlugin extends AbstractStoragePlugin {
 
   private final DrillbitContext context;
-
   private final CassandraStoragePluginConfig cassandraConfig;
-
   private final DrillCassandraSchemaFactory schemaFactory;
-
   private final Cluster cluster;
-
   private final Session session;
 
   public CassandraStoragePlugin(CassandraStoragePluginConfig cassandraConfig, DrillbitContext context, String name) {
@@ -82,13 +79,20 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
     CassandraScanSpec cassandraScanSpec = selection.getListWith(context.getLpPersistence().getMapper(), new TypeReference<CassandraScanSpec>() {});
-    return new CassandraGroupScan(userName, this, cassandraScanSpec, null);
+    return new CassandraGroupScan(userName, this, cassandraScanSpec, null, -1);
   }
 
-  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext, PlannerPhase phase) {
-
-    // TODO Fix this...  Do the push down at the correct phase
-    return ImmutableSet.of(CassandraPushDownFilterForScan.INSTANCE);
+  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
+    // Push-down planning is done at the logical phase so it can
+    // influence parallelization in the physical phase. Note that many
+    // existing plugins perform filter push-down at the physical
+    // phase, which also works fine if push-down is independent of
+    // parallelization.
+    if (FilterPushDownUtils.isFilterPushDownPhase(phase)) {
+      return CassandraPushDownListener.rulesFor(optimizerContext);
+    } else {
+      return ImmutableSet.of();
+    }
   }
 
   public Cluster getCluster() {
