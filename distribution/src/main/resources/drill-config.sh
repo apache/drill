@@ -141,7 +141,7 @@ function checkExecutableLineCount() {
   #Not valid file
   if [ ! -f "$1" ]; then echo $lineCount; return; fi
   # Filtering out commented and empty lines
-  let lineCount=`cat $1 | grep -v '#' | grep -v ^$ | wc -l`
+  let "lineCount=`cat $1 | grep -v '#' | grep -v ^$ | wc -l`"
   echo $lineCount
   return
 }
