@@ -27,6 +27,7 @@ import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.nio.channels.FileChannel;
 
 import org.apache.drill.common.HistoricalLog;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
@@ -457,7 +458,23 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
+  public ByteBuf touch(){
+    return this;
+  }
+
+  @Override
+  public ByteBuf touch(Object hint){
+    return this;
+  }
+
+  @Override
   public long getLong(int index) {
+    chk(index, 8);
+    return PlatformDependent.getLong(addr(index));
+  }
+
+  @Override
+  public long getLongLE(int index) {
     chk(index, 8);
     return PlatformDependent.getLong(addr(index));
   }
@@ -483,14 +500,30 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
+  public long getUnsignedIntLE(int index) {
+    return getIntLE(index) & 0xFFFFFFFFL;
+  }
+
+  @Override
   public int getInt(int index) {
     chk(index, 4);
     return PlatformDependent.getInt(addr(index));
   }
 
   @Override
+  public int getIntLE(int index) {
+    chk(index, 4);
+    return (PlatformDependent.getInt(addr(index)));
+  }
+
+  @Override
   public int getUnsignedShort(int index) {
     return getShort(index) & 0xFFFF;
+  }
+
+  @Override
+  public int getUnsignedShortLE(int index) {
+    return (getShortLE(index) & 0xFFFF);
   }
 
   @Override
@@ -500,7 +533,21 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
+  public short getShortLE(int index) {
+    chk(index, 2);
+    return (PlatformDependent.getShort(addr(index)));
+  }
+
+
+  @Override
   public ByteBuf setShort(int index, int value) {
+    chk(index, 2);
+    PlatformDependent.putShort(addr(index), (short) value);
+    return this;
+  }
+
+  @Override
+  public ByteBuf setShortLE(int index, int value) {
     chk(index, 2);
     PlatformDependent.putShort(addr(index), (short) value);
     return this;
@@ -514,9 +561,23 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
+  public ByteBuf setIntLE(int index, int value) {
+    chk(index, 4);
+    PlatformDependent.putInt(addr(index), (value));
+    return this;
+  }
+
+  @Override
   public ByteBuf setLong(int index, long value) {
     chk(index, 8);
     PlatformDependent.putLong(addr(index), value);
+    return this;
+  }
+
+  @Override
+  public ByteBuf setLongLE(int index, long value) {
+    chk(index, 8);
+    PlatformDependent.putLong(addr(index), (value));
     return this;
   }
 
@@ -550,6 +611,14 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
+  public ByteBuf writeShortLE(int value) {
+    BoundsChecking.ensureWritable(this, 2);
+    PlatformDependent.putShort(addr(writerIndex), ((short) value));
+    writerIndex += 2;
+    return this;
+  }
+
+  @Override
   public ByteBuf writeInt(int value) {
     BoundsChecking.ensureWritable(this, 4);
     PlatformDependent.putInt(addr(writerIndex), value);
@@ -561,6 +630,14 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   public ByteBuf writeLong(long value) {
     BoundsChecking.ensureWritable(this, 8);
     PlatformDependent.putLong(addr(writerIndex), value);
+    writerIndex += 8;
+    return this;
+  }
+
+  @Override
+  public ByteBuf writeLongLE(long value) {
+    BoundsChecking.ensureWritable(this, 8);
+    PlatformDependent.putLong(addr(writerIndex), (value));
     writerIndex += 8;
     return this;
   }
@@ -629,13 +706,28 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
+  protected short _getShortLE(int index) {
+    return getShortLE(index);
+  }
+
+  @Override
   protected int _getInt(int index) {
     return getInt(index);
   }
 
   @Override
+  protected int _getIntLE(int index) {
+    return getIntLE(index);
+  }
+
+  @Override
   protected long _getLong(int index) {
     return getLong(index);
+  }
+
+  @Override
+  protected long _getLongLE(int index) {
+    return getLongLE(index);
   }
 
   @Override
@@ -649,8 +741,18 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
+  protected void _setShortLE(int index, int value) {
+    setShortLE(index, value);
+  }
+
+  @Override
   protected void _setMedium(int index, int value) {
     setMedium(index, value);
+  }
+
+  @Override
+  protected void _setMediumLE(int index, int value) {
+    setMediumLE(index, value);
   }
 
   @Override
@@ -659,8 +761,18 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
+  protected void _setIntLE(int index, int value) {
+    setIntLE(index, value);
+  }
+
+  @Override
   protected void _setLong(int index, long value) {
     setLong(index, value);
+  }
+
+  @Override
+  protected void _setLongLE(int index, long value) {
+    setLongLE(index, value);
   }
 
   @Override
@@ -697,8 +809,21 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
+  protected int _getUnsignedMediumLE(int index) {
+    final long addr = addr(index);
+    return ((PlatformDependent.getByte(addr) & 0xff)) << 16 |
+        ((PlatformDependent.getByte(addr + 1) & 0xff)) << 8 |
+        ((PlatformDependent.getByte(addr + 2) & 0xff));
+  }
+
+  @Override
   public int getBytes(int index, GatheringByteChannel out, int length) throws IOException {
     return udle.getBytes(index + offset, out, length);
+  }
+
+  @Override
+  public int getBytes(int index, FileChannel out, long position, int length) throws IOException {
+    return udle.getBytes(index + offset, out, position, length);
   }
 
   @Override
@@ -746,6 +871,11 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   @Override
   public int setBytes(int index, ScatteringByteChannel in, int length) throws IOException {
     return udle.setBytes(index + offset, in, length);
+  }
+
+  @Override
+  public int setBytes(int index, FileChannel in, long position, int length) throws IOException {
+    return udle.setBytes(index + offset, in, position, length);
   }
 
   @Override

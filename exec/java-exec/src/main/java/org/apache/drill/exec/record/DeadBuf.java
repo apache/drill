@@ -19,8 +19,9 @@ package org.apache.drill.exec.record;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.ByteBufProcessor;
+import io.netty.util.ByteProcessor;
 import io.netty.buffer.DrillBuf;
+import java.nio.channels.FileChannel;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -222,7 +223,17 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public short getShortLE(int index) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
   public int getUnsignedShort(int index) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public int getUnsignedShortLE(int index) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
 
@@ -232,7 +243,17 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public int getMediumLE(int index) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
   public int getUnsignedMedium(int index) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public int getUnsignedMediumLE(int index) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
 
@@ -242,12 +263,27 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public int getIntLE(int index) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
   public long getUnsignedInt(int index) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
 
   @Override
+  public long getUnsignedIntLE(int index) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
   public long getLong(int index) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public long getLongLE(int index) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
 
@@ -278,6 +314,11 @@ public class DeadBuf extends ByteBuf {
 
   @Override
   public ByteBuf getBytes(int index, ByteBuf dst, int dstIndex, int length) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public int getBytes(int index, FileChannel out, long position, int length) throws IOException {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
 
@@ -322,7 +363,17 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public ByteBuf setShortLE(int index, int value) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
   public ByteBuf setMedium(int index, int value) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public ByteBuf setMediumLE(int index, int value) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
 
@@ -332,7 +383,17 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public ByteBuf setIntLE(int index, int value) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
   public ByteBuf setLong(int index, long value) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public ByteBuf setLongLE(int index, long value) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
 
@@ -362,6 +423,16 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public boolean isReadOnly() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public ByteBuf asReadOnly() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
   public ByteBuf setBytes(int index, ByteBuf src, int srcIndex, int length) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
@@ -373,6 +444,11 @@ public class DeadBuf extends ByteBuf {
 
   @Override
   public ByteBuf setBytes(int index, byte[] src, int srcIndex, int length) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public int setBytes(int index, FileChannel in, long position, int length) throws IOException {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
 
@@ -422,7 +498,31 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public short readShortLE() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
+  public int setCharSequence(int index, CharSequence sequence, Charset charset) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
+  public CharSequence getCharSequence(int index, int length, Charset charset) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
   public int readUnsignedShort() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
+  public int readUnsignedShortLE() {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
@@ -434,7 +534,19 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public int readMediumLE() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
   public int readUnsignedMedium() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
+  public int readUnsignedMediumLE() {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
@@ -446,7 +558,19 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public int   readIntLE() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
   public long readUnsignedInt() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
+  public  long  readUnsignedIntLE() {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
@@ -458,7 +582,19 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public long  readLongLE() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
   public char readChar() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
+  public CharSequence readCharSequence(int length, Charset charset) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
@@ -477,6 +613,12 @@ public class DeadBuf extends ByteBuf {
 
   @Override
   public ByteBuf readBytes(int length) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
+  public int readBytes(FileChannel out, long position, int length) throws IOException {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
@@ -560,7 +702,18 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public ByteBuf writeShortLE(int value) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+  @Override
   public ByteBuf writeMedium(int value) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
+  public ByteBuf writeMediumLE(int value) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
@@ -572,7 +725,18 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public  ByteBuf writeIntLE(int value) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+  @Override
   public ByteBuf writeLong(long value) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
+  public  ByteBuf writeLongLE(long value) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
@@ -644,6 +808,12 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
+  public int writeBytes(FileChannel in, long position, int length) throws IOException {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
   public ByteBuf writeZero(int length) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
@@ -691,6 +861,12 @@ public class DeadBuf extends ByteBuf {
   @Override
   public ByteBuf slice() {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
+
+  }
+
+  @Override
+  public  ByteBuf readRetainedSlice(int length) {
+      throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
 
@@ -793,33 +969,48 @@ public class DeadBuf extends ByteBuf {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
 
+  @Override
+  public ByteBuf retainedDuplicate() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public ByteBuf retainedSlice() {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public ByteBuf retainedSlice(int index, int length) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
 
   @Override
   public boolean equals(Object arg0) {
     return false;
   }
 
-
   @Override
-  public int forEachByte(ByteBufProcessor arg0) {
+  public int forEachByte(ByteProcessor arg0) {
     return 0;
   }
 
-
   @Override
-  public int forEachByte(int arg0, int arg1, ByteBufProcessor arg2) {
+  public int forEachByte(int arg0, int arg1, ByteProcessor arg2) {
     return 0;
   }
 
-
   @Override
-  public int forEachByteDesc(ByteBufProcessor arg0) {
+  public int forEachByteDesc(ByteProcessor arg0) {
     return 0;
   }
 
+  @Override
+  public int writeCharSequence(CharSequence sequence, Charset charset) {
+    return 0;
+  }
 
   @Override
-  public int forEachByteDesc(int arg0, int arg1, ByteBufProcessor arg2) {
+  public int forEachByteDesc(int arg0, int arg1, ByteProcessor arg2) {
     return 0;
   }
 
@@ -841,5 +1032,14 @@ public class DeadBuf extends ByteBuf {
     return null;
   }
 
+  @Override
+  public ByteBuf touch(){
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public ByteBuf touch(Object hint){
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
 
 }

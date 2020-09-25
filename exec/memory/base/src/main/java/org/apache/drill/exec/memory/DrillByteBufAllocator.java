@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.memory;
 
+import io.netty.buffer.AbstractByteBufAllocator;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.ExpandableByteBuf;
 
@@ -28,7 +28,7 @@ import io.netty.buffer.ExpandableByteBuf;
  * the signature and the fact that this Allocator returns ExpandableByteBufs which enable otherwise non-expandable
  * DrillBufs to be expandable.
  */
-public class DrillByteBufAllocator implements ByteBufAllocator {
+public class DrillByteBufAllocator extends AbstractByteBufAllocator {
 
   private static final int DEFAULT_BUFFER_SIZE = 4096;
   private static final int DEFAULT_MAX_COMPOSITE_COMPONENTS = 16;
@@ -121,6 +121,16 @@ public class DrillByteBufAllocator implements ByteBufAllocator {
 
   @Override
   public ByteBuf heapBuffer(int initialCapacity, int maxCapacity) {
+    throw fail();
+  }
+
+  @Override
+  protected ByteBuf newHeapBuffer(int initialCapacity, int maxCapacity) {
+    throw fail();
+  }
+
+  @Override
+  protected ByteBuf newDirectBuffer(int initialCapacity, int maxCapacity) {
     throw fail();
   }
 
