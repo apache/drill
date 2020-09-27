@@ -1,7 +1,7 @@
 {
-  "display_version": "1.17",
-  "full_version": "1.17.0",
-  "release_date": "December 26, 2019",
-  "blog_post":"/blog/2019/12/26/drill-1.17-released",
-  "release_notes": "https://drill.apache.org/docs/apache-drill-1-17-0-release-notes/"
+  "display_version": "1.18",
+  "full_version": "1.18.0",
+  "release_date": "September 05, 2020",
+  "blog_post":"/blog/2020/09/05/drill-1.18-released",
+  "release_notes": "https://drill.apache.org/docs/apache-drill-1-18-0-release-notes/"
 }

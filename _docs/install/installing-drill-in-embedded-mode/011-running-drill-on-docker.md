@@ -1,6 +1,6 @@
 ---
 title: "Running Drill on Docker"
-date: 2019-12-26
+date: 2020-09-05
 parent: "Installing Drill in Embedded Mode"
 ---  
 
@@ -34,11 +34,11 @@ Whether you run the Docker container in detached or foreground mode, you start D
 
 Open a terminal window (Command Prompt or PowerShell, but not PowerShell ISE) and then issue the following command and options to connect to SQLLine (the Drill shell):   
 
-       docker run -i --name drill-1.17.0 -p 8047:8047 -t apache/drill:1.17.0 /bin/bash
+       docker run -i --name drill-1.18.0 -p 8047:8047 -t apache/drill:1.18.0 /bin/bash
 
 When you issue the docker run command, the Drill process starts in a container. SQLLine prints a message, and the prompt appears:  
 
-       Apache Drill 1.17.0
+       Apache Drill 1.18.0
        "json ain't no thang"
        apache drill>
 
@@ -52,17 +52,17 @@ Open a terminal window (Command Prompt or PowerShell, but not PowerShell ISE) an
 
 **Note:** When you run the Drill Docker container in detached mode, you connect to SQLLine (the Drill shell) using drill-localhost.  
 
-       $ docker run -i --name drill-1.17.0 -p 8047:8047 --detach -t apache/drill:1.17.0 /bin/bash
+       $ docker run -i --name drill-1.18.0 -p 8047:8047 --detach -t apache/drill:1.18.0 /bin/bash
        <displays container ID>
 
-       $ docker exec -it drill-1.17.0 bash
+       $ docker exec -it drill-1.18.0 bash
        <connects to container>
 
        $ /opt/drill/bin/drill-localhost  
 
 After you issue the commands, the Drill process starts in a container. SQLLine prints a message, and the prompt appears:  
 
-       Apache Drill 1.17.0
+       Apache Drill 1.18.0
        "json ain't no thang"
        apache drill>
 
@@ -87,9 +87,4 @@ To query files outside of the container, you can configure [Docker volumes](http
 ## Drill Web UI  
 
 You can access the Drill web UI at `http://localhost:8047` when the Drill Docker container is running. On Windows, you may need to specify the IP address of your system instead of using "localhost".
-
-
-
-
-
 
