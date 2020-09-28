@@ -11,13 +11,13 @@ the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments.   
 
 ## What's New in Apache Drill 1.18
-* <a href='https://issues.apache.org/jira/browse/DRILL-6552'>DRILL-6552</a> -         Drill Metadata management "Drill Metastore"
-* <a href='https://issues.apache.org/jira/browse/DRILL-7233'>DRILL-7233</a> -         Format Plugin for HDF5
-* <a href='https://issues.apache.org/jira/browse/DRILL-7359'>DRILL-7359</a> -         Add support for DICT type in RowSet Framework
-* <a href='https://issues.apache.org/jira/browse/DRILL-7437'>DRILL-7437</a> -         Storage Plugin for Generic HTTP REST API
-* <a href='https://issues.apache.org/jira/browse/DRILL-7607'>DRILL-7607</a> -         Dynamic credit based flow control
-* <a href='https://issues.apache.org/jira/browse/DRILL-7656'>DRILL-7656</a> -         Support injecting BufferManager into UDF
-* <a href='https://issues.apache.org/jira/browse/DRILL-7706'>DRILL-7706</a> -         Drill RDBMS Metastore
+* <a href='https://issues.apache.org/jira/browse/DRILL-6552'>DRILL-6552</a> - Drill Metadata management "Drill Metastore"
+* <a href='https://issues.apache.org/jira/browse/DRILL-7233'>DRILL-7233</a> - Format Plugin for HDF5
+* <a href='https://issues.apache.org/jira/browse/DRILL-7359'>DRILL-7359</a> - Add support for DICT type in RowSet Framework
+* <a href='https://issues.apache.org/jira/browse/DRILL-7437'>DRILL-7437</a> - Storage Plugin for Generic HTTP REST API
+* <a href='https://issues.apache.org/jira/browse/DRILL-7607'>DRILL-7607</a> - Dynamic credit based flow control
+* <a href='https://issues.apache.org/jira/browse/DRILL-7656'>DRILL-7656</a> - Support injecting BufferManager into UDF
+* <a href='https://issues.apache.org/jira/browse/DRILL-7706'>DRILL-7706</a> - Drill RDBMS Metastore
 
 ## What's New in Apache Drill 1.17  
 * <a href='https://issues.apache.org/jira/browse/DRILL-6540'>DRILL-6540</a> - Upgrade to HADOOP-3.0 libraries. The hadoop-winutils version that worked for previous releases does not work with Drill 1.17 and later. Use the hadoop-winutils version provided with Drill 1.17 or use custom hadoop-winutils built for Hadoop 3.2.0.  
