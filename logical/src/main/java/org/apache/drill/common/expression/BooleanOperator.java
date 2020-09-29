@@ -24,20 +24,20 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 
-public class BooleanOperator extends FunctionCall{
+public class BooleanOperator extends FunctionCall {
 
   public BooleanOperator(String name, List<LogicalExpression> args, ExpressionPosition pos) {
     super(name, args, pos);
   }
 
   @Override
-  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E{
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
     return visitor.visitBooleanOperator(this, value);
   }
 
   @Override
   public MajorType getMajorType() {
-    // If any of argumgnet of a boolean "and"/"or" is nullable, the result is nullable bit.
+    // If any of argument of a boolean "and"/"or" is nullable, the result is nullable bit.
     // Otherwise, it's non-nullable bit.
     for (LogicalExpression e : args) {
       if (e.getMajorType().getMode() == DataMode.OPTIONAL) {
@@ -45,7 +45,6 @@ public class BooleanOperator extends FunctionCall{
       }
     }
     return Types.REQUIRED_BIT;
-
   }
 
   @Override
@@ -61,5 +60,4 @@ public class BooleanOperator extends FunctionCall{
 
     return cost / i;
   }
-
 }

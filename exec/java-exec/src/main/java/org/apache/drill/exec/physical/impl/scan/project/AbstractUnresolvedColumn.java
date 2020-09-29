@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.scan.project;
 
-import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
+import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 
 /**
@@ -32,7 +32,6 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
  * null column builder, etc.) to the output batch. Thus the columns
  * here are placeholders to be rewritten once more data is available.
  */
-
 public abstract class AbstractUnresolvedColumn implements ColumnProjection {
 
   /**
@@ -40,7 +39,6 @@ public abstract class AbstractUnresolvedColumn implements ColumnProjection {
    * reader (or filled in with nulls.) May be associated with
    * a provided schema column.
    */
-
   public static class UnresolvedColumn extends AbstractUnresolvedColumn {
 
     private final ColumnMetadata colDefn;
@@ -72,7 +70,6 @@ public abstract class AbstractUnresolvedColumn implements ColumnProjection {
    * maps. In some cases, multiple output columns map map the to the
    * same "input" (to the projection process) column.
    */
-
   protected final RequestedColumn inCol;
 
   public AbstractUnresolvedColumn(RequestedColumn inCol) {

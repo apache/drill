@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
         boost::asio::ip::tcp::resolver::query query(argv[1], argv[2]);
         boost::asio::ip::tcp::resolver::iterator iterator = resolver.resolve(query);
 
-        boost::asio::ssl::context ctx(io_service, boost::asio::ssl::context::sslv23);
+        boost::asio::ssl::context ctx(boost::asio::ssl::context::sslv23);
         ctx.set_verify_mode(boost::asio::ssl::context::verify_peer);
         ctx.load_verify_file("../../../test/ssl/drillTestCert.pem");
 

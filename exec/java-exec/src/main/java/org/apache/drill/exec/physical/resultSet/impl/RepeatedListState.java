@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.resultSet.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetFactory;
 import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 import org.apache.drill.exec.physical.resultSet.impl.ColumnState.BaseContainerColumnState;
 import org.apache.drill.exec.physical.resultSet.impl.SingleVectorState.OffsetVectorState;
@@ -42,13 +41,11 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * implements. At the vector level, we track the repeated list vector, but
  * only perform operations on its associated offset vector.
  */
-
 public class RepeatedListState extends ContainerState implements RepeatedListWriter.ArrayListener {
 
   /**
    * Repeated list column state.
    */
-
   public static class RepeatedListColumnState extends BaseContainerColumnState {
 
     private final RepeatedListState listState;
@@ -79,7 +76,6 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
    * offset vector. The child column state manages the repeated list content
    * (which may be complex: another repeated list, a map, a union, etc.)
    */
-
   public static class RepeatedListVectorState implements VectorState {
 
     private final ArrayWriter arrayWriter;
@@ -102,7 +98,6 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
      * @param childWriter child array writer for the inner dimension
      * of the repeated list
      */
-
     public void updateChildWriter(AbstractObjectWriter childWriter) {
       offsetsState.setChildWriter(childWriter.events());
     }
@@ -157,7 +152,7 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
 
   public RepeatedListState(LoaderInternals loader,
       ResultVectorCache vectorCache) {
-    super(loader, vectorCache, ProjectionSetFactory.projectAll());
+    super(loader, vectorCache, ProjectionFilter.PROJECT_ALL);
   }
 
   @Override
@@ -169,18 +164,15 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
   protected void addColumn(ColumnState colState) {
 
     // Remember the one and only child column.
-
     assert childState == null;
     childState = colState;
 
     // Add the new child schema to the existing repeated list
     // schema.
-
     ((RepeatedListColumnMetadata) parentColumn.schema()).childSchema(colState.schema());
 
     // Add the child vector to the existing repeated list
     // vector.
-
     final RepeatedListVectorState vectorState = (RepeatedListVectorState) parentColumn.vectorState();
     final RepeatedListVector listVector = vectorState.vector;
     listVector.setChildVector(childState.vector());
@@ -188,7 +180,6 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
     // The repeated list's offset vector state needs to know the offset
     // of the inner vector. Bind that information now that we have
     // an inner writer.
-
     vectorState.updateChildWriter(childState.writer());
   }
 
@@ -197,7 +188,6 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
 
     // Turn the one and only child into a list of children for
     // the general container mechanism.
-
     if (childState == null) {
       return new ArrayList<>();
     } else {
@@ -214,12 +204,10 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
    * and 2) given that background, the additional work of versioning is
    * not worth the effort.
    */
-
   @Override
   protected boolean isVersioned() { return false; }
 
   // Callback from the repeated list vector to add the child.
-
   @Override
   public AbstractObjectWriter setChild(ArrayWriter array,
       ColumnMetadata columnSchema) {
@@ -229,7 +217,6 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
   }
 
   // Callback from the repeated list vector to add the child.
-
   @Override
   public AbstractObjectWriter setChild(ArrayWriter array,
       MaterializedField field) {

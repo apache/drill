@@ -145,7 +145,7 @@ public class RecordBatchSizer {
     /**
      * Child columns if this is a map column.
      */
-    private Map<String, ColumnSize> children = CaseInsensitiveMap.newHashMap();
+    private final Map<String, ColumnSize> children = CaseInsensitiveMap.newHashMap();
 
     /**
      * Returns true if there is an accurate std size. Otherwise it returns false.
@@ -249,6 +249,7 @@ public class RecordBatchSizer {
           case VARDECIMAL:
             stdNetSize = 4 + 8;
             break;
+          default:
         }
       } catch (Exception e) {
         stdNetSize = 0;
@@ -638,17 +639,17 @@ public class RecordBatchSizer {
 
   // This keeps information for only top level columns. Information for nested
   // columns can be obtained from children of topColumns.
-  private Map<String, ColumnSize> columnSizes = new QuoteInsensitiveMap(CaseInsensitiveMap.newHashMap());
+  private final Map<String, ColumnSize> columnSizes = new QuoteInsensitiveMap(CaseInsensitiveMap.newHashMap());
 
   /**
    * This field is used by the convenience method {@link #columnsList()}.
    */
-  private List<ColumnSize> columnSizesList = new ArrayList<>();
+  private final List<ColumnSize> columnSizesList = new ArrayList<>();
 
   /**
    * Number of records (rows) in the batch.
    */
-  private int rowCount;
+  private final int rowCount;
   /**
    * Actual batch size summing all buffers used to store data
    * for the batch.
@@ -677,7 +678,7 @@ public class RecordBatchSizer {
 
   private int avgDensity;
 
-  private Set<BufferLedger> ledgers = Sets.newIdentityHashSet();
+  private final Set<BufferLedger> ledgers = Sets.newIdentityHashSet();
 
   private long netBatchSize;
 
@@ -963,7 +964,7 @@ public class RecordBatchSizer {
   }
 
   public void allocateVectors(VectorContainer container, int recordCount) {
-    for (VectorWrapper w : container) {
+    for (VectorWrapper<?> w : container) {
       ColumnSize colSize = columnSizes.get(w.getField().getName());
       colSize.allocateVector(w.getValueVector(), recordCount);
     }

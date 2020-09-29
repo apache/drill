@@ -27,6 +27,7 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -38,7 +39,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.sig.MappingSet;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -65,14 +65,13 @@ import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 
 import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 
 /**
- * A join operator merges two sorted streams using record iterator.
+ * A join operator that merges two sorted streams using a record iterator.
  */
 public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
 
@@ -106,9 +105,6 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
   private final List<Comparator> comparators;
   private final JoinRelType joinType;
   private JoinWorker worker;
-
-  private static final String LEFT_INPUT = "LEFT INPUT";
-  private static final String RIGHT_INPUT = "RIGHT INPUT";
 
   private class MergeJoinMemoryManager extends JoinBatchMemoryManager {
 
@@ -205,8 +201,10 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
         case FAILURE:
           status.left.clearInflightBatches();
           status.right.clearInflightBatches();
-          kill(false);
-          return IterOutcome.STOP;
+          // Should handle at the source of the error to provide a better error message.
+          throw UserException.executionError(null)
+              .message("Merge failed")
+              .build(logger);
         case WAITING:
           return IterOutcome.NOT_YET;
         default:
@@ -218,12 +216,8 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
         try {
           logger.debug("Creating New Worker");
           stats.startSetup();
-          this.worker = generateNewWorker();
+          worker = generateNewWorker();
           first = true;
-        } catch (ClassTransformationException | IOException | SchemaChangeException e) {
-          context.getExecutorState().fail(new SchemaChangeException(e));
-          kill(false);
-          return IterOutcome.STOP;
         } finally {
           stats.stopSetup();
         }
@@ -244,8 +238,10 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
         case FAILURE:
           status.left.clearInflightBatches();
           status.right.clearInflightBatches();
-          kill(false);
-          return IterOutcome.STOP;
+          // Should handle at the source of the error to provide a better error message.
+          throw UserException.executionError(null)
+              .message("Merge failed")
+              .build(logger);
         case NO_MORE_DATA:
           logger.debug("NO MORE DATA; returning {}",
             (status.getOutPosition() > 0 ? (first ? "OK_NEW_SCHEMA" : "OK") : (first ? "OK_NEW_SCHEMA" : "NONE")));
@@ -305,13 +301,7 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
     rightIterator.close();
   }
 
-  @Override
-  protected void killIncoming(boolean sendUpstream) {
-    left.kill(sendUpstream);
-    right.kill(sendUpstream);
-  }
-
-  private JoinWorker generateNewWorker() throws ClassTransformationException, IOException, SchemaChangeException {
+  private JoinWorker generateNewWorker() {
     final ClassGenerator<JoinWorker> cg = CodeGenerator.getRoot(JoinWorker.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
     // cg.getCodeGenerator().saveCodeForDebugging(true);
@@ -434,7 +424,11 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
     }
 
     JoinWorker w = context.getImplementationClass(cg);
-    w.setupJoin(context, status, this.container);
+    try {
+      w.setupJoin(context, status, this.container);
+    } catch (SchemaChangeException e) {
+      throw schemaChangeException(e, logger);
+    }
     return w;
   }
 
@@ -496,8 +490,9 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
   }
 
   private void generateDoCompare(ClassGenerator<JoinWorker> cg, JVar incomingRecordBatch,
-                                 LogicalExpression[] leftExpression, JVar incomingLeftRecordBatch, LogicalExpression[] rightExpression,
-                                 JVar incomingRightRecordBatch, ErrorCollector collector) throws ClassTransformationException {
+                                 LogicalExpression[] leftExpression, JVar incomingLeftRecordBatch,
+                                 LogicalExpression[] rightExpression,
+                                 JVar incomingRightRecordBatch, ErrorCollector collector) {
 
     cg.setMappingSet(compareMapping);
     if (status.getRightStatus() != IterOutcome.NONE) {
@@ -539,18 +534,15 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
   }
 
   private LogicalExpression materializeExpression(LogicalExpression expression, IterOutcome lastStatus,
-                                                  VectorAccessible input, ErrorCollector collector) throws ClassTransformationException {
+                                                  VectorAccessible input, ErrorCollector collector) {
     LogicalExpression materializedExpr;
     if (lastStatus != IterOutcome.NONE) {
-      materializedExpr = ExpressionTreeMaterializer.materialize(expression, input, collector, context.getFunctionRegistry(), unionTypeEnabled);
+      materializedExpr = ExpressionTreeMaterializer.materialize(expression, input,
+          collector, context.getFunctionRegistry(), unionTypeEnabled);
     } else {
       materializedExpr = new TypedNullConstant(Types.optional(MinorType.INT));
     }
-    if (collector.hasErrors()) {
-      throw new ClassTransformationException(String.format(
-        "Failure while trying to materialize incoming field from %s batch.  Errors:\n %s.",
-        (input == leftIterator ? LEFT_INPUT : RIGHT_INPUT), collector.toErrorString()));
-    }
+    collector.reportErrors(logger);
     return materializedExpr;
   }
 

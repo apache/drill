@@ -18,57 +18,54 @@
 package org.apache.drill.common.expression;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class FunctionCallFactory {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionCallFactory.class);
 
-  private static Map<String, String> opToFuncTable = new HashMap<>();
+  private static final Map<String, String> OP_TO_FUNC_NAME = ImmutableMap.<String, String>builder()
+      .put("+",   FunctionNames.ADD)
+      .put("-",   FunctionNames.SUBTRACT)
+      .put("/",   FunctionNames.DIVIDE)
+      .put("*",   FunctionNames.MULTIPLY)
+      .put("%",   FunctionNames.MODULO)
+      .put("^",   FunctionNames.XOR)
+      .put("||",  FunctionNames.CONCAT)
+      .put("or",  FunctionNames.OR)
+      .put("and", FunctionNames.AND)
+      .put(">",   FunctionNames.GT)
+      .put("<",   FunctionNames.LT)
+      .put("==",  FunctionNames.EQ)
+      .put("=",   FunctionNames.EQ)
+      .put("!=",  FunctionNames.NE)
+      .put("<>",  FunctionNames.NE)
+      .put(">=",  FunctionNames.GE)
+      .put("<=",  FunctionNames.LE)
+      .put("is null", FunctionNames.IS_NULL)
+      .put("is not null", FunctionNames.IS_NOT_NULL)
+      .put("is true", FunctionNames.IS_TRUE)
+      .put("is not true", FunctionNames.IS_NOT_TRUE)
+      .put("is false", FunctionNames.IS_FALSE)
+      .put("is not false", FunctionNames.IS_NOT_FALSE)
+      .put("similar to", FunctionNames.SIMILAR_TO)
+      .put("!",   FunctionNames.NOT)
+      .put("u-",  FunctionNames.NEGATE)
+      .build();
 
-  static {
-    opToFuncTable.put("+", "add");
-    opToFuncTable.put("-", "subtract");
-    opToFuncTable.put("/", "divide");
-    opToFuncTable.put("*", "multiply");
-    opToFuncTable.put("%", "modulo");
-    opToFuncTable.put("^", "xor");
-    opToFuncTable.put("||", "concatOperator");
-    opToFuncTable.put("or", "booleanOr");
-    opToFuncTable.put("and", "booleanAnd");
-    opToFuncTable.put(">", "greater_than");
-    opToFuncTable.put("<", "less_than");
-    opToFuncTable.put("==", "equal");
-    opToFuncTable.put("=", "equal");
-    opToFuncTable.put("!=", "not_equal");
-    opToFuncTable.put("<>", "not_equal");
-    opToFuncTable.put(">=", "greater_than_or_equal_to");
-    opToFuncTable.put("<=", "less_than_or_equal_to");
-    opToFuncTable.put("is null", "isnull");
-    opToFuncTable.put("is not null", "isnotnull");
-    opToFuncTable.put("is true", "istrue");
-    opToFuncTable.put("is not true", "isnottrue");
-    opToFuncTable.put("is false", "isfalse");
-    opToFuncTable.put("is not false", "isnotfalse");
-    opToFuncTable.put("similar to", "similar_to");
-
-    opToFuncTable.put("!", "not");
-    opToFuncTable.put("u-", "negative");
-  }
-
-  public static String replaceOpWithFuncName(String op) {
-    return (opToFuncTable.containsKey(op)) ? (opToFuncTable.get(op)) : op;
+  public static String convertToDrillFunctionName(String op) {
+    return OP_TO_FUNC_NAME.getOrDefault(op, op);
   }
 
   public static boolean isBooleanOperator(String funcName) {
-    String opName  = replaceOpWithFuncName(funcName);
-    return opName.equals("booleanAnd") || opName.equals("booleanOr");
+    String drillFuncName  = convertToDrillFunctionName(funcName);
+    return drillFuncName.equals(FunctionNames.AND) || drillFuncName.equals(FunctionNames.OR);
   }
 
   /*
@@ -98,7 +95,7 @@ public class FunctionCallFactory {
   }
 
   public static LogicalExpression createExpression(String functionName, ExpressionPosition ep, List<LogicalExpression> args){
-    String name = replaceOpWithFuncName(functionName);
+    String name = convertToDrillFunctionName(functionName);
     if (isBooleanOperator(name)) {
       return new BooleanOperator(name, args, ep);
     } else {
@@ -115,7 +112,7 @@ public class FunctionCallFactory {
   }
 
   public static LogicalExpression createBooleanOperator(String functionName, ExpressionPosition ep, List<LogicalExpression> args){
-    return new BooleanOperator(replaceOpWithFuncName(functionName), args, ep);
+    return new BooleanOperator(convertToDrillFunctionName(functionName), args, ep);
   }
 
   public static LogicalExpression createByOp(List<LogicalExpression> args, ExpressionPosition ep, List<String> opTypes) {
@@ -136,5 +133,4 @@ public class FunctionCallFactory {
     }
     return first;
   }
-
 }

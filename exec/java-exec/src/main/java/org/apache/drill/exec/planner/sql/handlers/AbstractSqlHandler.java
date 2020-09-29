@@ -24,13 +24,16 @@ import org.apache.calcite.tools.ValidationException;
 
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.calcite.sql.SqlNode;
 
 public abstract class AbstractSqlHandler {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSqlHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(AbstractSqlHandler.class);
 
   public abstract PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException;
 
+  @SuppressWarnings("unchecked")
   public static <T> T unwrap(Object o, Class<T> clazz) throws ForemanSetupException {
     if (clazz.isAssignableFrom(o.getClass())) {
       return (T) o;

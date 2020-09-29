@@ -23,6 +23,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
@@ -32,14 +33,15 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 import org.apache.drill.exec.util.FileSystemUtil;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.Metastore;
+import org.apache.drill.metastore.components.tables.BasicTablesRequests;
 import org.apache.drill.metastore.components.tables.BasicTablesTransformer;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.metadata.BaseTableMetadata;
 import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.apache.drill.metastore.metadata.MetadataType;
-import org.apache.drill.metastore.metadata.TableInfo;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -48,6 +50,7 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM;
@@ -232,7 +235,6 @@ public interface RecordCollector {
     private static final Logger logger = getLogger(MetastoreRecordCollector.class);
 
     public static final int UNDEFINED_INDEX = -1;
-    public static final String SCHEMA = "schema";
 
     private final Metastore metastore;
     private final FilterEvaluator filterEvaluator;
@@ -261,8 +263,8 @@ public interface RecordCollector {
         try {
           baseTableMetadata = metastore.tables().basicRequests()
             .tablesMetadata(FilterExpression.and(
-              FilterExpression.equal(TableInfo.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
-              FilterExpression.equal(TableInfo.WORKSPACE, drillSchema.getSchemaPath().get(1))));
+              FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
+              FilterExpression.equal(MetastoreColumn.WORKSPACE, drillSchema.getSchemaPath().get(1))));
         } catch (Exception e) {
           // ignore all exceptions related to Metastore data retrieval, return empty result
           logger.warn("Error while retrieving Metastore table data: {}", e.getMessage());
@@ -292,10 +294,10 @@ public interface RecordCollector {
         try {
           baseTableMetadata = metastore.tables().basicRequests()
             .tablesMetadata(FilterExpression.and(
-              FilterExpression.equal(TableInfo.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
-              FilterExpression.equal(TableInfo.WORKSPACE, drillSchema.getSchemaPath().get(1)),
+              FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
+              FilterExpression.equal(MetastoreColumn.WORKSPACE, drillSchema.getSchemaPath().get(1)),
               // exclude tables without schema
-              FilterExpression.isNotNull(SCHEMA)));
+              FilterExpression.isNotNull(MetastoreColumn.SCHEMA)));
         } catch (Exception e) {
           // ignore all exceptions related to Metastore data retrieval, return empty result
           logger.warn("Error while retrieving Metastore table data: {}", e.getMessage());
@@ -318,7 +320,7 @@ public interface RecordCollector {
      * @param schemaPath schema name
      * @param table table instance
      * @param schema table or column schema
-     * @param parentColumnName parent column name if any
+     * @param parentColumnNames list of parent column names if any
      * @param columnIndex column index if any
      * @param isNested indicates if column is nested
      * @return list of column records
@@ -326,28 +328,31 @@ public interface RecordCollector {
     private List<Records.Column> columns(String schemaPath,
                                          BaseTableMetadata table,
                                          TupleMetadata schema,
-                                         String parentColumnName,
+                                         List<String> parentColumnNames,
                                          int columnIndex,
                                          boolean isNested) {
       List<Records.Column> records = new ArrayList<>();
       schema.toMetadataList().forEach(
         column -> {
-          // concat parent column name to use full column name, i.e. struct_col.nested_col
-          String columnName = parentColumnName == null ? column.name() : parentColumnName + "." + column.name();
+          List<String> columnNames = CollectionUtils.isEmpty(parentColumnNames) ? new ArrayList<>() : new ArrayList<>(parentColumnNames);
+          columnNames.add(column.name());
           // nested columns have the same index as their parent
           int currentIndex = columnIndex == UNDEFINED_INDEX ? schema.index(column.name()) : columnIndex;
           // if column is a map / struct, recursively scan nested columns
           if (column.isMap()) {
             List<Records.Column> mapRecords =
-              columns(schemaPath, table, column.mapSchema(), columnName, currentIndex, true);
+              columns(schemaPath, table, column.tupleSchema(), columnNames, currentIndex, true);
             records.addAll(mapRecords);
           }
 
           String tableName = table.getTableInfo().name();
-          if (filterEvaluator.shouldVisitColumn(schemaPath, tableName, columnName)) {
+
+          // concat parent column names to use full column name, i.e. struct_col.nested_col
+          String columnPath = String.join(".", columnNames);
+          if (filterEvaluator.shouldVisitColumn(schemaPath, tableName, columnPath)) {
             ColumnStatistics<?> columnStatistics =
-              table.getColumnStatistics(SchemaPath.parseFromString(columnName));
-            records.add(new Records.Column(IS_CATALOG_NAME, schemaPath, tableName, columnName,
+              table.getColumnStatistics(SchemaPath.getCompoundPath(columnNames.toArray(new String[0])));
+            records.add(new Records.Column(IS_CATALOG_NAME, schemaPath, tableName, columnPath,
               column, columnStatistics, currentIndex, isNested));
           }
         });
@@ -362,15 +367,16 @@ public interface RecordCollector {
 
         BasicTablesTransformer.MetadataHolder metadataHolder;
         try {
-          List<TableMetadataUnit> units = metastore.tables().read()
-            .filter(FilterExpression.and(
-              FilterExpression.equal(TableInfo.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
-              FilterExpression.equal(TableInfo.WORKSPACE, drillSchema.getSchemaPath().get(1)),
-              // include SEGMENT and PARTITION data only
-              FilterExpression.in(MetadataInfo.METADATA_TYPE, MetadataType.SEGMENT.name(), MetadataType.PARTITION.name()),
+          BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
+            .metadataTypes(MetadataType.SEGMENT, MetadataType.PARTITION)
+            .customFilter(FilterExpression.and(
+              FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
+              FilterExpression.equal(MetastoreColumn.WORKSPACE, drillSchema.getSchemaPath().get(1)),
               // exclude DEFAULT_SEGMENT (used only for non-partitioned tables)
-              FilterExpression.notEqual(MetadataInfo.METADATA_KEY, MetadataInfo.DEFAULT_SEGMENT_KEY)))
-            .execute();
+              FilterExpression.notEqual(MetastoreColumn.METADATA_KEY, MetadataInfo.DEFAULT_SEGMENT_KEY)))
+            .build();
+
+          List<TableMetadataUnit> units = metastore.tables().basicRequests().request(requestMetadata);
 
           metadataHolder = BasicTablesTransformer.all(units);
         } catch (Exception e) {
@@ -382,11 +388,13 @@ public interface RecordCollector {
 
         metadataHolder.segments().stream()
           .filter(segment -> filterEvaluator.shouldVisitTable(schemaPath, segment.getTableInfo().name(), Schema.TableType.TABLE))
+          .filter(segmentMetadata -> Objects.nonNull(segmentMetadata.getPartitionValues()))
           .map(segment -> Records.Partition.fromSegment(IS_CATALOG_NAME, schemaPath, segment))
           .forEach(records::addAll);
 
         metadataHolder.partitions().stream()
           .filter(partition -> filterEvaluator.shouldVisitTable(schemaPath, partition.getTableInfo().name(), Schema.TableType.TABLE))
+          .filter(partitionMetadata -> Objects.nonNull(partitionMetadata.getPartitionValues()))
           .map(partition -> Records.Partition.fromPartition(IS_CATALOG_NAME, schemaPath, partition))
           .forEach(records::addAll);
       }

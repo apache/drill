@@ -132,6 +132,14 @@ public class TupleBuilder implements SchemaContainer {
     return new MapBuilder(parent, name, DataMode.REPEATED);
   }
 
+  public DictBuilder addDict(SchemaContainer parent, String name) {
+    return new DictBuilder(parent, name, DataMode.REQUIRED);
+  }
+
+  public DictBuilder addDictArray(SchemaContainer parent, String name) {
+    return new DictBuilder(parent, name, DataMode.REPEATED);
+  }
+
   public UnionBuilder addUnion(SchemaContainer parent, String name) {
     return new UnionBuilder(parent, name, MinorType.UNION);
   }

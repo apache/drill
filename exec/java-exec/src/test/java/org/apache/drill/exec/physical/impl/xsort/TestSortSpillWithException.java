@@ -42,7 +42,8 @@ import org.junit.experimental.categories.Category;
 /**
  * Testing External Sort's spilling to disk.
  * <br>
- * This class changes the following Drill property to force external sort to spill after the 2nd batch:
+ * This class changes the following Drill property to force
+ * external sort to spill after the 2nd batch:
  * {@link ExecConstants#EXTERNAL_SORT_SPILL_THRESHOLD} = 1
  * <br>
  * {@link ExecConstants#EXTERNAL_SORT_SPILL_GROUP_SIZE} = 1
@@ -67,37 +68,12 @@ public class TestSortSpillWithException extends ClusterTest {
         .sessionOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 60 * 1024 * 1024) // Spill early
         // Prevent the percent-based memory rule from second-guessing the above.
         .sessionOption(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.0)
-        .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, false)
         .maxParallelization(1);
     startCluster(builder);
   }
 
   @Test
-  public void testSpillLeakLegacy() throws Exception {
-    client.alterSession(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION.getOptionName(), true);
-    // inject exception in sort while spilling
-    final String controls = Controls.newBuilder()
-      .addExceptionOnBit(
-          ExternalSortBatch.class,
-          ExternalSortBatch.INTERRUPTION_WHILE_SPILLING,
-          IOException.class,
-          cluster.drillbit().getContext().getEndpoint())
-      .build();
-    ControlsInjectionUtil.setControls(cluster.client(), controls);
-    // run a simple order by query
-    try {
-      runAndLog("select employee_id from dfs.`xsort/2batches` order by employee_id");
-      fail("Query should have failed!");
-    } catch (UserRemoteException e) {
-      assertEquals(ErrorType.RESOURCE, e.getErrorType());
-      assertTrue("Incorrect error message",
-        e.getMessage().contains("External Sort encountered an error while spilling to disk"));
-    }
-  }
-
-  @Test
   public void testSpillLeakManaged() throws Exception {
-    client.alterSession(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION.getOptionName(), false);
     // inject exception in sort while spilling
     final String controls = Controls.newBuilder()
       .addExceptionOnBit(

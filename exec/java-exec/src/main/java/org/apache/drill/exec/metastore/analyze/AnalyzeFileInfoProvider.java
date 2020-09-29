@@ -64,6 +64,7 @@ public abstract class AnalyzeFileInfoProvider implements AnalyzeInfoProvider {
     List<SchemaPath> projectionList = new ArrayList<>(getSegmentColumns(table, columnNamesOptions));
     projectionList.add(SchemaPath.getSimplePath(columnNamesOptions.fullyQualifiedName()));
     projectionList.add(SchemaPath.getSimplePath(columnNamesOptions.lastModifiedTime()));
+    projectionList.add(SchemaPath.getSimplePath(columnNamesOptions.projectMetadataColumn()));
     return Collections.unmodifiableList(projectionList);
   }
 

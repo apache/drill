@@ -31,14 +31,19 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Class PathInExpr is to recursively analyze a expression trees with a map of indexed expression collected from indexDescriptor,
- * e.g. Map 'cast(a.q as int)' -> '$0' means the expression 'cast(a.q as int)' is named as '$0' in index table.
- *
- * for project expressions: cast(a.q as int), a.q, b + c, PathInExpr will get remainderPath {a.q, b, c}, which is
- * helpful to determine if q query is covering. remainderPathsInFunction will be {a.q}, which will be used to
- * decide if the {a.q} in scan column and project rowtype should be removed or not.
- *
- * This class could be more generic to support any expression, for now it works for only 'cast(schemapath as type)'.
+ * Class PathInExpr is to recursively analyze a expression trees with a map of
+ * indexed expression collected from indexDescriptor, e.g. Map 'cast(a.q as
+ * int)' -> '$0' means the expression 'cast(a.q as int)' is named as '$0' in
+ * index table.
+ * <p>
+ * for project expressions: cast(a.q as int), a.q, b + c, PathInExpr will get
+ * remainderPath {a.q, b, c}, which is helpful to determine if q query is
+ * covering. remainderPathsInFunction will be {a.q}, which will be used to
+ * decide if the {a.q} in scan column and project rowtype should be removed or
+ * not.
+ * <p>
+ * This class could be more generic to support any expression, for now it works
+ * for only 'cast(schemapath as type)'.
  */
 public class PathInExpr extends AbstractExprVisitor<Boolean,Void,RuntimeException> {
 
@@ -46,13 +51,13 @@ public class PathInExpr extends AbstractExprVisitor<Boolean,Void,RuntimeExceptio
   final private Map<LogicalExpression, Set<SchemaPath>> pathsInExpr;
 
   //collection of paths in all functional indexes
-  private Set<SchemaPath> allPaths;
+  private final Set<SchemaPath> allPaths;
 
   //the paths were found out of functional index expressions in query.
-  private Set<LogicalExpression> remainderPaths;
+  private final Set<LogicalExpression> remainderPaths;
 
   //the paths in functional index fields but were found out of index functions expression in query
-  private Set<LogicalExpression> remainderPathsInFunctions;
+  private final Set<LogicalExpression> remainderPathsInFunctions;
 
   //constructor is provided a map of all functional expressions to the paths involved in  the expressions.
   public PathInExpr(Map<LogicalExpression, Set<SchemaPath>> pathsInExpr) {
@@ -88,7 +93,7 @@ public class PathInExpr extends AbstractExprVisitor<Boolean,Void,RuntimeExceptio
     }
 
     boolean bret = true;
-    for (LogicalExpression arg : call.args) {
+    for (LogicalExpression arg : call.args()) {
       bret &= arg.accept(this, null);
       if(bret == false) {
         break;
@@ -109,6 +114,7 @@ public class PathInExpr extends AbstractExprVisitor<Boolean,Void,RuntimeExceptio
     return null;
   }
 
+  @Override
   public Boolean visitCastExpression(CastExpression castExpr, Void value) throws RuntimeException {
     if (preProcess(castExpr)) {
       //when it is true, we know this is exactly the indexed expression, no more deep search

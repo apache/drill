@@ -34,10 +34,12 @@ import org.junit.Test;
 
 import io.netty.buffer.DrillBuf;
 import org.junit.experimental.categories.Category;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Category(VectorTest.class)
 public class TestFillEmpties extends SubOperatorTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestFillEmpties.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestFillEmpties.class);
 
   @Test
   public void testNullableVarChar() {
@@ -208,5 +210,4 @@ public class TestFillEmpties extends SubOperatorTest {
     }
     return value;
   }
-
 }

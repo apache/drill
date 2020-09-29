@@ -17,18 +17,16 @@
  */
 package org.apache.drill.exec.work.filter;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.function.CheckedFunction;
+import org.apache.drill.exec.exception.ClassTransformationException;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.impl.ValueVectorHashHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.FragmentContextImpl;
-import org.apache.drill.exec.proto.BitControl;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -36,26 +34,23 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.test.BaseTest;
+import org.apache.drill.test.SubOperatorTest;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.IOException;
 import java.util.Iterator;
 
-public class BloomFilterTest extends BaseTest {
-  public static DrillConfig c = DrillConfig.create();
+public class BloomFilterTest extends SubOperatorTest {
 
-  class TestRecordBatch implements RecordBatch {
+  private static class TestRecordBatch implements RecordBatch {
     private final VectorContainer container;
 
     public TestRecordBatch(VectorContainer container) {
       this.container = container;
-
     }
 
     @Override
@@ -84,8 +79,7 @@ public class BloomFilterTest extends BaseTest {
     }
 
     @Override
-    public void kill(boolean sendUpstream) {
-
+    public void cancel() {
     }
 
     @Override
@@ -124,223 +118,113 @@ public class BloomFilterTest extends BaseTest {
     }
 
     @Override
-    public void dump() {
-    }
-
-    @Override
-    public boolean hasFailed() {
-      return false;
-    }
+    public void dump() { }
   }
-
 
   @Test
   public void testNotExist() throws Exception {
-    Drillbit bit = new Drillbit(c, RemoteServiceSet.getLocalServiceSet(), ClassPathScanner.fromPrescan(c));
-    bit.run();
-    DrillbitContext bitContext = bit.getContext();
-    FunctionImplementationRegistry registry = bitContext.getFunctionImplementationRegistry();
-    FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), null, registry);
-    BufferAllocator bufferAllocator = bitContext.getAllocator();
-    //create RecordBatch
-    VarCharVector vector = new VarCharVector(SchemaBuilder.columnSchema("a", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.REQUIRED), bufferAllocator);
-    vector.allocateNew();
-    int valueCount = 3;
-    VarCharVector.Mutator mutator = vector.getMutator();
-    mutator.setSafe(0, "a".getBytes());
-    mutator.setSafe(1, "b".getBytes());
-    mutator.setSafe(2, "c".getBytes());
-    mutator.setValueCount(valueCount);
-    VectorContainer vectorContainer = new VectorContainer();
-    TypedFieldId fieldId = vectorContainer.add(vector);
-    RecordBatch recordBatch = new TestRecordBatch(vectorContainer);
-    //construct hash64
-    ValueVectorReadExpression exp = new ValueVectorReadExpression(fieldId);
-    LogicalExpression[] expressions = new LogicalExpression[1];
-    expressions[0] = exp;
-    TypedFieldId[] fieldIds = new TypedFieldId[1];
-    fieldIds[0] = fieldId;
-    ValueVectorHashHelper valueVectorHashHelper = new ValueVectorHashHelper(recordBatch, context);
-    ValueVectorHashHelper.Hash64 hash64 = valueVectorHashHelper.getHash64(expressions, fieldIds);
+    RowSet.SingleRowSet probeRowSet = fixture.rowSetBuilder(getTestSchema())
+        .addRow("f")
+        .build();
 
-    //construct BloomFilter
-    int numBytes = BloomFilter.optimalNumOfBytes(3, 0.03);
-
-    BloomFilter bloomFilter = new BloomFilter(numBytes, bufferAllocator);
-    for (int i = 0; i < valueCount; i++) {
-      long hashCode = hash64.hash64Code(i, 0, 0);
-      bloomFilter.insert(hashCode);
-    }
-
-    //-----------------create probe side RecordBatch---------------------
-    VarCharVector probeVector = new VarCharVector(SchemaBuilder.columnSchema("a", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.REQUIRED), bufferAllocator);
-    probeVector.allocateNew();
-    int probeValueCount = 1;
-    VarCharVector.Mutator mutator1 = probeVector.getMutator();
-    mutator1.setSafe(0, "f".getBytes());
-    mutator1.setValueCount(probeValueCount);
-    VectorContainer probeVectorContainer = new VectorContainer();
-    TypedFieldId probeFieldId = probeVectorContainer.add(probeVector);
-    RecordBatch probeRecordBatch = new TestRecordBatch(probeVectorContainer);
-    ValueVectorReadExpression probExp = new ValueVectorReadExpression(probeFieldId);
-    LogicalExpression[] probExpressions = new LogicalExpression[1];
-    probExpressions[0] = probExp;
-    TypedFieldId[] probeFieldIds = new TypedFieldId[1];
-    probeFieldIds[0] = probeFieldId;
-    ValueVectorHashHelper probeValueVectorHashHelper = new ValueVectorHashHelper(probeRecordBatch, context);
-    ValueVectorHashHelper.Hash64 probeHash64 = probeValueVectorHashHelper.getHash64(probExpressions, probeFieldIds);
-    long hashCode = probeHash64.hash64Code(0, 0, 0);
-    boolean contain = bloomFilter.find(hashCode);
-    Assert.assertFalse(contain);
-    bloomFilter.getContent().close();
-    vectorContainer.clear();
-    probeVectorContainer.clear();
-    context.close();
-    bitContext.close();
-    bit.close();
+    checkBloomFilterResult(probeRowSet, BloomFilterTest::getSimpleBloomFilter, false);
   }
-
 
   @Test
   public void testExist() throws Exception {
+    RowSet.SingleRowSet probeRowSet = fixture.rowSetBuilder(getTestSchema())
+        .addRow("a")
+        .build();
 
-    Drillbit bit = new Drillbit(c, RemoteServiceSet.getLocalServiceSet(), ClassPathScanner.fromPrescan(c));
-    bit.run();
-    DrillbitContext bitContext = bit.getContext();
-    FunctionImplementationRegistry registry = bitContext.getFunctionImplementationRegistry();
-    FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), null, registry);
-    BufferAllocator bufferAllocator = bitContext.getAllocator();
-    //create RecordBatch
-    VarCharVector vector = new VarCharVector(SchemaBuilder.columnSchema("a", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.REQUIRED), bufferAllocator);
-    vector.allocateNew();
-    int valueCount = 3;
-    VarCharVector.Mutator mutator = vector.getMutator();
-    mutator.setSafe(0, "a".getBytes());
-    mutator.setSafe(1, "b".getBytes());
-    mutator.setSafe(2, "c".getBytes());
-    mutator.setValueCount(valueCount);
-    VectorContainer vectorContainer = new VectorContainer();
-    TypedFieldId fieldId = vectorContainer.add(vector);
-    RecordBatch recordBatch = new TestRecordBatch(vectorContainer);
-    //construct hash64
-    ValueVectorReadExpression exp = new ValueVectorReadExpression(fieldId);
-    LogicalExpression[] expressions = new LogicalExpression[1];
-    expressions[0] = exp;
-    TypedFieldId[] fieldIds = new TypedFieldId[1];
-    fieldIds[0] = fieldId;
-    ValueVectorHashHelper valueVectorHashHelper = new ValueVectorHashHelper(recordBatch, context);
-    ValueVectorHashHelper.Hash64 hash64 = valueVectorHashHelper.getHash64(expressions, fieldIds);
-
-    //construct BloomFilter
-    int numBytes = BloomFilter.optimalNumOfBytes(3, 0.03);
-
-    BloomFilter bloomFilter = new BloomFilter(numBytes, bufferAllocator);
-    for (int i = 0; i < valueCount; i++) {
-      long hashCode = hash64.hash64Code(i, 0, 0);
-      bloomFilter.insert(hashCode);
-    }
-
-    //-----------------create probe side RecordBatch---------------------
-    VarCharVector probeVector = new VarCharVector(SchemaBuilder.columnSchema("a", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.REQUIRED), bufferAllocator);
-    probeVector.allocateNew();
-    int probeValueCount = 1;
-    VarCharVector.Mutator mutator1 = probeVector.getMutator();
-    mutator1.setSafe(0, "a".getBytes());
-    mutator1.setValueCount(probeValueCount);
-    VectorContainer probeVectorContainer = new VectorContainer();
-    TypedFieldId probeFieldId = probeVectorContainer.add(probeVector);
-    RecordBatch probeRecordBatch = new TestRecordBatch(probeVectorContainer);
-    ValueVectorReadExpression probExp = new ValueVectorReadExpression(probeFieldId);
-    LogicalExpression[] probExpressions = new LogicalExpression[1];
-    probExpressions[0] = probExp;
-    TypedFieldId[] probeFieldIds = new TypedFieldId[1];
-    probeFieldIds[0] = probeFieldId;
-    ValueVectorHashHelper probeValueVectorHashHelper = new ValueVectorHashHelper(probeRecordBatch, context);
-    ValueVectorHashHelper.Hash64 probeHash64 = probeValueVectorHashHelper.getHash64(probExpressions, probeFieldIds);
-    long hashCode = probeHash64.hash64Code(0, 0, 0);
-    boolean contain = bloomFilter.find(hashCode);
-    Assert.assertTrue(contain);
-    bloomFilter.getContent().close();
-    vectorContainer.clear();
-    probeVectorContainer.clear();
-    context.close();
-    bitContext.close();
-    bit.close();
+    checkBloomFilterResult(probeRowSet, BloomFilterTest::getSimpleBloomFilter, true);
   }
-
 
   @Test
   public void testMerged() throws Exception {
+    RowSet.SingleRowSet probeRowSet = fixture.rowSetBuilder(getTestSchema())
+        .addRow("a")
+        .build();
 
-    Drillbit bit = new Drillbit(c, RemoteServiceSet.getLocalServiceSet(), ClassPathScanner.fromPrescan(c));
-    bit.run();
-    DrillbitContext bitContext = bit.getContext();
-    FunctionImplementationRegistry registry = bitContext.getFunctionImplementationRegistry();
-    FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), null, registry);
-    BufferAllocator bufferAllocator = bitContext.getAllocator();
-    //create RecordBatch
-    VarCharVector vector = new VarCharVector(SchemaBuilder.columnSchema("a", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.REQUIRED), bufferAllocator);
-    vector.allocateNew();
-    int valueCount = 3;
-    VarCharVector.Mutator mutator = vector.getMutator();
-    mutator.setSafe(0, "a".getBytes());
-    mutator.setSafe(1, "b".getBytes());
-    mutator.setSafe(2, "c".getBytes());
-    mutator.setValueCount(valueCount);
-    VectorContainer vectorContainer = new VectorContainer();
-    TypedFieldId fieldId = vectorContainer.add(vector);
-    RecordBatch recordBatch = new TestRecordBatch(vectorContainer);
-    //construct hash64
-    ValueVectorReadExpression exp = new ValueVectorReadExpression(fieldId);
-    LogicalExpression[] expressions = new LogicalExpression[1];
-    expressions[0] = exp;
-    TypedFieldId[] fieldIds = new TypedFieldId[1];
-    fieldIds[0] = fieldId;
-    ValueVectorHashHelper valueVectorHashHelper = new ValueVectorHashHelper(recordBatch, context);
-    ValueVectorHashHelper.Hash64 hash64 = valueVectorHashHelper.getHash64(expressions, fieldIds);
+    checkBloomFilterResult(probeRowSet, this::getDisjunctionBloomFilter, true);
+  }
 
-    //construct BloomFilter
+  private BloomFilter getDisjunctionBloomFilter(ValueVectorHashHelper.Hash64 hash64) throws SchemaChangeException {
     int numBytes = BloomFilter.optimalNumOfBytes(3, 0.03);
-
-    BloomFilter bloomFilter = new BloomFilter(numBytes, bufferAllocator);
+    BloomFilter bloomFilter = new BloomFilter(numBytes, fixture.allocator());
+    int valueCount = 3;
     for (int i = 0; i < valueCount; i++) {
       long hashCode = hash64.hash64Code(i, 0, 0);
       bloomFilter.insert(hashCode);
     }
 
-    BloomFilter bloomFilter1 = new BloomFilter(numBytes, bufferAllocator);
+    BloomFilter disjunctionBloomFilter = getSimpleBloomFilter(hash64);
+    disjunctionBloomFilter.or(bloomFilter);
+
+    bloomFilter.getContent().close();
+
+    return disjunctionBloomFilter;
+  }
+
+  private static BloomFilter getSimpleBloomFilter(ValueVectorHashHelper.Hash64 hash64) throws SchemaChangeException {
+    int numBytes = BloomFilter.optimalNumOfBytes(3, 0.03);
+
+    BloomFilter bloomFilter = new BloomFilter(numBytes, fixture.allocator());
+
+    int valueCount = 3;
     for (int i = 0; i < valueCount; i++) {
       long hashCode = hash64.hash64Code(i, 0, 0);
-      bloomFilter1.insert(hashCode);
+      bloomFilter.insert(hashCode);
     }
+    return bloomFilter;
+  }
 
-    bloomFilter.or(bloomFilter1);
+  private void checkBloomFilterResult(RowSet.SingleRowSet probeRowSet,
+      CheckedFunction<ValueVectorHashHelper.Hash64, BloomFilter, SchemaChangeException> bloomFilterProvider,
+      boolean matches) throws ClassTransformationException, IOException, SchemaChangeException {
+    try (FragmentContext context = fixture.getFragmentContext()) {
+      // create build side batch
+      RowSet.SingleRowSet batchRowSet = fixture.rowSetBuilder(getTestSchema())
+          .addRow("a")
+          .addRow("b")
+          .addRow("c")
+          .build();
 
-    //-----------------create probe side RecordBatch---------------------
-    VarCharVector probeVector = new VarCharVector(SchemaBuilder.columnSchema("a", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.REQUIRED), bufferAllocator);
-    probeVector.allocateNew();
-    int probeValueCount = 1;
-    VarCharVector.Mutator mutator1 = probeVector.getMutator();
-    mutator1.setSafe(0, "a".getBytes());
-    mutator1.setValueCount(probeValueCount);
-    VectorContainer probeVectorContainer = new VectorContainer();
-    TypedFieldId probeFieldId = probeVectorContainer.add(probeVector);
-    RecordBatch probeRecordBatch = new TestRecordBatch(probeVectorContainer);
+      // create build side Hash64
+      ValueVectorHashHelper.Hash64 hash64 = getHash64(context, batchRowSet);
+
+      // construct BloomFilter
+      BloomFilter bloomFilter = bloomFilterProvider.apply(hash64);
+
+      // create probe side Hash64
+      ValueVectorHashHelper.Hash64 probeHash64 = getHash64(context, probeRowSet);
+
+      long hashCode = probeHash64.hash64Code(0, 0, 0);
+
+      Assert.assertEquals(matches, bloomFilter.find(hashCode));
+
+      bloomFilter.getContent().close();
+      batchRowSet.clear();
+      probeRowSet.clear();
+    }
+  }
+
+  private static TupleMetadata getTestSchema() {
+    return new SchemaBuilder()
+        .add("a", TypeProtos.MinorType.VARCHAR)
+        .build();
+  }
+
+  private static ValueVectorHashHelper.Hash64 getHash64(FragmentContext context,
+      RowSet.SingleRowSet probeRowSet) throws ClassTransformationException, IOException, SchemaChangeException {
+
+    RecordBatch probeRecordBatch = new TestRecordBatch(probeRowSet.container());
+    TypedFieldId probeFieldId = probeRecordBatch.getValueVectorId(SchemaPath.getSimplePath("a"));
     ValueVectorReadExpression probExp = new ValueVectorReadExpression(probeFieldId);
     LogicalExpression[] probExpressions = new LogicalExpression[1];
     probExpressions[0] = probExp;
     TypedFieldId[] probeFieldIds = new TypedFieldId[1];
     probeFieldIds[0] = probeFieldId;
     ValueVectorHashHelper probeValueVectorHashHelper = new ValueVectorHashHelper(probeRecordBatch, context);
-    ValueVectorHashHelper.Hash64 probeHash64 = probeValueVectorHashHelper.getHash64(probExpressions, probeFieldIds);
-    long hashCode = probeHash64.hash64Code(0, 0, 0);
-    boolean contain = bloomFilter.find(hashCode);
-    Assert.assertTrue(contain);
-    bloomFilter.getContent().close();
-    vectorContainer.clear();
-    probeVectorContainer.clear();
-    context.close();
-    bitContext.close();
-    bit.close();
+    return probeValueVectorHashHelper.getHash64(probExpressions, probeFieldIds);
   }
 }

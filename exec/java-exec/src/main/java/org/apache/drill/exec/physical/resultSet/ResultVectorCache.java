@@ -30,7 +30,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 public interface ResultVectorCache {
   BufferAllocator allocator();
-  ValueVector addOrGet(MaterializedField colSchema);
+  ValueVector vectorFor(MaterializedField colSchema);
   MajorType getType(String name);
   boolean isPermissive();
   ResultVectorCache childCache(String colName);

@@ -61,7 +61,7 @@ public abstract class IcebergBaseTest extends BaseTest {
    * @param base Iceberg Metastore base path
    * @return {@link Config} instance
    */
-  protected static Config baseIcebergConfig(File base) {
+  public static Config baseIcebergConfig(File base) {
     return DrillConfig.create()
       .withValue(IcebergConfigConstants.BASE_PATH,
         ConfigValueFactory.fromAnyRef(new Path(base.toURI().getPath()).toUri().getPath()))

@@ -409,6 +409,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -416,6 +418,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static RpcType forNumber(int value) {
       switch (value) {
         case 0: return HANDSHAKE;
@@ -530,6 +536,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -537,6 +545,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static SaslSupport forNumber(int value) {
       switch (value) {
         case 0: return UNKNOWN_SASL_SUPPORT;
@@ -621,6 +633,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -628,6 +642,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static QueryResultsMode forNumber(int value) {
       switch (value) {
         case 1: return STREAM_FULL;
@@ -774,6 +792,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -781,6 +801,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static HandshakeStatus forNumber(int value) {
       switch (value) {
         case 1: return SUCCESS;
@@ -897,6 +921,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -904,6 +930,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static RequestStatus forNumber(int value) {
       switch (value) {
         case 0: return UNKNOWN_STATUS;
@@ -1049,6 +1079,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -1056,6 +1088,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static ColumnSearchability forNumber(int value) {
       switch (value) {
         case 0: return UNKNOWN_SEARCHABILITY;
@@ -1154,6 +1190,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -1161,6 +1199,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static ColumnUpdatability forNumber(int value) {
       switch (value) {
         case 0: return UNKNOWN_UPDATABILITY;
@@ -1261,6 +1303,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -1268,6 +1312,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static CollateSupport forNumber(int value) {
       switch (value) {
         case 0: return CS_UNKNOWN;
@@ -1383,6 +1431,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -1390,6 +1440,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static CorrelationNamesSupport forNumber(int value) {
       switch (value) {
         case 1: return CN_NONE;
@@ -1730,6 +1784,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -1737,6 +1793,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static DateTimeLiteralsSupport forNumber(int value) {
       switch (value) {
         case 0: return DL_UNKNOWN;
@@ -1885,6 +1945,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -1892,6 +1954,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static GroupBySupport forNumber(int value) {
       switch (value) {
         case 1: return GB_NONE;
@@ -2049,6 +2115,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -2056,6 +2124,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static IdentifierCasing forNumber(int value) {
       switch (value) {
         case 0: return IC_UNKNOWN;
@@ -2206,6 +2278,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -2213,6 +2287,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static NullCollation forNumber(int value) {
       switch (value) {
         case 0: return NC_UNKNOWN;
@@ -2331,6 +2409,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -2338,6 +2418,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static OrderBySupport forNumber(int value) {
       switch (value) {
         case 0: return OB_UNKNOWN;
@@ -2536,6 +2620,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -2543,6 +2629,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static OuterJoinSupport forNumber(int value) {
       switch (value) {
         case 0: return OJ_UNKNOWN;
@@ -2712,6 +2802,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -2719,6 +2811,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static SubQuerySupport forNumber(int value) {
       switch (value) {
         case 0: return SQ_UNKNOWN;
@@ -2838,6 +2934,8 @@ public final class UserProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -2845,6 +2943,10 @@ public final class UserProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static UnionSupport forNumber(int value) {
       switch (value) {
         case 0: return U_UNKNOWN;
@@ -2905,28 +3007,34 @@ public final class UserProtos {
 
     /**
      * <code>required string key = 1;</code>
+     * @return Whether the key field is set.
      */
     boolean hasKey();
     /**
      * <code>required string key = 1;</code>
+     * @return The key.
      */
     java.lang.String getKey();
     /**
      * <code>required string key = 1;</code>
+     * @return The bytes for key.
      */
     com.google.protobuf.ByteString
         getKeyBytes();
 
     /**
      * <code>required string value = 2;</code>
+     * @return Whether the value field is set.
      */
     boolean hasValue();
     /**
      * <code>required string value = 2;</code>
+     * @return The value.
      */
     java.lang.String getValue();
     /**
      * <code>required string value = 2;</code>
+     * @return The bytes for value.
      */
     com.google.protobuf.ByteString
         getValueBytes();
@@ -2946,6 +3054,13 @@ public final class UserProtos {
     private Property() {
       key_ = "";
       value_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Property();
     }
 
     @java.lang.Override
@@ -3021,12 +3136,14 @@ public final class UserProtos {
     private volatile java.lang.Object key_;
     /**
      * <code>required string key = 1;</code>
+     * @return Whether the key field is set.
      */
     public boolean hasKey() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required string key = 1;</code>
+     * @return The key.
      */
     public java.lang.String getKey() {
       java.lang.Object ref = key_;
@@ -3044,6 +3161,7 @@ public final class UserProtos {
     }
     /**
      * <code>required string key = 1;</code>
+     * @return The bytes for key.
      */
     public com.google.protobuf.ByteString
         getKeyBytes() {
@@ -3063,12 +3181,14 @@ public final class UserProtos {
     private volatile java.lang.Object value_;
     /**
      * <code>required string value = 2;</code>
+     * @return Whether the value field is set.
      */
     public boolean hasValue() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required string value = 2;</code>
+     * @return The value.
      */
     public java.lang.String getValue() {
       java.lang.Object ref = value_;
@@ -3086,6 +3206,7 @@ public final class UserProtos {
     }
     /**
      * <code>required string value = 2;</code>
+     * @return The bytes for value.
      */
     public com.google.protobuf.ByteString
         getValueBytes() {
@@ -3123,10 +3244,10 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, key_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, value_);
       }
       unknownFields.writeTo(output);
@@ -3138,10 +3259,10 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, key_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, value_);
       }
       size += unknownFields.getSerializedSize();
@@ -3159,19 +3280,18 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.Property other = (org.apache.drill.exec.proto.UserProtos.Property) obj;
 
-      boolean result = true;
-      result = result && (hasKey() == other.hasKey());
+      if (hasKey() != other.hasKey()) return false;
       if (hasKey()) {
-        result = result && getKey()
-            .equals(other.getKey());
+        if (!getKey()
+            .equals(other.getKey())) return false;
       }
-      result = result && (hasValue() == other.hasValue());
+      if (hasValue() != other.hasValue()) return false;
       if (hasValue()) {
-        result = result && getValue()
-            .equals(other.getValue());
+        if (!getValue()
+            .equals(other.getValue())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -3354,11 +3474,11 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.Property result = new org.apache.drill.exec.proto.UserProtos.Property(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.key_ = key_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.value_ = value_;
@@ -3369,35 +3489,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3460,12 +3580,14 @@ public final class UserProtos {
       private java.lang.Object key_ = "";
       /**
        * <code>required string key = 1;</code>
+       * @return Whether the key field is set.
        */
       public boolean hasKey() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required string key = 1;</code>
+       * @return The key.
        */
       public java.lang.String getKey() {
         java.lang.Object ref = key_;
@@ -3483,6 +3605,7 @@ public final class UserProtos {
       }
       /**
        * <code>required string key = 1;</code>
+       * @return The bytes for key.
        */
       public com.google.protobuf.ByteString
           getKeyBytes() {
@@ -3499,6 +3622,8 @@ public final class UserProtos {
       }
       /**
        * <code>required string key = 1;</code>
+       * @param value The key to set.
+       * @return This builder for chaining.
        */
       public Builder setKey(
           java.lang.String value) {
@@ -3512,6 +3637,7 @@ public final class UserProtos {
       }
       /**
        * <code>required string key = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearKey() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -3521,6 +3647,8 @@ public final class UserProtos {
       }
       /**
        * <code>required string key = 1;</code>
+       * @param value The bytes for key to set.
+       * @return This builder for chaining.
        */
       public Builder setKeyBytes(
           com.google.protobuf.ByteString value) {
@@ -3536,12 +3664,14 @@ public final class UserProtos {
       private java.lang.Object value_ = "";
       /**
        * <code>required string value = 2;</code>
+       * @return Whether the value field is set.
        */
       public boolean hasValue() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required string value = 2;</code>
+       * @return The value.
        */
       public java.lang.String getValue() {
         java.lang.Object ref = value_;
@@ -3559,6 +3689,7 @@ public final class UserProtos {
       }
       /**
        * <code>required string value = 2;</code>
+       * @return The bytes for value.
        */
       public com.google.protobuf.ByteString
           getValueBytes() {
@@ -3575,6 +3706,8 @@ public final class UserProtos {
       }
       /**
        * <code>required string value = 2;</code>
+       * @param value The value to set.
+       * @return This builder for chaining.
        */
       public Builder setValue(
           java.lang.String value) {
@@ -3588,6 +3721,7 @@ public final class UserProtos {
       }
       /**
        * <code>required string value = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearValue() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -3597,6 +3731,8 @@ public final class UserProtos {
       }
       /**
        * <code>required string value = 2;</code>
+       * @param value The bytes for value to set.
+       * @return This builder for chaining.
        */
       public Builder setValueBytes(
           com.google.protobuf.ByteString value) {
@@ -3706,6 +3842,13 @@ public final class UserProtos {
     }
 
     @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new UserProperties();
+    }
+
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
     getUnknownFields() {
       return this.unknownFields;
@@ -3730,7 +3873,7 @@ public final class UserProtos {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 properties_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.Property>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -3753,7 +3896,7 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           properties_ = java.util.Collections.unmodifiableList(properties_);
         }
         this.unknownFields = unknownFields.build();
@@ -3859,11 +4002,10 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.UserProperties other = (org.apache.drill.exec.proto.UserProtos.UserProperties) obj;
 
-      boolean result = true;
-      result = result && getPropertiesList()
-          .equals(other.getPropertiesList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getPropertiesList()
+          .equals(other.getPropertiesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -4045,7 +4187,7 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.UserProperties result = new org.apache.drill.exec.proto.UserProtos.UserProperties(this);
         int from_bitField0_ = bitField0_;
         if (propertiesBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             properties_ = java.util.Collections.unmodifiableList(properties_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -4059,35 +4201,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -4165,7 +4307,7 @@ public final class UserProtos {
       private java.util.List<org.apache.drill.exec.proto.UserProtos.Property> properties_ =
         java.util.Collections.emptyList();
       private void ensurePropertiesIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           properties_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.Property>(properties_);
           bitField0_ |= 0x00000001;
          }
@@ -4394,7 +4536,7 @@ public final class UserProtos {
           propertiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserProtos.Property, org.apache.drill.exec.proto.UserProtos.Property.Builder, org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder>(
                   properties_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           properties_ = null;
@@ -4464,6 +4606,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string name = 1;</code>
+     * @return Whether the name field is set.
      */
     boolean hasName();
     /**
@@ -4472,6 +4615,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string name = 1;</code>
+     * @return The name.
      */
     java.lang.String getName();
     /**
@@ -4480,6 +4624,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string name = 1;</code>
+     * @return The bytes for name.
      */
     com.google.protobuf.ByteString
         getNameBytes();
@@ -4490,6 +4635,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string version = 2;</code>
+     * @return Whether the version field is set.
      */
     boolean hasVersion();
     /**
@@ -4498,6 +4644,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string version = 2;</code>
+     * @return The version.
      */
     java.lang.String getVersion();
     /**
@@ -4506,6 +4653,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string version = 2;</code>
+     * @return The bytes for version.
      */
     com.google.protobuf.ByteString
         getVersionBytes();
@@ -4516,6 +4664,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 majorVersion = 3;</code>
+     * @return Whether the majorVersion field is set.
      */
     boolean hasMajorVersion();
     /**
@@ -4524,6 +4673,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 majorVersion = 3;</code>
+     * @return The majorVersion.
      */
     int getMajorVersion();
 
@@ -4533,6 +4683,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 minorVersion = 4;</code>
+     * @return Whether the minorVersion field is set.
      */
     boolean hasMinorVersion();
     /**
@@ -4541,6 +4692,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 minorVersion = 4;</code>
+     * @return The minorVersion.
      */
     int getMinorVersion();
 
@@ -4550,6 +4702,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 patchVersion = 5;</code>
+     * @return Whether the patchVersion field is set.
      */
     boolean hasPatchVersion();
     /**
@@ -4558,6 +4711,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 patchVersion = 5;</code>
+     * @return The patchVersion.
      */
     int getPatchVersion();
 
@@ -4567,6 +4721,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string application = 6;</code>
+     * @return Whether the application field is set.
      */
     boolean hasApplication();
     /**
@@ -4575,6 +4730,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string application = 6;</code>
+     * @return The application.
      */
     java.lang.String getApplication();
     /**
@@ -4583,6 +4739,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string application = 6;</code>
+     * @return The bytes for application.
      */
     com.google.protobuf.ByteString
         getApplicationBytes();
@@ -4593,6 +4750,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 buildNumber = 7;</code>
+     * @return Whether the buildNumber field is set.
      */
     boolean hasBuildNumber();
     /**
@@ -4601,6 +4759,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 buildNumber = 7;</code>
+     * @return The buildNumber.
      */
     int getBuildNumber();
 
@@ -4610,6 +4769,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string versionQualifier = 8;</code>
+     * @return Whether the versionQualifier field is set.
      */
     boolean hasVersionQualifier();
     /**
@@ -4618,6 +4778,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string versionQualifier = 8;</code>
+     * @return The versionQualifier.
      */
     java.lang.String getVersionQualifier();
     /**
@@ -4626,6 +4787,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string versionQualifier = 8;</code>
+     * @return The bytes for versionQualifier.
      */
     com.google.protobuf.ByteString
         getVersionQualifierBytes();
@@ -4645,12 +4807,15 @@ public final class UserProtos {
     private RpcEndpointInfos() {
       name_ = "";
       version_ = "";
-      majorVersion_ = 0;
-      minorVersion_ = 0;
-      patchVersion_ = 0;
       application_ = "";
-      buildNumber_ = 0;
       versionQualifier_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new RpcEndpointInfos();
     }
 
     @java.lang.Override
@@ -4762,9 +4927,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string name = 1;</code>
+     * @return Whether the name field is set.
      */
     public boolean hasName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -4772,6 +4938,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string name = 1;</code>
+     * @return The name.
      */
     public java.lang.String getName() {
       java.lang.Object ref = name_;
@@ -4793,6 +4960,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string name = 1;</code>
+     * @return The bytes for name.
      */
     public com.google.protobuf.ByteString
         getNameBytes() {
@@ -4816,9 +4984,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string version = 2;</code>
+     * @return Whether the version field is set.
      */
     public boolean hasVersion() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -4826,6 +4995,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string version = 2;</code>
+     * @return The version.
      */
     public java.lang.String getVersion() {
       java.lang.Object ref = version_;
@@ -4847,6 +5017,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string version = 2;</code>
+     * @return The bytes for version.
      */
     public com.google.protobuf.ByteString
         getVersionBytes() {
@@ -4870,9 +5041,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 majorVersion = 3;</code>
+     * @return Whether the majorVersion field is set.
      */
     public boolean hasMajorVersion() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -4880,6 +5052,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 majorVersion = 3;</code>
+     * @return The majorVersion.
      */
     public int getMajorVersion() {
       return majorVersion_;
@@ -4893,9 +5066,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 minorVersion = 4;</code>
+     * @return Whether the minorVersion field is set.
      */
     public boolean hasMinorVersion() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -4903,6 +5077,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 minorVersion = 4;</code>
+     * @return The minorVersion.
      */
     public int getMinorVersion() {
       return minorVersion_;
@@ -4916,9 +5091,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 patchVersion = 5;</code>
+     * @return Whether the patchVersion field is set.
      */
     public boolean hasPatchVersion() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -4926,6 +5102,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 patchVersion = 5;</code>
+     * @return The patchVersion.
      */
     public int getPatchVersion() {
       return patchVersion_;
@@ -4939,9 +5116,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string application = 6;</code>
+     * @return Whether the application field is set.
      */
     public boolean hasApplication() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <pre>
@@ -4949,6 +5127,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string application = 6;</code>
+     * @return The application.
      */
     public java.lang.String getApplication() {
       java.lang.Object ref = application_;
@@ -4970,6 +5149,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string application = 6;</code>
+     * @return The bytes for application.
      */
     public com.google.protobuf.ByteString
         getApplicationBytes() {
@@ -4993,9 +5173,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 buildNumber = 7;</code>
+     * @return Whether the buildNumber field is set.
      */
     public boolean hasBuildNumber() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <pre>
@@ -5003,6 +5184,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 buildNumber = 7;</code>
+     * @return The buildNumber.
      */
     public int getBuildNumber() {
       return buildNumber_;
@@ -5016,9 +5198,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string versionQualifier = 8;</code>
+     * @return Whether the versionQualifier field is set.
      */
     public boolean hasVersionQualifier() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <pre>
@@ -5026,6 +5209,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string versionQualifier = 8;</code>
+     * @return The versionQualifier.
      */
     public java.lang.String getVersionQualifier() {
       java.lang.Object ref = versionQualifier_;
@@ -5047,6 +5231,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string versionQualifier = 8;</code>
+     * @return The bytes for versionQualifier.
      */
     public com.google.protobuf.ByteString
         getVersionQualifierBytes() {
@@ -5076,28 +5261,28 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, version_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeUInt32(3, majorVersion_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeUInt32(4, minorVersion_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeUInt32(5, patchVersion_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 6, application_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeUInt32(7, buildNumber_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 8, versionQualifier_);
       }
       unknownFields.writeTo(output);
@@ -5109,32 +5294,32 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, version_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(3, majorVersion_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(4, minorVersion_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(5, patchVersion_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, application_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(7, buildNumber_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, versionQualifier_);
       }
       size += unknownFields.getSerializedSize();
@@ -5152,49 +5337,48 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos other = (org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos) obj;
 
-      boolean result = true;
-      result = result && (hasName() == other.hasName());
+      if (hasName() != other.hasName()) return false;
       if (hasName()) {
-        result = result && getName()
-            .equals(other.getName());
+        if (!getName()
+            .equals(other.getName())) return false;
       }
-      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion() != other.hasVersion()) return false;
       if (hasVersion()) {
-        result = result && getVersion()
-            .equals(other.getVersion());
+        if (!getVersion()
+            .equals(other.getVersion())) return false;
       }
-      result = result && (hasMajorVersion() == other.hasMajorVersion());
+      if (hasMajorVersion() != other.hasMajorVersion()) return false;
       if (hasMajorVersion()) {
-        result = result && (getMajorVersion()
-            == other.getMajorVersion());
+        if (getMajorVersion()
+            != other.getMajorVersion()) return false;
       }
-      result = result && (hasMinorVersion() == other.hasMinorVersion());
+      if (hasMinorVersion() != other.hasMinorVersion()) return false;
       if (hasMinorVersion()) {
-        result = result && (getMinorVersion()
-            == other.getMinorVersion());
+        if (getMinorVersion()
+            != other.getMinorVersion()) return false;
       }
-      result = result && (hasPatchVersion() == other.hasPatchVersion());
+      if (hasPatchVersion() != other.hasPatchVersion()) return false;
       if (hasPatchVersion()) {
-        result = result && (getPatchVersion()
-            == other.getPatchVersion());
+        if (getPatchVersion()
+            != other.getPatchVersion()) return false;
       }
-      result = result && (hasApplication() == other.hasApplication());
+      if (hasApplication() != other.hasApplication()) return false;
       if (hasApplication()) {
-        result = result && getApplication()
-            .equals(other.getApplication());
+        if (!getApplication()
+            .equals(other.getApplication())) return false;
       }
-      result = result && (hasBuildNumber() == other.hasBuildNumber());
+      if (hasBuildNumber() != other.hasBuildNumber()) return false;
       if (hasBuildNumber()) {
-        result = result && (getBuildNumber()
-            == other.getBuildNumber());
+        if (getBuildNumber()
+            != other.getBuildNumber()) return false;
       }
-      result = result && (hasVersionQualifier() == other.hasVersionQualifier());
+      if (hasVersionQualifier() != other.hasVersionQualifier()) return false;
       if (hasVersionQualifier()) {
-        result = result && getVersionQualifier()
-            .equals(other.getVersionQualifier());
+        if (!getVersionQualifier()
+            .equals(other.getVersionQualifier())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -5413,35 +5597,35 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos result = new org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.name_ = name_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.version_ = version_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.majorVersion_ = majorVersion_;
           to_bitField0_ |= 0x00000004;
         }
-        result.majorVersion_ = majorVersion_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.minorVersion_ = minorVersion_;
           to_bitField0_ |= 0x00000008;
         }
-        result.minorVersion_ = minorVersion_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.patchVersion_ = patchVersion_;
           to_bitField0_ |= 0x00000010;
         }
-        result.patchVersion_ = patchVersion_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
           to_bitField0_ |= 0x00000020;
         }
         result.application_ = application_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.buildNumber_ = buildNumber_;
           to_bitField0_ |= 0x00000040;
         }
-        result.buildNumber_ = buildNumber_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
           to_bitField0_ |= 0x00000080;
         }
         result.versionQualifier_ = versionQualifier_;
@@ -5452,35 +5636,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -5563,9 +5747,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string name = 1;</code>
+       * @return Whether the name field is set.
        */
       public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -5573,6 +5758,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string name = 1;</code>
+       * @return The name.
        */
       public java.lang.String getName() {
         java.lang.Object ref = name_;
@@ -5594,6 +5780,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string name = 1;</code>
+       * @return The bytes for name.
        */
       public com.google.protobuf.ByteString
           getNameBytes() {
@@ -5614,6 +5801,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string name = 1;</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
        */
       public Builder setName(
           java.lang.String value) {
@@ -5631,6 +5820,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -5644,6 +5834,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string name = 1;</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
        */
       public Builder setNameBytes(
           com.google.protobuf.ByteString value) {
@@ -5663,9 +5855,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string version = 2;</code>
+       * @return Whether the version field is set.
        */
       public boolean hasVersion() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -5673,6 +5866,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string version = 2;</code>
+       * @return The version.
        */
       public java.lang.String getVersion() {
         java.lang.Object ref = version_;
@@ -5694,6 +5888,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string version = 2;</code>
+       * @return The bytes for version.
        */
       public com.google.protobuf.ByteString
           getVersionBytes() {
@@ -5714,6 +5909,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string version = 2;</code>
+       * @param value The version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersion(
           java.lang.String value) {
@@ -5731,6 +5928,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string version = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -5744,6 +5942,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string version = 2;</code>
+       * @param value The bytes for version to set.
+       * @return This builder for chaining.
        */
       public Builder setVersionBytes(
           com.google.protobuf.ByteString value) {
@@ -5763,9 +5963,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 majorVersion = 3;</code>
+       * @return Whether the majorVersion field is set.
        */
       public boolean hasMajorVersion() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -5773,6 +5974,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 majorVersion = 3;</code>
+       * @return The majorVersion.
        */
       public int getMajorVersion() {
         return majorVersion_;
@@ -5783,6 +5985,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 majorVersion = 3;</code>
+       * @param value The majorVersion to set.
+       * @return This builder for chaining.
        */
       public Builder setMajorVersion(int value) {
         bitField0_ |= 0x00000004;
@@ -5796,6 +6000,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 majorVersion = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMajorVersion() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -5811,9 +6016,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 minorVersion = 4;</code>
+       * @return Whether the minorVersion field is set.
        */
       public boolean hasMinorVersion() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -5821,6 +6027,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 minorVersion = 4;</code>
+       * @return The minorVersion.
        */
       public int getMinorVersion() {
         return minorVersion_;
@@ -5831,6 +6038,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 minorVersion = 4;</code>
+       * @param value The minorVersion to set.
+       * @return This builder for chaining.
        */
       public Builder setMinorVersion(int value) {
         bitField0_ |= 0x00000008;
@@ -5844,6 +6053,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 minorVersion = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMinorVersion() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -5859,9 +6069,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 patchVersion = 5;</code>
+       * @return Whether the patchVersion field is set.
        */
       public boolean hasPatchVersion() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -5869,6 +6080,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 patchVersion = 5;</code>
+       * @return The patchVersion.
        */
       public int getPatchVersion() {
         return patchVersion_;
@@ -5879,6 +6091,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 patchVersion = 5;</code>
+       * @param value The patchVersion to set.
+       * @return This builder for chaining.
        */
       public Builder setPatchVersion(int value) {
         bitField0_ |= 0x00000010;
@@ -5892,6 +6106,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 patchVersion = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPatchVersion() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -5907,9 +6122,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string application = 6;</code>
+       * @return Whether the application field is set.
        */
       public boolean hasApplication() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <pre>
@@ -5917,6 +6133,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string application = 6;</code>
+       * @return The application.
        */
       public java.lang.String getApplication() {
         java.lang.Object ref = application_;
@@ -5938,6 +6155,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string application = 6;</code>
+       * @return The bytes for application.
        */
       public com.google.protobuf.ByteString
           getApplicationBytes() {
@@ -5958,6 +6176,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string application = 6;</code>
+       * @param value The application to set.
+       * @return This builder for chaining.
        */
       public Builder setApplication(
           java.lang.String value) {
@@ -5975,6 +6195,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string application = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearApplication() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -5988,6 +6209,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string application = 6;</code>
+       * @param value The bytes for application to set.
+       * @return This builder for chaining.
        */
       public Builder setApplicationBytes(
           com.google.protobuf.ByteString value) {
@@ -6007,9 +6230,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 buildNumber = 7;</code>
+       * @return Whether the buildNumber field is set.
        */
       public boolean hasBuildNumber() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <pre>
@@ -6017,6 +6241,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 buildNumber = 7;</code>
+       * @return The buildNumber.
        */
       public int getBuildNumber() {
         return buildNumber_;
@@ -6027,6 +6252,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 buildNumber = 7;</code>
+       * @param value The buildNumber to set.
+       * @return This builder for chaining.
        */
       public Builder setBuildNumber(int value) {
         bitField0_ |= 0x00000040;
@@ -6040,6 +6267,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 buildNumber = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBuildNumber() {
         bitField0_ = (bitField0_ & ~0x00000040);
@@ -6055,9 +6283,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string versionQualifier = 8;</code>
+       * @return Whether the versionQualifier field is set.
        */
       public boolean hasVersionQualifier() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <pre>
@@ -6065,6 +6294,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string versionQualifier = 8;</code>
+       * @return The versionQualifier.
        */
       public java.lang.String getVersionQualifier() {
         java.lang.Object ref = versionQualifier_;
@@ -6086,6 +6316,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string versionQualifier = 8;</code>
+       * @return The bytes for versionQualifier.
        */
       public com.google.protobuf.ByteString
           getVersionQualifierBytes() {
@@ -6106,6 +6337,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string versionQualifier = 8;</code>
+       * @param value The versionQualifier to set.
+       * @return This builder for chaining.
        */
       public Builder setVersionQualifier(
           java.lang.String value) {
@@ -6123,6 +6356,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string versionQualifier = 8;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVersionQualifier() {
         bitField0_ = (bitField0_ & ~0x00000080);
@@ -6136,6 +6370,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string versionQualifier = 8;</code>
+       * @param value The bytes for versionQualifier to set.
+       * @return This builder for chaining.
        */
       public Builder setVersionQualifierBytes(
           com.google.protobuf.ByteString value) {
@@ -6206,37 +6442,45 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+     * @return Whether the channel field is set.
      */
     boolean hasChannel();
     /**
      * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+     * @return The channel.
      */
     org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel();
 
     /**
      * <code>optional bool support_listening = 2;</code>
+     * @return Whether the supportListening field is set.
      */
     boolean hasSupportListening();
     /**
      * <code>optional bool support_listening = 2;</code>
+     * @return The supportListening.
      */
     boolean getSupportListening();
 
     /**
      * <code>optional int32 rpc_version = 3;</code>
+     * @return Whether the rpcVersion field is set.
      */
     boolean hasRpcVersion();
     /**
      * <code>optional int32 rpc_version = 3;</code>
+     * @return The rpcVersion.
      */
     int getRpcVersion();
 
     /**
      * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+     * @return Whether the credentials field is set.
      */
     boolean hasCredentials();
     /**
      * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+     * @return The credentials.
      */
     org.apache.drill.exec.proto.UserBitShared.UserCredentials getCredentials();
     /**
@@ -6246,10 +6490,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.UserProperties properties = 5;</code>
+     * @return Whether the properties field is set.
      */
     boolean hasProperties();
     /**
      * <code>optional .exec.user.UserProperties properties = 5;</code>
+     * @return The properties.
      */
     org.apache.drill.exec.proto.UserProtos.UserProperties getProperties();
     /**
@@ -6259,28 +6505,34 @@ public final class UserProtos {
 
     /**
      * <code>optional bool support_complex_types = 6 [default = false];</code>
+     * @return Whether the supportComplexTypes field is set.
      */
     boolean hasSupportComplexTypes();
     /**
      * <code>optional bool support_complex_types = 6 [default = false];</code>
+     * @return The supportComplexTypes.
      */
     boolean getSupportComplexTypes();
 
     /**
      * <code>optional bool support_timeout = 7 [default = false];</code>
+     * @return Whether the supportTimeout field is set.
      */
     boolean hasSupportTimeout();
     /**
      * <code>optional bool support_timeout = 7 [default = false];</code>
+     * @return The supportTimeout.
      */
     boolean getSupportTimeout();
 
     /**
      * <code>optional .exec.user.RpcEndpointInfos client_infos = 8;</code>
+     * @return Whether the clientInfos field is set.
      */
     boolean hasClientInfos();
     /**
      * <code>optional .exec.user.RpcEndpointInfos client_infos = 8;</code>
+     * @return The clientInfos.
      */
     org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos getClientInfos();
     /**
@@ -6290,10 +6542,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     * @return Whether the saslSupport field is set.
      */
     boolean hasSaslSupport();
     /**
      * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     * @return The saslSupport.
      */
     org.apache.drill.exec.proto.UserProtos.SaslSupport getSaslSupport();
   }
@@ -6311,11 +6565,14 @@ public final class UserProtos {
     }
     private UserToBitHandshake() {
       channel_ = 2;
-      supportListening_ = false;
-      rpcVersion_ = 0;
-      supportComplexTypes_ = false;
-      supportTimeout_ = false;
       saslSupport_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new UserToBitHandshake();
     }
 
     @java.lang.Override
@@ -6366,7 +6623,7 @@ public final class UserProtos {
             }
             case 34: {
               org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000008) != 0)) {
                 subBuilder = credentials_.toBuilder();
               }
               credentials_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.UserCredentials.PARSER, extensionRegistry);
@@ -6379,7 +6636,7 @@ public final class UserProtos {
             }
             case 42: {
               org.apache.drill.exec.proto.UserProtos.UserProperties.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+              if (((bitField0_ & 0x00000010) != 0)) {
                 subBuilder = properties_.toBuilder();
               }
               properties_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.UserProperties.PARSER, extensionRegistry);
@@ -6402,7 +6659,7 @@ public final class UserProtos {
             }
             case 66: {
               org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000080) == 0x00000080)) {
+              if (((bitField0_ & 0x00000080) != 0)) {
                 subBuilder = clientInfos_.toBuilder();
               }
               clientInfos_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.PARSER, extensionRegistry);
@@ -6462,12 +6719,14 @@ public final class UserProtos {
     private int channel_;
     /**
      * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+     * @return Whether the channel field is set.
      */
     public boolean hasChannel() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+     * @return The channel.
      */
     public org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel() {
       @SuppressWarnings("deprecation")
@@ -6479,12 +6738,14 @@ public final class UserProtos {
     private boolean supportListening_;
     /**
      * <code>optional bool support_listening = 2;</code>
+     * @return Whether the supportListening field is set.
      */
     public boolean hasSupportListening() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional bool support_listening = 2;</code>
+     * @return The supportListening.
      */
     public boolean getSupportListening() {
       return supportListening_;
@@ -6494,12 +6755,14 @@ public final class UserProtos {
     private int rpcVersion_;
     /**
      * <code>optional int32 rpc_version = 3;</code>
+     * @return Whether the rpcVersion field is set.
      */
     public boolean hasRpcVersion() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional int32 rpc_version = 3;</code>
+     * @return The rpcVersion.
      */
     public int getRpcVersion() {
       return rpcVersion_;
@@ -6509,12 +6772,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserBitShared.UserCredentials credentials_;
     /**
      * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+     * @return Whether the credentials field is set.
      */
     public boolean hasCredentials() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+     * @return The credentials.
      */
     public org.apache.drill.exec.proto.UserBitShared.UserCredentials getCredentials() {
       return credentials_ == null ? org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance() : credentials_;
@@ -6530,12 +6795,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.UserProperties properties_;
     /**
      * <code>optional .exec.user.UserProperties properties = 5;</code>
+     * @return Whether the properties field is set.
      */
     public boolean hasProperties() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional .exec.user.UserProperties properties = 5;</code>
+     * @return The properties.
      */
     public org.apache.drill.exec.proto.UserProtos.UserProperties getProperties() {
       return properties_ == null ? org.apache.drill.exec.proto.UserProtos.UserProperties.getDefaultInstance() : properties_;
@@ -6551,12 +6818,14 @@ public final class UserProtos {
     private boolean supportComplexTypes_;
     /**
      * <code>optional bool support_complex_types = 6 [default = false];</code>
+     * @return Whether the supportComplexTypes field is set.
      */
     public boolean hasSupportComplexTypes() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <code>optional bool support_complex_types = 6 [default = false];</code>
+     * @return The supportComplexTypes.
      */
     public boolean getSupportComplexTypes() {
       return supportComplexTypes_;
@@ -6566,12 +6835,14 @@ public final class UserProtos {
     private boolean supportTimeout_;
     /**
      * <code>optional bool support_timeout = 7 [default = false];</code>
+     * @return Whether the supportTimeout field is set.
      */
     public boolean hasSupportTimeout() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <code>optional bool support_timeout = 7 [default = false];</code>
+     * @return The supportTimeout.
      */
     public boolean getSupportTimeout() {
       return supportTimeout_;
@@ -6581,12 +6852,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos clientInfos_;
     /**
      * <code>optional .exec.user.RpcEndpointInfos client_infos = 8;</code>
+     * @return Whether the clientInfos field is set.
      */
     public boolean hasClientInfos() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <code>optional .exec.user.RpcEndpointInfos client_infos = 8;</code>
+     * @return The clientInfos.
      */
     public org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos getClientInfos() {
       return clientInfos_ == null ? org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.getDefaultInstance() : clientInfos_;
@@ -6602,12 +6875,14 @@ public final class UserProtos {
     private int saslSupport_;
     /**
      * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     * @return Whether the saslSupport field is set.
      */
     public boolean hasSaslSupport() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000100) != 0);
     }
     /**
      * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+     * @return The saslSupport.
      */
     public org.apache.drill.exec.proto.UserProtos.SaslSupport getSaslSupport() {
       @SuppressWarnings("deprecation")
@@ -6635,31 +6910,31 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, channel_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBool(2, supportListening_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt32(3, rpcVersion_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeMessage(4, getCredentials());
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeMessage(5, getProperties());
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeBool(6, supportComplexTypes_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeBool(7, supportTimeout_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         output.writeMessage(8, getClientInfos());
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         output.writeEnum(9, saslSupport_);
       }
       unknownFields.writeTo(output);
@@ -6671,39 +6946,39 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, channel_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(2, supportListening_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, rpcVersion_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getCredentials());
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, getProperties());
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(6, supportComplexTypes_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(7, supportTimeout_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, getClientInfos());
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(9, saslSupport_);
       }
@@ -6722,52 +6997,51 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.UserToBitHandshake other = (org.apache.drill.exec.proto.UserProtos.UserToBitHandshake) obj;
 
-      boolean result = true;
-      result = result && (hasChannel() == other.hasChannel());
+      if (hasChannel() != other.hasChannel()) return false;
       if (hasChannel()) {
-        result = result && channel_ == other.channel_;
+        if (channel_ != other.channel_) return false;
       }
-      result = result && (hasSupportListening() == other.hasSupportListening());
+      if (hasSupportListening() != other.hasSupportListening()) return false;
       if (hasSupportListening()) {
-        result = result && (getSupportListening()
-            == other.getSupportListening());
+        if (getSupportListening()
+            != other.getSupportListening()) return false;
       }
-      result = result && (hasRpcVersion() == other.hasRpcVersion());
+      if (hasRpcVersion() != other.hasRpcVersion()) return false;
       if (hasRpcVersion()) {
-        result = result && (getRpcVersion()
-            == other.getRpcVersion());
+        if (getRpcVersion()
+            != other.getRpcVersion()) return false;
       }
-      result = result && (hasCredentials() == other.hasCredentials());
+      if (hasCredentials() != other.hasCredentials()) return false;
       if (hasCredentials()) {
-        result = result && getCredentials()
-            .equals(other.getCredentials());
+        if (!getCredentials()
+            .equals(other.getCredentials())) return false;
       }
-      result = result && (hasProperties() == other.hasProperties());
+      if (hasProperties() != other.hasProperties()) return false;
       if (hasProperties()) {
-        result = result && getProperties()
-            .equals(other.getProperties());
+        if (!getProperties()
+            .equals(other.getProperties())) return false;
       }
-      result = result && (hasSupportComplexTypes() == other.hasSupportComplexTypes());
+      if (hasSupportComplexTypes() != other.hasSupportComplexTypes()) return false;
       if (hasSupportComplexTypes()) {
-        result = result && (getSupportComplexTypes()
-            == other.getSupportComplexTypes());
+        if (getSupportComplexTypes()
+            != other.getSupportComplexTypes()) return false;
       }
-      result = result && (hasSupportTimeout() == other.hasSupportTimeout());
+      if (hasSupportTimeout() != other.hasSupportTimeout()) return false;
       if (hasSupportTimeout()) {
-        result = result && (getSupportTimeout()
-            == other.getSupportTimeout());
+        if (getSupportTimeout()
+            != other.getSupportTimeout()) return false;
       }
-      result = result && (hasClientInfos() == other.hasClientInfos());
+      if (hasClientInfos() != other.hasClientInfos()) return false;
       if (hasClientInfos()) {
-        result = result && getClientInfos()
-            .equals(other.getClientInfos());
+        if (!getClientInfos()
+            .equals(other.getClientInfos())) return false;
       }
-      result = result && (hasSaslSupport() == other.hasSaslSupport());
+      if (hasSaslSupport() != other.hasSaslSupport()) return false;
       if (hasSaslSupport()) {
-        result = result && saslSupport_ == other.saslSupport_;
+        if (saslSupport_ != other.saslSupport_) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -7010,51 +7284,51 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.UserToBitHandshake result = new org.apache.drill.exec.proto.UserProtos.UserToBitHandshake(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.channel_ = channel_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.supportListening_ = supportListening_;
           to_bitField0_ |= 0x00000002;
         }
-        result.supportListening_ = supportListening_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.rpcVersion_ = rpcVersion_;
           to_bitField0_ |= 0x00000004;
         }
-        result.rpcVersion_ = rpcVersion_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (credentialsBuilder_ == null) {
+            result.credentials_ = credentials_;
+          } else {
+            result.credentials_ = credentialsBuilder_.build();
+          }
           to_bitField0_ |= 0x00000008;
         }
-        if (credentialsBuilder_ == null) {
-          result.credentials_ = credentials_;
-        } else {
-          result.credentials_ = credentialsBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          if (propertiesBuilder_ == null) {
+            result.properties_ = properties_;
+          } else {
+            result.properties_ = propertiesBuilder_.build();
+          }
           to_bitField0_ |= 0x00000010;
         }
-        if (propertiesBuilder_ == null) {
-          result.properties_ = properties_;
-        } else {
-          result.properties_ = propertiesBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.supportComplexTypes_ = supportComplexTypes_;
           to_bitField0_ |= 0x00000020;
         }
-        result.supportComplexTypes_ = supportComplexTypes_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.supportTimeout_ = supportTimeout_;
           to_bitField0_ |= 0x00000040;
         }
-        result.supportTimeout_ = supportTimeout_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          if (clientInfosBuilder_ == null) {
+            result.clientInfos_ = clientInfos_;
+          } else {
+            result.clientInfos_ = clientInfosBuilder_.build();
+          }
           to_bitField0_ |= 0x00000080;
         }
-        if (clientInfosBuilder_ == null) {
-          result.clientInfos_ = clientInfos_;
-        } else {
-          result.clientInfos_ = clientInfosBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
           to_bitField0_ |= 0x00000100;
         }
         result.saslSupport_ = saslSupport_;
@@ -7065,35 +7339,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -7172,12 +7446,14 @@ public final class UserProtos {
       private int channel_ = 2;
       /**
        * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+       * @return Whether the channel field is set.
        */
       public boolean hasChannel() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+       * @return The channel.
        */
       public org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel() {
         @SuppressWarnings("deprecation")
@@ -7186,6 +7462,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+       * @param value The channel to set.
+       * @return This builder for chaining.
        */
       public Builder setChannel(org.apache.drill.exec.proto.UserBitShared.RpcChannel value) {
         if (value == null) {
@@ -7198,6 +7476,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+       * @return This builder for chaining.
        */
       public Builder clearChannel() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -7209,18 +7488,22 @@ public final class UserProtos {
       private boolean supportListening_ ;
       /**
        * <code>optional bool support_listening = 2;</code>
+       * @return Whether the supportListening field is set.
        */
       public boolean hasSupportListening() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional bool support_listening = 2;</code>
+       * @return The supportListening.
        */
       public boolean getSupportListening() {
         return supportListening_;
       }
       /**
        * <code>optional bool support_listening = 2;</code>
+       * @param value The supportListening to set.
+       * @return This builder for chaining.
        */
       public Builder setSupportListening(boolean value) {
         bitField0_ |= 0x00000002;
@@ -7230,6 +7513,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional bool support_listening = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSupportListening() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -7241,18 +7525,22 @@ public final class UserProtos {
       private int rpcVersion_ ;
       /**
        * <code>optional int32 rpc_version = 3;</code>
+       * @return Whether the rpcVersion field is set.
        */
       public boolean hasRpcVersion() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional int32 rpc_version = 3;</code>
+       * @return The rpcVersion.
        */
       public int getRpcVersion() {
         return rpcVersion_;
       }
       /**
        * <code>optional int32 rpc_version = 3;</code>
+       * @param value The rpcVersion to set.
+       * @return This builder for chaining.
        */
       public Builder setRpcVersion(int value) {
         bitField0_ |= 0x00000004;
@@ -7262,6 +7550,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 rpc_version = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearRpcVersion() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -7270,17 +7559,19 @@ public final class UserProtos {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.UserCredentials credentials_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.UserCredentials credentials_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.UserCredentials, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder, org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder> credentialsBuilder_;
       /**
        * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+       * @return Whether the credentials field is set.
        */
       public boolean hasCredentials() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+       * @return The credentials.
        */
       public org.apache.drill.exec.proto.UserBitShared.UserCredentials getCredentials() {
         if (credentialsBuilder_ == null) {
@@ -7324,7 +7615,7 @@ public final class UserProtos {
        */
       public Builder mergeCredentials(org.apache.drill.exec.proto.UserBitShared.UserCredentials value) {
         if (credentialsBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               credentials_ != null &&
               credentials_ != org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance()) {
             credentials_ =
@@ -7388,17 +7679,19 @@ public final class UserProtos {
         return credentialsBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.UserProperties properties_ = null;
+      private org.apache.drill.exec.proto.UserProtos.UserProperties properties_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.UserProperties, org.apache.drill.exec.proto.UserProtos.UserProperties.Builder, org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder> propertiesBuilder_;
       /**
        * <code>optional .exec.user.UserProperties properties = 5;</code>
+       * @return Whether the properties field is set.
        */
       public boolean hasProperties() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional .exec.user.UserProperties properties = 5;</code>
+       * @return The properties.
        */
       public org.apache.drill.exec.proto.UserProtos.UserProperties getProperties() {
         if (propertiesBuilder_ == null) {
@@ -7442,7 +7735,7 @@ public final class UserProtos {
        */
       public Builder mergeProperties(org.apache.drill.exec.proto.UserProtos.UserProperties value) {
         if (propertiesBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+          if (((bitField0_ & 0x00000010) != 0) &&
               properties_ != null &&
               properties_ != org.apache.drill.exec.proto.UserProtos.UserProperties.getDefaultInstance()) {
             properties_ =
@@ -7509,18 +7802,22 @@ public final class UserProtos {
       private boolean supportComplexTypes_ ;
       /**
        * <code>optional bool support_complex_types = 6 [default = false];</code>
+       * @return Whether the supportComplexTypes field is set.
        */
       public boolean hasSupportComplexTypes() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <code>optional bool support_complex_types = 6 [default = false];</code>
+       * @return The supportComplexTypes.
        */
       public boolean getSupportComplexTypes() {
         return supportComplexTypes_;
       }
       /**
        * <code>optional bool support_complex_types = 6 [default = false];</code>
+       * @param value The supportComplexTypes to set.
+       * @return This builder for chaining.
        */
       public Builder setSupportComplexTypes(boolean value) {
         bitField0_ |= 0x00000020;
@@ -7530,6 +7827,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional bool support_complex_types = 6 [default = false];</code>
+       * @return This builder for chaining.
        */
       public Builder clearSupportComplexTypes() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -7541,18 +7839,22 @@ public final class UserProtos {
       private boolean supportTimeout_ ;
       /**
        * <code>optional bool support_timeout = 7 [default = false];</code>
+       * @return Whether the supportTimeout field is set.
        */
       public boolean hasSupportTimeout() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <code>optional bool support_timeout = 7 [default = false];</code>
+       * @return The supportTimeout.
        */
       public boolean getSupportTimeout() {
         return supportTimeout_;
       }
       /**
        * <code>optional bool support_timeout = 7 [default = false];</code>
+       * @param value The supportTimeout to set.
+       * @return This builder for chaining.
        */
       public Builder setSupportTimeout(boolean value) {
         bitField0_ |= 0x00000040;
@@ -7562,6 +7864,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional bool support_timeout = 7 [default = false];</code>
+       * @return This builder for chaining.
        */
       public Builder clearSupportTimeout() {
         bitField0_ = (bitField0_ & ~0x00000040);
@@ -7570,17 +7873,19 @@ public final class UserProtos {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos clientInfos_ = null;
+      private org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos clientInfos_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos, org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.Builder, org.apache.drill.exec.proto.UserProtos.RpcEndpointInfosOrBuilder> clientInfosBuilder_;
       /**
        * <code>optional .exec.user.RpcEndpointInfos client_infos = 8;</code>
+       * @return Whether the clientInfos field is set.
        */
       public boolean hasClientInfos() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <code>optional .exec.user.RpcEndpointInfos client_infos = 8;</code>
+       * @return The clientInfos.
        */
       public org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos getClientInfos() {
         if (clientInfosBuilder_ == null) {
@@ -7624,7 +7929,7 @@ public final class UserProtos {
        */
       public Builder mergeClientInfos(org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos value) {
         if (clientInfosBuilder_ == null) {
-          if (((bitField0_ & 0x00000080) == 0x00000080) &&
+          if (((bitField0_ & 0x00000080) != 0) &&
               clientInfos_ != null &&
               clientInfos_ != org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.getDefaultInstance()) {
             clientInfos_ =
@@ -7691,12 +7996,14 @@ public final class UserProtos {
       private int saslSupport_ = 0;
       /**
        * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       * @return Whether the saslSupport field is set.
        */
       public boolean hasSaslSupport() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       * @return The saslSupport.
        */
       public org.apache.drill.exec.proto.UserProtos.SaslSupport getSaslSupport() {
         @SuppressWarnings("deprecation")
@@ -7705,6 +8012,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       * @param value The saslSupport to set.
+       * @return This builder for chaining.
        */
       public Builder setSaslSupport(org.apache.drill.exec.proto.UserProtos.SaslSupport value) {
         if (value == null) {
@@ -7717,6 +8026,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.SaslSupport sasl_support = 9;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSaslSupport() {
         bitField0_ = (bitField0_ & ~0x00000100);
@@ -7783,10 +8093,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return Whether the queryId field is set.
      */
     boolean hasQueryId();
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return The queryId.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId();
     /**
@@ -7796,10 +8108,12 @@ public final class UserProtos {
 
     /**
      * <code>optional int32 maximum_responses = 2;</code>
+     * @return Whether the maximumResponses field is set.
      */
     boolean hasMaximumResponses();
     /**
      * <code>optional int32 maximum_responses = 2;</code>
+     * @return The maximumResponses.
      */
     int getMaximumResponses();
   }
@@ -7816,7 +8130,13 @@ public final class UserProtos {
       super(builder);
     }
     private RequestResults() {
-      maximumResponses_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new RequestResults();
     }
 
     @java.lang.Override
@@ -7845,7 +8165,7 @@ public final class UserProtos {
               break;
             case 10: {
               org.apache.drill.exec.proto.UserBitShared.QueryId.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = queryId_.toBuilder();
               }
               queryId_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.QueryId.PARSER, extensionRegistry);
@@ -7898,12 +8218,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return Whether the queryId field is set.
      */
     public boolean hasQueryId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return The queryId.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
@@ -7919,12 +8241,14 @@ public final class UserProtos {
     private int maximumResponses_;
     /**
      * <code>optional int32 maximum_responses = 2;</code>
+     * @return Whether the maximumResponses field is set.
      */
     public boolean hasMaximumResponses() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional int32 maximum_responses = 2;</code>
+     * @return The maximumResponses.
      */
     public int getMaximumResponses() {
       return maximumResponses_;
@@ -7944,10 +8268,10 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getQueryId());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeInt32(2, maximumResponses_);
       }
       unknownFields.writeTo(output);
@@ -7959,11 +8283,11 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getQueryId());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, maximumResponses_);
       }
@@ -7982,19 +8306,18 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.RequestResults other = (org.apache.drill.exec.proto.UserProtos.RequestResults) obj;
 
-      boolean result = true;
-      result = result && (hasQueryId() == other.hasQueryId());
+      if (hasQueryId() != other.hasQueryId()) return false;
       if (hasQueryId()) {
-        result = result && getQueryId()
-            .equals(other.getQueryId());
+        if (!getQueryId()
+            .equals(other.getQueryId())) return false;
       }
-      result = result && (hasMaximumResponses() == other.hasMaximumResponses());
+      if (hasMaximumResponses() != other.hasMaximumResponses()) return false;
       if (hasMaximumResponses()) {
-        result = result && (getMaximumResponses()
-            == other.getMaximumResponses());
+        if (getMaximumResponses()
+            != other.getMaximumResponses()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -8182,18 +8505,18 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.RequestResults result = new org.apache.drill.exec.proto.UserProtos.RequestResults(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (queryIdBuilder_ == null) {
+            result.queryId_ = queryId_;
+          } else {
+            result.queryId_ = queryIdBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (queryIdBuilder_ == null) {
-          result.queryId_ = queryId_;
-        } else {
-          result.queryId_ = queryIdBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.maximumResponses_ = maximumResponses_;
           to_bitField0_ |= 0x00000002;
         }
-        result.maximumResponses_ = maximumResponses_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -8201,35 +8524,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -8279,17 +8602,19 @@ public final class UserProtos {
       }
       private int bitField0_;
 
-      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> queryIdBuilder_;
       /**
        * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       * @return Whether the queryId field is set.
        */
       public boolean hasQueryId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       * @return The queryId.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
         if (queryIdBuilder_ == null) {
@@ -8333,7 +8658,7 @@ public final class UserProtos {
        */
       public Builder mergeQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
         if (queryIdBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               queryId_ != null &&
               queryId_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
             queryId_ =
@@ -8400,18 +8725,22 @@ public final class UserProtos {
       private int maximumResponses_ ;
       /**
        * <code>optional int32 maximum_responses = 2;</code>
+       * @return Whether the maximumResponses field is set.
        */
       public boolean hasMaximumResponses() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional int32 maximum_responses = 2;</code>
+       * @return The maximumResponses.
        */
       public int getMaximumResponses() {
         return maximumResponses_;
       }
       /**
        * <code>optional int32 maximum_responses = 2;</code>
+       * @param value The maximumResponses to set.
+       * @return This builder for chaining.
        */
       public Builder setMaximumResponses(int value) {
         bitField0_ |= 0x00000002;
@@ -8421,6 +8750,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 maximum_responses = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaximumResponses() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -8487,33 +8817,40 @@ public final class UserProtos {
 
     /**
      * <code>required string query = 1;</code>
+     * @return Whether the query field is set.
      */
     boolean hasQuery();
     /**
      * <code>required string query = 1;</code>
+     * @return The query.
      */
     java.lang.String getQuery();
     /**
      * <code>required string query = 1;</code>
+     * @return The bytes for query.
      */
     com.google.protobuf.ByteString
         getQueryBytes();
 
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return Whether the type field is set.
      */
     boolean hasType();
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return The type.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryType getType();
 
     /**
      * <code>optional bool split_plan = 3 [default = false];</code>
+     * @return Whether the splitPlan field is set.
      */
     boolean hasSplitPlan();
     /**
      * <code>optional bool split_plan = 3 [default = false];</code>
+     * @return The splitPlan.
      */
     boolean getSplitPlan();
   }
@@ -8532,7 +8869,13 @@ public final class UserProtos {
     private GetQueryPlanFragments() {
       query_ = "";
       type_ = 1;
-      splitPlan_ = false;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetQueryPlanFragments();
     }
 
     @java.lang.Override
@@ -8619,12 +8962,14 @@ public final class UserProtos {
     private volatile java.lang.Object query_;
     /**
      * <code>required string query = 1;</code>
+     * @return Whether the query field is set.
      */
     public boolean hasQuery() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required string query = 1;</code>
+     * @return The query.
      */
     public java.lang.String getQuery() {
       java.lang.Object ref = query_;
@@ -8642,6 +8987,7 @@ public final class UserProtos {
     }
     /**
      * <code>required string query = 1;</code>
+     * @return The bytes for query.
      */
     public com.google.protobuf.ByteString
         getQueryBytes() {
@@ -8661,12 +9007,14 @@ public final class UserProtos {
     private int type_;
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return Whether the type field is set.
      */
     public boolean hasType() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return The type.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryType getType() {
       @SuppressWarnings("deprecation")
@@ -8678,12 +9026,14 @@ public final class UserProtos {
     private boolean splitPlan_;
     /**
      * <code>optional bool split_plan = 3 [default = false];</code>
+     * @return Whether the splitPlan field is set.
      */
     public boolean hasSplitPlan() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional bool split_plan = 3 [default = false];</code>
+     * @return The splitPlan.
      */
     public boolean getSplitPlan() {
       return splitPlan_;
@@ -8707,13 +9057,13 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, query_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeEnum(2, type_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBool(3, splitPlan_);
       }
       unknownFields.writeTo(output);
@@ -8725,14 +9075,14 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, query_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(2, type_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(3, splitPlan_);
       }
@@ -8751,23 +9101,22 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments other = (org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments) obj;
 
-      boolean result = true;
-      result = result && (hasQuery() == other.hasQuery());
+      if (hasQuery() != other.hasQuery()) return false;
       if (hasQuery()) {
-        result = result && getQuery()
-            .equals(other.getQuery());
+        if (!getQuery()
+            .equals(other.getQuery())) return false;
       }
-      result = result && (hasType() == other.hasType());
+      if (hasType() != other.hasType()) return false;
       if (hasType()) {
-        result = result && type_ == other.type_;
+        if (type_ != other.type_) return false;
       }
-      result = result && (hasSplitPlan() == other.hasSplitPlan());
+      if (hasSplitPlan() != other.hasSplitPlan()) return false;
       if (hasSplitPlan()) {
-        result = result && (getSplitPlan()
-            == other.getSplitPlan());
+        if (getSplitPlan()
+            != other.getSplitPlan()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -8957,18 +9306,18 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments result = new org.apache.drill.exec.proto.UserProtos.GetQueryPlanFragments(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.query_ = query_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.type_ = type_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.splitPlan_ = splitPlan_;
           to_bitField0_ |= 0x00000004;
         }
-        result.splitPlan_ = splitPlan_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -8976,35 +9325,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -9065,12 +9414,14 @@ public final class UserProtos {
       private java.lang.Object query_ = "";
       /**
        * <code>required string query = 1;</code>
+       * @return Whether the query field is set.
        */
       public boolean hasQuery() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required string query = 1;</code>
+       * @return The query.
        */
       public java.lang.String getQuery() {
         java.lang.Object ref = query_;
@@ -9088,6 +9439,7 @@ public final class UserProtos {
       }
       /**
        * <code>required string query = 1;</code>
+       * @return The bytes for query.
        */
       public com.google.protobuf.ByteString
           getQueryBytes() {
@@ -9104,6 +9456,8 @@ public final class UserProtos {
       }
       /**
        * <code>required string query = 1;</code>
+       * @param value The query to set.
+       * @return This builder for chaining.
        */
       public Builder setQuery(
           java.lang.String value) {
@@ -9117,6 +9471,7 @@ public final class UserProtos {
       }
       /**
        * <code>required string query = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearQuery() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -9126,6 +9481,8 @@ public final class UserProtos {
       }
       /**
        * <code>required string query = 1;</code>
+       * @param value The bytes for query to set.
+       * @return This builder for chaining.
        */
       public Builder setQueryBytes(
           com.google.protobuf.ByteString value) {
@@ -9141,12 +9498,14 @@ public final class UserProtos {
       private int type_ = 1;
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @return Whether the type field is set.
        */
       public boolean hasType() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @return The type.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryType getType() {
         @SuppressWarnings("deprecation")
@@ -9155,6 +9514,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
        */
       public Builder setType(org.apache.drill.exec.proto.UserBitShared.QueryType value) {
         if (value == null) {
@@ -9167,6 +9528,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -9178,18 +9540,22 @@ public final class UserProtos {
       private boolean splitPlan_ ;
       /**
        * <code>optional bool split_plan = 3 [default = false];</code>
+       * @return Whether the splitPlan field is set.
        */
       public boolean hasSplitPlan() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional bool split_plan = 3 [default = false];</code>
+       * @return The splitPlan.
        */
       public boolean getSplitPlan() {
         return splitPlan_;
       }
       /**
        * <code>optional bool split_plan = 3 [default = false];</code>
+       * @param value The splitPlan to set.
+       * @return This builder for chaining.
        */
       public Builder setSplitPlan(boolean value) {
         bitField0_ |= 0x00000004;
@@ -9199,6 +9565,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional bool split_plan = 3 [default = false];</code>
+       * @return This builder for chaining.
        */
       public Builder clearSplitPlan() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -9265,19 +9632,23 @@ public final class UserProtos {
 
     /**
      * <code>required .exec.shared.QueryResult.QueryState status = 1;</code>
+     * @return Whether the status field is set.
      */
     boolean hasStatus();
     /**
      * <code>required .exec.shared.QueryResult.QueryState status = 1;</code>
+     * @return The status.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getStatus();
 
     /**
      * <code>optional .exec.shared.QueryId query_id = 2;</code>
+     * @return Whether the queryId field is set.
      */
     boolean hasQueryId();
     /**
      * <code>optional .exec.shared.QueryId query_id = 2;</code>
+     * @return The queryId.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId();
     /**
@@ -9311,10 +9682,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.shared.DrillPBError error = 4;</code>
+     * @return Whether the error field is set.
      */
     boolean hasError();
     /**
      * <code>optional .exec.shared.DrillPBError error = 4;</code>
+     * @return The error.
      */
     org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
     /**
@@ -9337,6 +9710,13 @@ public final class UserProtos {
     private QueryPlanFragments() {
       status_ = 0;
       fragments_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new QueryPlanFragments();
     }
 
     @java.lang.Override
@@ -9377,7 +9757,7 @@ public final class UserProtos {
             }
             case 18: {
               org.apache.drill.exec.proto.UserBitShared.QueryId.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = queryId_.toBuilder();
               }
               queryId_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.QueryId.PARSER, extensionRegistry);
@@ -9389,7 +9769,7 @@ public final class UserProtos {
               break;
             }
             case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
                 fragments_ = new java.util.ArrayList<org.apache.drill.exec.proto.BitControl.PlanFragment>();
                 mutable_bitField0_ |= 0x00000004;
               }
@@ -9399,7 +9779,7 @@ public final class UserProtos {
             }
             case 34: {
               org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = error_.toBuilder();
               }
               error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
@@ -9425,7 +9805,7 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
           fragments_ = java.util.Collections.unmodifiableList(fragments_);
         }
         this.unknownFields = unknownFields.build();
@@ -9450,12 +9830,14 @@ public final class UserProtos {
     private int status_;
     /**
      * <code>required .exec.shared.QueryResult.QueryState status = 1;</code>
+     * @return Whether the status field is set.
      */
     public boolean hasStatus() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .exec.shared.QueryResult.QueryState status = 1;</code>
+     * @return The status.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getStatus() {
       @SuppressWarnings("deprecation")
@@ -9467,12 +9849,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
     /**
      * <code>optional .exec.shared.QueryId query_id = 2;</code>
+     * @return Whether the queryId field is set.
      */
     public boolean hasQueryId() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryId query_id = 2;</code>
+     * @return The queryId.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
@@ -9523,12 +9907,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
     /**
      * <code>optional .exec.shared.DrillPBError error = 4;</code>
+     * @return Whether the error field is set.
      */
     public boolean hasError() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.DrillPBError error = 4;</code>
+     * @return The error.
      */
     public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
       return error_ == null ? org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance() : error_;
@@ -9558,16 +9944,16 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, status_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getQueryId());
       }
       for (int i = 0; i < fragments_.size(); i++) {
         output.writeMessage(3, fragments_.get(i));
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(4, getError());
       }
       unknownFields.writeTo(output);
@@ -9579,11 +9965,11 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, status_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getQueryId());
       }
@@ -9591,7 +9977,7 @@ public final class UserProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, fragments_.get(i));
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getError());
       }
@@ -9610,25 +9996,24 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.QueryPlanFragments other = (org.apache.drill.exec.proto.UserProtos.QueryPlanFragments) obj;
 
-      boolean result = true;
-      result = result && (hasStatus() == other.hasStatus());
+      if (hasStatus() != other.hasStatus()) return false;
       if (hasStatus()) {
-        result = result && status_ == other.status_;
+        if (status_ != other.status_) return false;
       }
-      result = result && (hasQueryId() == other.hasQueryId());
+      if (hasQueryId() != other.hasQueryId()) return false;
       if (hasQueryId()) {
-        result = result && getQueryId()
-            .equals(other.getQueryId());
+        if (!getQueryId()
+            .equals(other.getQueryId())) return false;
       }
-      result = result && getFragmentsList()
-          .equals(other.getFragmentsList());
-      result = result && (hasError() == other.hasError());
+      if (!getFragmentsList()
+          .equals(other.getFragmentsList())) return false;
+      if (hasError() != other.hasError()) return false;
       if (hasError()) {
-        result = result && getError()
-            .equals(other.getError());
+        if (!getError()
+            .equals(other.getError())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -9838,20 +10223,20 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.QueryPlanFragments result = new org.apache.drill.exec.proto.UserProtos.QueryPlanFragments(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.status_ = status_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (queryIdBuilder_ == null) {
+            result.queryId_ = queryId_;
+          } else {
+            result.queryId_ = queryIdBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (queryIdBuilder_ == null) {
-          result.queryId_ = queryId_;
-        } else {
-          result.queryId_ = queryIdBuilder_.build();
-        }
         if (fragmentsBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          if (((bitField0_ & 0x00000004) != 0)) {
             fragments_ = java.util.Collections.unmodifiableList(fragments_);
             bitField0_ = (bitField0_ & ~0x00000004);
           }
@@ -9859,13 +10244,13 @@ public final class UserProtos {
         } else {
           result.fragments_ = fragmentsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (errorBuilder_ == null) {
+            result.error_ = error_;
+          } else {
+            result.error_ = errorBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
-        }
-        if (errorBuilder_ == null) {
-          result.error_ = error_;
-        } else {
-          result.error_ = errorBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -9874,35 +10259,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -9987,12 +10372,14 @@ public final class UserProtos {
       private int status_ = 0;
       /**
        * <code>required .exec.shared.QueryResult.QueryState status = 1;</code>
+       * @return Whether the status field is set.
        */
       public boolean hasStatus() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .exec.shared.QueryResult.QueryState status = 1;</code>
+       * @return The status.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getStatus() {
         @SuppressWarnings("deprecation")
@@ -10001,6 +10388,8 @@ public final class UserProtos {
       }
       /**
        * <code>required .exec.shared.QueryResult.QueryState status = 1;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
        */
       public Builder setStatus(org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState value) {
         if (value == null) {
@@ -10013,6 +10402,7 @@ public final class UserProtos {
       }
       /**
        * <code>required .exec.shared.QueryResult.QueryState status = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStatus() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -10021,17 +10411,19 @@ public final class UserProtos {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> queryIdBuilder_;
       /**
        * <code>optional .exec.shared.QueryId query_id = 2;</code>
+       * @return Whether the queryId field is set.
        */
       public boolean hasQueryId() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryId query_id = 2;</code>
+       * @return The queryId.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
         if (queryIdBuilder_ == null) {
@@ -10075,7 +10467,7 @@ public final class UserProtos {
        */
       public Builder mergeQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
         if (queryIdBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               queryId_ != null &&
               queryId_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
             queryId_ =
@@ -10142,7 +10534,7 @@ public final class UserProtos {
       private java.util.List<org.apache.drill.exec.proto.BitControl.PlanFragment> fragments_ =
         java.util.Collections.emptyList();
       private void ensureFragmentsIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000004) != 0)) {
           fragments_ = new java.util.ArrayList<org.apache.drill.exec.proto.BitControl.PlanFragment>(fragments_);
           bitField0_ |= 0x00000004;
          }
@@ -10371,7 +10763,7 @@ public final class UserProtos {
           fragmentsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.BitControl.PlanFragment, org.apache.drill.exec.proto.BitControl.PlanFragment.Builder, org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder>(
                   fragments_,
-                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  ((bitField0_ & 0x00000004) != 0),
                   getParentForChildren(),
                   isClean());
           fragments_ = null;
@@ -10379,17 +10771,19 @@ public final class UserProtos {
         return fragmentsBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
       /**
        * <code>optional .exec.shared.DrillPBError error = 4;</code>
+       * @return Whether the error field is set.
        */
       public boolean hasError() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional .exec.shared.DrillPBError error = 4;</code>
+       * @return The error.
        */
       public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
         if (errorBuilder_ == null) {
@@ -10433,7 +10827,7 @@ public final class UserProtos {
        */
       public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
         if (errorBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               error_ != null &&
               error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
             error_ =
@@ -10555,56 +10949,68 @@ public final class UserProtos {
 
     /**
      * <code>optional int32 rpc_version = 2;</code>
+     * @return Whether the rpcVersion field is set.
      */
     boolean hasRpcVersion();
     /**
      * <code>optional int32 rpc_version = 2;</code>
+     * @return The rpcVersion.
      */
     int getRpcVersion();
 
     /**
      * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+     * @return Whether the status field is set.
      */
     boolean hasStatus();
     /**
      * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+     * @return The status.
      */
     org.apache.drill.exec.proto.UserProtos.HandshakeStatus getStatus();
 
     /**
      * <code>optional string errorId = 4;</code>
+     * @return Whether the errorId field is set.
      */
     boolean hasErrorId();
     /**
      * <code>optional string errorId = 4;</code>
+     * @return The errorId.
      */
     java.lang.String getErrorId();
     /**
      * <code>optional string errorId = 4;</code>
+     * @return The bytes for errorId.
      */
     com.google.protobuf.ByteString
         getErrorIdBytes();
 
     /**
      * <code>optional string errorMessage = 5;</code>
+     * @return Whether the errorMessage field is set.
      */
     boolean hasErrorMessage();
     /**
      * <code>optional string errorMessage = 5;</code>
+     * @return The errorMessage.
      */
     java.lang.String getErrorMessage();
     /**
      * <code>optional string errorMessage = 5;</code>
+     * @return The bytes for errorMessage.
      */
     com.google.protobuf.ByteString
         getErrorMessageBytes();
 
     /**
      * <code>optional .exec.user.RpcEndpointInfos server_infos = 6;</code>
+     * @return Whether the serverInfos field is set.
      */
     boolean hasServerInfos();
     /**
      * <code>optional .exec.user.RpcEndpointInfos server_infos = 6;</code>
+     * @return The serverInfos.
      */
     org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos getServerInfos();
     /**
@@ -10614,51 +11020,65 @@ public final class UserProtos {
 
     /**
      * <code>repeated string authenticationMechanisms = 7;</code>
+     * @return A list containing the authenticationMechanisms.
      */
     java.util.List<java.lang.String>
         getAuthenticationMechanismsList();
     /**
      * <code>repeated string authenticationMechanisms = 7;</code>
+     * @return The count of authenticationMechanisms.
      */
     int getAuthenticationMechanismsCount();
     /**
      * <code>repeated string authenticationMechanisms = 7;</code>
+     * @param index The index of the element to return.
+     * @return The authenticationMechanisms at the given index.
      */
     java.lang.String getAuthenticationMechanisms(int index);
     /**
      * <code>repeated string authenticationMechanisms = 7;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the authenticationMechanisms at the given index.
      */
     com.google.protobuf.ByteString
         getAuthenticationMechanismsBytes(int index);
 
     /**
      * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     * @return A list containing the supportedMethods.
      */
     java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> getSupportedMethodsList();
     /**
      * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     * @return The count of supportedMethods.
      */
     int getSupportedMethodsCount();
     /**
      * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     * @param index The index of the element to return.
+     * @return The supportedMethods at the given index.
      */
     org.apache.drill.exec.proto.UserProtos.RpcType getSupportedMethods(int index);
 
     /**
      * <code>optional bool encrypted = 9;</code>
+     * @return Whether the encrypted field is set.
      */
     boolean hasEncrypted();
     /**
      * <code>optional bool encrypted = 9;</code>
+     * @return The encrypted.
      */
     boolean getEncrypted();
 
     /**
      * <code>optional int32 maxWrappedSize = 10;</code>
+     * @return Whether the maxWrappedSize field is set.
      */
     boolean hasMaxWrappedSize();
     /**
      * <code>optional int32 maxWrappedSize = 10;</code>
+     * @return The maxWrappedSize.
      */
     int getMaxWrappedSize();
   }
@@ -10675,14 +11095,18 @@ public final class UserProtos {
       super(builder);
     }
     private BitToUserHandshake() {
-      rpcVersion_ = 0;
       status_ = 1;
       errorId_ = "";
       errorMessage_ = "";
       authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       supportedMethods_ = java.util.Collections.emptyList();
-      encrypted_ = false;
-      maxWrappedSize_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new BitToUserHandshake();
     }
 
     @java.lang.Override
@@ -10740,7 +11164,7 @@ public final class UserProtos {
             }
             case 50: {
               org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+              if (((bitField0_ & 0x00000010) != 0)) {
                 subBuilder = serverInfos_.toBuilder();
               }
               serverInfos_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.PARSER, extensionRegistry);
@@ -10753,7 +11177,7 @@ public final class UserProtos {
             }
             case 58: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+              if (!((mutable_bitField0_ & 0x00000020) != 0)) {
                 authenticationMechanisms_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000020;
               }
@@ -10767,7 +11191,7 @@ public final class UserProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(8, rawValue);
               } else {
-                if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                if (!((mutable_bitField0_ & 0x00000040) != 0)) {
                   supportedMethods_ = new java.util.ArrayList<java.lang.Integer>();
                   mutable_bitField0_ |= 0x00000040;
                 }
@@ -10785,7 +11209,7 @@ public final class UserProtos {
                 if (value == null) {
                   unknownFields.mergeVarintField(8, rawValue);
                 } else {
-                  if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                  if (!((mutable_bitField0_ & 0x00000040) != 0)) {
                     supportedMethods_ = new java.util.ArrayList<java.lang.Integer>();
                     mutable_bitField0_ |= 0x00000040;
                   }
@@ -10820,10 +11244,10 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((mutable_bitField0_ & 0x00000020) != 0)) {
           authenticationMechanisms_ = authenticationMechanisms_.getUnmodifiableView();
         }
-        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((mutable_bitField0_ & 0x00000040) != 0)) {
           supportedMethods_ = java.util.Collections.unmodifiableList(supportedMethods_);
         }
         this.unknownFields = unknownFields.build();
@@ -10848,12 +11272,14 @@ public final class UserProtos {
     private int rpcVersion_;
     /**
      * <code>optional int32 rpc_version = 2;</code>
+     * @return Whether the rpcVersion field is set.
      */
     public boolean hasRpcVersion() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional int32 rpc_version = 2;</code>
+     * @return The rpcVersion.
      */
     public int getRpcVersion() {
       return rpcVersion_;
@@ -10863,12 +11289,14 @@ public final class UserProtos {
     private int status_;
     /**
      * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+     * @return Whether the status field is set.
      */
     public boolean hasStatus() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+     * @return The status.
      */
     public org.apache.drill.exec.proto.UserProtos.HandshakeStatus getStatus() {
       @SuppressWarnings("deprecation")
@@ -10880,12 +11308,14 @@ public final class UserProtos {
     private volatile java.lang.Object errorId_;
     /**
      * <code>optional string errorId = 4;</code>
+     * @return Whether the errorId field is set.
      */
     public boolean hasErrorId() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional string errorId = 4;</code>
+     * @return The errorId.
      */
     public java.lang.String getErrorId() {
       java.lang.Object ref = errorId_;
@@ -10903,6 +11333,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string errorId = 4;</code>
+     * @return The bytes for errorId.
      */
     public com.google.protobuf.ByteString
         getErrorIdBytes() {
@@ -10922,12 +11353,14 @@ public final class UserProtos {
     private volatile java.lang.Object errorMessage_;
     /**
      * <code>optional string errorMessage = 5;</code>
+     * @return Whether the errorMessage field is set.
      */
     public boolean hasErrorMessage() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional string errorMessage = 5;</code>
+     * @return The errorMessage.
      */
     public java.lang.String getErrorMessage() {
       java.lang.Object ref = errorMessage_;
@@ -10945,6 +11378,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string errorMessage = 5;</code>
+     * @return The bytes for errorMessage.
      */
     public com.google.protobuf.ByteString
         getErrorMessageBytes() {
@@ -10964,12 +11398,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos serverInfos_;
     /**
      * <code>optional .exec.user.RpcEndpointInfos server_infos = 6;</code>
+     * @return Whether the serverInfos field is set.
      */
     public boolean hasServerInfos() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional .exec.user.RpcEndpointInfos server_infos = 6;</code>
+     * @return The serverInfos.
      */
     public org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos getServerInfos() {
       return serverInfos_ == null ? org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.getDefaultInstance() : serverInfos_;
@@ -10985,6 +11421,7 @@ public final class UserProtos {
     private com.google.protobuf.LazyStringList authenticationMechanisms_;
     /**
      * <code>repeated string authenticationMechanisms = 7;</code>
+     * @return A list containing the authenticationMechanisms.
      */
     public com.google.protobuf.ProtocolStringList
         getAuthenticationMechanismsList() {
@@ -10992,18 +11429,23 @@ public final class UserProtos {
     }
     /**
      * <code>repeated string authenticationMechanisms = 7;</code>
+     * @return The count of authenticationMechanisms.
      */
     public int getAuthenticationMechanismsCount() {
       return authenticationMechanisms_.size();
     }
     /**
      * <code>repeated string authenticationMechanisms = 7;</code>
+     * @param index The index of the element to return.
+     * @return The authenticationMechanisms at the given index.
      */
     public java.lang.String getAuthenticationMechanisms(int index) {
       return authenticationMechanisms_.get(index);
     }
     /**
      * <code>repeated string authenticationMechanisms = 7;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the authenticationMechanisms at the given index.
      */
     public com.google.protobuf.ByteString
         getAuthenticationMechanismsBytes(int index) {
@@ -11024,6 +11466,7 @@ public final class UserProtos {
             };
     /**
      * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     * @return A list containing the supportedMethods.
      */
     public java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> getSupportedMethodsList() {
       return new com.google.protobuf.Internal.ListAdapter<
@@ -11031,12 +11474,15 @@ public final class UserProtos {
     }
     /**
      * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     * @return The count of supportedMethods.
      */
     public int getSupportedMethodsCount() {
       return supportedMethods_.size();
     }
     /**
      * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+     * @param index The index of the element to return.
+     * @return The supportedMethods at the given index.
      */
     public org.apache.drill.exec.proto.UserProtos.RpcType getSupportedMethods(int index) {
       return supportedMethods_converter_.convert(supportedMethods_.get(index));
@@ -11046,12 +11492,14 @@ public final class UserProtos {
     private boolean encrypted_;
     /**
      * <code>optional bool encrypted = 9;</code>
+     * @return Whether the encrypted field is set.
      */
     public boolean hasEncrypted() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <code>optional bool encrypted = 9;</code>
+     * @return The encrypted.
      */
     public boolean getEncrypted() {
       return encrypted_;
@@ -11061,12 +11509,14 @@ public final class UserProtos {
     private int maxWrappedSize_;
     /**
      * <code>optional int32 maxWrappedSize = 10;</code>
+     * @return Whether the maxWrappedSize field is set.
      */
     public boolean hasMaxWrappedSize() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <code>optional int32 maxWrappedSize = 10;</code>
+     * @return The maxWrappedSize.
      */
     public int getMaxWrappedSize() {
       return maxWrappedSize_;
@@ -11086,19 +11536,19 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeInt32(2, rpcVersion_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeEnum(3, status_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, errorId_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 5, errorMessage_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeMessage(6, getServerInfos());
       }
       for (int i = 0; i < authenticationMechanisms_.size(); i++) {
@@ -11107,10 +11557,10 @@ public final class UserProtos {
       for (int i = 0; i < supportedMethods_.size(); i++) {
         output.writeEnum(8, supportedMethods_.get(i));
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeBool(9, encrypted_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeInt32(10, maxWrappedSize_);
       }
       unknownFields.writeTo(output);
@@ -11122,21 +11572,21 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, rpcVersion_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(3, status_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, errorId_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, errorMessage_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(6, getServerInfos());
       }
@@ -11157,11 +11607,11 @@ public final class UserProtos {
         size += dataSize;
         size += 1 * supportedMethods_.size();
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(9, encrypted_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(10, maxWrappedSize_);
       }
@@ -11180,46 +11630,45 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.BitToUserHandshake other = (org.apache.drill.exec.proto.UserProtos.BitToUserHandshake) obj;
 
-      boolean result = true;
-      result = result && (hasRpcVersion() == other.hasRpcVersion());
+      if (hasRpcVersion() != other.hasRpcVersion()) return false;
       if (hasRpcVersion()) {
-        result = result && (getRpcVersion()
-            == other.getRpcVersion());
+        if (getRpcVersion()
+            != other.getRpcVersion()) return false;
       }
-      result = result && (hasStatus() == other.hasStatus());
+      if (hasStatus() != other.hasStatus()) return false;
       if (hasStatus()) {
-        result = result && status_ == other.status_;
+        if (status_ != other.status_) return false;
       }
-      result = result && (hasErrorId() == other.hasErrorId());
+      if (hasErrorId() != other.hasErrorId()) return false;
       if (hasErrorId()) {
-        result = result && getErrorId()
-            .equals(other.getErrorId());
+        if (!getErrorId()
+            .equals(other.getErrorId())) return false;
       }
-      result = result && (hasErrorMessage() == other.hasErrorMessage());
+      if (hasErrorMessage() != other.hasErrorMessage()) return false;
       if (hasErrorMessage()) {
-        result = result && getErrorMessage()
-            .equals(other.getErrorMessage());
+        if (!getErrorMessage()
+            .equals(other.getErrorMessage())) return false;
       }
-      result = result && (hasServerInfos() == other.hasServerInfos());
+      if (hasServerInfos() != other.hasServerInfos()) return false;
       if (hasServerInfos()) {
-        result = result && getServerInfos()
-            .equals(other.getServerInfos());
+        if (!getServerInfos()
+            .equals(other.getServerInfos())) return false;
       }
-      result = result && getAuthenticationMechanismsList()
-          .equals(other.getAuthenticationMechanismsList());
-      result = result && supportedMethods_.equals(other.supportedMethods_);
-      result = result && (hasEncrypted() == other.hasEncrypted());
+      if (!getAuthenticationMechanismsList()
+          .equals(other.getAuthenticationMechanismsList())) return false;
+      if (!supportedMethods_.equals(other.supportedMethods_)) return false;
+      if (hasEncrypted() != other.hasEncrypted()) return false;
       if (hasEncrypted()) {
-        result = result && (getEncrypted()
-            == other.getEncrypted());
+        if (getEncrypted()
+            != other.getEncrypted()) return false;
       }
-      result = result && (hasMaxWrappedSize() == other.hasMaxWrappedSize());
+      if (hasMaxWrappedSize() != other.hasMaxWrappedSize()) return false;
       if (hasMaxWrappedSize()) {
-        result = result && (getMaxWrappedSize()
-            == other.getMaxWrappedSize());
+        if (getMaxWrappedSize()
+            != other.getMaxWrappedSize()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -11450,48 +11899,48 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.BitToUserHandshake result = new org.apache.drill.exec.proto.UserProtos.BitToUserHandshake(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.rpcVersion_ = rpcVersion_;
           to_bitField0_ |= 0x00000001;
         }
-        result.rpcVersion_ = rpcVersion_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.status_ = status_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.errorId_ = errorId_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.errorMessage_ = errorMessage_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          if (serverInfosBuilder_ == null) {
+            result.serverInfos_ = serverInfos_;
+          } else {
+            result.serverInfos_ = serverInfosBuilder_.build();
+          }
           to_bitField0_ |= 0x00000010;
         }
-        if (serverInfosBuilder_ == null) {
-          result.serverInfos_ = serverInfos_;
-        } else {
-          result.serverInfos_ = serverInfosBuilder_.build();
-        }
-        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((bitField0_ & 0x00000020) != 0)) {
           authenticationMechanisms_ = authenticationMechanisms_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000020);
         }
         result.authenticationMechanisms_ = authenticationMechanisms_;
-        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((bitField0_ & 0x00000040) != 0)) {
           supportedMethods_ = java.util.Collections.unmodifiableList(supportedMethods_);
           bitField0_ = (bitField0_ & ~0x00000040);
         }
         result.supportedMethods_ = supportedMethods_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          result.encrypted_ = encrypted_;
           to_bitField0_ |= 0x00000020;
         }
-        result.encrypted_ = encrypted_;
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          result.maxWrappedSize_ = maxWrappedSize_;
           to_bitField0_ |= 0x00000040;
         }
-        result.maxWrappedSize_ = maxWrappedSize_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -11499,35 +11948,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -11619,18 +12068,22 @@ public final class UserProtos {
       private int rpcVersion_ ;
       /**
        * <code>optional int32 rpc_version = 2;</code>
+       * @return Whether the rpcVersion field is set.
        */
       public boolean hasRpcVersion() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional int32 rpc_version = 2;</code>
+       * @return The rpcVersion.
        */
       public int getRpcVersion() {
         return rpcVersion_;
       }
       /**
        * <code>optional int32 rpc_version = 2;</code>
+       * @param value The rpcVersion to set.
+       * @return This builder for chaining.
        */
       public Builder setRpcVersion(int value) {
         bitField0_ |= 0x00000001;
@@ -11640,6 +12093,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 rpc_version = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearRpcVersion() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -11651,12 +12105,14 @@ public final class UserProtos {
       private int status_ = 1;
       /**
        * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+       * @return Whether the status field is set.
        */
       public boolean hasStatus() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+       * @return The status.
        */
       public org.apache.drill.exec.proto.UserProtos.HandshakeStatus getStatus() {
         @SuppressWarnings("deprecation")
@@ -11665,6 +12121,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
        */
       public Builder setStatus(org.apache.drill.exec.proto.UserProtos.HandshakeStatus value) {
         if (value == null) {
@@ -11677,6 +12135,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.HandshakeStatus status = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStatus() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -11688,12 +12147,14 @@ public final class UserProtos {
       private java.lang.Object errorId_ = "";
       /**
        * <code>optional string errorId = 4;</code>
+       * @return Whether the errorId field is set.
        */
       public boolean hasErrorId() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional string errorId = 4;</code>
+       * @return The errorId.
        */
       public java.lang.String getErrorId() {
         java.lang.Object ref = errorId_;
@@ -11711,6 +12172,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string errorId = 4;</code>
+       * @return The bytes for errorId.
        */
       public com.google.protobuf.ByteString
           getErrorIdBytes() {
@@ -11727,6 +12189,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string errorId = 4;</code>
+       * @param value The errorId to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorId(
           java.lang.String value) {
@@ -11740,6 +12204,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string errorId = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearErrorId() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -11749,6 +12214,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string errorId = 4;</code>
+       * @param value The bytes for errorId to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorIdBytes(
           com.google.protobuf.ByteString value) {
@@ -11764,12 +12231,14 @@ public final class UserProtos {
       private java.lang.Object errorMessage_ = "";
       /**
        * <code>optional string errorMessage = 5;</code>
+       * @return Whether the errorMessage field is set.
        */
       public boolean hasErrorMessage() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional string errorMessage = 5;</code>
+       * @return The errorMessage.
        */
       public java.lang.String getErrorMessage() {
         java.lang.Object ref = errorMessage_;
@@ -11787,6 +12256,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string errorMessage = 5;</code>
+       * @return The bytes for errorMessage.
        */
       public com.google.protobuf.ByteString
           getErrorMessageBytes() {
@@ -11803,6 +12273,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string errorMessage = 5;</code>
+       * @param value The errorMessage to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorMessage(
           java.lang.String value) {
@@ -11816,6 +12288,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string errorMessage = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearErrorMessage() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -11825,6 +12298,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string errorMessage = 5;</code>
+       * @param value The bytes for errorMessage to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorMessageBytes(
           com.google.protobuf.ByteString value) {
@@ -11837,17 +12312,19 @@ public final class UserProtos {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos serverInfos_ = null;
+      private org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos serverInfos_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos, org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.Builder, org.apache.drill.exec.proto.UserProtos.RpcEndpointInfosOrBuilder> serverInfosBuilder_;
       /**
        * <code>optional .exec.user.RpcEndpointInfos server_infos = 6;</code>
+       * @return Whether the serverInfos field is set.
        */
       public boolean hasServerInfos() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional .exec.user.RpcEndpointInfos server_infos = 6;</code>
+       * @return The serverInfos.
        */
       public org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos getServerInfos() {
         if (serverInfosBuilder_ == null) {
@@ -11891,7 +12368,7 @@ public final class UserProtos {
        */
       public Builder mergeServerInfos(org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos value) {
         if (serverInfosBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+          if (((bitField0_ & 0x00000010) != 0) &&
               serverInfos_ != null &&
               serverInfos_ != org.apache.drill.exec.proto.UserProtos.RpcEndpointInfos.getDefaultInstance()) {
             serverInfos_ =
@@ -11957,13 +12434,14 @@ public final class UserProtos {
 
       private com.google.protobuf.LazyStringList authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureAuthenticationMechanismsIsMutable() {
-        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (!((bitField0_ & 0x00000020) != 0)) {
           authenticationMechanisms_ = new com.google.protobuf.LazyStringArrayList(authenticationMechanisms_);
           bitField0_ |= 0x00000020;
          }
       }
       /**
        * <code>repeated string authenticationMechanisms = 7;</code>
+       * @return A list containing the authenticationMechanisms.
        */
       public com.google.protobuf.ProtocolStringList
           getAuthenticationMechanismsList() {
@@ -11971,18 +12449,23 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string authenticationMechanisms = 7;</code>
+       * @return The count of authenticationMechanisms.
        */
       public int getAuthenticationMechanismsCount() {
         return authenticationMechanisms_.size();
       }
       /**
        * <code>repeated string authenticationMechanisms = 7;</code>
+       * @param index The index of the element to return.
+       * @return The authenticationMechanisms at the given index.
        */
       public java.lang.String getAuthenticationMechanisms(int index) {
         return authenticationMechanisms_.get(index);
       }
       /**
        * <code>repeated string authenticationMechanisms = 7;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the authenticationMechanisms at the given index.
        */
       public com.google.protobuf.ByteString
           getAuthenticationMechanismsBytes(int index) {
@@ -11990,6 +12473,9 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string authenticationMechanisms = 7;</code>
+       * @param index The index to set the value at.
+       * @param value The authenticationMechanisms to set.
+       * @return This builder for chaining.
        */
       public Builder setAuthenticationMechanisms(
           int index, java.lang.String value) {
@@ -12003,6 +12489,8 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string authenticationMechanisms = 7;</code>
+       * @param value The authenticationMechanisms to add.
+       * @return This builder for chaining.
        */
       public Builder addAuthenticationMechanisms(
           java.lang.String value) {
@@ -12016,6 +12504,8 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string authenticationMechanisms = 7;</code>
+       * @param values The authenticationMechanisms to add.
+       * @return This builder for chaining.
        */
       public Builder addAllAuthenticationMechanisms(
           java.lang.Iterable<java.lang.String> values) {
@@ -12027,6 +12517,7 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string authenticationMechanisms = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAuthenticationMechanisms() {
         authenticationMechanisms_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -12036,6 +12527,8 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string authenticationMechanisms = 7;</code>
+       * @param value The bytes of the authenticationMechanisms to add.
+       * @return This builder for chaining.
        */
       public Builder addAuthenticationMechanismsBytes(
           com.google.protobuf.ByteString value) {
@@ -12051,13 +12544,14 @@ public final class UserProtos {
       private java.util.List<java.lang.Integer> supportedMethods_ =
         java.util.Collections.emptyList();
       private void ensureSupportedMethodsIsMutable() {
-        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (!((bitField0_ & 0x00000040) != 0)) {
           supportedMethods_ = new java.util.ArrayList<java.lang.Integer>(supportedMethods_);
           bitField0_ |= 0x00000040;
         }
       }
       /**
        * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       * @return A list containing the supportedMethods.
        */
       public java.util.List<org.apache.drill.exec.proto.UserProtos.RpcType> getSupportedMethodsList() {
         return new com.google.protobuf.Internal.ListAdapter<
@@ -12065,18 +12559,24 @@ public final class UserProtos {
       }
       /**
        * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       * @return The count of supportedMethods.
        */
       public int getSupportedMethodsCount() {
         return supportedMethods_.size();
       }
       /**
        * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       * @param index The index of the element to return.
+       * @return The supportedMethods at the given index.
        */
       public org.apache.drill.exec.proto.UserProtos.RpcType getSupportedMethods(int index) {
         return supportedMethods_converter_.convert(supportedMethods_.get(index));
       }
       /**
        * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       * @param index The index to set the value at.
+       * @param value The supportedMethods to set.
+       * @return This builder for chaining.
        */
       public Builder setSupportedMethods(
           int index, org.apache.drill.exec.proto.UserProtos.RpcType value) {
@@ -12090,6 +12590,8 @@ public final class UserProtos {
       }
       /**
        * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       * @param value The supportedMethods to add.
+       * @return This builder for chaining.
        */
       public Builder addSupportedMethods(org.apache.drill.exec.proto.UserProtos.RpcType value) {
         if (value == null) {
@@ -12102,6 +12604,8 @@ public final class UserProtos {
       }
       /**
        * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       * @param values The supportedMethods to add.
+       * @return This builder for chaining.
        */
       public Builder addAllSupportedMethods(
           java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.RpcType> values) {
@@ -12114,6 +12618,7 @@ public final class UserProtos {
       }
       /**
        * <code>repeated .exec.user.RpcType supported_methods = 8;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSupportedMethods() {
         supportedMethods_ = java.util.Collections.emptyList();
@@ -12125,18 +12630,22 @@ public final class UserProtos {
       private boolean encrypted_ ;
       /**
        * <code>optional bool encrypted = 9;</code>
+       * @return Whether the encrypted field is set.
        */
       public boolean hasEncrypted() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <code>optional bool encrypted = 9;</code>
+       * @return The encrypted.
        */
       public boolean getEncrypted() {
         return encrypted_;
       }
       /**
        * <code>optional bool encrypted = 9;</code>
+       * @param value The encrypted to set.
+       * @return This builder for chaining.
        */
       public Builder setEncrypted(boolean value) {
         bitField0_ |= 0x00000080;
@@ -12146,6 +12655,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional bool encrypted = 9;</code>
+       * @return This builder for chaining.
        */
       public Builder clearEncrypted() {
         bitField0_ = (bitField0_ & ~0x00000080);
@@ -12157,18 +12667,22 @@ public final class UserProtos {
       private int maxWrappedSize_ ;
       /**
        * <code>optional int32 maxWrappedSize = 10;</code>
+       * @return Whether the maxWrappedSize field is set.
        */
       public boolean hasMaxWrappedSize() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <code>optional int32 maxWrappedSize = 10;</code>
+       * @return The maxWrappedSize.
        */
       public int getMaxWrappedSize() {
         return maxWrappedSize_;
       }
       /**
        * <code>optional int32 maxWrappedSize = 10;</code>
+       * @param value The maxWrappedSize to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxWrappedSize(int value) {
         bitField0_ |= 0x00000100;
@@ -12178,6 +12692,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 maxWrappedSize = 10;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxWrappedSize() {
         bitField0_ = (bitField0_ & ~0x00000100);
@@ -12248,6 +12763,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string pattern = 1;</code>
+     * @return Whether the pattern field is set.
      */
     boolean hasPattern();
     /**
@@ -12256,6 +12772,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string pattern = 1;</code>
+     * @return The pattern.
      */
     java.lang.String getPattern();
     /**
@@ -12264,6 +12781,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string pattern = 1;</code>
+     * @return The bytes for pattern.
      */
     com.google.protobuf.ByteString
         getPatternBytes();
@@ -12274,6 +12792,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string escape = 2;</code>
+     * @return Whether the escape field is set.
      */
     boolean hasEscape();
     /**
@@ -12282,6 +12801,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string escape = 2;</code>
+     * @return The escape.
      */
     java.lang.String getEscape();
     /**
@@ -12290,6 +12810,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string escape = 2;</code>
+     * @return The bytes for escape.
      */
     com.google.protobuf.ByteString
         getEscapeBytes();
@@ -12313,6 +12834,13 @@ public final class UserProtos {
     private LikeFilter() {
       pattern_ = "";
       escape_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new LikeFilter();
     }
 
     @java.lang.Override
@@ -12392,9 +12920,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string pattern = 1;</code>
+     * @return Whether the pattern field is set.
      */
     public boolean hasPattern() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -12402,6 +12931,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string pattern = 1;</code>
+     * @return The pattern.
      */
     public java.lang.String getPattern() {
       java.lang.Object ref = pattern_;
@@ -12423,6 +12953,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string pattern = 1;</code>
+     * @return The bytes for pattern.
      */
     public com.google.protobuf.ByteString
         getPatternBytes() {
@@ -12446,9 +12977,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string escape = 2;</code>
+     * @return Whether the escape field is set.
      */
     public boolean hasEscape() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -12456,6 +12988,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string escape = 2;</code>
+     * @return The escape.
      */
     public java.lang.String getEscape() {
       java.lang.Object ref = escape_;
@@ -12477,6 +13010,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string escape = 2;</code>
+     * @return The bytes for escape.
      */
     public com.google.protobuf.ByteString
         getEscapeBytes() {
@@ -12506,10 +13040,10 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, pattern_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, escape_);
       }
       unknownFields.writeTo(output);
@@ -12521,10 +13055,10 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, pattern_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, escape_);
       }
       size += unknownFields.getSerializedSize();
@@ -12542,19 +13076,18 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.LikeFilter other = (org.apache.drill.exec.proto.UserProtos.LikeFilter) obj;
 
-      boolean result = true;
-      result = result && (hasPattern() == other.hasPattern());
+      if (hasPattern() != other.hasPattern()) return false;
       if (hasPattern()) {
-        result = result && getPattern()
-            .equals(other.getPattern());
+        if (!getPattern()
+            .equals(other.getPattern())) return false;
       }
-      result = result && (hasEscape() == other.hasEscape());
+      if (hasEscape() != other.hasEscape()) return false;
       if (hasEscape()) {
-        result = result && getEscape()
-            .equals(other.getEscape());
+        if (!getEscape()
+            .equals(other.getEscape())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -12741,11 +13274,11 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.LikeFilter result = new org.apache.drill.exec.proto.UserProtos.LikeFilter(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.pattern_ = pattern_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.escape_ = escape_;
@@ -12756,35 +13289,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -12845,9 +13378,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string pattern = 1;</code>
+       * @return Whether the pattern field is set.
        */
       public boolean hasPattern() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -12855,6 +13389,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string pattern = 1;</code>
+       * @return The pattern.
        */
       public java.lang.String getPattern() {
         java.lang.Object ref = pattern_;
@@ -12876,6 +13411,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string pattern = 1;</code>
+       * @return The bytes for pattern.
        */
       public com.google.protobuf.ByteString
           getPatternBytes() {
@@ -12896,6 +13432,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string pattern = 1;</code>
+       * @param value The pattern to set.
+       * @return This builder for chaining.
        */
       public Builder setPattern(
           java.lang.String value) {
@@ -12913,6 +13451,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string pattern = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPattern() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -12926,6 +13465,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string pattern = 1;</code>
+       * @param value The bytes for pattern to set.
+       * @return This builder for chaining.
        */
       public Builder setPatternBytes(
           com.google.protobuf.ByteString value) {
@@ -12945,9 +13486,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string escape = 2;</code>
+       * @return Whether the escape field is set.
        */
       public boolean hasEscape() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -12955,6 +13497,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string escape = 2;</code>
+       * @return The escape.
        */
       public java.lang.String getEscape() {
         java.lang.Object ref = escape_;
@@ -12976,6 +13519,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string escape = 2;</code>
+       * @return The bytes for escape.
        */
       public com.google.protobuf.ByteString
           getEscapeBytes() {
@@ -12996,6 +13540,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string escape = 2;</code>
+       * @param value The escape to set.
+       * @return This builder for chaining.
        */
       public Builder setEscape(
           java.lang.String value) {
@@ -13013,6 +13559,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string escape = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearEscape() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -13026,6 +13573,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string escape = 2;</code>
+       * @param value The bytes for escape to set.
+       * @return This builder for chaining.
        */
       public Builder setEscapeBytes(
           com.google.protobuf.ByteString value) {
@@ -13096,10 +13645,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return Whether the catalogNameFilter field is set.
      */
     boolean hasCatalogNameFilter();
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return The catalogNameFilter.
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter();
     /**
@@ -13124,6 +13675,13 @@ public final class UserProtos {
       super(builder);
     }
     private GetCatalogsReq() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetCatalogsReq();
     }
 
     @java.lang.Override
@@ -13152,7 +13710,7 @@ public final class UserProtos {
               break;
             case 10: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = catalogNameFilter_.toBuilder();
               }
               catalogNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
@@ -13200,12 +13758,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return Whether the catalogNameFilter field is set.
      */
     public boolean hasCatalogNameFilter() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return The catalogNameFilter.
      */
     public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
       return catalogNameFilter_ == null ? org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance() : catalogNameFilter_;
@@ -13231,7 +13791,7 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getCatalogNameFilter());
       }
       unknownFields.writeTo(output);
@@ -13243,7 +13803,7 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getCatalogNameFilter());
       }
@@ -13262,14 +13822,13 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.GetCatalogsReq other = (org.apache.drill.exec.proto.UserProtos.GetCatalogsReq) obj;
 
-      boolean result = true;
-      result = result && (hasCatalogNameFilter() == other.hasCatalogNameFilter());
+      if (hasCatalogNameFilter() != other.hasCatalogNameFilter()) return false;
       if (hasCatalogNameFilter()) {
-        result = result && getCatalogNameFilter()
-            .equals(other.getCatalogNameFilter());
+        if (!getCatalogNameFilter()
+            .equals(other.getCatalogNameFilter())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -13455,13 +14014,13 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.GetCatalogsReq result = new org.apache.drill.exec.proto.UserProtos.GetCatalogsReq(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (catalogNameFilterBuilder_ == null) {
+            result.catalogNameFilter_ = catalogNameFilter_;
+          } else {
+            result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (catalogNameFilterBuilder_ == null) {
-          result.catalogNameFilter_ = catalogNameFilter_;
-        } else {
-          result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -13470,35 +14029,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -13545,17 +14104,19 @@ public final class UserProtos {
       }
       private int bitField0_;
 
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_ = null;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> catalogNameFilterBuilder_;
       /**
        * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       * @return Whether the catalogNameFilter field is set.
        */
       public boolean hasCatalogNameFilter() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       * @return The catalogNameFilter.
        */
       public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
         if (catalogNameFilterBuilder_ == null) {
@@ -13599,7 +14160,7 @@ public final class UserProtos {
        */
       public Builder mergeCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
         if (catalogNameFilterBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               catalogNameFilter_ != null &&
               catalogNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
             catalogNameFilter_ =
@@ -13721,42 +14282,51 @@ public final class UserProtos {
 
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return Whether the catalogName field is set.
      */
     boolean hasCatalogName();
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The catalogName.
      */
     java.lang.String getCatalogName();
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The bytes for catalogName.
      */
     com.google.protobuf.ByteString
         getCatalogNameBytes();
 
     /**
      * <code>optional string description = 2;</code>
+     * @return Whether the description field is set.
      */
     boolean hasDescription();
     /**
      * <code>optional string description = 2;</code>
+     * @return The description.
      */
     java.lang.String getDescription();
     /**
      * <code>optional string description = 2;</code>
+     * @return The bytes for description.
      */
     com.google.protobuf.ByteString
         getDescriptionBytes();
 
     /**
      * <code>optional string connect = 3;</code>
+     * @return Whether the connect field is set.
      */
     boolean hasConnect();
     /**
      * <code>optional string connect = 3;</code>
+     * @return The connect.
      */
     java.lang.String getConnect();
     /**
      * <code>optional string connect = 3;</code>
+     * @return The bytes for connect.
      */
     com.google.protobuf.ByteString
         getConnectBytes();
@@ -13781,6 +14351,13 @@ public final class UserProtos {
       catalogName_ = "";
       description_ = "";
       connect_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CatalogMetadata();
     }
 
     @java.lang.Override
@@ -13862,12 +14439,14 @@ public final class UserProtos {
     private volatile java.lang.Object catalogName_;
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return Whether the catalogName field is set.
      */
     public boolean hasCatalogName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The catalogName.
      */
     public java.lang.String getCatalogName() {
       java.lang.Object ref = catalogName_;
@@ -13885,6 +14464,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The bytes for catalogName.
      */
     public com.google.protobuf.ByteString
         getCatalogNameBytes() {
@@ -13904,12 +14484,14 @@ public final class UserProtos {
     private volatile java.lang.Object description_;
     /**
      * <code>optional string description = 2;</code>
+     * @return Whether the description field is set.
      */
     public boolean hasDescription() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional string description = 2;</code>
+     * @return The description.
      */
     public java.lang.String getDescription() {
       java.lang.Object ref = description_;
@@ -13927,6 +14509,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string description = 2;</code>
+     * @return The bytes for description.
      */
     public com.google.protobuf.ByteString
         getDescriptionBytes() {
@@ -13946,12 +14529,14 @@ public final class UserProtos {
     private volatile java.lang.Object connect_;
     /**
      * <code>optional string connect = 3;</code>
+     * @return Whether the connect field is set.
      */
     public boolean hasConnect() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional string connect = 3;</code>
+     * @return The connect.
      */
     public java.lang.String getConnect() {
       java.lang.Object ref = connect_;
@@ -13969,6 +14554,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string connect = 3;</code>
+     * @return The bytes for connect.
      */
     public com.google.protobuf.ByteString
         getConnectBytes() {
@@ -13998,13 +14584,13 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, catalogName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, description_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, connect_);
       }
       unknownFields.writeTo(output);
@@ -14016,13 +14602,13 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, catalogName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, description_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, connect_);
       }
       size += unknownFields.getSerializedSize();
@@ -14040,24 +14626,23 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.CatalogMetadata other = (org.apache.drill.exec.proto.UserProtos.CatalogMetadata) obj;
 
-      boolean result = true;
-      result = result && (hasCatalogName() == other.hasCatalogName());
+      if (hasCatalogName() != other.hasCatalogName()) return false;
       if (hasCatalogName()) {
-        result = result && getCatalogName()
-            .equals(other.getCatalogName());
+        if (!getCatalogName()
+            .equals(other.getCatalogName())) return false;
       }
-      result = result && (hasDescription() == other.hasDescription());
+      if (hasDescription() != other.hasDescription()) return false;
       if (hasDescription()) {
-        result = result && getDescription()
-            .equals(other.getDescription());
+        if (!getDescription()
+            .equals(other.getDescription())) return false;
       }
-      result = result && (hasConnect() == other.hasConnect());
+      if (hasConnect() != other.hasConnect()) return false;
       if (hasConnect()) {
-        result = result && getConnect()
-            .equals(other.getConnect());
+        if (!getConnect()
+            .equals(other.getConnect())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -14250,15 +14835,15 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.CatalogMetadata result = new org.apache.drill.exec.proto.UserProtos.CatalogMetadata(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.catalogName_ = catalogName_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.description_ = description_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.connect_ = connect_;
@@ -14269,35 +14854,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -14359,12 +14944,14 @@ public final class UserProtos {
       private java.lang.Object catalogName_ = "";
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return Whether the catalogName field is set.
        */
       public boolean hasCatalogName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return The catalogName.
        */
       public java.lang.String getCatalogName() {
         java.lang.Object ref = catalogName_;
@@ -14382,6 +14969,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return The bytes for catalogName.
        */
       public com.google.protobuf.ByteString
           getCatalogNameBytes() {
@@ -14398,6 +14986,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @param value The catalogName to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogName(
           java.lang.String value) {
@@ -14411,6 +15001,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCatalogName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -14420,6 +15011,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @param value The bytes for catalogName to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogNameBytes(
           com.google.protobuf.ByteString value) {
@@ -14435,12 +15028,14 @@ public final class UserProtos {
       private java.lang.Object description_ = "";
       /**
        * <code>optional string description = 2;</code>
+       * @return Whether the description field is set.
        */
       public boolean hasDescription() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional string description = 2;</code>
+       * @return The description.
        */
       public java.lang.String getDescription() {
         java.lang.Object ref = description_;
@@ -14458,6 +15053,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string description = 2;</code>
+       * @return The bytes for description.
        */
       public com.google.protobuf.ByteString
           getDescriptionBytes() {
@@ -14474,6 +15070,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string description = 2;</code>
+       * @param value The description to set.
+       * @return This builder for chaining.
        */
       public Builder setDescription(
           java.lang.String value) {
@@ -14487,6 +15085,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string description = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDescription() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -14496,6 +15095,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string description = 2;</code>
+       * @param value The bytes for description to set.
+       * @return This builder for chaining.
        */
       public Builder setDescriptionBytes(
           com.google.protobuf.ByteString value) {
@@ -14511,12 +15112,14 @@ public final class UserProtos {
       private java.lang.Object connect_ = "";
       /**
        * <code>optional string connect = 3;</code>
+       * @return Whether the connect field is set.
        */
       public boolean hasConnect() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional string connect = 3;</code>
+       * @return The connect.
        */
       public java.lang.String getConnect() {
         java.lang.Object ref = connect_;
@@ -14534,6 +15137,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string connect = 3;</code>
+       * @return The bytes for connect.
        */
       public com.google.protobuf.ByteString
           getConnectBytes() {
@@ -14550,6 +15154,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string connect = 3;</code>
+       * @param value The connect to set.
+       * @return This builder for chaining.
        */
       public Builder setConnect(
           java.lang.String value) {
@@ -14563,6 +15169,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string connect = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearConnect() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -14572,6 +15179,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string connect = 3;</code>
+       * @param value The bytes for connect to set.
+       * @return This builder for chaining.
        */
       public Builder setConnectBytes(
           com.google.protobuf.ByteString value) {
@@ -14642,10 +15251,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     boolean hasStatus();
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus();
 
@@ -14675,10 +15286,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     boolean hasError();
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
     /**
@@ -14705,6 +15318,13 @@ public final class UserProtos {
     private GetCatalogsResp() {
       status_ = 0;
       catalogs_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetCatalogsResp();
     }
 
     @java.lang.Override
@@ -14744,7 +15364,7 @@ public final class UserProtos {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 catalogs_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.CatalogMetadata>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -14754,7 +15374,7 @@ public final class UserProtos {
             }
             case 26: {
               org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = error_.toBuilder();
               }
               error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
@@ -14780,7 +15400,7 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           catalogs_ = java.util.Collections.unmodifiableList(catalogs_);
         }
         this.unknownFields = unknownFields.build();
@@ -14805,12 +15425,14 @@ public final class UserProtos {
     private int status_;
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     public boolean hasStatus() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
       @SuppressWarnings("deprecation")
@@ -14857,12 +15479,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     public boolean hasError() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
       return error_ == null ? org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance() : error_;
@@ -14888,13 +15512,13 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, status_);
       }
       for (int i = 0; i < catalogs_.size(); i++) {
         output.writeMessage(2, catalogs_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(3, getError());
       }
       unknownFields.writeTo(output);
@@ -14906,7 +15530,7 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, status_);
       }
@@ -14914,7 +15538,7 @@ public final class UserProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, catalogs_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getError());
       }
@@ -14933,20 +15557,19 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.GetCatalogsResp other = (org.apache.drill.exec.proto.UserProtos.GetCatalogsResp) obj;
 
-      boolean result = true;
-      result = result && (hasStatus() == other.hasStatus());
+      if (hasStatus() != other.hasStatus()) return false;
       if (hasStatus()) {
-        result = result && status_ == other.status_;
+        if (status_ != other.status_) return false;
       }
-      result = result && getCatalogsList()
-          .equals(other.getCatalogsList());
-      result = result && (hasError() == other.hasError());
+      if (!getCatalogsList()
+          .equals(other.getCatalogsList())) return false;
+      if (hasError() != other.hasError()) return false;
       if (hasError()) {
-        result = result && getError()
-            .equals(other.getError());
+        if (!getError()
+            .equals(other.getError())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -15149,12 +15772,12 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.GetCatalogsResp result = new org.apache.drill.exec.proto.UserProtos.GetCatalogsResp(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.status_ = status_;
         if (catalogsBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             catalogs_ = java.util.Collections.unmodifiableList(catalogs_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -15162,13 +15785,13 @@ public final class UserProtos {
         } else {
           result.catalogs_ = catalogsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (errorBuilder_ == null) {
+            result.error_ = error_;
+          } else {
+            result.error_ = errorBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (errorBuilder_ == null) {
-          result.error_ = error_;
-        } else {
-          result.error_ = errorBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -15177,35 +15800,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -15284,12 +15907,14 @@ public final class UserProtos {
       private int status_ = 0;
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return Whether the status field is set.
        */
       public boolean hasStatus() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return The status.
        */
       public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
         @SuppressWarnings("deprecation")
@@ -15298,6 +15923,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
        */
       public Builder setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus value) {
         if (value == null) {
@@ -15310,6 +15937,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStatus() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -15321,7 +15949,7 @@ public final class UserProtos {
       private java.util.List<org.apache.drill.exec.proto.UserProtos.CatalogMetadata> catalogs_ =
         java.util.Collections.emptyList();
       private void ensureCatalogsIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           catalogs_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.CatalogMetadata>(catalogs_);
           bitField0_ |= 0x00000002;
          }
@@ -15550,7 +16178,7 @@ public final class UserProtos {
           catalogsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserProtos.CatalogMetadata, org.apache.drill.exec.proto.UserProtos.CatalogMetadata.Builder, org.apache.drill.exec.proto.UserProtos.CatalogMetadataOrBuilder>(
                   catalogs_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           catalogs_ = null;
@@ -15558,17 +16186,19 @@ public final class UserProtos {
         return catalogsBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return Whether the error field is set.
        */
       public boolean hasError() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return The error.
        */
       public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
         if (errorBuilder_ == null) {
@@ -15612,7 +16242,7 @@ public final class UserProtos {
        */
       public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
         if (errorBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               error_ != null &&
               error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
             error_ =
@@ -15734,10 +16364,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return Whether the catalogNameFilter field is set.
      */
     boolean hasCatalogNameFilter();
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return The catalogNameFilter.
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter();
     /**
@@ -15747,10 +16379,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return Whether the schemaNameFilter field is set.
      */
     boolean hasSchemaNameFilter();
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return The schemaNameFilter.
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter();
     /**
@@ -15775,6 +16409,13 @@ public final class UserProtos {
       super(builder);
     }
     private GetSchemasReq() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetSchemasReq();
     }
 
     @java.lang.Override
@@ -15803,7 +16444,7 @@ public final class UserProtos {
               break;
             case 10: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = catalogNameFilter_.toBuilder();
               }
               catalogNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
@@ -15816,7 +16457,7 @@ public final class UserProtos {
             }
             case 18: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = schemaNameFilter_.toBuilder();
               }
               schemaNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
@@ -15864,12 +16505,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return Whether the catalogNameFilter field is set.
      */
     public boolean hasCatalogNameFilter() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return The catalogNameFilter.
      */
     public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
       return catalogNameFilter_ == null ? org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance() : catalogNameFilter_;
@@ -15885,12 +16528,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_;
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return Whether the schemaNameFilter field is set.
      */
     public boolean hasSchemaNameFilter() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return The schemaNameFilter.
      */
     public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
       return schemaNameFilter_ == null ? org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance() : schemaNameFilter_;
@@ -15916,10 +16561,10 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getCatalogNameFilter());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getSchemaNameFilter());
       }
       unknownFields.writeTo(output);
@@ -15931,11 +16576,11 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getCatalogNameFilter());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getSchemaNameFilter());
       }
@@ -15954,19 +16599,18 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.GetSchemasReq other = (org.apache.drill.exec.proto.UserProtos.GetSchemasReq) obj;
 
-      boolean result = true;
-      result = result && (hasCatalogNameFilter() == other.hasCatalogNameFilter());
+      if (hasCatalogNameFilter() != other.hasCatalogNameFilter()) return false;
       if (hasCatalogNameFilter()) {
-        result = result && getCatalogNameFilter()
-            .equals(other.getCatalogNameFilter());
+        if (!getCatalogNameFilter()
+            .equals(other.getCatalogNameFilter())) return false;
       }
-      result = result && (hasSchemaNameFilter() == other.hasSchemaNameFilter());
+      if (hasSchemaNameFilter() != other.hasSchemaNameFilter()) return false;
       if (hasSchemaNameFilter()) {
-        result = result && getSchemaNameFilter()
-            .equals(other.getSchemaNameFilter());
+        if (!getSchemaNameFilter()
+            .equals(other.getSchemaNameFilter())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -16163,21 +16807,21 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.GetSchemasReq result = new org.apache.drill.exec.proto.UserProtos.GetSchemasReq(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (catalogNameFilterBuilder_ == null) {
+            result.catalogNameFilter_ = catalogNameFilter_;
+          } else {
+            result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (catalogNameFilterBuilder_ == null) {
-          result.catalogNameFilter_ = catalogNameFilter_;
-        } else {
-          result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (schemaNameFilterBuilder_ == null) {
+            result.schemaNameFilter_ = schemaNameFilter_;
+          } else {
+            result.schemaNameFilter_ = schemaNameFilterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (schemaNameFilterBuilder_ == null) {
-          result.schemaNameFilter_ = schemaNameFilter_;
-        } else {
-          result.schemaNameFilter_ = schemaNameFilterBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -16186,35 +16830,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -16264,17 +16908,19 @@ public final class UserProtos {
       }
       private int bitField0_;
 
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_ = null;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> catalogNameFilterBuilder_;
       /**
        * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       * @return Whether the catalogNameFilter field is set.
        */
       public boolean hasCatalogNameFilter() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       * @return The catalogNameFilter.
        */
       public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
         if (catalogNameFilterBuilder_ == null) {
@@ -16318,7 +16964,7 @@ public final class UserProtos {
        */
       public Builder mergeCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
         if (catalogNameFilterBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               catalogNameFilter_ != null &&
               catalogNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
             catalogNameFilter_ =
@@ -16382,17 +17028,19 @@ public final class UserProtos {
         return catalogNameFilterBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_ = null;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schemaNameFilterBuilder_;
       /**
        * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+       * @return Whether the schemaNameFilter field is set.
        */
       public boolean hasSchemaNameFilter() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+       * @return The schemaNameFilter.
        */
       public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
         if (schemaNameFilterBuilder_ == null) {
@@ -16436,7 +17084,7 @@ public final class UserProtos {
        */
       public Builder mergeSchemaNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
         if (schemaNameFilterBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               schemaNameFilter_ != null &&
               schemaNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
             schemaNameFilter_ =
@@ -16558,42 +17206,51 @@ public final class UserProtos {
 
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return Whether the catalogName field is set.
      */
     boolean hasCatalogName();
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The catalogName.
      */
     java.lang.String getCatalogName();
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The bytes for catalogName.
      */
     com.google.protobuf.ByteString
         getCatalogNameBytes();
 
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return Whether the schemaName field is set.
      */
     boolean hasSchemaName();
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The schemaName.
      */
     java.lang.String getSchemaName();
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The bytes for schemaName.
      */
     com.google.protobuf.ByteString
         getSchemaNameBytes();
 
     /**
      * <code>optional string owner = 3;</code>
+     * @return Whether the owner field is set.
      */
     boolean hasOwner();
     /**
      * <code>optional string owner = 3;</code>
+     * @return The owner.
      */
     java.lang.String getOwner();
     /**
      * <code>optional string owner = 3;</code>
+     * @return The bytes for owner.
      */
     com.google.protobuf.ByteString
         getOwnerBytes();
@@ -16604,6 +17261,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return Whether the type field is set.
      */
     boolean hasType();
     /**
@@ -16612,6 +17270,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return The type.
      */
     java.lang.String getType();
     /**
@@ -16620,20 +17279,24 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return The bytes for type.
      */
     com.google.protobuf.ByteString
         getTypeBytes();
 
     /**
      * <code>optional string mutable = 5;</code>
+     * @return Whether the mutable field is set.
      */
     boolean hasMutable();
     /**
      * <code>optional string mutable = 5;</code>
+     * @return The mutable.
      */
     java.lang.String getMutable();
     /**
      * <code>optional string mutable = 5;</code>
+     * @return The bytes for mutable.
      */
     com.google.protobuf.ByteString
         getMutableBytes();
@@ -16660,6 +17323,13 @@ public final class UserProtos {
       owner_ = "";
       type_ = "";
       mutable_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SchemaMetadata();
     }
 
     @java.lang.Override
@@ -16753,12 +17423,14 @@ public final class UserProtos {
     private volatile java.lang.Object catalogName_;
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return Whether the catalogName field is set.
      */
     public boolean hasCatalogName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The catalogName.
      */
     public java.lang.String getCatalogName() {
       java.lang.Object ref = catalogName_;
@@ -16776,6 +17448,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The bytes for catalogName.
      */
     public com.google.protobuf.ByteString
         getCatalogNameBytes() {
@@ -16795,12 +17468,14 @@ public final class UserProtos {
     private volatile java.lang.Object schemaName_;
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return Whether the schemaName field is set.
      */
     public boolean hasSchemaName() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The schemaName.
      */
     public java.lang.String getSchemaName() {
       java.lang.Object ref = schemaName_;
@@ -16818,6 +17493,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The bytes for schemaName.
      */
     public com.google.protobuf.ByteString
         getSchemaNameBytes() {
@@ -16837,12 +17513,14 @@ public final class UserProtos {
     private volatile java.lang.Object owner_;
     /**
      * <code>optional string owner = 3;</code>
+     * @return Whether the owner field is set.
      */
     public boolean hasOwner() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional string owner = 3;</code>
+     * @return The owner.
      */
     public java.lang.String getOwner() {
       java.lang.Object ref = owner_;
@@ -16860,6 +17538,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string owner = 3;</code>
+     * @return The bytes for owner.
      */
     public com.google.protobuf.ByteString
         getOwnerBytes() {
@@ -16883,9 +17562,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return Whether the type field is set.
      */
     public boolean hasType() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -16893,6 +17573,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return The type.
      */
     public java.lang.String getType() {
       java.lang.Object ref = type_;
@@ -16914,6 +17595,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return The bytes for type.
      */
     public com.google.protobuf.ByteString
         getTypeBytes() {
@@ -16933,12 +17615,14 @@ public final class UserProtos {
     private volatile java.lang.Object mutable_;
     /**
      * <code>optional string mutable = 5;</code>
+     * @return Whether the mutable field is set.
      */
     public boolean hasMutable() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional string mutable = 5;</code>
+     * @return The mutable.
      */
     public java.lang.String getMutable() {
       java.lang.Object ref = mutable_;
@@ -16956,6 +17640,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string mutable = 5;</code>
+     * @return The bytes for mutable.
      */
     public com.google.protobuf.ByteString
         getMutableBytes() {
@@ -16985,19 +17670,19 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, catalogName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, schemaName_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, owner_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, type_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 5, mutable_);
       }
       unknownFields.writeTo(output);
@@ -17009,19 +17694,19 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, catalogName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, schemaName_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, owner_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, type_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, mutable_);
       }
       size += unknownFields.getSerializedSize();
@@ -17039,34 +17724,33 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.SchemaMetadata other = (org.apache.drill.exec.proto.UserProtos.SchemaMetadata) obj;
 
-      boolean result = true;
-      result = result && (hasCatalogName() == other.hasCatalogName());
+      if (hasCatalogName() != other.hasCatalogName()) return false;
       if (hasCatalogName()) {
-        result = result && getCatalogName()
-            .equals(other.getCatalogName());
+        if (!getCatalogName()
+            .equals(other.getCatalogName())) return false;
       }
-      result = result && (hasSchemaName() == other.hasSchemaName());
+      if (hasSchemaName() != other.hasSchemaName()) return false;
       if (hasSchemaName()) {
-        result = result && getSchemaName()
-            .equals(other.getSchemaName());
+        if (!getSchemaName()
+            .equals(other.getSchemaName())) return false;
       }
-      result = result && (hasOwner() == other.hasOwner());
+      if (hasOwner() != other.hasOwner()) return false;
       if (hasOwner()) {
-        result = result && getOwner()
-            .equals(other.getOwner());
+        if (!getOwner()
+            .equals(other.getOwner())) return false;
       }
-      result = result && (hasType() == other.hasType());
+      if (hasType() != other.hasType()) return false;
       if (hasType()) {
-        result = result && getType()
-            .equals(other.getType());
+        if (!getType()
+            .equals(other.getType())) return false;
       }
-      result = result && (hasMutable() == other.hasMutable());
+      if (hasMutable() != other.hasMutable()) return false;
       if (hasMutable()) {
-        result = result && getMutable()
-            .equals(other.getMutable());
+        if (!getMutable()
+            .equals(other.getMutable())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -17271,23 +17955,23 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.SchemaMetadata result = new org.apache.drill.exec.proto.UserProtos.SchemaMetadata(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.catalogName_ = catalogName_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.schemaName_ = schemaName_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.owner_ = owner_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.type_ = type_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.mutable_ = mutable_;
@@ -17298,35 +17982,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -17398,12 +18082,14 @@ public final class UserProtos {
       private java.lang.Object catalogName_ = "";
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return Whether the catalogName field is set.
        */
       public boolean hasCatalogName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return The catalogName.
        */
       public java.lang.String getCatalogName() {
         java.lang.Object ref = catalogName_;
@@ -17421,6 +18107,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return The bytes for catalogName.
        */
       public com.google.protobuf.ByteString
           getCatalogNameBytes() {
@@ -17437,6 +18124,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @param value The catalogName to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogName(
           java.lang.String value) {
@@ -17450,6 +18139,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCatalogName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -17459,6 +18149,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @param value The bytes for catalogName to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogNameBytes(
           com.google.protobuf.ByteString value) {
@@ -17474,12 +18166,14 @@ public final class UserProtos {
       private java.lang.Object schemaName_ = "";
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return Whether the schemaName field is set.
        */
       public boolean hasSchemaName() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return The schemaName.
        */
       public java.lang.String getSchemaName() {
         java.lang.Object ref = schemaName_;
@@ -17497,6 +18191,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return The bytes for schemaName.
        */
       public com.google.protobuf.ByteString
           getSchemaNameBytes() {
@@ -17513,6 +18208,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @param value The schemaName to set.
+       * @return This builder for chaining.
        */
       public Builder setSchemaName(
           java.lang.String value) {
@@ -17526,6 +18223,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSchemaName() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -17535,6 +18233,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @param value The bytes for schemaName to set.
+       * @return This builder for chaining.
        */
       public Builder setSchemaNameBytes(
           com.google.protobuf.ByteString value) {
@@ -17550,12 +18250,14 @@ public final class UserProtos {
       private java.lang.Object owner_ = "";
       /**
        * <code>optional string owner = 3;</code>
+       * @return Whether the owner field is set.
        */
       public boolean hasOwner() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional string owner = 3;</code>
+       * @return The owner.
        */
       public java.lang.String getOwner() {
         java.lang.Object ref = owner_;
@@ -17573,6 +18275,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string owner = 3;</code>
+       * @return The bytes for owner.
        */
       public com.google.protobuf.ByteString
           getOwnerBytes() {
@@ -17589,6 +18292,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string owner = 3;</code>
+       * @param value The owner to set.
+       * @return This builder for chaining.
        */
       public Builder setOwner(
           java.lang.String value) {
@@ -17602,6 +18307,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string owner = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearOwner() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -17611,6 +18317,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string owner = 3;</code>
+       * @param value The bytes for owner to set.
+       * @return This builder for chaining.
        */
       public Builder setOwnerBytes(
           com.google.protobuf.ByteString value) {
@@ -17630,9 +18338,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @return Whether the type field is set.
        */
       public boolean hasType() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -17640,6 +18349,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @return The type.
        */
       public java.lang.String getType() {
         java.lang.Object ref = type_;
@@ -17661,6 +18371,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @return The bytes for type.
        */
       public com.google.protobuf.ByteString
           getTypeBytes() {
@@ -17681,6 +18392,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
        */
       public Builder setType(
           java.lang.String value) {
@@ -17698,6 +18411,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -17711,6 +18425,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @param value The bytes for type to set.
+       * @return This builder for chaining.
        */
       public Builder setTypeBytes(
           com.google.protobuf.ByteString value) {
@@ -17726,12 +18442,14 @@ public final class UserProtos {
       private java.lang.Object mutable_ = "";
       /**
        * <code>optional string mutable = 5;</code>
+       * @return Whether the mutable field is set.
        */
       public boolean hasMutable() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional string mutable = 5;</code>
+       * @return The mutable.
        */
       public java.lang.String getMutable() {
         java.lang.Object ref = mutable_;
@@ -17749,6 +18467,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string mutable = 5;</code>
+       * @return The bytes for mutable.
        */
       public com.google.protobuf.ByteString
           getMutableBytes() {
@@ -17765,6 +18484,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string mutable = 5;</code>
+       * @param value The mutable to set.
+       * @return This builder for chaining.
        */
       public Builder setMutable(
           java.lang.String value) {
@@ -17778,6 +18499,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string mutable = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMutable() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -17787,6 +18509,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string mutable = 5;</code>
+       * @param value The bytes for mutable to set.
+       * @return This builder for chaining.
        */
       public Builder setMutableBytes(
           com.google.protobuf.ByteString value) {
@@ -17857,10 +18581,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     boolean hasStatus();
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus();
 
@@ -17890,10 +18616,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     boolean hasError();
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
     /**
@@ -17920,6 +18648,13 @@ public final class UserProtos {
     private GetSchemasResp() {
       status_ = 0;
       schemas_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetSchemasResp();
     }
 
     @java.lang.Override
@@ -17959,7 +18694,7 @@ public final class UserProtos {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 schemas_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.SchemaMetadata>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -17969,7 +18704,7 @@ public final class UserProtos {
             }
             case 26: {
               org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = error_.toBuilder();
               }
               error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
@@ -17995,7 +18730,7 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           schemas_ = java.util.Collections.unmodifiableList(schemas_);
         }
         this.unknownFields = unknownFields.build();
@@ -18020,12 +18755,14 @@ public final class UserProtos {
     private int status_;
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     public boolean hasStatus() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
       @SuppressWarnings("deprecation")
@@ -18072,12 +18809,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     public boolean hasError() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
       return error_ == null ? org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance() : error_;
@@ -18103,13 +18842,13 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, status_);
       }
       for (int i = 0; i < schemas_.size(); i++) {
         output.writeMessage(2, schemas_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(3, getError());
       }
       unknownFields.writeTo(output);
@@ -18121,7 +18860,7 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, status_);
       }
@@ -18129,7 +18868,7 @@ public final class UserProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, schemas_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getError());
       }
@@ -18148,20 +18887,19 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.GetSchemasResp other = (org.apache.drill.exec.proto.UserProtos.GetSchemasResp) obj;
 
-      boolean result = true;
-      result = result && (hasStatus() == other.hasStatus());
+      if (hasStatus() != other.hasStatus()) return false;
       if (hasStatus()) {
-        result = result && status_ == other.status_;
+        if (status_ != other.status_) return false;
       }
-      result = result && getSchemasList()
-          .equals(other.getSchemasList());
-      result = result && (hasError() == other.hasError());
+      if (!getSchemasList()
+          .equals(other.getSchemasList())) return false;
+      if (hasError() != other.hasError()) return false;
       if (hasError()) {
-        result = result && getError()
-            .equals(other.getError());
+        if (!getError()
+            .equals(other.getError())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -18364,12 +19102,12 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.GetSchemasResp result = new org.apache.drill.exec.proto.UserProtos.GetSchemasResp(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.status_ = status_;
         if (schemasBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             schemas_ = java.util.Collections.unmodifiableList(schemas_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -18377,13 +19115,13 @@ public final class UserProtos {
         } else {
           result.schemas_ = schemasBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (errorBuilder_ == null) {
+            result.error_ = error_;
+          } else {
+            result.error_ = errorBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (errorBuilder_ == null) {
-          result.error_ = error_;
-        } else {
-          result.error_ = errorBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -18392,35 +19130,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -18499,12 +19237,14 @@ public final class UserProtos {
       private int status_ = 0;
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return Whether the status field is set.
        */
       public boolean hasStatus() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return The status.
        */
       public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
         @SuppressWarnings("deprecation")
@@ -18513,6 +19253,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
        */
       public Builder setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus value) {
         if (value == null) {
@@ -18525,6 +19267,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStatus() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -18536,7 +19279,7 @@ public final class UserProtos {
       private java.util.List<org.apache.drill.exec.proto.UserProtos.SchemaMetadata> schemas_ =
         java.util.Collections.emptyList();
       private void ensureSchemasIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           schemas_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.SchemaMetadata>(schemas_);
           bitField0_ |= 0x00000002;
          }
@@ -18765,7 +19508,7 @@ public final class UserProtos {
           schemasBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserProtos.SchemaMetadata, org.apache.drill.exec.proto.UserProtos.SchemaMetadata.Builder, org.apache.drill.exec.proto.UserProtos.SchemaMetadataOrBuilder>(
                   schemas_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           schemas_ = null;
@@ -18773,17 +19516,19 @@ public final class UserProtos {
         return schemasBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return Whether the error field is set.
        */
       public boolean hasError() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return The error.
        */
       public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
         if (errorBuilder_ == null) {
@@ -18827,7 +19572,7 @@ public final class UserProtos {
        */
       public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
         if (errorBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               error_ != null &&
               error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
             error_ =
@@ -18949,10 +19694,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return Whether the catalogNameFilter field is set.
      */
     boolean hasCatalogNameFilter();
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return The catalogNameFilter.
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter();
     /**
@@ -18962,10 +19709,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return Whether the schemaNameFilter field is set.
      */
     boolean hasSchemaNameFilter();
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return The schemaNameFilter.
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter();
     /**
@@ -18975,10 +19724,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     * @return Whether the tableNameFilter field is set.
      */
     boolean hasTableNameFilter();
     /**
      * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     * @return The tableNameFilter.
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter();
     /**
@@ -18988,19 +19739,25 @@ public final class UserProtos {
 
     /**
      * <code>repeated string table_type_filter = 4;</code>
+     * @return A list containing the tableTypeFilter.
      */
     java.util.List<java.lang.String>
         getTableTypeFilterList();
     /**
      * <code>repeated string table_type_filter = 4;</code>
+     * @return The count of tableTypeFilter.
      */
     int getTableTypeFilterCount();
     /**
      * <code>repeated string table_type_filter = 4;</code>
+     * @param index The index of the element to return.
+     * @return The tableTypeFilter at the given index.
      */
     java.lang.String getTableTypeFilter(int index);
     /**
      * <code>repeated string table_type_filter = 4;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the tableTypeFilter at the given index.
      */
     com.google.protobuf.ByteString
         getTableTypeFilterBytes(int index);
@@ -19023,6 +19780,13 @@ public final class UserProtos {
     }
     private GetTablesReq() {
       tableTypeFilter_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetTablesReq();
     }
 
     @java.lang.Override
@@ -19051,7 +19815,7 @@ public final class UserProtos {
               break;
             case 10: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = catalogNameFilter_.toBuilder();
               }
               catalogNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
@@ -19064,7 +19828,7 @@ public final class UserProtos {
             }
             case 18: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = schemaNameFilter_.toBuilder();
               }
               schemaNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
@@ -19077,7 +19841,7 @@ public final class UserProtos {
             }
             case 26: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = tableNameFilter_.toBuilder();
               }
               tableNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
@@ -19090,7 +19854,7 @@ public final class UserProtos {
             }
             case 34: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
                 tableTypeFilter_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000008;
               }
@@ -19112,7 +19876,7 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
           tableTypeFilter_ = tableTypeFilter_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
@@ -19137,12 +19901,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return Whether the catalogNameFilter field is set.
      */
     public boolean hasCatalogNameFilter() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return The catalogNameFilter.
      */
     public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
       return catalogNameFilter_ == null ? org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance() : catalogNameFilter_;
@@ -19158,12 +19924,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_;
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return Whether the schemaNameFilter field is set.
      */
     public boolean hasSchemaNameFilter() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return The schemaNameFilter.
      */
     public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
       return schemaNameFilter_ == null ? org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance() : schemaNameFilter_;
@@ -19179,12 +19947,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.LikeFilter tableNameFilter_;
     /**
      * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     * @return Whether the tableNameFilter field is set.
      */
     public boolean hasTableNameFilter() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     * @return The tableNameFilter.
      */
     public org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter() {
       return tableNameFilter_ == null ? org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance() : tableNameFilter_;
@@ -19200,6 +19970,7 @@ public final class UserProtos {
     private com.google.protobuf.LazyStringList tableTypeFilter_;
     /**
      * <code>repeated string table_type_filter = 4;</code>
+     * @return A list containing the tableTypeFilter.
      */
     public com.google.protobuf.ProtocolStringList
         getTableTypeFilterList() {
@@ -19207,18 +19978,23 @@ public final class UserProtos {
     }
     /**
      * <code>repeated string table_type_filter = 4;</code>
+     * @return The count of tableTypeFilter.
      */
     public int getTableTypeFilterCount() {
       return tableTypeFilter_.size();
     }
     /**
      * <code>repeated string table_type_filter = 4;</code>
+     * @param index The index of the element to return.
+     * @return The tableTypeFilter at the given index.
      */
     public java.lang.String getTableTypeFilter(int index) {
       return tableTypeFilter_.get(index);
     }
     /**
      * <code>repeated string table_type_filter = 4;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the tableTypeFilter at the given index.
      */
     public com.google.protobuf.ByteString
         getTableTypeFilterBytes(int index) {
@@ -19239,13 +20015,13 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getCatalogNameFilter());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getSchemaNameFilter());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getTableNameFilter());
       }
       for (int i = 0; i < tableTypeFilter_.size(); i++) {
@@ -19260,15 +20036,15 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getCatalogNameFilter());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getSchemaNameFilter());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getTableNameFilter());
       }
@@ -19295,26 +20071,25 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.GetTablesReq other = (org.apache.drill.exec.proto.UserProtos.GetTablesReq) obj;
 
-      boolean result = true;
-      result = result && (hasCatalogNameFilter() == other.hasCatalogNameFilter());
+      if (hasCatalogNameFilter() != other.hasCatalogNameFilter()) return false;
       if (hasCatalogNameFilter()) {
-        result = result && getCatalogNameFilter()
-            .equals(other.getCatalogNameFilter());
+        if (!getCatalogNameFilter()
+            .equals(other.getCatalogNameFilter())) return false;
       }
-      result = result && (hasSchemaNameFilter() == other.hasSchemaNameFilter());
+      if (hasSchemaNameFilter() != other.hasSchemaNameFilter()) return false;
       if (hasSchemaNameFilter()) {
-        result = result && getSchemaNameFilter()
-            .equals(other.getSchemaNameFilter());
+        if (!getSchemaNameFilter()
+            .equals(other.getSchemaNameFilter())) return false;
       }
-      result = result && (hasTableNameFilter() == other.hasTableNameFilter());
+      if (hasTableNameFilter() != other.hasTableNameFilter()) return false;
       if (hasTableNameFilter()) {
-        result = result && getTableNameFilter()
-            .equals(other.getTableNameFilter());
+        if (!getTableNameFilter()
+            .equals(other.getTableNameFilter())) return false;
       }
-      result = result && getTableTypeFilterList()
-          .equals(other.getTableTypeFilterList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getTableTypeFilterList()
+          .equals(other.getTableTypeFilterList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -19528,31 +20303,31 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.GetTablesReq result = new org.apache.drill.exec.proto.UserProtos.GetTablesReq(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (catalogNameFilterBuilder_ == null) {
+            result.catalogNameFilter_ = catalogNameFilter_;
+          } else {
+            result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (catalogNameFilterBuilder_ == null) {
-          result.catalogNameFilter_ = catalogNameFilter_;
-        } else {
-          result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (schemaNameFilterBuilder_ == null) {
+            result.schemaNameFilter_ = schemaNameFilter_;
+          } else {
+            result.schemaNameFilter_ = schemaNameFilterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (schemaNameFilterBuilder_ == null) {
-          result.schemaNameFilter_ = schemaNameFilter_;
-        } else {
-          result.schemaNameFilter_ = schemaNameFilterBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (tableNameFilterBuilder_ == null) {
+            result.tableNameFilter_ = tableNameFilter_;
+          } else {
+            result.tableNameFilter_ = tableNameFilterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
         }
-        if (tableNameFilterBuilder_ == null) {
-          result.tableNameFilter_ = tableNameFilter_;
-        } else {
-          result.tableNameFilter_ = tableNameFilterBuilder_.build();
-        }
-        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((bitField0_ & 0x00000008) != 0)) {
           tableTypeFilter_ = tableTypeFilter_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000008);
         }
@@ -19564,35 +20339,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -19655,17 +20430,19 @@ public final class UserProtos {
       }
       private int bitField0_;
 
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_ = null;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> catalogNameFilterBuilder_;
       /**
        * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       * @return Whether the catalogNameFilter field is set.
        */
       public boolean hasCatalogNameFilter() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       * @return The catalogNameFilter.
        */
       public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
         if (catalogNameFilterBuilder_ == null) {
@@ -19709,7 +20486,7 @@ public final class UserProtos {
        */
       public Builder mergeCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
         if (catalogNameFilterBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               catalogNameFilter_ != null &&
               catalogNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
             catalogNameFilter_ =
@@ -19773,17 +20550,19 @@ public final class UserProtos {
         return catalogNameFilterBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_ = null;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schemaNameFilterBuilder_;
       /**
        * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+       * @return Whether the schemaNameFilter field is set.
        */
       public boolean hasSchemaNameFilter() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+       * @return The schemaNameFilter.
        */
       public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
         if (schemaNameFilterBuilder_ == null) {
@@ -19827,7 +20606,7 @@ public final class UserProtos {
        */
       public Builder mergeSchemaNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
         if (schemaNameFilterBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               schemaNameFilter_ != null &&
               schemaNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
             schemaNameFilter_ =
@@ -19891,17 +20670,19 @@ public final class UserProtos {
         return schemaNameFilterBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter tableNameFilter_ = null;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter tableNameFilter_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> tableNameFilterBuilder_;
       /**
        * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       * @return Whether the tableNameFilter field is set.
        */
       public boolean hasTableNameFilter() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       * @return The tableNameFilter.
        */
       public org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter() {
         if (tableNameFilterBuilder_ == null) {
@@ -19945,7 +20726,7 @@ public final class UserProtos {
        */
       public Builder mergeTableNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
         if (tableNameFilterBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               tableNameFilter_ != null &&
               tableNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
             tableNameFilter_ =
@@ -20011,13 +20792,14 @@ public final class UserProtos {
 
       private com.google.protobuf.LazyStringList tableTypeFilter_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureTableTypeFilterIsMutable() {
-        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+        if (!((bitField0_ & 0x00000008) != 0)) {
           tableTypeFilter_ = new com.google.protobuf.LazyStringArrayList(tableTypeFilter_);
           bitField0_ |= 0x00000008;
          }
       }
       /**
        * <code>repeated string table_type_filter = 4;</code>
+       * @return A list containing the tableTypeFilter.
        */
       public com.google.protobuf.ProtocolStringList
           getTableTypeFilterList() {
@@ -20025,18 +20807,23 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string table_type_filter = 4;</code>
+       * @return The count of tableTypeFilter.
        */
       public int getTableTypeFilterCount() {
         return tableTypeFilter_.size();
       }
       /**
        * <code>repeated string table_type_filter = 4;</code>
+       * @param index The index of the element to return.
+       * @return The tableTypeFilter at the given index.
        */
       public java.lang.String getTableTypeFilter(int index) {
         return tableTypeFilter_.get(index);
       }
       /**
        * <code>repeated string table_type_filter = 4;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the tableTypeFilter at the given index.
        */
       public com.google.protobuf.ByteString
           getTableTypeFilterBytes(int index) {
@@ -20044,6 +20831,9 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string table_type_filter = 4;</code>
+       * @param index The index to set the value at.
+       * @param value The tableTypeFilter to set.
+       * @return This builder for chaining.
        */
       public Builder setTableTypeFilter(
           int index, java.lang.String value) {
@@ -20057,6 +20847,8 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string table_type_filter = 4;</code>
+       * @param value The tableTypeFilter to add.
+       * @return This builder for chaining.
        */
       public Builder addTableTypeFilter(
           java.lang.String value) {
@@ -20070,6 +20862,8 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string table_type_filter = 4;</code>
+       * @param values The tableTypeFilter to add.
+       * @return This builder for chaining.
        */
       public Builder addAllTableTypeFilter(
           java.lang.Iterable<java.lang.String> values) {
@@ -20081,6 +20875,7 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string table_type_filter = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTableTypeFilter() {
         tableTypeFilter_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -20090,6 +20885,8 @@ public final class UserProtos {
       }
       /**
        * <code>repeated string table_type_filter = 4;</code>
+       * @param value The bytes of the tableTypeFilter to add.
+       * @return This builder for chaining.
        */
       public Builder addTableTypeFilterBytes(
           com.google.protobuf.ByteString value) {
@@ -20160,42 +20957,51 @@ public final class UserProtos {
 
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return Whether the catalogName field is set.
      */
     boolean hasCatalogName();
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The catalogName.
      */
     java.lang.String getCatalogName();
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The bytes for catalogName.
      */
     com.google.protobuf.ByteString
         getCatalogNameBytes();
 
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return Whether the schemaName field is set.
      */
     boolean hasSchemaName();
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The schemaName.
      */
     java.lang.String getSchemaName();
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The bytes for schemaName.
      */
     com.google.protobuf.ByteString
         getSchemaNameBytes();
 
     /**
      * <code>optional string table_name = 3;</code>
+     * @return Whether the tableName field is set.
      */
     boolean hasTableName();
     /**
      * <code>optional string table_name = 3;</code>
+     * @return The tableName.
      */
     java.lang.String getTableName();
     /**
      * <code>optional string table_name = 3;</code>
+     * @return The bytes for tableName.
      */
     com.google.protobuf.ByteString
         getTableNameBytes();
@@ -20206,6 +21012,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return Whether the type field is set.
      */
     boolean hasType();
     /**
@@ -20214,6 +21021,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return The type.
      */
     java.lang.String getType();
     /**
@@ -20222,6 +21030,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return The bytes for type.
      */
     com.google.protobuf.ByteString
         getTypeBytes();
@@ -20247,6 +21056,13 @@ public final class UserProtos {
       schemaName_ = "";
       tableName_ = "";
       type_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new TableMetadata();
     }
 
     @java.lang.Override
@@ -20334,12 +21150,14 @@ public final class UserProtos {
     private volatile java.lang.Object catalogName_;
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return Whether the catalogName field is set.
      */
     public boolean hasCatalogName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The catalogName.
      */
     public java.lang.String getCatalogName() {
       java.lang.Object ref = catalogName_;
@@ -20357,6 +21175,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The bytes for catalogName.
      */
     public com.google.protobuf.ByteString
         getCatalogNameBytes() {
@@ -20376,12 +21195,14 @@ public final class UserProtos {
     private volatile java.lang.Object schemaName_;
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return Whether the schemaName field is set.
      */
     public boolean hasSchemaName() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The schemaName.
      */
     public java.lang.String getSchemaName() {
       java.lang.Object ref = schemaName_;
@@ -20399,6 +21220,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The bytes for schemaName.
      */
     public com.google.protobuf.ByteString
         getSchemaNameBytes() {
@@ -20418,12 +21240,14 @@ public final class UserProtos {
     private volatile java.lang.Object tableName_;
     /**
      * <code>optional string table_name = 3;</code>
+     * @return Whether the tableName field is set.
      */
     public boolean hasTableName() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional string table_name = 3;</code>
+     * @return The tableName.
      */
     public java.lang.String getTableName() {
       java.lang.Object ref = tableName_;
@@ -20441,6 +21265,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string table_name = 3;</code>
+     * @return The bytes for tableName.
      */
     public com.google.protobuf.ByteString
         getTableNameBytes() {
@@ -20464,9 +21289,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return Whether the type field is set.
      */
     public boolean hasType() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -20474,6 +21300,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return The type.
      */
     public java.lang.String getType() {
       java.lang.Object ref = type_;
@@ -20495,6 +21322,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string type = 4;</code>
+     * @return The bytes for type.
      */
     public com.google.protobuf.ByteString
         getTypeBytes() {
@@ -20524,16 +21352,16 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, catalogName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, schemaName_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, tableName_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, type_);
       }
       unknownFields.writeTo(output);
@@ -20545,16 +21373,16 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, catalogName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, schemaName_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, tableName_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, type_);
       }
       size += unknownFields.getSerializedSize();
@@ -20572,29 +21400,28 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.TableMetadata other = (org.apache.drill.exec.proto.UserProtos.TableMetadata) obj;
 
-      boolean result = true;
-      result = result && (hasCatalogName() == other.hasCatalogName());
+      if (hasCatalogName() != other.hasCatalogName()) return false;
       if (hasCatalogName()) {
-        result = result && getCatalogName()
-            .equals(other.getCatalogName());
+        if (!getCatalogName()
+            .equals(other.getCatalogName())) return false;
       }
-      result = result && (hasSchemaName() == other.hasSchemaName());
+      if (hasSchemaName() != other.hasSchemaName()) return false;
       if (hasSchemaName()) {
-        result = result && getSchemaName()
-            .equals(other.getSchemaName());
+        if (!getSchemaName()
+            .equals(other.getSchemaName())) return false;
       }
-      result = result && (hasTableName() == other.hasTableName());
+      if (hasTableName() != other.hasTableName()) return false;
       if (hasTableName()) {
-        result = result && getTableName()
-            .equals(other.getTableName());
+        if (!getTableName()
+            .equals(other.getTableName())) return false;
       }
-      result = result && (hasType() == other.hasType());
+      if (hasType() != other.hasType()) return false;
       if (hasType()) {
-        result = result && getType()
-            .equals(other.getType());
+        if (!getType()
+            .equals(other.getType())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -20793,19 +21620,19 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.TableMetadata result = new org.apache.drill.exec.proto.UserProtos.TableMetadata(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.catalogName_ = catalogName_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.schemaName_ = schemaName_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.tableName_ = tableName_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.type_ = type_;
@@ -20816,35 +21643,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -20911,12 +21738,14 @@ public final class UserProtos {
       private java.lang.Object catalogName_ = "";
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return Whether the catalogName field is set.
        */
       public boolean hasCatalogName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return The catalogName.
        */
       public java.lang.String getCatalogName() {
         java.lang.Object ref = catalogName_;
@@ -20934,6 +21763,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return The bytes for catalogName.
        */
       public com.google.protobuf.ByteString
           getCatalogNameBytes() {
@@ -20950,6 +21780,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @param value The catalogName to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogName(
           java.lang.String value) {
@@ -20963,6 +21795,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCatalogName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -20972,6 +21805,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @param value The bytes for catalogName to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogNameBytes(
           com.google.protobuf.ByteString value) {
@@ -20987,12 +21822,14 @@ public final class UserProtos {
       private java.lang.Object schemaName_ = "";
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return Whether the schemaName field is set.
        */
       public boolean hasSchemaName() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return The schemaName.
        */
       public java.lang.String getSchemaName() {
         java.lang.Object ref = schemaName_;
@@ -21010,6 +21847,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return The bytes for schemaName.
        */
       public com.google.protobuf.ByteString
           getSchemaNameBytes() {
@@ -21026,6 +21864,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @param value The schemaName to set.
+       * @return This builder for chaining.
        */
       public Builder setSchemaName(
           java.lang.String value) {
@@ -21039,6 +21879,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSchemaName() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -21048,6 +21889,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @param value The bytes for schemaName to set.
+       * @return This builder for chaining.
        */
       public Builder setSchemaNameBytes(
           com.google.protobuf.ByteString value) {
@@ -21063,12 +21906,14 @@ public final class UserProtos {
       private java.lang.Object tableName_ = "";
       /**
        * <code>optional string table_name = 3;</code>
+       * @return Whether the tableName field is set.
        */
       public boolean hasTableName() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional string table_name = 3;</code>
+       * @return The tableName.
        */
       public java.lang.String getTableName() {
         java.lang.Object ref = tableName_;
@@ -21086,6 +21931,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string table_name = 3;</code>
+       * @return The bytes for tableName.
        */
       public com.google.protobuf.ByteString
           getTableNameBytes() {
@@ -21102,6 +21948,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string table_name = 3;</code>
+       * @param value The tableName to set.
+       * @return This builder for chaining.
        */
       public Builder setTableName(
           java.lang.String value) {
@@ -21115,6 +21963,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string table_name = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTableName() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -21124,6 +21973,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string table_name = 3;</code>
+       * @param value The bytes for tableName to set.
+       * @return This builder for chaining.
        */
       public Builder setTableNameBytes(
           com.google.protobuf.ByteString value) {
@@ -21143,9 +21994,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @return Whether the type field is set.
        */
       public boolean hasType() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -21153,6 +22005,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @return The type.
        */
       public java.lang.String getType() {
         java.lang.Object ref = type_;
@@ -21174,6 +22027,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @return The bytes for type.
        */
       public com.google.protobuf.ByteString
           getTypeBytes() {
@@ -21194,6 +22048,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
        */
       public Builder setType(
           java.lang.String value) {
@@ -21211,6 +22067,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -21224,6 +22081,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string type = 4;</code>
+       * @param value The bytes for type to set.
+       * @return This builder for chaining.
        */
       public Builder setTypeBytes(
           com.google.protobuf.ByteString value) {
@@ -21294,10 +22153,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     boolean hasStatus();
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus();
 
@@ -21327,10 +22188,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     boolean hasError();
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
     /**
@@ -21357,6 +22220,13 @@ public final class UserProtos {
     private GetTablesResp() {
       status_ = 0;
       tables_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetTablesResp();
     }
 
     @java.lang.Override
@@ -21396,7 +22266,7 @@ public final class UserProtos {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 tables_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.TableMetadata>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -21406,7 +22276,7 @@ public final class UserProtos {
             }
             case 26: {
               org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = error_.toBuilder();
               }
               error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
@@ -21432,7 +22302,7 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           tables_ = java.util.Collections.unmodifiableList(tables_);
         }
         this.unknownFields = unknownFields.build();
@@ -21457,12 +22327,14 @@ public final class UserProtos {
     private int status_;
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     public boolean hasStatus() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
       @SuppressWarnings("deprecation")
@@ -21509,12 +22381,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     public boolean hasError() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
       return error_ == null ? org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance() : error_;
@@ -21540,13 +22414,13 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, status_);
       }
       for (int i = 0; i < tables_.size(); i++) {
         output.writeMessage(2, tables_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(3, getError());
       }
       unknownFields.writeTo(output);
@@ -21558,7 +22432,7 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, status_);
       }
@@ -21566,7 +22440,7 @@ public final class UserProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, tables_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getError());
       }
@@ -21585,20 +22459,19 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.GetTablesResp other = (org.apache.drill.exec.proto.UserProtos.GetTablesResp) obj;
 
-      boolean result = true;
-      result = result && (hasStatus() == other.hasStatus());
+      if (hasStatus() != other.hasStatus()) return false;
       if (hasStatus()) {
-        result = result && status_ == other.status_;
+        if (status_ != other.status_) return false;
       }
-      result = result && getTablesList()
-          .equals(other.getTablesList());
-      result = result && (hasError() == other.hasError());
+      if (!getTablesList()
+          .equals(other.getTablesList())) return false;
+      if (hasError() != other.hasError()) return false;
       if (hasError()) {
-        result = result && getError()
-            .equals(other.getError());
+        if (!getError()
+            .equals(other.getError())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -21801,12 +22674,12 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.GetTablesResp result = new org.apache.drill.exec.proto.UserProtos.GetTablesResp(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.status_ = status_;
         if (tablesBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             tables_ = java.util.Collections.unmodifiableList(tables_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -21814,13 +22687,13 @@ public final class UserProtos {
         } else {
           result.tables_ = tablesBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (errorBuilder_ == null) {
+            result.error_ = error_;
+          } else {
+            result.error_ = errorBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (errorBuilder_ == null) {
-          result.error_ = error_;
-        } else {
-          result.error_ = errorBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -21829,35 +22702,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -21936,12 +22809,14 @@ public final class UserProtos {
       private int status_ = 0;
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return Whether the status field is set.
        */
       public boolean hasStatus() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return The status.
        */
       public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
         @SuppressWarnings("deprecation")
@@ -21950,6 +22825,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
        */
       public Builder setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus value) {
         if (value == null) {
@@ -21962,6 +22839,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStatus() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -21973,7 +22851,7 @@ public final class UserProtos {
       private java.util.List<org.apache.drill.exec.proto.UserProtos.TableMetadata> tables_ =
         java.util.Collections.emptyList();
       private void ensureTablesIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           tables_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.TableMetadata>(tables_);
           bitField0_ |= 0x00000002;
          }
@@ -22202,7 +23080,7 @@ public final class UserProtos {
           tablesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserProtos.TableMetadata, org.apache.drill.exec.proto.UserProtos.TableMetadata.Builder, org.apache.drill.exec.proto.UserProtos.TableMetadataOrBuilder>(
                   tables_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           tables_ = null;
@@ -22210,17 +23088,19 @@ public final class UserProtos {
         return tablesBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return Whether the error field is set.
        */
       public boolean hasError() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return The error.
        */
       public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
         if (errorBuilder_ == null) {
@@ -22264,7 +23144,7 @@ public final class UserProtos {
        */
       public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
         if (errorBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               error_ != null &&
               error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
             error_ =
@@ -22386,10 +23266,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return Whether the catalogNameFilter field is set.
      */
     boolean hasCatalogNameFilter();
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return The catalogNameFilter.
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter();
     /**
@@ -22399,10 +23281,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return Whether the schemaNameFilter field is set.
      */
     boolean hasSchemaNameFilter();
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return The schemaNameFilter.
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter();
     /**
@@ -22412,10 +23296,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     * @return Whether the tableNameFilter field is set.
      */
     boolean hasTableNameFilter();
     /**
      * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     * @return The tableNameFilter.
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter();
     /**
@@ -22425,10 +23311,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+     * @return Whether the columnNameFilter field is set.
      */
     boolean hasColumnNameFilter();
     /**
      * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+     * @return The columnNameFilter.
      */
     org.apache.drill.exec.proto.UserProtos.LikeFilter getColumnNameFilter();
     /**
@@ -22453,6 +23341,13 @@ public final class UserProtos {
       super(builder);
     }
     private GetColumnsReq() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetColumnsReq();
     }
 
     @java.lang.Override
@@ -22481,7 +23376,7 @@ public final class UserProtos {
               break;
             case 10: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = catalogNameFilter_.toBuilder();
               }
               catalogNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
@@ -22494,7 +23389,7 @@ public final class UserProtos {
             }
             case 18: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = schemaNameFilter_.toBuilder();
               }
               schemaNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
@@ -22507,7 +23402,7 @@ public final class UserProtos {
             }
             case 26: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = tableNameFilter_.toBuilder();
               }
               tableNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
@@ -22520,7 +23415,7 @@ public final class UserProtos {
             }
             case 34: {
               org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000008) != 0)) {
                 subBuilder = columnNameFilter_.toBuilder();
               }
               columnNameFilter_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.LikeFilter.PARSER, extensionRegistry);
@@ -22568,12 +23463,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return Whether the catalogNameFilter field is set.
      */
     public boolean hasCatalogNameFilter() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+     * @return The catalogNameFilter.
      */
     public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
       return catalogNameFilter_ == null ? org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance() : catalogNameFilter_;
@@ -22589,12 +23486,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_;
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return Whether the schemaNameFilter field is set.
      */
     public boolean hasSchemaNameFilter() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+     * @return The schemaNameFilter.
      */
     public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
       return schemaNameFilter_ == null ? org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance() : schemaNameFilter_;
@@ -22610,12 +23509,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.LikeFilter tableNameFilter_;
     /**
      * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     * @return Whether the tableNameFilter field is set.
      */
     public boolean hasTableNameFilter() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+     * @return The tableNameFilter.
      */
     public org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter() {
       return tableNameFilter_ == null ? org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance() : tableNameFilter_;
@@ -22631,12 +23532,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.LikeFilter columnNameFilter_;
     /**
      * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+     * @return Whether the columnNameFilter field is set.
      */
     public boolean hasColumnNameFilter() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+     * @return The columnNameFilter.
      */
     public org.apache.drill.exec.proto.UserProtos.LikeFilter getColumnNameFilter() {
       return columnNameFilter_ == null ? org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance() : columnNameFilter_;
@@ -22662,16 +23565,16 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getCatalogNameFilter());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getSchemaNameFilter());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getTableNameFilter());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeMessage(4, getColumnNameFilter());
       }
       unknownFields.writeTo(output);
@@ -22683,19 +23586,19 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getCatalogNameFilter());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getSchemaNameFilter());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getTableNameFilter());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getColumnNameFilter());
       }
@@ -22714,29 +23617,28 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.GetColumnsReq other = (org.apache.drill.exec.proto.UserProtos.GetColumnsReq) obj;
 
-      boolean result = true;
-      result = result && (hasCatalogNameFilter() == other.hasCatalogNameFilter());
+      if (hasCatalogNameFilter() != other.hasCatalogNameFilter()) return false;
       if (hasCatalogNameFilter()) {
-        result = result && getCatalogNameFilter()
-            .equals(other.getCatalogNameFilter());
+        if (!getCatalogNameFilter()
+            .equals(other.getCatalogNameFilter())) return false;
       }
-      result = result && (hasSchemaNameFilter() == other.hasSchemaNameFilter());
+      if (hasSchemaNameFilter() != other.hasSchemaNameFilter()) return false;
       if (hasSchemaNameFilter()) {
-        result = result && getSchemaNameFilter()
-            .equals(other.getSchemaNameFilter());
+        if (!getSchemaNameFilter()
+            .equals(other.getSchemaNameFilter())) return false;
       }
-      result = result && (hasTableNameFilter() == other.hasTableNameFilter());
+      if (hasTableNameFilter() != other.hasTableNameFilter()) return false;
       if (hasTableNameFilter()) {
-        result = result && getTableNameFilter()
-            .equals(other.getTableNameFilter());
+        if (!getTableNameFilter()
+            .equals(other.getTableNameFilter())) return false;
       }
-      result = result && (hasColumnNameFilter() == other.hasColumnNameFilter());
+      if (hasColumnNameFilter() != other.hasColumnNameFilter()) return false;
       if (hasColumnNameFilter()) {
-        result = result && getColumnNameFilter()
-            .equals(other.getColumnNameFilter());
+        if (!getColumnNameFilter()
+            .equals(other.getColumnNameFilter())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -22955,37 +23857,37 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.GetColumnsReq result = new org.apache.drill.exec.proto.UserProtos.GetColumnsReq(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (catalogNameFilterBuilder_ == null) {
+            result.catalogNameFilter_ = catalogNameFilter_;
+          } else {
+            result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (catalogNameFilterBuilder_ == null) {
-          result.catalogNameFilter_ = catalogNameFilter_;
-        } else {
-          result.catalogNameFilter_ = catalogNameFilterBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (schemaNameFilterBuilder_ == null) {
+            result.schemaNameFilter_ = schemaNameFilter_;
+          } else {
+            result.schemaNameFilter_ = schemaNameFilterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (schemaNameFilterBuilder_ == null) {
-          result.schemaNameFilter_ = schemaNameFilter_;
-        } else {
-          result.schemaNameFilter_ = schemaNameFilterBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (tableNameFilterBuilder_ == null) {
+            result.tableNameFilter_ = tableNameFilter_;
+          } else {
+            result.tableNameFilter_ = tableNameFilterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
         }
-        if (tableNameFilterBuilder_ == null) {
-          result.tableNameFilter_ = tableNameFilter_;
-        } else {
-          result.tableNameFilter_ = tableNameFilterBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (columnNameFilterBuilder_ == null) {
+            result.columnNameFilter_ = columnNameFilter_;
+          } else {
+            result.columnNameFilter_ = columnNameFilterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000008;
-        }
-        if (columnNameFilterBuilder_ == null) {
-          result.columnNameFilter_ = columnNameFilter_;
-        } else {
-          result.columnNameFilter_ = columnNameFilterBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -22994,35 +23896,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -23078,17 +23980,19 @@ public final class UserProtos {
       }
       private int bitField0_;
 
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_ = null;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter catalogNameFilter_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> catalogNameFilterBuilder_;
       /**
        * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       * @return Whether the catalogNameFilter field is set.
        */
       public boolean hasCatalogNameFilter() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.user.LikeFilter catalog_name_filter = 1;</code>
+       * @return The catalogNameFilter.
        */
       public org.apache.drill.exec.proto.UserProtos.LikeFilter getCatalogNameFilter() {
         if (catalogNameFilterBuilder_ == null) {
@@ -23132,7 +24036,7 @@ public final class UserProtos {
        */
       public Builder mergeCatalogNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
         if (catalogNameFilterBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               catalogNameFilter_ != null &&
               catalogNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
             catalogNameFilter_ =
@@ -23196,17 +24100,19 @@ public final class UserProtos {
         return catalogNameFilterBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_ = null;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter schemaNameFilter_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> schemaNameFilterBuilder_;
       /**
        * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+       * @return Whether the schemaNameFilter field is set.
        */
       public boolean hasSchemaNameFilter() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.user.LikeFilter schema_name_filter = 2;</code>
+       * @return The schemaNameFilter.
        */
       public org.apache.drill.exec.proto.UserProtos.LikeFilter getSchemaNameFilter() {
         if (schemaNameFilterBuilder_ == null) {
@@ -23250,7 +24156,7 @@ public final class UserProtos {
        */
       public Builder mergeSchemaNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
         if (schemaNameFilterBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               schemaNameFilter_ != null &&
               schemaNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
             schemaNameFilter_ =
@@ -23314,17 +24220,19 @@ public final class UserProtos {
         return schemaNameFilterBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter tableNameFilter_ = null;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter tableNameFilter_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> tableNameFilterBuilder_;
       /**
        * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       * @return Whether the tableNameFilter field is set.
        */
       public boolean hasTableNameFilter() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.user.LikeFilter table_name_filter = 3;</code>
+       * @return The tableNameFilter.
        */
       public org.apache.drill.exec.proto.UserProtos.LikeFilter getTableNameFilter() {
         if (tableNameFilterBuilder_ == null) {
@@ -23368,7 +24276,7 @@ public final class UserProtos {
        */
       public Builder mergeTableNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
         if (tableNameFilterBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               tableNameFilter_ != null &&
               tableNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
             tableNameFilter_ =
@@ -23432,17 +24340,19 @@ public final class UserProtos {
         return tableNameFilterBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.LikeFilter columnNameFilter_ = null;
+      private org.apache.drill.exec.proto.UserProtos.LikeFilter columnNameFilter_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.LikeFilter, org.apache.drill.exec.proto.UserProtos.LikeFilter.Builder, org.apache.drill.exec.proto.UserProtos.LikeFilterOrBuilder> columnNameFilterBuilder_;
       /**
        * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+       * @return Whether the columnNameFilter field is set.
        */
       public boolean hasColumnNameFilter() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional .exec.user.LikeFilter column_name_filter = 4;</code>
+       * @return The columnNameFilter.
        */
       public org.apache.drill.exec.proto.UserProtos.LikeFilter getColumnNameFilter() {
         if (columnNameFilterBuilder_ == null) {
@@ -23486,7 +24396,7 @@ public final class UserProtos {
        */
       public Builder mergeColumnNameFilter(org.apache.drill.exec.proto.UserProtos.LikeFilter value) {
         if (columnNameFilterBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               columnNameFilter_ != null &&
               columnNameFilter_ != org.apache.drill.exec.proto.UserProtos.LikeFilter.getDefaultInstance()) {
             columnNameFilter_ =
@@ -23608,189 +24518,230 @@ public final class UserProtos {
 
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return Whether the catalogName field is set.
      */
     boolean hasCatalogName();
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The catalogName.
      */
     java.lang.String getCatalogName();
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The bytes for catalogName.
      */
     com.google.protobuf.ByteString
         getCatalogNameBytes();
 
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return Whether the schemaName field is set.
      */
     boolean hasSchemaName();
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The schemaName.
      */
     java.lang.String getSchemaName();
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The bytes for schemaName.
      */
     com.google.protobuf.ByteString
         getSchemaNameBytes();
 
     /**
      * <code>optional string table_name = 3;</code>
+     * @return Whether the tableName field is set.
      */
     boolean hasTableName();
     /**
      * <code>optional string table_name = 3;</code>
+     * @return The tableName.
      */
     java.lang.String getTableName();
     /**
      * <code>optional string table_name = 3;</code>
+     * @return The bytes for tableName.
      */
     com.google.protobuf.ByteString
         getTableNameBytes();
 
     /**
      * <code>optional string column_name = 4;</code>
+     * @return Whether the columnName field is set.
      */
     boolean hasColumnName();
     /**
      * <code>optional string column_name = 4;</code>
+     * @return The columnName.
      */
     java.lang.String getColumnName();
     /**
      * <code>optional string column_name = 4;</code>
+     * @return The bytes for columnName.
      */
     com.google.protobuf.ByteString
         getColumnNameBytes();
 
     /**
      * <code>optional int32 ordinal_position = 5;</code>
+     * @return Whether the ordinalPosition field is set.
      */
     boolean hasOrdinalPosition();
     /**
      * <code>optional int32 ordinal_position = 5;</code>
+     * @return The ordinalPosition.
      */
     int getOrdinalPosition();
 
     /**
      * <code>optional string default_value = 6;</code>
+     * @return Whether the defaultValue field is set.
      */
     boolean hasDefaultValue();
     /**
      * <code>optional string default_value = 6;</code>
+     * @return The defaultValue.
      */
     java.lang.String getDefaultValue();
     /**
      * <code>optional string default_value = 6;</code>
+     * @return The bytes for defaultValue.
      */
     com.google.protobuf.ByteString
         getDefaultValueBytes();
 
     /**
      * <code>optional bool is_nullable = 7;</code>
+     * @return Whether the isNullable field is set.
      */
     boolean hasIsNullable();
     /**
      * <code>optional bool is_nullable = 7;</code>
+     * @return The isNullable.
      */
     boolean getIsNullable();
 
     /**
      * <code>optional string data_type = 8;</code>
+     * @return Whether the dataType field is set.
      */
     boolean hasDataType();
     /**
      * <code>optional string data_type = 8;</code>
+     * @return The dataType.
      */
     java.lang.String getDataType();
     /**
      * <code>optional string data_type = 8;</code>
+     * @return The bytes for dataType.
      */
     com.google.protobuf.ByteString
         getDataTypeBytes();
 
     /**
      * <code>optional int32 char_max_length = 9;</code>
+     * @return Whether the charMaxLength field is set.
      */
     boolean hasCharMaxLength();
     /**
      * <code>optional int32 char_max_length = 9;</code>
+     * @return The charMaxLength.
      */
     int getCharMaxLength();
 
     /**
      * <code>optional int32 char_octet_length = 10;</code>
+     * @return Whether the charOctetLength field is set.
      */
     boolean hasCharOctetLength();
     /**
      * <code>optional int32 char_octet_length = 10;</code>
+     * @return The charOctetLength.
      */
     int getCharOctetLength();
 
     /**
      * <code>optional int32 numeric_precision = 11;</code>
+     * @return Whether the numericPrecision field is set.
      */
     boolean hasNumericPrecision();
     /**
      * <code>optional int32 numeric_precision = 11;</code>
+     * @return The numericPrecision.
      */
     int getNumericPrecision();
 
     /**
      * <code>optional int32 numeric_precision_radix = 12;</code>
+     * @return Whether the numericPrecisionRadix field is set.
      */
     boolean hasNumericPrecisionRadix();
     /**
      * <code>optional int32 numeric_precision_radix = 12;</code>
+     * @return The numericPrecisionRadix.
      */
     int getNumericPrecisionRadix();
 
     /**
      * <code>optional int32 numeric_scale = 13;</code>
+     * @return Whether the numericScale field is set.
      */
     boolean hasNumericScale();
     /**
      * <code>optional int32 numeric_scale = 13;</code>
+     * @return The numericScale.
      */
     int getNumericScale();
 
     /**
      * <code>optional int32 date_time_precision = 14;</code>
+     * @return Whether the dateTimePrecision field is set.
      */
     boolean hasDateTimePrecision();
     /**
      * <code>optional int32 date_time_precision = 14;</code>
+     * @return The dateTimePrecision.
      */
     int getDateTimePrecision();
 
     /**
      * <code>optional string interval_type = 15;</code>
+     * @return Whether the intervalType field is set.
      */
     boolean hasIntervalType();
     /**
      * <code>optional string interval_type = 15;</code>
+     * @return The intervalType.
      */
     java.lang.String getIntervalType();
     /**
      * <code>optional string interval_type = 15;</code>
+     * @return The bytes for intervalType.
      */
     com.google.protobuf.ByteString
         getIntervalTypeBytes();
 
     /**
      * <code>optional int32 interval_precision = 16;</code>
+     * @return Whether the intervalPrecision field is set.
      */
     boolean hasIntervalPrecision();
     /**
      * <code>optional int32 interval_precision = 16;</code>
+     * @return The intervalPrecision.
      */
     int getIntervalPrecision();
 
     /**
      * <code>optional int32 column_size = 17;</code>
+     * @return Whether the columnSize field is set.
      */
     boolean hasColumnSize();
     /**
      * <code>optional int32 column_size = 17;</code>
+     * @return The columnSize.
      */
     int getColumnSize();
   }
@@ -23815,19 +24766,16 @@ public final class UserProtos {
       schemaName_ = "";
       tableName_ = "";
       columnName_ = "";
-      ordinalPosition_ = 0;
       defaultValue_ = "";
-      isNullable_ = false;
       dataType_ = "";
-      charMaxLength_ = 0;
-      charOctetLength_ = 0;
-      numericPrecision_ = 0;
-      numericPrecisionRadix_ = 0;
-      numericScale_ = 0;
-      dateTimePrecision_ = 0;
       intervalType_ = "";
-      intervalPrecision_ = 0;
-      columnSize_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ColumnMetadata();
     }
 
     @java.lang.Override
@@ -23983,12 +24931,14 @@ public final class UserProtos {
     private volatile java.lang.Object catalogName_;
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return Whether the catalogName field is set.
      */
     public boolean hasCatalogName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The catalogName.
      */
     public java.lang.String getCatalogName() {
       java.lang.Object ref = catalogName_;
@@ -24006,6 +24956,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string catalog_name = 1;</code>
+     * @return The bytes for catalogName.
      */
     public com.google.protobuf.ByteString
         getCatalogNameBytes() {
@@ -24025,12 +24976,14 @@ public final class UserProtos {
     private volatile java.lang.Object schemaName_;
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return Whether the schemaName field is set.
      */
     public boolean hasSchemaName() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The schemaName.
      */
     public java.lang.String getSchemaName() {
       java.lang.Object ref = schemaName_;
@@ -24048,6 +25001,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string schema_name = 2;</code>
+     * @return The bytes for schemaName.
      */
     public com.google.protobuf.ByteString
         getSchemaNameBytes() {
@@ -24067,12 +25021,14 @@ public final class UserProtos {
     private volatile java.lang.Object tableName_;
     /**
      * <code>optional string table_name = 3;</code>
+     * @return Whether the tableName field is set.
      */
     public boolean hasTableName() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional string table_name = 3;</code>
+     * @return The tableName.
      */
     public java.lang.String getTableName() {
       java.lang.Object ref = tableName_;
@@ -24090,6 +25046,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string table_name = 3;</code>
+     * @return The bytes for tableName.
      */
     public com.google.protobuf.ByteString
         getTableNameBytes() {
@@ -24109,12 +25066,14 @@ public final class UserProtos {
     private volatile java.lang.Object columnName_;
     /**
      * <code>optional string column_name = 4;</code>
+     * @return Whether the columnName field is set.
      */
     public boolean hasColumnName() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional string column_name = 4;</code>
+     * @return The columnName.
      */
     public java.lang.String getColumnName() {
       java.lang.Object ref = columnName_;
@@ -24132,6 +25091,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string column_name = 4;</code>
+     * @return The bytes for columnName.
      */
     public com.google.protobuf.ByteString
         getColumnNameBytes() {
@@ -24151,12 +25111,14 @@ public final class UserProtos {
     private int ordinalPosition_;
     /**
      * <code>optional int32 ordinal_position = 5;</code>
+     * @return Whether the ordinalPosition field is set.
      */
     public boolean hasOrdinalPosition() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional int32 ordinal_position = 5;</code>
+     * @return The ordinalPosition.
      */
     public int getOrdinalPosition() {
       return ordinalPosition_;
@@ -24166,12 +25128,14 @@ public final class UserProtos {
     private volatile java.lang.Object defaultValue_;
     /**
      * <code>optional string default_value = 6;</code>
+     * @return Whether the defaultValue field is set.
      */
     public boolean hasDefaultValue() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <code>optional string default_value = 6;</code>
+     * @return The defaultValue.
      */
     public java.lang.String getDefaultValue() {
       java.lang.Object ref = defaultValue_;
@@ -24189,6 +25153,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string default_value = 6;</code>
+     * @return The bytes for defaultValue.
      */
     public com.google.protobuf.ByteString
         getDefaultValueBytes() {
@@ -24208,12 +25173,14 @@ public final class UserProtos {
     private boolean isNullable_;
     /**
      * <code>optional bool is_nullable = 7;</code>
+     * @return Whether the isNullable field is set.
      */
     public boolean hasIsNullable() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <code>optional bool is_nullable = 7;</code>
+     * @return The isNullable.
      */
     public boolean getIsNullable() {
       return isNullable_;
@@ -24223,12 +25190,14 @@ public final class UserProtos {
     private volatile java.lang.Object dataType_;
     /**
      * <code>optional string data_type = 8;</code>
+     * @return Whether the dataType field is set.
      */
     public boolean hasDataType() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <code>optional string data_type = 8;</code>
+     * @return The dataType.
      */
     public java.lang.String getDataType() {
       java.lang.Object ref = dataType_;
@@ -24246,6 +25215,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string data_type = 8;</code>
+     * @return The bytes for dataType.
      */
     public com.google.protobuf.ByteString
         getDataTypeBytes() {
@@ -24265,12 +25235,14 @@ public final class UserProtos {
     private int charMaxLength_;
     /**
      * <code>optional int32 char_max_length = 9;</code>
+     * @return Whether the charMaxLength field is set.
      */
     public boolean hasCharMaxLength() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000100) != 0);
     }
     /**
      * <code>optional int32 char_max_length = 9;</code>
+     * @return The charMaxLength.
      */
     public int getCharMaxLength() {
       return charMaxLength_;
@@ -24280,12 +25252,14 @@ public final class UserProtos {
     private int charOctetLength_;
     /**
      * <code>optional int32 char_octet_length = 10;</code>
+     * @return Whether the charOctetLength field is set.
      */
     public boolean hasCharOctetLength() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
+      return ((bitField0_ & 0x00000200) != 0);
     }
     /**
      * <code>optional int32 char_octet_length = 10;</code>
+     * @return The charOctetLength.
      */
     public int getCharOctetLength() {
       return charOctetLength_;
@@ -24295,12 +25269,14 @@ public final class UserProtos {
     private int numericPrecision_;
     /**
      * <code>optional int32 numeric_precision = 11;</code>
+     * @return Whether the numericPrecision field is set.
      */
     public boolean hasNumericPrecision() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00000400) != 0);
     }
     /**
      * <code>optional int32 numeric_precision = 11;</code>
+     * @return The numericPrecision.
      */
     public int getNumericPrecision() {
       return numericPrecision_;
@@ -24310,12 +25286,14 @@ public final class UserProtos {
     private int numericPrecisionRadix_;
     /**
      * <code>optional int32 numeric_precision_radix = 12;</code>
+     * @return Whether the numericPrecisionRadix field is set.
      */
     public boolean hasNumericPrecisionRadix() {
-      return ((bitField0_ & 0x00000800) == 0x00000800);
+      return ((bitField0_ & 0x00000800) != 0);
     }
     /**
      * <code>optional int32 numeric_precision_radix = 12;</code>
+     * @return The numericPrecisionRadix.
      */
     public int getNumericPrecisionRadix() {
       return numericPrecisionRadix_;
@@ -24325,12 +25303,14 @@ public final class UserProtos {
     private int numericScale_;
     /**
      * <code>optional int32 numeric_scale = 13;</code>
+     * @return Whether the numericScale field is set.
      */
     public boolean hasNumericScale() {
-      return ((bitField0_ & 0x00001000) == 0x00001000);
+      return ((bitField0_ & 0x00001000) != 0);
     }
     /**
      * <code>optional int32 numeric_scale = 13;</code>
+     * @return The numericScale.
      */
     public int getNumericScale() {
       return numericScale_;
@@ -24340,12 +25320,14 @@ public final class UserProtos {
     private int dateTimePrecision_;
     /**
      * <code>optional int32 date_time_precision = 14;</code>
+     * @return Whether the dateTimePrecision field is set.
      */
     public boolean hasDateTimePrecision() {
-      return ((bitField0_ & 0x00002000) == 0x00002000);
+      return ((bitField0_ & 0x00002000) != 0);
     }
     /**
      * <code>optional int32 date_time_precision = 14;</code>
+     * @return The dateTimePrecision.
      */
     public int getDateTimePrecision() {
       return dateTimePrecision_;
@@ -24355,12 +25337,14 @@ public final class UserProtos {
     private volatile java.lang.Object intervalType_;
     /**
      * <code>optional string interval_type = 15;</code>
+     * @return Whether the intervalType field is set.
      */
     public boolean hasIntervalType() {
-      return ((bitField0_ & 0x00004000) == 0x00004000);
+      return ((bitField0_ & 0x00004000) != 0);
     }
     /**
      * <code>optional string interval_type = 15;</code>
+     * @return The intervalType.
      */
     public java.lang.String getIntervalType() {
       java.lang.Object ref = intervalType_;
@@ -24378,6 +25362,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string interval_type = 15;</code>
+     * @return The bytes for intervalType.
      */
     public com.google.protobuf.ByteString
         getIntervalTypeBytes() {
@@ -24397,12 +25382,14 @@ public final class UserProtos {
     private int intervalPrecision_;
     /**
      * <code>optional int32 interval_precision = 16;</code>
+     * @return Whether the intervalPrecision field is set.
      */
     public boolean hasIntervalPrecision() {
-      return ((bitField0_ & 0x00008000) == 0x00008000);
+      return ((bitField0_ & 0x00008000) != 0);
     }
     /**
      * <code>optional int32 interval_precision = 16;</code>
+     * @return The intervalPrecision.
      */
     public int getIntervalPrecision() {
       return intervalPrecision_;
@@ -24412,12 +25399,14 @@ public final class UserProtos {
     private int columnSize_;
     /**
      * <code>optional int32 column_size = 17;</code>
+     * @return Whether the columnSize field is set.
      */
     public boolean hasColumnSize() {
-      return ((bitField0_ & 0x00010000) == 0x00010000);
+      return ((bitField0_ & 0x00010000) != 0);
     }
     /**
      * <code>optional int32 column_size = 17;</code>
+     * @return The columnSize.
      */
     public int getColumnSize() {
       return columnSize_;
@@ -24437,55 +25426,55 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, catalogName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, schemaName_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, tableName_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, columnName_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeInt32(5, ordinalPosition_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 6, defaultValue_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeBool(7, isNullable_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 8, dataType_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         output.writeInt32(9, charMaxLength_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         output.writeInt32(10, charOctetLength_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000400) != 0)) {
         output.writeInt32(11, numericPrecision_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00000800) != 0)) {
         output.writeInt32(12, numericPrecisionRadix_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00001000) != 0)) {
         output.writeInt32(13, numericScale_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00002000) != 0)) {
         output.writeInt32(14, dateTimePrecision_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00004000) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 15, intervalType_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00008000) != 0)) {
         output.writeInt32(16, intervalPrecision_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00010000) != 0)) {
         output.writeInt32(17, columnSize_);
       }
       unknownFields.writeTo(output);
@@ -24497,64 +25486,64 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, catalogName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, schemaName_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, tableName_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, columnName_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(5, ordinalPosition_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, defaultValue_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(7, isNullable_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, dataType_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(9, charMaxLength_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(10, charOctetLength_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000400) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(11, numericPrecision_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00000800) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(12, numericPrecisionRadix_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00001000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(13, numericScale_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00002000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(14, dateTimePrecision_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00004000) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(15, intervalType_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00008000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(16, intervalPrecision_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00010000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(17, columnSize_);
       }
@@ -24573,94 +25562,93 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.ColumnMetadata other = (org.apache.drill.exec.proto.UserProtos.ColumnMetadata) obj;
 
-      boolean result = true;
-      result = result && (hasCatalogName() == other.hasCatalogName());
+      if (hasCatalogName() != other.hasCatalogName()) return false;
       if (hasCatalogName()) {
-        result = result && getCatalogName()
-            .equals(other.getCatalogName());
+        if (!getCatalogName()
+            .equals(other.getCatalogName())) return false;
       }
-      result = result && (hasSchemaName() == other.hasSchemaName());
+      if (hasSchemaName() != other.hasSchemaName()) return false;
       if (hasSchemaName()) {
-        result = result && getSchemaName()
-            .equals(other.getSchemaName());
+        if (!getSchemaName()
+            .equals(other.getSchemaName())) return false;
       }
-      result = result && (hasTableName() == other.hasTableName());
+      if (hasTableName() != other.hasTableName()) return false;
       if (hasTableName()) {
-        result = result && getTableName()
-            .equals(other.getTableName());
+        if (!getTableName()
+            .equals(other.getTableName())) return false;
       }
-      result = result && (hasColumnName() == other.hasColumnName());
+      if (hasColumnName() != other.hasColumnName()) return false;
       if (hasColumnName()) {
-        result = result && getColumnName()
-            .equals(other.getColumnName());
+        if (!getColumnName()
+            .equals(other.getColumnName())) return false;
       }
-      result = result && (hasOrdinalPosition() == other.hasOrdinalPosition());
+      if (hasOrdinalPosition() != other.hasOrdinalPosition()) return false;
       if (hasOrdinalPosition()) {
-        result = result && (getOrdinalPosition()
-            == other.getOrdinalPosition());
+        if (getOrdinalPosition()
+            != other.getOrdinalPosition()) return false;
       }
-      result = result && (hasDefaultValue() == other.hasDefaultValue());
+      if (hasDefaultValue() != other.hasDefaultValue()) return false;
       if (hasDefaultValue()) {
-        result = result && getDefaultValue()
-            .equals(other.getDefaultValue());
+        if (!getDefaultValue()
+            .equals(other.getDefaultValue())) return false;
       }
-      result = result && (hasIsNullable() == other.hasIsNullable());
+      if (hasIsNullable() != other.hasIsNullable()) return false;
       if (hasIsNullable()) {
-        result = result && (getIsNullable()
-            == other.getIsNullable());
+        if (getIsNullable()
+            != other.getIsNullable()) return false;
       }
-      result = result && (hasDataType() == other.hasDataType());
+      if (hasDataType() != other.hasDataType()) return false;
       if (hasDataType()) {
-        result = result && getDataType()
-            .equals(other.getDataType());
+        if (!getDataType()
+            .equals(other.getDataType())) return false;
       }
-      result = result && (hasCharMaxLength() == other.hasCharMaxLength());
+      if (hasCharMaxLength() != other.hasCharMaxLength()) return false;
       if (hasCharMaxLength()) {
-        result = result && (getCharMaxLength()
-            == other.getCharMaxLength());
+        if (getCharMaxLength()
+            != other.getCharMaxLength()) return false;
       }
-      result = result && (hasCharOctetLength() == other.hasCharOctetLength());
+      if (hasCharOctetLength() != other.hasCharOctetLength()) return false;
       if (hasCharOctetLength()) {
-        result = result && (getCharOctetLength()
-            == other.getCharOctetLength());
+        if (getCharOctetLength()
+            != other.getCharOctetLength()) return false;
       }
-      result = result && (hasNumericPrecision() == other.hasNumericPrecision());
+      if (hasNumericPrecision() != other.hasNumericPrecision()) return false;
       if (hasNumericPrecision()) {
-        result = result && (getNumericPrecision()
-            == other.getNumericPrecision());
+        if (getNumericPrecision()
+            != other.getNumericPrecision()) return false;
       }
-      result = result && (hasNumericPrecisionRadix() == other.hasNumericPrecisionRadix());
+      if (hasNumericPrecisionRadix() != other.hasNumericPrecisionRadix()) return false;
       if (hasNumericPrecisionRadix()) {
-        result = result && (getNumericPrecisionRadix()
-            == other.getNumericPrecisionRadix());
+        if (getNumericPrecisionRadix()
+            != other.getNumericPrecisionRadix()) return false;
       }
-      result = result && (hasNumericScale() == other.hasNumericScale());
+      if (hasNumericScale() != other.hasNumericScale()) return false;
       if (hasNumericScale()) {
-        result = result && (getNumericScale()
-            == other.getNumericScale());
+        if (getNumericScale()
+            != other.getNumericScale()) return false;
       }
-      result = result && (hasDateTimePrecision() == other.hasDateTimePrecision());
+      if (hasDateTimePrecision() != other.hasDateTimePrecision()) return false;
       if (hasDateTimePrecision()) {
-        result = result && (getDateTimePrecision()
-            == other.getDateTimePrecision());
+        if (getDateTimePrecision()
+            != other.getDateTimePrecision()) return false;
       }
-      result = result && (hasIntervalType() == other.hasIntervalType());
+      if (hasIntervalType() != other.hasIntervalType()) return false;
       if (hasIntervalType()) {
-        result = result && getIntervalType()
-            .equals(other.getIntervalType());
+        if (!getIntervalType()
+            .equals(other.getIntervalType())) return false;
       }
-      result = result && (hasIntervalPrecision() == other.hasIntervalPrecision());
+      if (hasIntervalPrecision() != other.hasIntervalPrecision()) return false;
       if (hasIntervalPrecision()) {
-        result = result && (getIntervalPrecision()
-            == other.getIntervalPrecision());
+        if (getIntervalPrecision()
+            != other.getIntervalPrecision()) return false;
       }
-      result = result && (hasColumnSize() == other.hasColumnSize());
+      if (hasColumnSize() != other.hasColumnSize()) return false;
       if (hasColumnSize()) {
-        result = result && (getColumnSize()
-            == other.getColumnSize());
+        if (getColumnSize()
+            != other.getColumnSize()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -24938,74 +25926,74 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.ColumnMetadata result = new org.apache.drill.exec.proto.UserProtos.ColumnMetadata(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.catalogName_ = catalogName_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.schemaName_ = schemaName_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.tableName_ = tableName_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.columnName_ = columnName_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.ordinalPosition_ = ordinalPosition_;
           to_bitField0_ |= 0x00000010;
         }
-        result.ordinalPosition_ = ordinalPosition_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
           to_bitField0_ |= 0x00000020;
         }
         result.defaultValue_ = defaultValue_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.isNullable_ = isNullable_;
           to_bitField0_ |= 0x00000040;
         }
-        result.isNullable_ = isNullable_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
           to_bitField0_ |= 0x00000080;
         }
         result.dataType_ = dataType_;
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          result.charMaxLength_ = charMaxLength_;
           to_bitField0_ |= 0x00000100;
         }
-        result.charMaxLength_ = charMaxLength_;
-        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+        if (((from_bitField0_ & 0x00000200) != 0)) {
+          result.charOctetLength_ = charOctetLength_;
           to_bitField0_ |= 0x00000200;
         }
-        result.charOctetLength_ = charOctetLength_;
-        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+        if (((from_bitField0_ & 0x00000400) != 0)) {
+          result.numericPrecision_ = numericPrecision_;
           to_bitField0_ |= 0x00000400;
         }
-        result.numericPrecision_ = numericPrecision_;
-        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+        if (((from_bitField0_ & 0x00000800) != 0)) {
+          result.numericPrecisionRadix_ = numericPrecisionRadix_;
           to_bitField0_ |= 0x00000800;
         }
-        result.numericPrecisionRadix_ = numericPrecisionRadix_;
-        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+        if (((from_bitField0_ & 0x00001000) != 0)) {
+          result.numericScale_ = numericScale_;
           to_bitField0_ |= 0x00001000;
         }
-        result.numericScale_ = numericScale_;
-        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+        if (((from_bitField0_ & 0x00002000) != 0)) {
+          result.dateTimePrecision_ = dateTimePrecision_;
           to_bitField0_ |= 0x00002000;
         }
-        result.dateTimePrecision_ = dateTimePrecision_;
-        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+        if (((from_bitField0_ & 0x00004000) != 0)) {
           to_bitField0_ |= 0x00004000;
         }
         result.intervalType_ = intervalType_;
-        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+        if (((from_bitField0_ & 0x00008000) != 0)) {
+          result.intervalPrecision_ = intervalPrecision_;
           to_bitField0_ |= 0x00008000;
         }
-        result.intervalPrecision_ = intervalPrecision_;
-        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+        if (((from_bitField0_ & 0x00010000) != 0)) {
+          result.columnSize_ = columnSize_;
           to_bitField0_ |= 0x00010000;
         }
-        result.columnSize_ = columnSize_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -25013,35 +26001,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -25153,12 +26141,14 @@ public final class UserProtos {
       private java.lang.Object catalogName_ = "";
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return Whether the catalogName field is set.
        */
       public boolean hasCatalogName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return The catalogName.
        */
       public java.lang.String getCatalogName() {
         java.lang.Object ref = catalogName_;
@@ -25176,6 +26166,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return The bytes for catalogName.
        */
       public com.google.protobuf.ByteString
           getCatalogNameBytes() {
@@ -25192,6 +26183,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @param value The catalogName to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogName(
           java.lang.String value) {
@@ -25205,6 +26198,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCatalogName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -25214,6 +26208,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string catalog_name = 1;</code>
+       * @param value The bytes for catalogName to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogNameBytes(
           com.google.protobuf.ByteString value) {
@@ -25229,12 +26225,14 @@ public final class UserProtos {
       private java.lang.Object schemaName_ = "";
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return Whether the schemaName field is set.
        */
       public boolean hasSchemaName() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return The schemaName.
        */
       public java.lang.String getSchemaName() {
         java.lang.Object ref = schemaName_;
@@ -25252,6 +26250,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return The bytes for schemaName.
        */
       public com.google.protobuf.ByteString
           getSchemaNameBytes() {
@@ -25268,6 +26267,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @param value The schemaName to set.
+       * @return This builder for chaining.
        */
       public Builder setSchemaName(
           java.lang.String value) {
@@ -25281,6 +26282,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSchemaName() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -25290,6 +26292,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string schema_name = 2;</code>
+       * @param value The bytes for schemaName to set.
+       * @return This builder for chaining.
        */
       public Builder setSchemaNameBytes(
           com.google.protobuf.ByteString value) {
@@ -25305,12 +26309,14 @@ public final class UserProtos {
       private java.lang.Object tableName_ = "";
       /**
        * <code>optional string table_name = 3;</code>
+       * @return Whether the tableName field is set.
        */
       public boolean hasTableName() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional string table_name = 3;</code>
+       * @return The tableName.
        */
       public java.lang.String getTableName() {
         java.lang.Object ref = tableName_;
@@ -25328,6 +26334,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string table_name = 3;</code>
+       * @return The bytes for tableName.
        */
       public com.google.protobuf.ByteString
           getTableNameBytes() {
@@ -25344,6 +26351,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string table_name = 3;</code>
+       * @param value The tableName to set.
+       * @return This builder for chaining.
        */
       public Builder setTableName(
           java.lang.String value) {
@@ -25357,6 +26366,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string table_name = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTableName() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -25366,6 +26376,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string table_name = 3;</code>
+       * @param value The bytes for tableName to set.
+       * @return This builder for chaining.
        */
       public Builder setTableNameBytes(
           com.google.protobuf.ByteString value) {
@@ -25381,12 +26393,14 @@ public final class UserProtos {
       private java.lang.Object columnName_ = "";
       /**
        * <code>optional string column_name = 4;</code>
+       * @return Whether the columnName field is set.
        */
       public boolean hasColumnName() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional string column_name = 4;</code>
+       * @return The columnName.
        */
       public java.lang.String getColumnName() {
         java.lang.Object ref = columnName_;
@@ -25404,6 +26418,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string column_name = 4;</code>
+       * @return The bytes for columnName.
        */
       public com.google.protobuf.ByteString
           getColumnNameBytes() {
@@ -25420,6 +26435,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string column_name = 4;</code>
+       * @param value The columnName to set.
+       * @return This builder for chaining.
        */
       public Builder setColumnName(
           java.lang.String value) {
@@ -25433,6 +26450,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string column_name = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearColumnName() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -25442,6 +26460,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string column_name = 4;</code>
+       * @param value The bytes for columnName to set.
+       * @return This builder for chaining.
        */
       public Builder setColumnNameBytes(
           com.google.protobuf.ByteString value) {
@@ -25457,18 +26477,22 @@ public final class UserProtos {
       private int ordinalPosition_ ;
       /**
        * <code>optional int32 ordinal_position = 5;</code>
+       * @return Whether the ordinalPosition field is set.
        */
       public boolean hasOrdinalPosition() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional int32 ordinal_position = 5;</code>
+       * @return The ordinalPosition.
        */
       public int getOrdinalPosition() {
         return ordinalPosition_;
       }
       /**
        * <code>optional int32 ordinal_position = 5;</code>
+       * @param value The ordinalPosition to set.
+       * @return This builder for chaining.
        */
       public Builder setOrdinalPosition(int value) {
         bitField0_ |= 0x00000010;
@@ -25478,6 +26502,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 ordinal_position = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearOrdinalPosition() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -25489,12 +26514,14 @@ public final class UserProtos {
       private java.lang.Object defaultValue_ = "";
       /**
        * <code>optional string default_value = 6;</code>
+       * @return Whether the defaultValue field is set.
        */
       public boolean hasDefaultValue() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <code>optional string default_value = 6;</code>
+       * @return The defaultValue.
        */
       public java.lang.String getDefaultValue() {
         java.lang.Object ref = defaultValue_;
@@ -25512,6 +26539,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string default_value = 6;</code>
+       * @return The bytes for defaultValue.
        */
       public com.google.protobuf.ByteString
           getDefaultValueBytes() {
@@ -25528,6 +26556,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string default_value = 6;</code>
+       * @param value The defaultValue to set.
+       * @return This builder for chaining.
        */
       public Builder setDefaultValue(
           java.lang.String value) {
@@ -25541,6 +26571,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string default_value = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDefaultValue() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -25550,6 +26581,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string default_value = 6;</code>
+       * @param value The bytes for defaultValue to set.
+       * @return This builder for chaining.
        */
       public Builder setDefaultValueBytes(
           com.google.protobuf.ByteString value) {
@@ -25565,18 +26598,22 @@ public final class UserProtos {
       private boolean isNullable_ ;
       /**
        * <code>optional bool is_nullable = 7;</code>
+       * @return Whether the isNullable field is set.
        */
       public boolean hasIsNullable() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <code>optional bool is_nullable = 7;</code>
+       * @return The isNullable.
        */
       public boolean getIsNullable() {
         return isNullable_;
       }
       /**
        * <code>optional bool is_nullable = 7;</code>
+       * @param value The isNullable to set.
+       * @return This builder for chaining.
        */
       public Builder setIsNullable(boolean value) {
         bitField0_ |= 0x00000040;
@@ -25586,6 +26623,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional bool is_nullable = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIsNullable() {
         bitField0_ = (bitField0_ & ~0x00000040);
@@ -25597,12 +26635,14 @@ public final class UserProtos {
       private java.lang.Object dataType_ = "";
       /**
        * <code>optional string data_type = 8;</code>
+       * @return Whether the dataType field is set.
        */
       public boolean hasDataType() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <code>optional string data_type = 8;</code>
+       * @return The dataType.
        */
       public java.lang.String getDataType() {
         java.lang.Object ref = dataType_;
@@ -25620,6 +26660,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string data_type = 8;</code>
+       * @return The bytes for dataType.
        */
       public com.google.protobuf.ByteString
           getDataTypeBytes() {
@@ -25636,6 +26677,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string data_type = 8;</code>
+       * @param value The dataType to set.
+       * @return This builder for chaining.
        */
       public Builder setDataType(
           java.lang.String value) {
@@ -25649,6 +26692,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string data_type = 8;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDataType() {
         bitField0_ = (bitField0_ & ~0x00000080);
@@ -25658,6 +26702,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string data_type = 8;</code>
+       * @param value The bytes for dataType to set.
+       * @return This builder for chaining.
        */
       public Builder setDataTypeBytes(
           com.google.protobuf.ByteString value) {
@@ -25673,18 +26719,22 @@ public final class UserProtos {
       private int charMaxLength_ ;
       /**
        * <code>optional int32 char_max_length = 9;</code>
+       * @return Whether the charMaxLength field is set.
        */
       public boolean hasCharMaxLength() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <code>optional int32 char_max_length = 9;</code>
+       * @return The charMaxLength.
        */
       public int getCharMaxLength() {
         return charMaxLength_;
       }
       /**
        * <code>optional int32 char_max_length = 9;</code>
+       * @param value The charMaxLength to set.
+       * @return This builder for chaining.
        */
       public Builder setCharMaxLength(int value) {
         bitField0_ |= 0x00000100;
@@ -25694,6 +26744,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 char_max_length = 9;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCharMaxLength() {
         bitField0_ = (bitField0_ & ~0x00000100);
@@ -25705,18 +26756,22 @@ public final class UserProtos {
       private int charOctetLength_ ;
       /**
        * <code>optional int32 char_octet_length = 10;</code>
+       * @return Whether the charOctetLength field is set.
        */
       public boolean hasCharOctetLength() {
-        return ((bitField0_ & 0x00000200) == 0x00000200);
+        return ((bitField0_ & 0x00000200) != 0);
       }
       /**
        * <code>optional int32 char_octet_length = 10;</code>
+       * @return The charOctetLength.
        */
       public int getCharOctetLength() {
         return charOctetLength_;
       }
       /**
        * <code>optional int32 char_octet_length = 10;</code>
+       * @param value The charOctetLength to set.
+       * @return This builder for chaining.
        */
       public Builder setCharOctetLength(int value) {
         bitField0_ |= 0x00000200;
@@ -25726,6 +26781,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 char_octet_length = 10;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCharOctetLength() {
         bitField0_ = (bitField0_ & ~0x00000200);
@@ -25737,18 +26793,22 @@ public final class UserProtos {
       private int numericPrecision_ ;
       /**
        * <code>optional int32 numeric_precision = 11;</code>
+       * @return Whether the numericPrecision field is set.
        */
       public boolean hasNumericPrecision() {
-        return ((bitField0_ & 0x00000400) == 0x00000400);
+        return ((bitField0_ & 0x00000400) != 0);
       }
       /**
        * <code>optional int32 numeric_precision = 11;</code>
+       * @return The numericPrecision.
        */
       public int getNumericPrecision() {
         return numericPrecision_;
       }
       /**
        * <code>optional int32 numeric_precision = 11;</code>
+       * @param value The numericPrecision to set.
+       * @return This builder for chaining.
        */
       public Builder setNumericPrecision(int value) {
         bitField0_ |= 0x00000400;
@@ -25758,6 +26818,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 numeric_precision = 11;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNumericPrecision() {
         bitField0_ = (bitField0_ & ~0x00000400);
@@ -25769,18 +26830,22 @@ public final class UserProtos {
       private int numericPrecisionRadix_ ;
       /**
        * <code>optional int32 numeric_precision_radix = 12;</code>
+       * @return Whether the numericPrecisionRadix field is set.
        */
       public boolean hasNumericPrecisionRadix() {
-        return ((bitField0_ & 0x00000800) == 0x00000800);
+        return ((bitField0_ & 0x00000800) != 0);
       }
       /**
        * <code>optional int32 numeric_precision_radix = 12;</code>
+       * @return The numericPrecisionRadix.
        */
       public int getNumericPrecisionRadix() {
         return numericPrecisionRadix_;
       }
       /**
        * <code>optional int32 numeric_precision_radix = 12;</code>
+       * @param value The numericPrecisionRadix to set.
+       * @return This builder for chaining.
        */
       public Builder setNumericPrecisionRadix(int value) {
         bitField0_ |= 0x00000800;
@@ -25790,6 +26855,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 numeric_precision_radix = 12;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNumericPrecisionRadix() {
         bitField0_ = (bitField0_ & ~0x00000800);
@@ -25801,18 +26867,22 @@ public final class UserProtos {
       private int numericScale_ ;
       /**
        * <code>optional int32 numeric_scale = 13;</code>
+       * @return Whether the numericScale field is set.
        */
       public boolean hasNumericScale() {
-        return ((bitField0_ & 0x00001000) == 0x00001000);
+        return ((bitField0_ & 0x00001000) != 0);
       }
       /**
        * <code>optional int32 numeric_scale = 13;</code>
+       * @return The numericScale.
        */
       public int getNumericScale() {
         return numericScale_;
       }
       /**
        * <code>optional int32 numeric_scale = 13;</code>
+       * @param value The numericScale to set.
+       * @return This builder for chaining.
        */
       public Builder setNumericScale(int value) {
         bitField0_ |= 0x00001000;
@@ -25822,6 +26892,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 numeric_scale = 13;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNumericScale() {
         bitField0_ = (bitField0_ & ~0x00001000);
@@ -25833,18 +26904,22 @@ public final class UserProtos {
       private int dateTimePrecision_ ;
       /**
        * <code>optional int32 date_time_precision = 14;</code>
+       * @return Whether the dateTimePrecision field is set.
        */
       public boolean hasDateTimePrecision() {
-        return ((bitField0_ & 0x00002000) == 0x00002000);
+        return ((bitField0_ & 0x00002000) != 0);
       }
       /**
        * <code>optional int32 date_time_precision = 14;</code>
+       * @return The dateTimePrecision.
        */
       public int getDateTimePrecision() {
         return dateTimePrecision_;
       }
       /**
        * <code>optional int32 date_time_precision = 14;</code>
+       * @param value The dateTimePrecision to set.
+       * @return This builder for chaining.
        */
       public Builder setDateTimePrecision(int value) {
         bitField0_ |= 0x00002000;
@@ -25854,6 +26929,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 date_time_precision = 14;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDateTimePrecision() {
         bitField0_ = (bitField0_ & ~0x00002000);
@@ -25865,12 +26941,14 @@ public final class UserProtos {
       private java.lang.Object intervalType_ = "";
       /**
        * <code>optional string interval_type = 15;</code>
+       * @return Whether the intervalType field is set.
        */
       public boolean hasIntervalType() {
-        return ((bitField0_ & 0x00004000) == 0x00004000);
+        return ((bitField0_ & 0x00004000) != 0);
       }
       /**
        * <code>optional string interval_type = 15;</code>
+       * @return The intervalType.
        */
       public java.lang.String getIntervalType() {
         java.lang.Object ref = intervalType_;
@@ -25888,6 +26966,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string interval_type = 15;</code>
+       * @return The bytes for intervalType.
        */
       public com.google.protobuf.ByteString
           getIntervalTypeBytes() {
@@ -25904,6 +26983,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string interval_type = 15;</code>
+       * @param value The intervalType to set.
+       * @return This builder for chaining.
        */
       public Builder setIntervalType(
           java.lang.String value) {
@@ -25917,6 +26998,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string interval_type = 15;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIntervalType() {
         bitField0_ = (bitField0_ & ~0x00004000);
@@ -25926,6 +27008,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string interval_type = 15;</code>
+       * @param value The bytes for intervalType to set.
+       * @return This builder for chaining.
        */
       public Builder setIntervalTypeBytes(
           com.google.protobuf.ByteString value) {
@@ -25941,18 +27025,22 @@ public final class UserProtos {
       private int intervalPrecision_ ;
       /**
        * <code>optional int32 interval_precision = 16;</code>
+       * @return Whether the intervalPrecision field is set.
        */
       public boolean hasIntervalPrecision() {
-        return ((bitField0_ & 0x00008000) == 0x00008000);
+        return ((bitField0_ & 0x00008000) != 0);
       }
       /**
        * <code>optional int32 interval_precision = 16;</code>
+       * @return The intervalPrecision.
        */
       public int getIntervalPrecision() {
         return intervalPrecision_;
       }
       /**
        * <code>optional int32 interval_precision = 16;</code>
+       * @param value The intervalPrecision to set.
+       * @return This builder for chaining.
        */
       public Builder setIntervalPrecision(int value) {
         bitField0_ |= 0x00008000;
@@ -25962,6 +27050,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 interval_precision = 16;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIntervalPrecision() {
         bitField0_ = (bitField0_ & ~0x00008000);
@@ -25973,18 +27062,22 @@ public final class UserProtos {
       private int columnSize_ ;
       /**
        * <code>optional int32 column_size = 17;</code>
+       * @return Whether the columnSize field is set.
        */
       public boolean hasColumnSize() {
-        return ((bitField0_ & 0x00010000) == 0x00010000);
+        return ((bitField0_ & 0x00010000) != 0);
       }
       /**
        * <code>optional int32 column_size = 17;</code>
+       * @return The columnSize.
        */
       public int getColumnSize() {
         return columnSize_;
       }
       /**
        * <code>optional int32 column_size = 17;</code>
+       * @param value The columnSize to set.
+       * @return This builder for chaining.
        */
       public Builder setColumnSize(int value) {
         bitField0_ |= 0x00010000;
@@ -25994,6 +27087,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional int32 column_size = 17;</code>
+       * @return This builder for chaining.
        */
       public Builder clearColumnSize() {
         bitField0_ = (bitField0_ & ~0x00010000);
@@ -26060,10 +27154,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     boolean hasStatus();
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus();
 
@@ -26093,10 +27189,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     boolean hasError();
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
     /**
@@ -26123,6 +27221,13 @@ public final class UserProtos {
     private GetColumnsResp() {
       status_ = 0;
       columns_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetColumnsResp();
     }
 
     @java.lang.Override
@@ -26162,7 +27267,7 @@ public final class UserProtos {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 columns_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.ColumnMetadata>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -26172,7 +27277,7 @@ public final class UserProtos {
             }
             case 26: {
               org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = error_.toBuilder();
               }
               error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
@@ -26198,7 +27303,7 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           columns_ = java.util.Collections.unmodifiableList(columns_);
         }
         this.unknownFields = unknownFields.build();
@@ -26223,12 +27328,14 @@ public final class UserProtos {
     private int status_;
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     public boolean hasStatus() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
       @SuppressWarnings("deprecation")
@@ -26275,12 +27382,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     public boolean hasError() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
       return error_ == null ? org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance() : error_;
@@ -26306,13 +27415,13 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, status_);
       }
       for (int i = 0; i < columns_.size(); i++) {
         output.writeMessage(2, columns_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(3, getError());
       }
       unknownFields.writeTo(output);
@@ -26324,7 +27433,7 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, status_);
       }
@@ -26332,7 +27441,7 @@ public final class UserProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, columns_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getError());
       }
@@ -26351,20 +27460,19 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.GetColumnsResp other = (org.apache.drill.exec.proto.UserProtos.GetColumnsResp) obj;
 
-      boolean result = true;
-      result = result && (hasStatus() == other.hasStatus());
+      if (hasStatus() != other.hasStatus()) return false;
       if (hasStatus()) {
-        result = result && status_ == other.status_;
+        if (status_ != other.status_) return false;
       }
-      result = result && getColumnsList()
-          .equals(other.getColumnsList());
-      result = result && (hasError() == other.hasError());
+      if (!getColumnsList()
+          .equals(other.getColumnsList())) return false;
+      if (hasError() != other.hasError()) return false;
       if (hasError()) {
-        result = result && getError()
-            .equals(other.getError());
+        if (!getError()
+            .equals(other.getError())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -26567,12 +27675,12 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.GetColumnsResp result = new org.apache.drill.exec.proto.UserProtos.GetColumnsResp(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.status_ = status_;
         if (columnsBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             columns_ = java.util.Collections.unmodifiableList(columns_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -26580,13 +27688,13 @@ public final class UserProtos {
         } else {
           result.columns_ = columnsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (errorBuilder_ == null) {
+            result.error_ = error_;
+          } else {
+            result.error_ = errorBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (errorBuilder_ == null) {
-          result.error_ = error_;
-        } else {
-          result.error_ = errorBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -26595,35 +27703,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -26702,12 +27810,14 @@ public final class UserProtos {
       private int status_ = 0;
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return Whether the status field is set.
        */
       public boolean hasStatus() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return The status.
        */
       public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
         @SuppressWarnings("deprecation")
@@ -26716,6 +27826,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
        */
       public Builder setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus value) {
         if (value == null) {
@@ -26728,6 +27840,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStatus() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -26739,7 +27852,7 @@ public final class UserProtos {
       private java.util.List<org.apache.drill.exec.proto.UserProtos.ColumnMetadata> columns_ =
         java.util.Collections.emptyList();
       private void ensureColumnsIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           columns_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.ColumnMetadata>(columns_);
           bitField0_ |= 0x00000002;
          }
@@ -26968,7 +28081,7 @@ public final class UserProtos {
           columnsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserProtos.ColumnMetadata, org.apache.drill.exec.proto.UserProtos.ColumnMetadata.Builder, org.apache.drill.exec.proto.UserProtos.ColumnMetadataOrBuilder>(
                   columns_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           columns_ = null;
@@ -26976,17 +28089,19 @@ public final class UserProtos {
         return columnsBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return Whether the error field is set.
        */
       public boolean hasError() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return The error.
        */
       public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
         if (errorBuilder_ == null) {
@@ -27030,7 +28145,7 @@ public final class UserProtos {
        */
       public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
         if (errorBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               error_ != null &&
               error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
             error_ =
@@ -27152,14 +28267,17 @@ public final class UserProtos {
 
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return Whether the sqlQuery field is set.
      */
     boolean hasSqlQuery();
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return The sqlQuery.
      */
     java.lang.String getSqlQuery();
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return The bytes for sqlQuery.
      */
     com.google.protobuf.ByteString
         getSqlQueryBytes();
@@ -27184,6 +28302,13 @@ public final class UserProtos {
     }
     private CreatePreparedStatementReq() {
       sqlQuery_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CreatePreparedStatementReq();
     }
 
     @java.lang.Override
@@ -27253,12 +28378,14 @@ public final class UserProtos {
     private volatile java.lang.Object sqlQuery_;
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return Whether the sqlQuery field is set.
      */
     public boolean hasSqlQuery() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return The sqlQuery.
      */
     public java.lang.String getSqlQuery() {
       java.lang.Object ref = sqlQuery_;
@@ -27276,6 +28403,7 @@ public final class UserProtos {
     }
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return The bytes for sqlQuery.
      */
     public com.google.protobuf.ByteString
         getSqlQueryBytes() {
@@ -27305,7 +28433,7 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, sqlQuery_);
       }
       unknownFields.writeTo(output);
@@ -27317,7 +28445,7 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, sqlQuery_);
       }
       size += unknownFields.getSerializedSize();
@@ -27335,14 +28463,13 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq other = (org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq) obj;
 
-      boolean result = true;
-      result = result && (hasSqlQuery() == other.hasSqlQuery());
+      if (hasSqlQuery() != other.hasSqlQuery()) return false;
       if (hasSqlQuery()) {
-        result = result && getSqlQuery()
-            .equals(other.getSqlQuery());
+        if (!getSqlQuery()
+            .equals(other.getSqlQuery())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -27525,7 +28652,7 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq result = new org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementReq(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.sqlQuery_ = sqlQuery_;
@@ -27536,35 +28663,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -27616,12 +28743,14 @@ public final class UserProtos {
       private java.lang.Object sqlQuery_ = "";
       /**
        * <code>optional string sql_query = 1;</code>
+       * @return Whether the sqlQuery field is set.
        */
       public boolean hasSqlQuery() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string sql_query = 1;</code>
+       * @return The sqlQuery.
        */
       public java.lang.String getSqlQuery() {
         java.lang.Object ref = sqlQuery_;
@@ -27639,6 +28768,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string sql_query = 1;</code>
+       * @return The bytes for sqlQuery.
        */
       public com.google.protobuf.ByteString
           getSqlQueryBytes() {
@@ -27655,6 +28785,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string sql_query = 1;</code>
+       * @param value The sqlQuery to set.
+       * @return This builder for chaining.
        */
       public Builder setSqlQuery(
           java.lang.String value) {
@@ -27668,6 +28800,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional string sql_query = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSqlQuery() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -27677,6 +28810,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional string sql_query = 1;</code>
+       * @param value The bytes for sqlQuery to set.
+       * @return This builder for chaining.
        */
       public Builder setSqlQueryBytes(
           com.google.protobuf.ByteString value) {
@@ -27752,6 +28887,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_name = 1;</code>
+     * @return Whether the catalogName field is set.
      */
     boolean hasCatalogName();
     /**
@@ -27761,6 +28897,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_name = 1;</code>
+     * @return The catalogName.
      */
     java.lang.String getCatalogName();
     /**
@@ -27770,6 +28907,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_name = 1;</code>
+     * @return The bytes for catalogName.
      */
     com.google.protobuf.ByteString
         getCatalogNameBytes();
@@ -27782,6 +28920,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_name = 2;</code>
+     * @return Whether the schemaName field is set.
      */
     boolean hasSchemaName();
     /**
@@ -27792,6 +28931,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_name = 2;</code>
+     * @return The schemaName.
      */
     java.lang.String getSchemaName();
     /**
@@ -27802,6 +28942,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_name = 2;</code>
+     * @return The bytes for schemaName.
      */
     com.google.protobuf.ByteString
         getSchemaNameBytes();
@@ -27814,6 +28955,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_name = 3;</code>
+     * @return Whether the tableName field is set.
      */
     boolean hasTableName();
     /**
@@ -27824,6 +28966,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_name = 3;</code>
+     * @return The tableName.
      */
     java.lang.String getTableName();
     /**
@@ -27834,6 +28977,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_name = 3;</code>
+     * @return The bytes for tableName.
      */
     com.google.protobuf.ByteString
         getTableNameBytes();
@@ -27844,6 +28988,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string column_name = 4;</code>
+     * @return Whether the columnName field is set.
      */
     boolean hasColumnName();
     /**
@@ -27852,6 +28997,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string column_name = 4;</code>
+     * @return The columnName.
      */
     java.lang.String getColumnName();
     /**
@@ -27860,6 +29006,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string column_name = 4;</code>
+     * @return The bytes for columnName.
      */
     com.google.protobuf.ByteString
         getColumnNameBytes();
@@ -27871,6 +29018,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string label = 5;</code>
+     * @return Whether the label field is set.
      */
     boolean hasLabel();
     /**
@@ -27880,6 +29028,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string label = 5;</code>
+     * @return The label.
      */
     java.lang.String getLabel();
     /**
@@ -27889,6 +29038,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string label = 5;</code>
+     * @return The bytes for label.
      */
     com.google.protobuf.ByteString
         getLabelBytes();
@@ -27899,6 +29049,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string data_type = 6;</code>
+     * @return Whether the dataType field is set.
      */
     boolean hasDataType();
     /**
@@ -27907,6 +29058,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string data_type = 6;</code>
+     * @return The dataType.
      */
     java.lang.String getDataType();
     /**
@@ -27915,16 +29067,19 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string data_type = 6;</code>
+     * @return The bytes for dataType.
      */
     com.google.protobuf.ByteString
         getDataTypeBytes();
 
     /**
      * <code>optional bool is_nullable = 7;</code>
+     * @return Whether the isNullable field is set.
      */
     boolean hasIsNullable();
     /**
      * <code>optional bool is_nullable = 7;</code>
+     * @return The isNullable.
      */
     boolean getIsNullable();
 
@@ -27939,6 +29094,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 precision = 8;</code>
+     * @return Whether the precision field is set.
      */
     boolean hasPrecision();
     /**
@@ -27952,6 +29108,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 precision = 8;</code>
+     * @return The precision.
      */
     int getPrecision();
 
@@ -27962,6 +29119,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 scale = 9;</code>
+     * @return Whether the scale field is set.
      */
     boolean hasScale();
     /**
@@ -27971,6 +29129,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 scale = 9;</code>
+     * @return The scale.
      */
     int getScale();
 
@@ -27980,6 +29139,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool signed = 10;</code>
+     * @return Whether the signed field is set.
      */
     boolean hasSigned();
     /**
@@ -27988,6 +29148,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool signed = 10;</code>
+     * @return The signed.
      */
     boolean getSigned();
 
@@ -27997,6 +29158,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 display_size = 11;</code>
+     * @return Whether the displaySize field is set.
      */
     boolean hasDisplaySize();
     /**
@@ -28005,6 +29167,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 display_size = 11;</code>
+     * @return The displaySize.
      */
     int getDisplaySize();
 
@@ -28015,6 +29178,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool is_aliased = 12;</code>
+     * @return Whether the isAliased field is set.
      */
     boolean hasIsAliased();
     /**
@@ -28024,15 +29188,18 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool is_aliased = 12;</code>
+     * @return The isAliased.
      */
     boolean getIsAliased();
 
     /**
      * <code>optional .exec.user.ColumnSearchability searchability = 13;</code>
+     * @return Whether the searchability field is set.
      */
     boolean hasSearchability();
     /**
      * <code>optional .exec.user.ColumnSearchability searchability = 13;</code>
+     * @return The searchability.
      */
     org.apache.drill.exec.proto.UserProtos.ColumnSearchability getSearchability();
 
@@ -28042,6 +29209,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.ColumnUpdatability updatability = 14;</code>
+     * @return Whether the updatability field is set.
      */
     boolean hasUpdatability();
     /**
@@ -28050,6 +29218,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.ColumnUpdatability updatability = 14;</code>
+     * @return The updatability.
      */
     org.apache.drill.exec.proto.UserProtos.ColumnUpdatability getUpdatability();
 
@@ -28059,6 +29228,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool auto_increment = 15;</code>
+     * @return Whether the autoIncrement field is set.
      */
     boolean hasAutoIncrement();
     /**
@@ -28067,6 +29237,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool auto_increment = 15;</code>
+     * @return The autoIncrement.
      */
     boolean getAutoIncrement();
 
@@ -28076,6 +29247,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool case_sensitivity = 16;</code>
+     * @return Whether the caseSensitivity field is set.
      */
     boolean hasCaseSensitivity();
     /**
@@ -28084,6 +29256,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool case_sensitivity = 16;</code>
+     * @return The caseSensitivity.
      */
     boolean getCaseSensitivity();
 
@@ -28093,6 +29266,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool sortable = 17;</code>
+     * @return Whether the sortable field is set.
      */
     boolean hasSortable();
     /**
@@ -28101,6 +29275,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool sortable = 17;</code>
+     * @return The sortable.
      */
     boolean getSortable();
 
@@ -28112,6 +29287,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string class_name = 18;</code>
+     * @return Whether the className field is set.
      */
     boolean hasClassName();
     /**
@@ -28122,6 +29298,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string class_name = 18;</code>
+     * @return The className.
      */
     java.lang.String getClassName();
     /**
@@ -28132,6 +29309,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string class_name = 18;</code>
+     * @return The bytes for className.
      */
     com.google.protobuf.ByteString
         getClassNameBytes();
@@ -28142,6 +29320,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool is_currency = 20;</code>
+     * @return Whether the isCurrency field is set.
      */
     boolean hasIsCurrency();
     /**
@@ -28150,6 +29329,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool is_currency = 20;</code>
+     * @return The isCurrency.
      */
     boolean getIsCurrency();
   }
@@ -28176,19 +29356,16 @@ public final class UserProtos {
       columnName_ = "";
       label_ = "";
       dataType_ = "";
-      isNullable_ = false;
-      precision_ = 0;
-      scale_ = 0;
-      signed_ = false;
-      displaySize_ = 0;
-      isAliased_ = false;
       searchability_ = 0;
       updatability_ = 0;
-      autoIncrement_ = false;
-      caseSensitivity_ = false;
-      sortable_ = false;
       className_ = "";
-      isCurrency_ = false;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ResultColumnMetadata();
     }
 
     @java.lang.Override
@@ -28373,9 +29550,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_name = 1;</code>
+     * @return Whether the catalogName field is set.
      */
     public boolean hasCatalogName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -28384,6 +29562,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_name = 1;</code>
+     * @return The catalogName.
      */
     public java.lang.String getCatalogName() {
       java.lang.Object ref = catalogName_;
@@ -28406,6 +29585,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_name = 1;</code>
+     * @return The bytes for catalogName.
      */
     public com.google.protobuf.ByteString
         getCatalogNameBytes() {
@@ -28431,9 +29611,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_name = 2;</code>
+     * @return Whether the schemaName field is set.
      */
     public boolean hasSchemaName() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -28443,6 +29624,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_name = 2;</code>
+     * @return The schemaName.
      */
     public java.lang.String getSchemaName() {
       java.lang.Object ref = schemaName_;
@@ -28466,6 +29648,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_name = 2;</code>
+     * @return The bytes for schemaName.
      */
     public com.google.protobuf.ByteString
         getSchemaNameBytes() {
@@ -28491,9 +29674,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_name = 3;</code>
+     * @return Whether the tableName field is set.
      */
     public boolean hasTableName() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -28503,6 +29687,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_name = 3;</code>
+     * @return The tableName.
      */
     public java.lang.String getTableName() {
       java.lang.Object ref = tableName_;
@@ -28526,6 +29711,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_name = 3;</code>
+     * @return The bytes for tableName.
      */
     public com.google.protobuf.ByteString
         getTableNameBytes() {
@@ -28549,9 +29735,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string column_name = 4;</code>
+     * @return Whether the columnName field is set.
      */
     public boolean hasColumnName() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -28559,6 +29746,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string column_name = 4;</code>
+     * @return The columnName.
      */
     public java.lang.String getColumnName() {
       java.lang.Object ref = columnName_;
@@ -28580,6 +29768,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string column_name = 4;</code>
+     * @return The bytes for columnName.
      */
     public com.google.protobuf.ByteString
         getColumnNameBytes() {
@@ -28604,9 +29793,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string label = 5;</code>
+     * @return Whether the label field is set.
      */
     public boolean hasLabel() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -28615,6 +29805,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string label = 5;</code>
+     * @return The label.
      */
     public java.lang.String getLabel() {
       java.lang.Object ref = label_;
@@ -28637,6 +29828,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string label = 5;</code>
+     * @return The bytes for label.
      */
     public com.google.protobuf.ByteString
         getLabelBytes() {
@@ -28660,9 +29852,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string data_type = 6;</code>
+     * @return Whether the dataType field is set.
      */
     public boolean hasDataType() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <pre>
@@ -28670,6 +29863,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string data_type = 6;</code>
+     * @return The dataType.
      */
     public java.lang.String getDataType() {
       java.lang.Object ref = dataType_;
@@ -28691,6 +29885,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string data_type = 6;</code>
+     * @return The bytes for dataType.
      */
     public com.google.protobuf.ByteString
         getDataTypeBytes() {
@@ -28710,12 +29905,14 @@ public final class UserProtos {
     private boolean isNullable_;
     /**
      * <code>optional bool is_nullable = 7;</code>
+     * @return Whether the isNullable field is set.
      */
     public boolean hasIsNullable() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <code>optional bool is_nullable = 7;</code>
+     * @return The isNullable.
      */
     public boolean getIsNullable() {
       return isNullable_;
@@ -28734,9 +29931,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 precision = 8;</code>
+     * @return Whether the precision field is set.
      */
     public boolean hasPrecision() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <pre>
@@ -28749,6 +29947,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 precision = 8;</code>
+     * @return The precision.
      */
     public int getPrecision() {
       return precision_;
@@ -28763,9 +29962,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 scale = 9;</code>
+     * @return Whether the scale field is set.
      */
     public boolean hasScale() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000100) != 0);
     }
     /**
      * <pre>
@@ -28774,6 +29974,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 scale = 9;</code>
+     * @return The scale.
      */
     public int getScale() {
       return scale_;
@@ -28787,9 +29988,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool signed = 10;</code>
+     * @return Whether the signed field is set.
      */
     public boolean hasSigned() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
+      return ((bitField0_ & 0x00000200) != 0);
     }
     /**
      * <pre>
@@ -28797,6 +29999,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool signed = 10;</code>
+     * @return The signed.
      */
     public boolean getSigned() {
       return signed_;
@@ -28810,9 +30013,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 display_size = 11;</code>
+     * @return Whether the displaySize field is set.
      */
     public boolean hasDisplaySize() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00000400) != 0);
     }
     /**
      * <pre>
@@ -28820,6 +30024,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 display_size = 11;</code>
+     * @return The displaySize.
      */
     public int getDisplaySize() {
       return displaySize_;
@@ -28834,9 +30039,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool is_aliased = 12;</code>
+     * @return Whether the isAliased field is set.
      */
     public boolean hasIsAliased() {
-      return ((bitField0_ & 0x00000800) == 0x00000800);
+      return ((bitField0_ & 0x00000800) != 0);
     }
     /**
      * <pre>
@@ -28845,6 +30051,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool is_aliased = 12;</code>
+     * @return The isAliased.
      */
     public boolean getIsAliased() {
       return isAliased_;
@@ -28854,12 +30061,14 @@ public final class UserProtos {
     private int searchability_;
     /**
      * <code>optional .exec.user.ColumnSearchability searchability = 13;</code>
+     * @return Whether the searchability field is set.
      */
     public boolean hasSearchability() {
-      return ((bitField0_ & 0x00001000) == 0x00001000);
+      return ((bitField0_ & 0x00001000) != 0);
     }
     /**
      * <code>optional .exec.user.ColumnSearchability searchability = 13;</code>
+     * @return The searchability.
      */
     public org.apache.drill.exec.proto.UserProtos.ColumnSearchability getSearchability() {
       @SuppressWarnings("deprecation")
@@ -28875,9 +30084,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.ColumnUpdatability updatability = 14;</code>
+     * @return Whether the updatability field is set.
      */
     public boolean hasUpdatability() {
-      return ((bitField0_ & 0x00002000) == 0x00002000);
+      return ((bitField0_ & 0x00002000) != 0);
     }
     /**
      * <pre>
@@ -28885,6 +30095,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.ColumnUpdatability updatability = 14;</code>
+     * @return The updatability.
      */
     public org.apache.drill.exec.proto.UserProtos.ColumnUpdatability getUpdatability() {
       @SuppressWarnings("deprecation")
@@ -28900,9 +30111,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool auto_increment = 15;</code>
+     * @return Whether the autoIncrement field is set.
      */
     public boolean hasAutoIncrement() {
-      return ((bitField0_ & 0x00004000) == 0x00004000);
+      return ((bitField0_ & 0x00004000) != 0);
     }
     /**
      * <pre>
@@ -28910,6 +30122,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool auto_increment = 15;</code>
+     * @return The autoIncrement.
      */
     public boolean getAutoIncrement() {
       return autoIncrement_;
@@ -28923,9 +30136,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool case_sensitivity = 16;</code>
+     * @return Whether the caseSensitivity field is set.
      */
     public boolean hasCaseSensitivity() {
-      return ((bitField0_ & 0x00008000) == 0x00008000);
+      return ((bitField0_ & 0x00008000) != 0);
     }
     /**
      * <pre>
@@ -28933,6 +30147,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool case_sensitivity = 16;</code>
+     * @return The caseSensitivity.
      */
     public boolean getCaseSensitivity() {
       return caseSensitivity_;
@@ -28946,9 +30161,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool sortable = 17;</code>
+     * @return Whether the sortable field is set.
      */
     public boolean hasSortable() {
-      return ((bitField0_ & 0x00010000) == 0x00010000);
+      return ((bitField0_ & 0x00010000) != 0);
     }
     /**
      * <pre>
@@ -28956,6 +30172,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool sortable = 17;</code>
+     * @return The sortable.
      */
     public boolean getSortable() {
       return sortable_;
@@ -28971,9 +30188,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string class_name = 18;</code>
+     * @return Whether the className field is set.
      */
     public boolean hasClassName() {
-      return ((bitField0_ & 0x00020000) == 0x00020000);
+      return ((bitField0_ & 0x00020000) != 0);
     }
     /**
      * <pre>
@@ -28983,6 +30201,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string class_name = 18;</code>
+     * @return The className.
      */
     public java.lang.String getClassName() {
       java.lang.Object ref = className_;
@@ -29006,6 +30225,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string class_name = 18;</code>
+     * @return The bytes for className.
      */
     public com.google.protobuf.ByteString
         getClassNameBytes() {
@@ -29029,9 +30249,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool is_currency = 20;</code>
+     * @return Whether the isCurrency field is set.
      */
     public boolean hasIsCurrency() {
-      return ((bitField0_ & 0x00040000) == 0x00040000);
+      return ((bitField0_ & 0x00040000) != 0);
     }
     /**
      * <pre>
@@ -29039,6 +30260,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool is_currency = 20;</code>
+     * @return The isCurrency.
      */
     public boolean getIsCurrency() {
       return isCurrency_;
@@ -29058,61 +30280,61 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, catalogName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, schemaName_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, tableName_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, columnName_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 5, label_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 6, dataType_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeBool(7, isNullable_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         output.writeInt32(8, precision_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         output.writeInt32(9, scale_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         output.writeBool(10, signed_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000400) != 0)) {
         output.writeInt32(11, displaySize_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00000800) != 0)) {
         output.writeBool(12, isAliased_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00001000) != 0)) {
         output.writeEnum(13, searchability_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00002000) != 0)) {
         output.writeEnum(14, updatability_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00004000) != 0)) {
         output.writeBool(15, autoIncrement_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00008000) != 0)) {
         output.writeBool(16, caseSensitivity_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00010000) != 0)) {
         output.writeBool(17, sortable_);
       }
-      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+      if (((bitField0_ & 0x00020000) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 18, className_);
       }
-      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((bitField0_ & 0x00040000) != 0)) {
         output.writeBool(20, isCurrency_);
       }
       unknownFields.writeTo(output);
@@ -29124,72 +30346,72 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, catalogName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, schemaName_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, tableName_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, columnName_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, label_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, dataType_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(7, isNullable_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(8, precision_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(9, scale_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(10, signed_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000400) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(11, displaySize_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00000800) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(12, isAliased_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00001000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(13, searchability_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00002000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(14, updatability_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00004000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(15, autoIncrement_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00008000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(16, caseSensitivity_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00010000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(17, sortable_);
       }
-      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+      if (((bitField0_ & 0x00020000) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(18, className_);
       }
-      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((bitField0_ & 0x00040000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(20, isCurrency_);
       }
@@ -29208,102 +30430,101 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata other = (org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata) obj;
 
-      boolean result = true;
-      result = result && (hasCatalogName() == other.hasCatalogName());
+      if (hasCatalogName() != other.hasCatalogName()) return false;
       if (hasCatalogName()) {
-        result = result && getCatalogName()
-            .equals(other.getCatalogName());
+        if (!getCatalogName()
+            .equals(other.getCatalogName())) return false;
       }
-      result = result && (hasSchemaName() == other.hasSchemaName());
+      if (hasSchemaName() != other.hasSchemaName()) return false;
       if (hasSchemaName()) {
-        result = result && getSchemaName()
-            .equals(other.getSchemaName());
+        if (!getSchemaName()
+            .equals(other.getSchemaName())) return false;
       }
-      result = result && (hasTableName() == other.hasTableName());
+      if (hasTableName() != other.hasTableName()) return false;
       if (hasTableName()) {
-        result = result && getTableName()
-            .equals(other.getTableName());
+        if (!getTableName()
+            .equals(other.getTableName())) return false;
       }
-      result = result && (hasColumnName() == other.hasColumnName());
+      if (hasColumnName() != other.hasColumnName()) return false;
       if (hasColumnName()) {
-        result = result && getColumnName()
-            .equals(other.getColumnName());
+        if (!getColumnName()
+            .equals(other.getColumnName())) return false;
       }
-      result = result && (hasLabel() == other.hasLabel());
+      if (hasLabel() != other.hasLabel()) return false;
       if (hasLabel()) {
-        result = result && getLabel()
-            .equals(other.getLabel());
+        if (!getLabel()
+            .equals(other.getLabel())) return false;
       }
-      result = result && (hasDataType() == other.hasDataType());
+      if (hasDataType() != other.hasDataType()) return false;
       if (hasDataType()) {
-        result = result && getDataType()
-            .equals(other.getDataType());
+        if (!getDataType()
+            .equals(other.getDataType())) return false;
       }
-      result = result && (hasIsNullable() == other.hasIsNullable());
+      if (hasIsNullable() != other.hasIsNullable()) return false;
       if (hasIsNullable()) {
-        result = result && (getIsNullable()
-            == other.getIsNullable());
+        if (getIsNullable()
+            != other.getIsNullable()) return false;
       }
-      result = result && (hasPrecision() == other.hasPrecision());
+      if (hasPrecision() != other.hasPrecision()) return false;
       if (hasPrecision()) {
-        result = result && (getPrecision()
-            == other.getPrecision());
+        if (getPrecision()
+            != other.getPrecision()) return false;
       }
-      result = result && (hasScale() == other.hasScale());
+      if (hasScale() != other.hasScale()) return false;
       if (hasScale()) {
-        result = result && (getScale()
-            == other.getScale());
+        if (getScale()
+            != other.getScale()) return false;
       }
-      result = result && (hasSigned() == other.hasSigned());
+      if (hasSigned() != other.hasSigned()) return false;
       if (hasSigned()) {
-        result = result && (getSigned()
-            == other.getSigned());
+        if (getSigned()
+            != other.getSigned()) return false;
       }
-      result = result && (hasDisplaySize() == other.hasDisplaySize());
+      if (hasDisplaySize() != other.hasDisplaySize()) return false;
       if (hasDisplaySize()) {
-        result = result && (getDisplaySize()
-            == other.getDisplaySize());
+        if (getDisplaySize()
+            != other.getDisplaySize()) return false;
       }
-      result = result && (hasIsAliased() == other.hasIsAliased());
+      if (hasIsAliased() != other.hasIsAliased()) return false;
       if (hasIsAliased()) {
-        result = result && (getIsAliased()
-            == other.getIsAliased());
+        if (getIsAliased()
+            != other.getIsAliased()) return false;
       }
-      result = result && (hasSearchability() == other.hasSearchability());
+      if (hasSearchability() != other.hasSearchability()) return false;
       if (hasSearchability()) {
-        result = result && searchability_ == other.searchability_;
+        if (searchability_ != other.searchability_) return false;
       }
-      result = result && (hasUpdatability() == other.hasUpdatability());
+      if (hasUpdatability() != other.hasUpdatability()) return false;
       if (hasUpdatability()) {
-        result = result && updatability_ == other.updatability_;
+        if (updatability_ != other.updatability_) return false;
       }
-      result = result && (hasAutoIncrement() == other.hasAutoIncrement());
+      if (hasAutoIncrement() != other.hasAutoIncrement()) return false;
       if (hasAutoIncrement()) {
-        result = result && (getAutoIncrement()
-            == other.getAutoIncrement());
+        if (getAutoIncrement()
+            != other.getAutoIncrement()) return false;
       }
-      result = result && (hasCaseSensitivity() == other.hasCaseSensitivity());
+      if (hasCaseSensitivity() != other.hasCaseSensitivity()) return false;
       if (hasCaseSensitivity()) {
-        result = result && (getCaseSensitivity()
-            == other.getCaseSensitivity());
+        if (getCaseSensitivity()
+            != other.getCaseSensitivity()) return false;
       }
-      result = result && (hasSortable() == other.hasSortable());
+      if (hasSortable() != other.hasSortable()) return false;
       if (hasSortable()) {
-        result = result && (getSortable()
-            == other.getSortable());
+        if (getSortable()
+            != other.getSortable()) return false;
       }
-      result = result && (hasClassName() == other.hasClassName());
+      if (hasClassName() != other.hasClassName()) return false;
       if (hasClassName()) {
-        result = result && getClassName()
-            .equals(other.getClassName());
+        if (!getClassName()
+            .equals(other.getClassName())) return false;
       }
-      result = result && (hasIsCurrency() == other.hasIsCurrency());
+      if (hasIsCurrency() != other.hasIsCurrency()) return false;
       if (hasIsCurrency()) {
-        result = result && (getIsCurrency()
-            == other.getIsCurrency());
+        if (getIsCurrency()
+            != other.getIsCurrency()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -29599,82 +30820,82 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata result = new org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.catalogName_ = catalogName_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.schemaName_ = schemaName_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.tableName_ = tableName_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.columnName_ = columnName_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.label_ = label_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
           to_bitField0_ |= 0x00000020;
         }
         result.dataType_ = dataType_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.isNullable_ = isNullable_;
           to_bitField0_ |= 0x00000040;
         }
-        result.isNullable_ = isNullable_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          result.precision_ = precision_;
           to_bitField0_ |= 0x00000080;
         }
-        result.precision_ = precision_;
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          result.scale_ = scale_;
           to_bitField0_ |= 0x00000100;
         }
-        result.scale_ = scale_;
-        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+        if (((from_bitField0_ & 0x00000200) != 0)) {
+          result.signed_ = signed_;
           to_bitField0_ |= 0x00000200;
         }
-        result.signed_ = signed_;
-        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+        if (((from_bitField0_ & 0x00000400) != 0)) {
+          result.displaySize_ = displaySize_;
           to_bitField0_ |= 0x00000400;
         }
-        result.displaySize_ = displaySize_;
-        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+        if (((from_bitField0_ & 0x00000800) != 0)) {
+          result.isAliased_ = isAliased_;
           to_bitField0_ |= 0x00000800;
         }
-        result.isAliased_ = isAliased_;
-        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+        if (((from_bitField0_ & 0x00001000) != 0)) {
           to_bitField0_ |= 0x00001000;
         }
         result.searchability_ = searchability_;
-        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+        if (((from_bitField0_ & 0x00002000) != 0)) {
           to_bitField0_ |= 0x00002000;
         }
         result.updatability_ = updatability_;
-        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+        if (((from_bitField0_ & 0x00004000) != 0)) {
+          result.autoIncrement_ = autoIncrement_;
           to_bitField0_ |= 0x00004000;
         }
-        result.autoIncrement_ = autoIncrement_;
-        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+        if (((from_bitField0_ & 0x00008000) != 0)) {
+          result.caseSensitivity_ = caseSensitivity_;
           to_bitField0_ |= 0x00008000;
         }
-        result.caseSensitivity_ = caseSensitivity_;
-        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+        if (((from_bitField0_ & 0x00010000) != 0)) {
+          result.sortable_ = sortable_;
           to_bitField0_ |= 0x00010000;
         }
-        result.sortable_ = sortable_;
-        if (((from_bitField0_ & 0x00020000) == 0x00020000)) {
+        if (((from_bitField0_ & 0x00020000) != 0)) {
           to_bitField0_ |= 0x00020000;
         }
         result.className_ = className_;
-        if (((from_bitField0_ & 0x00040000) == 0x00040000)) {
+        if (((from_bitField0_ & 0x00040000) != 0)) {
+          result.isCurrency_ = isCurrency_;
           to_bitField0_ |= 0x00040000;
         }
-        result.isCurrency_ = isCurrency_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -29682,35 +30903,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -29833,9 +31054,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_name = 1;</code>
+       * @return Whether the catalogName field is set.
        */
       public boolean hasCatalogName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -29844,6 +31066,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_name = 1;</code>
+       * @return The catalogName.
        */
       public java.lang.String getCatalogName() {
         java.lang.Object ref = catalogName_;
@@ -29866,6 +31089,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_name = 1;</code>
+       * @return The bytes for catalogName.
        */
       public com.google.protobuf.ByteString
           getCatalogNameBytes() {
@@ -29887,6 +31111,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_name = 1;</code>
+       * @param value The catalogName to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogName(
           java.lang.String value) {
@@ -29905,6 +31131,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCatalogName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -29919,6 +31146,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_name = 1;</code>
+       * @param value The bytes for catalogName to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogNameBytes(
           com.google.protobuf.ByteString value) {
@@ -29940,9 +31169,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_name = 2;</code>
+       * @return Whether the schemaName field is set.
        */
       public boolean hasSchemaName() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -29952,6 +31182,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_name = 2;</code>
+       * @return The schemaName.
        */
       public java.lang.String getSchemaName() {
         java.lang.Object ref = schemaName_;
@@ -29975,6 +31206,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_name = 2;</code>
+       * @return The bytes for schemaName.
        */
       public com.google.protobuf.ByteString
           getSchemaNameBytes() {
@@ -29997,6 +31229,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_name = 2;</code>
+       * @param value The schemaName to set.
+       * @return This builder for chaining.
        */
       public Builder setSchemaName(
           java.lang.String value) {
@@ -30016,6 +31250,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_name = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSchemaName() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -30031,6 +31266,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_name = 2;</code>
+       * @param value The bytes for schemaName to set.
+       * @return This builder for chaining.
        */
       public Builder setSchemaNameBytes(
           com.google.protobuf.ByteString value) {
@@ -30052,9 +31289,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_name = 3;</code>
+       * @return Whether the tableName field is set.
        */
       public boolean hasTableName() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -30064,6 +31302,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_name = 3;</code>
+       * @return The tableName.
        */
       public java.lang.String getTableName() {
         java.lang.Object ref = tableName_;
@@ -30087,6 +31326,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_name = 3;</code>
+       * @return The bytes for tableName.
        */
       public com.google.protobuf.ByteString
           getTableNameBytes() {
@@ -30109,6 +31349,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_name = 3;</code>
+       * @param value The tableName to set.
+       * @return This builder for chaining.
        */
       public Builder setTableName(
           java.lang.String value) {
@@ -30128,6 +31370,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_name = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTableName() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -30143,6 +31386,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_name = 3;</code>
+       * @param value The bytes for tableName to set.
+       * @return This builder for chaining.
        */
       public Builder setTableNameBytes(
           com.google.protobuf.ByteString value) {
@@ -30162,9 +31407,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
+       * @return Whether the columnName field is set.
        */
       public boolean hasColumnName() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -30172,6 +31418,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
+       * @return The columnName.
        */
       public java.lang.String getColumnName() {
         java.lang.Object ref = columnName_;
@@ -30193,6 +31440,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
+       * @return The bytes for columnName.
        */
       public com.google.protobuf.ByteString
           getColumnNameBytes() {
@@ -30213,6 +31461,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
+       * @param value The columnName to set.
+       * @return This builder for chaining.
        */
       public Builder setColumnName(
           java.lang.String value) {
@@ -30230,6 +31480,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearColumnName() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -30243,6 +31494,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
+       * @param value The bytes for columnName to set.
+       * @return This builder for chaining.
        */
       public Builder setColumnNameBytes(
           com.google.protobuf.ByteString value) {
@@ -30263,9 +31516,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string label = 5;</code>
+       * @return Whether the label field is set.
        */
       public boolean hasLabel() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -30274,6 +31528,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string label = 5;</code>
+       * @return The label.
        */
       public java.lang.String getLabel() {
         java.lang.Object ref = label_;
@@ -30296,6 +31551,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string label = 5;</code>
+       * @return The bytes for label.
        */
       public com.google.protobuf.ByteString
           getLabelBytes() {
@@ -30317,6 +31573,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string label = 5;</code>
+       * @param value The label to set.
+       * @return This builder for chaining.
        */
       public Builder setLabel(
           java.lang.String value) {
@@ -30335,6 +31593,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string label = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLabel() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -30349,6 +31608,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string label = 5;</code>
+       * @param value The bytes for label to set.
+       * @return This builder for chaining.
        */
       public Builder setLabelBytes(
           com.google.protobuf.ByteString value) {
@@ -30368,9 +31629,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string data_type = 6;</code>
+       * @return Whether the dataType field is set.
        */
       public boolean hasDataType() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <pre>
@@ -30378,6 +31640,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string data_type = 6;</code>
+       * @return The dataType.
        */
       public java.lang.String getDataType() {
         java.lang.Object ref = dataType_;
@@ -30399,6 +31662,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string data_type = 6;</code>
+       * @return The bytes for dataType.
        */
       public com.google.protobuf.ByteString
           getDataTypeBytes() {
@@ -30419,6 +31683,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string data_type = 6;</code>
+       * @param value The dataType to set.
+       * @return This builder for chaining.
        */
       public Builder setDataType(
           java.lang.String value) {
@@ -30436,6 +31702,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string data_type = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDataType() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -30449,6 +31716,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string data_type = 6;</code>
+       * @param value The bytes for dataType to set.
+       * @return This builder for chaining.
        */
       public Builder setDataTypeBytes(
           com.google.protobuf.ByteString value) {
@@ -30464,18 +31733,22 @@ public final class UserProtos {
       private boolean isNullable_ ;
       /**
        * <code>optional bool is_nullable = 7;</code>
+       * @return Whether the isNullable field is set.
        */
       public boolean hasIsNullable() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <code>optional bool is_nullable = 7;</code>
+       * @return The isNullable.
        */
       public boolean getIsNullable() {
         return isNullable_;
       }
       /**
        * <code>optional bool is_nullable = 7;</code>
+       * @param value The isNullable to set.
+       * @return This builder for chaining.
        */
       public Builder setIsNullable(boolean value) {
         bitField0_ |= 0x00000040;
@@ -30485,6 +31758,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional bool is_nullable = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIsNullable() {
         bitField0_ = (bitField0_ & ~0x00000040);
@@ -30505,9 +31779,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 precision = 8;</code>
+       * @return Whether the precision field is set.
        */
       public boolean hasPrecision() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <pre>
@@ -30520,6 +31795,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 precision = 8;</code>
+       * @return The precision.
        */
       public int getPrecision() {
         return precision_;
@@ -30535,6 +31811,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 precision = 8;</code>
+       * @param value The precision to set.
+       * @return This builder for chaining.
        */
       public Builder setPrecision(int value) {
         bitField0_ |= 0x00000080;
@@ -30553,6 +31831,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 precision = 8;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPrecision() {
         bitField0_ = (bitField0_ & ~0x00000080);
@@ -30569,9 +31848,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 scale = 9;</code>
+       * @return Whether the scale field is set.
        */
       public boolean hasScale() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <pre>
@@ -30580,6 +31860,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 scale = 9;</code>
+       * @return The scale.
        */
       public int getScale() {
         return scale_;
@@ -30591,6 +31872,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 scale = 9;</code>
+       * @param value The scale to set.
+       * @return This builder for chaining.
        */
       public Builder setScale(int value) {
         bitField0_ |= 0x00000100;
@@ -30605,6 +31888,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 scale = 9;</code>
+       * @return This builder for chaining.
        */
       public Builder clearScale() {
         bitField0_ = (bitField0_ & ~0x00000100);
@@ -30620,9 +31904,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool signed = 10;</code>
+       * @return Whether the signed field is set.
        */
       public boolean hasSigned() {
-        return ((bitField0_ & 0x00000200) == 0x00000200);
+        return ((bitField0_ & 0x00000200) != 0);
       }
       /**
        * <pre>
@@ -30630,6 +31915,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool signed = 10;</code>
+       * @return The signed.
        */
       public boolean getSigned() {
         return signed_;
@@ -30640,6 +31926,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool signed = 10;</code>
+       * @param value The signed to set.
+       * @return This builder for chaining.
        */
       public Builder setSigned(boolean value) {
         bitField0_ |= 0x00000200;
@@ -30653,6 +31941,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool signed = 10;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSigned() {
         bitField0_ = (bitField0_ & ~0x00000200);
@@ -30668,9 +31957,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 display_size = 11;</code>
+       * @return Whether the displaySize field is set.
        */
       public boolean hasDisplaySize() {
-        return ((bitField0_ & 0x00000400) == 0x00000400);
+        return ((bitField0_ & 0x00000400) != 0);
       }
       /**
        * <pre>
@@ -30678,6 +31968,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 display_size = 11;</code>
+       * @return The displaySize.
        */
       public int getDisplaySize() {
         return displaySize_;
@@ -30688,6 +31979,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 display_size = 11;</code>
+       * @param value The displaySize to set.
+       * @return This builder for chaining.
        */
       public Builder setDisplaySize(int value) {
         bitField0_ |= 0x00000400;
@@ -30701,6 +31994,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 display_size = 11;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDisplaySize() {
         bitField0_ = (bitField0_ & ~0x00000400);
@@ -30717,9 +32011,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool is_aliased = 12;</code>
+       * @return Whether the isAliased field is set.
        */
       public boolean hasIsAliased() {
-        return ((bitField0_ & 0x00000800) == 0x00000800);
+        return ((bitField0_ & 0x00000800) != 0);
       }
       /**
        * <pre>
@@ -30728,6 +32023,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool is_aliased = 12;</code>
+       * @return The isAliased.
        */
       public boolean getIsAliased() {
         return isAliased_;
@@ -30739,6 +32035,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool is_aliased = 12;</code>
+       * @param value The isAliased to set.
+       * @return This builder for chaining.
        */
       public Builder setIsAliased(boolean value) {
         bitField0_ |= 0x00000800;
@@ -30753,6 +32051,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool is_aliased = 12;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIsAliased() {
         bitField0_ = (bitField0_ & ~0x00000800);
@@ -30764,12 +32063,14 @@ public final class UserProtos {
       private int searchability_ = 0;
       /**
        * <code>optional .exec.user.ColumnSearchability searchability = 13;</code>
+       * @return Whether the searchability field is set.
        */
       public boolean hasSearchability() {
-        return ((bitField0_ & 0x00001000) == 0x00001000);
+        return ((bitField0_ & 0x00001000) != 0);
       }
       /**
        * <code>optional .exec.user.ColumnSearchability searchability = 13;</code>
+       * @return The searchability.
        */
       public org.apache.drill.exec.proto.UserProtos.ColumnSearchability getSearchability() {
         @SuppressWarnings("deprecation")
@@ -30778,6 +32079,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.ColumnSearchability searchability = 13;</code>
+       * @param value The searchability to set.
+       * @return This builder for chaining.
        */
       public Builder setSearchability(org.apache.drill.exec.proto.UserProtos.ColumnSearchability value) {
         if (value == null) {
@@ -30790,6 +32093,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.ColumnSearchability searchability = 13;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSearchability() {
         bitField0_ = (bitField0_ & ~0x00001000);
@@ -30805,9 +32109,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.ColumnUpdatability updatability = 14;</code>
+       * @return Whether the updatability field is set.
        */
       public boolean hasUpdatability() {
-        return ((bitField0_ & 0x00002000) == 0x00002000);
+        return ((bitField0_ & 0x00002000) != 0);
       }
       /**
        * <pre>
@@ -30815,6 +32120,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.ColumnUpdatability updatability = 14;</code>
+       * @return The updatability.
        */
       public org.apache.drill.exec.proto.UserProtos.ColumnUpdatability getUpdatability() {
         @SuppressWarnings("deprecation")
@@ -30827,6 +32133,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.ColumnUpdatability updatability = 14;</code>
+       * @param value The updatability to set.
+       * @return This builder for chaining.
        */
       public Builder setUpdatability(org.apache.drill.exec.proto.UserProtos.ColumnUpdatability value) {
         if (value == null) {
@@ -30843,6 +32151,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.ColumnUpdatability updatability = 14;</code>
+       * @return This builder for chaining.
        */
       public Builder clearUpdatability() {
         bitField0_ = (bitField0_ & ~0x00002000);
@@ -30858,9 +32167,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool auto_increment = 15;</code>
+       * @return Whether the autoIncrement field is set.
        */
       public boolean hasAutoIncrement() {
-        return ((bitField0_ & 0x00004000) == 0x00004000);
+        return ((bitField0_ & 0x00004000) != 0);
       }
       /**
        * <pre>
@@ -30868,6 +32178,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool auto_increment = 15;</code>
+       * @return The autoIncrement.
        */
       public boolean getAutoIncrement() {
         return autoIncrement_;
@@ -30878,6 +32189,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool auto_increment = 15;</code>
+       * @param value The autoIncrement to set.
+       * @return This builder for chaining.
        */
       public Builder setAutoIncrement(boolean value) {
         bitField0_ |= 0x00004000;
@@ -30891,6 +32204,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool auto_increment = 15;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAutoIncrement() {
         bitField0_ = (bitField0_ & ~0x00004000);
@@ -30906,9 +32220,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool case_sensitivity = 16;</code>
+       * @return Whether the caseSensitivity field is set.
        */
       public boolean hasCaseSensitivity() {
-        return ((bitField0_ & 0x00008000) == 0x00008000);
+        return ((bitField0_ & 0x00008000) != 0);
       }
       /**
        * <pre>
@@ -30916,6 +32231,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool case_sensitivity = 16;</code>
+       * @return The caseSensitivity.
        */
       public boolean getCaseSensitivity() {
         return caseSensitivity_;
@@ -30926,6 +32242,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool case_sensitivity = 16;</code>
+       * @param value The caseSensitivity to set.
+       * @return This builder for chaining.
        */
       public Builder setCaseSensitivity(boolean value) {
         bitField0_ |= 0x00008000;
@@ -30939,6 +32257,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool case_sensitivity = 16;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCaseSensitivity() {
         bitField0_ = (bitField0_ & ~0x00008000);
@@ -30954,9 +32273,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool sortable = 17;</code>
+       * @return Whether the sortable field is set.
        */
       public boolean hasSortable() {
-        return ((bitField0_ & 0x00010000) == 0x00010000);
+        return ((bitField0_ & 0x00010000) != 0);
       }
       /**
        * <pre>
@@ -30964,6 +32284,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool sortable = 17;</code>
+       * @return The sortable.
        */
       public boolean getSortable() {
         return sortable_;
@@ -30974,6 +32295,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool sortable = 17;</code>
+       * @param value The sortable to set.
+       * @return This builder for chaining.
        */
       public Builder setSortable(boolean value) {
         bitField0_ |= 0x00010000;
@@ -30987,6 +32310,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool sortable = 17;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSortable() {
         bitField0_ = (bitField0_ & ~0x00010000);
@@ -31004,9 +32328,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string class_name = 18;</code>
+       * @return Whether the className field is set.
        */
       public boolean hasClassName() {
-        return ((bitField0_ & 0x00020000) == 0x00020000);
+        return ((bitField0_ & 0x00020000) != 0);
       }
       /**
        * <pre>
@@ -31016,6 +32341,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string class_name = 18;</code>
+       * @return The className.
        */
       public java.lang.String getClassName() {
         java.lang.Object ref = className_;
@@ -31039,6 +32365,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string class_name = 18;</code>
+       * @return The bytes for className.
        */
       public com.google.protobuf.ByteString
           getClassNameBytes() {
@@ -31061,6 +32388,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string class_name = 18;</code>
+       * @param value The className to set.
+       * @return This builder for chaining.
        */
       public Builder setClassName(
           java.lang.String value) {
@@ -31080,6 +32409,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string class_name = 18;</code>
+       * @return This builder for chaining.
        */
       public Builder clearClassName() {
         bitField0_ = (bitField0_ & ~0x00020000);
@@ -31095,6 +32425,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string class_name = 18;</code>
+       * @param value The bytes for className to set.
+       * @return This builder for chaining.
        */
       public Builder setClassNameBytes(
           com.google.protobuf.ByteString value) {
@@ -31114,9 +32446,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool is_currency = 20;</code>
+       * @return Whether the isCurrency field is set.
        */
       public boolean hasIsCurrency() {
-        return ((bitField0_ & 0x00040000) == 0x00040000);
+        return ((bitField0_ & 0x00040000) != 0);
       }
       /**
        * <pre>
@@ -31124,6 +32457,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool is_currency = 20;</code>
+       * @return The isCurrency.
        */
       public boolean getIsCurrency() {
         return isCurrency_;
@@ -31134,6 +32468,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool is_currency = 20;</code>
+       * @param value The isCurrency to set.
+       * @return This builder for chaining.
        */
       public Builder setIsCurrency(boolean value) {
         bitField0_ |= 0x00040000;
@@ -31147,6 +32483,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool is_currency = 20;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIsCurrency() {
         bitField0_ = (bitField0_ & ~0x00040000);
@@ -31213,10 +32550,12 @@ public final class UserProtos {
 
     /**
      * <code>optional bytes server_info = 1;</code>
+     * @return Whether the serverInfo field is set.
      */
     boolean hasServerInfo();
     /**
      * <code>optional bytes server_info = 1;</code>
+     * @return The serverInfo.
      */
     com.google.protobuf.ByteString getServerInfo();
   }
@@ -31240,6 +32579,13 @@ public final class UserProtos {
     }
     private PreparedStatementHandle() {
       serverInfo_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new PreparedStatementHandle();
     }
 
     @java.lang.Override
@@ -31308,12 +32654,14 @@ public final class UserProtos {
     private com.google.protobuf.ByteString serverInfo_;
     /**
      * <code>optional bytes server_info = 1;</code>
+     * @return Whether the serverInfo field is set.
      */
     public boolean hasServerInfo() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional bytes server_info = 1;</code>
+     * @return The serverInfo.
      */
     public com.google.protobuf.ByteString getServerInfo() {
       return serverInfo_;
@@ -31333,7 +32681,7 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, serverInfo_);
       }
       unknownFields.writeTo(output);
@@ -31345,7 +32693,7 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, serverInfo_);
       }
@@ -31364,14 +32712,13 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle other = (org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle) obj;
 
-      boolean result = true;
-      result = result && (hasServerInfo() == other.hasServerInfo());
+      if (hasServerInfo() != other.hasServerInfo()) return false;
       if (hasServerInfo()) {
-        result = result && getServerInfo()
-            .equals(other.getServerInfo());
+        if (!getServerInfo()
+            .equals(other.getServerInfo())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -31554,7 +32901,7 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle result = new org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.serverInfo_ = serverInfo_;
@@ -31565,35 +32912,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -31643,18 +32990,22 @@ public final class UserProtos {
       private com.google.protobuf.ByteString serverInfo_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>optional bytes server_info = 1;</code>
+       * @return Whether the serverInfo field is set.
        */
       public boolean hasServerInfo() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional bytes server_info = 1;</code>
+       * @return The serverInfo.
        */
       public com.google.protobuf.ByteString getServerInfo() {
         return serverInfo_;
       }
       /**
        * <code>optional bytes server_info = 1;</code>
+       * @param value The serverInfo to set.
+       * @return This builder for chaining.
        */
       public Builder setServerInfo(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -31667,6 +33018,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional bytes server_info = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearServerInfo() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -31762,6 +33114,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.PreparedStatementHandle server_handle = 2;</code>
+     * @return Whether the serverHandle field is set.
      */
     boolean hasServerHandle();
     /**
@@ -31771,6 +33124,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.PreparedStatementHandle server_handle = 2;</code>
+     * @return The serverHandle.
      */
     org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle getServerHandle();
     /**
@@ -31805,6 +33159,13 @@ public final class UserProtos {
     }
 
     @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new PreparedStatement();
+    }
+
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
     getUnknownFields() {
       return this.unknownFields;
@@ -31829,7 +33190,7 @@ public final class UserProtos {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 columns_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -31839,7 +33200,7 @@ public final class UserProtos {
             }
             case 18: {
               org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = serverHandle_.toBuilder();
               }
               serverHandle_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.PARSER, extensionRegistry);
@@ -31865,7 +33226,7 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           columns_ = java.util.Collections.unmodifiableList(columns_);
         }
         this.unknownFields = unknownFields.build();
@@ -31930,9 +33291,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.PreparedStatementHandle server_handle = 2;</code>
+     * @return Whether the serverHandle field is set.
      */
     public boolean hasServerHandle() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -31941,6 +33303,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.PreparedStatementHandle server_handle = 2;</code>
+     * @return The serverHandle.
      */
     public org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle getServerHandle() {
       return serverHandle_ == null ? org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.getDefaultInstance() : serverHandle_;
@@ -31974,7 +33337,7 @@ public final class UserProtos {
       for (int i = 0; i < columns_.size(); i++) {
         output.writeMessage(1, columns_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(2, getServerHandle());
       }
       unknownFields.writeTo(output);
@@ -31990,7 +33353,7 @@ public final class UserProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, columns_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getServerHandle());
       }
@@ -32009,16 +33372,15 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.PreparedStatement other = (org.apache.drill.exec.proto.UserProtos.PreparedStatement) obj;
 
-      boolean result = true;
-      result = result && getColumnsList()
-          .equals(other.getColumnsList());
-      result = result && (hasServerHandle() == other.hasServerHandle());
+      if (!getColumnsList()
+          .equals(other.getColumnsList())) return false;
+      if (hasServerHandle() != other.hasServerHandle()) return false;
       if (hasServerHandle()) {
-        result = result && getServerHandle()
-            .equals(other.getServerHandle());
+        if (!getServerHandle()
+            .equals(other.getServerHandle())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -32217,7 +33579,7 @@ public final class UserProtos {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (columnsBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             columns_ = java.util.Collections.unmodifiableList(columns_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -32225,13 +33587,13 @@ public final class UserProtos {
         } else {
           result.columns_ = columnsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (serverHandleBuilder_ == null) {
+            result.serverHandle_ = serverHandle_;
+          } else {
+            result.serverHandle_ = serverHandleBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (serverHandleBuilder_ == null) {
-          result.serverHandle_ = serverHandle_;
-        } else {
-          result.serverHandle_ = serverHandleBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -32240,35 +33602,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -32344,7 +33706,7 @@ public final class UserProtos {
       private java.util.List<org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata> columns_ =
         java.util.Collections.emptyList();
       private void ensureColumnsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           columns_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata>(columns_);
           bitField0_ |= 0x00000001;
          }
@@ -32573,7 +33935,7 @@ public final class UserProtos {
           columnsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata, org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata.Builder, org.apache.drill.exec.proto.UserProtos.ResultColumnMetadataOrBuilder>(
                   columns_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           columns_ = null;
@@ -32581,7 +33943,7 @@ public final class UserProtos {
         return columnsBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle serverHandle_ = null;
+      private org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle serverHandle_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle, org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.Builder, org.apache.drill.exec.proto.UserProtos.PreparedStatementHandleOrBuilder> serverHandleBuilder_;
       /**
@@ -32591,9 +33953,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.PreparedStatementHandle server_handle = 2;</code>
+       * @return Whether the serverHandle field is set.
        */
       public boolean hasServerHandle() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -32602,6 +33965,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.PreparedStatementHandle server_handle = 2;</code>
+       * @return The serverHandle.
        */
       public org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle getServerHandle() {
         if (serverHandleBuilder_ == null) {
@@ -32660,7 +34024,7 @@ public final class UserProtos {
        */
       public Builder mergeServerHandle(org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle value) {
         if (serverHandleBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               serverHandle_ != null &&
               serverHandle_ != org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.getDefaultInstance()) {
             serverHandle_ =
@@ -32802,19 +34166,23 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     boolean hasStatus();
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus();
 
     /**
      * <code>optional .exec.user.PreparedStatement prepared_statement = 2;</code>
+     * @return Whether the preparedStatement field is set.
      */
     boolean hasPreparedStatement();
     /**
      * <code>optional .exec.user.PreparedStatement prepared_statement = 2;</code>
+     * @return The preparedStatement.
      */
     org.apache.drill.exec.proto.UserProtos.PreparedStatement getPreparedStatement();
     /**
@@ -32824,10 +34192,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     boolean hasError();
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
     /**
@@ -32853,6 +34223,13 @@ public final class UserProtos {
     }
     private CreatePreparedStatementResp() {
       status_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CreatePreparedStatementResp();
     }
 
     @java.lang.Override
@@ -32893,7 +34270,7 @@ public final class UserProtos {
             }
             case 18: {
               org.apache.drill.exec.proto.UserProtos.PreparedStatement.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = preparedStatement_.toBuilder();
               }
               preparedStatement_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.PreparedStatement.PARSER, extensionRegistry);
@@ -32906,7 +34283,7 @@ public final class UserProtos {
             }
             case 26: {
               org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = error_.toBuilder();
               }
               error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
@@ -32954,12 +34331,14 @@ public final class UserProtos {
     private int status_;
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     public boolean hasStatus() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
       @SuppressWarnings("deprecation")
@@ -32971,12 +34350,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.PreparedStatement preparedStatement_;
     /**
      * <code>optional .exec.user.PreparedStatement prepared_statement = 2;</code>
+     * @return Whether the preparedStatement field is set.
      */
     public boolean hasPreparedStatement() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.user.PreparedStatement prepared_statement = 2;</code>
+     * @return The preparedStatement.
      */
     public org.apache.drill.exec.proto.UserProtos.PreparedStatement getPreparedStatement() {
       return preparedStatement_ == null ? org.apache.drill.exec.proto.UserProtos.PreparedStatement.getDefaultInstance() : preparedStatement_;
@@ -32992,12 +34373,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     public boolean hasError() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
       return error_ == null ? org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance() : error_;
@@ -33023,13 +34406,13 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, status_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getPreparedStatement());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getError());
       }
       unknownFields.writeTo(output);
@@ -33041,15 +34424,15 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, status_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getPreparedStatement());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getError());
       }
@@ -33068,23 +34451,22 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp other = (org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp) obj;
 
-      boolean result = true;
-      result = result && (hasStatus() == other.hasStatus());
+      if (hasStatus() != other.hasStatus()) return false;
       if (hasStatus()) {
-        result = result && status_ == other.status_;
+        if (status_ != other.status_) return false;
       }
-      result = result && (hasPreparedStatement() == other.hasPreparedStatement());
+      if (hasPreparedStatement() != other.hasPreparedStatement()) return false;
       if (hasPreparedStatement()) {
-        result = result && getPreparedStatement()
-            .equals(other.getPreparedStatement());
+        if (!getPreparedStatement()
+            .equals(other.getPreparedStatement())) return false;
       }
-      result = result && (hasError() == other.hasError());
+      if (hasError() != other.hasError()) return false;
       if (hasError()) {
-        result = result && getError()
-            .equals(other.getError());
+        if (!getError()
+            .equals(other.getError())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -33287,25 +34669,25 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp result = new org.apache.drill.exec.proto.UserProtos.CreatePreparedStatementResp(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.status_ = status_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (preparedStatementBuilder_ == null) {
+            result.preparedStatement_ = preparedStatement_;
+          } else {
+            result.preparedStatement_ = preparedStatementBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (preparedStatementBuilder_ == null) {
-          result.preparedStatement_ = preparedStatement_;
-        } else {
-          result.preparedStatement_ = preparedStatementBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (errorBuilder_ == null) {
+            result.error_ = error_;
+          } else {
+            result.error_ = errorBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
-        }
-        if (errorBuilder_ == null) {
-          result.error_ = error_;
-        } else {
-          result.error_ = errorBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -33314,35 +34696,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -33398,12 +34780,14 @@ public final class UserProtos {
       private int status_ = 0;
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return Whether the status field is set.
        */
       public boolean hasStatus() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return The status.
        */
       public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
         @SuppressWarnings("deprecation")
@@ -33412,6 +34796,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
        */
       public Builder setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus value) {
         if (value == null) {
@@ -33424,6 +34810,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStatus() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -33432,17 +34819,19 @@ public final class UserProtos {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.PreparedStatement preparedStatement_ = null;
+      private org.apache.drill.exec.proto.UserProtos.PreparedStatement preparedStatement_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.PreparedStatement, org.apache.drill.exec.proto.UserProtos.PreparedStatement.Builder, org.apache.drill.exec.proto.UserProtos.PreparedStatementOrBuilder> preparedStatementBuilder_;
       /**
        * <code>optional .exec.user.PreparedStatement prepared_statement = 2;</code>
+       * @return Whether the preparedStatement field is set.
        */
       public boolean hasPreparedStatement() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.user.PreparedStatement prepared_statement = 2;</code>
+       * @return The preparedStatement.
        */
       public org.apache.drill.exec.proto.UserProtos.PreparedStatement getPreparedStatement() {
         if (preparedStatementBuilder_ == null) {
@@ -33486,7 +34875,7 @@ public final class UserProtos {
        */
       public Builder mergePreparedStatement(org.apache.drill.exec.proto.UserProtos.PreparedStatement value) {
         if (preparedStatementBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               preparedStatement_ != null &&
               preparedStatement_ != org.apache.drill.exec.proto.UserProtos.PreparedStatement.getDefaultInstance()) {
             preparedStatement_ =
@@ -33550,17 +34939,19 @@ public final class UserProtos {
         return preparedStatementBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return Whether the error field is set.
        */
       public boolean hasError() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return The error.
        */
       public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
         if (errorBuilder_ == null) {
@@ -33604,7 +34995,7 @@ public final class UserProtos {
        */
       public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
         if (errorBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               error_ != null &&
               error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
             error_ =
@@ -33744,6 +35135,13 @@ public final class UserProtos {
     }
 
     @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetServerMetaReq();
+    }
+
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
     getUnknownFields() {
       return this.unknownFields;
@@ -33836,9 +35234,8 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.GetServerMetaReq other = (org.apache.drill.exec.proto.UserProtos.GetServerMetaReq) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -34017,35 +35414,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -34146,19 +35543,23 @@ public final class UserProtos {
 
     /**
      * <code>required .common.MinorType from = 1;</code>
+     * @return Whether the from field is set.
      */
     boolean hasFrom();
     /**
      * <code>required .common.MinorType from = 1;</code>
+     * @return The from.
      */
     org.apache.drill.common.types.TypeProtos.MinorType getFrom();
 
     /**
      * <code>required .common.MinorType to = 2;</code>
+     * @return Whether the to field is set.
      */
     boolean hasTo();
     /**
      * <code>required .common.MinorType to = 2;</code>
+     * @return The to.
      */
     org.apache.drill.common.types.TypeProtos.MinorType getTo();
   }
@@ -34177,6 +35578,13 @@ public final class UserProtos {
     private ConvertSupport() {
       from_ = 0;
       to_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ConvertSupport();
     }
 
     @java.lang.Override
@@ -34264,12 +35672,14 @@ public final class UserProtos {
     private int from_;
     /**
      * <code>required .common.MinorType from = 1;</code>
+     * @return Whether the from field is set.
      */
     public boolean hasFrom() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .common.MinorType from = 1;</code>
+     * @return The from.
      */
     public org.apache.drill.common.types.TypeProtos.MinorType getFrom() {
       @SuppressWarnings("deprecation")
@@ -34281,12 +35691,14 @@ public final class UserProtos {
     private int to_;
     /**
      * <code>required .common.MinorType to = 2;</code>
+     * @return Whether the to field is set.
      */
     public boolean hasTo() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required .common.MinorType to = 2;</code>
+     * @return The to.
      */
     public org.apache.drill.common.types.TypeProtos.MinorType getTo() {
       @SuppressWarnings("deprecation")
@@ -34316,10 +35728,10 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, from_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeEnum(2, to_);
       }
       unknownFields.writeTo(output);
@@ -34331,11 +35743,11 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, from_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(2, to_);
       }
@@ -34354,17 +35766,16 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.ConvertSupport other = (org.apache.drill.exec.proto.UserProtos.ConvertSupport) obj;
 
-      boolean result = true;
-      result = result && (hasFrom() == other.hasFrom());
+      if (hasFrom() != other.hasFrom()) return false;
       if (hasFrom()) {
-        result = result && from_ == other.from_;
+        if (from_ != other.from_) return false;
       }
-      result = result && (hasTo() == other.hasTo());
+      if (hasTo() != other.hasTo()) return false;
       if (hasTo()) {
-        result = result && to_ == other.to_;
+        if (to_ != other.to_) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -34547,11 +35958,11 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.ConvertSupport result = new org.apache.drill.exec.proto.UserProtos.ConvertSupport(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.from_ = from_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.to_ = to_;
@@ -34562,35 +35973,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -34649,12 +36060,14 @@ public final class UserProtos {
       private int from_ = 0;
       /**
        * <code>required .common.MinorType from = 1;</code>
+       * @return Whether the from field is set.
        */
       public boolean hasFrom() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .common.MinorType from = 1;</code>
+       * @return The from.
        */
       public org.apache.drill.common.types.TypeProtos.MinorType getFrom() {
         @SuppressWarnings("deprecation")
@@ -34663,6 +36076,8 @@ public final class UserProtos {
       }
       /**
        * <code>required .common.MinorType from = 1;</code>
+       * @param value The from to set.
+       * @return This builder for chaining.
        */
       public Builder setFrom(org.apache.drill.common.types.TypeProtos.MinorType value) {
         if (value == null) {
@@ -34675,6 +36090,7 @@ public final class UserProtos {
       }
       /**
        * <code>required .common.MinorType from = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFrom() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -34686,12 +36102,14 @@ public final class UserProtos {
       private int to_ = 0;
       /**
        * <code>required .common.MinorType to = 2;</code>
+       * @return Whether the to field is set.
        */
       public boolean hasTo() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required .common.MinorType to = 2;</code>
+       * @return The to.
        */
       public org.apache.drill.common.types.TypeProtos.MinorType getTo() {
         @SuppressWarnings("deprecation")
@@ -34700,6 +36118,8 @@ public final class UserProtos {
       }
       /**
        * <code>required .common.MinorType to = 2;</code>
+       * @param value The to to set.
+       * @return This builder for chaining.
        */
       public Builder setTo(org.apache.drill.common.types.TypeProtos.MinorType value) {
         if (value == null) {
@@ -34712,6 +36132,7 @@ public final class UserProtos {
       }
       /**
        * <code>required .common.MinorType to = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTo() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -34778,19 +36199,23 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     boolean hasStatus();
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus();
 
     /**
      * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+     * @return Whether the serverMeta field is set.
      */
     boolean hasServerMeta();
     /**
      * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+     * @return The serverMeta.
      */
     org.apache.drill.exec.proto.UserProtos.ServerMeta getServerMeta();
     /**
@@ -34800,10 +36225,12 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     boolean hasError();
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
     /**
@@ -34829,6 +36256,13 @@ public final class UserProtos {
     }
     private GetServerMetaResp() {
       status_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GetServerMetaResp();
     }
 
     @java.lang.Override
@@ -34869,7 +36303,7 @@ public final class UserProtos {
             }
             case 18: {
               org.apache.drill.exec.proto.UserProtos.ServerMeta.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = serverMeta_.toBuilder();
               }
               serverMeta_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.ServerMeta.PARSER, extensionRegistry);
@@ -34882,7 +36316,7 @@ public final class UserProtos {
             }
             case 26: {
               org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = error_.toBuilder();
               }
               error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
@@ -34930,12 +36364,14 @@ public final class UserProtos {
     private int status_;
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return Whether the status field is set.
      */
     public boolean hasStatus() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.user.RequestStatus status = 1;</code>
+     * @return The status.
      */
     public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
       @SuppressWarnings("deprecation")
@@ -34947,12 +36383,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserProtos.ServerMeta serverMeta_;
     /**
      * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+     * @return Whether the serverMeta field is set.
      */
     public boolean hasServerMeta() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+     * @return The serverMeta.
      */
     public org.apache.drill.exec.proto.UserProtos.ServerMeta getServerMeta() {
       return serverMeta_ == null ? org.apache.drill.exec.proto.UserProtos.ServerMeta.getDefaultInstance() : serverMeta_;
@@ -34968,12 +36406,14 @@ public final class UserProtos {
     private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return Whether the error field is set.
      */
     public boolean hasError() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.DrillPBError error = 3;</code>
+     * @return The error.
      */
     public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
       return error_ == null ? org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance() : error_;
@@ -35005,13 +36445,13 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, status_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getServerMeta());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getError());
       }
       unknownFields.writeTo(output);
@@ -35023,15 +36463,15 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, status_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getServerMeta());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getError());
       }
@@ -35050,23 +36490,22 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.GetServerMetaResp other = (org.apache.drill.exec.proto.UserProtos.GetServerMetaResp) obj;
 
-      boolean result = true;
-      result = result && (hasStatus() == other.hasStatus());
+      if (hasStatus() != other.hasStatus()) return false;
       if (hasStatus()) {
-        result = result && status_ == other.status_;
+        if (status_ != other.status_) return false;
       }
-      result = result && (hasServerMeta() == other.hasServerMeta());
+      if (hasServerMeta() != other.hasServerMeta()) return false;
       if (hasServerMeta()) {
-        result = result && getServerMeta()
-            .equals(other.getServerMeta());
+        if (!getServerMeta()
+            .equals(other.getServerMeta())) return false;
       }
-      result = result && (hasError() == other.hasError());
+      if (hasError() != other.hasError()) return false;
       if (hasError()) {
-        result = result && getError()
-            .equals(other.getError());
+        if (!getError()
+            .equals(other.getError())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -35269,25 +36708,25 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.GetServerMetaResp result = new org.apache.drill.exec.proto.UserProtos.GetServerMetaResp(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.status_ = status_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (serverMetaBuilder_ == null) {
+            result.serverMeta_ = serverMeta_;
+          } else {
+            result.serverMeta_ = serverMetaBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (serverMetaBuilder_ == null) {
-          result.serverMeta_ = serverMeta_;
-        } else {
-          result.serverMeta_ = serverMetaBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (errorBuilder_ == null) {
+            result.error_ = error_;
+          } else {
+            result.error_ = errorBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
-        }
-        if (errorBuilder_ == null) {
-          result.error_ = error_;
-        } else {
-          result.error_ = errorBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -35296,35 +36735,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -35385,12 +36824,14 @@ public final class UserProtos {
       private int status_ = 0;
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return Whether the status field is set.
        */
       public boolean hasStatus() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return The status.
        */
       public org.apache.drill.exec.proto.UserProtos.RequestStatus getStatus() {
         @SuppressWarnings("deprecation")
@@ -35399,6 +36840,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
        */
       public Builder setStatus(org.apache.drill.exec.proto.UserProtos.RequestStatus value) {
         if (value == null) {
@@ -35411,6 +36854,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.RequestStatus status = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStatus() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -35419,17 +36863,19 @@ public final class UserProtos {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.ServerMeta serverMeta_ = null;
+      private org.apache.drill.exec.proto.UserProtos.ServerMeta serverMeta_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.ServerMeta, org.apache.drill.exec.proto.UserProtos.ServerMeta.Builder, org.apache.drill.exec.proto.UserProtos.ServerMetaOrBuilder> serverMetaBuilder_;
       /**
        * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+       * @return Whether the serverMeta field is set.
        */
       public boolean hasServerMeta() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.user.ServerMeta server_meta = 2;</code>
+       * @return The serverMeta.
        */
       public org.apache.drill.exec.proto.UserProtos.ServerMeta getServerMeta() {
         if (serverMetaBuilder_ == null) {
@@ -35473,7 +36919,7 @@ public final class UserProtos {
        */
       public Builder mergeServerMeta(org.apache.drill.exec.proto.UserProtos.ServerMeta value) {
         if (serverMetaBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               serverMeta_ != null &&
               serverMeta_ != org.apache.drill.exec.proto.UserProtos.ServerMeta.getDefaultInstance()) {
             serverMeta_ =
@@ -35537,17 +36983,19 @@ public final class UserProtos {
         return serverMetaBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return Whether the error field is set.
        */
       public boolean hasError() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.DrillPBError error = 3;</code>
+       * @return The error.
        */
       public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
         if (errorBuilder_ == null) {
@@ -35591,7 +37039,7 @@ public final class UserProtos {
        */
       public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
         if (errorBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               error_ != null &&
               error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
             error_ =
@@ -35717,6 +37165,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool all_tables_selectable = 1;</code>
+     * @return Whether the allTablesSelectable field is set.
      */
     boolean hasAllTablesSelectable();
     /**
@@ -35725,6 +37174,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool all_tables_selectable = 1;</code>
+     * @return The allTablesSelectable.
      */
     boolean getAllTablesSelectable();
 
@@ -35734,6 +37184,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool blob_included_in_max_row_size = 2;</code>
+     * @return Whether the blobIncludedInMaxRowSize field is set.
      */
     boolean hasBlobIncludedInMaxRowSize();
     /**
@@ -35742,6 +37193,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool blob_included_in_max_row_size = 2;</code>
+     * @return The blobIncludedInMaxRowSize.
      */
     boolean getBlobIncludedInMaxRowSize();
 
@@ -35751,6 +37203,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool catalog_at_start = 3;</code>
+     * @return Whether the catalogAtStart field is set.
      */
     boolean hasCatalogAtStart();
     /**
@@ -35759,6 +37212,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool catalog_at_start = 3;</code>
+     * @return The catalogAtStart.
      */
     boolean getCatalogAtStart();
 
@@ -35768,6 +37222,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_separator = 4;</code>
+     * @return Whether the catalogSeparator field is set.
      */
     boolean hasCatalogSeparator();
     /**
@@ -35776,6 +37231,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_separator = 4;</code>
+     * @return The catalogSeparator.
      */
     java.lang.String getCatalogSeparator();
     /**
@@ -35784,6 +37240,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_separator = 4;</code>
+     * @return The bytes for catalogSeparator.
      */
     com.google.protobuf.ByteString
         getCatalogSeparatorBytes();
@@ -35794,6 +37251,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_term = 5;</code>
+     * @return Whether the catalogTerm field is set.
      */
     boolean hasCatalogTerm();
     /**
@@ -35802,6 +37260,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_term = 5;</code>
+     * @return The catalogTerm.
      */
     java.lang.String getCatalogTerm();
     /**
@@ -35810,6 +37269,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_term = 5;</code>
+     * @return The bytes for catalogTerm.
      */
     com.google.protobuf.ByteString
         getCatalogTermBytes();
@@ -35820,6 +37280,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     * @return A list containing the collateSupport.
      */
     java.util.List<org.apache.drill.exec.proto.UserProtos.CollateSupport> getCollateSupportList();
     /**
@@ -35828,6 +37289,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     * @return The count of collateSupport.
      */
     int getCollateSupportCount();
     /**
@@ -35836,6 +37298,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     * @param index The index of the element to return.
+     * @return The collateSupport at the given index.
      */
     org.apache.drill.exec.proto.UserProtos.CollateSupport getCollateSupport(int index);
 
@@ -35845,6 +37309,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool column_aliasing_supported = 7;</code>
+     * @return Whether the columnAliasingSupported field is set.
      */
     boolean hasColumnAliasingSupported();
     /**
@@ -35853,6 +37318,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool column_aliasing_supported = 7;</code>
+     * @return The columnAliasingSupported.
      */
     boolean getColumnAliasingSupported();
 
@@ -35906,6 +37372,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+     * @return Whether the correlationNamesSupport field is set.
      */
     boolean hasCorrelationNamesSupport();
     /**
@@ -35914,6 +37381,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+     * @return The correlationNamesSupport.
      */
     org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport getCorrelationNamesSupport();
 
@@ -35923,6 +37391,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string date_time_functions = 10;</code>
+     * @return A list containing the dateTimeFunctions.
      */
     java.util.List<java.lang.String>
         getDateTimeFunctionsList();
@@ -35932,6 +37401,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string date_time_functions = 10;</code>
+     * @return The count of dateTimeFunctions.
      */
     int getDateTimeFunctionsCount();
     /**
@@ -35940,6 +37410,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string date_time_functions = 10;</code>
+     * @param index The index of the element to return.
+     * @return The dateTimeFunctions at the given index.
      */
     java.lang.String getDateTimeFunctions(int index);
     /**
@@ -35948,6 +37420,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string date_time_functions = 10;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the dateTimeFunctions at the given index.
      */
     com.google.protobuf.ByteString
         getDateTimeFunctionsBytes(int index);
@@ -35958,6 +37432,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     * @return A list containing the dateTimeLiteralsSupport.
      */
     java.util.List<org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport> getDateTimeLiteralsSupportList();
     /**
@@ -35966,6 +37441,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     * @return The count of dateTimeLiteralsSupport.
      */
     int getDateTimeLiteralsSupportCount();
     /**
@@ -35974,6 +37450,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     * @param index The index of the element to return.
+     * @return The dateTimeLiteralsSupport at the given index.
      */
     org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport getDateTimeLiteralsSupport(int index);
 
@@ -35983,6 +37461,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+     * @return Whether the groupBySupport field is set.
      */
     boolean hasGroupBySupport();
     /**
@@ -35991,6 +37470,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+     * @return The groupBySupport.
      */
     org.apache.drill.exec.proto.UserProtos.GroupBySupport getGroupBySupport();
 
@@ -36000,6 +37480,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+     * @return Whether the identifierCasing field is set.
      */
     boolean hasIdentifierCasing();
     /**
@@ -36008,6 +37489,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+     * @return The identifierCasing.
      */
     org.apache.drill.exec.proto.UserProtos.IdentifierCasing getIdentifierCasing();
 
@@ -36017,6 +37499,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string identifier_quote_string = 14;</code>
+     * @return Whether the identifierQuoteString field is set.
      */
     boolean hasIdentifierQuoteString();
     /**
@@ -36025,6 +37508,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string identifier_quote_string = 14;</code>
+     * @return The identifierQuoteString.
      */
     java.lang.String getIdentifierQuoteString();
     /**
@@ -36033,6 +37517,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string identifier_quote_string = 14;</code>
+     * @return The bytes for identifierQuoteString.
      */
     com.google.protobuf.ByteString
         getIdentifierQuoteStringBytes();
@@ -36043,6 +37528,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool like_escape_clause_supported = 15;</code>
+     * @return Whether the likeEscapeClauseSupported field is set.
      */
     boolean hasLikeEscapeClauseSupported();
     /**
@@ -36051,6 +37537,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool like_escape_clause_supported = 15;</code>
+     * @return The likeEscapeClauseSupported.
      */
     boolean getLikeEscapeClauseSupported();
 
@@ -36060,6 +37547,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_binary_literal_length = 16;</code>
+     * @return Whether the maxBinaryLiteralLength field is set.
      */
     boolean hasMaxBinaryLiteralLength();
     /**
@@ -36068,6 +37556,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_binary_literal_length = 16;</code>
+     * @return The maxBinaryLiteralLength.
      */
     int getMaxBinaryLiteralLength();
 
@@ -36077,6 +37566,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_catalog_name_length = 17;</code>
+     * @return Whether the maxCatalogNameLength field is set.
      */
     boolean hasMaxCatalogNameLength();
     /**
@@ -36085,6 +37575,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_catalog_name_length = 17;</code>
+     * @return The maxCatalogNameLength.
      */
     int getMaxCatalogNameLength();
 
@@ -36094,6 +37585,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_char_literal_length = 18;</code>
+     * @return Whether the maxCharLiteralLength field is set.
      */
     boolean hasMaxCharLiteralLength();
     /**
@@ -36102,6 +37594,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_char_literal_length = 18;</code>
+     * @return The maxCharLiteralLength.
      */
     int getMaxCharLiteralLength();
 
@@ -36111,6 +37604,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_column_name_length = 19;</code>
+     * @return Whether the maxColumnNameLength field is set.
      */
     boolean hasMaxColumnNameLength();
     /**
@@ -36119,6 +37613,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_column_name_length = 19;</code>
+     * @return The maxColumnNameLength.
      */
     int getMaxColumnNameLength();
 
@@ -36128,6 +37623,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_group_by = 20;</code>
+     * @return Whether the maxColumnsInGroupBy field is set.
      */
     boolean hasMaxColumnsInGroupBy();
     /**
@@ -36136,6 +37632,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_group_by = 20;</code>
+     * @return The maxColumnsInGroupBy.
      */
     int getMaxColumnsInGroupBy();
 
@@ -36145,6 +37642,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_order_by = 21;</code>
+     * @return Whether the maxColumnsInOrderBy field is set.
      */
     boolean hasMaxColumnsInOrderBy();
     /**
@@ -36153,6 +37651,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_order_by = 21;</code>
+     * @return The maxColumnsInOrderBy.
      */
     int getMaxColumnsInOrderBy();
 
@@ -36162,6 +37661,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_select = 22;</code>
+     * @return Whether the maxColumnsInSelect field is set.
      */
     boolean hasMaxColumnsInSelect();
     /**
@@ -36170,6 +37670,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_select = 22;</code>
+     * @return The maxColumnsInSelect.
      */
     int getMaxColumnsInSelect();
 
@@ -36179,6 +37680,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_cursor_name_length = 23;</code>
+     * @return Whether the maxCursorNameLength field is set.
      */
     boolean hasMaxCursorNameLength();
     /**
@@ -36187,6 +37689,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_cursor_name_length = 23;</code>
+     * @return The maxCursorNameLength.
      */
     int getMaxCursorNameLength();
 
@@ -36196,6 +37699,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_logical_lob_size = 24;</code>
+     * @return Whether the maxLogicalLobSize field is set.
      */
     boolean hasMaxLogicalLobSize();
     /**
@@ -36204,6 +37708,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_logical_lob_size = 24;</code>
+     * @return The maxLogicalLobSize.
      */
     int getMaxLogicalLobSize();
 
@@ -36213,6 +37718,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_row_size = 25;</code>
+     * @return Whether the maxRowSize field is set.
      */
     boolean hasMaxRowSize();
     /**
@@ -36221,6 +37727,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_row_size = 25;</code>
+     * @return The maxRowSize.
      */
     int getMaxRowSize();
 
@@ -36230,6 +37737,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_schema_name_length = 26;</code>
+     * @return Whether the maxSchemaNameLength field is set.
      */
     boolean hasMaxSchemaNameLength();
     /**
@@ -36238,6 +37746,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_schema_name_length = 26;</code>
+     * @return The maxSchemaNameLength.
      */
     int getMaxSchemaNameLength();
 
@@ -36247,6 +37756,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_statement_length = 27;</code>
+     * @return Whether the maxStatementLength field is set.
      */
     boolean hasMaxStatementLength();
     /**
@@ -36255,6 +37765,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_statement_length = 27;</code>
+     * @return The maxStatementLength.
      */
     int getMaxStatementLength();
 
@@ -36264,6 +37775,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_statements = 28;</code>
+     * @return Whether the maxStatements field is set.
      */
     boolean hasMaxStatements();
     /**
@@ -36272,6 +37784,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_statements = 28;</code>
+     * @return The maxStatements.
      */
     int getMaxStatements();
 
@@ -36281,6 +37794,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_table_name_length = 29;</code>
+     * @return Whether the maxTableNameLength field is set.
      */
     boolean hasMaxTableNameLength();
     /**
@@ -36289,6 +37803,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_table_name_length = 29;</code>
+     * @return The maxTableNameLength.
      */
     int getMaxTableNameLength();
 
@@ -36298,6 +37813,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_tables_in_select = 30;</code>
+     * @return Whether the maxTablesInSelect field is set.
      */
     boolean hasMaxTablesInSelect();
     /**
@@ -36306,6 +37822,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_tables_in_select = 30;</code>
+     * @return The maxTablesInSelect.
      */
     int getMaxTablesInSelect();
 
@@ -36315,6 +37832,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_user_name_length = 31;</code>
+     * @return Whether the maxUserNameLength field is set.
      */
     boolean hasMaxUserNameLength();
     /**
@@ -36323,6 +37841,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_user_name_length = 31;</code>
+     * @return The maxUserNameLength.
      */
     int getMaxUserNameLength();
 
@@ -36332,6 +37851,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+     * @return Whether the nullCollation field is set.
      */
     boolean hasNullCollation();
     /**
@@ -36340,6 +37860,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+     * @return The nullCollation.
      */
     org.apache.drill.exec.proto.UserProtos.NullCollation getNullCollation();
 
@@ -36349,6 +37870,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+     * @return Whether the nullPlusNonNullEqualsNull field is set.
      */
     boolean hasNullPlusNonNullEqualsNull();
     /**
@@ -36357,6 +37879,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+     * @return The nullPlusNonNullEqualsNull.
      */
     boolean getNullPlusNonNullEqualsNull();
 
@@ -36366,6 +37889,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string numeric_functions = 34;</code>
+     * @return A list containing the numericFunctions.
      */
     java.util.List<java.lang.String>
         getNumericFunctionsList();
@@ -36375,6 +37899,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string numeric_functions = 34;</code>
+     * @return The count of numericFunctions.
      */
     int getNumericFunctionsCount();
     /**
@@ -36383,6 +37908,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string numeric_functions = 34;</code>
+     * @param index The index of the element to return.
+     * @return The numericFunctions at the given index.
      */
     java.lang.String getNumericFunctions(int index);
     /**
@@ -36391,6 +37918,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string numeric_functions = 34;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the numericFunctions at the given index.
      */
     com.google.protobuf.ByteString
         getNumericFunctionsBytes(int index);
@@ -36401,6 +37930,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     * @return A list containing the orderBySupport.
      */
     java.util.List<org.apache.drill.exec.proto.UserProtos.OrderBySupport> getOrderBySupportList();
     /**
@@ -36409,6 +37939,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     * @return The count of orderBySupport.
      */
     int getOrderBySupportCount();
     /**
@@ -36417,6 +37948,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     * @param index The index of the element to return.
+     * @return The orderBySupport at the given index.
      */
     org.apache.drill.exec.proto.UserProtos.OrderBySupport getOrderBySupport(int index);
 
@@ -36426,6 +37959,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     * @return A list containing the outerJoinSupport.
      */
     java.util.List<org.apache.drill.exec.proto.UserProtos.OuterJoinSupport> getOuterJoinSupportList();
     /**
@@ -36434,6 +37968,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     * @return The count of outerJoinSupport.
      */
     int getOuterJoinSupportCount();
     /**
@@ -36442,6 +37977,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     * @param index The index of the element to return.
+     * @return The outerJoinSupport at the given index.
      */
     org.apache.drill.exec.proto.UserProtos.OuterJoinSupport getOuterJoinSupport(int index);
 
@@ -36451,6 +37988,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+     * @return Whether the quotedIdentifierCasing field is set.
      */
     boolean hasQuotedIdentifierCasing();
     /**
@@ -36459,6 +37997,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+     * @return The quotedIdentifierCasing.
      */
     org.apache.drill.exec.proto.UserProtos.IdentifierCasing getQuotedIdentifierCasing();
 
@@ -36468,6 +38007,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool read_only = 38;</code>
+     * @return Whether the readOnly field is set.
      */
     boolean hasReadOnly();
     /**
@@ -36476,6 +38016,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool read_only = 38;</code>
+     * @return The readOnly.
      */
     boolean getReadOnly();
 
@@ -36485,6 +38026,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_term = 39;</code>
+     * @return Whether the schemaTerm field is set.
      */
     boolean hasSchemaTerm();
     /**
@@ -36493,6 +38035,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_term = 39;</code>
+     * @return The schemaTerm.
      */
     java.lang.String getSchemaTerm();
     /**
@@ -36501,6 +38044,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_term = 39;</code>
+     * @return The bytes for schemaTerm.
      */
     com.google.protobuf.ByteString
         getSchemaTermBytes();
@@ -36511,6 +38055,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string search_escape_string = 40;</code>
+     * @return Whether the searchEscapeString field is set.
      */
     boolean hasSearchEscapeString();
     /**
@@ -36519,6 +38064,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string search_escape_string = 40;</code>
+     * @return The searchEscapeString.
      */
     java.lang.String getSearchEscapeString();
     /**
@@ -36527,6 +38073,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string search_escape_string = 40;</code>
+     * @return The bytes for searchEscapeString.
      */
     com.google.protobuf.ByteString
         getSearchEscapeStringBytes();
@@ -36537,6 +38084,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool select_for_update_supported = 41;</code>
+     * @return Whether the selectForUpdateSupported field is set.
      */
     boolean hasSelectForUpdateSupported();
     /**
@@ -36545,6 +38093,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool select_for_update_supported = 41;</code>
+     * @return The selectForUpdateSupported.
      */
     boolean getSelectForUpdateSupported();
 
@@ -36554,6 +38103,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string special_characters = 42;</code>
+     * @return Whether the specialCharacters field is set.
      */
     boolean hasSpecialCharacters();
     /**
@@ -36562,6 +38112,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string special_characters = 42;</code>
+     * @return The specialCharacters.
      */
     java.lang.String getSpecialCharacters();
     /**
@@ -36570,6 +38121,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string special_characters = 42;</code>
+     * @return The bytes for specialCharacters.
      */
     com.google.protobuf.ByteString
         getSpecialCharactersBytes();
@@ -36580,6 +38132,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string sql_keywords = 43;</code>
+     * @return A list containing the sqlKeywords.
      */
     java.util.List<java.lang.String>
         getSqlKeywordsList();
@@ -36589,6 +38142,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string sql_keywords = 43;</code>
+     * @return The count of sqlKeywords.
      */
     int getSqlKeywordsCount();
     /**
@@ -36597,6 +38151,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string sql_keywords = 43;</code>
+     * @param index The index of the element to return.
+     * @return The sqlKeywords at the given index.
      */
     java.lang.String getSqlKeywords(int index);
     /**
@@ -36605,6 +38161,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string sql_keywords = 43;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the sqlKeywords at the given index.
      */
     com.google.protobuf.ByteString
         getSqlKeywordsBytes(int index);
@@ -36615,6 +38173,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string string_functions = 44;</code>
+     * @return A list containing the stringFunctions.
      */
     java.util.List<java.lang.String>
         getStringFunctionsList();
@@ -36624,6 +38183,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string string_functions = 44;</code>
+     * @return The count of stringFunctions.
      */
     int getStringFunctionsCount();
     /**
@@ -36632,6 +38192,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string string_functions = 44;</code>
+     * @param index The index of the element to return.
+     * @return The stringFunctions at the given index.
      */
     java.lang.String getStringFunctions(int index);
     /**
@@ -36640,6 +38202,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string string_functions = 44;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the stringFunctions at the given index.
      */
     com.google.protobuf.ByteString
         getStringFunctionsBytes(int index);
@@ -36650,6 +38214,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     * @return A list containing the subquerySupport.
      */
     java.util.List<org.apache.drill.exec.proto.UserProtos.SubQuerySupport> getSubquerySupportList();
     /**
@@ -36658,6 +38223,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     * @return The count of subquerySupport.
      */
     int getSubquerySupportCount();
     /**
@@ -36666,6 +38232,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     * @param index The index of the element to return.
+     * @return The subquerySupport at the given index.
      */
     org.apache.drill.exec.proto.UserProtos.SubQuerySupport getSubquerySupport(int index);
 
@@ -36675,6 +38243,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string system_functions = 46;</code>
+     * @return A list containing the systemFunctions.
      */
     java.util.List<java.lang.String>
         getSystemFunctionsList();
@@ -36684,6 +38253,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string system_functions = 46;</code>
+     * @return The count of systemFunctions.
      */
     int getSystemFunctionsCount();
     /**
@@ -36692,6 +38262,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string system_functions = 46;</code>
+     * @param index The index of the element to return.
+     * @return The systemFunctions at the given index.
      */
     java.lang.String getSystemFunctions(int index);
     /**
@@ -36700,6 +38272,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string system_functions = 46;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the systemFunctions at the given index.
      */
     com.google.protobuf.ByteString
         getSystemFunctionsBytes(int index);
@@ -36710,6 +38284,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_term = 47;</code>
+     * @return Whether the tableTerm field is set.
      */
     boolean hasTableTerm();
     /**
@@ -36718,6 +38293,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_term = 47;</code>
+     * @return The tableTerm.
      */
     java.lang.String getTableTerm();
     /**
@@ -36726,6 +38302,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_term = 47;</code>
+     * @return The bytes for tableTerm.
      */
     com.google.protobuf.ByteString
         getTableTermBytes();
@@ -36736,6 +38313,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool transaction_supported = 48;</code>
+     * @return Whether the transactionSupported field is set.
      */
     boolean hasTransactionSupported();
     /**
@@ -36744,6 +38322,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool transaction_supported = 48;</code>
+     * @return The transactionSupported.
      */
     boolean getTransactionSupported();
 
@@ -36753,6 +38332,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     * @return A list containing the unionSupport.
      */
     java.util.List<org.apache.drill.exec.proto.UserProtos.UnionSupport> getUnionSupportList();
     /**
@@ -36761,6 +38341,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     * @return The count of unionSupport.
      */
     int getUnionSupportCount();
     /**
@@ -36769,6 +38350,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     * @param index The index of the element to return.
+     * @return The unionSupport at the given index.
      */
     org.apache.drill.exec.proto.UserProtos.UnionSupport getUnionSupport(int index);
 
@@ -36778,6 +38361,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string current_schema = 50;</code>
+     * @return Whether the currentSchema field is set.
      */
     boolean hasCurrentSchema();
     /**
@@ -36786,6 +38370,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string current_schema = 50;</code>
+     * @return The currentSchema.
      */
     java.lang.String getCurrentSchema();
     /**
@@ -36794,6 +38379,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string current_schema = 50;</code>
+     * @return The bytes for currentSchema.
      */
     com.google.protobuf.ByteString
         getCurrentSchemaBytes();
@@ -36811,13 +38397,9 @@ public final class UserProtos {
       super(builder);
     }
     private ServerMeta() {
-      allTablesSelectable_ = false;
-      blobIncludedInMaxRowSize_ = false;
-      catalogAtStart_ = false;
       catalogSeparator_ = "";
       catalogTerm_ = "";
       collateSupport_ = java.util.Collections.emptyList();
-      columnAliasingSupported_ = false;
       convertSupport_ = java.util.Collections.emptyList();
       correlationNamesSupport_ = 1;
       dateTimeFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -36825,42 +38407,28 @@ public final class UserProtos {
       groupBySupport_ = 1;
       identifierCasing_ = 0;
       identifierQuoteString_ = "";
-      likeEscapeClauseSupported_ = false;
-      maxBinaryLiteralLength_ = 0;
-      maxCatalogNameLength_ = 0;
-      maxCharLiteralLength_ = 0;
-      maxColumnNameLength_ = 0;
-      maxColumnsInGroupBy_ = 0;
-      maxColumnsInOrderBy_ = 0;
-      maxColumnsInSelect_ = 0;
-      maxCursorNameLength_ = 0;
-      maxLogicalLobSize_ = 0;
-      maxRowSize_ = 0;
-      maxSchemaNameLength_ = 0;
-      maxStatementLength_ = 0;
-      maxStatements_ = 0;
-      maxTableNameLength_ = 0;
-      maxTablesInSelect_ = 0;
-      maxUserNameLength_ = 0;
       nullCollation_ = 0;
-      nullPlusNonNullEqualsNull_ = false;
       numericFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       orderBySupport_ = java.util.Collections.emptyList();
       outerJoinSupport_ = java.util.Collections.emptyList();
       quotedIdentifierCasing_ = 0;
-      readOnly_ = false;
       schemaTerm_ = "";
       searchEscapeString_ = "";
-      selectForUpdateSupported_ = false;
       specialCharacters_ = "";
       sqlKeywords_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       stringFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       subquerySupport_ = java.util.Collections.emptyList();
       systemFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       tableTerm_ = "";
-      transactionSupported_ = false;
       unionSupport_ = java.util.Collections.emptyList();
       currentSchema_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ServerMeta();
     }
 
     @java.lang.Override
@@ -36922,7 +38490,7 @@ public final class UserProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(6, rawValue);
               } else {
-                if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                if (!((mutable_bitField0_ & 0x00000020) != 0)) {
                   collateSupport_ = new java.util.ArrayList<java.lang.Integer>();
                   mutable_bitField0_ |= 0x00000020;
                 }
@@ -36940,7 +38508,7 @@ public final class UserProtos {
                 if (value == null) {
                   unknownFields.mergeVarintField(6, rawValue);
                 } else {
-                  if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                  if (!((mutable_bitField0_ & 0x00000020) != 0)) {
                     collateSupport_ = new java.util.ArrayList<java.lang.Integer>();
                     mutable_bitField0_ |= 0x00000020;
                   }
@@ -36956,7 +38524,7 @@ public final class UserProtos {
               break;
             }
             case 66: {
-              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+              if (!((mutable_bitField0_ & 0x00000080) != 0)) {
                 convertSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.ConvertSupport>();
                 mutable_bitField0_ |= 0x00000080;
               }
@@ -36978,7 +38546,7 @@ public final class UserProtos {
             }
             case 82: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
+              if (!((mutable_bitField0_ & 0x00000200) != 0)) {
                 dateTimeFunctions_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000200;
               }
@@ -36992,7 +38560,7 @@ public final class UserProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(11, rawValue);
               } else {
-                if (!((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+                if (!((mutable_bitField0_ & 0x00000400) != 0)) {
                   dateTimeLiteralsSupport_ = new java.util.ArrayList<java.lang.Integer>();
                   mutable_bitField0_ |= 0x00000400;
                 }
@@ -37010,7 +38578,7 @@ public final class UserProtos {
                 if (value == null) {
                   unknownFields.mergeVarintField(11, rawValue);
                 } else {
-                  if (!((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+                  if (!((mutable_bitField0_ & 0x00000400) != 0)) {
                     dateTimeLiteralsSupport_ = new java.util.ArrayList<java.lang.Integer>();
                     mutable_bitField0_ |= 0x00000400;
                   }
@@ -37154,7 +38722,7 @@ public final class UserProtos {
             }
             case 274: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField1_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField1_ & 0x00000002) != 0)) {
                 numericFunctions_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField1_ |= 0x00000002;
               }
@@ -37168,7 +38736,7 @@ public final class UserProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(35, rawValue);
               } else {
-                if (!((mutable_bitField1_ & 0x00000004) == 0x00000004)) {
+                if (!((mutable_bitField1_ & 0x00000004) != 0)) {
                   orderBySupport_ = new java.util.ArrayList<java.lang.Integer>();
                   mutable_bitField1_ |= 0x00000004;
                 }
@@ -37186,7 +38754,7 @@ public final class UserProtos {
                 if (value == null) {
                   unknownFields.mergeVarintField(35, rawValue);
                 } else {
-                  if (!((mutable_bitField1_ & 0x00000004) == 0x00000004)) {
+                  if (!((mutable_bitField1_ & 0x00000004) != 0)) {
                     orderBySupport_ = new java.util.ArrayList<java.lang.Integer>();
                     mutable_bitField1_ |= 0x00000004;
                   }
@@ -37203,7 +38771,7 @@ public final class UserProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(36, rawValue);
               } else {
-                if (!((mutable_bitField1_ & 0x00000008) == 0x00000008)) {
+                if (!((mutable_bitField1_ & 0x00000008) != 0)) {
                   outerJoinSupport_ = new java.util.ArrayList<java.lang.Integer>();
                   mutable_bitField1_ |= 0x00000008;
                 }
@@ -37221,7 +38789,7 @@ public final class UserProtos {
                 if (value == null) {
                   unknownFields.mergeVarintField(36, rawValue);
                 } else {
-                  if (!((mutable_bitField1_ & 0x00000008) == 0x00000008)) {
+                  if (!((mutable_bitField1_ & 0x00000008) != 0)) {
                     outerJoinSupport_ = new java.util.ArrayList<java.lang.Integer>();
                     mutable_bitField1_ |= 0x00000008;
                   }
@@ -37273,7 +38841,7 @@ public final class UserProtos {
             }
             case 346: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField1_ & 0x00000400) == 0x00000400)) {
+              if (!((mutable_bitField1_ & 0x00000400) != 0)) {
                 sqlKeywords_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField1_ |= 0x00000400;
               }
@@ -37282,7 +38850,7 @@ public final class UserProtos {
             }
             case 354: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField1_ & 0x00000800) == 0x00000800)) {
+              if (!((mutable_bitField1_ & 0x00000800) != 0)) {
                 stringFunctions_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField1_ |= 0x00000800;
               }
@@ -37296,7 +38864,7 @@ public final class UserProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(45, rawValue);
               } else {
-                if (!((mutable_bitField1_ & 0x00001000) == 0x00001000)) {
+                if (!((mutable_bitField1_ & 0x00001000) != 0)) {
                   subquerySupport_ = new java.util.ArrayList<java.lang.Integer>();
                   mutable_bitField1_ |= 0x00001000;
                 }
@@ -37314,7 +38882,7 @@ public final class UserProtos {
                 if (value == null) {
                   unknownFields.mergeVarintField(45, rawValue);
                 } else {
-                  if (!((mutable_bitField1_ & 0x00001000) == 0x00001000)) {
+                  if (!((mutable_bitField1_ & 0x00001000) != 0)) {
                     subquerySupport_ = new java.util.ArrayList<java.lang.Integer>();
                     mutable_bitField1_ |= 0x00001000;
                   }
@@ -37326,7 +38894,7 @@ public final class UserProtos {
             }
             case 370: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField1_ & 0x00002000) == 0x00002000)) {
+              if (!((mutable_bitField1_ & 0x00002000) != 0)) {
                 systemFunctions_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField1_ |= 0x00002000;
               }
@@ -37351,7 +38919,7 @@ public final class UserProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(49, rawValue);
               } else {
-                if (!((mutable_bitField1_ & 0x00010000) == 0x00010000)) {
+                if (!((mutable_bitField1_ & 0x00010000) != 0)) {
                   unionSupport_ = new java.util.ArrayList<java.lang.Integer>();
                   mutable_bitField1_ |= 0x00010000;
                 }
@@ -37369,7 +38937,7 @@ public final class UserProtos {
                 if (value == null) {
                   unknownFields.mergeVarintField(49, rawValue);
                 } else {
-                  if (!((mutable_bitField1_ & 0x00010000) == 0x00010000)) {
+                  if (!((mutable_bitField1_ & 0x00010000) != 0)) {
                     unionSupport_ = new java.util.ArrayList<java.lang.Integer>();
                     mutable_bitField1_ |= 0x00010000;
                   }
@@ -37400,40 +38968,40 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((mutable_bitField0_ & 0x00000020) != 0)) {
           collateSupport_ = java.util.Collections.unmodifiableList(collateSupport_);
         }
-        if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((mutable_bitField0_ & 0x00000080) != 0)) {
           convertSupport_ = java.util.Collections.unmodifiableList(convertSupport_);
         }
-        if (((mutable_bitField0_ & 0x00000200) == 0x00000200)) {
+        if (((mutable_bitField0_ & 0x00000200) != 0)) {
           dateTimeFunctions_ = dateTimeFunctions_.getUnmodifiableView();
         }
-        if (((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+        if (((mutable_bitField0_ & 0x00000400) != 0)) {
           dateTimeLiteralsSupport_ = java.util.Collections.unmodifiableList(dateTimeLiteralsSupport_);
         }
-        if (((mutable_bitField1_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField1_ & 0x00000002) != 0)) {
           numericFunctions_ = numericFunctions_.getUnmodifiableView();
         }
-        if (((mutable_bitField1_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField1_ & 0x00000004) != 0)) {
           orderBySupport_ = java.util.Collections.unmodifiableList(orderBySupport_);
         }
-        if (((mutable_bitField1_ & 0x00000008) == 0x00000008)) {
+        if (((mutable_bitField1_ & 0x00000008) != 0)) {
           outerJoinSupport_ = java.util.Collections.unmodifiableList(outerJoinSupport_);
         }
-        if (((mutable_bitField1_ & 0x00000400) == 0x00000400)) {
+        if (((mutable_bitField1_ & 0x00000400) != 0)) {
           sqlKeywords_ = sqlKeywords_.getUnmodifiableView();
         }
-        if (((mutable_bitField1_ & 0x00000800) == 0x00000800)) {
+        if (((mutable_bitField1_ & 0x00000800) != 0)) {
           stringFunctions_ = stringFunctions_.getUnmodifiableView();
         }
-        if (((mutable_bitField1_ & 0x00001000) == 0x00001000)) {
+        if (((mutable_bitField1_ & 0x00001000) != 0)) {
           subquerySupport_ = java.util.Collections.unmodifiableList(subquerySupport_);
         }
-        if (((mutable_bitField1_ & 0x00002000) == 0x00002000)) {
+        if (((mutable_bitField1_ & 0x00002000) != 0)) {
           systemFunctions_ = systemFunctions_.getUnmodifiableView();
         }
-        if (((mutable_bitField1_ & 0x00010000) == 0x00010000)) {
+        if (((mutable_bitField1_ & 0x00010000) != 0)) {
           unionSupport_ = java.util.Collections.unmodifiableList(unionSupport_);
         }
         this.unknownFields = unknownFields.build();
@@ -37463,9 +39031,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool all_tables_selectable = 1;</code>
+     * @return Whether the allTablesSelectable field is set.
      */
     public boolean hasAllTablesSelectable() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -37473,6 +39042,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool all_tables_selectable = 1;</code>
+     * @return The allTablesSelectable.
      */
     public boolean getAllTablesSelectable() {
       return allTablesSelectable_;
@@ -37486,9 +39056,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool blob_included_in_max_row_size = 2;</code>
+     * @return Whether the blobIncludedInMaxRowSize field is set.
      */
     public boolean hasBlobIncludedInMaxRowSize() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -37496,6 +39067,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool blob_included_in_max_row_size = 2;</code>
+     * @return The blobIncludedInMaxRowSize.
      */
     public boolean getBlobIncludedInMaxRowSize() {
       return blobIncludedInMaxRowSize_;
@@ -37509,9 +39081,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool catalog_at_start = 3;</code>
+     * @return Whether the catalogAtStart field is set.
      */
     public boolean hasCatalogAtStart() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -37519,6 +39092,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool catalog_at_start = 3;</code>
+     * @return The catalogAtStart.
      */
     public boolean getCatalogAtStart() {
       return catalogAtStart_;
@@ -37532,9 +39106,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_separator = 4;</code>
+     * @return Whether the catalogSeparator field is set.
      */
     public boolean hasCatalogSeparator() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -37542,6 +39117,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_separator = 4;</code>
+     * @return The catalogSeparator.
      */
     public java.lang.String getCatalogSeparator() {
       java.lang.Object ref = catalogSeparator_;
@@ -37563,6 +39139,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_separator = 4;</code>
+     * @return The bytes for catalogSeparator.
      */
     public com.google.protobuf.ByteString
         getCatalogSeparatorBytes() {
@@ -37586,9 +39163,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_term = 5;</code>
+     * @return Whether the catalogTerm field is set.
      */
     public boolean hasCatalogTerm() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -37596,6 +39174,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_term = 5;</code>
+     * @return The catalogTerm.
      */
     public java.lang.String getCatalogTerm() {
       java.lang.Object ref = catalogTerm_;
@@ -37617,6 +39196,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string catalog_term = 5;</code>
+     * @return The bytes for catalogTerm.
      */
     public com.google.protobuf.ByteString
         getCatalogTermBytes() {
@@ -37650,6 +39230,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     * @return A list containing the collateSupport.
      */
     public java.util.List<org.apache.drill.exec.proto.UserProtos.CollateSupport> getCollateSupportList() {
       return new com.google.protobuf.Internal.ListAdapter<
@@ -37661,6 +39242,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     * @return The count of collateSupport.
      */
     public int getCollateSupportCount() {
       return collateSupport_.size();
@@ -37671,6 +39253,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+     * @param index The index of the element to return.
+     * @return The collateSupport at the given index.
      */
     public org.apache.drill.exec.proto.UserProtos.CollateSupport getCollateSupport(int index) {
       return collateSupport_converter_.convert(collateSupport_.get(index));
@@ -37684,9 +39268,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool column_aliasing_supported = 7;</code>
+     * @return Whether the columnAliasingSupported field is set.
      */
     public boolean hasColumnAliasingSupported() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <pre>
@@ -37694,6 +39279,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool column_aliasing_supported = 7;</code>
+     * @return The columnAliasingSupported.
      */
     public boolean getColumnAliasingSupported() {
       return columnAliasingSupported_;
@@ -37762,9 +39348,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+     * @return Whether the correlationNamesSupport field is set.
      */
     public boolean hasCorrelationNamesSupport() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <pre>
@@ -37772,6 +39359,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+     * @return The correlationNamesSupport.
      */
     public org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport getCorrelationNamesSupport() {
       @SuppressWarnings("deprecation")
@@ -37787,6 +39375,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string date_time_functions = 10;</code>
+     * @return A list containing the dateTimeFunctions.
      */
     public com.google.protobuf.ProtocolStringList
         getDateTimeFunctionsList() {
@@ -37798,6 +39387,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string date_time_functions = 10;</code>
+     * @return The count of dateTimeFunctions.
      */
     public int getDateTimeFunctionsCount() {
       return dateTimeFunctions_.size();
@@ -37808,6 +39398,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string date_time_functions = 10;</code>
+     * @param index The index of the element to return.
+     * @return The dateTimeFunctions at the given index.
      */
     public java.lang.String getDateTimeFunctions(int index) {
       return dateTimeFunctions_.get(index);
@@ -37818,6 +39410,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string date_time_functions = 10;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the dateTimeFunctions at the given index.
      */
     public com.google.protobuf.ByteString
         getDateTimeFunctionsBytes(int index) {
@@ -37842,6 +39436,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     * @return A list containing the dateTimeLiteralsSupport.
      */
     public java.util.List<org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport> getDateTimeLiteralsSupportList() {
       return new com.google.protobuf.Internal.ListAdapter<
@@ -37853,6 +39448,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     * @return The count of dateTimeLiteralsSupport.
      */
     public int getDateTimeLiteralsSupportCount() {
       return dateTimeLiteralsSupport_.size();
@@ -37863,6 +39459,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+     * @param index The index of the element to return.
+     * @return The dateTimeLiteralsSupport at the given index.
      */
     public org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport getDateTimeLiteralsSupport(int index) {
       return dateTimeLiteralsSupport_converter_.convert(dateTimeLiteralsSupport_.get(index));
@@ -37876,9 +39474,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+     * @return Whether the groupBySupport field is set.
      */
     public boolean hasGroupBySupport() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <pre>
@@ -37886,6 +39485,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+     * @return The groupBySupport.
      */
     public org.apache.drill.exec.proto.UserProtos.GroupBySupport getGroupBySupport() {
       @SuppressWarnings("deprecation")
@@ -37901,9 +39501,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+     * @return Whether the identifierCasing field is set.
      */
     public boolean hasIdentifierCasing() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000100) != 0);
     }
     /**
      * <pre>
@@ -37911,6 +39512,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+     * @return The identifierCasing.
      */
     public org.apache.drill.exec.proto.UserProtos.IdentifierCasing getIdentifierCasing() {
       @SuppressWarnings("deprecation")
@@ -37926,9 +39528,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string identifier_quote_string = 14;</code>
+     * @return Whether the identifierQuoteString field is set.
      */
     public boolean hasIdentifierQuoteString() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
+      return ((bitField0_ & 0x00000200) != 0);
     }
     /**
      * <pre>
@@ -37936,6 +39539,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string identifier_quote_string = 14;</code>
+     * @return The identifierQuoteString.
      */
     public java.lang.String getIdentifierQuoteString() {
       java.lang.Object ref = identifierQuoteString_;
@@ -37957,6 +39561,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string identifier_quote_string = 14;</code>
+     * @return The bytes for identifierQuoteString.
      */
     public com.google.protobuf.ByteString
         getIdentifierQuoteStringBytes() {
@@ -37980,9 +39585,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool like_escape_clause_supported = 15;</code>
+     * @return Whether the likeEscapeClauseSupported field is set.
      */
     public boolean hasLikeEscapeClauseSupported() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00000400) != 0);
     }
     /**
      * <pre>
@@ -37990,6 +39596,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool like_escape_clause_supported = 15;</code>
+     * @return The likeEscapeClauseSupported.
      */
     public boolean getLikeEscapeClauseSupported() {
       return likeEscapeClauseSupported_;
@@ -38003,9 +39610,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_binary_literal_length = 16;</code>
+     * @return Whether the maxBinaryLiteralLength field is set.
      */
     public boolean hasMaxBinaryLiteralLength() {
-      return ((bitField0_ & 0x00000800) == 0x00000800);
+      return ((bitField0_ & 0x00000800) != 0);
     }
     /**
      * <pre>
@@ -38013,6 +39621,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_binary_literal_length = 16;</code>
+     * @return The maxBinaryLiteralLength.
      */
     public int getMaxBinaryLiteralLength() {
       return maxBinaryLiteralLength_;
@@ -38026,9 +39635,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_catalog_name_length = 17;</code>
+     * @return Whether the maxCatalogNameLength field is set.
      */
     public boolean hasMaxCatalogNameLength() {
-      return ((bitField0_ & 0x00001000) == 0x00001000);
+      return ((bitField0_ & 0x00001000) != 0);
     }
     /**
      * <pre>
@@ -38036,6 +39646,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_catalog_name_length = 17;</code>
+     * @return The maxCatalogNameLength.
      */
     public int getMaxCatalogNameLength() {
       return maxCatalogNameLength_;
@@ -38049,9 +39660,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_char_literal_length = 18;</code>
+     * @return Whether the maxCharLiteralLength field is set.
      */
     public boolean hasMaxCharLiteralLength() {
-      return ((bitField0_ & 0x00002000) == 0x00002000);
+      return ((bitField0_ & 0x00002000) != 0);
     }
     /**
      * <pre>
@@ -38059,6 +39671,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_char_literal_length = 18;</code>
+     * @return The maxCharLiteralLength.
      */
     public int getMaxCharLiteralLength() {
       return maxCharLiteralLength_;
@@ -38072,9 +39685,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_column_name_length = 19;</code>
+     * @return Whether the maxColumnNameLength field is set.
      */
     public boolean hasMaxColumnNameLength() {
-      return ((bitField0_ & 0x00004000) == 0x00004000);
+      return ((bitField0_ & 0x00004000) != 0);
     }
     /**
      * <pre>
@@ -38082,6 +39696,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_column_name_length = 19;</code>
+     * @return The maxColumnNameLength.
      */
     public int getMaxColumnNameLength() {
       return maxColumnNameLength_;
@@ -38095,9 +39710,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_group_by = 20;</code>
+     * @return Whether the maxColumnsInGroupBy field is set.
      */
     public boolean hasMaxColumnsInGroupBy() {
-      return ((bitField0_ & 0x00008000) == 0x00008000);
+      return ((bitField0_ & 0x00008000) != 0);
     }
     /**
      * <pre>
@@ -38105,6 +39721,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_group_by = 20;</code>
+     * @return The maxColumnsInGroupBy.
      */
     public int getMaxColumnsInGroupBy() {
       return maxColumnsInGroupBy_;
@@ -38118,9 +39735,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_order_by = 21;</code>
+     * @return Whether the maxColumnsInOrderBy field is set.
      */
     public boolean hasMaxColumnsInOrderBy() {
-      return ((bitField0_ & 0x00010000) == 0x00010000);
+      return ((bitField0_ & 0x00010000) != 0);
     }
     /**
      * <pre>
@@ -38128,6 +39746,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_order_by = 21;</code>
+     * @return The maxColumnsInOrderBy.
      */
     public int getMaxColumnsInOrderBy() {
       return maxColumnsInOrderBy_;
@@ -38141,9 +39760,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_select = 22;</code>
+     * @return Whether the maxColumnsInSelect field is set.
      */
     public boolean hasMaxColumnsInSelect() {
-      return ((bitField0_ & 0x00020000) == 0x00020000);
+      return ((bitField0_ & 0x00020000) != 0);
     }
     /**
      * <pre>
@@ -38151,6 +39771,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_columns_in_select = 22;</code>
+     * @return The maxColumnsInSelect.
      */
     public int getMaxColumnsInSelect() {
       return maxColumnsInSelect_;
@@ -38164,9 +39785,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_cursor_name_length = 23;</code>
+     * @return Whether the maxCursorNameLength field is set.
      */
     public boolean hasMaxCursorNameLength() {
-      return ((bitField0_ & 0x00040000) == 0x00040000);
+      return ((bitField0_ & 0x00040000) != 0);
     }
     /**
      * <pre>
@@ -38174,6 +39796,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_cursor_name_length = 23;</code>
+     * @return The maxCursorNameLength.
      */
     public int getMaxCursorNameLength() {
       return maxCursorNameLength_;
@@ -38187,9 +39810,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_logical_lob_size = 24;</code>
+     * @return Whether the maxLogicalLobSize field is set.
      */
     public boolean hasMaxLogicalLobSize() {
-      return ((bitField0_ & 0x00080000) == 0x00080000);
+      return ((bitField0_ & 0x00080000) != 0);
     }
     /**
      * <pre>
@@ -38197,6 +39821,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_logical_lob_size = 24;</code>
+     * @return The maxLogicalLobSize.
      */
     public int getMaxLogicalLobSize() {
       return maxLogicalLobSize_;
@@ -38210,9 +39835,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_row_size = 25;</code>
+     * @return Whether the maxRowSize field is set.
      */
     public boolean hasMaxRowSize() {
-      return ((bitField0_ & 0x00100000) == 0x00100000);
+      return ((bitField0_ & 0x00100000) != 0);
     }
     /**
      * <pre>
@@ -38220,6 +39846,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_row_size = 25;</code>
+     * @return The maxRowSize.
      */
     public int getMaxRowSize() {
       return maxRowSize_;
@@ -38233,9 +39860,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_schema_name_length = 26;</code>
+     * @return Whether the maxSchemaNameLength field is set.
      */
     public boolean hasMaxSchemaNameLength() {
-      return ((bitField0_ & 0x00200000) == 0x00200000);
+      return ((bitField0_ & 0x00200000) != 0);
     }
     /**
      * <pre>
@@ -38243,6 +39871,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_schema_name_length = 26;</code>
+     * @return The maxSchemaNameLength.
      */
     public int getMaxSchemaNameLength() {
       return maxSchemaNameLength_;
@@ -38256,9 +39885,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_statement_length = 27;</code>
+     * @return Whether the maxStatementLength field is set.
      */
     public boolean hasMaxStatementLength() {
-      return ((bitField0_ & 0x00400000) == 0x00400000);
+      return ((bitField0_ & 0x00400000) != 0);
     }
     /**
      * <pre>
@@ -38266,6 +39896,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_statement_length = 27;</code>
+     * @return The maxStatementLength.
      */
     public int getMaxStatementLength() {
       return maxStatementLength_;
@@ -38279,9 +39910,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_statements = 28;</code>
+     * @return Whether the maxStatements field is set.
      */
     public boolean hasMaxStatements() {
-      return ((bitField0_ & 0x00800000) == 0x00800000);
+      return ((bitField0_ & 0x00800000) != 0);
     }
     /**
      * <pre>
@@ -38289,6 +39921,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_statements = 28;</code>
+     * @return The maxStatements.
      */
     public int getMaxStatements() {
       return maxStatements_;
@@ -38302,9 +39935,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_table_name_length = 29;</code>
+     * @return Whether the maxTableNameLength field is set.
      */
     public boolean hasMaxTableNameLength() {
-      return ((bitField0_ & 0x01000000) == 0x01000000);
+      return ((bitField0_ & 0x01000000) != 0);
     }
     /**
      * <pre>
@@ -38312,6 +39946,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_table_name_length = 29;</code>
+     * @return The maxTableNameLength.
      */
     public int getMaxTableNameLength() {
       return maxTableNameLength_;
@@ -38325,9 +39960,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_tables_in_select = 30;</code>
+     * @return Whether the maxTablesInSelect field is set.
      */
     public boolean hasMaxTablesInSelect() {
-      return ((bitField0_ & 0x02000000) == 0x02000000);
+      return ((bitField0_ & 0x02000000) != 0);
     }
     /**
      * <pre>
@@ -38335,6 +39971,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_tables_in_select = 30;</code>
+     * @return The maxTablesInSelect.
      */
     public int getMaxTablesInSelect() {
       return maxTablesInSelect_;
@@ -38348,9 +39985,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_user_name_length = 31;</code>
+     * @return Whether the maxUserNameLength field is set.
      */
     public boolean hasMaxUserNameLength() {
-      return ((bitField0_ & 0x04000000) == 0x04000000);
+      return ((bitField0_ & 0x04000000) != 0);
     }
     /**
      * <pre>
@@ -38358,6 +39996,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional uint32 max_user_name_length = 31;</code>
+     * @return The maxUserNameLength.
      */
     public int getMaxUserNameLength() {
       return maxUserNameLength_;
@@ -38371,9 +40010,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+     * @return Whether the nullCollation field is set.
      */
     public boolean hasNullCollation() {
-      return ((bitField0_ & 0x08000000) == 0x08000000);
+      return ((bitField0_ & 0x08000000) != 0);
     }
     /**
      * <pre>
@@ -38381,6 +40021,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+     * @return The nullCollation.
      */
     public org.apache.drill.exec.proto.UserProtos.NullCollation getNullCollation() {
       @SuppressWarnings("deprecation")
@@ -38396,9 +40037,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+     * @return Whether the nullPlusNonNullEqualsNull field is set.
      */
     public boolean hasNullPlusNonNullEqualsNull() {
-      return ((bitField0_ & 0x10000000) == 0x10000000);
+      return ((bitField0_ & 0x10000000) != 0);
     }
     /**
      * <pre>
@@ -38406,6 +40048,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+     * @return The nullPlusNonNullEqualsNull.
      */
     public boolean getNullPlusNonNullEqualsNull() {
       return nullPlusNonNullEqualsNull_;
@@ -38419,6 +40062,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string numeric_functions = 34;</code>
+     * @return A list containing the numericFunctions.
      */
     public com.google.protobuf.ProtocolStringList
         getNumericFunctionsList() {
@@ -38430,6 +40074,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string numeric_functions = 34;</code>
+     * @return The count of numericFunctions.
      */
     public int getNumericFunctionsCount() {
       return numericFunctions_.size();
@@ -38440,6 +40085,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string numeric_functions = 34;</code>
+     * @param index The index of the element to return.
+     * @return The numericFunctions at the given index.
      */
     public java.lang.String getNumericFunctions(int index) {
       return numericFunctions_.get(index);
@@ -38450,6 +40097,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string numeric_functions = 34;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the numericFunctions at the given index.
      */
     public com.google.protobuf.ByteString
         getNumericFunctionsBytes(int index) {
@@ -38474,6 +40123,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     * @return A list containing the orderBySupport.
      */
     public java.util.List<org.apache.drill.exec.proto.UserProtos.OrderBySupport> getOrderBySupportList() {
       return new com.google.protobuf.Internal.ListAdapter<
@@ -38485,6 +40135,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     * @return The count of orderBySupport.
      */
     public int getOrderBySupportCount() {
       return orderBySupport_.size();
@@ -38495,6 +40146,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+     * @param index The index of the element to return.
+     * @return The orderBySupport at the given index.
      */
     public org.apache.drill.exec.proto.UserProtos.OrderBySupport getOrderBySupport(int index) {
       return orderBySupport_converter_.convert(orderBySupport_.get(index));
@@ -38518,6 +40171,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     * @return A list containing the outerJoinSupport.
      */
     public java.util.List<org.apache.drill.exec.proto.UserProtos.OuterJoinSupport> getOuterJoinSupportList() {
       return new com.google.protobuf.Internal.ListAdapter<
@@ -38529,6 +40183,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     * @return The count of outerJoinSupport.
      */
     public int getOuterJoinSupportCount() {
       return outerJoinSupport_.size();
@@ -38539,6 +40194,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+     * @param index The index of the element to return.
+     * @return The outerJoinSupport at the given index.
      */
     public org.apache.drill.exec.proto.UserProtos.OuterJoinSupport getOuterJoinSupport(int index) {
       return outerJoinSupport_converter_.convert(outerJoinSupport_.get(index));
@@ -38552,9 +40209,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+     * @return Whether the quotedIdentifierCasing field is set.
      */
     public boolean hasQuotedIdentifierCasing() {
-      return ((bitField0_ & 0x20000000) == 0x20000000);
+      return ((bitField0_ & 0x20000000) != 0);
     }
     /**
      * <pre>
@@ -38562,6 +40220,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+     * @return The quotedIdentifierCasing.
      */
     public org.apache.drill.exec.proto.UserProtos.IdentifierCasing getQuotedIdentifierCasing() {
       @SuppressWarnings("deprecation")
@@ -38577,9 +40236,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool read_only = 38;</code>
+     * @return Whether the readOnly field is set.
      */
     public boolean hasReadOnly() {
-      return ((bitField0_ & 0x40000000) == 0x40000000);
+      return ((bitField0_ & 0x40000000) != 0);
     }
     /**
      * <pre>
@@ -38587,6 +40247,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool read_only = 38;</code>
+     * @return The readOnly.
      */
     public boolean getReadOnly() {
       return readOnly_;
@@ -38600,9 +40261,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_term = 39;</code>
+     * @return Whether the schemaTerm field is set.
      */
     public boolean hasSchemaTerm() {
-      return ((bitField0_ & 0x80000000) == 0x80000000);
+      return ((bitField0_ & 0x80000000) != 0);
     }
     /**
      * <pre>
@@ -38610,6 +40272,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_term = 39;</code>
+     * @return The schemaTerm.
      */
     public java.lang.String getSchemaTerm() {
       java.lang.Object ref = schemaTerm_;
@@ -38631,6 +40294,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string schema_term = 39;</code>
+     * @return The bytes for schemaTerm.
      */
     public com.google.protobuf.ByteString
         getSchemaTermBytes() {
@@ -38654,9 +40318,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string search_escape_string = 40;</code>
+     * @return Whether the searchEscapeString field is set.
      */
     public boolean hasSearchEscapeString() {
-      return ((bitField1_ & 0x00000001) == 0x00000001);
+      return ((bitField1_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -38664,6 +40329,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string search_escape_string = 40;</code>
+     * @return The searchEscapeString.
      */
     public java.lang.String getSearchEscapeString() {
       java.lang.Object ref = searchEscapeString_;
@@ -38685,6 +40351,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string search_escape_string = 40;</code>
+     * @return The bytes for searchEscapeString.
      */
     public com.google.protobuf.ByteString
         getSearchEscapeStringBytes() {
@@ -38708,9 +40375,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool select_for_update_supported = 41;</code>
+     * @return Whether the selectForUpdateSupported field is set.
      */
     public boolean hasSelectForUpdateSupported() {
-      return ((bitField1_ & 0x00000002) == 0x00000002);
+      return ((bitField1_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -38718,6 +40386,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool select_for_update_supported = 41;</code>
+     * @return The selectForUpdateSupported.
      */
     public boolean getSelectForUpdateSupported() {
       return selectForUpdateSupported_;
@@ -38731,9 +40400,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string special_characters = 42;</code>
+     * @return Whether the specialCharacters field is set.
      */
     public boolean hasSpecialCharacters() {
-      return ((bitField1_ & 0x00000004) == 0x00000004);
+      return ((bitField1_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -38741,6 +40411,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string special_characters = 42;</code>
+     * @return The specialCharacters.
      */
     public java.lang.String getSpecialCharacters() {
       java.lang.Object ref = specialCharacters_;
@@ -38762,6 +40433,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string special_characters = 42;</code>
+     * @return The bytes for specialCharacters.
      */
     public com.google.protobuf.ByteString
         getSpecialCharactersBytes() {
@@ -38785,6 +40457,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string sql_keywords = 43;</code>
+     * @return A list containing the sqlKeywords.
      */
     public com.google.protobuf.ProtocolStringList
         getSqlKeywordsList() {
@@ -38796,6 +40469,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string sql_keywords = 43;</code>
+     * @return The count of sqlKeywords.
      */
     public int getSqlKeywordsCount() {
       return sqlKeywords_.size();
@@ -38806,6 +40480,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string sql_keywords = 43;</code>
+     * @param index The index of the element to return.
+     * @return The sqlKeywords at the given index.
      */
     public java.lang.String getSqlKeywords(int index) {
       return sqlKeywords_.get(index);
@@ -38816,6 +40492,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string sql_keywords = 43;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the sqlKeywords at the given index.
      */
     public com.google.protobuf.ByteString
         getSqlKeywordsBytes(int index) {
@@ -38830,6 +40508,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string string_functions = 44;</code>
+     * @return A list containing the stringFunctions.
      */
     public com.google.protobuf.ProtocolStringList
         getStringFunctionsList() {
@@ -38841,6 +40520,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string string_functions = 44;</code>
+     * @return The count of stringFunctions.
      */
     public int getStringFunctionsCount() {
       return stringFunctions_.size();
@@ -38851,6 +40531,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string string_functions = 44;</code>
+     * @param index The index of the element to return.
+     * @return The stringFunctions at the given index.
      */
     public java.lang.String getStringFunctions(int index) {
       return stringFunctions_.get(index);
@@ -38861,6 +40543,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string string_functions = 44;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the stringFunctions at the given index.
      */
     public com.google.protobuf.ByteString
         getStringFunctionsBytes(int index) {
@@ -38885,6 +40569,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     * @return A list containing the subquerySupport.
      */
     public java.util.List<org.apache.drill.exec.proto.UserProtos.SubQuerySupport> getSubquerySupportList() {
       return new com.google.protobuf.Internal.ListAdapter<
@@ -38896,6 +40581,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     * @return The count of subquerySupport.
      */
     public int getSubquerySupportCount() {
       return subquerySupport_.size();
@@ -38906,6 +40592,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+     * @param index The index of the element to return.
+     * @return The subquerySupport at the given index.
      */
     public org.apache.drill.exec.proto.UserProtos.SubQuerySupport getSubquerySupport(int index) {
       return subquerySupport_converter_.convert(subquerySupport_.get(index));
@@ -38919,6 +40607,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string system_functions = 46;</code>
+     * @return A list containing the systemFunctions.
      */
     public com.google.protobuf.ProtocolStringList
         getSystemFunctionsList() {
@@ -38930,6 +40619,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string system_functions = 46;</code>
+     * @return The count of systemFunctions.
      */
     public int getSystemFunctionsCount() {
       return systemFunctions_.size();
@@ -38940,6 +40630,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string system_functions = 46;</code>
+     * @param index The index of the element to return.
+     * @return The systemFunctions at the given index.
      */
     public java.lang.String getSystemFunctions(int index) {
       return systemFunctions_.get(index);
@@ -38950,6 +40642,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated string system_functions = 46;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the systemFunctions at the given index.
      */
     public com.google.protobuf.ByteString
         getSystemFunctionsBytes(int index) {
@@ -38964,9 +40658,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_term = 47;</code>
+     * @return Whether the tableTerm field is set.
      */
     public boolean hasTableTerm() {
-      return ((bitField1_ & 0x00000008) == 0x00000008);
+      return ((bitField1_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -38974,6 +40669,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_term = 47;</code>
+     * @return The tableTerm.
      */
     public java.lang.String getTableTerm() {
       java.lang.Object ref = tableTerm_;
@@ -38995,6 +40691,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string table_term = 47;</code>
+     * @return The bytes for tableTerm.
      */
     public com.google.protobuf.ByteString
         getTableTermBytes() {
@@ -39018,9 +40715,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool transaction_supported = 48;</code>
+     * @return Whether the transactionSupported field is set.
      */
     public boolean hasTransactionSupported() {
-      return ((bitField1_ & 0x00000010) == 0x00000010);
+      return ((bitField1_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -39028,6 +40726,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional bool transaction_supported = 48;</code>
+     * @return The transactionSupported.
      */
     public boolean getTransactionSupported() {
       return transactionSupported_;
@@ -39051,6 +40750,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     * @return A list containing the unionSupport.
      */
     public java.util.List<org.apache.drill.exec.proto.UserProtos.UnionSupport> getUnionSupportList() {
       return new com.google.protobuf.Internal.ListAdapter<
@@ -39062,6 +40762,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     * @return The count of unionSupport.
      */
     public int getUnionSupportCount() {
       return unionSupport_.size();
@@ -39072,6 +40773,8 @@ public final class UserProtos {
      * </pre>
      *
      * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+     * @param index The index of the element to return.
+     * @return The unionSupport at the given index.
      */
     public org.apache.drill.exec.proto.UserProtos.UnionSupport getUnionSupport(int index) {
       return unionSupport_converter_.convert(unionSupport_.get(index));
@@ -39085,9 +40788,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string current_schema = 50;</code>
+     * @return Whether the currentSchema field is set.
      */
     public boolean hasCurrentSchema() {
-      return ((bitField1_ & 0x00000020) == 0x00000020);
+      return ((bitField1_ & 0x00000020) != 0);
     }
     /**
      * <pre>
@@ -39095,6 +40799,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string current_schema = 50;</code>
+     * @return The currentSchema.
      */
     public java.lang.String getCurrentSchema() {
       java.lang.Object ref = currentSchema_;
@@ -39116,6 +40821,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string current_schema = 50;</code>
+     * @return The bytes for currentSchema.
      */
     public com.google.protobuf.ByteString
         getCurrentSchemaBytes() {
@@ -39151,31 +40857,31 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBool(1, allTablesSelectable_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBool(2, blobIncludedInMaxRowSize_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBool(3, catalogAtStart_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, catalogSeparator_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 5, catalogTerm_);
       }
       for (int i = 0; i < collateSupport_.size(); i++) {
         output.writeEnum(6, collateSupport_.get(i));
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeBool(7, columnAliasingSupported_);
       }
       for (int i = 0; i < convertSupport_.size(); i++) {
         output.writeMessage(8, convertSupport_.get(i));
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeEnum(9, correlationNamesSupport_);
       }
       for (int i = 0; i < dateTimeFunctions_.size(); i++) {
@@ -39184,70 +40890,70 @@ public final class UserProtos {
       for (int i = 0; i < dateTimeLiteralsSupport_.size(); i++) {
         output.writeEnum(11, dateTimeLiteralsSupport_.get(i));
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         output.writeEnum(12, groupBySupport_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         output.writeEnum(13, identifierCasing_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 14, identifierQuoteString_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000400) != 0)) {
         output.writeBool(15, likeEscapeClauseSupported_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00000800) != 0)) {
         output.writeUInt32(16, maxBinaryLiteralLength_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00001000) != 0)) {
         output.writeUInt32(17, maxCatalogNameLength_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00002000) != 0)) {
         output.writeUInt32(18, maxCharLiteralLength_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00004000) != 0)) {
         output.writeUInt32(19, maxColumnNameLength_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00008000) != 0)) {
         output.writeUInt32(20, maxColumnsInGroupBy_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00010000) != 0)) {
         output.writeUInt32(21, maxColumnsInOrderBy_);
       }
-      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+      if (((bitField0_ & 0x00020000) != 0)) {
         output.writeUInt32(22, maxColumnsInSelect_);
       }
-      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((bitField0_ & 0x00040000) != 0)) {
         output.writeUInt32(23, maxCursorNameLength_);
       }
-      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+      if (((bitField0_ & 0x00080000) != 0)) {
         output.writeUInt32(24, maxLogicalLobSize_);
       }
-      if (((bitField0_ & 0x00100000) == 0x00100000)) {
+      if (((bitField0_ & 0x00100000) != 0)) {
         output.writeUInt32(25, maxRowSize_);
       }
-      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+      if (((bitField0_ & 0x00200000) != 0)) {
         output.writeUInt32(26, maxSchemaNameLength_);
       }
-      if (((bitField0_ & 0x00400000) == 0x00400000)) {
+      if (((bitField0_ & 0x00400000) != 0)) {
         output.writeUInt32(27, maxStatementLength_);
       }
-      if (((bitField0_ & 0x00800000) == 0x00800000)) {
+      if (((bitField0_ & 0x00800000) != 0)) {
         output.writeUInt32(28, maxStatements_);
       }
-      if (((bitField0_ & 0x01000000) == 0x01000000)) {
+      if (((bitField0_ & 0x01000000) != 0)) {
         output.writeUInt32(29, maxTableNameLength_);
       }
-      if (((bitField0_ & 0x02000000) == 0x02000000)) {
+      if (((bitField0_ & 0x02000000) != 0)) {
         output.writeUInt32(30, maxTablesInSelect_);
       }
-      if (((bitField0_ & 0x04000000) == 0x04000000)) {
+      if (((bitField0_ & 0x04000000) != 0)) {
         output.writeUInt32(31, maxUserNameLength_);
       }
-      if (((bitField0_ & 0x08000000) == 0x08000000)) {
+      if (((bitField0_ & 0x08000000) != 0)) {
         output.writeEnum(32, nullCollation_);
       }
-      if (((bitField0_ & 0x10000000) == 0x10000000)) {
+      if (((bitField0_ & 0x10000000) != 0)) {
         output.writeBool(33, nullPlusNonNullEqualsNull_);
       }
       for (int i = 0; i < numericFunctions_.size(); i++) {
@@ -39259,22 +40965,22 @@ public final class UserProtos {
       for (int i = 0; i < outerJoinSupport_.size(); i++) {
         output.writeEnum(36, outerJoinSupport_.get(i));
       }
-      if (((bitField0_ & 0x20000000) == 0x20000000)) {
+      if (((bitField0_ & 0x20000000) != 0)) {
         output.writeEnum(37, quotedIdentifierCasing_);
       }
-      if (((bitField0_ & 0x40000000) == 0x40000000)) {
+      if (((bitField0_ & 0x40000000) != 0)) {
         output.writeBool(38, readOnly_);
       }
-      if (((bitField0_ & 0x80000000) == 0x80000000)) {
+      if (((bitField0_ & 0x80000000) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 39, schemaTerm_);
       }
-      if (((bitField1_ & 0x00000001) == 0x00000001)) {
+      if (((bitField1_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 40, searchEscapeString_);
       }
-      if (((bitField1_ & 0x00000002) == 0x00000002)) {
+      if (((bitField1_ & 0x00000002) != 0)) {
         output.writeBool(41, selectForUpdateSupported_);
       }
-      if (((bitField1_ & 0x00000004) == 0x00000004)) {
+      if (((bitField1_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 42, specialCharacters_);
       }
       for (int i = 0; i < sqlKeywords_.size(); i++) {
@@ -39289,16 +40995,16 @@ public final class UserProtos {
       for (int i = 0; i < systemFunctions_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 46, systemFunctions_.getRaw(i));
       }
-      if (((bitField1_ & 0x00000008) == 0x00000008)) {
+      if (((bitField1_ & 0x00000008) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 47, tableTerm_);
       }
-      if (((bitField1_ & 0x00000010) == 0x00000010)) {
+      if (((bitField1_ & 0x00000010) != 0)) {
         output.writeBool(48, transactionSupported_);
       }
       for (int i = 0; i < unionSupport_.size(); i++) {
         output.writeEnum(49, unionSupport_.get(i));
       }
-      if (((bitField1_ & 0x00000020) == 0x00000020)) {
+      if (((bitField1_ & 0x00000020) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 50, currentSchema_);
       }
       unknownFields.writeTo(output);
@@ -39310,22 +41016,22 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(1, allTablesSelectable_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(2, blobIncludedInMaxRowSize_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(3, catalogAtStart_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, catalogSeparator_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, catalogTerm_);
       }
       {
@@ -39337,7 +41043,7 @@ public final class UserProtos {
         size += dataSize;
         size += 1 * collateSupport_.size();
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(7, columnAliasingSupported_);
       }
@@ -39345,7 +41051,7 @@ public final class UserProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, convertSupport_.get(i));
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(9, correlationNamesSupport_);
       }
@@ -39366,90 +41072,90 @@ public final class UserProtos {
         size += dataSize;
         size += 1 * dateTimeLiteralsSupport_.size();
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(12, groupBySupport_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(13, identifierCasing_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(14, identifierQuoteString_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000400) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(15, likeEscapeClauseSupported_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00000800) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(16, maxBinaryLiteralLength_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00001000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(17, maxCatalogNameLength_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00002000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(18, maxCharLiteralLength_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00004000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(19, maxColumnNameLength_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00008000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(20, maxColumnsInGroupBy_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00010000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(21, maxColumnsInOrderBy_);
       }
-      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+      if (((bitField0_ & 0x00020000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(22, maxColumnsInSelect_);
       }
-      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((bitField0_ & 0x00040000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(23, maxCursorNameLength_);
       }
-      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+      if (((bitField0_ & 0x00080000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(24, maxLogicalLobSize_);
       }
-      if (((bitField0_ & 0x00100000) == 0x00100000)) {
+      if (((bitField0_ & 0x00100000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(25, maxRowSize_);
       }
-      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+      if (((bitField0_ & 0x00200000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(26, maxSchemaNameLength_);
       }
-      if (((bitField0_ & 0x00400000) == 0x00400000)) {
+      if (((bitField0_ & 0x00400000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(27, maxStatementLength_);
       }
-      if (((bitField0_ & 0x00800000) == 0x00800000)) {
+      if (((bitField0_ & 0x00800000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(28, maxStatements_);
       }
-      if (((bitField0_ & 0x01000000) == 0x01000000)) {
+      if (((bitField0_ & 0x01000000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(29, maxTableNameLength_);
       }
-      if (((bitField0_ & 0x02000000) == 0x02000000)) {
+      if (((bitField0_ & 0x02000000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(30, maxTablesInSelect_);
       }
-      if (((bitField0_ & 0x04000000) == 0x04000000)) {
+      if (((bitField0_ & 0x04000000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(31, maxUserNameLength_);
       }
-      if (((bitField0_ & 0x08000000) == 0x08000000)) {
+      if (((bitField0_ & 0x08000000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(32, nullCollation_);
       }
-      if (((bitField0_ & 0x10000000) == 0x10000000)) {
+      if (((bitField0_ & 0x10000000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(33, nullPlusNonNullEqualsNull_);
       }
@@ -39479,25 +41185,25 @@ public final class UserProtos {
         size += dataSize;
         size += 2 * outerJoinSupport_.size();
       }
-      if (((bitField0_ & 0x20000000) == 0x20000000)) {
+      if (((bitField0_ & 0x20000000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(37, quotedIdentifierCasing_);
       }
-      if (((bitField0_ & 0x40000000) == 0x40000000)) {
+      if (((bitField0_ & 0x40000000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(38, readOnly_);
       }
-      if (((bitField0_ & 0x80000000) == 0x80000000)) {
+      if (((bitField0_ & 0x80000000) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(39, schemaTerm_);
       }
-      if (((bitField1_ & 0x00000001) == 0x00000001)) {
+      if (((bitField1_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(40, searchEscapeString_);
       }
-      if (((bitField1_ & 0x00000002) == 0x00000002)) {
+      if (((bitField1_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(41, selectForUpdateSupported_);
       }
-      if (((bitField1_ & 0x00000004) == 0x00000004)) {
+      if (((bitField1_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(42, specialCharacters_);
       }
       {
@@ -39533,10 +41239,10 @@ public final class UserProtos {
         size += dataSize;
         size += 2 * getSystemFunctionsList().size();
       }
-      if (((bitField1_ & 0x00000008) == 0x00000008)) {
+      if (((bitField1_ & 0x00000008) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(47, tableTerm_);
       }
-      if (((bitField1_ & 0x00000010) == 0x00000010)) {
+      if (((bitField1_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(48, transactionSupported_);
       }
@@ -39549,7 +41255,7 @@ public final class UserProtos {
         size += dataSize;
         size += 2 * unionSupport_.size();
       }
-      if (((bitField1_ & 0x00000020) == 0x00000020)) {
+      if (((bitField1_ & 0x00000020) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(50, currentSchema_);
       }
       size += unknownFields.getSerializedSize();
@@ -39567,212 +41273,211 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.ServerMeta other = (org.apache.drill.exec.proto.UserProtos.ServerMeta) obj;
 
-      boolean result = true;
-      result = result && (hasAllTablesSelectable() == other.hasAllTablesSelectable());
+      if (hasAllTablesSelectable() != other.hasAllTablesSelectable()) return false;
       if (hasAllTablesSelectable()) {
-        result = result && (getAllTablesSelectable()
-            == other.getAllTablesSelectable());
+        if (getAllTablesSelectable()
+            != other.getAllTablesSelectable()) return false;
       }
-      result = result && (hasBlobIncludedInMaxRowSize() == other.hasBlobIncludedInMaxRowSize());
+      if (hasBlobIncludedInMaxRowSize() != other.hasBlobIncludedInMaxRowSize()) return false;
       if (hasBlobIncludedInMaxRowSize()) {
-        result = result && (getBlobIncludedInMaxRowSize()
-            == other.getBlobIncludedInMaxRowSize());
+        if (getBlobIncludedInMaxRowSize()
+            != other.getBlobIncludedInMaxRowSize()) return false;
       }
-      result = result && (hasCatalogAtStart() == other.hasCatalogAtStart());
+      if (hasCatalogAtStart() != other.hasCatalogAtStart()) return false;
       if (hasCatalogAtStart()) {
-        result = result && (getCatalogAtStart()
-            == other.getCatalogAtStart());
+        if (getCatalogAtStart()
+            != other.getCatalogAtStart()) return false;
       }
-      result = result && (hasCatalogSeparator() == other.hasCatalogSeparator());
+      if (hasCatalogSeparator() != other.hasCatalogSeparator()) return false;
       if (hasCatalogSeparator()) {
-        result = result && getCatalogSeparator()
-            .equals(other.getCatalogSeparator());
+        if (!getCatalogSeparator()
+            .equals(other.getCatalogSeparator())) return false;
       }
-      result = result && (hasCatalogTerm() == other.hasCatalogTerm());
+      if (hasCatalogTerm() != other.hasCatalogTerm()) return false;
       if (hasCatalogTerm()) {
-        result = result && getCatalogTerm()
-            .equals(other.getCatalogTerm());
+        if (!getCatalogTerm()
+            .equals(other.getCatalogTerm())) return false;
       }
-      result = result && collateSupport_.equals(other.collateSupport_);
-      result = result && (hasColumnAliasingSupported() == other.hasColumnAliasingSupported());
+      if (!collateSupport_.equals(other.collateSupport_)) return false;
+      if (hasColumnAliasingSupported() != other.hasColumnAliasingSupported()) return false;
       if (hasColumnAliasingSupported()) {
-        result = result && (getColumnAliasingSupported()
-            == other.getColumnAliasingSupported());
+        if (getColumnAliasingSupported()
+            != other.getColumnAliasingSupported()) return false;
       }
-      result = result && getConvertSupportList()
-          .equals(other.getConvertSupportList());
-      result = result && (hasCorrelationNamesSupport() == other.hasCorrelationNamesSupport());
+      if (!getConvertSupportList()
+          .equals(other.getConvertSupportList())) return false;
+      if (hasCorrelationNamesSupport() != other.hasCorrelationNamesSupport()) return false;
       if (hasCorrelationNamesSupport()) {
-        result = result && correlationNamesSupport_ == other.correlationNamesSupport_;
+        if (correlationNamesSupport_ != other.correlationNamesSupport_) return false;
       }
-      result = result && getDateTimeFunctionsList()
-          .equals(other.getDateTimeFunctionsList());
-      result = result && dateTimeLiteralsSupport_.equals(other.dateTimeLiteralsSupport_);
-      result = result && (hasGroupBySupport() == other.hasGroupBySupport());
+      if (!getDateTimeFunctionsList()
+          .equals(other.getDateTimeFunctionsList())) return false;
+      if (!dateTimeLiteralsSupport_.equals(other.dateTimeLiteralsSupport_)) return false;
+      if (hasGroupBySupport() != other.hasGroupBySupport()) return false;
       if (hasGroupBySupport()) {
-        result = result && groupBySupport_ == other.groupBySupport_;
+        if (groupBySupport_ != other.groupBySupport_) return false;
       }
-      result = result && (hasIdentifierCasing() == other.hasIdentifierCasing());
+      if (hasIdentifierCasing() != other.hasIdentifierCasing()) return false;
       if (hasIdentifierCasing()) {
-        result = result && identifierCasing_ == other.identifierCasing_;
+        if (identifierCasing_ != other.identifierCasing_) return false;
       }
-      result = result && (hasIdentifierQuoteString() == other.hasIdentifierQuoteString());
+      if (hasIdentifierQuoteString() != other.hasIdentifierQuoteString()) return false;
       if (hasIdentifierQuoteString()) {
-        result = result && getIdentifierQuoteString()
-            .equals(other.getIdentifierQuoteString());
+        if (!getIdentifierQuoteString()
+            .equals(other.getIdentifierQuoteString())) return false;
       }
-      result = result && (hasLikeEscapeClauseSupported() == other.hasLikeEscapeClauseSupported());
+      if (hasLikeEscapeClauseSupported() != other.hasLikeEscapeClauseSupported()) return false;
       if (hasLikeEscapeClauseSupported()) {
-        result = result && (getLikeEscapeClauseSupported()
-            == other.getLikeEscapeClauseSupported());
+        if (getLikeEscapeClauseSupported()
+            != other.getLikeEscapeClauseSupported()) return false;
       }
-      result = result && (hasMaxBinaryLiteralLength() == other.hasMaxBinaryLiteralLength());
+      if (hasMaxBinaryLiteralLength() != other.hasMaxBinaryLiteralLength()) return false;
       if (hasMaxBinaryLiteralLength()) {
-        result = result && (getMaxBinaryLiteralLength()
-            == other.getMaxBinaryLiteralLength());
+        if (getMaxBinaryLiteralLength()
+            != other.getMaxBinaryLiteralLength()) return false;
       }
-      result = result && (hasMaxCatalogNameLength() == other.hasMaxCatalogNameLength());
+      if (hasMaxCatalogNameLength() != other.hasMaxCatalogNameLength()) return false;
       if (hasMaxCatalogNameLength()) {
-        result = result && (getMaxCatalogNameLength()
-            == other.getMaxCatalogNameLength());
+        if (getMaxCatalogNameLength()
+            != other.getMaxCatalogNameLength()) return false;
       }
-      result = result && (hasMaxCharLiteralLength() == other.hasMaxCharLiteralLength());
+      if (hasMaxCharLiteralLength() != other.hasMaxCharLiteralLength()) return false;
       if (hasMaxCharLiteralLength()) {
-        result = result && (getMaxCharLiteralLength()
-            == other.getMaxCharLiteralLength());
+        if (getMaxCharLiteralLength()
+            != other.getMaxCharLiteralLength()) return false;
       }
-      result = result && (hasMaxColumnNameLength() == other.hasMaxColumnNameLength());
+      if (hasMaxColumnNameLength() != other.hasMaxColumnNameLength()) return false;
       if (hasMaxColumnNameLength()) {
-        result = result && (getMaxColumnNameLength()
-            == other.getMaxColumnNameLength());
+        if (getMaxColumnNameLength()
+            != other.getMaxColumnNameLength()) return false;
       }
-      result = result && (hasMaxColumnsInGroupBy() == other.hasMaxColumnsInGroupBy());
+      if (hasMaxColumnsInGroupBy() != other.hasMaxColumnsInGroupBy()) return false;
       if (hasMaxColumnsInGroupBy()) {
-        result = result && (getMaxColumnsInGroupBy()
-            == other.getMaxColumnsInGroupBy());
+        if (getMaxColumnsInGroupBy()
+            != other.getMaxColumnsInGroupBy()) return false;
       }
-      result = result && (hasMaxColumnsInOrderBy() == other.hasMaxColumnsInOrderBy());
+      if (hasMaxColumnsInOrderBy() != other.hasMaxColumnsInOrderBy()) return false;
       if (hasMaxColumnsInOrderBy()) {
-        result = result && (getMaxColumnsInOrderBy()
-            == other.getMaxColumnsInOrderBy());
+        if (getMaxColumnsInOrderBy()
+            != other.getMaxColumnsInOrderBy()) return false;
       }
-      result = result && (hasMaxColumnsInSelect() == other.hasMaxColumnsInSelect());
+      if (hasMaxColumnsInSelect() != other.hasMaxColumnsInSelect()) return false;
       if (hasMaxColumnsInSelect()) {
-        result = result && (getMaxColumnsInSelect()
-            == other.getMaxColumnsInSelect());
+        if (getMaxColumnsInSelect()
+            != other.getMaxColumnsInSelect()) return false;
       }
-      result = result && (hasMaxCursorNameLength() == other.hasMaxCursorNameLength());
+      if (hasMaxCursorNameLength() != other.hasMaxCursorNameLength()) return false;
       if (hasMaxCursorNameLength()) {
-        result = result && (getMaxCursorNameLength()
-            == other.getMaxCursorNameLength());
+        if (getMaxCursorNameLength()
+            != other.getMaxCursorNameLength()) return false;
       }
-      result = result && (hasMaxLogicalLobSize() == other.hasMaxLogicalLobSize());
+      if (hasMaxLogicalLobSize() != other.hasMaxLogicalLobSize()) return false;
       if (hasMaxLogicalLobSize()) {
-        result = result && (getMaxLogicalLobSize()
-            == other.getMaxLogicalLobSize());
+        if (getMaxLogicalLobSize()
+            != other.getMaxLogicalLobSize()) return false;
       }
-      result = result && (hasMaxRowSize() == other.hasMaxRowSize());
+      if (hasMaxRowSize() != other.hasMaxRowSize()) return false;
       if (hasMaxRowSize()) {
-        result = result && (getMaxRowSize()
-            == other.getMaxRowSize());
+        if (getMaxRowSize()
+            != other.getMaxRowSize()) return false;
       }
-      result = result && (hasMaxSchemaNameLength() == other.hasMaxSchemaNameLength());
+      if (hasMaxSchemaNameLength() != other.hasMaxSchemaNameLength()) return false;
       if (hasMaxSchemaNameLength()) {
-        result = result && (getMaxSchemaNameLength()
-            == other.getMaxSchemaNameLength());
+        if (getMaxSchemaNameLength()
+            != other.getMaxSchemaNameLength()) return false;
       }
-      result = result && (hasMaxStatementLength() == other.hasMaxStatementLength());
+      if (hasMaxStatementLength() != other.hasMaxStatementLength()) return false;
       if (hasMaxStatementLength()) {
-        result = result && (getMaxStatementLength()
-            == other.getMaxStatementLength());
+        if (getMaxStatementLength()
+            != other.getMaxStatementLength()) return false;
       }
-      result = result && (hasMaxStatements() == other.hasMaxStatements());
+      if (hasMaxStatements() != other.hasMaxStatements()) return false;
       if (hasMaxStatements()) {
-        result = result && (getMaxStatements()
-            == other.getMaxStatements());
+        if (getMaxStatements()
+            != other.getMaxStatements()) return false;
       }
-      result = result && (hasMaxTableNameLength() == other.hasMaxTableNameLength());
+      if (hasMaxTableNameLength() != other.hasMaxTableNameLength()) return false;
       if (hasMaxTableNameLength()) {
-        result = result && (getMaxTableNameLength()
-            == other.getMaxTableNameLength());
+        if (getMaxTableNameLength()
+            != other.getMaxTableNameLength()) return false;
       }
-      result = result && (hasMaxTablesInSelect() == other.hasMaxTablesInSelect());
+      if (hasMaxTablesInSelect() != other.hasMaxTablesInSelect()) return false;
       if (hasMaxTablesInSelect()) {
-        result = result && (getMaxTablesInSelect()
-            == other.getMaxTablesInSelect());
+        if (getMaxTablesInSelect()
+            != other.getMaxTablesInSelect()) return false;
       }
-      result = result && (hasMaxUserNameLength() == other.hasMaxUserNameLength());
+      if (hasMaxUserNameLength() != other.hasMaxUserNameLength()) return false;
       if (hasMaxUserNameLength()) {
-        result = result && (getMaxUserNameLength()
-            == other.getMaxUserNameLength());
+        if (getMaxUserNameLength()
+            != other.getMaxUserNameLength()) return false;
       }
-      result = result && (hasNullCollation() == other.hasNullCollation());
+      if (hasNullCollation() != other.hasNullCollation()) return false;
       if (hasNullCollation()) {
-        result = result && nullCollation_ == other.nullCollation_;
+        if (nullCollation_ != other.nullCollation_) return false;
       }
-      result = result && (hasNullPlusNonNullEqualsNull() == other.hasNullPlusNonNullEqualsNull());
+      if (hasNullPlusNonNullEqualsNull() != other.hasNullPlusNonNullEqualsNull()) return false;
       if (hasNullPlusNonNullEqualsNull()) {
-        result = result && (getNullPlusNonNullEqualsNull()
-            == other.getNullPlusNonNullEqualsNull());
+        if (getNullPlusNonNullEqualsNull()
+            != other.getNullPlusNonNullEqualsNull()) return false;
       }
-      result = result && getNumericFunctionsList()
-          .equals(other.getNumericFunctionsList());
-      result = result && orderBySupport_.equals(other.orderBySupport_);
-      result = result && outerJoinSupport_.equals(other.outerJoinSupport_);
-      result = result && (hasQuotedIdentifierCasing() == other.hasQuotedIdentifierCasing());
+      if (!getNumericFunctionsList()
+          .equals(other.getNumericFunctionsList())) return false;
+      if (!orderBySupport_.equals(other.orderBySupport_)) return false;
+      if (!outerJoinSupport_.equals(other.outerJoinSupport_)) return false;
+      if (hasQuotedIdentifierCasing() != other.hasQuotedIdentifierCasing()) return false;
       if (hasQuotedIdentifierCasing()) {
-        result = result && quotedIdentifierCasing_ == other.quotedIdentifierCasing_;
+        if (quotedIdentifierCasing_ != other.quotedIdentifierCasing_) return false;
       }
-      result = result && (hasReadOnly() == other.hasReadOnly());
+      if (hasReadOnly() != other.hasReadOnly()) return false;
       if (hasReadOnly()) {
-        result = result && (getReadOnly()
-            == other.getReadOnly());
+        if (getReadOnly()
+            != other.getReadOnly()) return false;
       }
-      result = result && (hasSchemaTerm() == other.hasSchemaTerm());
+      if (hasSchemaTerm() != other.hasSchemaTerm()) return false;
       if (hasSchemaTerm()) {
-        result = result && getSchemaTerm()
-            .equals(other.getSchemaTerm());
+        if (!getSchemaTerm()
+            .equals(other.getSchemaTerm())) return false;
       }
-      result = result && (hasSearchEscapeString() == other.hasSearchEscapeString());
+      if (hasSearchEscapeString() != other.hasSearchEscapeString()) return false;
       if (hasSearchEscapeString()) {
-        result = result && getSearchEscapeString()
-            .equals(other.getSearchEscapeString());
+        if (!getSearchEscapeString()
+            .equals(other.getSearchEscapeString())) return false;
       }
-      result = result && (hasSelectForUpdateSupported() == other.hasSelectForUpdateSupported());
+      if (hasSelectForUpdateSupported() != other.hasSelectForUpdateSupported()) return false;
       if (hasSelectForUpdateSupported()) {
-        result = result && (getSelectForUpdateSupported()
-            == other.getSelectForUpdateSupported());
+        if (getSelectForUpdateSupported()
+            != other.getSelectForUpdateSupported()) return false;
       }
-      result = result && (hasSpecialCharacters() == other.hasSpecialCharacters());
+      if (hasSpecialCharacters() != other.hasSpecialCharacters()) return false;
       if (hasSpecialCharacters()) {
-        result = result && getSpecialCharacters()
-            .equals(other.getSpecialCharacters());
+        if (!getSpecialCharacters()
+            .equals(other.getSpecialCharacters())) return false;
       }
-      result = result && getSqlKeywordsList()
-          .equals(other.getSqlKeywordsList());
-      result = result && getStringFunctionsList()
-          .equals(other.getStringFunctionsList());
-      result = result && subquerySupport_.equals(other.subquerySupport_);
-      result = result && getSystemFunctionsList()
-          .equals(other.getSystemFunctionsList());
-      result = result && (hasTableTerm() == other.hasTableTerm());
+      if (!getSqlKeywordsList()
+          .equals(other.getSqlKeywordsList())) return false;
+      if (!getStringFunctionsList()
+          .equals(other.getStringFunctionsList())) return false;
+      if (!subquerySupport_.equals(other.subquerySupport_)) return false;
+      if (!getSystemFunctionsList()
+          .equals(other.getSystemFunctionsList())) return false;
+      if (hasTableTerm() != other.hasTableTerm()) return false;
       if (hasTableTerm()) {
-        result = result && getTableTerm()
-            .equals(other.getTableTerm());
+        if (!getTableTerm()
+            .equals(other.getTableTerm())) return false;
       }
-      result = result && (hasTransactionSupported() == other.hasTransactionSupported());
+      if (hasTransactionSupported() != other.hasTransactionSupported()) return false;
       if (hasTransactionSupported()) {
-        result = result && (getTransactionSupported()
-            == other.getTransactionSupported());
+        if (getTransactionSupported()
+            != other.getTransactionSupported()) return false;
       }
-      result = result && unionSupport_.equals(other.unionSupport_);
-      result = result && (hasCurrentSchema() == other.hasCurrentSchema());
+      if (!unionSupport_.equals(other.unionSupport_)) return false;
+      if (hasCurrentSchema() != other.hasCurrentSchema()) return false;
       if (hasCurrentSchema()) {
-        result = result && getCurrentSchema()
-            .equals(other.getCurrentSchema());
+        if (!getCurrentSchema()
+            .equals(other.getCurrentSchema())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -40259,37 +41964,37 @@ public final class UserProtos {
         int from_bitField1_ = bitField1_;
         int to_bitField0_ = 0;
         int to_bitField1_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.allTablesSelectable_ = allTablesSelectable_;
           to_bitField0_ |= 0x00000001;
         }
-        result.allTablesSelectable_ = allTablesSelectable_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.blobIncludedInMaxRowSize_ = blobIncludedInMaxRowSize_;
           to_bitField0_ |= 0x00000002;
         }
-        result.blobIncludedInMaxRowSize_ = blobIncludedInMaxRowSize_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.catalogAtStart_ = catalogAtStart_;
           to_bitField0_ |= 0x00000004;
         }
-        result.catalogAtStart_ = catalogAtStart_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.catalogSeparator_ = catalogSeparator_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.catalogTerm_ = catalogTerm_;
-        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((bitField0_ & 0x00000020) != 0)) {
           collateSupport_ = java.util.Collections.unmodifiableList(collateSupport_);
           bitField0_ = (bitField0_ & ~0x00000020);
         }
         result.collateSupport_ = collateSupport_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.columnAliasingSupported_ = columnAliasingSupported_;
           to_bitField0_ |= 0x00000020;
         }
-        result.columnAliasingSupported_ = columnAliasingSupported_;
         if (convertSupportBuilder_ == null) {
-          if (((bitField0_ & 0x00000080) == 0x00000080)) {
+          if (((bitField0_ & 0x00000080) != 0)) {
             convertSupport_ = java.util.Collections.unmodifiableList(convertSupport_);
             bitField0_ = (bitField0_ & ~0x00000080);
           }
@@ -40297,181 +42002,181 @@ public final class UserProtos {
         } else {
           result.convertSupport_ = convertSupportBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
           to_bitField0_ |= 0x00000040;
         }
         result.correlationNamesSupport_ = correlationNamesSupport_;
-        if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        if (((bitField0_ & 0x00000200) != 0)) {
           dateTimeFunctions_ = dateTimeFunctions_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000200);
         }
         result.dateTimeFunctions_ = dateTimeFunctions_;
-        if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        if (((bitField0_ & 0x00000400) != 0)) {
           dateTimeLiteralsSupport_ = java.util.Collections.unmodifiableList(dateTimeLiteralsSupport_);
           bitField0_ = (bitField0_ & ~0x00000400);
         }
         result.dateTimeLiteralsSupport_ = dateTimeLiteralsSupport_;
-        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+        if (((from_bitField0_ & 0x00000800) != 0)) {
           to_bitField0_ |= 0x00000080;
         }
         result.groupBySupport_ = groupBySupport_;
-        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+        if (((from_bitField0_ & 0x00001000) != 0)) {
           to_bitField0_ |= 0x00000100;
         }
         result.identifierCasing_ = identifierCasing_;
-        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+        if (((from_bitField0_ & 0x00002000) != 0)) {
           to_bitField0_ |= 0x00000200;
         }
         result.identifierQuoteString_ = identifierQuoteString_;
-        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+        if (((from_bitField0_ & 0x00004000) != 0)) {
+          result.likeEscapeClauseSupported_ = likeEscapeClauseSupported_;
           to_bitField0_ |= 0x00000400;
         }
-        result.likeEscapeClauseSupported_ = likeEscapeClauseSupported_;
-        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+        if (((from_bitField0_ & 0x00008000) != 0)) {
+          result.maxBinaryLiteralLength_ = maxBinaryLiteralLength_;
           to_bitField0_ |= 0x00000800;
         }
-        result.maxBinaryLiteralLength_ = maxBinaryLiteralLength_;
-        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+        if (((from_bitField0_ & 0x00010000) != 0)) {
+          result.maxCatalogNameLength_ = maxCatalogNameLength_;
           to_bitField0_ |= 0x00001000;
         }
-        result.maxCatalogNameLength_ = maxCatalogNameLength_;
-        if (((from_bitField0_ & 0x00020000) == 0x00020000)) {
+        if (((from_bitField0_ & 0x00020000) != 0)) {
+          result.maxCharLiteralLength_ = maxCharLiteralLength_;
           to_bitField0_ |= 0x00002000;
         }
-        result.maxCharLiteralLength_ = maxCharLiteralLength_;
-        if (((from_bitField0_ & 0x00040000) == 0x00040000)) {
+        if (((from_bitField0_ & 0x00040000) != 0)) {
+          result.maxColumnNameLength_ = maxColumnNameLength_;
           to_bitField0_ |= 0x00004000;
         }
-        result.maxColumnNameLength_ = maxColumnNameLength_;
-        if (((from_bitField0_ & 0x00080000) == 0x00080000)) {
+        if (((from_bitField0_ & 0x00080000) != 0)) {
+          result.maxColumnsInGroupBy_ = maxColumnsInGroupBy_;
           to_bitField0_ |= 0x00008000;
         }
-        result.maxColumnsInGroupBy_ = maxColumnsInGroupBy_;
-        if (((from_bitField0_ & 0x00100000) == 0x00100000)) {
+        if (((from_bitField0_ & 0x00100000) != 0)) {
+          result.maxColumnsInOrderBy_ = maxColumnsInOrderBy_;
           to_bitField0_ |= 0x00010000;
         }
-        result.maxColumnsInOrderBy_ = maxColumnsInOrderBy_;
-        if (((from_bitField0_ & 0x00200000) == 0x00200000)) {
+        if (((from_bitField0_ & 0x00200000) != 0)) {
+          result.maxColumnsInSelect_ = maxColumnsInSelect_;
           to_bitField0_ |= 0x00020000;
         }
-        result.maxColumnsInSelect_ = maxColumnsInSelect_;
-        if (((from_bitField0_ & 0x00400000) == 0x00400000)) {
+        if (((from_bitField0_ & 0x00400000) != 0)) {
+          result.maxCursorNameLength_ = maxCursorNameLength_;
           to_bitField0_ |= 0x00040000;
         }
-        result.maxCursorNameLength_ = maxCursorNameLength_;
-        if (((from_bitField0_ & 0x00800000) == 0x00800000)) {
+        if (((from_bitField0_ & 0x00800000) != 0)) {
+          result.maxLogicalLobSize_ = maxLogicalLobSize_;
           to_bitField0_ |= 0x00080000;
         }
-        result.maxLogicalLobSize_ = maxLogicalLobSize_;
-        if (((from_bitField0_ & 0x01000000) == 0x01000000)) {
+        if (((from_bitField0_ & 0x01000000) != 0)) {
+          result.maxRowSize_ = maxRowSize_;
           to_bitField0_ |= 0x00100000;
         }
-        result.maxRowSize_ = maxRowSize_;
-        if (((from_bitField0_ & 0x02000000) == 0x02000000)) {
+        if (((from_bitField0_ & 0x02000000) != 0)) {
+          result.maxSchemaNameLength_ = maxSchemaNameLength_;
           to_bitField0_ |= 0x00200000;
         }
-        result.maxSchemaNameLength_ = maxSchemaNameLength_;
-        if (((from_bitField0_ & 0x04000000) == 0x04000000)) {
+        if (((from_bitField0_ & 0x04000000) != 0)) {
+          result.maxStatementLength_ = maxStatementLength_;
           to_bitField0_ |= 0x00400000;
         }
-        result.maxStatementLength_ = maxStatementLength_;
-        if (((from_bitField0_ & 0x08000000) == 0x08000000)) {
+        if (((from_bitField0_ & 0x08000000) != 0)) {
+          result.maxStatements_ = maxStatements_;
           to_bitField0_ |= 0x00800000;
         }
-        result.maxStatements_ = maxStatements_;
-        if (((from_bitField0_ & 0x10000000) == 0x10000000)) {
+        if (((from_bitField0_ & 0x10000000) != 0)) {
+          result.maxTableNameLength_ = maxTableNameLength_;
           to_bitField0_ |= 0x01000000;
         }
-        result.maxTableNameLength_ = maxTableNameLength_;
-        if (((from_bitField0_ & 0x20000000) == 0x20000000)) {
+        if (((from_bitField0_ & 0x20000000) != 0)) {
+          result.maxTablesInSelect_ = maxTablesInSelect_;
           to_bitField0_ |= 0x02000000;
         }
-        result.maxTablesInSelect_ = maxTablesInSelect_;
-        if (((from_bitField0_ & 0x40000000) == 0x40000000)) {
+        if (((from_bitField0_ & 0x40000000) != 0)) {
+          result.maxUserNameLength_ = maxUserNameLength_;
           to_bitField0_ |= 0x04000000;
         }
-        result.maxUserNameLength_ = maxUserNameLength_;
-        if (((from_bitField0_ & 0x80000000) == 0x80000000)) {
+        if (((from_bitField0_ & 0x80000000) != 0)) {
           to_bitField0_ |= 0x08000000;
         }
         result.nullCollation_ = nullCollation_;
-        if (((from_bitField1_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField1_ & 0x00000001) != 0)) {
+          result.nullPlusNonNullEqualsNull_ = nullPlusNonNullEqualsNull_;
           to_bitField0_ |= 0x10000000;
         }
-        result.nullPlusNonNullEqualsNull_ = nullPlusNonNullEqualsNull_;
-        if (((bitField1_ & 0x00000002) == 0x00000002)) {
+        if (((bitField1_ & 0x00000002) != 0)) {
           numericFunctions_ = numericFunctions_.getUnmodifiableView();
           bitField1_ = (bitField1_ & ~0x00000002);
         }
         result.numericFunctions_ = numericFunctions_;
-        if (((bitField1_ & 0x00000004) == 0x00000004)) {
+        if (((bitField1_ & 0x00000004) != 0)) {
           orderBySupport_ = java.util.Collections.unmodifiableList(orderBySupport_);
           bitField1_ = (bitField1_ & ~0x00000004);
         }
         result.orderBySupport_ = orderBySupport_;
-        if (((bitField1_ & 0x00000008) == 0x00000008)) {
+        if (((bitField1_ & 0x00000008) != 0)) {
           outerJoinSupport_ = java.util.Collections.unmodifiableList(outerJoinSupport_);
           bitField1_ = (bitField1_ & ~0x00000008);
         }
         result.outerJoinSupport_ = outerJoinSupport_;
-        if (((from_bitField1_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField1_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x20000000;
         }
         result.quotedIdentifierCasing_ = quotedIdentifierCasing_;
-        if (((from_bitField1_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField1_ & 0x00000020) != 0)) {
+          result.readOnly_ = readOnly_;
           to_bitField0_ |= 0x40000000;
         }
-        result.readOnly_ = readOnly_;
-        if (((from_bitField1_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField1_ & 0x00000040) != 0)) {
           to_bitField0_ |= 0x80000000;
         }
         result.schemaTerm_ = schemaTerm_;
-        if (((from_bitField1_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField1_ & 0x00000080) != 0)) {
           to_bitField1_ |= 0x00000001;
         }
         result.searchEscapeString_ = searchEscapeString_;
-        if (((from_bitField1_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField1_ & 0x00000100) != 0)) {
+          result.selectForUpdateSupported_ = selectForUpdateSupported_;
           to_bitField1_ |= 0x00000002;
         }
-        result.selectForUpdateSupported_ = selectForUpdateSupported_;
-        if (((from_bitField1_ & 0x00000200) == 0x00000200)) {
+        if (((from_bitField1_ & 0x00000200) != 0)) {
           to_bitField1_ |= 0x00000004;
         }
         result.specialCharacters_ = specialCharacters_;
-        if (((bitField1_ & 0x00000400) == 0x00000400)) {
+        if (((bitField1_ & 0x00000400) != 0)) {
           sqlKeywords_ = sqlKeywords_.getUnmodifiableView();
           bitField1_ = (bitField1_ & ~0x00000400);
         }
         result.sqlKeywords_ = sqlKeywords_;
-        if (((bitField1_ & 0x00000800) == 0x00000800)) {
+        if (((bitField1_ & 0x00000800) != 0)) {
           stringFunctions_ = stringFunctions_.getUnmodifiableView();
           bitField1_ = (bitField1_ & ~0x00000800);
         }
         result.stringFunctions_ = stringFunctions_;
-        if (((bitField1_ & 0x00001000) == 0x00001000)) {
+        if (((bitField1_ & 0x00001000) != 0)) {
           subquerySupport_ = java.util.Collections.unmodifiableList(subquerySupport_);
           bitField1_ = (bitField1_ & ~0x00001000);
         }
         result.subquerySupport_ = subquerySupport_;
-        if (((bitField1_ & 0x00002000) == 0x00002000)) {
+        if (((bitField1_ & 0x00002000) != 0)) {
           systemFunctions_ = systemFunctions_.getUnmodifiableView();
           bitField1_ = (bitField1_ & ~0x00002000);
         }
         result.systemFunctions_ = systemFunctions_;
-        if (((from_bitField1_ & 0x00004000) == 0x00004000)) {
+        if (((from_bitField1_ & 0x00004000) != 0)) {
           to_bitField1_ |= 0x00000008;
         }
         result.tableTerm_ = tableTerm_;
-        if (((from_bitField1_ & 0x00008000) == 0x00008000)) {
+        if (((from_bitField1_ & 0x00008000) != 0)) {
+          result.transactionSupported_ = transactionSupported_;
           to_bitField1_ |= 0x00000010;
         }
-        result.transactionSupported_ = transactionSupported_;
-        if (((bitField1_ & 0x00010000) == 0x00010000)) {
+        if (((bitField1_ & 0x00010000) != 0)) {
           unionSupport_ = java.util.Collections.unmodifiableList(unionSupport_);
           bitField1_ = (bitField1_ & ~0x00010000);
         }
         result.unionSupport_ = unionSupport_;
-        if (((from_bitField1_ & 0x00020000) == 0x00020000)) {
+        if (((from_bitField1_ & 0x00020000) != 0)) {
           to_bitField1_ |= 0x00000020;
         }
         result.currentSchema_ = currentSchema_;
@@ -40483,35 +42188,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -40834,9 +42539,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool all_tables_selectable = 1;</code>
+       * @return Whether the allTablesSelectable field is set.
        */
       public boolean hasAllTablesSelectable() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -40844,6 +42550,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool all_tables_selectable = 1;</code>
+       * @return The allTablesSelectable.
        */
       public boolean getAllTablesSelectable() {
         return allTablesSelectable_;
@@ -40854,6 +42561,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool all_tables_selectable = 1;</code>
+       * @param value The allTablesSelectable to set.
+       * @return This builder for chaining.
        */
       public Builder setAllTablesSelectable(boolean value) {
         bitField0_ |= 0x00000001;
@@ -40867,6 +42576,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool all_tables_selectable = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAllTablesSelectable() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -40882,9 +42592,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool blob_included_in_max_row_size = 2;</code>
+       * @return Whether the blobIncludedInMaxRowSize field is set.
        */
       public boolean hasBlobIncludedInMaxRowSize() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -40892,6 +42603,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool blob_included_in_max_row_size = 2;</code>
+       * @return The blobIncludedInMaxRowSize.
        */
       public boolean getBlobIncludedInMaxRowSize() {
         return blobIncludedInMaxRowSize_;
@@ -40902,6 +42614,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool blob_included_in_max_row_size = 2;</code>
+       * @param value The blobIncludedInMaxRowSize to set.
+       * @return This builder for chaining.
        */
       public Builder setBlobIncludedInMaxRowSize(boolean value) {
         bitField0_ |= 0x00000002;
@@ -40915,6 +42629,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool blob_included_in_max_row_size = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBlobIncludedInMaxRowSize() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -40930,9 +42645,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool catalog_at_start = 3;</code>
+       * @return Whether the catalogAtStart field is set.
        */
       public boolean hasCatalogAtStart() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -40940,6 +42656,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool catalog_at_start = 3;</code>
+       * @return The catalogAtStart.
        */
       public boolean getCatalogAtStart() {
         return catalogAtStart_;
@@ -40950,6 +42667,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool catalog_at_start = 3;</code>
+       * @param value The catalogAtStart to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogAtStart(boolean value) {
         bitField0_ |= 0x00000004;
@@ -40963,6 +42682,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool catalog_at_start = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCatalogAtStart() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -40978,9 +42698,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_separator = 4;</code>
+       * @return Whether the catalogSeparator field is set.
        */
       public boolean hasCatalogSeparator() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -40988,6 +42709,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_separator = 4;</code>
+       * @return The catalogSeparator.
        */
       public java.lang.String getCatalogSeparator() {
         java.lang.Object ref = catalogSeparator_;
@@ -41009,6 +42731,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_separator = 4;</code>
+       * @return The bytes for catalogSeparator.
        */
       public com.google.protobuf.ByteString
           getCatalogSeparatorBytes() {
@@ -41029,6 +42752,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_separator = 4;</code>
+       * @param value The catalogSeparator to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogSeparator(
           java.lang.String value) {
@@ -41046,6 +42771,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_separator = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCatalogSeparator() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -41059,6 +42785,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_separator = 4;</code>
+       * @param value The bytes for catalogSeparator to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogSeparatorBytes(
           com.google.protobuf.ByteString value) {
@@ -41078,9 +42806,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_term = 5;</code>
+       * @return Whether the catalogTerm field is set.
        */
       public boolean hasCatalogTerm() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -41088,6 +42817,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_term = 5;</code>
+       * @return The catalogTerm.
        */
       public java.lang.String getCatalogTerm() {
         java.lang.Object ref = catalogTerm_;
@@ -41109,6 +42839,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_term = 5;</code>
+       * @return The bytes for catalogTerm.
        */
       public com.google.protobuf.ByteString
           getCatalogTermBytes() {
@@ -41129,6 +42860,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_term = 5;</code>
+       * @param value The catalogTerm to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogTerm(
           java.lang.String value) {
@@ -41146,6 +42879,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_term = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCatalogTerm() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -41159,6 +42893,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string catalog_term = 5;</code>
+       * @param value The bytes for catalogTerm to set.
+       * @return This builder for chaining.
        */
       public Builder setCatalogTermBytes(
           com.google.protobuf.ByteString value) {
@@ -41174,7 +42910,7 @@ public final class UserProtos {
       private java.util.List<java.lang.Integer> collateSupport_ =
         java.util.Collections.emptyList();
       private void ensureCollateSupportIsMutable() {
-        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (!((bitField0_ & 0x00000020) != 0)) {
           collateSupport_ = new java.util.ArrayList<java.lang.Integer>(collateSupport_);
           bitField0_ |= 0x00000020;
         }
@@ -41185,6 +42921,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       * @return A list containing the collateSupport.
        */
       public java.util.List<org.apache.drill.exec.proto.UserProtos.CollateSupport> getCollateSupportList() {
         return new com.google.protobuf.Internal.ListAdapter<
@@ -41196,6 +42933,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       * @return The count of collateSupport.
        */
       public int getCollateSupportCount() {
         return collateSupport_.size();
@@ -41206,6 +42944,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       * @param index The index of the element to return.
+       * @return The collateSupport at the given index.
        */
       public org.apache.drill.exec.proto.UserProtos.CollateSupport getCollateSupport(int index) {
         return collateSupport_converter_.convert(collateSupport_.get(index));
@@ -41216,6 +42956,9 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       * @param index The index to set the value at.
+       * @param value The collateSupport to set.
+       * @return This builder for chaining.
        */
       public Builder setCollateSupport(
           int index, org.apache.drill.exec.proto.UserProtos.CollateSupport value) {
@@ -41233,6 +42976,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       * @param value The collateSupport to add.
+       * @return This builder for chaining.
        */
       public Builder addCollateSupport(org.apache.drill.exec.proto.UserProtos.CollateSupport value) {
         if (value == null) {
@@ -41249,6 +42994,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       * @param values The collateSupport to add.
+       * @return This builder for chaining.
        */
       public Builder addAllCollateSupport(
           java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.CollateSupport> values) {
@@ -41265,6 +43012,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.CollateSupport collate_support = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCollateSupport() {
         collateSupport_ = java.util.Collections.emptyList();
@@ -41280,9 +43028,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool column_aliasing_supported = 7;</code>
+       * @return Whether the columnAliasingSupported field is set.
        */
       public boolean hasColumnAliasingSupported() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <pre>
@@ -41290,6 +43039,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool column_aliasing_supported = 7;</code>
+       * @return The columnAliasingSupported.
        */
       public boolean getColumnAliasingSupported() {
         return columnAliasingSupported_;
@@ -41300,6 +43050,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool column_aliasing_supported = 7;</code>
+       * @param value The columnAliasingSupported to set.
+       * @return This builder for chaining.
        */
       public Builder setColumnAliasingSupported(boolean value) {
         bitField0_ |= 0x00000040;
@@ -41313,6 +43065,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool column_aliasing_supported = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearColumnAliasingSupported() {
         bitField0_ = (bitField0_ & ~0x00000040);
@@ -41324,7 +43077,7 @@ public final class UserProtos {
       private java.util.List<org.apache.drill.exec.proto.UserProtos.ConvertSupport> convertSupport_ =
         java.util.Collections.emptyList();
       private void ensureConvertSupportIsMutable() {
-        if (!((bitField0_ & 0x00000080) == 0x00000080)) {
+        if (!((bitField0_ & 0x00000080) != 0)) {
           convertSupport_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.ConvertSupport>(convertSupport_);
           bitField0_ |= 0x00000080;
          }
@@ -41625,7 +43378,7 @@ public final class UserProtos {
           convertSupportBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserProtos.ConvertSupport, org.apache.drill.exec.proto.UserProtos.ConvertSupport.Builder, org.apache.drill.exec.proto.UserProtos.ConvertSupportOrBuilder>(
                   convertSupport_,
-                  ((bitField0_ & 0x00000080) == 0x00000080),
+                  ((bitField0_ & 0x00000080) != 0),
                   getParentForChildren(),
                   isClean());
           convertSupport_ = null;
@@ -41640,9 +43393,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+       * @return Whether the correlationNamesSupport field is set.
        */
       public boolean hasCorrelationNamesSupport() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <pre>
@@ -41650,6 +43404,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+       * @return The correlationNamesSupport.
        */
       public org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport getCorrelationNamesSupport() {
         @SuppressWarnings("deprecation")
@@ -41662,6 +43417,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+       * @param value The correlationNamesSupport to set.
+       * @return This builder for chaining.
        */
       public Builder setCorrelationNamesSupport(org.apache.drill.exec.proto.UserProtos.CorrelationNamesSupport value) {
         if (value == null) {
@@ -41678,6 +43435,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.CorrelationNamesSupport correlation_names_support = 9;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCorrelationNamesSupport() {
         bitField0_ = (bitField0_ & ~0x00000100);
@@ -41688,7 +43446,7 @@ public final class UserProtos {
 
       private com.google.protobuf.LazyStringList dateTimeFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureDateTimeFunctionsIsMutable() {
-        if (!((bitField0_ & 0x00000200) == 0x00000200)) {
+        if (!((bitField0_ & 0x00000200) != 0)) {
           dateTimeFunctions_ = new com.google.protobuf.LazyStringArrayList(dateTimeFunctions_);
           bitField0_ |= 0x00000200;
          }
@@ -41699,6 +43457,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string date_time_functions = 10;</code>
+       * @return A list containing the dateTimeFunctions.
        */
       public com.google.protobuf.ProtocolStringList
           getDateTimeFunctionsList() {
@@ -41710,6 +43469,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string date_time_functions = 10;</code>
+       * @return The count of dateTimeFunctions.
        */
       public int getDateTimeFunctionsCount() {
         return dateTimeFunctions_.size();
@@ -41720,6 +43480,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string date_time_functions = 10;</code>
+       * @param index The index of the element to return.
+       * @return The dateTimeFunctions at the given index.
        */
       public java.lang.String getDateTimeFunctions(int index) {
         return dateTimeFunctions_.get(index);
@@ -41730,6 +43492,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string date_time_functions = 10;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the dateTimeFunctions at the given index.
        */
       public com.google.protobuf.ByteString
           getDateTimeFunctionsBytes(int index) {
@@ -41741,6 +43505,9 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string date_time_functions = 10;</code>
+       * @param index The index to set the value at.
+       * @param value The dateTimeFunctions to set.
+       * @return This builder for chaining.
        */
       public Builder setDateTimeFunctions(
           int index, java.lang.String value) {
@@ -41758,6 +43525,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string date_time_functions = 10;</code>
+       * @param value The dateTimeFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addDateTimeFunctions(
           java.lang.String value) {
@@ -41775,6 +43544,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string date_time_functions = 10;</code>
+       * @param values The dateTimeFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addAllDateTimeFunctions(
           java.lang.Iterable<java.lang.String> values) {
@@ -41790,6 +43561,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string date_time_functions = 10;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDateTimeFunctions() {
         dateTimeFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -41803,6 +43575,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string date_time_functions = 10;</code>
+       * @param value The bytes of the dateTimeFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addDateTimeFunctionsBytes(
           com.google.protobuf.ByteString value) {
@@ -41818,7 +43592,7 @@ public final class UserProtos {
       private java.util.List<java.lang.Integer> dateTimeLiteralsSupport_ =
         java.util.Collections.emptyList();
       private void ensureDateTimeLiteralsSupportIsMutable() {
-        if (!((bitField0_ & 0x00000400) == 0x00000400)) {
+        if (!((bitField0_ & 0x00000400) != 0)) {
           dateTimeLiteralsSupport_ = new java.util.ArrayList<java.lang.Integer>(dateTimeLiteralsSupport_);
           bitField0_ |= 0x00000400;
         }
@@ -41829,6 +43603,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       * @return A list containing the dateTimeLiteralsSupport.
        */
       public java.util.List<org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport> getDateTimeLiteralsSupportList() {
         return new com.google.protobuf.Internal.ListAdapter<
@@ -41840,6 +43615,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       * @return The count of dateTimeLiteralsSupport.
        */
       public int getDateTimeLiteralsSupportCount() {
         return dateTimeLiteralsSupport_.size();
@@ -41850,6 +43626,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       * @param index The index of the element to return.
+       * @return The dateTimeLiteralsSupport at the given index.
        */
       public org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport getDateTimeLiteralsSupport(int index) {
         return dateTimeLiteralsSupport_converter_.convert(dateTimeLiteralsSupport_.get(index));
@@ -41860,6 +43638,9 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       * @param index The index to set the value at.
+       * @param value The dateTimeLiteralsSupport to set.
+       * @return This builder for chaining.
        */
       public Builder setDateTimeLiteralsSupport(
           int index, org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport value) {
@@ -41877,6 +43658,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       * @param value The dateTimeLiteralsSupport to add.
+       * @return This builder for chaining.
        */
       public Builder addDateTimeLiteralsSupport(org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport value) {
         if (value == null) {
@@ -41893,6 +43676,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       * @param values The dateTimeLiteralsSupport to add.
+       * @return This builder for chaining.
        */
       public Builder addAllDateTimeLiteralsSupport(
           java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.DateTimeLiteralsSupport> values) {
@@ -41909,6 +43694,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.DateTimeLiteralsSupport date_time_literals_support = 11;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDateTimeLiteralsSupport() {
         dateTimeLiteralsSupport_ = java.util.Collections.emptyList();
@@ -41924,9 +43710,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+       * @return Whether the groupBySupport field is set.
        */
       public boolean hasGroupBySupport() {
-        return ((bitField0_ & 0x00000800) == 0x00000800);
+        return ((bitField0_ & 0x00000800) != 0);
       }
       /**
        * <pre>
@@ -41934,6 +43721,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+       * @return The groupBySupport.
        */
       public org.apache.drill.exec.proto.UserProtos.GroupBySupport getGroupBySupport() {
         @SuppressWarnings("deprecation")
@@ -41946,6 +43734,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+       * @param value The groupBySupport to set.
+       * @return This builder for chaining.
        */
       public Builder setGroupBySupport(org.apache.drill.exec.proto.UserProtos.GroupBySupport value) {
         if (value == null) {
@@ -41962,6 +43752,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.GroupBySupport group_by_support = 12;</code>
+       * @return This builder for chaining.
        */
       public Builder clearGroupBySupport() {
         bitField0_ = (bitField0_ & ~0x00000800);
@@ -41977,9 +43768,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+       * @return Whether the identifierCasing field is set.
        */
       public boolean hasIdentifierCasing() {
-        return ((bitField0_ & 0x00001000) == 0x00001000);
+        return ((bitField0_ & 0x00001000) != 0);
       }
       /**
        * <pre>
@@ -41987,6 +43779,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+       * @return The identifierCasing.
        */
       public org.apache.drill.exec.proto.UserProtos.IdentifierCasing getIdentifierCasing() {
         @SuppressWarnings("deprecation")
@@ -41999,6 +43792,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+       * @param value The identifierCasing to set.
+       * @return This builder for chaining.
        */
       public Builder setIdentifierCasing(org.apache.drill.exec.proto.UserProtos.IdentifierCasing value) {
         if (value == null) {
@@ -42015,6 +43810,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.IdentifierCasing identifier_casing = 13;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIdentifierCasing() {
         bitField0_ = (bitField0_ & ~0x00001000);
@@ -42030,9 +43826,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string identifier_quote_string = 14;</code>
+       * @return Whether the identifierQuoteString field is set.
        */
       public boolean hasIdentifierQuoteString() {
-        return ((bitField0_ & 0x00002000) == 0x00002000);
+        return ((bitField0_ & 0x00002000) != 0);
       }
       /**
        * <pre>
@@ -42040,6 +43837,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string identifier_quote_string = 14;</code>
+       * @return The identifierQuoteString.
        */
       public java.lang.String getIdentifierQuoteString() {
         java.lang.Object ref = identifierQuoteString_;
@@ -42061,6 +43859,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string identifier_quote_string = 14;</code>
+       * @return The bytes for identifierQuoteString.
        */
       public com.google.protobuf.ByteString
           getIdentifierQuoteStringBytes() {
@@ -42081,6 +43880,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string identifier_quote_string = 14;</code>
+       * @param value The identifierQuoteString to set.
+       * @return This builder for chaining.
        */
       public Builder setIdentifierQuoteString(
           java.lang.String value) {
@@ -42098,6 +43899,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string identifier_quote_string = 14;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIdentifierQuoteString() {
         bitField0_ = (bitField0_ & ~0x00002000);
@@ -42111,6 +43913,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string identifier_quote_string = 14;</code>
+       * @param value The bytes for identifierQuoteString to set.
+       * @return This builder for chaining.
        */
       public Builder setIdentifierQuoteStringBytes(
           com.google.protobuf.ByteString value) {
@@ -42130,9 +43934,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool like_escape_clause_supported = 15;</code>
+       * @return Whether the likeEscapeClauseSupported field is set.
        */
       public boolean hasLikeEscapeClauseSupported() {
-        return ((bitField0_ & 0x00004000) == 0x00004000);
+        return ((bitField0_ & 0x00004000) != 0);
       }
       /**
        * <pre>
@@ -42140,6 +43945,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool like_escape_clause_supported = 15;</code>
+       * @return The likeEscapeClauseSupported.
        */
       public boolean getLikeEscapeClauseSupported() {
         return likeEscapeClauseSupported_;
@@ -42150,6 +43956,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool like_escape_clause_supported = 15;</code>
+       * @param value The likeEscapeClauseSupported to set.
+       * @return This builder for chaining.
        */
       public Builder setLikeEscapeClauseSupported(boolean value) {
         bitField0_ |= 0x00004000;
@@ -42163,6 +43971,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool like_escape_clause_supported = 15;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLikeEscapeClauseSupported() {
         bitField0_ = (bitField0_ & ~0x00004000);
@@ -42178,9 +43987,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_binary_literal_length = 16;</code>
+       * @return Whether the maxBinaryLiteralLength field is set.
        */
       public boolean hasMaxBinaryLiteralLength() {
-        return ((bitField0_ & 0x00008000) == 0x00008000);
+        return ((bitField0_ & 0x00008000) != 0);
       }
       /**
        * <pre>
@@ -42188,6 +43998,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_binary_literal_length = 16;</code>
+       * @return The maxBinaryLiteralLength.
        */
       public int getMaxBinaryLiteralLength() {
         return maxBinaryLiteralLength_;
@@ -42198,6 +44009,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_binary_literal_length = 16;</code>
+       * @param value The maxBinaryLiteralLength to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxBinaryLiteralLength(int value) {
         bitField0_ |= 0x00008000;
@@ -42211,6 +44024,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_binary_literal_length = 16;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxBinaryLiteralLength() {
         bitField0_ = (bitField0_ & ~0x00008000);
@@ -42226,9 +44040,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_catalog_name_length = 17;</code>
+       * @return Whether the maxCatalogNameLength field is set.
        */
       public boolean hasMaxCatalogNameLength() {
-        return ((bitField0_ & 0x00010000) == 0x00010000);
+        return ((bitField0_ & 0x00010000) != 0);
       }
       /**
        * <pre>
@@ -42236,6 +44051,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_catalog_name_length = 17;</code>
+       * @return The maxCatalogNameLength.
        */
       public int getMaxCatalogNameLength() {
         return maxCatalogNameLength_;
@@ -42246,6 +44062,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_catalog_name_length = 17;</code>
+       * @param value The maxCatalogNameLength to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxCatalogNameLength(int value) {
         bitField0_ |= 0x00010000;
@@ -42259,6 +44077,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_catalog_name_length = 17;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxCatalogNameLength() {
         bitField0_ = (bitField0_ & ~0x00010000);
@@ -42274,9 +44093,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_char_literal_length = 18;</code>
+       * @return Whether the maxCharLiteralLength field is set.
        */
       public boolean hasMaxCharLiteralLength() {
-        return ((bitField0_ & 0x00020000) == 0x00020000);
+        return ((bitField0_ & 0x00020000) != 0);
       }
       /**
        * <pre>
@@ -42284,6 +44104,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_char_literal_length = 18;</code>
+       * @return The maxCharLiteralLength.
        */
       public int getMaxCharLiteralLength() {
         return maxCharLiteralLength_;
@@ -42294,6 +44115,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_char_literal_length = 18;</code>
+       * @param value The maxCharLiteralLength to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxCharLiteralLength(int value) {
         bitField0_ |= 0x00020000;
@@ -42307,6 +44130,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_char_literal_length = 18;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxCharLiteralLength() {
         bitField0_ = (bitField0_ & ~0x00020000);
@@ -42322,9 +44146,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_column_name_length = 19;</code>
+       * @return Whether the maxColumnNameLength field is set.
        */
       public boolean hasMaxColumnNameLength() {
-        return ((bitField0_ & 0x00040000) == 0x00040000);
+        return ((bitField0_ & 0x00040000) != 0);
       }
       /**
        * <pre>
@@ -42332,6 +44157,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_column_name_length = 19;</code>
+       * @return The maxColumnNameLength.
        */
       public int getMaxColumnNameLength() {
         return maxColumnNameLength_;
@@ -42342,6 +44168,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_column_name_length = 19;</code>
+       * @param value The maxColumnNameLength to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxColumnNameLength(int value) {
         bitField0_ |= 0x00040000;
@@ -42355,6 +44183,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_column_name_length = 19;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxColumnNameLength() {
         bitField0_ = (bitField0_ & ~0x00040000);
@@ -42370,9 +44199,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_group_by = 20;</code>
+       * @return Whether the maxColumnsInGroupBy field is set.
        */
       public boolean hasMaxColumnsInGroupBy() {
-        return ((bitField0_ & 0x00080000) == 0x00080000);
+        return ((bitField0_ & 0x00080000) != 0);
       }
       /**
        * <pre>
@@ -42380,6 +44210,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_group_by = 20;</code>
+       * @return The maxColumnsInGroupBy.
        */
       public int getMaxColumnsInGroupBy() {
         return maxColumnsInGroupBy_;
@@ -42390,6 +44221,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_group_by = 20;</code>
+       * @param value The maxColumnsInGroupBy to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxColumnsInGroupBy(int value) {
         bitField0_ |= 0x00080000;
@@ -42403,6 +44236,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_group_by = 20;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxColumnsInGroupBy() {
         bitField0_ = (bitField0_ & ~0x00080000);
@@ -42418,9 +44252,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_order_by = 21;</code>
+       * @return Whether the maxColumnsInOrderBy field is set.
        */
       public boolean hasMaxColumnsInOrderBy() {
-        return ((bitField0_ & 0x00100000) == 0x00100000);
+        return ((bitField0_ & 0x00100000) != 0);
       }
       /**
        * <pre>
@@ -42428,6 +44263,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_order_by = 21;</code>
+       * @return The maxColumnsInOrderBy.
        */
       public int getMaxColumnsInOrderBy() {
         return maxColumnsInOrderBy_;
@@ -42438,6 +44274,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_order_by = 21;</code>
+       * @param value The maxColumnsInOrderBy to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxColumnsInOrderBy(int value) {
         bitField0_ |= 0x00100000;
@@ -42451,6 +44289,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_order_by = 21;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxColumnsInOrderBy() {
         bitField0_ = (bitField0_ & ~0x00100000);
@@ -42466,9 +44305,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_select = 22;</code>
+       * @return Whether the maxColumnsInSelect field is set.
        */
       public boolean hasMaxColumnsInSelect() {
-        return ((bitField0_ & 0x00200000) == 0x00200000);
+        return ((bitField0_ & 0x00200000) != 0);
       }
       /**
        * <pre>
@@ -42476,6 +44316,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_select = 22;</code>
+       * @return The maxColumnsInSelect.
        */
       public int getMaxColumnsInSelect() {
         return maxColumnsInSelect_;
@@ -42486,6 +44327,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_select = 22;</code>
+       * @param value The maxColumnsInSelect to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxColumnsInSelect(int value) {
         bitField0_ |= 0x00200000;
@@ -42499,6 +44342,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_columns_in_select = 22;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxColumnsInSelect() {
         bitField0_ = (bitField0_ & ~0x00200000);
@@ -42514,9 +44358,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_cursor_name_length = 23;</code>
+       * @return Whether the maxCursorNameLength field is set.
        */
       public boolean hasMaxCursorNameLength() {
-        return ((bitField0_ & 0x00400000) == 0x00400000);
+        return ((bitField0_ & 0x00400000) != 0);
       }
       /**
        * <pre>
@@ -42524,6 +44369,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_cursor_name_length = 23;</code>
+       * @return The maxCursorNameLength.
        */
       public int getMaxCursorNameLength() {
         return maxCursorNameLength_;
@@ -42534,6 +44380,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_cursor_name_length = 23;</code>
+       * @param value The maxCursorNameLength to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxCursorNameLength(int value) {
         bitField0_ |= 0x00400000;
@@ -42547,6 +44395,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_cursor_name_length = 23;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxCursorNameLength() {
         bitField0_ = (bitField0_ & ~0x00400000);
@@ -42562,9 +44411,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_logical_lob_size = 24;</code>
+       * @return Whether the maxLogicalLobSize field is set.
        */
       public boolean hasMaxLogicalLobSize() {
-        return ((bitField0_ & 0x00800000) == 0x00800000);
+        return ((bitField0_ & 0x00800000) != 0);
       }
       /**
        * <pre>
@@ -42572,6 +44422,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_logical_lob_size = 24;</code>
+       * @return The maxLogicalLobSize.
        */
       public int getMaxLogicalLobSize() {
         return maxLogicalLobSize_;
@@ -42582,6 +44433,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_logical_lob_size = 24;</code>
+       * @param value The maxLogicalLobSize to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxLogicalLobSize(int value) {
         bitField0_ |= 0x00800000;
@@ -42595,6 +44448,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_logical_lob_size = 24;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxLogicalLobSize() {
         bitField0_ = (bitField0_ & ~0x00800000);
@@ -42610,9 +44464,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_row_size = 25;</code>
+       * @return Whether the maxRowSize field is set.
        */
       public boolean hasMaxRowSize() {
-        return ((bitField0_ & 0x01000000) == 0x01000000);
+        return ((bitField0_ & 0x01000000) != 0);
       }
       /**
        * <pre>
@@ -42620,6 +44475,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_row_size = 25;</code>
+       * @return The maxRowSize.
        */
       public int getMaxRowSize() {
         return maxRowSize_;
@@ -42630,6 +44486,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_row_size = 25;</code>
+       * @param value The maxRowSize to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxRowSize(int value) {
         bitField0_ |= 0x01000000;
@@ -42643,6 +44501,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_row_size = 25;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxRowSize() {
         bitField0_ = (bitField0_ & ~0x01000000);
@@ -42658,9 +44517,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_schema_name_length = 26;</code>
+       * @return Whether the maxSchemaNameLength field is set.
        */
       public boolean hasMaxSchemaNameLength() {
-        return ((bitField0_ & 0x02000000) == 0x02000000);
+        return ((bitField0_ & 0x02000000) != 0);
       }
       /**
        * <pre>
@@ -42668,6 +44528,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_schema_name_length = 26;</code>
+       * @return The maxSchemaNameLength.
        */
       public int getMaxSchemaNameLength() {
         return maxSchemaNameLength_;
@@ -42678,6 +44539,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_schema_name_length = 26;</code>
+       * @param value The maxSchemaNameLength to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxSchemaNameLength(int value) {
         bitField0_ |= 0x02000000;
@@ -42691,6 +44554,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_schema_name_length = 26;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxSchemaNameLength() {
         bitField0_ = (bitField0_ & ~0x02000000);
@@ -42706,9 +44570,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_statement_length = 27;</code>
+       * @return Whether the maxStatementLength field is set.
        */
       public boolean hasMaxStatementLength() {
-        return ((bitField0_ & 0x04000000) == 0x04000000);
+        return ((bitField0_ & 0x04000000) != 0);
       }
       /**
        * <pre>
@@ -42716,6 +44581,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_statement_length = 27;</code>
+       * @return The maxStatementLength.
        */
       public int getMaxStatementLength() {
         return maxStatementLength_;
@@ -42726,6 +44592,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_statement_length = 27;</code>
+       * @param value The maxStatementLength to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxStatementLength(int value) {
         bitField0_ |= 0x04000000;
@@ -42739,6 +44607,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_statement_length = 27;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxStatementLength() {
         bitField0_ = (bitField0_ & ~0x04000000);
@@ -42754,9 +44623,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_statements = 28;</code>
+       * @return Whether the maxStatements field is set.
        */
       public boolean hasMaxStatements() {
-        return ((bitField0_ & 0x08000000) == 0x08000000);
+        return ((bitField0_ & 0x08000000) != 0);
       }
       /**
        * <pre>
@@ -42764,6 +44634,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_statements = 28;</code>
+       * @return The maxStatements.
        */
       public int getMaxStatements() {
         return maxStatements_;
@@ -42774,6 +44645,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_statements = 28;</code>
+       * @param value The maxStatements to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxStatements(int value) {
         bitField0_ |= 0x08000000;
@@ -42787,6 +44660,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_statements = 28;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxStatements() {
         bitField0_ = (bitField0_ & ~0x08000000);
@@ -42802,9 +44676,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_table_name_length = 29;</code>
+       * @return Whether the maxTableNameLength field is set.
        */
       public boolean hasMaxTableNameLength() {
-        return ((bitField0_ & 0x10000000) == 0x10000000);
+        return ((bitField0_ & 0x10000000) != 0);
       }
       /**
        * <pre>
@@ -42812,6 +44687,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_table_name_length = 29;</code>
+       * @return The maxTableNameLength.
        */
       public int getMaxTableNameLength() {
         return maxTableNameLength_;
@@ -42822,6 +44698,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_table_name_length = 29;</code>
+       * @param value The maxTableNameLength to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxTableNameLength(int value) {
         bitField0_ |= 0x10000000;
@@ -42835,6 +44713,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_table_name_length = 29;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxTableNameLength() {
         bitField0_ = (bitField0_ & ~0x10000000);
@@ -42850,9 +44729,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_tables_in_select = 30;</code>
+       * @return Whether the maxTablesInSelect field is set.
        */
       public boolean hasMaxTablesInSelect() {
-        return ((bitField0_ & 0x20000000) == 0x20000000);
+        return ((bitField0_ & 0x20000000) != 0);
       }
       /**
        * <pre>
@@ -42860,6 +44740,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_tables_in_select = 30;</code>
+       * @return The maxTablesInSelect.
        */
       public int getMaxTablesInSelect() {
         return maxTablesInSelect_;
@@ -42870,6 +44751,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_tables_in_select = 30;</code>
+       * @param value The maxTablesInSelect to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxTablesInSelect(int value) {
         bitField0_ |= 0x20000000;
@@ -42883,6 +44766,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_tables_in_select = 30;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxTablesInSelect() {
         bitField0_ = (bitField0_ & ~0x20000000);
@@ -42898,9 +44782,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_user_name_length = 31;</code>
+       * @return Whether the maxUserNameLength field is set.
        */
       public boolean hasMaxUserNameLength() {
-        return ((bitField0_ & 0x40000000) == 0x40000000);
+        return ((bitField0_ & 0x40000000) != 0);
       }
       /**
        * <pre>
@@ -42908,6 +44793,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_user_name_length = 31;</code>
+       * @return The maxUserNameLength.
        */
       public int getMaxUserNameLength() {
         return maxUserNameLength_;
@@ -42918,6 +44804,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_user_name_length = 31;</code>
+       * @param value The maxUserNameLength to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxUserNameLength(int value) {
         bitField0_ |= 0x40000000;
@@ -42931,6 +44819,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional uint32 max_user_name_length = 31;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxUserNameLength() {
         bitField0_ = (bitField0_ & ~0x40000000);
@@ -42946,9 +44835,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+       * @return Whether the nullCollation field is set.
        */
       public boolean hasNullCollation() {
-        return ((bitField0_ & 0x80000000) == 0x80000000);
+        return ((bitField0_ & 0x80000000) != 0);
       }
       /**
        * <pre>
@@ -42956,6 +44846,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+       * @return The nullCollation.
        */
       public org.apache.drill.exec.proto.UserProtos.NullCollation getNullCollation() {
         @SuppressWarnings("deprecation")
@@ -42968,6 +44859,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+       * @param value The nullCollation to set.
+       * @return This builder for chaining.
        */
       public Builder setNullCollation(org.apache.drill.exec.proto.UserProtos.NullCollation value) {
         if (value == null) {
@@ -42984,6 +44877,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.NullCollation null_collation = 32;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNullCollation() {
         bitField0_ = (bitField0_ & ~0x80000000);
@@ -42999,9 +44893,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+       * @return Whether the nullPlusNonNullEqualsNull field is set.
        */
       public boolean hasNullPlusNonNullEqualsNull() {
-        return ((bitField1_ & 0x00000001) == 0x00000001);
+        return ((bitField1_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -43009,6 +44904,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+       * @return The nullPlusNonNullEqualsNull.
        */
       public boolean getNullPlusNonNullEqualsNull() {
         return nullPlusNonNullEqualsNull_;
@@ -43019,6 +44915,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+       * @param value The nullPlusNonNullEqualsNull to set.
+       * @return This builder for chaining.
        */
       public Builder setNullPlusNonNullEqualsNull(boolean value) {
         bitField1_ |= 0x00000001;
@@ -43032,6 +44930,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool null_plus_non_null_equals_null = 33;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNullPlusNonNullEqualsNull() {
         bitField1_ = (bitField1_ & ~0x00000001);
@@ -43042,7 +44941,7 @@ public final class UserProtos {
 
       private com.google.protobuf.LazyStringList numericFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureNumericFunctionsIsMutable() {
-        if (!((bitField1_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField1_ & 0x00000002) != 0)) {
           numericFunctions_ = new com.google.protobuf.LazyStringArrayList(numericFunctions_);
           bitField1_ |= 0x00000002;
          }
@@ -43053,6 +44952,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string numeric_functions = 34;</code>
+       * @return A list containing the numericFunctions.
        */
       public com.google.protobuf.ProtocolStringList
           getNumericFunctionsList() {
@@ -43064,6 +44964,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string numeric_functions = 34;</code>
+       * @return The count of numericFunctions.
        */
       public int getNumericFunctionsCount() {
         return numericFunctions_.size();
@@ -43074,6 +44975,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string numeric_functions = 34;</code>
+       * @param index The index of the element to return.
+       * @return The numericFunctions at the given index.
        */
       public java.lang.String getNumericFunctions(int index) {
         return numericFunctions_.get(index);
@@ -43084,6 +44987,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string numeric_functions = 34;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the numericFunctions at the given index.
        */
       public com.google.protobuf.ByteString
           getNumericFunctionsBytes(int index) {
@@ -43095,6 +45000,9 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string numeric_functions = 34;</code>
+       * @param index The index to set the value at.
+       * @param value The numericFunctions to set.
+       * @return This builder for chaining.
        */
       public Builder setNumericFunctions(
           int index, java.lang.String value) {
@@ -43112,6 +45020,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string numeric_functions = 34;</code>
+       * @param value The numericFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addNumericFunctions(
           java.lang.String value) {
@@ -43129,6 +45039,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string numeric_functions = 34;</code>
+       * @param values The numericFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addAllNumericFunctions(
           java.lang.Iterable<java.lang.String> values) {
@@ -43144,6 +45056,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string numeric_functions = 34;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNumericFunctions() {
         numericFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -43157,6 +45070,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string numeric_functions = 34;</code>
+       * @param value The bytes of the numericFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addNumericFunctionsBytes(
           com.google.protobuf.ByteString value) {
@@ -43172,7 +45087,7 @@ public final class UserProtos {
       private java.util.List<java.lang.Integer> orderBySupport_ =
         java.util.Collections.emptyList();
       private void ensureOrderBySupportIsMutable() {
-        if (!((bitField1_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField1_ & 0x00000004) != 0)) {
           orderBySupport_ = new java.util.ArrayList<java.lang.Integer>(orderBySupport_);
           bitField1_ |= 0x00000004;
         }
@@ -43183,6 +45098,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       * @return A list containing the orderBySupport.
        */
       public java.util.List<org.apache.drill.exec.proto.UserProtos.OrderBySupport> getOrderBySupportList() {
         return new com.google.protobuf.Internal.ListAdapter<
@@ -43194,6 +45110,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       * @return The count of orderBySupport.
        */
       public int getOrderBySupportCount() {
         return orderBySupport_.size();
@@ -43204,6 +45121,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       * @param index The index of the element to return.
+       * @return The orderBySupport at the given index.
        */
       public org.apache.drill.exec.proto.UserProtos.OrderBySupport getOrderBySupport(int index) {
         return orderBySupport_converter_.convert(orderBySupport_.get(index));
@@ -43214,6 +45133,9 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       * @param index The index to set the value at.
+       * @param value The orderBySupport to set.
+       * @return This builder for chaining.
        */
       public Builder setOrderBySupport(
           int index, org.apache.drill.exec.proto.UserProtos.OrderBySupport value) {
@@ -43231,6 +45153,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       * @param value The orderBySupport to add.
+       * @return This builder for chaining.
        */
       public Builder addOrderBySupport(org.apache.drill.exec.proto.UserProtos.OrderBySupport value) {
         if (value == null) {
@@ -43247,6 +45171,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       * @param values The orderBySupport to add.
+       * @return This builder for chaining.
        */
       public Builder addAllOrderBySupport(
           java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.OrderBySupport> values) {
@@ -43263,6 +45189,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OrderBySupport order_by_support = 35;</code>
+       * @return This builder for chaining.
        */
       public Builder clearOrderBySupport() {
         orderBySupport_ = java.util.Collections.emptyList();
@@ -43274,7 +45201,7 @@ public final class UserProtos {
       private java.util.List<java.lang.Integer> outerJoinSupport_ =
         java.util.Collections.emptyList();
       private void ensureOuterJoinSupportIsMutable() {
-        if (!((bitField1_ & 0x00000008) == 0x00000008)) {
+        if (!((bitField1_ & 0x00000008) != 0)) {
           outerJoinSupport_ = new java.util.ArrayList<java.lang.Integer>(outerJoinSupport_);
           bitField1_ |= 0x00000008;
         }
@@ -43285,6 +45212,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       * @return A list containing the outerJoinSupport.
        */
       public java.util.List<org.apache.drill.exec.proto.UserProtos.OuterJoinSupport> getOuterJoinSupportList() {
         return new com.google.protobuf.Internal.ListAdapter<
@@ -43296,6 +45224,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       * @return The count of outerJoinSupport.
        */
       public int getOuterJoinSupportCount() {
         return outerJoinSupport_.size();
@@ -43306,6 +45235,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       * @param index The index of the element to return.
+       * @return The outerJoinSupport at the given index.
        */
       public org.apache.drill.exec.proto.UserProtos.OuterJoinSupport getOuterJoinSupport(int index) {
         return outerJoinSupport_converter_.convert(outerJoinSupport_.get(index));
@@ -43316,6 +45247,9 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       * @param index The index to set the value at.
+       * @param value The outerJoinSupport to set.
+       * @return This builder for chaining.
        */
       public Builder setOuterJoinSupport(
           int index, org.apache.drill.exec.proto.UserProtos.OuterJoinSupport value) {
@@ -43333,6 +45267,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       * @param value The outerJoinSupport to add.
+       * @return This builder for chaining.
        */
       public Builder addOuterJoinSupport(org.apache.drill.exec.proto.UserProtos.OuterJoinSupport value) {
         if (value == null) {
@@ -43349,6 +45285,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       * @param values The outerJoinSupport to add.
+       * @return This builder for chaining.
        */
       public Builder addAllOuterJoinSupport(
           java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.OuterJoinSupport> values) {
@@ -43365,6 +45303,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.OuterJoinSupport outer_join_support = 36;</code>
+       * @return This builder for chaining.
        */
       public Builder clearOuterJoinSupport() {
         outerJoinSupport_ = java.util.Collections.emptyList();
@@ -43380,9 +45319,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+       * @return Whether the quotedIdentifierCasing field is set.
        */
       public boolean hasQuotedIdentifierCasing() {
-        return ((bitField1_ & 0x00000010) == 0x00000010);
+        return ((bitField1_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -43390,6 +45330,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+       * @return The quotedIdentifierCasing.
        */
       public org.apache.drill.exec.proto.UserProtos.IdentifierCasing getQuotedIdentifierCasing() {
         @SuppressWarnings("deprecation")
@@ -43402,6 +45343,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+       * @param value The quotedIdentifierCasing to set.
+       * @return This builder for chaining.
        */
       public Builder setQuotedIdentifierCasing(org.apache.drill.exec.proto.UserProtos.IdentifierCasing value) {
         if (value == null) {
@@ -43418,6 +45361,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.IdentifierCasing quoted_identifier_casing = 37;</code>
+       * @return This builder for chaining.
        */
       public Builder clearQuotedIdentifierCasing() {
         bitField1_ = (bitField1_ & ~0x00000010);
@@ -43433,9 +45377,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool read_only = 38;</code>
+       * @return Whether the readOnly field is set.
        */
       public boolean hasReadOnly() {
-        return ((bitField1_ & 0x00000020) == 0x00000020);
+        return ((bitField1_ & 0x00000020) != 0);
       }
       /**
        * <pre>
@@ -43443,6 +45388,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool read_only = 38;</code>
+       * @return The readOnly.
        */
       public boolean getReadOnly() {
         return readOnly_;
@@ -43453,6 +45399,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool read_only = 38;</code>
+       * @param value The readOnly to set.
+       * @return This builder for chaining.
        */
       public Builder setReadOnly(boolean value) {
         bitField1_ |= 0x00000020;
@@ -43466,6 +45414,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool read_only = 38;</code>
+       * @return This builder for chaining.
        */
       public Builder clearReadOnly() {
         bitField1_ = (bitField1_ & ~0x00000020);
@@ -43481,9 +45430,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_term = 39;</code>
+       * @return Whether the schemaTerm field is set.
        */
       public boolean hasSchemaTerm() {
-        return ((bitField1_ & 0x00000040) == 0x00000040);
+        return ((bitField1_ & 0x00000040) != 0);
       }
       /**
        * <pre>
@@ -43491,6 +45441,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_term = 39;</code>
+       * @return The schemaTerm.
        */
       public java.lang.String getSchemaTerm() {
         java.lang.Object ref = schemaTerm_;
@@ -43512,6 +45463,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_term = 39;</code>
+       * @return The bytes for schemaTerm.
        */
       public com.google.protobuf.ByteString
           getSchemaTermBytes() {
@@ -43532,6 +45484,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_term = 39;</code>
+       * @param value The schemaTerm to set.
+       * @return This builder for chaining.
        */
       public Builder setSchemaTerm(
           java.lang.String value) {
@@ -43549,6 +45503,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_term = 39;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSchemaTerm() {
         bitField1_ = (bitField1_ & ~0x00000040);
@@ -43562,6 +45517,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string schema_term = 39;</code>
+       * @param value The bytes for schemaTerm to set.
+       * @return This builder for chaining.
        */
       public Builder setSchemaTermBytes(
           com.google.protobuf.ByteString value) {
@@ -43581,9 +45538,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string search_escape_string = 40;</code>
+       * @return Whether the searchEscapeString field is set.
        */
       public boolean hasSearchEscapeString() {
-        return ((bitField1_ & 0x00000080) == 0x00000080);
+        return ((bitField1_ & 0x00000080) != 0);
       }
       /**
        * <pre>
@@ -43591,6 +45549,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string search_escape_string = 40;</code>
+       * @return The searchEscapeString.
        */
       public java.lang.String getSearchEscapeString() {
         java.lang.Object ref = searchEscapeString_;
@@ -43612,6 +45571,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string search_escape_string = 40;</code>
+       * @return The bytes for searchEscapeString.
        */
       public com.google.protobuf.ByteString
           getSearchEscapeStringBytes() {
@@ -43632,6 +45592,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string search_escape_string = 40;</code>
+       * @param value The searchEscapeString to set.
+       * @return This builder for chaining.
        */
       public Builder setSearchEscapeString(
           java.lang.String value) {
@@ -43649,6 +45611,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string search_escape_string = 40;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSearchEscapeString() {
         bitField1_ = (bitField1_ & ~0x00000080);
@@ -43662,6 +45625,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string search_escape_string = 40;</code>
+       * @param value The bytes for searchEscapeString to set.
+       * @return This builder for chaining.
        */
       public Builder setSearchEscapeStringBytes(
           com.google.protobuf.ByteString value) {
@@ -43681,9 +45646,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool select_for_update_supported = 41;</code>
+       * @return Whether the selectForUpdateSupported field is set.
        */
       public boolean hasSelectForUpdateSupported() {
-        return ((bitField1_ & 0x00000100) == 0x00000100);
+        return ((bitField1_ & 0x00000100) != 0);
       }
       /**
        * <pre>
@@ -43691,6 +45657,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool select_for_update_supported = 41;</code>
+       * @return The selectForUpdateSupported.
        */
       public boolean getSelectForUpdateSupported() {
         return selectForUpdateSupported_;
@@ -43701,6 +45668,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool select_for_update_supported = 41;</code>
+       * @param value The selectForUpdateSupported to set.
+       * @return This builder for chaining.
        */
       public Builder setSelectForUpdateSupported(boolean value) {
         bitField1_ |= 0x00000100;
@@ -43714,6 +45683,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool select_for_update_supported = 41;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSelectForUpdateSupported() {
         bitField1_ = (bitField1_ & ~0x00000100);
@@ -43729,9 +45699,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string special_characters = 42;</code>
+       * @return Whether the specialCharacters field is set.
        */
       public boolean hasSpecialCharacters() {
-        return ((bitField1_ & 0x00000200) == 0x00000200);
+        return ((bitField1_ & 0x00000200) != 0);
       }
       /**
        * <pre>
@@ -43739,6 +45710,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string special_characters = 42;</code>
+       * @return The specialCharacters.
        */
       public java.lang.String getSpecialCharacters() {
         java.lang.Object ref = specialCharacters_;
@@ -43760,6 +45732,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string special_characters = 42;</code>
+       * @return The bytes for specialCharacters.
        */
       public com.google.protobuf.ByteString
           getSpecialCharactersBytes() {
@@ -43780,6 +45753,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string special_characters = 42;</code>
+       * @param value The specialCharacters to set.
+       * @return This builder for chaining.
        */
       public Builder setSpecialCharacters(
           java.lang.String value) {
@@ -43797,6 +45772,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string special_characters = 42;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSpecialCharacters() {
         bitField1_ = (bitField1_ & ~0x00000200);
@@ -43810,6 +45786,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string special_characters = 42;</code>
+       * @param value The bytes for specialCharacters to set.
+       * @return This builder for chaining.
        */
       public Builder setSpecialCharactersBytes(
           com.google.protobuf.ByteString value) {
@@ -43824,7 +45802,7 @@ public final class UserProtos {
 
       private com.google.protobuf.LazyStringList sqlKeywords_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureSqlKeywordsIsMutable() {
-        if (!((bitField1_ & 0x00000400) == 0x00000400)) {
+        if (!((bitField1_ & 0x00000400) != 0)) {
           sqlKeywords_ = new com.google.protobuf.LazyStringArrayList(sqlKeywords_);
           bitField1_ |= 0x00000400;
          }
@@ -43835,6 +45813,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string sql_keywords = 43;</code>
+       * @return A list containing the sqlKeywords.
        */
       public com.google.protobuf.ProtocolStringList
           getSqlKeywordsList() {
@@ -43846,6 +45825,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string sql_keywords = 43;</code>
+       * @return The count of sqlKeywords.
        */
       public int getSqlKeywordsCount() {
         return sqlKeywords_.size();
@@ -43856,6 +45836,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string sql_keywords = 43;</code>
+       * @param index The index of the element to return.
+       * @return The sqlKeywords at the given index.
        */
       public java.lang.String getSqlKeywords(int index) {
         return sqlKeywords_.get(index);
@@ -43866,6 +45848,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string sql_keywords = 43;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the sqlKeywords at the given index.
        */
       public com.google.protobuf.ByteString
           getSqlKeywordsBytes(int index) {
@@ -43877,6 +45861,9 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string sql_keywords = 43;</code>
+       * @param index The index to set the value at.
+       * @param value The sqlKeywords to set.
+       * @return This builder for chaining.
        */
       public Builder setSqlKeywords(
           int index, java.lang.String value) {
@@ -43894,6 +45881,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string sql_keywords = 43;</code>
+       * @param value The sqlKeywords to add.
+       * @return This builder for chaining.
        */
       public Builder addSqlKeywords(
           java.lang.String value) {
@@ -43911,6 +45900,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string sql_keywords = 43;</code>
+       * @param values The sqlKeywords to add.
+       * @return This builder for chaining.
        */
       public Builder addAllSqlKeywords(
           java.lang.Iterable<java.lang.String> values) {
@@ -43926,6 +45917,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string sql_keywords = 43;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSqlKeywords() {
         sqlKeywords_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -43939,6 +45931,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string sql_keywords = 43;</code>
+       * @param value The bytes of the sqlKeywords to add.
+       * @return This builder for chaining.
        */
       public Builder addSqlKeywordsBytes(
           com.google.protobuf.ByteString value) {
@@ -43953,7 +45947,7 @@ public final class UserProtos {
 
       private com.google.protobuf.LazyStringList stringFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureStringFunctionsIsMutable() {
-        if (!((bitField1_ & 0x00000800) == 0x00000800)) {
+        if (!((bitField1_ & 0x00000800) != 0)) {
           stringFunctions_ = new com.google.protobuf.LazyStringArrayList(stringFunctions_);
           bitField1_ |= 0x00000800;
          }
@@ -43964,6 +45958,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string string_functions = 44;</code>
+       * @return A list containing the stringFunctions.
        */
       public com.google.protobuf.ProtocolStringList
           getStringFunctionsList() {
@@ -43975,6 +45970,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string string_functions = 44;</code>
+       * @return The count of stringFunctions.
        */
       public int getStringFunctionsCount() {
         return stringFunctions_.size();
@@ -43985,6 +45981,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string string_functions = 44;</code>
+       * @param index The index of the element to return.
+       * @return The stringFunctions at the given index.
        */
       public java.lang.String getStringFunctions(int index) {
         return stringFunctions_.get(index);
@@ -43995,6 +45993,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string string_functions = 44;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the stringFunctions at the given index.
        */
       public com.google.protobuf.ByteString
           getStringFunctionsBytes(int index) {
@@ -44006,6 +46006,9 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string string_functions = 44;</code>
+       * @param index The index to set the value at.
+       * @param value The stringFunctions to set.
+       * @return This builder for chaining.
        */
       public Builder setStringFunctions(
           int index, java.lang.String value) {
@@ -44023,6 +46026,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string string_functions = 44;</code>
+       * @param value The stringFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addStringFunctions(
           java.lang.String value) {
@@ -44040,6 +46045,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string string_functions = 44;</code>
+       * @param values The stringFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addAllStringFunctions(
           java.lang.Iterable<java.lang.String> values) {
@@ -44055,6 +46062,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string string_functions = 44;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStringFunctions() {
         stringFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -44068,6 +46076,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string string_functions = 44;</code>
+       * @param value The bytes of the stringFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addStringFunctionsBytes(
           com.google.protobuf.ByteString value) {
@@ -44083,7 +46093,7 @@ public final class UserProtos {
       private java.util.List<java.lang.Integer> subquerySupport_ =
         java.util.Collections.emptyList();
       private void ensureSubquerySupportIsMutable() {
-        if (!((bitField1_ & 0x00001000) == 0x00001000)) {
+        if (!((bitField1_ & 0x00001000) != 0)) {
           subquerySupport_ = new java.util.ArrayList<java.lang.Integer>(subquerySupport_);
           bitField1_ |= 0x00001000;
         }
@@ -44094,6 +46104,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       * @return A list containing the subquerySupport.
        */
       public java.util.List<org.apache.drill.exec.proto.UserProtos.SubQuerySupport> getSubquerySupportList() {
         return new com.google.protobuf.Internal.ListAdapter<
@@ -44105,6 +46116,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       * @return The count of subquerySupport.
        */
       public int getSubquerySupportCount() {
         return subquerySupport_.size();
@@ -44115,6 +46127,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       * @param index The index of the element to return.
+       * @return The subquerySupport at the given index.
        */
       public org.apache.drill.exec.proto.UserProtos.SubQuerySupport getSubquerySupport(int index) {
         return subquerySupport_converter_.convert(subquerySupport_.get(index));
@@ -44125,6 +46139,9 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       * @param index The index to set the value at.
+       * @param value The subquerySupport to set.
+       * @return This builder for chaining.
        */
       public Builder setSubquerySupport(
           int index, org.apache.drill.exec.proto.UserProtos.SubQuerySupport value) {
@@ -44142,6 +46159,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       * @param value The subquerySupport to add.
+       * @return This builder for chaining.
        */
       public Builder addSubquerySupport(org.apache.drill.exec.proto.UserProtos.SubQuerySupport value) {
         if (value == null) {
@@ -44158,6 +46177,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       * @param values The subquerySupport to add.
+       * @return This builder for chaining.
        */
       public Builder addAllSubquerySupport(
           java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.SubQuerySupport> values) {
@@ -44174,6 +46195,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.SubQuerySupport subquery_support = 45;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSubquerySupport() {
         subquerySupport_ = java.util.Collections.emptyList();
@@ -44184,7 +46206,7 @@ public final class UserProtos {
 
       private com.google.protobuf.LazyStringList systemFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureSystemFunctionsIsMutable() {
-        if (!((bitField1_ & 0x00002000) == 0x00002000)) {
+        if (!((bitField1_ & 0x00002000) != 0)) {
           systemFunctions_ = new com.google.protobuf.LazyStringArrayList(systemFunctions_);
           bitField1_ |= 0x00002000;
          }
@@ -44195,6 +46217,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string system_functions = 46;</code>
+       * @return A list containing the systemFunctions.
        */
       public com.google.protobuf.ProtocolStringList
           getSystemFunctionsList() {
@@ -44206,6 +46229,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string system_functions = 46;</code>
+       * @return The count of systemFunctions.
        */
       public int getSystemFunctionsCount() {
         return systemFunctions_.size();
@@ -44216,6 +46240,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string system_functions = 46;</code>
+       * @param index The index of the element to return.
+       * @return The systemFunctions at the given index.
        */
       public java.lang.String getSystemFunctions(int index) {
         return systemFunctions_.get(index);
@@ -44226,6 +46252,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string system_functions = 46;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the systemFunctions at the given index.
        */
       public com.google.protobuf.ByteString
           getSystemFunctionsBytes(int index) {
@@ -44237,6 +46265,9 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string system_functions = 46;</code>
+       * @param index The index to set the value at.
+       * @param value The systemFunctions to set.
+       * @return This builder for chaining.
        */
       public Builder setSystemFunctions(
           int index, java.lang.String value) {
@@ -44254,6 +46285,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string system_functions = 46;</code>
+       * @param value The systemFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addSystemFunctions(
           java.lang.String value) {
@@ -44271,6 +46304,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string system_functions = 46;</code>
+       * @param values The systemFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addAllSystemFunctions(
           java.lang.Iterable<java.lang.String> values) {
@@ -44286,6 +46321,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string system_functions = 46;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSystemFunctions() {
         systemFunctions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -44299,6 +46335,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated string system_functions = 46;</code>
+       * @param value The bytes of the systemFunctions to add.
+       * @return This builder for chaining.
        */
       public Builder addSystemFunctionsBytes(
           com.google.protobuf.ByteString value) {
@@ -44318,9 +46356,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_term = 47;</code>
+       * @return Whether the tableTerm field is set.
        */
       public boolean hasTableTerm() {
-        return ((bitField1_ & 0x00004000) == 0x00004000);
+        return ((bitField1_ & 0x00004000) != 0);
       }
       /**
        * <pre>
@@ -44328,6 +46367,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_term = 47;</code>
+       * @return The tableTerm.
        */
       public java.lang.String getTableTerm() {
         java.lang.Object ref = tableTerm_;
@@ -44349,6 +46389,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_term = 47;</code>
+       * @return The bytes for tableTerm.
        */
       public com.google.protobuf.ByteString
           getTableTermBytes() {
@@ -44369,6 +46410,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_term = 47;</code>
+       * @param value The tableTerm to set.
+       * @return This builder for chaining.
        */
       public Builder setTableTerm(
           java.lang.String value) {
@@ -44386,6 +46429,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_term = 47;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTableTerm() {
         bitField1_ = (bitField1_ & ~0x00004000);
@@ -44399,6 +46443,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string table_term = 47;</code>
+       * @param value The bytes for tableTerm to set.
+       * @return This builder for chaining.
        */
       public Builder setTableTermBytes(
           com.google.protobuf.ByteString value) {
@@ -44418,9 +46464,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool transaction_supported = 48;</code>
+       * @return Whether the transactionSupported field is set.
        */
       public boolean hasTransactionSupported() {
-        return ((bitField1_ & 0x00008000) == 0x00008000);
+        return ((bitField1_ & 0x00008000) != 0);
       }
       /**
        * <pre>
@@ -44428,6 +46475,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool transaction_supported = 48;</code>
+       * @return The transactionSupported.
        */
       public boolean getTransactionSupported() {
         return transactionSupported_;
@@ -44438,6 +46486,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool transaction_supported = 48;</code>
+       * @param value The transactionSupported to set.
+       * @return This builder for chaining.
        */
       public Builder setTransactionSupported(boolean value) {
         bitField1_ |= 0x00008000;
@@ -44451,6 +46501,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional bool transaction_supported = 48;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTransactionSupported() {
         bitField1_ = (bitField1_ & ~0x00008000);
@@ -44462,7 +46513,7 @@ public final class UserProtos {
       private java.util.List<java.lang.Integer> unionSupport_ =
         java.util.Collections.emptyList();
       private void ensureUnionSupportIsMutable() {
-        if (!((bitField1_ & 0x00010000) == 0x00010000)) {
+        if (!((bitField1_ & 0x00010000) != 0)) {
           unionSupport_ = new java.util.ArrayList<java.lang.Integer>(unionSupport_);
           bitField1_ |= 0x00010000;
         }
@@ -44473,6 +46524,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       * @return A list containing the unionSupport.
        */
       public java.util.List<org.apache.drill.exec.proto.UserProtos.UnionSupport> getUnionSupportList() {
         return new com.google.protobuf.Internal.ListAdapter<
@@ -44484,6 +46536,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       * @return The count of unionSupport.
        */
       public int getUnionSupportCount() {
         return unionSupport_.size();
@@ -44494,6 +46547,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       * @param index The index of the element to return.
+       * @return The unionSupport at the given index.
        */
       public org.apache.drill.exec.proto.UserProtos.UnionSupport getUnionSupport(int index) {
         return unionSupport_converter_.convert(unionSupport_.get(index));
@@ -44504,6 +46559,9 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       * @param index The index to set the value at.
+       * @param value The unionSupport to set.
+       * @return This builder for chaining.
        */
       public Builder setUnionSupport(
           int index, org.apache.drill.exec.proto.UserProtos.UnionSupport value) {
@@ -44521,6 +46579,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       * @param value The unionSupport to add.
+       * @return This builder for chaining.
        */
       public Builder addUnionSupport(org.apache.drill.exec.proto.UserProtos.UnionSupport value) {
         if (value == null) {
@@ -44537,6 +46597,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       * @param values The unionSupport to add.
+       * @return This builder for chaining.
        */
       public Builder addAllUnionSupport(
           java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.UnionSupport> values) {
@@ -44553,6 +46615,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>repeated .exec.user.UnionSupport union_support = 49;</code>
+       * @return This builder for chaining.
        */
       public Builder clearUnionSupport() {
         unionSupport_ = java.util.Collections.emptyList();
@@ -44568,9 +46631,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string current_schema = 50;</code>
+       * @return Whether the currentSchema field is set.
        */
       public boolean hasCurrentSchema() {
-        return ((bitField1_ & 0x00020000) == 0x00020000);
+        return ((bitField1_ & 0x00020000) != 0);
       }
       /**
        * <pre>
@@ -44578,6 +46642,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string current_schema = 50;</code>
+       * @return The currentSchema.
        */
       public java.lang.String getCurrentSchema() {
         java.lang.Object ref = currentSchema_;
@@ -44599,6 +46664,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string current_schema = 50;</code>
+       * @return The bytes for currentSchema.
        */
       public com.google.protobuf.ByteString
           getCurrentSchemaBytes() {
@@ -44619,6 +46685,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string current_schema = 50;</code>
+       * @param value The currentSchema to set.
+       * @return This builder for chaining.
        */
       public Builder setCurrentSchema(
           java.lang.String value) {
@@ -44636,6 +46704,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string current_schema = 50;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCurrentSchema() {
         bitField1_ = (bitField1_ & ~0x00020000);
@@ -44649,6 +46718,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string current_schema = 50;</code>
+       * @param value The bytes for currentSchema to set.
+       * @return This builder for chaining.
        */
       public Builder setCurrentSchemaBytes(
           com.google.protobuf.ByteString value) {
@@ -44719,19 +46790,23 @@ public final class UserProtos {
 
     /**
      * <code>optional .exec.user.QueryResultsMode results_mode = 1;</code>
+     * @return Whether the resultsMode field is set.
      */
     boolean hasResultsMode();
     /**
      * <code>optional .exec.user.QueryResultsMode results_mode = 1;</code>
+     * @return The resultsMode.
      */
     org.apache.drill.exec.proto.UserProtos.QueryResultsMode getResultsMode();
 
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return Whether the type field is set.
      */
     boolean hasType();
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return The type.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryType getType();
 
@@ -44741,6 +46816,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string plan = 3;</code>
+     * @return Whether the plan field is set.
      */
     boolean hasPlan();
     /**
@@ -44749,6 +46825,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string plan = 3;</code>
+     * @return The plan.
      */
     java.lang.String getPlan();
     /**
@@ -44757,6 +46834,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string plan = 3;</code>
+     * @return The bytes for plan.
      */
     com.google.protobuf.ByteString
         getPlanBytes();
@@ -44812,6 +46890,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.PreparedStatementHandle prepared_statement_handle = 5;</code>
+     * @return Whether the preparedStatementHandle field is set.
      */
     boolean hasPreparedStatementHandle();
     /**
@@ -44821,6 +46900,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.PreparedStatementHandle prepared_statement_handle = 5;</code>
+     * @return The preparedStatementHandle.
      */
     org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle getPreparedStatementHandle();
     /**
@@ -44839,6 +46919,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 autolimit_rowcount = 6;</code>
+     * @return Whether the autolimitRowcount field is set.
      */
     boolean hasAutolimitRowcount();
     /**
@@ -44847,6 +46928,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 autolimit_rowcount = 6;</code>
+     * @return The autolimitRowcount.
      */
     int getAutolimitRowcount();
   }
@@ -44871,7 +46953,13 @@ public final class UserProtos {
       type_ = 1;
       plan_ = "";
       fragments_ = java.util.Collections.emptyList();
-      autolimitRowcount_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new RunQuery();
     }
 
     @java.lang.Override
@@ -44929,7 +47017,7 @@ public final class UserProtos {
               break;
             }
             case 34: {
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
                 fragments_ = new java.util.ArrayList<org.apache.drill.exec.proto.BitControl.PlanFragment>();
                 mutable_bitField0_ |= 0x00000008;
               }
@@ -44939,7 +47027,7 @@ public final class UserProtos {
             }
             case 42: {
               org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000008) != 0)) {
                 subBuilder = preparedStatementHandle_.toBuilder();
               }
               preparedStatementHandle_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.PARSER, extensionRegistry);
@@ -44970,7 +47058,7 @@ public final class UserProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
           fragments_ = java.util.Collections.unmodifiableList(fragments_);
         }
         this.unknownFields = unknownFields.build();
@@ -44995,12 +47083,14 @@ public final class UserProtos {
     private int resultsMode_;
     /**
      * <code>optional .exec.user.QueryResultsMode results_mode = 1;</code>
+     * @return Whether the resultsMode field is set.
      */
     public boolean hasResultsMode() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.user.QueryResultsMode results_mode = 1;</code>
+     * @return The resultsMode.
      */
     public org.apache.drill.exec.proto.UserProtos.QueryResultsMode getResultsMode() {
       @SuppressWarnings("deprecation")
@@ -45012,12 +47102,14 @@ public final class UserProtos {
     private int type_;
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return Whether the type field is set.
      */
     public boolean hasType() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return The type.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryType getType() {
       @SuppressWarnings("deprecation")
@@ -45033,9 +47125,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string plan = 3;</code>
+     * @return Whether the plan field is set.
      */
     public boolean hasPlan() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -45043,6 +47136,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string plan = 3;</code>
+     * @return The plan.
      */
     public java.lang.String getPlan() {
       java.lang.Object ref = plan_;
@@ -45064,6 +47158,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional string plan = 3;</code>
+     * @return The bytes for plan.
      */
     public com.google.protobuf.ByteString
         getPlanBytes() {
@@ -45143,9 +47238,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.PreparedStatementHandle prepared_statement_handle = 5;</code>
+     * @return Whether the preparedStatementHandle field is set.
      */
     public boolean hasPreparedStatementHandle() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -45154,6 +47250,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional .exec.user.PreparedStatementHandle prepared_statement_handle = 5;</code>
+     * @return The preparedStatementHandle.
      */
     public org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle getPreparedStatementHandle() {
       return preparedStatementHandle_ == null ? org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.getDefaultInstance() : preparedStatementHandle_;
@@ -45178,9 +47275,10 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 autolimit_rowcount = 6;</code>
+     * @return Whether the autolimitRowcount field is set.
      */
     public boolean hasAutolimitRowcount() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -45188,6 +47286,7 @@ public final class UserProtos {
      * </pre>
      *
      * <code>optional int32 autolimit_rowcount = 6;</code>
+     * @return The autolimitRowcount.
      */
     public int getAutolimitRowcount() {
       return autolimitRowcount_;
@@ -45207,22 +47306,22 @@ public final class UserProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, resultsMode_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeEnum(2, type_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, plan_);
       }
       for (int i = 0; i < fragments_.size(); i++) {
         output.writeMessage(4, fragments_.get(i));
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeMessage(5, getPreparedStatementHandle());
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeInt32(6, autolimitRowcount_);
       }
       unknownFields.writeTo(output);
@@ -45234,26 +47333,26 @@ public final class UserProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, resultsMode_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(2, type_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, plan_);
       }
       for (int i = 0; i < fragments_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, fragments_.get(i));
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, getPreparedStatementHandle());
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(6, autolimitRowcount_);
       }
@@ -45272,34 +47371,33 @@ public final class UserProtos {
       }
       org.apache.drill.exec.proto.UserProtos.RunQuery other = (org.apache.drill.exec.proto.UserProtos.RunQuery) obj;
 
-      boolean result = true;
-      result = result && (hasResultsMode() == other.hasResultsMode());
+      if (hasResultsMode() != other.hasResultsMode()) return false;
       if (hasResultsMode()) {
-        result = result && resultsMode_ == other.resultsMode_;
+        if (resultsMode_ != other.resultsMode_) return false;
       }
-      result = result && (hasType() == other.hasType());
+      if (hasType() != other.hasType()) return false;
       if (hasType()) {
-        result = result && type_ == other.type_;
+        if (type_ != other.type_) return false;
       }
-      result = result && (hasPlan() == other.hasPlan());
+      if (hasPlan() != other.hasPlan()) return false;
       if (hasPlan()) {
-        result = result && getPlan()
-            .equals(other.getPlan());
+        if (!getPlan()
+            .equals(other.getPlan())) return false;
       }
-      result = result && getFragmentsList()
-          .equals(other.getFragmentsList());
-      result = result && (hasPreparedStatementHandle() == other.hasPreparedStatementHandle());
+      if (!getFragmentsList()
+          .equals(other.getFragmentsList())) return false;
+      if (hasPreparedStatementHandle() != other.hasPreparedStatementHandle()) return false;
       if (hasPreparedStatementHandle()) {
-        result = result && getPreparedStatementHandle()
-            .equals(other.getPreparedStatementHandle());
+        if (!getPreparedStatementHandle()
+            .equals(other.getPreparedStatementHandle())) return false;
       }
-      result = result && (hasAutolimitRowcount() == other.hasAutolimitRowcount());
+      if (hasAutolimitRowcount() != other.hasAutolimitRowcount()) return false;
       if (hasAutolimitRowcount()) {
-        result = result && (getAutolimitRowcount()
-            == other.getAutolimitRowcount());
+        if (getAutolimitRowcount()
+            != other.getAutolimitRowcount()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -45520,20 +47618,20 @@ public final class UserProtos {
         org.apache.drill.exec.proto.UserProtos.RunQuery result = new org.apache.drill.exec.proto.UserProtos.RunQuery(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.resultsMode_ = resultsMode_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.type_ = type_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.plan_ = plan_;
         if (fragmentsBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          if (((bitField0_ & 0x00000008) != 0)) {
             fragments_ = java.util.Collections.unmodifiableList(fragments_);
             bitField0_ = (bitField0_ & ~0x00000008);
           }
@@ -45541,18 +47639,18 @@ public final class UserProtos {
         } else {
           result.fragments_ = fragmentsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          if (preparedStatementHandleBuilder_ == null) {
+            result.preparedStatementHandle_ = preparedStatementHandle_;
+          } else {
+            result.preparedStatementHandle_ = preparedStatementHandleBuilder_.build();
+          }
           to_bitField0_ |= 0x00000008;
         }
-        if (preparedStatementHandleBuilder_ == null) {
-          result.preparedStatementHandle_ = preparedStatementHandle_;
-        } else {
-          result.preparedStatementHandle_ = preparedStatementHandleBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.autolimitRowcount_ = autolimitRowcount_;
           to_bitField0_ |= 0x00000010;
         }
-        result.autolimitRowcount_ = autolimitRowcount_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -45560,35 +47658,35 @@ public final class UserProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -45678,12 +47776,14 @@ public final class UserProtos {
       private int resultsMode_ = 1;
       /**
        * <code>optional .exec.user.QueryResultsMode results_mode = 1;</code>
+       * @return Whether the resultsMode field is set.
        */
       public boolean hasResultsMode() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.user.QueryResultsMode results_mode = 1;</code>
+       * @return The resultsMode.
        */
       public org.apache.drill.exec.proto.UserProtos.QueryResultsMode getResultsMode() {
         @SuppressWarnings("deprecation")
@@ -45692,6 +47792,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.QueryResultsMode results_mode = 1;</code>
+       * @param value The resultsMode to set.
+       * @return This builder for chaining.
        */
       public Builder setResultsMode(org.apache.drill.exec.proto.UserProtos.QueryResultsMode value) {
         if (value == null) {
@@ -45704,6 +47806,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.user.QueryResultsMode results_mode = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearResultsMode() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -45715,12 +47818,14 @@ public final class UserProtos {
       private int type_ = 1;
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @return Whether the type field is set.
        */
       public boolean hasType() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @return The type.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryType getType() {
         @SuppressWarnings("deprecation")
@@ -45729,6 +47834,8 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
        */
       public Builder setType(org.apache.drill.exec.proto.UserBitShared.QueryType value) {
         if (value == null) {
@@ -45741,6 +47848,7 @@ public final class UserProtos {
       }
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -45756,9 +47864,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string plan = 3;</code>
+       * @return Whether the plan field is set.
        */
       public boolean hasPlan() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -45766,6 +47875,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string plan = 3;</code>
+       * @return The plan.
        */
       public java.lang.String getPlan() {
         java.lang.Object ref = plan_;
@@ -45787,6 +47897,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string plan = 3;</code>
+       * @return The bytes for plan.
        */
       public com.google.protobuf.ByteString
           getPlanBytes() {
@@ -45807,6 +47918,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string plan = 3;</code>
+       * @param value The plan to set.
+       * @return This builder for chaining.
        */
       public Builder setPlan(
           java.lang.String value) {
@@ -45824,6 +47937,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string plan = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPlan() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -45837,6 +47951,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional string plan = 3;</code>
+       * @param value The bytes for plan to set.
+       * @return This builder for chaining.
        */
       public Builder setPlanBytes(
           com.google.protobuf.ByteString value) {
@@ -45852,7 +47968,7 @@ public final class UserProtos {
       private java.util.List<org.apache.drill.exec.proto.BitControl.PlanFragment> fragments_ =
         java.util.Collections.emptyList();
       private void ensureFragmentsIsMutable() {
-        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+        if (!((bitField0_ & 0x00000008) != 0)) {
           fragments_ = new java.util.ArrayList<org.apache.drill.exec.proto.BitControl.PlanFragment>(fragments_);
           bitField0_ |= 0x00000008;
          }
@@ -46153,7 +48269,7 @@ public final class UserProtos {
           fragmentsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.BitControl.PlanFragment, org.apache.drill.exec.proto.BitControl.PlanFragment.Builder, org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder>(
                   fragments_,
-                  ((bitField0_ & 0x00000008) == 0x00000008),
+                  ((bitField0_ & 0x00000008) != 0),
                   getParentForChildren(),
                   isClean());
           fragments_ = null;
@@ -46161,7 +48277,7 @@ public final class UserProtos {
         return fragmentsBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle preparedStatementHandle_ = null;
+      private org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle preparedStatementHandle_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle, org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.Builder, org.apache.drill.exec.proto.UserProtos.PreparedStatementHandleOrBuilder> preparedStatementHandleBuilder_;
       /**
@@ -46171,9 +48287,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.PreparedStatementHandle prepared_statement_handle = 5;</code>
+       * @return Whether the preparedStatementHandle field is set.
        */
       public boolean hasPreparedStatementHandle() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -46182,6 +48299,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional .exec.user.PreparedStatementHandle prepared_statement_handle = 5;</code>
+       * @return The preparedStatementHandle.
        */
       public org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle getPreparedStatementHandle() {
         if (preparedStatementHandleBuilder_ == null) {
@@ -46240,7 +48358,7 @@ public final class UserProtos {
        */
       public Builder mergePreparedStatementHandle(org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle value) {
         if (preparedStatementHandleBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+          if (((bitField0_ & 0x00000010) != 0) &&
               preparedStatementHandle_ != null &&
               preparedStatementHandle_ != org.apache.drill.exec.proto.UserProtos.PreparedStatementHandle.getDefaultInstance()) {
             preparedStatementHandle_ =
@@ -46331,9 +48449,10 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 autolimit_rowcount = 6;</code>
+       * @return Whether the autolimitRowcount field is set.
        */
       public boolean hasAutolimitRowcount() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <pre>
@@ -46341,6 +48460,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 autolimit_rowcount = 6;</code>
+       * @return The autolimitRowcount.
        */
       public int getAutolimitRowcount() {
         return autolimitRowcount_;
@@ -46351,6 +48471,8 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 autolimit_rowcount = 6;</code>
+       * @param value The autolimitRowcount to set.
+       * @return This builder for chaining.
        */
       public Builder setAutolimitRowcount(int value) {
         bitField0_ |= 0x00000020;
@@ -46364,6 +48486,7 @@ public final class UserProtos {
        * </pre>
        *
        * <code>optional int32 autolimit_rowcount = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAutolimitRowcount() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -46813,15 +48936,7 @@ public final class UserProtos {
       "ON_ALL\020\002B+\n\033org.apache.drill.exec.protoB" +
       "\nUserProtosH\001"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.apache.drill.exec.proto.SchemaDefProtos.getDescriptor(),
@@ -46830,7 +48945,7 @@ public final class UserProtos {
           org.apache.drill.exec.proto.BitData.getDescriptor(),
           org.apache.drill.exec.proto.BitControl.getDescriptor(),
           org.apache.drill.exec.proto.ExecProtos.getDescriptor(),
-        }, assigner);
+        });
     internal_static_exec_user_Property_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_exec_user_Property_fieldAccessorTable = new

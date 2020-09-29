@@ -22,9 +22,11 @@ import java.util.regex.Pattern;
 
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HBaseRegexParser {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseRegexParser.class);
+  private static final Logger logger = LoggerFactory.getLogger(HBaseRegexParser.class);
 
   /**
    * Regular expression pattern to parse the value operand of the SQL LIKE operator.
@@ -45,9 +47,9 @@ public class HBaseRegexParser {
 
   private final String escapeChar_;
 
-  private String regexString_ = null;
+  private String regexString_;
 
-  private String prefixString_ = null;
+  private String prefixString_;
 
   public HBaseRegexParser(FunctionCall call) {
     this(likeString(call), escapeString(call));
@@ -152,12 +154,12 @@ public class HBaseRegexParser {
   }
 
   private static String likeString(FunctionCall call) {
-    return ((QuotedString) call.args.get(1)).value;
+    return ((QuotedString) call.arg(1)).value;
   }
 
   private static Character escapeString(FunctionCall call) {
-    if (call.args.size() > 2) {
-      return ((QuotedString) call.args.get(2)).value.charAt(0);
+    if (call.argCount() > 2) {
+      return ((QuotedString) call.arg(2)).value.charAt(0);
     }
     return null;
   }

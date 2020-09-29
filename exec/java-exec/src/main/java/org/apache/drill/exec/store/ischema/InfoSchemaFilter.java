@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode.Type;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 
@@ -149,7 +151,7 @@ public class InfoSchemaFilter {
 
   private Result evaluateHelperFunction(Map<String, String> recordValues, FunctionExprNode exprNode) {
     switch (exprNode.function) {
-      case "like": {
+      case FunctionNames.LIKE: {
         FieldExprNode col = (FieldExprNode) exprNode.args.get(0);
         ConstantExprNode pattern = (ConstantExprNode) exprNode.args.get(1);
         ConstantExprNode escape = exprNode.args.size() > 2 ? (ConstantExprNode) exprNode.args.get(2) : null;
@@ -166,16 +168,16 @@ public class InfoSchemaFilter {
 
         return Result.INCONCLUSIVE;
       }
-      case "equal":
-      case "not equal":
-      case "notequal":
-      case "not_equal": {
+      case FunctionNames.EQ:
+      case "not equal": // TODO: Is this name correct?
+      case "notequal":  // TODO: Is this name correct?
+      case FunctionNames.NE: {
         FieldExprNode arg0 = (FieldExprNode) exprNode.args.get(0);
         ConstantExprNode arg1 = (ConstantExprNode) exprNode.args.get(1);
 
         final String value = recordValues.get(arg0.field);
         if (value != null) {
-          if (exprNode.function.equals("equal")) {
+          if (exprNode.function.equals(FunctionNames.EQ)) {
             return arg1.value.equals(value) ? Result.TRUE : Result.FALSE;
           } else {
             return arg1.value.equals(value) ? Result.FALSE : Result.TRUE;
@@ -185,7 +187,8 @@ public class InfoSchemaFilter {
         return Result.INCONCLUSIVE;
       }
 
-      case "booleanor": {
+      case FunctionNames.OR:
+      case "booleanor": { // TODO: Is this name correct?
         // If at least one arg returns TRUE, then the OR function value is TRUE
         // If all args return FALSE, then OR function value is FALSE
         // For all other cases, return INCONCLUSIVE
@@ -202,7 +205,8 @@ public class InfoSchemaFilter {
         return result;
       }
 
-      case "booleanand": {
+      case FunctionNames.AND:
+      case "booleanand": { // TODO: Is this name correct?
         // If at least one arg returns FALSE, then the AND function value is FALSE
         // If at least one arg returns INCONCLUSIVE, then the AND function value is INCONCLUSIVE
         // If all args return TRUE, then the AND function value is TRUE

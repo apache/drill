@@ -60,7 +60,6 @@ import org.junit.experimental.categories.Category;
  * tests work. Maps, and especially repeated maps, are very complex
  * constructs not to be tackled lightly.
  */
-
 @Category(RowSetTests.class)
 public class TestResultSetLoaderMapArray extends SubOperatorTest {
 
@@ -73,28 +72,26 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
           .add("d", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
 
     // Verify structure and schema
-
     TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(2, actualSchema.size());
     assertTrue(actualSchema.metadata(1).isArray());
     assertTrue(actualSchema.metadata(1).isMap());
-    assertEquals(2, actualSchema.metadata("m").mapSchema().size());
+    assertEquals(2, actualSchema.metadata("m").tupleSchema().size());
     assertEquals(2, actualSchema.column("m").getChildren().size());
     TupleWriter mapWriter = rootWriter.array("m").tuple();
-    assertSame(actualSchema.metadata("m").mapSchema(), mapWriter.schema().mapSchema());
-    assertSame(mapWriter.tupleSchema(), mapWriter.schema().mapSchema());
+    assertSame(actualSchema.metadata("m").tupleSchema(), mapWriter.schema().tupleSchema());
+    assertSame(mapWriter.tupleSchema(), mapWriter.schema().tupleSchema());
     assertSame(mapWriter.tupleSchema().metadata(0), mapWriter.scalar(0).schema());
     assertSame(mapWriter.tupleSchema().metadata(1), mapWriter.scalar(1).schema());
 
     // Write a couple of rows with arrays.
-
     rsLoader.startBatch();
     rootWriter
       .addRow(10, mapArray(
@@ -107,7 +104,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
           mapValue(330, "d3.3")));
 
     // Verify the first batch
-
     RowSet actual = fixture.wrap(rsLoader.harvest());
     RepeatedMapVector mapVector = (RepeatedMapVector) actual.container().getValueVector(1).getValueVector();
     MaterializedField mapField = mapVector.getField();
@@ -130,7 +126,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
 
     // In the second, create a row, then add a map member.
     // Should be back-filled to empty for the first row.
-
     rsLoader.startBatch();
     rootWriter
       .addRow(40, mapArray(
@@ -149,7 +144,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
           mapValue(630, "d6.3", "e6.3")));
 
     // Verify the second batch
-
     actual = fixture.wrap(rsLoader.harvest());
     mapVector = (RepeatedMapVector) actual.container().getValueVector(1).getValueVector();
     mapField = mapVector.getField();
@@ -189,8 +183,8 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
           .addArray("d", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -198,7 +192,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
     // Write a couple of rows with arrays within arrays.
     // (And, of course, the Varchar is actually an array of
     // bytes, so that's three array levels.)
-
     rsLoader.startBatch();
     rootWriter
       .addRow(10, mapArray(
@@ -211,7 +204,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
           mapValue(330, strArray("d3.3.1", "d1.2.2"))));
 
     // Verify the batch
-
     RowSet actual = fixture.wrap(rsLoader.harvest());
     SingleRowSet expected = fixture.rowSetBuilder(schema)
         .addRow(10, mapArray(
@@ -231,7 +223,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
   /**
    * Test a doubly-nested array of maps.
    */
-
   @Test
   public void testDoubleNestedArray() {
     TupleMetadata schema = new SchemaBuilder()
@@ -244,8 +235,8 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
             .resumeMap()
           .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -316,10 +307,9 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
   /**
    * Version of the {#link TestResultSetLoaderProtocol#testOverwriteRow()} test
    * that uses nested columns inside an array of maps. Here we must call
-   * <tt>start()</tt> to reset the array back to the initial start position after
+   * {@code start()} to reset the array back to the initial start position after
    * each "discard."
    */
-
   @Test
   public void testOverwriteRow() {
     TupleMetadata schema = new SchemaBuilder()
@@ -329,15 +319,14 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
           .add("c", MinorType.VARCHAR)
         .resumeSchema()
       .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
 
     // Can't use the shortcut to populate rows when doing overwrites.
-
     ScalarWriter aWriter = rootWriter.scalar("a");
     ArrayWriter maWriter = rootWriter.array("m");
     TupleWriter mWriter = maWriter.tuple();
@@ -347,7 +336,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
     // Write 100,000 rows, overwriting 99% of them. This will cause vector
     // overflow and data corruption if overwrite does not work; but will happily
     // produce the correct result if everything works as it should.
-
     byte value[] = new byte[512];
     Arrays.fill(value, (byte) 'X');
     int count = 0;
@@ -367,7 +355,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
     }
 
     // Verify using a reader.
-
     RowSet result = fixture.wrap(rsLoader.harvest());
     assertEquals(count / 100, result.rowCount());
     RowSetReader reader = result.reader();
@@ -393,7 +380,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
    * Check that the "fill-empties" logic descends down into
    * a repeated map.
    */
-
   @Test
   public void testOmittedValues() {
     TupleMetadata schema = new SchemaBuilder()
@@ -403,9 +389,9 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
           .addNullable("b", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -467,7 +453,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
    * Test that memory is released if the loader is closed with an active
    * batch (that is, before the batch is harvested.)
    */
-
   @Test
   public void testCloseWithoutHarvest() {
     TupleMetadata schema = new SchemaBuilder()
@@ -476,9 +461,9 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
           .add("b", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -498,7 +483,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
 
     // Don't harvest the batch. Allocator will complain if the
     // loader does not release memory.
-
     rsLoader.close();
   }
 }

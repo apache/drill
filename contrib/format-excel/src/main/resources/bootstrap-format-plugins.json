@@ -11,6 +11,17 @@
         }
       }
     },
+    "cp": {
+      "type": "file",
+      "formats": {
+        "excel": {
+          "type": "excel",
+          "extensions": [
+            "xlsx"
+          ]
+        }
+      }
+    },
     "s3": {
       "type": "file",
       "formats": {

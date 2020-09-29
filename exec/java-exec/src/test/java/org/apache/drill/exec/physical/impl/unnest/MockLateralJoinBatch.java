@@ -45,7 +45,7 @@ import java.util.List;
  */
 public class MockLateralJoinBatch implements LateralContract, CloseableRecordBatch {
 
-  private RecordBatch incoming;
+  private final RecordBatch incoming;
 
   private int recordIndex = 0;
   private RecordBatch unnest;
@@ -57,7 +57,7 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
   private final FragmentContext context;
   private  final OperatorContext oContext;
 
-  private List<ValueVector> resultList = new ArrayList<>();
+  private final List<ValueVector> resultList = new ArrayList<>();
 
   public MockLateralJoinBatch(FragmentContext context, OperatorContext oContext, RecordBatch incoming) {
     this.context = context;
@@ -98,6 +98,7 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
     return unnest;
   }
 
+  @Override
   public IterOutcome next() {
 
     IterOutcome currentOutcome = incoming.next();
@@ -138,8 +139,6 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
         }
         return currentOutcome;
       case NONE:
-      case STOP:
-      case OUT_OF_MEMORY:
         isDone = true;
         return currentOutcome;
       case NOT_YET:
@@ -163,15 +162,10 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
   }
 
   @Override
-  public boolean hasFailed() {
-    return false;
-  }
+  public void dump() { }
 
   @Override
-  public void dump() {
-  }
-
-  @Override public int getRecordCount() {
+  public int getRecordCount() {
     return 0;
   }
 
@@ -190,23 +184,28 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
     return context;
   }
 
-  @Override public BatchSchema getSchema() {
+  @Override
+  public BatchSchema getSchema() {
     return null;
   }
 
-  @Override public void kill(boolean sendUpstream) {
-    unnest.kill(sendUpstream);
+  @Override
+  public void cancel() {
+    unnest.cancel();
   }
 
-  @Override public VectorContainer getOutgoingContainer() {
+  @Override
+  public VectorContainer getOutgoingContainer() {
     return null;
   }
 
-  @Override public TypedFieldId getValueVectorId(SchemaPath path) {
+  @Override
+  public TypedFieldId getValueVectorId(SchemaPath path) {
     return null;
   }
 
-  @Override public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
+  @Override
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
     return null;
   }
 
@@ -242,7 +241,8 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
   @Override
   public VectorContainer getContainer() { return null; }
 
-  @Override public Iterator<VectorWrapper<?>> iterator() {
+  @Override
+  public Iterator<VectorWrapper<?>> iterator() {
     return null;
   }
 }

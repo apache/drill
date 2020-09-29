@@ -19,17 +19,17 @@
         "psv" : {
           "type" : "text",
           "extensions" : [ "tbl" ],
-          "delimiter" : "|"
+          "fieldDelimiter" : "|"
         },
         "csv" : {
           "type" : "text",
           "extensions" : [ "csv" ],
-          "delimiter" : ","
+          "fieldDelimiter" : ","
         },
         "tsv" : {
           "type" : "text",
           "extensions" : [ "tsv" ],
-          "delimiter" : "\t"
+          "fieldDelimiter" : "\t"
         },
         "httpd" : {
           "type" : "httpd",
@@ -50,7 +50,8 @@
           "type" : "pcapng"
         },
         "avro" : {
-          "type" : "avro"
+          "type" : "avro",
+          "extensions" : [ "avro" ]
         },
         "sequencefile" : {
           "type" : "sequencefile",
@@ -90,17 +91,17 @@
         "psv" : {
           "type" : "text",
           "extensions" : [ "tbl" ],
-          "delimiter" : "|"
+          "fieldDelimiter" : "|"
         },
         "csv" : {
           "type" : "text",
           "extensions" : [ "csv" ],
-          "delimiter" : ","
+          "fieldDelimiter" : ","
         },
         "tsv" : {
           "type" : "text",
           "extensions" : [ "tsv" ],
-          "delimiter" : "\t"
+          "fieldDelimiter" : "\t"
         },
         "parquet" : {
           "type" : "parquet"
@@ -109,7 +110,13 @@
           "type" : "json",
           "extensions" : [ "json" ]
         },
-        "avro" : {
+        "pcap" : {
+          "type" : "pcap"
+        },
+        "pcapng" : {
+          "type" : "pcapng"
+        },
+       "avro" : {
           "type" : "avro"
         },
         "sequencefile" : {
@@ -119,7 +126,7 @@
         "csvh" : {
           "type" : "text",
           "extensions" : [ "csvh" ],
-          "delimiter" : ",",
+          "fieldDelimiter" : ",",
           "extractHeader" : true
         }
       },
@@ -132,16 +139,22 @@
         "csv" : {
           "type" : "text",
           "extensions" : [ "csv" ],
-          "delimiter" : ","
+          "fieldDelimiter" : ","
         },
         "tsv" : {
           "type" : "text",
           "extensions" : [ "tsv" ],
-          "delimiter" : "\t"
+          "fieldDelimiter" : "\t"
         },
         "json" : {
           "type" : "json",
           "extensions" : [ "json" ]
+        },
+        "pcap" : {
+          "type" : "pcap"
+        },
+        "pcapng" : {
+          "type" : "pcapng"
         },
         "parquet" : {
           "type" : "parquet"
@@ -152,7 +165,7 @@
         "csvh" : {
           "type" : "text",
           "extensions" : [ "csvh" ],
-          "delimiter" : ",",
+          "fieldDelimiter" : ",",
           "extractHeader" : true
         },
         "image" : {

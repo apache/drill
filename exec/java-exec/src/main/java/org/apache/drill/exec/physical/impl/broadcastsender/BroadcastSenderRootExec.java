@@ -95,9 +95,6 @@ public class BroadcastSenderRootExec extends BaseRootExec {
     RecordBatch.IterOutcome out = next(incoming);
     logger.debug("Outcome of sender next {}", out);
     switch(out){
-      case OUT_OF_MEMORY:
-        throw new OutOfMemoryException();
-      case STOP:
       case NONE:
         for (int i = 0; i < tunnels.length; ++i) {
           FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLast(

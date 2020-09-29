@@ -51,7 +51,7 @@ public class ImplCreator {
 
   private final LinkedList<CloseableRecordBatch> operators = Lists.newLinkedList();
 
-  private ImplCreator() {}
+  private ImplCreator() { }
 
   private List<CloseableRecordBatch> getOperators() {
     return operators;
@@ -107,8 +107,9 @@ public class ImplCreator {
     return null;
   }
 
-  /** Create RootExec and its children (RecordBatches) for given FragmentRoot */
-
+  /**
+   * Create RootExec and its children (RecordBatches) for given FragmentRoot
+   */
   @SuppressWarnings("unchecked")
   private RootExec getRootExec(final FragmentRoot root, final ExecutorFragmentContext context) throws ExecutionSetupException {
     final List<RecordBatch> childRecordBatches = getChildren(root, context);
@@ -132,8 +133,9 @@ public class ImplCreator {
     }
   }
 
-
-  /** Create a RecordBatch and its children for given PhysicalOperator */
+  /**
+   * Create a RecordBatch and its children for given PhysicalOperator
+   */
   @VisibleForTesting
   public RecordBatch getRecordBatch(final PhysicalOperator op, final ExecutorFragmentContext context) throws ExecutionSetupException {
     Preconditions.checkNotNull(op);

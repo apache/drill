@@ -22,6 +22,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.BiRel;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.metastore.analyze.MetastoreAnalyzeConstants;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -87,7 +88,7 @@ public class MetadataControllerPrel extends BiRel implements DrillRelNode, Prel 
 
   @Override
   protected RelDataType deriveRowType() {
-    return getCluster().getTypeFactory().builder()
+    return new RelDataTypeFactory.Builder(getCluster().getTypeFactory())
         .add(MetastoreAnalyzeConstants.OK_FIELD_NAME, SqlTypeName.BOOLEAN)
         .add(MetastoreAnalyzeConstants.SUMMARY_FIELD_NAME, SqlTypeName.VARCHAR)
         .build();

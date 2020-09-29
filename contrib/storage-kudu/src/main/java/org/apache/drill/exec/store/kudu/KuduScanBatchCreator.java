@@ -32,7 +32,6 @@ import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class KuduScanBatchCreator implements BatchCreator<KuduSubScan>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduScanBatchCreator.class);
 
   @Override
   public ScanBatch getBatch(ExecutorFragmentContext context, KuduSubScan subScan, List<RecordBatch> children)
@@ -53,5 +52,4 @@ public class KuduScanBatchCreator implements BatchCreator<KuduSubScan>{
     }
     return new ScanBatch(subScan, context, readers);
   }
-
 }

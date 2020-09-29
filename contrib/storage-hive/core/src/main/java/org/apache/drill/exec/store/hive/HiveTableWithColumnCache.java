@@ -28,6 +28,7 @@ import java.util.Map;
  * This class is wrapper of {@link Table} class and used for
  * storage of such additional information as column lists cache.
  */
+@SuppressWarnings("serial")
 public class HiveTableWithColumnCache extends Table {
 
   private ColumnListsCache columnListsCache;

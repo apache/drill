@@ -20,6 +20,7 @@ package org.apache.drill.exec.work;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.fragment.Wrapper;
@@ -31,7 +32,6 @@ import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.codehaus.jackson.map.ObjectMapper;
 
 public class QueryWorkUnit {
 

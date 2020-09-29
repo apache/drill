@@ -63,7 +63,7 @@ public class JsonReader extends BaseJsonReader {
 
   private final FieldSelection selection;
 
-  private JsonReader(Builder builder) {
+  public JsonReader(Builder builder) {
     super(builder.managedBuf, builder.enableNanInf, builder.enableEscapeAnyChar, builder.skipOuterList);
     selection = FieldSelection.getFieldSelection(builder.columns);
     workingBuffer = builder.workingBuffer;

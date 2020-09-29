@@ -27,30 +27,40 @@ import java.nio.file.Paths;
 
 /**
  * <p>
- * This class is used to create consistently named and safe temp directories for unit tests.
+ * This class is used to create consistently named and safe temp directories for
+ * unit tests.
+ * </p>
+ * <p>
+ * A {@link DirTestWatcher} is added to a test by declaring it as a JUnit
+ * {@link org.junit.Rule}. A {@link org.junit.Rule Rule} is a piece of code that
+ * is run before and after every JUnit test marked with the
+ * {@link org.junit.Test Test} annotation. When the {@link DirTestWatcher} is
+ * added to a test class the {@link DirTestWatcher} will create a temp directory
+ * before each of your {@link org.junit.Test Test}s and optionally delete the
+ * temp directory after each of your {@link org.junit.Test Test}s. The <b>base
+ * temp directory</b> created by the {@link DirTestWatcher} is in the
+ * <b>target</b> folder of the maven project and has the form <b>(my test class
+ * fully qualified name)/(my test method name)</b>. So in the context of the
+ * code example below, the temp directory created for each test in <b>target</b>
+ * will be <b>my.proj.MyTestClass/myTestMethod1</b> and
+ * <b>my.proj.MyTestClass/myTestMethod2</b> respectively.
+ * </p>
+ * <p>
+ * The temp directory created by the {@link DirTestWatcher} can be used within a
+ * test by simply calling the {@link DirTestWatcher#getDir()} method on the
+ * {@link DirTestWatcher} within your unit test.
  * </p>
  *
  * <p>
- * A {@link DirTestWatcher} is added to a test by declaring it as a JUnit {@link org.junit.Rule}. A {@link org.junit.Rule Rule} is
- * a piece of code that is run before and after every JUnit test marked with the {@link org.junit.Test Test} annotation. When the
- * {@link DirTestWatcher} is added to a test class the {@link DirTestWatcher} will create a temp directory before each of your
- * {@link org.junit.Test Test}s and optionally delete the temp directory after each of your {@link org.junit.Test Test}s. The <b>base temp directory</b>
- * created by the {@link DirTestWatcher} is in the <b>target</b> folder of the maven project and has the form
- * <b>(my test class fully qualified name)/(my test method name)</b>. So in the context of the code example below, the temp directory created for
- * each test in <b>target</b> will be <b>my.proj.MyTestClass/myTestMethod1</b> and <b>my.proj.MyTestClass/myTestMethod2</b> respectively.
- * </p>
- *
- * <p>
- * The temp directory created by the {@link DirTestWatcher} can be used within a test by simply calling the {@link DirTestWatcher#getDir()}
- * method on the {@link DirTestWatcher} within your unit test.
- * </p>
- *
- * <p>
- * By default, the {@link DirTestWatcher} deletes the temp directory it creates at the end of each {@link org.junit.Test Test}. However, you can create a {@link DirTestWatcher}
- * by doing {@code new DirTestWatcher(false)} to disable the deletion of temp directories after a test. This is useful if you want to examine files after a test runs.
+ * By default, the {@link DirTestWatcher} deletes the temp directory it creates
+ * at the end of each {@link org.junit.Test Test}. However, you can create a
+ * {@link DirTestWatcher} by doing {@code new DirTestWatcher(false)} to disable
+ * the deletion of temp directories after a test. This is useful if you want to
+ * examine files after a test runs.
  * </p>
  *
  * <pre>
+ * <code>
  * package my.proj;
  *
  * public class MyTestClass {
@@ -69,11 +79,14 @@ import java.nio.file.Paths;
  *     // Do stuff in the temp directory
  *   }
  * }
+ * </code>
  * </pre>
  *
  * <p>
- * <b>Note:</b> In the code sample above, the directories returned by {@link DirTestWatcher#getDir()} in myTestMethod1 and myTestMethod2 are
- * <b>my.proj.MyTestClass/myTestMethod1</b> and <b>my.proj.MyTestClass/myTestMethod2</b> respectively.
+ * <b>Note:</b> In the code sample above, the directories returned by
+ * {@link DirTestWatcher#getDir()} in myTestMethod1 and myTestMethod2 are
+ * <b>my.proj.MyTestClass/myTestMethod1</b> and
+ * <b>my.proj.MyTestClass/myTestMethod2</b> respectively.
  * </p>
  */
 public class DirTestWatcher extends TestWatcher {
@@ -84,15 +97,20 @@ public class DirTestWatcher extends TestWatcher {
   private boolean deleteDirAtEnd = true;
 
   /**
-   * Creates a {@link DirTestWatcher} that deletes temp directories after the {@link TestWatcher} completes.
+   * Creates a {@link DirTestWatcher} that deletes temp directories after the
+   * {@link TestWatcher} completes.
    */
   public DirTestWatcher() {
   }
 
   /**
-   * Creates a {@link DirTestWatcher} which can delete or keep the temp directory after the {@link TestWatcher} completes.
-   * @param deleteDirAtEnd When true the temp directory created by the {@link DirTestWatcher} is deleted. When false the
-   *                       temp directory created by the {@link DirTestWatcher} is not deleted.
+   * Creates a {@link DirTestWatcher} which can delete or keep the temp
+   * directory after the {@link TestWatcher} completes.
+   *
+   * @param deleteDirAtEnd
+   *          When true the temp directory created by the {@link DirTestWatcher}
+   *          is deleted. When false the temp directory created by the
+   *          {@link DirTestWatcher} is not deleted.
    */
   public DirTestWatcher(boolean deleteDirAtEnd) {
     this.deleteDirAtEnd = deleteDirAtEnd;
@@ -101,9 +119,10 @@ public class DirTestWatcher extends TestWatcher {
   @Override
   protected void starting(Description description) {
     if (description.getMethodName() != null) {
-      dirPath = Paths.get(".","target", description.getClassName(), description.getMethodName()).toString();
+      dirPath = Paths.get(".", "target", description.getClassName(),
+          description.getMethodName()).toString();
     } else {
-      dirPath = Paths.get(".","target", description.getClassName()).toString();
+      dirPath = Paths.get(".", "target", description.getClassName()).toString();
     }
 
     dir = new File(dirPath);
@@ -122,15 +141,16 @@ public class DirTestWatcher extends TestWatcher {
   }
 
   /**
-   * Creates a sub directory with the given relative path in current temp directory
-   * @param relativeDirPath The relative path of the sub directory to create in the current temp directory.
+   * Creates a sub directory with the given relative path in current temp
+   * directory
+   *
+   * @param relativeDirPath
+   *          The relative path of the sub directory to create in the current
+   *          temp directory.
    * @return The {@link java.io.File} object of the newly created sub directory.
    */
   public File makeSubDir(Path relativeDirPath) {
-    File subDir = dir
-      .toPath()
-      .resolve(relativeDirPath)
-      .toFile();
+    File subDir = dir.toPath().resolve(relativeDirPath).toFile();
     subDir.mkdirs();
     return subDir;
   }
@@ -143,6 +163,7 @@ public class DirTestWatcher extends TestWatcher {
 
   /**
    * Gets the {@link java.io.File} object of the current temp directory.
+   *
    * @return The {@link java.io.File} object of the current temp directory.
    */
   public File getDir() {
@@ -159,8 +180,9 @@ public class DirTestWatcher extends TestWatcher {
       }
     }
 
-    String message = String.format("Failed to create directory within %s attempts (tried %s0 to %s)",
-      TEMP_DIR_ATTEMPTS, baseName, baseName + (TEMP_DIR_ATTEMPTS - 1));
+    String message = String.format(
+        "Failed to create directory within %s attempts (tried %s0 to %s)",
+        TEMP_DIR_ATTEMPTS, baseName, baseName + (TEMP_DIR_ATTEMPTS - 1));
     throw new IllegalStateException(message);
   }
 }

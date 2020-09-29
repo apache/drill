@@ -188,7 +188,6 @@ public class MetadataControllerContext {
       Objects.requireNonNull(tableInfo, "tableInfo was not set");
       Objects.requireNonNull(location, "location was not set");
       Objects.requireNonNull(segmentColumns, "segmentColumns were not set");
-      Objects.requireNonNull(metadataToHandle, "metadataToHandle was not set");
       Objects.requireNonNull(metadataToRemove, "metadataToRemove was not set");
       return new MetadataControllerContext(this);
     }

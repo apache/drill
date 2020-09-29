@@ -53,7 +53,7 @@ public class JdbcGroupScan extends AbstractGroupScan {
     super("");
     this.sql = sql;
     this.columns = columns;
-    this.plugin = (JdbcStoragePlugin) plugins.getPlugin(config);
+    this.plugin = plugins.resolve(config, JdbcStoragePlugin.class);
     this.rows = rows;
   }
 
@@ -92,6 +92,7 @@ public class JdbcGroupScan extends AbstractGroupScan {
     return sql;
   }
 
+  @Override
   public List<SchemaPath> getColumns() {
     return columns;
   }

@@ -28,8 +28,7 @@ public class SystemTablePluginConfig extends StoragePluginConfig {
 
   public static final SystemTablePluginConfig INSTANCE = new SystemTablePluginConfig();
 
-  private SystemTablePluginConfig() {
-  }
+  private SystemTablePluginConfig() { }
 
   @Override
   public boolean equals(Object o) {
@@ -40,5 +39,4 @@ public class SystemTablePluginConfig extends StoragePluginConfig {
   public int hashCode() {
     return 1;
   }
-
 }

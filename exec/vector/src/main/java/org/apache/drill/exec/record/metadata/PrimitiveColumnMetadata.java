@@ -18,6 +18,7 @@
 package org.apache.drill.exec.record.metadata;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 import org.apache.drill.common.types.BooleanType;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -32,6 +33,8 @@ import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Primitive (non-map) column. Describes non-nullable, nullable and array types
@@ -47,10 +50,8 @@ import org.joda.time.format.ISODateTimeFormat;
  * should generally be set before invoking code that uses the metadata.</li>
  * </ul>
  */
-
 public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrimitiveColumnMetadata.class);
+  private static final Logger logger = LoggerFactory.getLogger(PrimitiveColumnMetadata.class);
 
   public PrimitiveColumnMetadata(MaterializedField schema) {
     super(schema);
@@ -72,13 +73,12 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
       // The above getSize() method uses the deprecated getWidth()
       // method to get the expected VarChar size. If zero (which
       // it will be), try the revised precision field.
-
       int precision = majorType.getPrecision();
       if (precision > 0) {
         return precision;
       } else {
-        // TypeHelper includes the offset vector width
 
+        // TypeHelper includes the offset vector width
         return BasicTypeHelper.getSize(majorType) - 4;
       }
     } else {
@@ -96,13 +96,12 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   }
 
   @Override
-  public ColumnMetadata.StructureType structureType() { return ColumnMetadata.StructureType.PRIMITIVE; }
+  public ColumnMetadata.StructureType structureType() { return StructureType.PRIMITIVE; }
 
   @Override
   public int expectedWidth() {
 
     // If the property is not set, estimate width from the type.
-
     int width = PropertyAccessor.getInt(this, EXPECTED_WIDTH_PROP);
     if (width == 0) {
       width = estimateWidth(majorType());
@@ -118,10 +117,10 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   @Override
   public void setExpectedWidth(int width) {
+
     // The allocation utilities don't like a width of zero, so set to
     // 1 as the minimum. Adjusted to avoid trivial errors if the caller
     // makes an error.
-
     if (isVariableWidth()) {
       PropertyAccessor.set(this, EXPECTED_WIDTH_PROP, Math.max(1, width));
     }
@@ -281,7 +280,8 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   }
 
   /**
-   * Converts given value instance into String literal representation based on column metadata type.
+   * Converts given value instance into String literal representation based on
+   * column metadata type.
    *
    * @param value value instance
    * @return value in string literal representation
@@ -300,6 +300,36 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
         return dateTimeFormatter().print((Instant) value);
       default:
        return value.toString();
+    }
+  }
+
+  @Override
+  public boolean isEquivalent(ColumnMetadata o) {
+    if (!super.isEquivalent(o)) {
+      return false;
+    }
+
+    PrimitiveColumnMetadata other = (PrimitiveColumnMetadata) o;
+    switch (type) {
+      case DECIMAL18:
+      case DECIMAL28DENSE:
+      case DECIMAL28SPARSE:
+      case DECIMAL38DENSE:
+      case DECIMAL38SPARSE:
+      case DECIMAL9:
+        return Objects.equals(precision, other.precision) &&
+               Objects.equals(scale, other.scale);
+      case VAR16CHAR:
+      case VARBINARY:
+      case VARCHAR:
+      case VARDECIMAL:
+        // Precision is a mess: it should not be needed, as indicated
+        // by -1. But, some MaterializedFields from vectors set the
+        // value to 0.
+        return (precision <= 0 && other.precision <= 0) ||
+                Objects.equals(precision, other.precision);
+      default:
+        return true;
     }
   }
 }

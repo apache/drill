@@ -139,7 +139,7 @@ public class BootStrapContext implements AutoCloseable {
               ExecConstants.SERVICE_PRINCIPAL));
         }
 
-        parts[1] = (parts[1] == "") ? "" : KerberosUtil.canonicalizeInstanceName(parts[1], hostName);
+        parts[1] = ("".equals(parts[1])) ? "" : KerberosUtil.canonicalizeInstanceName(parts[1], hostName);
 
         final String canonicalizedPrincipal = KerberosUtil.getPrincipalFromParts(parts[0], parts[1], parts[2]);
         final String keytab = config.getString(ExecConstants.SERVICE_KEYTAB_LOCATION);

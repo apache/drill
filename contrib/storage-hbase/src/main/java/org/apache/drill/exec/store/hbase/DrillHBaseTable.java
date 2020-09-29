@@ -18,12 +18,10 @@
 package org.apache.drill.exec.store.hbase;
 
 
-
 public class DrillHBaseTable extends AbstractHBaseDrillTable {
 
   public DrillHBaseTable(String storageEngineName, HBaseStoragePlugin plugin, HBaseScanSpec scanSpec) {
     super(storageEngineName, plugin, scanSpec);
     setTableDesc(plugin.getConnection(), scanSpec.getTableName());
   }
-
 }

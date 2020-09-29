@@ -23,6 +23,7 @@ import org.apache.drill.exec.physical.impl.scan.RowBatchReader;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorEvents;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,9 +112,7 @@ import org.slf4j.LoggerFactory;
  * <li>The reader then releases its resources.</li>
  * </ul>
  */
-
 public class ManagedScanFramework implements ScanOperatorEvents {
-
   static final Logger logger = LoggerFactory.getLogger(ManagedScanFramework.class);
 
   /**
@@ -129,7 +128,6 @@ public class ManagedScanFramework implements ScanOperatorEvents {
    * Also manages opening the reader using a scan-specific schema
    * negotiator.
    */
-
   public interface ReaderFactory {
     void bind(ManagedScanFramework framework);
     ManagedReader<? extends SchemaNegotiator> next();
@@ -183,6 +181,10 @@ public class ManagedScanFramework implements ScanOperatorEvents {
 
   public ScanSchemaOrchestrator scanOrchestrator() {
     return scanOrchestrator;
+  }
+
+  public TupleMetadata outputSchema() {
+    return scanOrchestrator.providedSchema();
   }
 
   public CustomErrorContext errorContext() { return builder.errorContext(); }

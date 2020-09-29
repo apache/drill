@@ -47,7 +47,7 @@ public final class KerberosUtil {
     checkNotNull(realm);
 
     return primary +
-        ((instance != "") ? "/" + instance : "")
+        ((!"".equals(instance)) ? "/" + instance : "")
         + "@" + realm;
   }
 

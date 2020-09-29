@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.impl.validate;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
 
 import java.util.Iterator;
 
@@ -120,7 +119,6 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
     this(incoming, false);
   }
 
-
   public void enableBatchValidation(boolean option) {
     validateBatches = option;
   }
@@ -184,8 +182,8 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
   }
 
   @Override
-  public void kill(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
+  public void cancel() {
+    incoming.cancel();
   }
 
   @Override
@@ -227,7 +225,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
                 instNum, batchTypeName, exceptionState, batchState));
       }
       // (Note:  This could use validationState.)
-      if ((!isRepeatable && batchState == NONE) || batchState == STOP) {
+      if (!isRepeatable && batchState == NONE) {
         throw new IllegalStateException(
             String.format(
                 "next() [on #%d, %s] called again after it returned %s."
@@ -271,23 +269,15 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
             validationState = ValidationState.TERMINAL;
           }
           break;
-        case STOP:
-          // STOP is allowed at any time, except if already terminated (checked
-          // above).
-          // STOP moves to terminal high-level state.
-          validationState = ValidationState.TERMINAL;
-          break;
         case NOT_YET:
-        case OUT_OF_MEMORY:
-          // NOT_YET and OUT_OF_MEMORY are allowed at any time, except if
+          // NOT_YET is allowed at any time, except if
           // terminated (checked above).
-          // NOT_YET and OUT_OF_MEMORY OK don't change high-level state.
+          // NOT_YET doesn't change high-level state.
           break;
         default:
           throw new AssertionError(
               "Unhandled new " + IterOutcome.class.getSimpleName() + " value "
               + batchState);
-          //break;
       }
 
       // Validate schema when available.
@@ -384,11 +374,6 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
   }
 
   public RecordBatch getIncoming() { return incoming; }
-
-  @Override
-  public boolean hasFailed() {
-    return exceptionState != null || batchState == STOP;
-  }
 
   @Override
   public void dump() {

@@ -45,13 +45,14 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
 
   private final SystemTable table;
   private final SystemTablePlugin plugin;
-  private int maxRecordsToRead;
+  private final int maxRecordsToRead;
 
   @JsonCreator
   public SystemTableScan(@JsonProperty("table") SystemTable table,
                          @JsonProperty("maxRecordsToRead") int maxRecordsToRead,
                          @JacksonInject StoragePluginRegistry engineRegistry) throws ExecutionSetupException {
-    this(table, maxRecordsToRead, (SystemTablePlugin) engineRegistry.getPlugin(SystemTablePluginConfig.INSTANCE));
+    this(table, maxRecordsToRead,
+        engineRegistry.resolve(SystemTablePluginConfig.INSTANCE, SystemTablePlugin.class));
   }
 
   public SystemTableScan(SystemTable table, SystemTablePlugin plugin) {

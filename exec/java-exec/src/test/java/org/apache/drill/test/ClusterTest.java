@@ -17,11 +17,11 @@
  */
 package org.apache.drill.test;
 
-import java.io.IOException;
-
 import org.apache.drill.common.AutoCloseables;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
+
+import java.io.IOException;
 
 /**
  * Base class for tests that use a single cluster fixture for a set of
@@ -70,7 +70,6 @@ import org.junit.ClassRule;
  * The try-with-resources block ensures that the cluster is shut down at
  * the end of each test method.
  */
-
 public class ClusterTest extends DrillTest {
 
   @ClassRule
@@ -94,7 +93,6 @@ public class ClusterTest extends DrillTest {
    * cluster fixture.
    * @return a test builder that works against the cluster fixture
    */
-
   public TestBuilder testBuilder() {
     return client.testBuilder();
   }
@@ -104,7 +102,6 @@ public class ClusterTest extends DrillTest {
    * cluster fixture.
    * @return the contents of the resource text file
    */
-
   public String getFile(String resource) throws IOException {
     return ClusterFixture.getResource(resource);
   }
@@ -113,8 +110,12 @@ public class ClusterTest extends DrillTest {
     client.runQueriesAndLog(sqlQuery);
   }
 
-  public void runAndPrint(String sqlQuery) throws Exception {
+  public void runAndPrint(String sqlQuery) {
     client.runQueriesAndPrint(sqlQuery);
+  }
+
+  public void runAndPrint(String sqlQuery, Object... args) {
+    runAndPrint(String.format(sqlQuery, args));
   }
 
   public static void run(String query, Object... args) throws Exception {

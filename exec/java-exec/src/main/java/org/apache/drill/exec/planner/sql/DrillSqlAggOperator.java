@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.calcite.util.Optionality;
 import org.apache.calcite.sql.SqlAggFunction;
@@ -89,7 +90,7 @@ public class DrillSqlAggOperator extends SqlAggFunction {
       return new DrillSqlAggOperator(
           name,
           functions,
-          isVarArg ? VarArgOperandTypeChecker.INSTANCE : Checker.getChecker(argCountMin, argCountMax),
+          isVarArg ? OperandTypes.VARIADIC : Checker.getChecker(argCountMin, argCountMax),
           TypeInferenceUtils.getDrillSqlReturnTypeInference(
               name,
               functions));

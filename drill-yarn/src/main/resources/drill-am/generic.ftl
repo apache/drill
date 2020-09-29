@@ -34,7 +34,7 @@
       <link href="/static/css/bootstrap.min.css" rel="stylesheet">
       <link href="/drill-am/static/css/drill-am.css" rel="stylesheet">
 
-      <script src="/static/js/jquery.min.js"></script>
+      <script src="/static/js/jquery-3.4.1.min.js"></script>
       <script src="/static/js/bootstrap.min.js"></script>
 
       <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -46,10 +46,10 @@
       <@page_head/>
     </head>
     <body role="document">
-      <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="navbar navbar-dark bg-dark fixed-top navbar-expand" role="navigation">
         <div class="container-fluid">
           <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <button type="button" class="navbar-toggler" data-toggle="collapse" data-target=".navbar-collapse">
               <span class="sr-only">Toggle navigation</span>
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
@@ -58,19 +58,19 @@
             <a class="navbar-brand" href="/">Apache Drill</a>
           </div>
           <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-              <li><a href="/config">Configuration</a></li>
-              <li><a href="/drillbits">Drillbits</a></li>
-              <li><a href="/manage">Manage</a></li>
-              <li><a href="/history">History</a></li>
+            <ul class="nav navbar-nav mr-auto">
+              <li class="nav-item"><a class="nav-link" href="/config">Configuration</a></li>
+              <li class="nav-item"><a class="nav-link" href="/drillbits">Drillbits</a></li>
+              <li class="nav-item"><a class="nav-link" href="/manage">Manage</a></li>
+              <li class="nav-item"><a class="nav-link" href="/history">History</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-              <li><a href="${docsLink}">Documentation</a>
+              <li class="nav-item"><a class="nav-link" href="${docsLink}">Documentation</a>
               <#if showLogin == true >
-              <li><a href="/login">Log In</a>
+              <li class="nav-item"><a class="nav-link" href="/login">Log In</a>
               </#if>
               <#if showLogout == true >
-              <li><a href="/logout">Log Out (${loggedInUserName})</a>
+              <li class="nav-item"><a class="nav-link" href="/logout">Log Out (${loggedInUserName})</a>
              </#if>
             </ul>
           </div>

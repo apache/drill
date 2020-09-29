@@ -62,8 +62,8 @@ public class TestHashJoinOutcome extends PhysicalOpUnitTestBase {
   private static BatchSchema batchSchemaLeft;
 
   // Input containers -- where row count is not set for the 2nd container !!
-  private List<VectorContainer> uninitialized2ndInputContainersRight = new ArrayList<>(5);
-  private List<VectorContainer> uninitialized2ndInputContainersLeft = new ArrayList<>(5);
+  private final List<VectorContainer> uninitialized2ndInputContainersRight = new ArrayList<>(5);
+  private final List<VectorContainer> uninitialized2ndInputContainersLeft = new ArrayList<>(5);
 
   private RowSet.SingleRowSet emptyInputRowSetRight;
   private RowSet.SingleRowSet emptyInputRowSetLeft;
@@ -188,16 +188,6 @@ public class TestHashJoinOutcome extends PhysicalOpUnitTestBase {
 
     gotOutcome = hjBatch.next();
     assertSame(gotOutcome, expectedOutcome); // verify returned outcome
-  }
-
-  @Test
-  public void testHashJoinStopOutcomeUninitRightSide() {
-    testHashJoinOutcomes(UninitializedSide.Right, RecordBatch.IterOutcome.STOP, RecordBatch.IterOutcome.STOP);
-  }
-
-  @Test
-  public void testHashJoinStopOutcomeUninitLeftSide() {
-    testHashJoinOutcomes(UninitializedSide.Left, RecordBatch.IterOutcome.STOP, RecordBatch.IterOutcome.STOP);
   }
 
   @Test

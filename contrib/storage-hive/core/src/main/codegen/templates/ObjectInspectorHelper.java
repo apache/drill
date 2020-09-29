@@ -48,7 +48,8 @@ public class ObjectInspectorHelper {
   private static Multimap<MinorType, Class> OIMAP_REQUIRED = ArrayListMultimap.create();
   private static Multimap<MinorType, Class> OIMAP_OPTIONAL = ArrayListMultimap.create();
   static {
-<#list drillOI.map as entry>
+<#assign entries = drillDataType.map + drillOI.map />
+<#list entries as entry>
     <#if entry.needOIForDrillType == true>
     OIMAP_REQUIRED.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}${entry.hiveOI}.Required.class);
     OIMAP_OPTIONAL.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}${entry.hiveOI}.Optional.class);
@@ -91,7 +92,8 @@ public class ObjectInspectorHelper {
       case PRIMITIVE: {
         PrimitiveObjectInspector poi = (PrimitiveObjectInspector)oi;
         switch(poi.getPrimitiveCategory()) {
-<#list drillOI.map as entry>
+<#assign entries = drillDataType.map + drillOI.map />
+<#list entries as entry>
           case ${entry.hiveType}:{
             JType holderClass = TypeHelper.getHolderType(m, returnType, TypeProtos.DataMode.OPTIONAL);
             block.assign(returnValueHolder, JExpr._new(holderClass));
@@ -126,7 +128,8 @@ public class ObjectInspectorHelper {
 
   private static Map<PrimitiveCategory, MinorType> TYPE_HIVE2DRILL = new HashMap<>();
   static {
-<#list drillOI.map as entry>
+<#assign entries = drillDataType.map + drillOI.map />
+<#list entries as entry>
     TYPE_HIVE2DRILL.put(PrimitiveCategory.${entry.hiveType}, MinorType.${entry.drillType?upper_case});
 </#list>
   }
@@ -156,7 +159,8 @@ public class ObjectInspectorHelper {
       case PRIMITIVE: {
         PrimitiveObjectInspector poi = (PrimitiveObjectInspector)oi;
         switch(poi.getPrimitiveCategory()) {
-<#list drillOI.map as entry>
+<#assign entries = drillDataType.map + drillOI.map />
+<#list entries as entry>
           case ${entry.hiveType}:{
             JConditional jc = block._if(returnValue.eq(JExpr._null()));
             jc._then().assign(returnValueHolder.ref("isSet"), JExpr.lit(0));
@@ -201,17 +205,25 @@ public class ObjectInspectorHelper {
             jnullif._else().add(returnValueHolder.ref("buffer").invoke("setIndex").arg(JExpr.lit(0)).arg(data.ref("length")));
 
           <#elseif entry.hiveType == "TIMESTAMP">
-            JVar tsVar = jc._else().decl(m.directClass(java.sql.Timestamp.class.getCanonicalName()), "ts",
+            JVar tsVar = jc._else().decl(m.directClass(${entry.javaType}.class.getCanonicalName()), "ts",
               castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
+              <#if entry.javaType == "org.apache.hadoop.hive.common.type.Timestamp">
+            jc._else().assign(returnValueHolder.ref("value"), tsVar.invoke("toEpochMilli"));
+              <#else>
             // Bringing relative timestamp value without timezone info to timestamp value in UTC, since Drill keeps date-time values in UTC
             JVar localDateTimeVar = jc._else().decl(m.directClass(org.joda.time.LocalDateTime.class.getCanonicalName()), "localDateTime",
                 JExpr._new(m.directClass(org.joda.time.LocalDateTime.class.getCanonicalName())).arg(tsVar));
             jc._else().assign(returnValueHolder.ref("value"), localDateTimeVar.invoke("toDateTime")
                 .arg(m.directClass(org.joda.time.DateTimeZone.class.getCanonicalName()).staticRef("UTC")).invoke("getMillis"));
+              </#if>
           <#elseif entry.hiveType == "DATE">
-            JVar dVar = jc._else().decl(m.directClass(java.sql.Date.class.getCanonicalName()), "d",
+            JVar dVar = jc._else().decl(m.directClass(${entry.javaType}.class.getCanonicalName()), "d",
               castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
+              <#if entry.javaType == "org.apache.hadoop.hive.common.type.Date">
+            jc._else().assign(returnValueHolder.ref("value"), dVar.invoke("toEpochMilli"));
+              <#else>
             jc._else().assign(returnValueHolder.ref("value"), dVar.invoke("getTime"));
+              </#if>
           <#else>
             jc._else().assign(returnValueHolder.ref("value"),
               castedOI.invoke("get").arg(returnValue));

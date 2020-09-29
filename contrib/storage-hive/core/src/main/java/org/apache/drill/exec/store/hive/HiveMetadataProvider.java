@@ -31,9 +31,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
@@ -41,6 +41,8 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
@@ -63,7 +65,8 @@ import java.util.stream.Collectors;
  * loaded, InputSplits are cached to speedup subsequent access.
  */
 public class HiveMetadataProvider {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveMetadataProvider.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(HiveMetadataProvider.class);
 
   public static final int RECORD_SIZE = 1024;
 
@@ -99,7 +102,7 @@ public class HiveMetadataProvider {
     HiveTableWithColumnCache table = hiveReadEntry.getTable();
     try {
       if (!isPartitionedTable) {
-        Properties properties = MetaStoreUtils.getTableMetadata(table);
+        Properties properties = new Table(table).getMetadata();
         HiveStats stats = HiveStats.getStatsFromProps(properties);
         if (stats.valid()) {
           return stats;
@@ -393,7 +396,7 @@ public class HiveMetadataProvider {
    */
   public static class HiveStats {
 
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveStats.class);
+    private static final Logger logger = LoggerFactory.getLogger(HiveStats.class);
 
     private long numRows;
     private long sizeInBytes;

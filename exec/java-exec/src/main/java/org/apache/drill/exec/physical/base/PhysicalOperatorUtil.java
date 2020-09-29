@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -24,19 +25,18 @@ import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.scanner.persistence.ScanResult;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.record.VectorAccessible;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PhysicalOperatorUtil {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalOperatorUtil.class);
+  private static final Logger logger = LoggerFactory.getLogger(PhysicalOperatorUtil.class);
 
-
-  private PhysicalOperatorUtil() {}
+  private PhysicalOperatorUtil() { }
 
   public static Set<Class<? extends PhysicalOperator>> getSubTypes(ScanResult classpathScan) {
     final Set<Class<? extends PhysicalOperator>> ops = classpathScan.getImplementations(PhysicalOperator.class);
@@ -46,16 +46,21 @@ public class PhysicalOperatorUtil {
   }
 
   /**
-   * Helper method to create a list of MinorFragmentEndpoint instances from a given endpoint assignment list.
+   * Helper method to create a list of {@code MinorFragmentEndpoint} instances from a
+   * given endpoint assignment list.
    *
-   * @param endpoints Assigned endpoint list. Index of each endpoint in list indicates the MinorFragmentId of the
-   *                  fragment that is assigned to the endpoint.
-   * @return
+   * @param endpoints
+   *          Assigned endpoint list. Index of each endpoint in list indicates
+   *          the MinorFragmentId of the fragment that is assigned to the
+   *          endpoint.
+   * @return a list of (minor fragment id, endpoint) pairs in which the
+   * minor fragment ID is reified as a member. Items are indexed by minor fragment
+   * ID.
    */
   public static List<MinorFragmentEndpoint> getIndexOrderedEndpoints(List<DrillbitEndpoint> endpoints) {
-    List<MinorFragmentEndpoint> destinations = Lists.newArrayList();
+    List<MinorFragmentEndpoint> destinations = new ArrayList<>();
     int minorFragmentId = 0;
-    for(DrillbitEndpoint endpoint : endpoints) {
+    for (DrillbitEndpoint endpoint : endpoints) {
       destinations.add(new MinorFragmentEndpoint(minorFragmentId, endpoint));
       minorFragmentId++;
     }
@@ -64,20 +69,18 @@ public class PhysicalOperatorUtil {
   }
 
   /**
-   * Helper method tp materialize the given logical expression using the ExpressionTreeMaterializer
+   * Helper method to materialize the given logical expression using the
+   * {@code ExpressionTreeMaterializer}.
    * @param expr Logical expression to materialize
    * @param incoming Incoming record batch
    * @param context Fragment context
    */
   public static LogicalExpression materializeExpression(LogicalExpression expr,
-      VectorAccessible incoming, FragmentContext context) throws SchemaChangeException {
+      VectorAccessible incoming, FragmentContext context)  {
     ErrorCollector collector = new ErrorCollectorImpl();
     LogicalExpression mle = ExpressionTreeMaterializer.materialize(expr, incoming, collector,
             context.getFunctionRegistry());
-    if (collector.hasErrors()) {
-      throw new SchemaChangeException("Failure while materializing expression. "
-          + collector.toErrorString());
-    }
+    collector.reportErrors(logger);
     return mle;
   }
 }

@@ -25,7 +25,6 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
@@ -41,8 +40,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import com.mapr.fs.MapRFileSystem;
 
 public abstract class TableFormatPlugin implements FormatPlugin {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(TableFormatPlugin.class);
 
   private final StoragePluginConfig storageConfig;
   private final TableFormatPluginConfig config;
@@ -83,6 +80,7 @@ public abstract class TableFormatPlugin implements FormatPlugin {
     return false;
   }
 
+  @Override
   public Configuration getFsConf() {
     return fsConf;
   }
@@ -120,11 +118,8 @@ public abstract class TableFormatPlugin implements FormatPlugin {
 
   public synchronized AbstractStoragePlugin getStoragePlugin() {
     if (this.storagePlugin == null) {
-      try {
-        this.storagePlugin = (AbstractStoragePlugin) context.getStorage().getPlugin(storageConfig);
-      } catch (ExecutionSetupException e) {
-        throw new RuntimeException(e);
-      }
+      this.storagePlugin = context.getStorage().resolve(storageConfig,
+          AbstractStoragePlugin.class);
     }
     return storagePlugin;
   }
@@ -133,5 +128,4 @@ public abstract class TableFormatPlugin implements FormatPlugin {
   public MapRFileSystem getMaprFS() {
     return maprfs;
   }
-
 }

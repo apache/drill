@@ -18,7 +18,8 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.channel.ChannelFuture;
-import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
+
+import org.apache.drill.exec.physical.impl.materialize.QueryDataPackage;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -26,12 +27,14 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import java.net.SocketAddress;
 
 /**
- * Interface for getting user session properties and interacting with user connection. Separating this interface from
- * {@link AbstractRemoteConnection} implementation for user connection:
+ * Interface for getting user session properties and interacting with user
+ * connection. Separating this interface from {@link AbstractRemoteConnection}
+ * implementation for user connection:
  * <p><ul>
- * <li> Connection is passed to Foreman and Screen operators. Instead passing this interface exposes few details.
- * <li> Makes it easy to have wrappers around user connection which can be helpful to tap the messages and data
- * going to the actual client.
+ * <li>Connection is passed to Foreman and Screen operators. Instead passing
+ * this interface exposes few details.
+ * <li>Makes it easy to have wrappers around user connection which can be
+ * helpful to tap the messages and data going to the actual client.
  * </ul>
  */
 public interface UserClientConnection {
@@ -41,7 +44,7 @@ public interface UserClientConnection {
   UserSession getSession();
 
   /**
-   * Send query result outcome to client. Outcome is returned through <code>listener</code>
+   * Send query result outcome to client. Outcome is returned through {@code listener}.
    *
    * @param listener
    * @param result
@@ -49,12 +52,12 @@ public interface UserClientConnection {
   void sendResult(RpcOutcomeListener<Ack> listener, QueryResult result);
 
   /**
-   * Send query data to client. Outcome is returned through <code>listener</code>
+   * Send query data to client. Outcome is returned through {@code listener}.
    *
    * @param listener
    * @param result
    */
-  void sendData(RpcOutcomeListener<Ack> listener, QueryWritableBatch result);
+  void sendData(RpcOutcomeListener<Ack> listener, QueryDataPackage data);
 
   /**
    * Returns the {@link ChannelFuture} which will be notified when this

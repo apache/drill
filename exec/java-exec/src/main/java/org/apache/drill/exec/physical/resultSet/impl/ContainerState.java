@@ -19,8 +19,6 @@ package org.apache.drill.exec.physical.resultSet.impl;
 
 import java.util.Collection;
 
-import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetFactory;
-import org.apache.drill.exec.physical.resultSet.ProjectionSet;
 import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 
@@ -40,28 +38,26 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
  * <li>A column state which orchestrates the above three items.</li>
  * <ul>
  */
-
 public abstract class ContainerState {
 
   protected final LoaderInternals loader;
-  protected final ProjectionSet projectionSet;
+  protected final ProjectionFilter projectionSet;
   protected ColumnState parentColumn;
 
   /**
    * Vector cache for this loader.
-   * @see {@link OptionBuilder#setVectorCache()}.
+   * {@see ResultSetOptionBuilder#setVectorCache()}.
    */
-
   protected final ResultVectorCache vectorCache;
 
-  public ContainerState(LoaderInternals loader, ResultVectorCache vectorCache, ProjectionSet projectionSet) {
+  public ContainerState(LoaderInternals loader, ResultVectorCache vectorCache, ProjectionFilter projectionSet) {
     this.loader = loader;
     this.vectorCache = vectorCache;
     this.projectionSet = projectionSet;
   }
 
   public ContainerState(LoaderInternals loader, ResultVectorCache vectorCache) {
-    this(loader, vectorCache, ProjectionSetFactory.projectAll());
+    this(loader, vectorCache, ProjectionFilter.PROJECT_ALL);
   }
 
   public void bindColumnState(ColumnState parentState) {
@@ -71,37 +67,32 @@ public abstract class ContainerState {
   public abstract int innerCardinality();
   protected abstract void addColumn(ColumnState colState);
   protected abstract Collection<ColumnState> columnStates();
+  protected ProjectionFilter projection() { return projectionSet; }
 
   /**
    * Reports whether this container is subject to version management. Version
    * management adds columns to the output container at harvest time based on
    * whether they should appear in the output batch.
    *
-   * @return <tt>true</tt> if versioned
+   * @return {@code true} if versioned
    */
-
   protected abstract boolean isVersioned();
 
   protected LoaderInternals loader() { return loader; }
   public ResultVectorCache vectorCache() { return vectorCache; }
-  public ProjectionSet projectionSet() { return projectionSet; }
 
   public ColumnState addColumn(ColumnMetadata columnSchema) {
 
     // Create the vector, writer and column state
-
     ColumnState colState = loader.columnBuilder().buildColumn(this, columnSchema);
 
     // Add the column to this container
-
     addColumn(colState);
 
     // Set initial cardinality
-
     colState.updateCardinality(innerCardinality());
 
     // Allocate vectors if a batch is in progress.
-
     if (loader().writeable()) {
       colState.allocateVectors();
     }
@@ -116,7 +107,6 @@ public abstract class ContainerState {
    * this value is recursively pushed downward to compute the cardinality
    * of lists of maps that contains lists of maps, and so on.
    */
-
   public void updateCardinality() {
     int innerCardinality = innerCardinality();
     assert innerCardinality > 0;
@@ -129,7 +119,6 @@ public abstract class ContainerState {
    * Start a new batch by shifting the overflow buffers back into the main
    * write vectors and updating the writers.
    */
-
   public void startBatch(boolean schemaOnly) {
     for (ColumnState colState : columnStates()) {
       colState.startBatch(schemaOnly);
@@ -143,7 +132,6 @@ public abstract class ContainerState {
    * for some previous row, depending on exactly when and where the overflow
    * occurs.
    */
-
   public void rollover() {
     for (ColumnState colState : columnStates()) {
       colState.rollover();
@@ -155,7 +143,6 @@ public abstract class ContainerState {
    * vector for harvesting to send downstream. Set aside the look-ahead vector
    * and put the full vector buffer back into the active vector.
    */
-
   public void harvestWithLookAhead() {
     for (ColumnState colState : columnStates()) {
       colState.harvestWithLookAhead();
@@ -166,7 +153,6 @@ public abstract class ContainerState {
    * Clean up state (such as backup vectors) associated with the state
    * for each vector.
    */
-
   public void close() {
     for (ColumnState colState : columnStates()) {
       colState.close();

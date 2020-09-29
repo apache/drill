@@ -79,7 +79,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
     this.allOutcomes = iterOutcomes;
   }
 
-  @Deprecated
   public MockRecordBatch(@Nullable FragmentContext context,
                          @Nullable OperatorContext oContext,
                          @NotNull List<VectorContainer> testContainers,
@@ -127,7 +126,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
   @Override
   public void close() {
     container.clear();
-    container.setRecordCount(0);
+    container.setEmpty();
     currentContainerIndex = 0;
     currentOutcomeIndex = 0;
     if (sv2 != null) {
@@ -161,14 +160,9 @@ public class MockRecordBatch implements CloseableRecordBatch {
   }
 
   @Override
-  public void kill(boolean sendUpstream) {
+  public void cancel() {
     if (!limitWithUnnest) {
       isDone = true;
-      container.clear();
-      container.setRecordCount(0);
-      if (sv2 != null) {
-        sv2.clear();
-      }
     }
   }
 
@@ -255,8 +249,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
         ++currentContainerIndex;
         return currentOutcome;
       case NONE:
-      case STOP:
-      case OUT_OF_MEMORY:
         isDone = true;
       case NOT_YET:
         container.setRecordCount(0);
@@ -288,13 +280,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
   }
 
   @Override
-  public boolean hasFailed() {
-    return false;
-  }
-
-  @Override
-  public void dump() {
-  }
+  public void dump() { }
 
   public static class Builder {
     private final List<RowSet> rowSets = new ArrayList<>();
@@ -327,9 +313,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
     }
 
     public Builder terminateWithError(IterOutcome errorOutcome) {
-      Preconditions.checkArgument(errorOutcome != IterOutcome.STOP);
-      Preconditions.checkArgument(errorOutcome != IterOutcome.OUT_OF_MEMORY);
-
       iterOutcomes.add(errorOutcome);
       return this;
     }

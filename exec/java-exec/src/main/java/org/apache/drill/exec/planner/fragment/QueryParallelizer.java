@@ -28,15 +28,15 @@ import org.apache.drill.exec.work.QueryWorkUnit;
 import java.util.Collection;
 
 /**
- * This class parallelizes the query plan. Once the optimizer finishes its job by producing a
+ * Parallelizes the query plan. Once the optimizer finishes its job by producing a
  * optimized plan, it is the job of this parallelizer to generate a parallel plan out of the
  * optimized physical plan. It does so by using the optimizers estimates for row count etc.
  * There are two kinds of parallelizers as explained below. Currently the difference in
  * both of these parallelizers is only in the memory assignment for the physical operators.
- *
+ * <p>
  * a) Default Parallelizer: It optimistically assumes that the whole cluster is running only the
  *    current query and based on heuristics assigns the optimal memory to the buffered operators.
- *
+ * <p>
  * b) Queue Parallelizer: This parallelizer computes the memory that can be allocated at best based
  *    on the current cluster state(as to how much memory is available) and also the configuration
  *    of the queue that it can run on.

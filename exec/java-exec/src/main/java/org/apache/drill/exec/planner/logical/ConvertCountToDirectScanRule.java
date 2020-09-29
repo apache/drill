@@ -188,7 +188,7 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
     FormatPluginConfig formatConfig = formatSelection.getFormat();
     if (!((formatConfig instanceof ParquetFormatConfig)
       || ((formatConfig instanceof NamedFormatPluginConfig)
-      && ((NamedFormatPluginConfig) formatConfig).name.equals("parquet")))) {
+      && ((NamedFormatPluginConfig) formatConfig).getName().equals("parquet")))) {
       return new ImmutablePair<>(false, null);
     }
 

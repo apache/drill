@@ -22,8 +22,6 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 
-import java.util.stream.Collectors;
-
 /**
  * Describes a base column type for map, dict, repeated map and repeated dict. All are tuples that have a tuple
  * schema as part of the column definition.
@@ -47,21 +45,21 @@ public abstract class AbstractMapColumnMetadata extends AbstractColumnMetadata {
    * the children) of the materialized field provided.
    *
    * @param schema the schema to use
-   * @param mapSchema parent schema
+   * @param tupleSchema parent schema
    */
-  AbstractMapColumnMetadata(MaterializedField schema, TupleSchema mapSchema) {
+  AbstractMapColumnMetadata(MaterializedField schema, TupleSchema tupleSchema) {
     super(schema);
-    if (mapSchema == null) {
+    if (tupleSchema == null) {
       this.schema = new TupleSchema();
     } else {
-      this.schema = mapSchema;
+      this.schema = tupleSchema;
     }
     this.schema.bind(this);
   }
 
   public AbstractMapColumnMetadata(AbstractMapColumnMetadata from) {
     super(from);
-    schema = (TupleSchema) from.schema.copy();
+    schema = from.schema.copy();
   }
 
   public AbstractMapColumnMetadata(String name, MinorType type, DataMode mode, TupleSchema schema) {
@@ -84,7 +82,7 @@ public abstract class AbstractMapColumnMetadata extends AbstractColumnMetadata {
   }
 
   @Override
-  public TupleMetadata mapSchema() {
+  public TupleMetadata tupleSchema() {
     return schema;
   }
 
@@ -100,43 +98,44 @@ public abstract class AbstractMapColumnMetadata extends AbstractColumnMetadata {
   @Override
   public MaterializedField schema() {
     MaterializedField field = emptySchema();
-    for (MaterializedField member : schema.toFieldList()) {
-      field.addChild(member);
-    }
+    schema.toFieldList().forEach(field::addChild);
     return field;
   }
 
   @Override
   public MaterializedField emptySchema() {
     return MaterializedField.create(name,
-        MajorType.newBuilder()
-            .setMinorType(type)
-            .setMode(mode)
-            .build());
+      MajorType.newBuilder()
+        .setMinorType(type)
+        .setMode(mode)
+        .build());
   }
 
   @Override
   public String typeString() {
-    StringBuilder builder = new StringBuilder();
-    if (isArray()) {
-      builder.append("ARRAY<");
-    }
-    builder.append(getStringType())
-        .append("<").append(
-            mapSchema().toMetadataList().stream()
-              .map(ColumnMetadata::columnString)
-              .collect(Collectors.joining(", "))
-        )
-        .append(">");
-    if (isArray()) {
-      builder.append(">");
-    }
-    return builder.toString();
+    String typeString = internalTypeString();
+    return isArray() ? "ARRAY<" + typeString + ">" : typeString;
   }
 
   /**
-   * Returns string representation of type like {@code "STRUCT"} or {@code "MAP"}
-   * @return column type
+   * Returns specific type string representation of the type that extends this class.
+   *
+   * @return type string representation
    */
-  protected abstract String getStringType();
+  protected abstract String internalTypeString();
+
+  @Override
+  protected void appendContents(StringBuilder buf) {
+    buf.append(", schema: ")
+       .append(tupleSchema().toString());
+  }
+
+  @Override
+  public boolean isEquivalent(ColumnMetadata o) {
+    if (!super.isEquivalent(o)) {
+      return false;
+    }
+    AbstractMapColumnMetadata other = (AbstractMapColumnMetadata) o;
+    return schema.equals(other.schema);
+  }
 }

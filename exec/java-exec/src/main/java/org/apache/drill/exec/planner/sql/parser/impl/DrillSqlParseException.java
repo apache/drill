@@ -19,23 +19,33 @@ package org.apache.drill.exec.planner.sql.parser.impl;
 
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Customized {@link SqlParseException} class
  */
 public class DrillSqlParseException extends SqlParseException {
+  private final String sql;
   private final ParseException parseException;
 
-  public DrillSqlParseException(String message, SqlParserPos pos, int[][] expectedTokenSequences,
-                                String[] tokenImages, Throwable ex) {
-    super(message, pos, expectedTokenSequences, tokenImages, ex);
-
-    parseException = (ex instanceof ParseException) ? (ParseException) ex : null;
+  public DrillSqlParseException(String sql, SqlParseException sqlParseException) {
+    this(sql, sqlParseException.getMessage(), sqlParseException.getPos(), sqlParseException.getExpectedTokenSequences(),
+        sqlParseException.getTokenImages(), sqlParseException.getCause());
   }
 
-  public DrillSqlParseException(SqlParseException sqlParseException) {
-    this(sqlParseException.getMessage(), sqlParseException.getPos(), sqlParseException.getExpectedTokenSequences(),
-        sqlParseException.getTokenImages(), sqlParseException.getCause());
+  @VisibleForTesting
+  public DrillSqlParseException(String sql, SqlParserPos pos) {
+    this(sql, null, pos, null, null, null);
+  }
+
+  private DrillSqlParseException(String sql, String message, SqlParserPos pos,
+                                 int[][] expectedTokenSequences,
+                                String[] tokenImages, Throwable ex) {
+    super(message, pos, expectedTokenSequences, tokenImages, ex);
+    this.parseException = (ex instanceof ParseException) ? (ParseException) ex : null;
+    this.sql = sql;
   }
 
   /**
@@ -101,5 +111,44 @@ public class DrillSqlParseException extends SqlParseException {
         .append(".");
 
     return sb.toString();
+  }
+
+  /**
+   * Formats sql query which caused the exception by adding
+   * error pointer ^ under incorrect expression.
+   *
+   * @return The sql with a ^ character under the error
+   */
+  public String getSqlWithErrorPointer() {
+    final String sqlErrorMessageHeader = "SQL Query: ";
+    final SqlParserPos pos = getPos();
+    String formattedSql = sql;
+    if (pos != null) {
+      int issueLineNumber = pos.getLineNum() - 1;  // recalculates to base 0
+      int issueColumnNumber = pos.getColumnNum() - 1;  // recalculates to base 0
+      int messageHeaderLength = sqlErrorMessageHeader.length();
+
+      // If the issue happens on the first line, header width should be calculated alongside with the sql query
+      int shiftLength = (issueLineNumber == 0) ? issueColumnNumber + messageHeaderLength : issueColumnNumber;
+
+      StringBuilder sb = new StringBuilder();
+      String[] lines = sql.split(DrillParserUtil.EOL);
+
+      for (int i = 0; i < lines.length; i++) {
+        sb.append(lines[i]);
+
+        if (i == issueLineNumber) {
+          sb
+              .append(DrillParserUtil.EOL)
+              .append(StringUtils.repeat(' ', shiftLength))
+              .append("^");
+        }
+        if (i < lines.length - 1) {
+          sb.append(DrillParserUtil.EOL);
+        }
+      }
+      formattedSql = sb.toString();
+    }
+    return sqlErrorMessageHeader + formattedSql;
   }
 }

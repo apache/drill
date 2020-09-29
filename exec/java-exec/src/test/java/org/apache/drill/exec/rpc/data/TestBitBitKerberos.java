@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
+import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -41,7 +42,6 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.FragmentWritableBatch;
@@ -145,7 +145,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
     return WritableBatch.getBatchNoHV(records, vectors, false);
   }
 
-  private class TimingOutcome implements RpcOutcomeListener<Ack> {
+  private class TimingOutcome implements RpcOutcomeListener<BitData.AckWithCredit> {
     private AtomicLong max;
     private Stopwatch watch = Stopwatch.createStarted();
 
@@ -160,7 +160,7 @@ public class TestBitBitKerberos extends BaseTestQuery {
     }
 
     @Override
-    public void success(Ack value, ByteBuf buffer) {
+    public void success(BitData.AckWithCredit value, ByteBuf buffer) {
       long micros = watch.elapsed(TimeUnit.MILLISECONDS);
       while (true) {
         long nowMax = max.get();

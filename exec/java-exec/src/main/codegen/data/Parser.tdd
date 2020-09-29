@@ -1,3 +1,4 @@
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -6,13 +7,14 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http:# www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
 {
   # Generated parser implementation class package and name
@@ -75,6 +77,14 @@
   dataTypeParserMethods: [
   ]
 
+  # Binary operators tokens
+  binaryOperatorsTokens: [
+  ]
+
+  # Binary operators initialization
+  extraBinaryExpressions: [
+  ]
+
   # List of files in @includes directory that have parser method
   # implementations for custom SQL statements, literals or types
   # given as part of "statementParserMethods", "literalParserMethods" or
@@ -105,6 +115,7 @@
   # For details please see comment under CALCITE-2405.
    nonReservedKeywords: [
         "A"
+        "ABSENT"
         "ABSOLUTE"
         "ACTION"
         "ADA"
@@ -175,13 +186,16 @@
         "DOY"
         "DYNAMIC_FUNCTION"
         "DYNAMIC_FUNCTION_CODE"
+        "ENCODING"
         "EPOCH"
+        "ERROR"
         "EXCEPTION"
         "EXCLUDE"
         "EXCLUDING"
         "FINAL"
         "FIRST"
         "FOLLOWING"
+        "FORMAT"
         "FORTRAN"
         "FOUND"
         "FRAC_SECOND"
@@ -229,6 +243,7 @@
         "MILLISECOND"
         "MILLENNIUM"
         "MINVALUE"
+        "MONTHS"
         "MORE_"
         "MUMPS"
         "NAME"
@@ -257,6 +272,7 @@
         "PARAMETER_SPECIFIC_SCHEMA"
         "PARTIAL"
         "PASCAL"
+        "PASSING"
         "PASSTHROUGH"
         "PAST"
         "PATH"
@@ -583,7 +599,7 @@
 #       "HAVING",
         "HOLD",
         "HOUR",
-#       # "HOURS", # not a keyword in Calcite
+        "HOURS",
         "IDENTITY",
 #       # "IF", # not a keyword in Calcite
         "IMMEDIATE",
@@ -865,6 +881,16 @@
         "REMOVE"
       ]
 
+  # List of non-reserved keywords to add;
+  # items in this list become non-reserved
+  nonReservedKeywordsToAdd: [
+  ]
+
+  # List of non-reserved keywords to remove;
+  # items in this list become reserved
+  nonReservedKeywordsToRemove: [
+  ]
+
   # List of additional join types. Each is a method with no arguments.
   # Example: LeftSemiJoin()
   joinTypes: [
@@ -876,6 +902,7 @@
   builtinFunctionCallMethods: [
   ]
 
+  includePosixOperators: false,
   includeCompoundIdentifier: false,
   includeBraces: true,
   includeAdditionalDeclarations: false,

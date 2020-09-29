@@ -24,6 +24,7 @@ import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.dotdrill.DotDrillType;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -406,8 +407,8 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
   }
 
   @AfterClass
-  public static void removeMiniDfsBasedStorage() {
-    getDrillbitContext().getStorage().deletePlugin(MINI_DFS_STORAGE_PLUGIN_NAME);
+  public static void removeMiniDfsBasedStorage() throws PluginException {
+    getDrillbitContext().getStorage().remove(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }
 }

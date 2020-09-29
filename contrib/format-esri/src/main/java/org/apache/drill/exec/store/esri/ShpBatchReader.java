@@ -59,7 +59,7 @@ public class ShpBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private FileSplit split;
   private ResultSetLoader loader;
-  private ShpReaderConfig readerConfig;
+  private final ShpReaderConfig readerConfig;
   private Path hadoopShp;
   private Path hadoopDbf;
   private Path hadoopPrj;
@@ -104,7 +104,7 @@ public class ShpBatchReader implements ManagedReader<FileSchemaNegotiator> {
       .addNullable(SHAPE_TYPE_FIELD_NAME, TypeProtos.MinorType.VARCHAR)
       .addNullable(GEOM_FIELD_NAME, TypeProtos.MinorType.VARBINARY);
 
-    negotiator.setTableSchema(builder.buildSchema(), false);
+    negotiator.tableSchema(builder.buildSchema(), false);
     loader = negotiator.build();
 
     rowWriter = loader.writer();
@@ -185,7 +185,7 @@ public class ShpBatchReader implements ManagedReader<FileSchemaNegotiator> {
     gidWriter.setInt(gid);
     sridWriter.setInt(srid);
     shapeTypeWriter.setString(geom.getType().toString());
-    final ByteBuffer buf = (ByteBuffer) OGCGeometry.createFromEsriGeometry(geom, spatialReference).asBinary();
+    final ByteBuffer buf = OGCGeometry.createFromEsriGeometry(geom, spatialReference).asBinary();
     final byte[] bytes = buf.array();
     geomWriter.setBytes(bytes, bytes.length);
     writeDbfRow(dbfRow, rowWriter);

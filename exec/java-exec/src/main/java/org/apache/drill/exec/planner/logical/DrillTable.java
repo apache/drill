@@ -18,7 +18,9 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.io.IOException;
+import java.util.Objects;
 
+import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
@@ -30,7 +32,7 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.metastore.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.exec.physical.base.SchemalessScan;
@@ -168,9 +170,9 @@ public abstract class DrillTable implements Table {
   }
 
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {
-    return new DrillScanRel(context.getCluster(),
-        context.getCluster().traitSetOf(DrillRel.DRILL_LOGICAL),
-        table);
+    // returns non-drill table scan to allow directory-based partition pruning
+    // before table group scan is created
+    return EnumerableTableScan.create(context.getCluster(), table);
   }
 
   @Override
@@ -191,13 +193,7 @@ public abstract class DrillTable implements Table {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((selection == null) ? 0 : selection.hashCode());
-    result = prime * result + ((storageEngineConfig == null) ? 0 : storageEngineConfig.hashCode());
-    result = prime * result + ((storageEngineName == null) ? 0 : storageEngineName.hashCode());
-    result = prime * result + ((userName == null) ? 0 : userName.hashCode());
-    return result;
+    return Objects.hash(selection, storageEngineConfig, storageEngineName, userName);
   }
 
   @Override
@@ -205,42 +201,13 @@ public abstract class DrillTable implements Table {
     if (this == obj) {
       return true;
     }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
     DrillTable other = (DrillTable) obj;
-    if (selection == null) {
-      if (other.selection != null) {
-        return false;
-      }
-    } else if (!selection.equals(other.selection)) {
-      return false;
-    }
-    if (storageEngineConfig == null) {
-      if (other.storageEngineConfig != null) {
-        return false;
-      }
-    } else if (!storageEngineConfig.equals(other.storageEngineConfig)) {
-      return false;
-    }
-    if (storageEngineName == null) {
-      if (other.storageEngineName != null) {
-        return false;
-      }
-    } else if (!storageEngineName.equals(other.storageEngineName)) {
-      return false;
-    }
-    if (userName == null) {
-      if (other.userName != null) {
-        return false;
-      }
-    } else if (!userName.equals(other.userName)) {
-      return false;
-    }
-    return true;
+    return Objects.equals(selection, other.selection) &&
+           Objects.equals(storageEngineConfig, other.storageEngineConfig) &&
+           Objects.equals(storageEngineName, other.storageEngineName) &&
+           Objects.equals(userName, other.userName);
   }
-
 }

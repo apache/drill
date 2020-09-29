@@ -52,6 +52,8 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.QueryWorkUnit.MinorFragmentDefn;
@@ -59,18 +61,22 @@ import org.apache.drill.exec.work.foreman.ForemanSetupException;
 
 
 /**
- * The simple parallelizer determines the level of parallelization of a plan based on the cost of the underlying
- * operations.  It doesn't take into account system load or other factors.  Based on the cost of the query, the
- * parallelization for each major fragment will be determined.  Once the amount of parallelization is done, assignment
- * is done based on round robin assignment ordered by operator affinity (locality) to available execution Drillbits.
+ * The simple parallelizer determines the level of parallelization of a plan
+ * based on the cost of the underlying operations. It doesn't take into account
+ * system load or other factors. Based on the cost of the query, the
+ * parallelization for each major fragment will be determined. Once the amount
+ * of parallelization is done, assignment is done based on round robin
+ * assignment ordered by operator affinity (locality) to available execution
+ * Drillbits.
  */
 public abstract class SimpleParallelizer implements QueryParallelizer {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleParallelizer.class);
+  static final Logger logger = LoggerFactory.getLogger(SimpleParallelizer.class);
 
   private final long parallelizationThreshold;
   private final int maxWidthPerNode;
   private final int maxGlobalWidth;
   private final double affinityFactor;
+  private boolean enableDynamicFC;
 
   protected SimpleParallelizer(QueryContext context) {
     OptionManager optionManager = context.getOptions();
@@ -79,9 +85,10 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
     double cpu_load_average = optionManager.getOption(ExecConstants.CPU_LOAD_AVERAGE);
     final long maxWidth = optionManager.getOption(ExecConstants.MAX_WIDTH_PER_NODE);
     // compute the maxwidth
-    this.maxWidthPerNode = ExecConstants.MAX_WIDTH_PER_NODE.computeMaxWidth(cpu_load_average,maxWidth);
+    this.maxWidthPerNode = ExecConstants.MAX_WIDTH_PER_NODE.computeMaxWidth(cpu_load_average, maxWidth);
     this.maxGlobalWidth = optionManager.getOption(ExecConstants.MAX_WIDTH_GLOBAL_KEY).num_val.intValue();
     this.affinityFactor = optionManager.getOption(ExecConstants.AFFINITY_FACTOR_KEY).float_val.intValue();
+    this.enableDynamicFC = optionManager.getBoolean(ExecConstants.ENABLE_DYNAMIC_CREDIT_BASED_FC);
   }
 
   protected SimpleParallelizer(long parallelizationThreshold, int maxWidthPerNode, int maxGlobalWidth, double affinityFactor) {
@@ -112,19 +119,20 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
   }
 
   public Set<Wrapper> getRootFragments(PlanningSet planningSet) {
-    //The following code gets the root fragment by removing all the dependent fragments on which root fragments depend upon.
-    //This is fine because the later parallelizer code traverses from these root fragments to their respective dependent
-    //fragments.
+    // Gets the root fragment by removing all the dependent fragments on which
+    // root fragments depend upon. This is fine because the later parallelizer
+    // code traverses from these root fragments to their respective dependent
+    // fragments.
     final Set<Wrapper> roots = Sets.newHashSet();
-    for(Wrapper w : planningSet) {
+    for (Wrapper w : planningSet) {
       roots.add(w);
     }
 
-    //roots will be left over with the fragments which are not depended upon by any other fragments.
-    for(Wrapper wrapper : planningSet) {
+    // Roots will be left over with the fragments which are not depended upon by any other fragments.
+    for (Wrapper wrapper : planningSet) {
       final List<Wrapper> fragmentDependencies = wrapper.getFragmentDependencies();
       if (fragmentDependencies != null && fragmentDependencies.size() > 0) {
-        for(Wrapper dependency : fragmentDependencies) {
+        for (Wrapper dependency : fragmentDependencies) {
           if (roots.contains(dependency)) {
             roots.remove(dependency);
           }
@@ -191,7 +199,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
    * @param options List of options set by the user.
    * @param foremanNode foreman node for this query plan.
    * @param queryId  Query ID.
-   * @param activeEndpoints currently active endpoins on which this plan will run.
+   * @param activeEndpoints currently active endpoints on which this plan will run.
    * @param rootFragment Root major fragment.
    * @param session session context.
    * @param queryContextInfo query context.
@@ -233,8 +241,6 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
     throw new UnsupportedOperationException("Use children classes");
   }
 
-
-
   // For every fragment, create a Wrapper in PlanningSet.
   @VisibleForTesting
   public void initFragmentWrappers(Fragment rootFragment, PlanningSet planningSet) {
@@ -254,14 +260,15 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
   private void constructFragmentDependencyGraph(Fragment rootFragment, PlanningSet planningSet) {
 
     // Set up dependency of fragments based on the affinity of exchange that separates the fragments.
-    for(Wrapper currentFragment : planningSet) {
+    for (Wrapper currentFragment : planningSet) {
       ExchangeFragmentPair sendingXchgForCurrFrag = currentFragment.getNode().getSendingExchangePair();
       if (sendingXchgForCurrFrag != null) {
         ParallelizationDependency dependency = sendingXchgForCurrFrag.getExchange().getParallelizationDependency();
         Wrapper receivingFragmentWrapper = planningSet.get(sendingXchgForCurrFrag.getNode());
 
-        //Mostly Receivers of the current fragment depend on the sender of the child fragments. However there is a special case
-        //for DeMux Exchanges where the Sender of the current fragment depends on the receiver of the parent fragment.
+        // Mostly Receivers of the current fragment depend on the sender of the child fragments.
+        // However there is a special case for DeMux Exchanges where the Sender of the current
+        // fragment depends on the receiver of the parent fragment.
         if (dependency == ParallelizationDependency.RECEIVER_DEPENDS_ON_SENDER) {
           receivingFragmentWrapper.addFragmentDependency(currentFragment);
         } else if (dependency == ParallelizationDependency.SENDER_DEPENDS_ON_RECEIVER) {
@@ -272,16 +279,15 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
     planningSet.findRootWrapper(rootFragment);
   }
 
-
   /**
-   * Helper method to call operation on each fragment. Traversal calls operation on child fragments before
-   * calling it on the parent fragment.
+   * Call operation on each fragment. Traversal calls operation
+   * on child fragments before calling it on the parent fragment.
    */
   protected void traverse(Wrapper fragmentWrapper, Consumer<Wrapper> operation) throws PhysicalOperatorSetupException {
 
     final List<Wrapper> fragmentDependencies = fragmentWrapper.getFragmentDependencies();
     if (fragmentDependencies != null && fragmentDependencies.size() > 0) {
-      for(Wrapper dependency : fragmentDependencies) {
+      for (Wrapper dependency : fragmentDependencies) {
         traverse(dependency, operation);
       }
     }
@@ -298,8 +304,8 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
 
     MinorFragmentDefn rootFragmentDefn = null;
     FragmentRoot rootOperator = null;
-    // now we generate all the individual plan fragments and associated assignments. Note, we need all endpoints
-    // assigned before we can materialize, so we start a new loop here rather than utilizing the previous one.
+    // Generate all the individual plan fragments and associated assignments. Note, we need all endpoints
+    // assigned before we can materialize.
     for (Wrapper wrapper : planningSet) {
       Fragment node = wrapper.getNode();
       final PhysicalOperator physicalOperatorRoot = node.getRoot();
@@ -310,9 +316,8 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
                 "The root fragment must always have parallelization one. In the current case, the width was set to %d.",
                 wrapper.getWidth()));
       }
-      // a fragment is self driven if it doesn't rely on any other exchanges.
+      // A fragment is self-driven if it doesn't rely on any other exchanges.
       boolean isLeafFragment = node.getReceivingExchangePairs().size() == 0;
-
       // Create a minorFragment for each major fragment.
       for (int minorFragmentId = 0; minorFragmentId < wrapper.getWidth(); minorFragmentId++) {
         IndexedFragmentNode iNode = new IndexedFragmentNode(minorFragmentId, wrapper,
@@ -338,7 +343,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
             .setMemInitial(wrapper.getInitialAllocation())
             .setMemMax(wrapper.getMaxAllocation())
             .setCredentials(session.getCredentials())
-            .addAllCollector(CountRequiredFragments.getCollectors(root))
+            .addAllCollector(CountRequiredFragments.getCollectors(root, enableDynamicFC))
             .build();
 
         MinorFragmentDefn fragmentDefn = new MinorFragmentDefn(fragment, root, options);
@@ -362,11 +367,16 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
    */
 
   protected static class CountRequiredFragments extends AbstractPhysicalVisitor<Void, List<Collector>, RuntimeException> {
-    private static final CountRequiredFragments INSTANCE = new CountRequiredFragments();
+    private boolean enableDynamicFC;
 
-    public static List<Collector> getCollectors(PhysicalOperator root) {
+    CountRequiredFragments(boolean enableDynamicFC) {
+      this.enableDynamicFC = enableDynamicFC;
+    }
+
+    public static List<Collector> getCollectors(PhysicalOperator root, boolean enableDynamicFC) {
       List<Collector> collectors = Lists.newArrayList();
-      root.accept(INSTANCE, collectors);
+      CountRequiredFragments countRequiredFragments = new CountRequiredFragments(enableDynamicFC);
+      root.accept(countRequiredFragments, collectors);
       return collectors;
     }
 
@@ -382,6 +392,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
         .setIsSpooling(receiver.isSpooling())
         .setOppositeMajorFragmentId(receiver.getOppositeMajorFragmentId())
         .setSupportsOutOfOrder(receiver.supportsOutOfOrderExchange())
+        .setEnableDynamicFc(enableDynamicFC)
           .addAllIncomingMinorFragment(list)
           .build());
       return null;

@@ -54,15 +54,15 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
 
   @Test
   public void testNumericTypes() throws Exception {
-    // left side int and strings
+    // left side int and floats
     BufferedWriter writer = new BufferedWriter(new FileWriter(new File(tableDir, "d1.json")));
     for (int i = 0; i < 10000; i+=2) {
-      writer.write(String.format("{ \"kl\" : %d , \"vl\": %d }\n", i, i));
+      writer.write(String.format("{ \"kl\": %d, \"vl\": %d }\n", i, i));
     }
     writer.close();
     writer = new BufferedWriter(new FileWriter(new File(tableDir, "d2.json")));
     for (int i = 1; i < 10000; i+=2) {
-      writer.write(String.format("{ \"kl\" : %f , \"vl\": %f }\n", (float)i, (float)i));
+      writer.write(String.format("{ \"kl\": %f, \"vl\": %f }\n", (float)i, (float)i));
     }
     writer.close();
 
@@ -87,12 +87,12 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
     // left side int and strings
     BufferedWriter writer = new BufferedWriter(new FileWriter(new File(tableDir, "d1.json")));
     for (int i = 0; i < 1000; i+=2) {
-      writer.write(String.format("{ \"kl\" : %d , \"vl\": %d }\n", i, i));
+      writer.write(String.format("{ \"kl\": %d, \"vl\": %d }\n", i, i));
     }
     writer.close();
     writer = new BufferedWriter(new FileWriter(new File(tableDir, "d2.json")));
     for (int i = 1; i < 1000; i+=2) {
-      writer.write(String.format("{ \"kl\" : \"%s\" , \"vl\": \"%s\" }\n", i, i));
+      writer.write(String.format("{ \"kl\": \"%s\", \"vl\": \"%s\" }\n", i, i));
     }
     writer.close();
 
@@ -133,13 +133,13 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
     for (int i = 0; i <= 9; ++i) {
       switch (i%3) {
         case 0: // 0, 3, 6, 9
-          writer.write(String.format("{ \"kl\" : %d , \"vl\": %d }\n", i, i));
+          writer.write(String.format("{ \"kl\": %d, \"vl\": %d }\n", i, i));
           break;
         case 1: // 1, 4, 7
-          writer.write(String.format("{ \"kl\" : %f , \"vl\": %f }\n", (float)i, (float)i));
+          writer.write(String.format("{ \"kl\": %f, \"vl\": %f }\n", (float)i, (float)i));
           break;
         case 2: // 2, 5, 8
-          writer.write(String.format("{ \"kl\" : \"%s\" , \"vl\": \"%s\" }\n", i, i));
+          writer.write(String.format("{ \"kl\": \"%s\", \"vl\": \"%s\" }\n", i, i));
           break;
       }
     }
@@ -153,12 +153,12 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
 
     builder.baselineValues(0l, 0l);
     builder.baselineValues(1.0d, 1.0d);
+    builder.baselineValues("2", "2");
     builder.baselineValues(3l, 3l);
     builder.baselineValues(4.0d, 4.0d);
+    builder.baselineValues("5", "5");
     builder.baselineValues(6l, 6l);
     builder.baselineValues(7.0d, 7.0d);
-    builder.baselineValues(9l, 9l);
-    builder.baselineValues("2", "2");
     builder.go();
   }
 
@@ -166,18 +166,18 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
   public void testMissingColumn() throws Exception {
     BufferedWriter writer = new BufferedWriter(new FileWriter(new File(tableDir, "d1.json")));
     for (int i = 0; i < 100; i++) {
-      writer.write(String.format("{ \"kl1\" : %d , \"vl1\": %d }\n", i, i));
+      writer.write(String.format("{ \"kl1\": %d, \"vl1\": %d }\n", i, i));
     }
     writer.close();
     writer = new BufferedWriter(new FileWriter(new File(tableDir, "d2.json")));
     for (int i = 100; i < 200; i++) {
-      writer.write(String.format("{ \"kl\" : %f , \"vl\": %f }\n", (float)i, (float)i));
+      writer.write(String.format("{ \"kl\": %f, \"vl\": %f }\n", (float)i, (float)i));
     }
     writer.close();
 
     writer = new BufferedWriter(new FileWriter(new File(tableDir, "d3.json")));
     for (int i = 200; i < 300; i++) {
-      writer.write(String.format("{ \"kl2\" : \"%s\" , \"vl2\": \"%s\" }\n", i, i));
+      writer.write(String.format("{ \"kl2\": \"%s\", \"vl2\": \"%s\" }\n", i, i));
     }
     writer.close();
 

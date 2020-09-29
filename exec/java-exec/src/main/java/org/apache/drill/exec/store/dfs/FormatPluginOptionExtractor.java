@@ -27,14 +27,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
-import org.apache.drill.common.logical.FormatPluginConfigBase;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.TableInstance;
 import org.apache.drill.exec.store.table.function.TableParamDef;
 import org.apache.drill.exec.store.table.function.TableSignature;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
@@ -42,21 +45,23 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
  * Manages format plugins options to define table macros.
  */
 final class FormatPluginOptionExtractor {
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(FormatPluginOptionExtractor.class);
+  private static final Logger logger = LoggerFactory.getLogger(FormatPluginOptionExtractor.class);
 
   private final Map<String, FormatPluginOptionsDescriptor> optionsByTypeName;
 
   /**
-   * Extracts the format plugin options based on the scanned implementations of {@link FormatPluginConfig}.
+   * Extracts the format plugin options based on the scanned implementations of
+   * {@link FormatPluginConfig}.
    *
    * @param scanResult scan result of the classpath
    */
   FormatPluginOptionExtractor(ScanResult scanResult) {
     Map<String, FormatPluginOptionsDescriptor> result = new HashMap<>();
-    Set<Class<? extends FormatPluginConfig>> pluginConfigClasses = FormatPluginConfigBase.getSubTypes(scanResult);
+    Set<Class<? extends FormatPluginConfig>> pluginConfigClasses =
+        LogicalPlanPersistence.getSubTypes(scanResult, FormatPluginConfig.class);
     for (Class<? extends FormatPluginConfig> pluginConfigClass : pluginConfigClasses) {
       FormatPluginOptionsDescriptor optionsDescriptor = new FormatPluginOptionsDescriptor(pluginConfigClass);
-      result.put(optionsDescriptor.typeName.toLowerCase(), optionsDescriptor);
+      result.put(optionsDescriptor.getTypeName().toLowerCase(), optionsDescriptor);
     }
     this.optionsByTypeName = unmodifiableMap(result);
   }
@@ -86,13 +91,17 @@ final class FormatPluginOptionExtractor {
   }
 
   /**
-   * Given a table function signature and the corresponding parameters
-   * return the corresponding formatPlugin configuration.
+   * Given a table function signature and the corresponding parameters return
+   * the corresponding formatPlugin configuration.
    *
-   * @param t the signature and parameters (it should be one of the signatures returned by {@link FormatPluginOptionExtractor#getTableSignatures(String, List)})
+   * @param t
+   *          the signature and parameters (it should be one of the signatures
+   *          returned by
+   *          {@link FormatPluginOptionExtractor#getTableSignatures(String, List)})
+   * @param mapper
    * @return the config
    */
-  FormatPluginConfig createConfigForTable(TableInstance t) {
+  FormatPluginConfig createConfigForTable(TableInstance t, ObjectMapper mapper, FormatPluginConfig baseConfig) {
     if (!t.sig.getSpecificParams().get(0).getName().equals("type")) {
       throw UserException.parseError()
         .message("unknown first param for %s", t.sig)
@@ -115,6 +124,6 @@ final class FormatPluginOptionExtractor {
           .addContext("table", t.sig.getName())
           .build(logger);
     }
-    return optionsDescriptor.createConfigForTable(t);
+    return optionsDescriptor.createConfigForTable(t, mapper, baseConfig);
   }
 }

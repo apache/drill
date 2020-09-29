@@ -19,21 +19,35 @@
 package org.apache.drill.exec.store.syslog;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.apache.drill.shaded.guava.com.google.common.base.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Objects;
 
 @JsonTypeName("syslog")
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class SyslogFormatConfig implements FormatPluginConfig {
 
-  public List<String> extensions;
-  public int maxErrors = 10;
-  public boolean flattenStructuredData;
+  private final List<String> extensions;
+  private final int maxErrors;
+  private final boolean flattenStructuredData;
+
+  @JsonCreator
+  public SyslogFormatConfig(
+      @JsonProperty("extensions") List<String> extensions,
+      @JsonProperty("maxErrors") Integer maxErrors,
+      @JsonProperty("flattenStructuredData") Boolean flattenStructuredData) {
+    this.extensions = extensions == null ?
+        ImmutableList.of() : ImmutableList.copyOf(extensions);
+    this.maxErrors = maxErrors == null ? 10 : maxErrors;
+    this.flattenStructuredData = flattenStructuredData == null ? false : flattenStructuredData;
+  }
 
   public boolean getFlattenStructuredData() {
     return flattenStructuredData;
@@ -47,25 +61,6 @@ public class SyslogFormatConfig implements FormatPluginConfig {
     return extensions;
   }
 
-  public void setExtensions(List ext) {
-    this.extensions = ext;
-  }
-
-  public void setExtension(String ext) {
-    if (this.extensions == null) {
-      this.extensions = new ArrayList<String>();
-    }
-    this.extensions.add(ext);
-  }
-
-  public void setMaxErrors(int errors) {
-    this.maxErrors = errors;
-  }
-
-  public void setFlattenStructuredData(boolean flattenData) {
-    this.flattenStructuredData = flattenData;
-  }
-
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -75,13 +70,22 @@ public class SyslogFormatConfig implements FormatPluginConfig {
       return false;
     }
     SyslogFormatConfig other = (SyslogFormatConfig) obj;
-    return Objects.equal(extensions, other.extensions) &&
-            Objects.equal(maxErrors, other.maxErrors) &&
-            Objects.equal(flattenStructuredData, other.flattenStructuredData);
+    return Objects.equals(extensions, other.extensions) &&
+           Objects.equals(maxErrors, other.maxErrors) &&
+           Objects.equals(flattenStructuredData, other.flattenStructuredData);
   }
 
   @Override
   public int hashCode() {
-    return Arrays.hashCode(new Object[]{maxErrors, flattenStructuredData, extensions});
+    return Objects.hash(maxErrors, flattenStructuredData, extensions);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .field("max errors", maxErrors)
+        .field("flatten structured data", flattenStructuredData)
+        .toString();
   }
 }

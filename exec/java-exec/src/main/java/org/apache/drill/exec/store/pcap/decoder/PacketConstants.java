@@ -41,6 +41,9 @@ public final class PacketConstants {
   public static final int AUTHENTICATION_V6 = 51;
   public static final int ENCAPSULATING_SECURITY_V6 = 50;
   public static final int MOBILITY_EXTENSION_V6 = 135;
+  public static final int HOST_IDENTITY_PROTOCOL = 139;
+  public static final int SHIM6_PROTOCOL = 140;
+
   public static final int NO_NEXT_HEADER = 59;
   public static final int UDP_HEADER_LENGTH = 8;
   public static final int VER_IHL_OFFSET = 14;

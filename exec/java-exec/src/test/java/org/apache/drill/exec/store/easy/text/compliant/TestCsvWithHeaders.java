@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
@@ -60,8 +60,7 @@ import static org.junit.Assert.fail;
  *
  * @see TestHeaderBuilder
  */
-
-@Category(RowSetTests.class)
+@Category(EvfTest.class)
 public class TestCsvWithHeaders extends BaseCsvTest {
 
   private static final String TEST_FILE_NAME = "basic.csv";
@@ -136,7 +135,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
   /**
    * Trivial case: empty header. This case should fail.
    */
-
   @Test
   public void testEmptyCsvHeaders() throws IOException {
     buildFile(EMPTY_HEADERS_FILE, emptyHeaders);
@@ -174,7 +172,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     buildFile(EMPTY_BODY_FILE, emptyBody);
 
     // SELECT * query: expect schema-only result.
-
     RowSet rowSet = client.queryBuilder().sql(makeStatement(EMPTY_BODY_FILE)).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
@@ -186,7 +183,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     RowSetUtilities.verify(expected, rowSet);
 
     // Try again with COUNT(*)
-
     long count = client.queryBuilder().sql(COUNT_STAR, EMPTY_BODY_FILE).singletonLong();
     assertEquals(0, count);
   }
@@ -289,7 +285,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
    * of just one implicit column. V3 uses non-nullable VARCHAR for file
    * metadata columns.
    */
-
   @Test
   public void testImplicitColsExplicitSelect() throws IOException {
     String sql = "SELECT A, filename FROM `dfs.data`.`%s`";
@@ -311,7 +306,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
    * of just one implicit column. V3 uses non-nullable VARCHAR for file
    * metadata columns.
    */
-
   @Test
   public void testImplicitColWildcard() throws IOException {
     String sql = "SELECT *, filename FROM `dfs.data`.`%s`";
@@ -412,13 +406,13 @@ public class TestCsvWithHeaders extends BaseCsvTest {
   }
 
   /**
-   * Test partition expansion .
+   * Test partition expansion.
    * <p>
    * This test is tricky because it will return two data batches
    * (preceded by an empty schema batch.) File read order is random
    * so we have to expect the files in either order.
    * <p>
-   * V3, as in V2 before Drill 1.12, puts partition columns after
+   * V3 puts partition columns after
    * data columns (so that data columns don't shift positions if
    * files are nested to another level.)
    */
@@ -435,8 +429,8 @@ public class TestCsvWithHeaders extends BaseCsvTest {
 
     RowSet rowSet;
     if (SCHEMA_BATCH_ENABLED) {
-      // First batch is empty; just carries the schema.
 
+      // First batch is empty; just carries the schema.
       assertTrue(iter.hasNext());
       rowSet = iter.next();
       assertEquals(0, rowSet.rowCount());
@@ -444,13 +438,11 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     }
 
     // Read the other two batches.
-
     for (int i = 0; i < 2; i++) {
       assertTrue(iter.hasNext());
       rowSet = iter.next();
 
       // Figure out which record this is and test accordingly.
-
       RowSetReader reader = rowSet.reader();
       assertTrue(reader.next());
       String col1 = reader.scalar(0).getString();
@@ -493,8 +485,8 @@ public class TestCsvWithHeaders extends BaseCsvTest {
 
     RowSet rowSet;
     if (SCHEMA_BATCH_ENABLED) {
-      // First batch is empty; just carries the schema.
 
+      // First batch is empty; just carries the schema.
       assertTrue(iter.hasNext());
       rowSet = iter.next();
       RowSetUtilities.verify(new RowSetBuilder(client.allocator(), expectedSchema).build(),
@@ -502,13 +494,11 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     }
 
     // Read the two batches.
-
     for (int i = 0; i < 2; i++) {
       assertTrue(iter.hasNext());
       rowSet = iter.next();
 
       // Figure out which record this is and test accordingly.
-
       RowSetReader reader = rowSet.reader();
       assertTrue(reader.next());
       String aCol = reader.scalar("a").getString();
@@ -548,8 +538,8 @@ public class TestCsvWithHeaders extends BaseCsvTest {
 
     RowSet rowSet;
     if (SCHEMA_BATCH_ENABLED) {
-      // First batch is empty; just carries the schema.
 
+      // First batch is empty; just carries the schema.
       assertTrue(iter.hasNext());
       rowSet = iter.next();
       RowSetUtilities.verify(new RowSetBuilder(client.allocator(), expectedSchema).build(),
@@ -557,13 +547,11 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     }
 
     // Read the two batches.
-
     for (int i = 0; i < 2; i++) {
       assertTrue(iter.hasNext());
       rowSet = iter.next();
 
       // Figure out which record this is and test accordingly.
-
       RowSetReader reader = rowSet.reader();
       assertTrue(reader.next());
       String aCol = reader.scalar("a").getString();

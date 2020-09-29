@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -99,14 +100,14 @@ public class MaterializedField {
    * The type is immutable. But, it contains subtypes, used or lists
    * and unions. To add a subtype, we must create a whole new major type.
    * <p>
-   * It appears that the <tt>MaterializedField</tt> class was also meant
+   * It appears that the {@code MaterializedField} class was also meant
    * to be immutable. But, it holds the children for a map, and contains
    * methods to add children. So, it is not immutable.
    * <p>
    * This method allows evolving a list or union without the need to create
-   * a new <tt>MaterializedField</tt>. Doing so is problematic for nested
+   * a new {@code MaterializedField}. Doing so is problematic for nested
    * maps because the map (or list, or union) holds onto the
-   * <tt>MaterializedField</tt>'s of its children. There is no way for
+   * {@code MaterializedField}'s of its children. There is no way for
    * an inner map to reach out and change the child of its parent.
    * <p>
    * By allowing the non-critical metadata to change, we preserve the
@@ -227,7 +228,7 @@ public class MaterializedField {
    * tricky issue. The rules here:
    * <ul>
    * <li>The other schema is assumed to be non-null (unlike
-   * <tt>equals()</tt>).</li>
+   * {@code equals()}).</li>
    * <li>Names must be identical, ignoring case. (Drill, like SQL, is case
    * insensitive.)
    * <li>Type, mode, precision and scale must be identical.</li>
@@ -235,7 +236,7 @@ public class MaterializedField {
    * "$bits" and "$offsets" vector columns are not compared, as one schema may
    * be an "original" (without these hidden columns) while the other may come
    * from a vector (which has the hidden columns added. The standard
-   * <tt>equals()</tt> comparison does consider hidden columns.</li>
+   * {@code equals()} comparison does consider hidden columns.</li>
    * <li>For maps, the child columns are compared recursively. This version
    * requires that the two sets of columns appear in the same order. (It assumes
    * it is being used in a context where column indexes make sense.) Operators
@@ -274,10 +275,9 @@ public class MaterializedField {
    *
    * @param other
    *          another field
-   * @return <tt>true</tt> if the columns are identical according to the above
-   *         rules, <tt>false</tt> if they differ
+   * @return {@code true} if the columns are identical according to the above
+   *         rules, {@code false} if they differ
    */
-
   public boolean isEquivalent(MaterializedField other) {
     if (! name.equalsIgnoreCase(other.name)) {
       return false;
@@ -286,14 +286,12 @@ public class MaterializedField {
     // Requires full type equality, including fields such as precision and scale.
     // But, unset fields are equivalent to 0. Can't use the protobuf-provided
     // isEquals(), that treats set and unset fields as different.
-
     if (! Types.isEquivalent(type, other.type)) {
       return false;
     }
 
     // Compare children -- but only for maps, not the internal children
     // for Varchar, repeated or nullable types.
-
     if (type.getMinorType() != MinorType.MAP) {
       return true;
     }
@@ -307,7 +305,6 @@ public class MaterializedField {
 
     // Maps are name-based, not position. But, for our
     // purposes, we insist on identical ordering.
-
     final Iterator<MaterializedField> thisIter = children.iterator();
     final Iterator<MaterializedField> otherIter = other.children.iterator();
     while (thisIter.hasNext()) {
@@ -329,7 +326,6 @@ public class MaterializedField {
    * @param other the field to which this one is to be promoted
    * @return true if promotion is possible, false otherwise
    */
-
   public boolean isPromotableTo(MaterializedField other, boolean allowModeChange) {
     if (! name.equalsIgnoreCase(other.name)) {
       return false;
@@ -338,7 +334,6 @@ public class MaterializedField {
     // Requires full type equality, including fields such as precision and scale.
     // But, unset fields are equivalent to 0. Can't use the protobuf-provided
     // isEquals(), that treats set and unset fields as different.
-
     if (type.getMinorType() != other.type.getMinorType()) {
       return false;
     }
@@ -346,7 +341,6 @@ public class MaterializedField {
 
       // Modes differ, but type can be promoted from required to
       // nullable
-
       if (! allowModeChange) {
         return false;
       }
@@ -363,7 +357,6 @@ public class MaterializedField {
 
     // Compare children -- but only for maps, not the internal children
     // for Varchar, repeated or nullable types.
-
     if (type.getMinorType() != MinorType.MAP) {
       return true;
     }
@@ -377,7 +370,6 @@ public class MaterializedField {
 
     // Maps are name-based, not position. But, for our
     // purposes, we insist on identical ordering.
-
     final Iterator<MaterializedField> thisIter = children.iterator();
     final Iterator<MaterializedField> otherIter = other.children.iterator();
     while (thisIter.hasNext()) {
@@ -400,30 +392,11 @@ public class MaterializedField {
    *
    * @return materialized field string representation
    */
-
   public String toString(boolean includeChildren) {
     final int maxLen = 10;
-    final StringBuilder builder = new StringBuilder();
-    builder
-      .append("[`")
-      .append(name)
-      .append("` (")
-      .append(type.getMinorType().name());
-
-    if (type.hasPrecision() && (type.getPrecision() > 0 || Types.isDecimalType(type))) {
-      builder.append("(");
-      builder.append(type.getPrecision());
-      if (type.hasScale() && type.getScale() > 0) {
-        builder.append(", ");
-        builder.append(type.getScale());
-      }
-      builder.append(")");
-    }
-
-    builder
-      .append(":")
-      .append(type.getMode().name())
-      .append(")");
+    final StringBuilder builder = new StringBuilder()
+      .append("[`");
+    prefix(builder);
 
     if (includeChildren) {
       if (type.getSubTypeCount() > 0) {
@@ -446,19 +419,63 @@ public class MaterializedField {
         .toString();
   }
 
+  private void prefix(StringBuilder builder) {
+    builder
+      .append(name)
+      .append("` (")
+      .append(type.getMinorType().name());
+
+    if (type.hasPrecision() && (type.getPrecision() > 0 || Types.isDecimalType(type))) {
+      builder.append("(");
+      builder.append(type.getPrecision());
+      if (type.hasScale() && type.getScale() > 0) {
+        builder.append(", ");
+        builder.append(type.getScale());
+      }
+      builder.append(")");
+    }
+
+    builder
+      .append(":")
+      .append(type.getMode().name())
+      .append(")");
+  }
+
   @Override
   public String toString() {
     return toString(true);
   }
 
+  public String format() {
+    final StringBuilder builder = new StringBuilder();
+    format(builder, 0);
+    return builder.toString();
+  }
+
+  /**
+   * Format the field in a multi-line format, with children (but not subtypes)
+   * indented. Useful for wide rows where the single-line format is too hard
+   * to read.
+   */
+  public void format(StringBuilder builder, int level) {
+    builder.append(StringUtils.repeat(' ', level));
+    prefix(builder);
+    if (children != null && ! children.isEmpty()) {
+      builder.append(":\n");
+      for (MaterializedField child : children) {
+        child.format(builder, level + 1);
+      }
+    } else {
+      builder.append("\n");
+    }
+  }
+
   /**
    * Return true if two fields have identical MinorType and Mode.
-   * @param that
-   * @return
    */
   public boolean hasSameTypeAndMode(MaterializedField that) {
-    return (getType().getMinorType() == that.getType().getMinorType())
-        && (getType().getMode() == that.getType().getMode());
+    return getType().getMinorType() == that.getType().getMinorType()
+        && getType().getMode() == that.getType().getMode();
   }
 
   private String toString(Collection<?> collection, int maxLen) {

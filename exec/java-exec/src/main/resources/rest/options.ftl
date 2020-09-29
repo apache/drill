@@ -76,21 +76,21 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
-  <div class="col-xs-4">
-    <div class="input-group input-sm" >
-      <input id="searchBox" name="searchBox" class="form-control" type="text" value="" placeholder="Search options...">
-        <div class="input-group-btn">
-          <button class="btn btn-default" type="button" onclick="$('#searchBox').val('').focus();" title="Clear search" style="font-weight:bold">&times;</button>
-        </div> 
+  <div class="container-fluid px-0">
+    <div class="row">
+      <div class="input-group input-sm col-4" >
+        <input id="searchBox" name="searchBox" class="form-control" type="text" value="" placeholder="Search options...">
+          <div class="input-group-btn">
+            <button class="btn btn-light" type="button" onclick="$('#searchBox').val('').focus();" title="Clear search" style="font-weight:bold">&times;</button>
+          </div>
+      </div>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-light" style="cursor:default;font-weight:bold;" > Quick Filters </button>
+          <#list model.getFilters() as filter>
+            <button type="button" class="btn btn-info" onclick="inject(this.innerHTML);">${filter}</button>
+          </#list>
+      </div>
     </div>
-  </div>
-  <div class="btn-group btn-group-sm" style="padding-top:0.5%;">
-  <button type="button" class="btn" style="cursor:default;font-weight:bold;" > Quick Filters </button>
-  <#list model.getFilters() as filter>
-  <button type="button" class="btn btn-info" onclick="inject(this.innerHTML);">${filter}</button>
-  </#list>
   </div>
   <#include "*/alertModals.ftl">
   <div class="table-responsive">
@@ -107,10 +107,10 @@
             <td style="font-family:Courier New; vertical-align:middle" id='optionName'>${option.getName()}</td>
             <td>
               <form class="form-inline" role="form" id="${option.getName()}">
-                <div class="form-group">
+                <div class="form-group form-row col-12 p-0">
                 <input type="hidden" class="form-control" name="kind" value="${option.getKind()}">
                 <input type="hidden" class="form-control" name="name" value="${option.getName()}">
-                  <div class="input-group input-sm">
+                  <div class="input-group input-sm col-12">
                   <#if option.getKind() == "BOOLEAN" >
                   <select class="form-control" name="value">
                     <option value="false" ${(option.getValueAsString() == "false")?string("selected", "")}>false</option>
@@ -119,9 +119,9 @@
                   <#else>
                     <input type="text" class="form-control" placeholder="${option.getValueAsString()}" name="value" value="${option.getValueAsString()}">
                   </#if>
-                    <div class="input-group-btn">
-                      <button class="btn btn-default" type="button" onclick="alterSysOptionUsingId('${option.getName()}')">Update</button>
-                      <button class="btn btn-default" type="button" onclick="alterSysOption('${option.getName()}','${option.getDefaultValue()}', '${option.getKind()}')" <#if option.getDefaultValue() == option.getValueAsString()>disabled="true" style="pointer-events:none" <#else>
+                    <div class="input-group-append">
+                      <button class="btn btn-primary" type="button" onclick="alterSysOptionUsingId('${option.getName()}')">Update</button>
+                      <button class="btn btn-success" type="button" onclick="alterSysOption('${option.getName()}','${option.getDefaultValue()}', '${option.getKind()}')" <#if option.getDefaultValue() == option.getValueAsString()>disabled="true" style="pointer-events:none" <#else>
                       title="Reset to ${option.getDefaultValue()}"</#if>>Default</button>
                     </div>
                   </div>

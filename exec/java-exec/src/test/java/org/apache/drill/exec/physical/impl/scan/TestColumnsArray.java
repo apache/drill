@@ -29,17 +29,17 @@ import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.MockScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayManager;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework.ColumnsScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework;
-import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
-import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
+import org.apache.drill.exec.physical.impl.scan.file.ImplicitColumnManager;
+import org.apache.drill.exec.physical.impl.scan.file.ImplicitColumnManager.ImplicitColumnOptions;
 import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.hadoop.fs.Path;
@@ -50,7 +50,6 @@ import org.junit.experimental.categories.Category;
  * Test the "columns" array mechanism integrated with the scan schema
  * orchestrator including simulating reading data.
  */
-
 @Category(RowSetTests.class)
 public class TestColumnsArray extends SubOperatorTest {
 
@@ -60,8 +59,8 @@ public class TestColumnsArray extends SubOperatorTest {
     ResultSetLoader loader;
   }
 
-  private FileMetadataOptions standardOptions(Path filePath) {
-    FileMetadataOptions options = new FileMetadataOptions();
+  private ImplicitColumnOptions standardOptions(Path filePath) {
+    ImplicitColumnOptions options = new ImplicitColumnOptions();
     options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
     options.setSelectionRoot(new Path("hdfs:///w"));
     options.setFiles(Lists.newArrayList(filePath));
@@ -75,7 +74,7 @@ public class TestColumnsArray extends SubOperatorTest {
     // Set up the file metadata manager
 
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
-    FileMetadataManager metadataManager = new FileMetadataManager(
+    ImplicitColumnManager metadataManager = new ImplicitColumnManager(
         fixture.getOptionManager(),
         standardOptions(filePath));
 
@@ -86,13 +85,13 @@ public class TestColumnsArray extends SubOperatorTest {
     // Configure the schema orchestrator
 
     ScanOrchestratorBuilder builder = new MockScanBuilder();
-    builder.withMetadata(metadataManager);
+    builder.withImplicitColumns(metadataManager);
     builder.addParser(colsManager.projectionParser());
     builder.addResolver(colsManager.resolver());
 
     // SELECT <proj list> ...
 
-    builder.setProjection(projList);
+    builder.projection(projList);
     mock.scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // FROM z.csv
@@ -265,7 +264,7 @@ public class TestColumnsArray extends SubOperatorTest {
     ScanOrchestratorBuilder builder = new ColumnsScanBuilder();
     builder.addParser(colsManager.projectionParser());
     builder.addResolver(colsManager.resolver());
-    builder.setProjection(cols);
+    builder.projection(cols);
     return new ScanSchemaOrchestrator(fixture.allocator(), builder);
   }
 

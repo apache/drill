@@ -640,8 +640,6 @@ public class DateUtility {
   public static DateTimeFormatter dateTimeTZFormat = null;
   public static DateTimeFormatter timeFormat = null;
 
-
-
   public static int getIndex(String timezone) {
     return timezoneMap.get(timezone);
   }

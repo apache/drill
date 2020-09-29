@@ -17,21 +17,5 @@
  */
 package org.apache.drill.common.logical;
 
-import java.util.Set;
-
-import org.apache.drill.common.scanner.persistence.ScanResult;
-
-
 public abstract class StoragePluginConfigBase extends StoragePluginConfig {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginConfigBase.class);
-
-  public static Set<Class<? extends StoragePluginConfig>> getSubTypes(final ScanResult classpathScan) {
-    final Set<Class<? extends StoragePluginConfig>> packages = classpathScan.getImplementations(StoragePluginConfig.class);
-    logger.debug("Found {} logical operator classes: {}.", packages.size(), packages);
-    return packages;
-  }
-
-  @Override
-  public abstract boolean equals(Object o);
-
 }

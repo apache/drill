@@ -35,13 +35,14 @@ import org.apache.drill.exec.util.JarUtil;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
 
 public class DropFunctionHandler extends DefaultSqlHandler {
-
-  private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DropFunctionHandler.class);
+  private static Logger logger = LoggerFactory.getLogger(DropFunctionHandler.class);
 
   public DropFunctionHandler(SqlHandlerConfig config) {
     super(config);
@@ -163,5 +164,4 @@ public class DropFunctionHandler extends DefaultSqlHandler {
       logger.error("Error removing jar {} from area {}", jarName, area.toUri().getPath());
     }
   }
-
 }

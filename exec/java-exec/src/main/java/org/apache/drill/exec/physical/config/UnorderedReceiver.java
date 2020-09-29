@@ -30,7 +30,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("unordered-receiver")
 public class UnorderedReceiver extends AbstractReceiver{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnorderedReceiver.class);
 
   @JsonCreator
   public UnorderedReceiver(@JsonProperty("sender-major-fragment") int oppositeMajorFragmentId,

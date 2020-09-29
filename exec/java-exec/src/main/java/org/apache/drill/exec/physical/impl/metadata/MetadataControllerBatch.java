@@ -29,12 +29,14 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.metastore.analyze.AnalyzeColumnUtils;
+import org.apache.drill.exec.metastore.analyze.MetadataControllerContext;
 import org.apache.drill.exec.metastore.analyze.MetadataIdentifierUtils;
 import org.apache.drill.exec.metastore.analyze.MetastoreAnalyzeConstants;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -63,6 +65,7 @@ import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.MetastoreTableInfo;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.components.tables.Tables;
@@ -76,6 +79,7 @@ import org.apache.drill.metastore.metadata.PartitionMetadata;
 import org.apache.drill.metastore.metadata.RowGroupMetadata;
 import org.apache.drill.metastore.metadata.SegmentMetadata;
 import org.apache.drill.metastore.metadata.TableInfo;
+import org.apache.drill.metastore.operate.Delete;
 import org.apache.drill.metastore.operate.Modify;
 import org.apache.drill.metastore.statistics.BaseStatisticsKind;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
@@ -92,26 +96,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Terminal operator for producing ANALYZE statement. This operator is responsible for converting
- * obtained metadata, fetching absent metadata from the Metastore and storing resulting metadata into the Metastore.
+ * Terminal operator for producing ANALYZE statement. This operator is
+ * responsible for converting obtained metadata, fetching absent metadata from
+ * the Metastore and storing resulting metadata into the Metastore.
  * <p>
- * This operator has two inputs: left input contains metadata and right input contains statistics metadata.
+ * This operator has two inputs: left input contains metadata and right input
+ * contains statistics metadata.
  */
 public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataControllerPOP> {
   private static final Logger logger = LoggerFactory.getLogger(MetadataControllerBatch.class);
 
+  enum State { RIGHT, LEFT, WRITE, FINISHED }
+
   private final Tables tables;
   private final TableInfo tableInfo;
   private final Map<String, MetadataInfo> metadataToHandle;
-  private final StatisticsRecordCollector statisticsCollector;
-  private final List<TableMetadataUnit> metadataUnits;
+  private final StatisticsRecordCollector statisticsCollector = new StatisticsCollectorImpl();
+  private final List<TableMetadataUnit> metadataUnits = new ArrayList<>();
   private final ColumnNamesOptions columnNamesOptions;
 
-  private boolean firstLeft = true;
-  private boolean firstRight = true;
-  private boolean finished;
-  private boolean finishedRight;
-  private int recordCount;
+  private State state = State.RIGHT;
 
   protected MetadataControllerBatch(MetadataControllerPOP popConfig,
       FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
@@ -122,161 +126,118 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         ? null
         : popConfig.getContext().metadataToHandle().stream()
             .collect(Collectors.toMap(MetadataInfo::identifier, Function.identity()));
-    this.metadataUnits = new ArrayList<>();
-    this.statisticsCollector = new StatisticsCollectorImpl();
     this.columnNamesOptions = new ColumnNamesOptions(context.getOptions());
-  }
-
-  protected boolean setupNewSchema() {
-    container.clear();
-    container.addOrGet(MetastoreAnalyzeConstants.OK_FIELD_NAME, Types.required(TypeProtos.MinorType.BIT), null);
-    container.addOrGet(MetastoreAnalyzeConstants.SUMMARY_FIELD_NAME, Types.required(TypeProtos.MinorType.VARCHAR), null);
-    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-    container.setEmpty();
-    return true;
   }
 
   @Override
   public IterOutcome innerNext() {
-    IterOutcome outcome;
-    boolean finishedLeft;
-    if (finished) {
-      return IterOutcome.NONE;
-    }
+    while (state != State.FINISHED) {
+      switch (state) {
+        case RIGHT: {
 
-    if (!finishedRight) {
-      outcome = handleRightIncoming();
-      if (outcome != null) {
-        return outcome;
-      }
-    }
-
-    outer:
-    while (true) {
-      outcome = next(0, left);
-      switch (outcome) {
-        case NONE:
-          // all incoming data was processed when returned OK_NEW_SCHEMA
-          finishedLeft = !firstLeft;
-          break outer;
-        case OUT_OF_MEMORY:
-        case NOT_YET:
-        case STOP:
-          return outcome;
-        case OK_NEW_SCHEMA:
-          if (firstLeft) {
-            firstLeft = false;
-            if (!setupNewSchema()) {
-              outcome = IterOutcome.OK;
-            }
-            IterOutcome out = handleLeftIncoming();
-            if (out != IterOutcome.OK) {
-              return out;
-            }
+          // Can only return NOT_YET
+          IterOutcome outcome = handleRightIncoming();
+          if (outcome != null) {
             return outcome;
           }
-          //fall through
-        case OK:
-          assert !firstLeft : "First batch should be OK_NEW_SCHEMA";
-          IterOutcome out = handleLeftIncoming();
-          if (out != IterOutcome.OK) {
-            return out;
+          break;
+        }
+        case LEFT: {
+
+          // Can only return NOT_YET
+          IterOutcome outcome = handleLeftIncoming();
+          if (outcome != null) {
+            return outcome;
           }
           break;
+        }
+        case WRITE:
+          writeToMetastore();
+          createSummary();
+          state = State.FINISHED;
+          return IterOutcome.OK_NEW_SCHEMA;
+
+        case FINISHED:
+          break;
+
         default:
-          context.getExecutorState()
-              .fail(new UnsupportedOperationException("Unsupported upstream state " + outcome));
-          close();
-          killIncoming(false);
-          return IterOutcome.STOP;
+          throw new IllegalStateException(state.name());
       }
     }
-
-    if (finishedLeft) {
-      IterOutcome out = writeToMetastore();
-      finished = true;
-      return out;
-    }
-    return outcome;
+    return IterOutcome.NONE;
   }
 
   private IterOutcome handleRightIncoming() {
-    IterOutcome outcome;
     outer:
     while (true) {
-      outcome = next(0, right);
+      IterOutcome outcome = next(0, right);
       switch (outcome) {
         case NONE:
-          // all incoming data was processed
-          finishedRight = true;
+          state = State.LEFT;
           break outer;
-        case OUT_OF_MEMORY:
         case NOT_YET:
-        case STOP:
           return outcome;
         case OK_NEW_SCHEMA:
-          firstRight = false;
-          //fall through
         case OK:
-          assert !firstRight : "First batch should be OK_NEW_SCHEMA";
-          try {
-            appendStatistics(statisticsCollector);
-          } catch (IOException e) {
-            context.getExecutorState().fail(e);
-            close();
-            killIncoming(false);
-            return IterOutcome.STOP;
-          }
+          appendStatistics(statisticsCollector);
           break;
         default:
-          context.getExecutorState()
-              .fail(new UnsupportedOperationException("Unsupported upstream state " + outcome));
-          close();
-          killIncoming(false);
-          return IterOutcome.STOP;
+          throw new UnsupportedOperationException("Unsupported upstream state " + outcome);
       }
     }
     return null;
   }
 
   private IterOutcome handleLeftIncoming() {
-    try {
-      metadataUnits.addAll(getMetadataUnits(left.getContainer()));
-    } catch (Exception e) {
-      context.getExecutorState().fail(e);
-      close();
-      killIncoming(false);
-      return IterOutcome.STOP;
+    while (true) {
+      IterOutcome outcome = next(0, left);
+      switch (outcome) {
+        case NONE:
+          // all incoming data was processed when returned OK_NEW_SCHEMA
+          state = State.WRITE;
+          return null;
+        case NOT_YET:
+          return outcome;
+        case OK_NEW_SCHEMA:
+        case OK:
+          metadataUnits.addAll(getMetadataUnits(left.getContainer()));
+          break;
+        default:
+          throw new UnsupportedOperationException("Unsupported upstream state " + outcome);
+      }
     }
-    return IterOutcome.OK;
   }
 
-  private IterOutcome writeToMetastore() {
-    FilterExpression deleteFilter = popConfig.getContext().tableInfo().toFilter();
+  private void writeToMetastore() {
+    MetadataControllerContext mdContext = popConfig.getContext();
+    FilterExpression deleteFilter = mdContext.tableInfo().toFilter();
 
-    for (MetadataInfo metadataInfo : popConfig.getContext().metadataToRemove()) {
+    for (MetadataInfo metadataInfo : mdContext.metadataToRemove()) {
       deleteFilter = FilterExpression.and(deleteFilter,
-          FilterExpression.equal(MetadataInfo.METADATA_KEY, metadataInfo.key()));
+          FilterExpression.equal(MetastoreColumn.METADATA_KEY, metadataInfo.key()));
     }
 
     Modify<TableMetadataUnit> modify = tables.modify();
     if (!popConfig.getContext().metadataToRemove().isEmpty()) {
-      modify.delete(deleteFilter);
+      modify.delete(Delete.builder()
+        .metadataType(MetadataType.SEGMENT, MetadataType.FILE, MetadataType.ROW_GROUP, MetadataType.PARTITION)
+        .filter(deleteFilter)
+        .build());
     }
 
-    MetastoreTableInfo metastoreTableInfo = popConfig.getContext().metastoreTableInfo();
-
+    MetastoreTableInfo metastoreTableInfo = mdContext.metastoreTableInfo();
     if (tables.basicRequests().hasMetastoreTableInfoChanged(metastoreTableInfo)) {
-      context.getExecutorState()
-          .fail(new IllegalStateException(String.format("Metadata for table [%s] was changed before analyze is finished", tableInfo.name())));
-      close();
-      killIncoming(false);
-      return IterOutcome.STOP;
+      throw UserException.executionError(null)
+        .message("Metadata for table [%s] was changed before analyze is finished", tableInfo.name())
+        .build(logger);
     }
 
     modify.overwrite(metadataUnits)
         .execute();
+  }
 
+  private void createSummary() {
+    container.clear();
     BitVector bitVector =
         container.addOrGet(MetastoreAnalyzeConstants.OK_FIELD_NAME, Types.required(TypeProtos.MinorType.BIT), null);
     VarCharVector varCharVector =
@@ -292,11 +253,8 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
             popConfig.getContext().tableInfo().workspace(),
             popConfig.getContext().tableInfo().name()).getBytes());
 
-    bitVector.getMutator().setValueCount(1);
-    varCharVector.getMutator().setValueCount(1);
-    container.setRecordCount(++recordCount);
-
-    return IterOutcome.OK;
+    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+    container.setValueCount(1);
   }
 
   private List<TableMetadataUnit> getMetadataUnits(VectorContainer container) {
@@ -306,7 +264,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       metadataUnits.addAll(getMetadataUnits(reader, 0));
     }
 
-    if (!metadataToHandle.isEmpty()) {
+    if (metadataToHandle != null) {
       // leaves only table metadata and metadata which belongs to segments to be overridden
       metadataUnits = metadataUnits.stream()
           .filter(tableMetadataUnit ->
@@ -328,7 +286,9 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       metadataUnits.addAll(metadata);
     }
 
-    boolean insertDefaultSegment = metadataUnits.stream()
+    // checks whether metadataUnits contains not only table metadata before adding default segment
+    // to avoid case when only table metadata should be updated and / or root segments removed
+    boolean insertDefaultSegment = metadataUnits.size() > 1 && metadataUnits.stream()
         .noneMatch(metadataUnit -> metadataUnit.metadataType().equals(MetadataType.SEGMENT.name()));
 
     if (insertDefaultSegment) {
@@ -353,6 +313,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
     return tableMetadataUnit.toBuilder()
         .metadataType(MetadataType.SEGMENT.name())
         .metadataKey(MetadataInfo.DEFAULT_SEGMENT_KEY)
+        .metadataIdentifier(MetadataInfo.DEFAULT_SEGMENT_KEY)
         .owner(null)
         .tableType(null)
         .metadataStatistics(Collections.emptyList())
@@ -611,9 +572,9 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
     Multimap<String, StatisticsHolder<?>> columnStatistics = ArrayListMultimap.create();
     Map<String, TypeProtos.MinorType> columnTypes = new HashMap<>();
     for (ColumnMetadata column : columnMetadata) {
-      String fieldName = AnalyzeColumnUtils.getColumnName(column.name());
 
       if (AnalyzeColumnUtils.isColumnStatisticsField(column.name())) {
+        String fieldName = AnalyzeColumnUtils.getColumnName(column.name());
         StatisticsKind<?> statisticsKind = AnalyzeColumnUtils.getStatisticsKind(column.name());
         columnStatistics.put(fieldName,
             new StatisticsHolder<>(getConvertedColumnValue(reader.column(column.name())), statisticsKind));
@@ -670,7 +631,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
     return metadataStatistics;
   }
 
-  private void appendStatistics(StatisticsRecordCollector statisticsCollector) throws IOException {
+  private void appendStatistics(StatisticsRecordCollector statisticsCollector) {
     if (context.getOptions().getOption(PlannerSettings.STATISTICS_USE)) {
       List<FieldConverter> fieldConverters = new ArrayList<>();
       int fieldId = 0;
@@ -685,16 +646,22 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         fieldConverters.add(converter);
       }
 
-      for (int counter = 0; counter < right.getRecordCount(); counter++) {
-        statisticsCollector.startStatisticsRecord();
-        // write the current record
-        for (FieldConverter converter : fieldConverters) {
-          converter.setPosition(counter);
-          converter.startField();
-          converter.writeField();
-          converter.endField();
+      try {
+        for (int counter = 0; counter < right.getRecordCount(); counter++) {
+          statisticsCollector.startStatisticsRecord();
+          // write the current record
+          for (FieldConverter converter : fieldConverters) {
+            converter.setPosition(counter);
+            converter.startField();
+            converter.writeField();
+            converter.endField();
+          }
+          statisticsCollector.endStatisticsRecord();
         }
-        statisticsCollector.endStatisticsRecord();
+      } catch (IOException e) {
+        throw UserException.dataWriteError(e)
+            .addContext("Failed to write metadata")
+            .build(logger);
       }
     }
   }
@@ -707,7 +674,6 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       default:
         return objectReader.getObject();
     }
-
   }
 
   private Set<Path> getIncomingLocations(TupleReader reader) {
@@ -753,18 +719,12 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    left.kill(sendUpstream);
-    right.kill(sendUpstream);
-  }
-
-  @Override
   public void dump() {
     logger.error("MetadataHandlerBatch[container={}, popConfig={}]", container, popConfig);
   }
 
   @Override
   public int getRecordCount() {
-    return recordCount;
+    return container.getRecordCount();
   }
 }

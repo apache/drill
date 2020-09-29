@@ -25,9 +25,7 @@ import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.RequestHandler;
-import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcBus;
 import org.apache.drill.exec.rpc.RpcException;
@@ -94,7 +92,7 @@ class DataServerRequestHandler implements RequestHandler<DataServerConnection> {
           fragmentBatch.getReceivingMajorFragmentId(),
           fragmentBatch.getReceivingMinorFragmentIdList()), e);
       ack.clear();
-      sender.send(new Response(BitData.RpcType.ACK, Acks.FAIL));
+      ack.sendFail();
     } finally {
 
       // decrement the extra reference we grabbed at the top.
@@ -127,7 +125,7 @@ class DataServerRequestHandler implements RequestHandler<DataServerConnection> {
       logger.error("error to solve received runtime filter, {}",
         QueryIdHelper.getQueryId(runtimeFilterBDef.getQueryId()), e);
       ackSender.clear();
-      sender.send(new Response(BitData.RpcType.ACK, Acks.FAIL));
+      ackSender.sendFail();
     } finally {
       ackSender.sendOk();
     }

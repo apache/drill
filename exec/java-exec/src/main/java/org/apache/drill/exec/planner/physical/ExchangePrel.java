@@ -25,7 +25,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 
 import java.util.Collections;
 
-public abstract class ExchangePrel extends SinglePrel{
+public abstract class ExchangePrel extends SinglePrel {
 
   public ExchangePrel(RelOptCluster cluster, RelTraitSet traits, RelNode child) {
     super(cluster, traits, child);
@@ -38,12 +38,11 @@ public abstract class ExchangePrel extends SinglePrel{
 
   /**
    * The derived classes can override this method to create relevant mux exchanges.
-   * If this method is not overrided the default behaviour is to clone itself.
+   * If this method is not overridden then the default behavior is to clone itself.
    * @param child input to the new muxPrel or new Exchange node.
    * @param options options manager to check if mux is enabled.
    */
   public Prel constructMuxPrel(Prel child, OptionManager options) {
     return (Prel)copy(getTraitSet(), Collections.singletonList(((RelNode)child)));
   }
-
 }

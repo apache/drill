@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl;
 
 import java.util.List;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
@@ -33,27 +32,27 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SingleSenderCreator implements RootCreator<SingleSender>{
 
   @Override
-  public RootExec getRoot(ExecutorFragmentContext context, SingleSender config, List<RecordBatch> children)
-      throws ExecutionSetupException {
+  public RootExec getRoot(ExecutorFragmentContext context, SingleSender config, List<RecordBatch> children) {
     assert children != null && children.size() == 1;
     return new SingleSenderRootExec(context, children.iterator().next(), config);
   }
 
   public static class SingleSenderRootExec extends BaseRootExec {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleSenderRootExec.class);
+    private static final Logger logger = LoggerFactory.getLogger(SingleSenderRootExec.class);
     private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(SingleSenderRootExec.class);
 
     private final FragmentHandle oppositeHandle;
 
-    private RecordBatch incoming;
+    private final RecordBatch incoming;
     private AccountingDataTunnel tunnel;
-    private FragmentHandle handle;
-    private int recMajor;
-    private volatile boolean ok = true;
+    private final FragmentHandle handle;
+    private final int recMajor;
     private volatile boolean done = false;
 
     public enum Metric implements MetricDef {
@@ -82,24 +81,15 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
 
     @Override
     public boolean innerNext() {
-      if (!ok) {
-        incoming.kill(false);
-
-        return false;
-      }
 
       IterOutcome out;
       if (!done) {
         out = next(incoming);
       } else {
-        incoming.kill(true);
+        incoming.cancel();
         out = IterOutcome.NONE;
       }
-//      logger.debug("Outcome of sender next {}", out);
       switch (out) {
-      case OUT_OF_MEMORY:
-        throw new OutOfMemoryException();
-      case STOP:
       case NONE:
         // if we didn't do anything yet, send an empty schema.
         final BatchSchema sendSchema = incoming.getSchema() == null ?

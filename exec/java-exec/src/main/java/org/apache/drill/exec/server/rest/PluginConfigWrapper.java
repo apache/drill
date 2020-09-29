@@ -19,9 +19,9 @@ package org.apache.drill.exec.server.rest;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,50 +29,25 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @XmlRootElement
 public class PluginConfigWrapper {
 
-  private String name;
-  private StoragePluginConfig config;
-  private boolean exists;
+  private final String name;
+  private final StoragePluginConfig config;
 
   @JsonCreator
-  public PluginConfigWrapper(@JsonProperty("name") String name, @JsonProperty("config") StoragePluginConfig config) {
+  public PluginConfigWrapper(@JsonProperty("name") String name,
+      @JsonProperty("config") StoragePluginConfig config) {
     this.name = name;
     this.config = config;
-    this.exists = config != null;
   }
 
-  public String getName() {
-    return name;
-  }
+  public String getName() { return name; }
 
-  public StoragePluginConfig getConfig() {
-    return config;
-  }
+  public StoragePluginConfig getConfig() { return config; }
 
   public boolean enabled() {
-    return exists && config.isEnabled();
+    return config.isEnabled();
   }
 
-  public void createOrUpdateInStorage(StoragePluginRegistry storage) throws ExecutionSetupException {
-    storage.createOrUpdate(name, config, true);
-  }
-
-  public boolean setEnabledInStorage(StoragePluginRegistry storage, boolean enabled) throws ExecutionSetupException {
-    if (exists) {
-      config.setEnabled(enabled);
-      createOrUpdateInStorage(storage);
-    }
-    return exists;
-  }
-
-  public boolean exists() {
-    return exists;
-  }
-
-  public boolean deleteFromStorage(StoragePluginRegistry storage) {
-    if (exists) {
-      storage.deletePlugin(name);
-      return true;
-    }
-    return false;
+  public void createOrUpdateInStorage(StoragePluginRegistry storage) throws PluginException {
+    storage.validatedPut(name, config);
   }
 }

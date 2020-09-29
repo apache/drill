@@ -70,6 +70,7 @@ public class UnionExchangePrel extends ExchangePrel {
     return new UnionExchangePrel(getCluster(), traitSet, sole(inputs));
   }
 
+  @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getInput();
 
@@ -87,5 +88,4 @@ public class UnionExchangePrel extends ExchangePrel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
-
 }

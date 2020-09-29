@@ -33,9 +33,8 @@ import static org.junit.Assert.assertTrue;
 public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
 
   /**
-   * Test to show empty batch with both OK_NEW_SCHEMA and EMIT outcome is not ignored by Limit and is pass through to
-   * the downstream operator.
-   * @throws Throwable
+   * Test to show empty batch with both OK_NEW_SCHEMA and EMIT outcome is not
+   * ignored by Limit and is pass through to the downstream operator.
    */
   @Test
   public void testLimitEmptyBatchEmitOutcome() throws Throwable {
@@ -52,6 +51,7 @@ public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
     mockInputBatch.useUnnestKillHandlingForLimit(true);
 
     final Limit limitConf = new Limit(null, 0, 1);
+    @SuppressWarnings("resource")
     final LimitRecordBatch limitBatch = new LimitRecordBatch(limitConf, operatorFixture.getFragmentContext(),
       mockInputBatch);
 
@@ -63,9 +63,8 @@ public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
   }
 
   /**
-   * Test to validate limit considers all the data until it sees EMIT outcome and return output batch with data that
-   * meets the limit criteria.
-   * @throws Throwable
+   * Test to validate limit considers all the data until it sees EMIT outcome
+   * and return output batch with data that meets the limit criteria.
    */
   @Test
   public void testLimitNonEmptyBatchEmitOutcome() throws Throwable {
@@ -82,6 +81,7 @@ public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
     mockInputBatch.useUnnestKillHandlingForLimit(true);
 
     final Limit limitConf = new Limit(null, 0, 1);
+    @SuppressWarnings("resource")
     final LimitRecordBatch limitBatch = new LimitRecordBatch(limitConf, operatorFixture.getFragmentContext(),
       mockInputBatch);
 
@@ -94,9 +94,9 @@ public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
   }
 
   /**
-   * Test to show that once a limit number of records is produced using first set of batches then on getting a batch
-   * with EMIT outcome, the limit state is again refreshed and applied to next set of batches with data.
-   * @throws Throwable
+   * Test to show that once a limit number of records is produced using first
+   * set of batches then on getting a batch with EMIT outcome, the limit state
+   * is again refreshed and applied to next set of batches with data.
    */
   @Test
   public void testLimitResetsAfterFirstEmitOutcome() throws Throwable {
@@ -119,6 +119,7 @@ public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
     mockInputBatch.useUnnestKillHandlingForLimit(true);
 
     final Limit limitConf = new Limit(null, 0, 1);
+    @SuppressWarnings("resource")
     final LimitRecordBatch limitBatch = new LimitRecordBatch(limitConf, operatorFixture.getFragmentContext(),
       mockInputBatch);
 
@@ -134,10 +135,10 @@ public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
   }
 
   /**
-   * Test to show that when the limit number of records is found with first incoming batch, then next empty incoming
-   * batch with OK outcome is ignored, but the empty EMIT outcome batch is not ignored. Empty incoming batch with
+   * Test to show that when the limit number of records is found with first
+   * incoming batch, then next empty incoming batch with OK outcome is ignored,
+   * but the empty EMIT outcome batch is not ignored. Empty incoming batch with
    * EMIT outcome produces empty output batch with EMIT outcome.
-   * @throws Throwable
    */
   @Test
   public void testLimitNonEmptyFirst_EmptyOKEmitOutcome() throws Throwable {
@@ -157,6 +158,7 @@ public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
     mockInputBatch.useUnnestKillHandlingForLimit(true);
 
     final Limit limitConf = new Limit(null, 0, 1);
+    @SuppressWarnings("resource")
     final LimitRecordBatch limitBatch = new LimitRecordBatch(limitConf, operatorFixture.getFragmentContext(),
       mockInputBatch);
 
@@ -169,15 +171,18 @@ public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
   }
 
   /**
-   * Test to show that limit refreshes it's state after seeing first EMIT outcome and works on data batches following
-   * it as new set's of incoming batch and apply the limits rule from fresh on those. So for first set of batches with
-   * OK_NEW_SCHEMA and EMIT outcome but total number of records received being less than limit condition, it still
-   * produces an output with that many records (in this case 1 even though limit number of records is 2).
-   *
-   * After seeing EMIT, it refreshes it's state and operate on next input batches to again return limit number of
-   * records. So for 3rd batch with 2 records but with EMIT outcome it produces an output batch with 2 records not
-   * with 1 since state is refreshed.
-   * @throws Throwable
+   * Test to show that limit refreshes it's state after seeing first EMIT
+   * outcome and works on data batches following it as new set's of incoming
+   * batch and apply the limits rule from fresh on those. So for first set of
+   * batches with OK_NEW_SCHEMA and EMIT outcome but total number of records
+   * received being less than limit condition, it still produces an output with
+   * that many records (in this case 1 even though limit number of records is
+   * 2).
+   * <p>
+   * After seeing EMIT, it refreshes it's state and operate on next input
+   * batches to again return limit number of records. So for 3rd batch with 2
+   * records but with EMIT outcome it produces an output batch with 2 records
+   * not with 1 since state is refreshed.
    */
   @Test
   public void testMultipleLimitWithEMITOutcome() throws Throwable {
@@ -201,6 +206,7 @@ public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
     mockInputBatch.useUnnestKillHandlingForLimit(true);
 
     final Limit limitConf = new Limit(null, 0, 2);
+    @SuppressWarnings("resource")
     final LimitRecordBatch limitBatch = new LimitRecordBatch(limitConf, operatorFixture.getFragmentContext(),
       mockInputBatch);
 
@@ -219,9 +225,8 @@ public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
   }
 
   /**
-   * Test shows that limit operates on multiple input batches until it finds limit number of records or it sees an
-   * EMIT outcome to refresh it's state.
-   * @throws Throwable
+   * Test shows that limit operates on multiple input batches until it finds
+   * limit number of records or it sees an EMIT outcome to refresh it's state.
    */
   @Test
   public void testLimitNonEmptyFirst_NonEmptyOK_EmptyBatchEmitOutcome() throws Throwable {
@@ -246,6 +251,7 @@ public class TestLimitBatchEmitOutcome extends BaseTestOpBatchEmitOutcome {
     mockInputBatch.useUnnestKillHandlingForLimit(true);
 
     final Limit limitConf = new Limit(null, 0, 2);
+    @SuppressWarnings("resource")
     final LimitRecordBatch limitBatch = new LimitRecordBatch(limitConf, operatorFixture.getFragmentContext(),
       mockInputBatch);
 

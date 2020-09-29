@@ -17,243 +17,123 @@
  */
 package org.apache.drill.exec.store.avro;
 
-import static org.apache.drill.exec.store.avro.AvroTestUtil.ARRAY_SIZE;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.RECORD_COUNT;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateDoubleNestedSchema_NoNullValues;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateLinkedList;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateMapSchema;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateMapSchemaComplex_withNullValues;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateMapSchema_withNullValues;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateNestedArraySchema;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateSimpleArraySchema_NoNullValues;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateSimpleEnumSchema_NoNullValues;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateSimpleNestedSchema_NoNullValues;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateStringAndUtf8Data;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionNestedArraySchema_withNullValues;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionNestedSchema_withNullValues;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionSchema_WithNonNullValues;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.generateUnionSchema_WithNullValues;
-import static org.apache.drill.exec.store.avro.AvroTestUtil.write;
-import static org.apache.drill.test.TestBuilder.listOf;
-import static org.apache.drill.test.TestBuilder.mapOfObject;
+import org.apache.commons.io.FileUtils;
+import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.util.JsonStringHashMap;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.TestBuilder;
+import org.apache.hadoop.fs.Path;
+import org.joda.time.Period;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.avro.specific.TestRecordWithLogicalTypes;
-import org.apache.commons.io.FileUtils;
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.util.JsonStringHashMap;
-import org.apache.drill.exec.work.ExecErrorConstants;
-import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.test.TestBuilder;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import static org.apache.drill.test.TestBuilder.listOf;
+import static org.apache.drill.test.TestBuilder.mapOf;
+import static org.apache.drill.test.TestBuilder.mapOfObject;
 
 /**
  * Unit tests for Avro record reader.
  */
-public class AvroFormatTest extends BaseTestQuery {
+public class AvroFormatTest extends ClusterTest {
 
   private static String mapTableName;
+  private static AvroDataGenerator dataGenerator;
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @BeforeClass
-  public static void init() throws Exception {
+  public static void setup() throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
+    startCluster(builder);
+    dataGenerator = new AvroDataGenerator(dirTestWatcher);
     // Create temporary table containing map and map array
-    mapTableName = generateMapSchema().getFileName();
-  }
-
-  // XXX
-  //      1. Need to test nested field names with same name as top-level names for conflict.
-  //      2. Avro supports recursive types? Can we test this?
-
-  @Test
-  public void testBatchCutoff() throws Exception {
-    final AvroTestUtil.AvroTestRecordWriter testSetup = generateSimplePrimitiveSchema_NoNullValues(5000);
-    final String file = testSetup.getFileName();
-    final String sql = "select a_string, b_int, c_long, d_float, e_double, f_bytes, h_boolean, g_null from dfs.`%s`";
-    test(sql, file);
-    testBuilder()
-        .sqlQuery(sql, file)
-        .unOrdered()
-        .expectsNumBatches(2)
-        .baselineRecords(testSetup.getExpectedRecords())
-        .go();
-  }
-
-  /**
-   * Previously a bug in the Avro table metadata would cause wrong results
-   * for some queries on varchar types, as a length was not provided during metadata
-   * population. In some cases casts were being added with the default length
-   * of 1 and truncating values.
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testFiltersOnVarchar() throws Exception {
-    final String file = generateSimplePrimitiveSchema_NoNullValues(5000).getFileName();
-    final String sql = "select a_string from dfs.`%s` where a_string = 'a_1'";
-    testBuilder()
-        .sqlQuery(sql, file)
-        .unOrdered()
-        .baselineColumns("a_string")
-        .baselineValues("a_1")
-        .go();
-
-    final String sql2 = "select a_string from dfs.`%s` where a_string IN ('a_1')";
-    testBuilder()
-        .sqlQuery(sql2, file)
-        .unOrdered()
-        .baselineColumns("a_string")
-        .baselineValues("a_1")
-        .go();
-  }
-
-  @Test
-  public void testFiltersOnVarBinary() throws Exception {
-    final String file = generateSimplePrimitiveSchema_NoNullValues(5000).getFileName();
-    final String sql = "select f_bytes from dfs.`%s` where f_bytes = BINARY_STRING('\\x61\\x31')";
-    TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, file)
-        .unOrdered()
-        .baselineColumns("f_bytes");
-
-    for (int i = 0; i < 500; i++) {
-      testBuilder.baselineValues(new byte[] {'a', '1'});
-    }
-    testBuilder.go();
-
-    final String sql2 = "select f_bytes from dfs.`%s` where f_bytes IN (BINARY_STRING('\\x61\\x31'))";
-    testBuilder = testBuilder()
-        .sqlQuery(sql2, file)
-        .unOrdered()
-        .baselineColumns("f_bytes");
-
-    for (int i = 0; i < 500; i++) {
-      testBuilder.baselineValues(new byte[] {'a', '1'});
-    }
-    testBuilder.go();
+    mapTableName = dataGenerator.generateMapSchema().getFileName();
   }
 
   @Test
   public void testSimplePrimitiveSchema_NoNullValues() throws Exception {
-    final AvroTestUtil.AvroTestRecordWriter testSetup = generateSimplePrimitiveSchema_NoNullValues();
-    final String file = testSetup.getFileName();
-    final String sql = "select a_string, b_int, c_long, d_float, e_double, f_bytes, h_boolean, g_null from dfs.`%s`";
-    test(sql, file);
+    AvroDataGenerator.AvroTestRecordWriter testSetup = dataGenerator.generateSimplePrimitiveSchema_NoNullValues();
+    String file = testSetup.getFileName();
+    String sql = "select a_string, b_int, c_long, d_float, e_double, f_bytes, h_boolean, g_null from dfs.`%s`";
     testBuilder()
-        .sqlQuery(sql, file)
-        .unOrdered()
-        .baselineRecords(testSetup.getExpectedRecords())
-        .go();
+      .sqlQuery(sql, file)
+      .unOrdered()
+      .baselineRecords(testSetup.getExpectedRecords())
+      .go();
   }
 
   @Test
   public void testSimplePrimitiveSchema_StarQuery() throws Exception {
-    simpleAvroTestHelper(generateSimplePrimitiveSchema_NoNullValues(), "select * from dfs.`%s`");
-  }
-
-  private List<Map<String, Object>> project(
-      List<Map<String,Object>> incomingRecords,
-      List<String> projectCols) {
-    List<Map<String,Object>> output = Lists.newArrayList();
-    for (Map<String, Object> incomingRecord : incomingRecords) {
-      final JsonStringHashMap<String, Object> newRecord = new JsonStringHashMap<>();
-      for (String s : incomingRecord.keySet()) {
-        if (projectCols.contains(s)) {
-          newRecord.put(s, incomingRecord.get(s));
-        }
-      }
-      output.add(newRecord);
-    }
-    return output;
+    simpleAvroTestHelper(dataGenerator.generateSimplePrimitiveSchema_NoNullValues());
   }
 
   @Test
   public void testSimplePrimitiveSchema_SelectColumnSubset() throws Exception {
-    final AvroTestUtil.AvroTestRecordWriter testSetup = generateSimplePrimitiveSchema_NoNullValues();
-    final String file = testSetup.getFileName();
-    List<String> projectList = Lists.newArrayList("`h_boolean`", "`e_double`");
+    AvroDataGenerator.AvroTestRecordWriter testSetup = dataGenerator.generateSimplePrimitiveSchema_NoNullValues();
+    String file = testSetup.getFileName();
+    List<String> projectList = Arrays.asList("`h_boolean`", "`e_double`");
     testBuilder()
-        .sqlQuery("select h_boolean, e_double from dfs.`%s`", file)
-        .unOrdered()
-        .baselineRecords(project(testSetup.getExpectedRecords(), projectList))
-        .go();
-  }
-
-  @Test
-  public void testSimplePrimitiveSchema_NoColumnsExistInTheSchema() throws Exception {
-    final String file = generateSimplePrimitiveSchema_NoNullValues().getFileName();
-    try {
-      test("select h_dummy1, e_dummy2 from dfs.`%s`", file);
-      Assert.fail("Test should fail as h_dummy1 and e_dummy2 does not exist.");
-    } catch(UserException ue) {
-      Assert.assertTrue("Test should fail as h_dummy1 and e_dummy2 does not exist.",
-          ue.getMessage().contains("Column 'h_dummy1' not found in any table"));
-    }
-  }
-
-  @Test
-  public void testSimplePrimitiveSchema_OneExistAndOneDoesNotExistInTheSchema() throws Exception {
-    final String file = generateSimplePrimitiveSchema_NoNullValues().getFileName();
-    try {
-      test("select h_boolean, e_dummy2 from dfs.`%s`", file);
-      Assert.fail("Test should fail as e_dummy2 does not exist.");
-    } catch(UserException ue) {
-      Assert.assertTrue("Test should fail as e_dummy2 does not exist.", true);
-    }
+      .sqlQuery("select h_boolean, e_double from dfs.`%s`", file)
+      .unOrdered()
+      .baselineRecords(project(testSetup.getExpectedRecords(), projectList))
+      .go();
   }
 
   @Test
   public void testImplicitColumnsWithStar() throws Exception {
-    AvroTestUtil.AvroTestRecordWriter testWriter = generateSimplePrimitiveSchema_NoNullValues(1);
-    final String file = testWriter.getFileName();
+    AvroDataGenerator.AvroTestRecordWriter testWriter = dataGenerator.generateSimplePrimitiveSchema_NoNullValues(1);
     // removes "." and ".." from the path
-    String tablePath = new File(testWriter.getFilePath()).getCanonicalPath();
+    String tablePathString = new File(testWriter.getFilePath()).getCanonicalPath();
+    Path tablePath = new Path(tablePathString);
 
     List<Map<String, Object>> expectedRecords = testWriter.getExpectedRecords();
-    expectedRecords.get(0).put("`filename`", file);
+    expectedRecords.get(0).put("`filename`", tablePath.getName());
     expectedRecords.get(0).put("`suffix`", "avro");
-    expectedRecords.get(0).put("`fqn`", tablePath);
-    expectedRecords.get(0).put("`filepath`", new File(tablePath).getParent());
+    expectedRecords.get(0).put("`fqn`", tablePath.toUri().getPath());
+    expectedRecords.get(0).put("`filepath`", tablePath.getParent().toUri().getPath());
     try {
       testBuilder()
-          .sqlQuery("select filename, *, suffix, fqn, filepath from dfs.`%s`", file)
-          .unOrdered()
-          .baselineRecords(expectedRecords)
-          .go();
+        .sqlQuery("select filename, *, suffix, fqn, filepath from dfs.`%s`", tablePath.getName())
+        .unOrdered()
+        .baselineRecords(expectedRecords)
+        .go();
     } finally {
-      FileUtils.deleteQuietly(new File(tablePath));
+      FileUtils.deleteQuietly(new File(tablePath.toUri().getPath()));
     }
   }
 
   @Test
   public void testImplicitColumnAlone() throws Exception {
-    AvroTestUtil.AvroTestRecordWriter testWriter = generateSimplePrimitiveSchema_NoNullValues(1);
-    final String file = testWriter.getFileName();
+    AvroDataGenerator.AvroTestRecordWriter testWriter = dataGenerator.generateSimplePrimitiveSchema_NoNullValues(1);
+    String file = testWriter.getFileName();
     // removes "." and ".." from the path
     String tablePath = new File(testWriter.getFilePath()).getCanonicalPath();
     try {
       testBuilder()
-          .sqlQuery("select filename from dfs.`%s`", file)
-          .unOrdered()
-          .baselineColumns("filename")
-          .baselineValues(file)
-          .go();
+        .sqlQuery("select filename from dfs.`%s`", file)
+        .unOrdered()
+        .baselineColumns("filename")
+        .baselineValues(file)
+        .go();
     } finally {
       FileUtils.deleteQuietly(new File(tablePath));
     }
@@ -261,18 +141,17 @@ public class AvroFormatTest extends BaseTestQuery {
 
   @Test
   public void testImplicitColumnInWhereClause() throws Exception {
-    AvroTestUtil.AvroTestRecordWriter testWriter = generateSimplePrimitiveSchema_NoNullValues(1);
-    final String file = testWriter.getFileName();
+    AvroDataGenerator.AvroTestRecordWriter testWriter = dataGenerator.generateSimplePrimitiveSchema_NoNullValues(1);
+    String file = testWriter.getFileName();
     // removes "." and ".." from the path
     String tablePath = new File(testWriter.getFilePath()).getCanonicalPath();
 
-    List<Map<String, Object>> expectedRecords = testWriter.getExpectedRecords();
     try {
       testBuilder()
-          .sqlQuery("select * from dfs.`%1$s` where filename = '%1$s'", file)
-          .unOrdered()
-          .baselineRecords(expectedRecords)
-          .go();
+        .sqlQuery("select * from dfs.`%1$s` where filename = '%1$s'", file)
+        .unOrdered()
+        .baselineRecords(testWriter.getExpectedRecords())
+        .go();
     } finally {
       FileUtils.deleteQuietly(new File(tablePath));
     }
@@ -280,302 +159,234 @@ public class AvroFormatTest extends BaseTestQuery {
 
   @Test
   public void testPartitionColumn() throws Exception {
-    setSessionOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL, "directory");
+    client.alterSession(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL, "directory");
     String file = "avroTable";
     String partitionColumn = "2018";
-    AvroTestUtil.AvroTestRecordWriter testWriter =
-        generateSimplePrimitiveSchema_NoNullValues(1, FileUtils.getFile(file, partitionColumn).getPath());
+    String tablePath = FileUtils.getFile(file, partitionColumn).getPath();
+    AvroDataGenerator.AvroTestRecordWriter testWriter = dataGenerator.generateSimplePrimitiveSchema_NoNullValues(1, tablePath);
     try {
       testBuilder()
-          .sqlQuery("select directory0 from dfs.`%s`", file)
-          .unOrdered()
-          .baselineColumns("directory0")
-          .baselineValues(partitionColumn)
-          .go();
-    } finally {
-      FileUtils.deleteQuietly(new File(testWriter.getFilePath()));
-      resetSessionOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
-    }
-  }
-
-  @Test
-  public void testSelectAllWithPartitionColumn() throws Exception {
-    String file = "avroTable";
-    String partitionColumn = "2018";
-    AvroTestUtil.AvroTestRecordWriter testWriter =
-      generateSimplePrimitiveSchema_NoNullValues(1, FileUtils.getFile(file, partitionColumn).getPath());
-    List<Map<String, Object>> expectedRecords = testWriter.getExpectedRecords();
-    expectedRecords.get(0).put("`dir0`", partitionColumn);
-    try {
-      testBuilder()
-          .sqlQuery("select * from dfs.`%s`", file)
-          .unOrdered()
-          .baselineRecords(expectedRecords)
-          .go();
-    } finally {
-      FileUtils.deleteQuietly(new File(testWriter.getFilePath()));
-    }
-  }
-
-  @Test
-  public void testAvroTableWithLogicalTypesDecimal() throws Exception {
-    ExecTest.mockUtcDateTimeZone();
-    LocalDate date = DateUtility.parseLocalDate("2018-02-03");
-    LocalTime time = DateUtility.parseLocalTime("19:25:03.0");
-    LocalDateTime timestamp = DateUtility.parseLocalDateTime("2018-02-03 19:25:03.0");
-
-    // Avro uses joda package
-    org.joda.time.DateTime jodaDateTime = org.joda.time.DateTime.parse("2018-02-03T19:25:03");
-    BigDecimal bigDecimal = new BigDecimal("123.45");
-
-    TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(
-        true,
-        34,
-        35L,
-        3.14F,
-        3019.34,
-        "abc",
-        jodaDateTime.toLocalDate(),
-        jodaDateTime.toLocalTime(),
-        jodaDateTime,
-        bigDecimal
-    );
-
-    File data = write(TestRecordWithLogicalTypes.getClassSchema(), record);
-
-    final String query = "select * from dfs.`%s`";
-
-    testBuilder()
-        .sqlQuery(query, data.getName())
+        .sqlQuery("select directory0 from dfs.`%s`", file)
         .unOrdered()
-        .baselineColumns("b", "i32", "i64", "f32", "f64", "s", "d", "t", "ts", "dec")
-        .baselineValues(true, 34, 35L, 3.14F, 3019.34, "abc", date, time, timestamp, bigDecimal)
+        .baselineColumns("directory0")
+        .baselineValues(partitionColumn)
         .go();
-  }
-
-  @Test
-  public void testAvroWithDisabledDecimalType() throws Exception {
-    TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(
-        true,
-        34,
-        35L,
-        3.14F,
-        3019.34,
-        "abc",
-        org.joda.time.LocalDate.now(),
-        org.joda.time.LocalTime.now(),
-        org.joda.time.DateTime.now(),
-        new BigDecimal("123.45")
-    );
-
-    File data = write(TestRecordWithLogicalTypes.getClassSchema(), record);
-    final String query = String.format("select * from dfs.`%s`", data.getName());
-
-    try {
-      alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, false);
-      errorMsgTestHelper(query, ExecErrorConstants.DECIMAL_DISABLE_ERR_MSG);
     } finally {
-      resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+      client.resetSession(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
+      FileUtils.deleteQuietly(new File(testWriter.getFilePath()));
     }
   }
 
   @Test
   public void testSimpleArraySchema_NoNullValues() throws Exception {
-    final String file = generateSimpleArraySchema_NoNullValues().getFileName();
-    final String sql = "select a_string, c_string_array[0], e_float_array[2] from dfs.`%s`";
-    test(sql, file);
+    String file = dataGenerator.generateSimpleArraySchema_NoNullValues().getFileName();
+    String sql = "select a_string, c_string_array[0] as csa, e_float_array[2] as efa " +
+      "from dfs.`%s` where a_string in ('a_0', 'a_15')";
+
+    testBuilder()
+      .sqlQuery(sql, file)
+      .unOrdered()
+      .baselineColumns("a_string", "csa", "efa")
+      .baselineValues("a_0", "c_string_array_0_0", 0.0F)
+      .baselineValues("a_15", "c_string_array_15_0", 30.0F)
+      .go();
   }
 
   @Test
   public void testSimpleArraySchema_StarQuery() throws Exception {
-    simpleAvroTestHelper(generateSimpleArraySchema_NoNullValues(), "select * from dfs.`%s`");
+    simpleAvroTestHelper(dataGenerator.generateSimpleArraySchema_NoNullValues());
   }
 
   @Test
   public void testDoubleNestedSchema_NoNullValues_NotAllColumnsProjected() throws Exception {
-    final String file = generateDoubleNestedSchema_NoNullValues().getFileName();
-    final String sql = "select t.c_record.nested_1_int, t.c_record.nested_1_record.double_nested_1_int from dfs.`%s` t";
-    test(sql, file);
+    String file = dataGenerator.generateDoubleNestedSchema_NoNullValues().getFileName();
+    String sql = "select a_string, t.c_record.nested_1_int as ni, " +
+      "t.c_record.nested_1_record.double_nested_1_int as dni from dfs.`%s` t " +
+      "where a_string in ('a_3', 'a_11')";
+
+    testBuilder()
+      .sqlQuery(sql, file)
+      .unOrdered()
+      .baselineColumns("a_string", "ni", "dni")
+      .baselineValues("a_3", 9, 27)
+      .baselineValues("a_11", 121, 1331)
+      .go();
   }
 
   @Test
   public void testSimpleNestedSchema_NoNullValues() throws Exception {
-    final String file = generateSimpleNestedSchema_NoNullValues().getFileName();
-    final String sql = "select a_string, b_int, t.c_record.nested_1_string, t.c_record.nested_1_int from dfs.`%s` t";
-    test(sql, file);
+    String file = dataGenerator.generateSimpleNestedSchema_NoNullValues().getFileName();
+    String sql = "select a_string, b_int, t.c_record.nested_1_string as ns," +
+      " t.c_record.nested_1_int as ni from dfs.`%s` t where b_int in (6, 19)";
+
+    testBuilder()
+      .sqlQuery(sql, file)
+      .unOrdered()
+      .baselineColumns("a_string", "b_int", "ns", "ni")
+      .baselineValues("a_6", 6, "nested_1_string_6", 36)
+      .baselineValues("a_19", 19, "nested_1_string_19", 361)
+      .go();
   }
 
   @Test
   public void testSimpleNestedSchema_StarQuery() throws Exception {
-    final AvroTestUtil.AvroTestRecordWriter testSetup = generateSimpleNestedSchema_NoNullValues();
-    final String file = testSetup.getFileName();
-    testBuilder()
-        .sqlQuery("select * from dfs.`%s`", file)
-        .unOrdered()
-        .baselineRecords(testSetup.getExpectedRecords())
-        .go();
+    simpleAvroTestHelper(dataGenerator.generateSimpleNestedSchema_NoNullValues());
   }
   @Test
   public void testDoubleNestedSchema_NoNullValues() throws Exception {
-    final String file = generateDoubleNestedSchema_NoNullValues().getFileName();
-    final String sql = "select a_string, b_int, t.c_record.nested_1_string, t.c_record.nested_1_int, " +
-            "t.c_record.nested_1_record.double_nested_1_string, " +
-            "t.c_record.nested_1_record.double_nested_1_int " +
-            "from dfs.`%s` t";
-    test(sql, file);
+    String file = dataGenerator.generateDoubleNestedSchema_NoNullValues().getFileName();
+    String sql = "select a_string, b_int, t.c_record.nested_1_string as ns, t.c_record.nested_1_int as ni, " +
+      "t.c_record.nested_1_record.double_nested_1_string as dns, t.c_record.nested_1_record.double_nested_1_int as dni " +
+      "from dfs.`%s` t where b_int in (2, 14)";
 
-    final String sql2 = "select t.c_record.nested_1_string from dfs.`%s` t limit 1";
-    TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql2, file)
-        .unOrdered()
-        .baselineColumns("EXPR$0");
-    for (int i = 0; i < 1; i++) {
-      testBuilder.baselineValues("nested_1_string_" + i);
-    }
-    testBuilder.go();
+    testBuilder()
+      .sqlQuery(sql, file)
+      .unOrdered()
+      .baselineColumns("a_string", "b_int", "ns", "ni", "dns", "dni")
+      .baselineValues("a_2", 2, "nested_1_string_2", 4, "double_nested_1_string_2_2", 8)
+      .baselineValues("a_14", 14, "nested_1_string_14", 196, "double_nested_1_string_14_14", 2744)
+      .go();
   }
 
   @Test
   public void testDoubleNestedSchema_StarQuery() throws Exception {
-    simpleAvroTestHelper(generateDoubleNestedSchema_NoNullValues(), "select * from dfs.`%s`");
-  }
-
-  private static void simpleAvroTestHelper(AvroTestUtil.AvroTestRecordWriter testSetup, final String sql) throws Exception {
-    testBuilder()
-        .sqlQuery(sql, testSetup.getFileName())
-        .unOrdered()
-        .baselineRecords(testSetup.getExpectedRecords())
-        .go();
+    simpleAvroTestHelper(dataGenerator.generateDoubleNestedSchema_NoNullValues());
   }
 
   @Test
   public void testSimpleEnumSchema_NoNullValues() throws Exception {
-    final AvroTestUtil.AvroTestRecordWriter testSetup = generateSimpleEnumSchema_NoNullValues();
-    final String file = testSetup.getFileName();
-    final String sql = "select a_string, b_enum from dfs.`%s`";
-    List<String> projectList = Lists.newArrayList("`a_string`", "`b_enum`");
+    AvroDataGenerator.AvroTestRecordWriter testSetup = dataGenerator.generateSimpleEnumSchema_NoNullValues();
+    String file = testSetup.getFileName();
+    String sql = "select a_string, b_enum from dfs.`%s`";
+    List<String> projectList = Arrays.asList("`a_string`", "`b_enum`");
     testBuilder()
-        .sqlQuery(sql, file)
-        .unOrdered()
-        .baselineRecords(project(testSetup.getExpectedRecords(), projectList))
-        .go();
+      .sqlQuery(sql, file)
+      .unOrdered()
+      .baselineRecords(project(testSetup.getExpectedRecords(), projectList))
+      .go();
   }
 
   @Test
   public void testSimpleEnumSchema_StarQuery() throws Exception {
-    simpleAvroTestHelper(generateSimpleEnumSchema_NoNullValues(), "select * from dfs.`%s`");
+    simpleAvroTestHelper(dataGenerator.generateSimpleEnumSchema_NoNullValues());
   }
 
   @Test
   public void testSimpleUnionSchema_StarQuery() throws Exception {
-    simpleAvroTestHelper(generateUnionSchema_WithNullValues(), "select * from dfs.`%s`");
+    simpleAvroTestHelper(dataGenerator.generateUnionSchema_WithNullValues());
   }
 
   @Test
   public void testShouldFailSimpleUnionNonNullSchema_StarQuery() throws Exception {
-    final String file = generateUnionSchema_WithNonNullValues().getFileName();
-    try {
-      test("select * from dfs.`%s`", file);
-      Assert.fail("Test should fail as union is only supported for optional fields");
-    } catch(UserRemoteException e) {
-      String message = e.getMessage();
-      Assert.assertTrue(message.contains("Avro union type must be of the format : [\"null\", \"some-type\"]"));
-    }
+    String file = dataGenerator.generateUnionSchema_WithNonNullValues().getFileName();
+
+    thrown.expect(UserRemoteException.class);
+    thrown.expectMessage("UNSUPPORTED_OPERATION ERROR");
+    run("select * from dfs.`%s`", file);
   }
 
   @Test
   public void testNestedUnionSchema_withNullValues() throws Exception {
-    final String file = generateUnionNestedSchema_withNullValues().getFileName();
-    final String sql = "select t.c_record.nested_1_string,t.c_record.nested_1_int from dfs.`%s` t";
-    test(sql, file);
+    String file = dataGenerator.generateUnionNestedSchema_withNullValues().getFileName();
+    String sql = "select a_string, t.c_record.nested_1_string as ns, " +
+      "t.c_record.nested_1_int as ni from dfs.`%s` t where a_string in ('a_0', 'a_1')";
+
+    testBuilder()
+      .sqlQuery(sql, file)
+      .unOrdered()
+      .baselineColumns("a_string", "ns", "ni")
+      .baselineValues("a_0", "nested_1_string_0", 0)
+      .baselineValues("a_1", null, null)
+      .go();
   }
 
-  // DRILL-4574"></a>
+  // DRILL-4574
   @Test
   public void testFlattenPrimitiveArray() throws Exception {
-    final String file = generateSimpleArraySchema_NoNullValues().getFileName();
-    final String sql = "select a_string, flatten(c_string_array) as array_item from dfs.`%s` t";
+    String file = dataGenerator.generateSimpleArraySchema_NoNullValues().getFileName();
+    String sql = "select a_string, flatten(c_string_array) as array_item from dfs.`%s` t";
 
     TestBuilder testBuilder = testBuilder()
       .sqlQuery(sql, file)
       .unOrdered()
       .baselineColumns("a_string", "array_item");
 
-    for (int i = 0; i < RECORD_COUNT; i++) {
-
-      for (int j = 0; j < ARRAY_SIZE; j++) {
+    for (int i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
+      for (int j = 0; j < AvroDataGenerator.ARRAY_SIZE; j++) {
         testBuilder.baselineValues("a_" + i, "c_string_array_" + i + "_" + j);
       }
     }
-
     testBuilder.go();
-  }
-
-  private TestBuilder nestedArrayQueryTestBuilder(String file) {
-    final String sql = "select rec_nr, array_item['nested_1_int'] as array_item_nested_int from "
-        + "(select a_int as rec_nr, flatten(t.b_array) as array_item from dfs.`%s` t) a";
-
-    TestBuilder testBuilder = testBuilder()
-      .sqlQuery(sql, file)
-      .unOrdered()
-      .baselineColumns("rec_nr", "array_item_nested_int");
-
-    return testBuilder;
   }
 
   //DRILL-4574
   @Test
   public void testFlattenComplexArray() throws Exception {
-    final String file = generateNestedArraySchema().getFileName();
+    String file = dataGenerator.generateNestedArraySchema().getFileName();
 
     TestBuilder testBuilder = nestedArrayQueryTestBuilder(file);
-    for (int i = 0; i < RECORD_COUNT; i++) {
-      for (int j = 0; j < ARRAY_SIZE; j++) {
+    for (int i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
+      for (int j = 0; j < AvroDataGenerator.ARRAY_SIZE; j++) {
         testBuilder.baselineValues(i, j);
       }
     }
     testBuilder.go();
-
   }
 
   //DRILL-4574
   @Test
   public void testFlattenEmptyComplexArrayMustYieldNoResults() throws Exception {
-    final String file = generateNestedArraySchema(RECORD_COUNT, 0).getFilePath();
+    String file = dataGenerator.generateNestedArraySchema(AvroDataGenerator.RECORD_COUNT, 0).getFilePath();
     TestBuilder testBuilder = nestedArrayQueryTestBuilder(file);
     testBuilder.expectsEmptyResultSet();
   }
 
   @Test
   public void testNestedUnionArraySchema_withNullValues() throws Exception {
-    final String file = generateUnionNestedArraySchema_withNullValues().getFileName();
-    final String sql = "select t.c_array[0].nested_1_string,t.c_array[0].nested_1_int from dfs.`%s` t";
-    test(sql, file);
+    String file = dataGenerator.generateUnionNestedArraySchema_withNullValues().getFileName();
+    String sql = "select a_string, t.c_array[0].nested_1_string as ns, " +
+      "t.c_array[0].nested_1_int as ni from dfs.`%s` t where a_string in ('a_2', 'a_3')";
+
+    testBuilder()
+      .sqlQuery(sql, file)
+      .unOrdered()
+      .baselineColumns("a_string", "ns", "ni")
+      .baselineValues("a_2", "nested_1_string_2", 4)
+      .baselineValues("a_3", null, null)
+      .go();
   }
 
   @Test
   public void testMapSchema_withNullValues() throws Exception {
-    final String file = generateMapSchema_withNullValues().getFileName();
-    final String sql = "select c_map['key1'],c_map['key2'] from dfs.`%s`";
-    test(sql, file);
+    String file = dataGenerator.generateMapSchema_withNullValues().getFileName();
+    String sql = "select a_string, c_map['key1'] as k1, c_map['key2'] as k2 " +
+      "from dfs.`%s` where a_string in ('a_4', 'a_5')";
+
+    testBuilder()
+      .sqlQuery(sql, file)
+      .unOrdered()
+      .baselineColumns("a_string", "k1", "k2")
+      .baselineValues("a_4", "nested_1_string_4", "nested_1_string_5")
+      .baselineValues("a_5", null, null)
+      .go();
   }
 
   @Test
   public void testMapSchemaComplex_withNullValues() throws Exception {
-    final String file = generateMapSchemaComplex_withNullValues().getFileName();
-    final String sql = "select d_map['key1'] nested_key1, d_map['key2'] nested_key2 from dfs.`%s`";
+    String file = dataGenerator.generateMapSchemaComplex_withNullValues().getFileName();
+    String sql = "select d_map['key1'] nested_key1, d_map['key2'] nested_key2 from dfs.`%s`";
 
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, file)
-        .unOrdered()
-        .baselineColumns("nested_key1", "nested_key2");
+      .sqlQuery(sql, file)
+      .unOrdered()
+      .baselineColumns("nested_key1", "nested_key2");
 
-    final List<Object> expectedList = Lists.newArrayList();
-    for (int i = 0; i < ARRAY_SIZE; i++) {
-      expectedList.add((double)i);
+    List<Object> expectedList = new ArrayList<>();
+    for (int i = 0; i < AvroDataGenerator.ARRAY_SIZE; i++) {
+      expectedList.add((double) i);
     }
-    final List<Object> emptyList = listOf();
-    for (int i = 0; i < RECORD_COUNT; i += 2) {
+    List<Object> emptyList = listOf();
+    for (int i = 0; i < AvroDataGenerator.RECORD_COUNT; i += 2) {
       testBuilder.baselineValues(expectedList, expectedList);
       testBuilder.baselineValues(emptyList, emptyList);
     }
@@ -584,26 +395,39 @@ public class AvroFormatTest extends BaseTestQuery {
 
   @Test
   public void testStringAndUtf8Data() throws Exception {
-    simpleAvroTestHelper(generateStringAndUtf8Data(), "select * from dfs.`%s`");
+    simpleAvroTestHelper(dataGenerator.generateStringAndUtf8Data());
   }
 
   @Test
   public void testLinkedList() throws Exception {
-    final String file = generateLinkedList();
-    final String sql = "select * from dfs.`%s`";
-    test(sql, file);
+    int numRows = 5;
+    String file = dataGenerator.generateLinkedList(numRows);
+
+    TestBuilder testBuilder = testBuilder()
+      .sqlQuery("select * from dfs.`%s` t", file)
+      .unOrdered()
+      .baselineColumns("value", "next");
+
+    for (long i = 0; i < numRows; i++) {
+      if (i == numRows - 1) { // last row
+        testBuilder.baselineValues(i, mapOf("next", new JsonStringHashMap<>()));
+        continue;
+      }
+      testBuilder.baselineValues(i, mapOf("value", i + 1, "next", new JsonStringHashMap<>()));
+    }
+    testBuilder.go();
   }
 
   @Test
   public void testCountStar() throws Exception {
-    final String file = generateStringAndUtf8Data().getFileName();
-    final String sql = "select count(*) as row_count from dfs.`%s`";
+    String file = dataGenerator.generateStringAndUtf8Data().getFileName();
+    String sql = "select count(*) as row_count from dfs.`%s`";
     testBuilder()
-        .sqlQuery(sql, file)
-        .ordered()
-        .baselineColumns("row_count")
-        .baselineValues((long) RECORD_COUNT)
-        .go();
+      .sqlQuery(sql, file)
+      .ordered()
+      .baselineColumns("row_count")
+      .baselineValues((long) AvroDataGenerator.RECORD_COUNT)
+      .go();
   }
 
   @Test
@@ -611,11 +435,11 @@ public class AvroFormatTest extends BaseTestQuery {
     String sql = "select map_field from dfs.`%s`";
 
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, mapTableName)
-        .unOrdered()
-        .baselineColumns("map_field");
+      .sqlQuery(sql, mapTableName)
+      .unOrdered()
+      .baselineColumns("map_field");
 
-    for (long i = 0; i < RECORD_COUNT; i++) {
+    for (long i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
       testBuilder.baselineValues(mapOfObject("key1", i, "key2", i + 1));
     }
     testBuilder.go();
@@ -623,14 +447,14 @@ public class AvroFormatTest extends BaseTestQuery {
 
   @Test
   public void testMapSchemaGetByKey() throws Exception {
-     String sql = "select map_field['key1'] val1, map_field['key2'] val2 from dfs.`%s`";
+    String sql = "select map_field['key1'] val1, map_field['key2'] val2 from dfs.`%s`";
 
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, mapTableName)
-        .unOrdered()
-        .baselineColumns("val1", "val2");
+      .sqlQuery(sql, mapTableName)
+      .unOrdered()
+      .baselineColumns("val1", "val2");
 
-    for (long i = 0; i < RECORD_COUNT; i++) {
+    for (long i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
       testBuilder.baselineValues(i, i + 1);
     }
     testBuilder.go();
@@ -641,12 +465,12 @@ public class AvroFormatTest extends BaseTestQuery {
     String sql = "select map_field['notExists'] as map_field from dfs.`%s`";
 
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, mapTableName)
-        .unOrdered()
-        .baselineColumns("map_field");
+      .sqlQuery(sql, mapTableName)
+      .unOrdered()
+      .baselineColumns("map_field");
 
     Object[] nullValue = new Object[] {null};
-    for (long i = 0; i < RECORD_COUNT; i++) {
+    for (long i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
       testBuilder.baselineValues(nullValue);
     }
     testBuilder.go();
@@ -657,11 +481,11 @@ public class AvroFormatTest extends BaseTestQuery {
     String sql = "select t.map_field.key1 val1, t.map_field.key2 val2 from dfs.`%s` t";
 
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, mapTableName)
-        .unOrdered()
-        .baselineColumns("val1", "val2");
+      .sqlQuery(sql, mapTableName)
+      .unOrdered()
+      .baselineColumns("val1", "val2");
 
-    for (long i = 0; i < RECORD_COUNT; i++) {
+    for (long i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
       testBuilder.baselineValues(i, i + 1);
     }
     testBuilder.go();
@@ -672,14 +496,14 @@ public class AvroFormatTest extends BaseTestQuery {
     String sql = "select map_array from dfs.`%s`";
 
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, mapTableName)
-        .unOrdered()
-        .baselineColumns("map_array");
+      .sqlQuery(sql, mapTableName)
+      .unOrdered()
+      .baselineColumns("map_array");
 
 
-    for (int i = 0; i < RECORD_COUNT; i++) {
+    for (int i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
       List<Object> array = listOf();
-      for (int j = 0; j < ARRAY_SIZE; j++) {
+      for (int j = 0; j < AvroDataGenerator.ARRAY_SIZE; j++) {
         array.add(mapOfObject(
             "key1", (i + 1) * (j + 50),
             "key2", (i + 1) * (j + 100)
@@ -696,11 +520,11 @@ public class AvroFormatTest extends BaseTestQuery {
     String sql = "select map_array[%d] element from dfs.`%s`";
 
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, elementIndex, mapTableName)
-        .unOrdered()
-        .baselineColumns("element");
+      .sqlQuery(sql, elementIndex, mapTableName)
+      .unOrdered()
+      .baselineColumns("element");
 
-    for (int i = 0; i < RECORD_COUNT; i++) {
+    for (int i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
       testBuilder.baselineValues(mapOfObject(
           "key1", (i + 1) * (elementIndex + 50),
           "key2", (i + 1) * (elementIndex + 100)
@@ -715,11 +539,11 @@ public class AvroFormatTest extends BaseTestQuery {
     String sql = "select map_array[%d]['key2'] val from dfs.`%s`";
 
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, elementIndex, mapTableName)
-        .unOrdered()
-        .baselineColumns("val");
+      .sqlQuery(sql, elementIndex, mapTableName)
+      .unOrdered()
+      .baselineColumns("val");
 
-    for (int i = 0; i < RECORD_COUNT; i++) {
+    for (int i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
       testBuilder.baselineValues((i + 1) * (elementIndex + 100));
     }
     testBuilder.go();
@@ -730,13 +554,13 @@ public class AvroFormatTest extends BaseTestQuery {
     String sql = "select map_array_value from dfs.`%s`";
 
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, mapTableName)
-        .unOrdered()
-        .baselineColumns("map_array_value");
+      .sqlQuery(sql, mapTableName)
+      .unOrdered()
+      .baselineColumns("map_array_value");
 
-    for (int i = 0; i < RECORD_COUNT; i++) {
+    for (int i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
       List<Object> doubleArray = listOf();
-      for (double j = 0; j < ARRAY_SIZE; j++) {
+      for (double j = 0; j < AvroDataGenerator.ARRAY_SIZE; j++) {
         doubleArray.add((double) (i + 1) * j);
       }
       testBuilder.baselineValues(mapOfObject("key1", doubleArray, "key2", doubleArray));
@@ -750,13 +574,13 @@ public class AvroFormatTest extends BaseTestQuery {
     String sql = "select map_array_value['key1'] element from dfs.`%s`";
 
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, generateMapSchema().getFileName())
-        .unOrdered()
-        .baselineColumns("element");
+      .sqlQuery(sql, dataGenerator.generateMapSchema().getFileName())
+      .unOrdered()
+      .baselineColumns("element");
 
-    for (int i = 0; i < RECORD_COUNT; i++) {
+    for (int i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
       List<Object> doubleArray = listOf();
-      for (double j = 0; j < ARRAY_SIZE; j++) {
+      for (double j = 0; j < AvroDataGenerator.ARRAY_SIZE; j++) {
         doubleArray.add((double) (i + 1) * j);
       }
       testBuilder.baselineValues(doubleArray);
@@ -766,14 +590,31 @@ public class AvroFormatTest extends BaseTestQuery {
   }
 
   @Test
+  public void testMapSchemaArrayValueGetByKeyElementByIndex() throws Exception {
+    String sql = "select map_array_value['key1'][3] element from dfs.`%s`";
+
+    TestBuilder testBuilder = testBuilder()
+      .sqlQuery(sql, mapTableName)
+      .unOrdered()
+      .baselineColumns("element");
+
+    for (int i = 0; i < AvroDataGenerator.RECORD_COUNT; i++) {
+      double val = (double) (i + 1) * 3;
+      testBuilder.baselineValues(val);
+    }
+
+    testBuilder.go();
+  }
+
+  @Test
   public void testMapSchemaValueInFilter() throws Exception {
     String sql = "select map_field['key1'] val from dfs.`%s` where map_field['key1'] < %d";
 
-    long filterValue = RECORD_COUNT / 10;
+    long filterValue = AvroDataGenerator.RECORD_COUNT / 10;
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, mapTableName, filterValue)
-        .unOrdered()
-        .baselineColumns("val");
+      .sqlQuery(sql, mapTableName, filterValue)
+      .unOrdered()
+      .baselineColumns("val");
 
     for (long i = 0; i < filterValue; i++) {
       testBuilder.baselineValues(i);
@@ -786,16 +627,134 @@ public class AvroFormatTest extends BaseTestQuery {
     String sql = "select map_array[%d]['key2'] val from dfs.`%s` where map_array[%d]['key2'] > %d";
 
     int elementIndex = 1;
-    int startRecord = 5001;
-    int filterValue = 5002 * (elementIndex + 100);
+    int startRecord = 30;
+    int filterValue = startRecord * (elementIndex + 100);
     TestBuilder testBuilder = testBuilder()
-        .sqlQuery(sql, elementIndex, mapTableName, elementIndex, filterValue)
-        .unOrdered()
-        .baselineColumns("val");
+      .sqlQuery(sql, elementIndex, mapTableName, elementIndex, filterValue)
+      .unOrdered()
+      .baselineColumns("val");
 
-    for (int i = startRecord + 1; i < RECORD_COUNT; i++) {
+    for (int i = startRecord; i < AvroDataGenerator.RECORD_COUNT; i++) {
       testBuilder.baselineValues((i + 1) * (elementIndex + 100));
     }
     testBuilder.go();
+  }
+
+  @Test
+  public void testDecimal() throws Exception {
+    int numRows = 5;
+    String fileName = dataGenerator.generateDecimalData(numRows);
+
+    TestBuilder testBuilder = testBuilder()
+      .sqlQuery("select * from dfs.`%s`", fileName)
+      .unOrdered()
+      .baselineColumns("col_dec_pos_bytes", "col_dec_neg_bytes", "col_dec_pos_fixed", "col_dec_neg_fixed");
+
+    for (int i = 0; i < numRows; i++) {
+      testBuilder.baselineValues(
+        new BigDecimal(BigInteger.valueOf(100 + i), 2),
+        new BigDecimal(BigInteger.valueOf(-200 + i), 2),
+        new BigDecimal(BigInteger.valueOf(300 + i), 2),
+        new BigDecimal(BigInteger.valueOf(-400 + i), 2));
+    }
+    testBuilder.go();
+  }
+
+  @Test
+  public void testDateTime() throws Exception {
+    LocalDateTime dateTime = LocalDateTime.now(ZoneId.of("UTC")).withNano(0);
+    LocalDate localDate = dateTime.toLocalDate();
+    LocalTime localTime = dateTime.toLocalTime();
+
+    String fileName = dataGenerator.generateDateTimeData(dateTime);
+
+    testBuilder()
+      .sqlQuery("select * from dfs.`%s`", fileName)
+      .unOrdered()
+      .baselineColumns("col_timestamp_millis", "col_timestamp_micros", "col_date", "col_time_millis", "col_time_micros")
+      .baselineValues(dateTime, dateTime, localDate, localTime, localTime)
+      .go();
+  }
+
+  @Test
+  public void testDuration() throws Exception {
+    int numRows = 5;
+    String fileName = dataGenerator.generateDuration(numRows);
+
+    TestBuilder testBuilder = testBuilder()
+      .sqlQuery("select * from dfs.`%s`", fileName)
+      .unOrdered()
+      .baselineColumns("col_duration");
+
+    for (int i = 0; i < numRows; i++) {
+      testBuilder.baselineValues(Period.months(10 + i).withDays(100 + i).withMillis(1000 + i));
+    }
+    testBuilder.go();
+  }
+
+  @Test
+  public void testMultiDimensionalArray() throws Exception {
+    int numRecords = 5;
+    int arraySize = 3;
+    String fileName = dataGenerator.generateMultiDimensionalArray(numRecords, arraySize);
+
+    TestBuilder testBuilder = testBuilder()
+      .sqlQuery("select * from dfs.`%s`", fileName)
+      .unOrdered()
+      .baselineColumns("col_array_two_dims");
+
+    for (int i = 0; i < numRecords; i++) {
+      JsonStringArrayList<Object> nestedArray = new JsonStringArrayList<>();
+      for (int a = 0; a < arraySize; a++) {
+        nestedArray.add(listOf(String.format("val_%s_%s_0", i, a), String.format("val_%s_%s_1", i, a)));
+      }
+      testBuilder.baselineValues(nestedArray);
+    }
+    testBuilder.go();
+  }
+
+  @Test
+  public void testWithProvidedSchema() throws Exception {
+    testBuilder()
+      .sqlQuery("select * from " +
+          "table(dfs.`%s`(schema=>'inline=(col_i int not null default `15`, a_string varchar)')) " +
+          "where a_string = 'a_0'",
+        dataGenerator.generateStringAndUtf8Data().getFileName())
+      .unOrdered()
+      .baselineColumns("col_i", "a_string", "b_utf8")
+      .baselineValues(15, "a_0", "b_0")
+      .go();
+  }
+
+  private void simpleAvroTestHelper(AvroDataGenerator.AvroTestRecordWriter testSetup) throws Exception {
+    testBuilder()
+      .sqlQuery("select * from dfs.`%s`", testSetup.getFileName())
+      .unOrdered()
+      .baselineRecords(testSetup.getExpectedRecords())
+      .go();
+  }
+
+  private List<Map<String, Object>> project(List<Map<String,Object>> incomingRecords, List<String> projectCols) {
+    List<Map<String,Object>> output = new ArrayList<>();
+    for (Map<String, Object> incomingRecord : incomingRecords) {
+      JsonStringHashMap<String, Object> newRecord = new JsonStringHashMap<>();
+      for (String s : incomingRecord.keySet()) {
+        if (projectCols.contains(s)) {
+          newRecord.put(s, incomingRecord.get(s));
+        }
+      }
+      output.add(newRecord);
+    }
+    return output;
+  }
+
+  private TestBuilder nestedArrayQueryTestBuilder(String file) {
+    String sql = "select rec_nr, array_item['nested_1_int'] as array_item_nested_int from "
+      + "(select a_int as rec_nr, flatten(t.b_array) as array_item from dfs.`%s` t) a";
+
+    return testBuilder()
+      .sqlQuery(sql, file)
+      .unOrdered()
+      .baselineColumns("rec_nr", "array_item_nested_int");
   }
 }

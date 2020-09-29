@@ -21,12 +21,12 @@ import java.util.concurrent.Executor;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.BitData.RuntimeFilterBDef;
 import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.BitData.BitServerHandshake;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.proto.BitData.RpcType;
-import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.SaslMessage;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.Response;
@@ -41,9 +41,9 @@ public class DataRpcConfig {
         .executor(executor)
         .timeout(config.getInt(ExecConstants.BIT_RPC_TIMEOUT))
         .add(RpcType.HANDSHAKE, BitClientHandshake.class, RpcType.HANDSHAKE, BitServerHandshake.class)
-        .add(RpcType.REQ_RECORD_BATCH, FragmentRecordBatch.class, RpcType.ACK, Ack.class)
+        .add(RpcType.REQ_RECORD_BATCH, FragmentRecordBatch.class, RpcType.DATA_ACK_WITH_CREDIT, BitData.AckWithCredit.class)
         .add(RpcType.SASL_MESSAGE, SaslMessage.class, RpcType.SASL_MESSAGE, SaslMessage.class)
-        .add(RpcType.REQ_RUNTIME_FILTER, RuntimeFilterBDef.class, RpcType.ACK, Ack.class)
+        .add(RpcType.REQ_RUNTIME_FILTER, RuntimeFilterBDef.class, RpcType.DATA_ACK_WITH_CREDIT, BitData.AckWithCredit.class)
         .build();
   }
 

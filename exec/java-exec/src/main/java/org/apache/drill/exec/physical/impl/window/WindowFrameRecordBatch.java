@@ -17,12 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.window;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -31,7 +29,6 @@ import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -69,8 +66,6 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   private boolean noMoreBatches; // true when downstream returns NONE
   private BatchSchema schema;
 
-  private boolean shouldStop; // true if we received an early termination request
-
   public WindowFrameRecordBatch(WindowPOP popConfig, FragmentContext context,
       RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -91,21 +86,6 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       return IterOutcome.NONE;
     }
 
-    if (shouldStop) {
-      if (!noMoreBatches) {
-        IterOutcome upstream = next(incoming);
-        while (upstream == IterOutcome.OK || upstream == IterOutcome.OK_NEW_SCHEMA) {
-          // Clear the memory for the incoming batch
-          for (VectorWrapper<?> wrapper : incoming) {
-            wrapper.getValueVector().clear();
-          }
-          upstream = next(incoming);
-        }
-      }
-
-      return IterOutcome.NONE;
-    }
-
     // keep saving incoming batches until the first unprocessed batch can be
     // processed, or upstream == NONE
     while (!noMoreBatches && !canDoWork()) {
@@ -116,9 +96,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
         case NONE:
           noMoreBatches = true;
           break;
-        case OUT_OF_MEMORY:
         case NOT_YET:
-        case STOP:
           cleanup();
           return upstream;
         case OK_NEW_SCHEMA:
@@ -146,13 +124,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
 
     // process first saved batch, then release it
-    try {
-      doWork();
-    } catch (DrillException e) {
-      context.getExecutorState().fail(e);
-      cleanup();
-      return IterOutcome.STOP;
-    }
+    doWork();
 
     if (state == BatchState.FIRST) {
       state = BatchState.NOT_FIRST;
@@ -161,7 +133,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     return IterOutcome.OK;
   }
 
-  private void doWork() throws DrillException {
+  private void doWork() {
 
     WindowDataBatch current = batches.get(0);
     int recordCount = current.getRecordCount();
@@ -171,8 +143,12 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     // allocate outgoing vectors
     container.allocateNew();
 
-    for (WindowFramer framer : framers) {
-      framer.doWork();
+    try {
+      for (WindowFramer framer : framers) {
+        framer.doWork();
+      }
+    } catch (SchemaChangeException e) {
+      throw schemaChangeException(e, logger);
     }
 
     // transfer "non aggregated" vectors
@@ -226,7 +202,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   }
 
   @Override
-  protected void buildSchema() throws SchemaChangeException {
+  protected void buildSchema() {
     logger.trace("buildSchema()");
     IterOutcome outcome = next(incoming);
     switch (outcome) {
@@ -234,20 +210,13 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       state = BatchState.DONE;
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
       return;
-    case STOP:
-      state = BatchState.STOP;
-      return;
-    case OUT_OF_MEMORY:
-      state = BatchState.OUT_OF_MEMORY;
-      return;
     default:
-      break;
     }
 
     try {
       createFramers(incoming);
-    } catch (IOException | ClassTransformationException e) {
-      throw new SchemaChangeException("Exception when creating the schema", e);
+    } catch (SchemaChangeException e) {
+      throw schemaChangeException(e, logger);
     }
 
     if (incoming.getRecordCount() > 0) {
@@ -255,7 +224,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     }
   }
 
-  private void createFramers(VectorAccessible batch) throws SchemaChangeException, IOException, ClassTransformationException {
+  private void createFramers(VectorAccessible batch) throws SchemaChangeException {
     assert framers == null : "createFramer should only be called once";
 
     logger.trace("creating framer(s)");
@@ -325,7 +294,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   }
 
   private WindowFramer generateFramer(List<LogicalExpression> keyExprs, List<LogicalExpression> orderExprs,
-      List<WindowFunction> functions, boolean useCustomFrame) throws IOException, ClassTransformationException {
+      List<WindowFunction> functions, boolean useCustomFrame) {
 
     TemplateClassDefinition<WindowFramer> definition = useCustomFrame ?
       WindowFramer.FRAME_TEMPLATE_DEFINITION : WindowFramer.NOFRAME_TEMPLATE_DEFINITION;
@@ -359,7 +328,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     CodeGenerator<WindowFramer> codeGen = cg.getCodeGenerator();
     codeGen.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-    codeGen.saveCodeForDebugging(true);
+    // codeGen.saveCodeForDebugging(true);
 
     return context.getImplementationClass(codeGen);
   }
@@ -414,9 +383,8 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    shouldStop = true;
-    incoming.kill(sendUpstream);
+  protected void cancelIncoming() {
+    incoming.cancel();
   }
 
   @Override

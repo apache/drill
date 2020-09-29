@@ -23,6 +23,8 @@ import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -34,7 +36,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 @JsonTypeName(HBaseStoragePluginConfig.NAME)
 public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements DrillHBaseConstants {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseStoragePluginConfig.class);
+  private static final Logger logger = LoggerFactory.getLogger(HBaseStoragePluginConfig.class);
 
   private Map<String, String> config;
 
@@ -52,6 +54,8 @@ public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements
     if (config == null) {
       config = Maps.newHashMap();
     }
+    // TODO: Config-based information should reside in the
+    // storage plugin instance, not here.
     logger.debug("Initializing HBase StoragePlugin configuration with zookeeper quorum '{}', port '{}'.",
         config.get(HConstants.ZOOKEEPER_QUORUM), config.get(HBASE_ZOOKEEPER_PORT));
     if (sizeCalculatorEnabled == null) {

@@ -38,7 +38,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Collections2;
  * in the reset query itself.
  */
 public class SessionOptionManager extends InMemoryOptionManager {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SessionOptionManager.class);
 
   private final UserSession session;
 

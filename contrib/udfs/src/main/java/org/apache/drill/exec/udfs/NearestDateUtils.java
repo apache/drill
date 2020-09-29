@@ -78,7 +78,7 @@ public class NearestDateUtils {
         newDate = LocalDateTime.of(year, 1, 1, 0, 0, 0);
         break;
       case QUARTER:
-        newDate = LocalDateTime.of(year, (month / 3) * 3 + 1, 1, 0, 0, 0);
+        newDate = LocalDateTime.of(year, ((month - 1) / 3) * 3 + 1, 1, 0, 0, 0);
         break;
       case MONTH:
         newDate = LocalDateTime.of(year, month, 1, 0, 0, 0);

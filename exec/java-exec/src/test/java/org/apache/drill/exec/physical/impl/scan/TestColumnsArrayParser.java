@@ -30,10 +30,10 @@ import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayParser;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework;
 import org.apache.drill.exec.physical.impl.scan.columns.UnresolvedColumnsArrayColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
-import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
-import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
+import org.apache.drill.exec.physical.impl.scan.file.ImplicitColumnManager;
+import org.apache.drill.exec.physical.impl.scan.file.ImplicitColumnManager.ImplicitColumnOptions;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
-import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.hadoop.fs.Path;
@@ -48,7 +48,6 @@ public class TestColumnsArrayParser extends SubOperatorTest {
    * as an array. No need for early schema. This case is special: it actually
    * creates the one and only table column to match the desired output column.
    */
-
   @Test
   public void testColumnsArray() {
     ScanLevelProjection scanProj = ScanLevelProjection.build(
@@ -89,7 +88,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
         RowSetTestUtils.projectAll(),
         ScanTestUtils.parsers(new ColumnsArrayParser(true)));
 
-    assertFalse(scanProj.projectAll());
+    assertTrue(scanProj.projectAll());
     assertEquals(1, scanProj.requestedCols().size());
 
     assertEquals(1, scanProj.columns().size());
@@ -154,7 +153,6 @@ public class TestColumnsArrayParser extends SubOperatorTest {
    * <p>
    * TODO: This should only be true for text readers, make this an option.
    */
-
   @Test
   public void testErrorColumnsArrayAndColumn() {
     try {
@@ -170,7 +168,6 @@ public class TestColumnsArrayParser extends SubOperatorTest {
   /**
    * Exclude a column and `columns` (reversed order of previous test).
    */
-
   @Test
   public void testErrorColumnAndColumnsArray() {
     try {
@@ -184,19 +181,17 @@ public class TestColumnsArrayParser extends SubOperatorTest {
   }
 
   /**
-   * Can't request `columns` twice.
+   * Requesting `columns` twice: second is ignored.
    */
-
   @Test
-  public void testErrorTwoColumnsArray() {
-    try {
-      ScanLevelProjection.build(
-          RowSetTestUtils.projectList(ColumnsScanFramework.COLUMNS_COL, ColumnsScanFramework.COLUMNS_COL),
-          ScanTestUtils.parsers(new ColumnsArrayParser(false)));
-      fail();
-    } catch (UserException e) {
-      // Expected
-    }
+  public void testTwoColumnsArray() {
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
+        RowSetTestUtils.projectList(ColumnsScanFramework.COLUMNS_COL, ColumnsScanFramework.COLUMNS_COL),
+        ScanTestUtils.parsers(new ColumnsArrayParser(false)));
+    assertFalse(scanProj.projectAll());
+    assertEquals(2, scanProj.requestedCols().size());
+    assertEquals(1, scanProj.columns().size());
+    assertEquals(ColumnsScanFramework.COLUMNS_COL, scanProj.columns().get(0).name());
   }
 
   @Test
@@ -223,8 +218,8 @@ public class TestColumnsArrayParser extends SubOperatorTest {
     }
   }
 
-  private FileMetadataOptions standardOptions(Path filePath) {
-    FileMetadataOptions options = new FileMetadataOptions();
+  private ImplicitColumnOptions standardOptions(Path filePath) {
+    ImplicitColumnOptions options = new ImplicitColumnOptions();
     options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
     options.setSelectionRoot(new Path("hdfs:///w"));
     options.setFiles(Lists.newArrayList(filePath));
@@ -235,11 +230,10 @@ public class TestColumnsArrayParser extends SubOperatorTest {
    * The `columns` column is special: can't be used with other column names.
    * Make sure that the rule <i>does not</i> apply to implicit columns.
    */
-
   @Test
   public void testMetadataColumnsWithColumnsArray() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
-    FileMetadataManager metadataManager = new FileMetadataManager(
+    ImplicitColumnManager metadataManager = new ImplicitColumnManager(
         fixture.getOptionManager(),
         standardOptions(filePath));
 
@@ -274,7 +268,6 @@ public class TestColumnsArrayParser extends SubOperatorTest {
    * includes both the wildcard and the `columns` array.
    * We can ignore one of them.
    */
-
   @Test
   public void testWildcardAndColumns() {
     ScanLevelProjection scanProj = ScanLevelProjection.build(
@@ -283,7 +276,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
             ColumnsScanFramework.COLUMNS_COL),
         ScanTestUtils.parsers(new ColumnsArrayParser(true)));
 
-    assertFalse(scanProj.projectAll());
+    assertTrue(scanProj.projectAll());
     assertEquals(2, scanProj.requestedCols().size());
 
     assertEquals(1, scanProj.columns().size());

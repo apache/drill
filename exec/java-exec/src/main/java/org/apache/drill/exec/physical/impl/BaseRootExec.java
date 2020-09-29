@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.DeferredException;
@@ -32,9 +31,11 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class BaseRootExec implements RootExec {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseRootExec.class);
+  private static final Logger logger = LoggerFactory.getLogger(BaseRootExec.class);
 
   public static final String ENABLE_BATCH_DUMP_CONFIG = "drill.exec.debug.dump_batches";
   protected OperatorStats stats;
@@ -85,11 +86,8 @@ public abstract class BaseRootExec implements RootExec {
 
   @Override
   public final boolean next() {
-    // Stats should have been initialized
     assert stats != null;
-    if (!fragmentContext.getExecutorState().shouldContinue()) {
-      return false;
-    }
+    fragmentContext.getExecutorState().checkContinue();
     try {
       stats.startProcessing();
       return innerNext();
@@ -127,7 +125,7 @@ public abstract class BaseRootExec implements RootExec {
   }
 
   @Override
-  public void dumpBatches() {
+  public void dumpBatches(Throwable t) {
     if (operators == null) {
       return;
     }
@@ -135,22 +133,18 @@ public abstract class BaseRootExec implements RootExec {
       return;
     }
 
-    final int numberOfBatchesToDump = 2;
+    CloseableRecordBatch leafMost = findLeaf(operators, t);
+    if (leafMost == null) {
+      // Don't know which batch failed.
+      return;
+    }
+    int batchPosn = operators.indexOf(leafMost);
+    final int numberOfBatchesToDump = Math.min(batchPosn + 1, 2);
     logger.error("Batch dump started: dumping last {} failed batches", numberOfBatchesToDump);
     // As batches are stored in a 'flat' List there is a need to filter out the failed batch
     // and a few of its parent (actual number of batches is set by a constant defined above)
-    List<CloseableRecordBatch> failedBatchStack = new LinkedList<>();
-    for (int i = operators.size() - 1; i >= 0; i--) {
-      CloseableRecordBatch batch = operators.get(i);
-      if (batch.hasFailed()) {
-        failedBatchStack.add(0, batch);
-        if (failedBatchStack.size() == numberOfBatchesToDump) {
-          break;
-        }
-      }
-    }
-    for (CloseableRecordBatch batch : failedBatchStack) {
-      batch.dump();
+    for (int i = 0; i < numberOfBatchesToDump; i++) {
+      operators.get(batchPosn--).dump();
     }
     logger.error("Batch dump completed.");
   }
@@ -184,5 +178,39 @@ public abstract class BaseRootExec implements RootExec {
         fragmentContext.getExecutorState().fail(e);
       }
     }
+  }
+
+  /**
+   * Given a list of operators and a stack trace, walks the stack trace and
+   * the operator list to find the leaf-most operator, which is the one
+   * that was active when the exception was thrown. Handle the cases in
+   * which no operator was active, each operator had multiple methods on
+   * the stack, or the exception was thrown in some class called by
+   * the operator.
+   * <p>
+   * Not all operators leave a mark in the trace. In particular if a the
+   * call stack is only through base-class methods, then we have no way to
+   * know the actual class during the call. This is OK because the leaf
+   * methods are just pass-through operations, they are unlikely to fail.
+   *
+   * @param <T> the type of the operator. Parameterized to allow easier
+   * testing
+   * @param dag the list of operators from root-most to leaf-most
+   * @param e the exception thrown somewhere in the operator tree
+   * @return the leaf-most operator, if any
+   */
+  public static <T> T findLeaf(List<T> dag, Throwable e) {
+    StackTraceElement[] trace = e.getStackTrace();
+    for (int i = dag.size() - 1; i >= 0; i--) {
+      T leaf = dag.get(i);
+      String opName = leaf.getClass().getName();
+      for (StackTraceElement element : trace) {
+        String frameName = element.getClassName();
+        if (frameName.contentEquals(opName)) {
+          return leaf;
+        }
+      }
+    }
+    return null;
   }
 }

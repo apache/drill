@@ -71,7 +71,7 @@ public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
     FileScanFramework.FileScanBuilder builder = new FileScanFramework.FileScanBuilder();
     builder.setReaderFactory(new ShpReaderFactory(new ShpReaderConfig(this)));
     initScanBuilder(builder, scan);
-    builder.setNullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;
   }
 

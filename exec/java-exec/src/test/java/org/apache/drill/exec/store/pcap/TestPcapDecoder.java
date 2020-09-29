@@ -211,7 +211,6 @@ public class TestPcapDecoder extends BaseTestQuery {
     logger.info("\n\n\n");
   }
 
-
   /**
    * Creates an ephemeral file of about a GB in size
    *

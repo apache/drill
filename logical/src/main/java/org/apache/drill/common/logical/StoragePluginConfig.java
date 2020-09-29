@@ -21,9 +21,11 @@ package org.apache.drill.common.logical;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="type")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 public abstract class StoragePluginConfig {
 
+  // DO NOT include enabled status in equality and hash
+  // comparisons; doing so will break the plugin registry.
   private Boolean enabled;
 
   /**
@@ -34,7 +36,6 @@ public abstract class StoragePluginConfig {
   public boolean isEnabled() {
     return enabled != null && enabled;
   }
-
 
   public void setEnabled(Boolean enabled) {
     this.enabled = enabled;
@@ -59,5 +60,4 @@ public abstract class StoragePluginConfig {
   public String getValue(String key) {
     return null;
   }
-
 }

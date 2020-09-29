@@ -31,15 +31,13 @@ import com.mongodb.MongoCredential;
 
 @JsonTypeName(MongoStoragePluginConfig.NAME)
 public class MongoStoragePluginConfig extends StoragePluginConfig {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(MongoStoragePluginConfig.class);
 
   public static final String NAME = "mongo";
 
-  private String connection;
+  private final String connection;
 
   @JsonIgnore
-  private MongoClientURI clientURI;
+  private final MongoClientURI clientURI;
 
   @JsonCreator
   public MongoStoragePluginConfig(@JsonProperty("connection") String connection) {
@@ -65,7 +63,7 @@ public class MongoStoragePluginConfig extends StoragePluginConfig {
   }
 
   @JsonIgnore
-  public MongoCredential getMongoCrendials() {
+  public MongoCredential getMongoCredentials() {
     return clientURI.getCredentials();
   }
 

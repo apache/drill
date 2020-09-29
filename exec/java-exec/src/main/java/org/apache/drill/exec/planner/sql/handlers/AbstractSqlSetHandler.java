@@ -24,12 +24,15 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base handler for SQL_SET kind statements.
  */
 abstract class AbstractSqlSetHandler extends AbstractSqlHandler {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSqlHandler.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(AbstractSqlSetHandler.class);
 
   final QueryContext context;
 

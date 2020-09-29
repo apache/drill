@@ -31,10 +31,8 @@ import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 
 public class QueryProfileStoreContext {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryProfileStoreContext.class);
 
   private static final String PROFILES = "profiles";
-
   private static final String RUNNING = "running";
 
   private final PersistentStore<UserBitShared.QueryProfile> completedProfiles;

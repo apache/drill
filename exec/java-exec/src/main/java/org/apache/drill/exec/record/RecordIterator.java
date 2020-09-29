@@ -191,7 +191,6 @@ public class RecordIterator implements VectorAccessible {
       nextBatch();
       switch (lastOutcome) {
         case NONE:
-        case STOP:
           // No more data, disallow reads unless reset is called.
           outerPosition = nextOuterPosition;
           lastBatchRead = true;
@@ -240,8 +239,6 @@ public class RecordIterator implements VectorAccessible {
             rbd.clear();
           }
           break;
-        case OUT_OF_MEMORY:
-          return lastOutcome;
         case NOT_YET:
         default:
           throw new UnsupportedOperationException("Unsupported outcome received " + lastOutcome);

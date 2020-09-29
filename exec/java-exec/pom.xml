@@ -23,18 +23,32 @@
   <parent>
     <artifactId>exec-parent</artifactId>
     <groupId>org.apache.drill.exec</groupId>
-    <version>1.17.0</version>
+    <version>1.19.0-SNAPSHOT</version>
   </parent>
   <artifactId>drill-java-exec</artifactId>
   <name>exec/Java Execution Engine</name>
+
   <properties>
     <libpam4j.version>1.8-rev2</libpam4j.version>
+    <aether.version>1.1.0</aether.version>
+    <wagon.version>3.3.4</wagon.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpasyncclient</artifactId>
+      <version>4.1.4</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.kerby</groupId>
@@ -515,7 +529,7 @@
     <dependency>
       <groupId>nl.basjes.parse.httpdlog</groupId>
       <artifactId>httpdlog-parser</artifactId>
-      <version>5.2</version>
+      <version>5.3</version>
       <exclusions>
         <exclusion>
           <groupId>commons-codec</groupId>
@@ -546,31 +560,31 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-embedder</artifactId>
-      <version>${maven.embedder.version}</version>
+      <version>${maven.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-compat</artifactId>
-      <version>3.5.3</version>
+      <version>${maven.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.aether</groupId>
       <artifactId>aether-connector-basic</artifactId>
-      <version>1.1.0</version>
+      <version>${aether.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.aether</groupId>
       <artifactId>aether-transport-wagon</artifactId>
-      <version>1.1.0</version>
+      <version>${aether.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.wagon</groupId>
       <artifactId>wagon-http</artifactId>
-      <version>3.0.0</version>
+      <version>${wagon.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -582,7 +596,7 @@
     <dependency>
       <groupId>org.apache.maven.wagon</groupId>
       <artifactId>wagon-provider-api</artifactId>
-      <version>3.0.0</version>
+      <version>${wagon.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -594,7 +608,6 @@
     <dependency>
       <groupId>com.drewnoakes</groupId>
       <artifactId>metadata-extractor</artifactId>
-      <version>2.11.0</version>
     </dependency>
     <dependency>
       <groupId>fr.bmartel</groupId>
@@ -655,6 +668,28 @@
     </profile>
     <profile>
       <id>mapr</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-mapr-sources</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>add-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>srcMapr/main/java</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
       <dependencies>
         <dependency>
           <groupId>com.mapr.hadoop</groupId>
@@ -664,6 +699,10 @@
         <dependency>
           <groupId>com.tdunning</groupId>
           <artifactId>json</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>com.mapr.security</groupId>
+          <artifactId>mapr-security-web</artifactId>
         </dependency>
       </dependencies>
     </profile>

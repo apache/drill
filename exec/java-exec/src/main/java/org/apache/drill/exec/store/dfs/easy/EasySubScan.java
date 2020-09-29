@@ -33,7 +33,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.Path;
 
 @JsonTypeName("fs-sub-scan")
@@ -59,8 +58,7 @@ public class EasySubScan extends AbstractSubScan {
     @JsonProperty("schema") TupleMetadata schema
     ) throws ExecutionSetupException {
     super(userName);
-    this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
-    Preconditions.checkNotNull(this.formatPlugin);
+    this.formatPlugin = engineRegistry.resolveFormat(storageConfig, formatConfig, EasyFormatPlugin.class);
     this.files = files;
     this.columns = columns;
     this.selectionRoot = selectionRoot;

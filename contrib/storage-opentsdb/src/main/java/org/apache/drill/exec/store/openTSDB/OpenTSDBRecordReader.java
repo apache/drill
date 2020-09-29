@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.openTSDB;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -45,7 +44,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.List;
@@ -58,7 +56,7 @@ import static org.apache.drill.exec.store.openTSDB.Util.fromRowData;
 
 public class OpenTSDBRecordReader extends AbstractRecordReader {
 
-  private static final Logger log = LoggerFactory.getLogger(OpenTSDBRecordReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(OpenTSDBRecordReader.class);
 
   // batch size should not exceed max allowed record count
   private static final int TARGET_RECORD_COUNT = 4000;
@@ -74,23 +72,23 @@ public class OpenTSDBRecordReader extends AbstractRecordReader {
   private Map<String, String> params;
 
   public OpenTSDBRecordReader(Service client, OpenTSDBSubScan.OpenTSDBSubScanSpec subScanSpec,
-                       List<SchemaPath> projectedColumns) throws IOException {
+                       List<SchemaPath> projectedColumns) {
     setColumns(projectedColumns);
     this.db = client;
     this.params =
             fromRowData(subScanSpec.getTableName());
-    log.debug("Scan spec: {}", subScanSpec);
+    logger.debug("Scan spec: {}", subScanSpec);
   }
 
   @Override
-  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
+  public void setup(OperatorContext context, OutputMutator output) {
     this.output = output;
     Set<MetricDTO> metrics =
             db.getAllMetrics(params);
     if (metrics == null) {
       throw UserException.validationError()
               .message(String.format("Table '%s' not found", params.get(METRIC_PARAM)))
-              .build(log);
+              .build(logger);
     }
     this.tableIterator = metrics.iterator();
   }
@@ -105,7 +103,7 @@ public class OpenTSDBRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
   }
 
   static {
@@ -210,7 +208,7 @@ public class OpenTSDBRecordReader extends AbstractRecordReader {
                         + "The column's name was %s and its OpenTSDB data type was %s. ", name, type.toString());
         throw UserException.unsupportedError()
                 .message(message)
-                .build(log);
+                .build(logger);
       }
 
       ProjectedColumnInfo pci = getProjectedColumnInfo(column, name, minorType);

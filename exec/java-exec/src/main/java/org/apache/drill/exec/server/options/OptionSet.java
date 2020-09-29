@@ -83,8 +83,17 @@ public interface OptionSet {
    * @throws IllegalArgumentException if the option is undefined or
    * is not of the correct data type
    */
-
   boolean getBoolean(String name);
+
+  /**
+   * Return the value of a long option as an int
+   *
+   * @param name option name
+   * @return the long value
+   * @throws IllegalArgumentException if the option is undefined or
+   * is not of the correct data type
+   */
+  int getInt(String name);
 
   /**
    * Return the value of a long option.
@@ -94,7 +103,6 @@ public interface OptionSet {
    * @throws IllegalArgumentException if the option is undefined or
    * is not of the correct data type
    */
-
   long getLong(String name);
 
   /**
@@ -105,7 +113,6 @@ public interface OptionSet {
    * @throws IllegalArgumentException if the option is undefined or
    * is not of the correct data type
    */
-
   double getDouble(String name);
 
   /**
@@ -116,6 +123,5 @@ public interface OptionSet {
    * @throws IllegalArgumentException if the option is undefined or
    * is not of the correct data type
    */
-
   String getString(String name);
 }

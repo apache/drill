@@ -19,43 +19,45 @@ package org.apache.drill.exec.physical.impl;
 
 import java.util.List;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingUserConnection;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.RootFragmentContext;
 import org.apache.drill.exec.physical.config.Screen;
-import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
-import org.apache.drill.exec.physical.impl.materialize.RecordMaterializer;
+import org.apache.drill.exec.physical.impl.materialize.QueryDataPackage.DataPackage;
+import org.apache.drill.exec.physical.impl.materialize.QueryDataPackage.EmptyResultsPackage;
 import org.apache.drill.exec.physical.impl.materialize.VectorRecordMaterializer;
-import org.apache.drill.exec.proto.UserBitShared.QueryData;
-import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ScreenCreator implements RootCreator<Screen> {
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ScreenCreator.class);
 
   @Override
-  public RootExec getRoot(ExecutorFragmentContext context, Screen config, List<RecordBatch> children)
-      throws ExecutionSetupException {
+  public RootExec getRoot(ExecutorFragmentContext context, Screen config, List<RecordBatch> children) {
     Preconditions.checkNotNull(children);
     Preconditions.checkArgument(children.size() == 1);
     return new ScreenRoot(context, children.iterator().next(), config);
   }
 
+  /**
+   * Transfer batches to a user connection. The user connection is typically a
+   * network connection, but may be internal for a web or REST client. Data is
+   * sent as a "package", allowing the network client to request serialization,
+   * and the internal client to just transfer buffer ownership.
+   */
   public static class ScreenRoot extends BaseRootExec {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
+    private static final Logger logger = LoggerFactory.getLogger(ScreenRoot.class);
     private final RecordBatch incoming;
     private final RootFragmentContext context;
     private final AccountingUserConnection userConnection;
-    private RecordMaterializer materializer;
-
+    private DataPackage dataPackage;
     private boolean firstBatch = true;
 
     public enum Metric implements MetricDef {
@@ -67,15 +69,11 @@ public class ScreenCreator implements RootCreator<Screen> {
       }
     }
 
-    public ScreenRoot(RootFragmentContext context, RecordBatch incoming, Screen config) throws OutOfMemoryException {
+    public ScreenRoot(RootFragmentContext context, RecordBatch incoming, Screen config) {
       super(context, config);
       this.context = context;
       this.incoming = incoming;
-      userConnection = context.getUserDataTunnel();
-    }
-
-    public RootFragmentContext getContext() {
-      return context;
+      this.userConnection = context.getUserDataTunnel();
     }
 
     @Override
@@ -83,59 +81,42 @@ public class ScreenCreator implements RootCreator<Screen> {
       IterOutcome outcome = next(incoming);
       logger.trace("Screen Outcome {}", outcome);
       switch (outcome) {
-      case OUT_OF_MEMORY:
-        throw new OutOfMemoryException();
-      case STOP:
-        return false;
-      case NONE:
-        if (firstBatch) {
-          // this is the only data message sent to the client and may contain the schema
-          QueryWritableBatch batch;
-          QueryData header = QueryData.newBuilder()
-            .setQueryId(context.getHandle().getQueryId())
-            .setRowCount(0)
-            .setDef(RecordBatchDef.getDefaultInstance())
-            .build();
-          batch = new QueryWritableBatch(header);
+        case NONE:
+          if (firstBatch) {
 
+            stats.startWait();
+            try {
+              // This is the only data message sent to the client and does not contain the schema
+              userConnection.sendData(new EmptyResultsPackage(context.getHandle().getQueryId()));
+            } finally {
+              stats.stopWait();
+            }
+            firstBatch = false; // we don't really need to set this. But who knows!
+          }
+          return false;
+
+        case OK_NEW_SCHEMA:
+          dataPackage = new DataPackage(new VectorRecordMaterializer(context, oContext, incoming), stats);
+          //$FALL-THROUGH$
+        case OK:
+          injector.injectPause(context.getExecutionControls(), "sending-data", logger);
           stats.startWait();
           try {
-            userConnection.sendData(batch);
+            // Stats updated if connection serializes the batch
+            userConnection.sendData(dataPackage);
           } finally {
             stats.stopWait();
           }
-          firstBatch = false; // we don't really need to set this. But who knows!
-        }
+          firstBatch = false;
+          return true;
 
-        return false;
-      case OK_NEW_SCHEMA:
-        materializer = new VectorRecordMaterializer(context, oContext, incoming);
-        //$FALL-THROUGH$
-      case OK:
-        injector.injectPause(context.getExecutionControls(), "sending-data", logger);
-        final QueryWritableBatch batch = materializer.convertNext();
-        updateStats(batch);
-        stats.startWait();
-        try {
-          userConnection.sendData(batch);
-        } finally {
-          stats.stopWait();
-        }
-        firstBatch = false;
-
-        return true;
-      default:
-        throw new UnsupportedOperationException();
+        default:
+          throw new UnsupportedOperationException(outcome.name());
       }
     }
 
-    public void updateStats(QueryWritableBatch queryBatch) {
-      stats.addLongStat(Metric.BYTES_SENT, queryBatch.getByteCount());
-    }
-
-    RecordBatch getIncoming() {
-      return incoming;
-    }
+    public RootFragmentContext getContext() { return context; }
+    protected RecordBatch getIncoming() { return incoming; }
 
     @Override
     public void close() throws Exception {

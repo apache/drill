@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -57,8 +58,8 @@ class KafkaNodeProcessor extends AbstractExprVisitor<Boolean, LogicalExpression,
 
   public static KafkaNodeProcessor process(FunctionCall call) {
     String functionName = call.getName();
-    LogicalExpression nameArg = call.args.get(0);
-    LogicalExpression valueArg = call.args.size() >= 2? call.args.get(1) : null;
+    LogicalExpression nameArg = call.arg(0);
+    LogicalExpression valueArg = call.argCount() >= 2? call.arg(1) : null;
     KafkaNodeProcessor evaluator = new KafkaNodeProcessor(functionName);
 
     if (VALUE_EXPRESSION_CLASSES.contains(nameArg.getClass())) {
@@ -99,9 +100,9 @@ class KafkaNodeProcessor extends AbstractExprVisitor<Boolean, LogicalExpression,
     switch (this.path) {
       case "kafkaMsgOffset":
         /*
-         * Do not pushdown "not_equal" on kafkaMsgOffset.
+         * Do not pushdown FunctionNames.NE on kafkaMsgOffset.
          */
-        if(functionName.equals("not_equal")) {
+        if(functionName.equals(FunctionNames.NE)) {
           return false;
         }
       case "kafkaPartitionId":
@@ -117,10 +118,10 @@ class KafkaNodeProcessor extends AbstractExprVisitor<Boolean, LogicalExpression,
         break;
       case "kafkaMsgTimestamp":
         /*
-        Only pushdown "equal", "greater_than", "greater_than_or_equal" on kafkaMsgTimestamp
+        Only pushdown FunctionNames.EQ, FunctionNames.GT, "greater_than_or_equal" on kafkaMsgTimestamp
          */
-        if(!functionName.equals("equal") && !functionName.equals("greater_than")
-               && !functionName.equals("greater_than_or_equal_to")) {
+        if(!functionName.equals(FunctionNames.EQ) && !functionName.equals(FunctionNames.GT)
+               && !functionName.equals(FunctionNames.GE)) {
           return false;
         }
 
@@ -172,12 +173,12 @@ class KafkaNodeProcessor extends AbstractExprVisitor<Boolean, LogicalExpression,
   static {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     COMPARE_FUNCTIONS_TRANSPOSE_MAP = builder
-                                          .put("equal", "equal")
-                                          .put("not_equal", "not_equal")
-                                          .put("greater_than_or_equal_to", "less_than_or_equal_to")
-                                          .put("greater_than", "less_than")
-                                          .put("less_than_or_equal_to", "greater_than_or_equal_to")
-                                          .put("less_than", "greater_than")
+                                          .put(FunctionNames.EQ, FunctionNames.EQ)
+                                          .put(FunctionNames.NE, FunctionNames.NE)
+                                          .put(FunctionNames.GE, FunctionNames.LE)
+                                          .put(FunctionNames.GT, FunctionNames.LT)
+                                          .put(FunctionNames.LE, FunctionNames.GE)
+                                          .put(FunctionNames.LT, FunctionNames.GT)
                                           .build();
   }
 }

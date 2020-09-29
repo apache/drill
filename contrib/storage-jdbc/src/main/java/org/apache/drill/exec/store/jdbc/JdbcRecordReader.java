@@ -21,10 +21,10 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -61,18 +61,19 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("unchecked")
 class JdbcRecordReader extends AbstractRecordReader {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(JdbcRecordReader.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(JdbcRecordReader.class);
 
   private static final ImmutableMap<Integer, MinorType> JDBC_TYPE_MAPPINGS;
   private final DataSource source;
   private ResultSet resultSet;
   private final String storagePluginName;
   private Connection connection;
-  private Statement statement;
+  private PreparedStatement statement;
   private final String sql;
   private ImmutableList<ValueVector> vectors;
   private ImmutableList<Copier<?>> copiers;
@@ -86,7 +87,7 @@ class JdbcRecordReader extends AbstractRecordReader {
   }
 
   static {
-    JDBC_TYPE_MAPPINGS = (ImmutableMap<Integer, MinorType>) (Object) ImmutableMap.builder()
+    JDBC_TYPE_MAPPINGS = ImmutableMap.<Integer, MinorType>builder()
         .put(java.sql.Types.DOUBLE, MinorType.FLOAT8)
         .put(java.sql.Types.FLOAT, MinorType.FLOAT4)
         .put(java.sql.Types.TINYINT, MinorType.INT)
@@ -129,10 +130,10 @@ class JdbcRecordReader extends AbstractRecordReader {
             f.getType() == int.class &&
             f.getInt(null) == javaSqlType) {
           return f.getName();
-
         }
       }
     } catch (IllegalArgumentException | IllegalAccessException e) {
+      logger.trace("Unable to SQL type {} into String: {}", javaSqlType, e.getMessage());
     }
 
     return Integer.toString(javaSqlType);
@@ -140,7 +141,6 @@ class JdbcRecordReader extends AbstractRecordReader {
   }
 
   private Copier<?> getCopier(int jdbcType, int offset, ResultSet result, ValueVector v) {
-
     switch (jdbcType) {
       case java.sql.Types.BIGINT:
         return new BigIntCopier(offset, result, (NullableBigIntVector.Mutator) v.getMutator());
@@ -186,8 +186,8 @@ class JdbcRecordReader extends AbstractRecordReader {
   public void setup(OperatorContext operatorContext, OutputMutator output) {
     try {
       connection = source.getConnection();
-      statement = connection.createStatement();
-      resultSet = statement.executeQuery(sql);
+      statement = connection.prepareStatement(sql);
+      resultSet = statement.executeQuery();
 
       ResultSetMetaData meta = resultSet.getMetaData();
       int columnsCount = meta.getColumnCount();
@@ -199,8 +199,8 @@ class JdbcRecordReader extends AbstractRecordReader {
                   "Expected columns: %s\n" +
                   "Returned columns count: %s",
               columns, columnsCount)
-            .addContext("sql", sql)
-            .addContext("plugin", storagePluginName)
+            .addContext("Sql", sql)
+            .addContext("Plugin", storagePluginName)
             .build(logger);
       }
       ImmutableList.Builder<ValueVector> vectorBuilder = ImmutableList.builder();
@@ -214,7 +214,6 @@ class JdbcRecordReader extends AbstractRecordReader {
         int scale = meta.getScale(i);
         MinorType minorType = JDBC_TYPE_MAPPINGS.get(jdbcType);
         if (minorType == null) {
-
           logger.warn("Ignoring column that is unsupported.", UserException
               .unsupportedError()
               .message(
@@ -222,11 +221,10 @@ class JdbcRecordReader extends AbstractRecordReader {
                       + "The column's name was %s and its JDBC data type was %s. ",
                   name,
                   nameFromType(jdbcType))
-              .addContext("sql", sql)
-              .addContext("column Name", name)
-              .addContext("plugin", storagePluginName)
+              .addContext("Sql", sql)
+              .addContext("Column Name", name)
+              .addContext("Plugin", storagePluginName)
               .build(logger));
-
           continue;
         }
 
@@ -242,7 +240,6 @@ class JdbcRecordReader extends AbstractRecordReader {
         ValueVector vector = output.addField(field, clazz);
         vectorBuilder.add(vector);
         copierBuilder.add(getCopier(jdbcType, i, resultSet, vector));
-
       }
 
       vectors = vectorBuilder.build();
@@ -251,12 +248,11 @@ class JdbcRecordReader extends AbstractRecordReader {
     } catch (SQLException | SchemaChangeException e) {
       throw UserException.dataReadError(e)
           .message("The JDBC storage plugin failed while trying setup the SQL query. ")
-          .addContext("sql", sql)
-          .addContext("plugin", storagePluginName)
+          .addContext("Sql", sql)
+          .addContext("Plugin", storagePluginName)
           .build(logger);
     }
   }
-
 
   @Override
   public int next() {
@@ -276,21 +272,22 @@ class JdbcRecordReader extends AbstractRecordReader {
       throw UserException
           .dataReadError(e)
           .message("Failure while attempting to read from database.")
-          .addContext("sql", sql)
-          .addContext("plugin", storagePluginName)
+          .addContext("Sql", sql)
+          .addContext("Plugin", storagePluginName)
           .build(logger);
     }
 
+    int valueCount = Math.max(counter, 0);
     for (ValueVector vv : vectors) {
-      vv.getMutator().setValueCount(counter > 0 ? counter : 0);
+      vv.getMutator().setValueCount(valueCount);
     }
 
-    return counter>0 ? counter : 0;
+    return valueCount;
   }
 
   @Override
-  public void close() throws Exception {
-    AutoCloseables.close(resultSet, statement, connection);
+  public void close() {
+    AutoCloseables.closeSilently(resultSet, statement, connection);
   }
 
   @Override
@@ -300,13 +297,12 @@ class JdbcRecordReader extends AbstractRecordReader {
         + "]";
   }
 
-  private abstract class Copier<T extends ValueVector.Mutator> {
-    protected final int columnIndex;
-    protected final ResultSet result;
-    protected final T mutator;
+  private abstract static class Copier<T extends ValueVector.Mutator> {
+    final int columnIndex;
+    final ResultSet result;
+    final T mutator;
 
-    public Copier(int columnIndex, ResultSet result, T mutator) {
-      super();
+    Copier(int columnIndex, ResultSet result, T mutator) {
       this.columnIndex = columnIndex;
       this.result = result;
       this.mutator = mutator;
@@ -315,8 +311,9 @@ class JdbcRecordReader extends AbstractRecordReader {
     abstract void copy(int index) throws SQLException;
   }
 
-  private class IntCopier extends Copier<NullableIntVector.Mutator> {
-    public IntCopier(int offset, ResultSet set, NullableIntVector.Mutator mutator) {
+  private static class IntCopier extends Copier<NullableIntVector.Mutator> {
+
+    IntCopier(int offset, ResultSet set, NullableIntVector.Mutator mutator) {
       super(offset, set, mutator);
     }
 
@@ -329,8 +326,9 @@ class JdbcRecordReader extends AbstractRecordReader {
     }
   }
 
-  private class BigIntCopier extends Copier<NullableBigIntVector.Mutator> {
-    public BigIntCopier(int offset, ResultSet set, NullableBigIntVector.Mutator mutator) {
+  private static class BigIntCopier extends Copier<NullableBigIntVector.Mutator> {
+
+    BigIntCopier(int offset, ResultSet set, NullableBigIntVector.Mutator mutator) {
       super(offset, set, mutator);
     }
 
@@ -341,12 +339,11 @@ class JdbcRecordReader extends AbstractRecordReader {
         mutator.setNull(index);
       }
     }
-
   }
 
-  private class Float4Copier extends Copier<NullableFloat4Vector.Mutator> {
+  private static class Float4Copier extends Copier<NullableFloat4Vector.Mutator> {
 
-    public Float4Copier(int columnIndex, ResultSet result, NullableFloat4Vector.Mutator mutator) {
+    Float4Copier(int columnIndex, ResultSet result, NullableFloat4Vector.Mutator mutator) {
       super(columnIndex, result, mutator);
     }
 
@@ -357,13 +354,11 @@ class JdbcRecordReader extends AbstractRecordReader {
         mutator.setNull(index);
       }
     }
-
   }
 
+  private static class Float8Copier extends Copier<NullableFloat8Vector.Mutator> {
 
-  private class Float8Copier extends Copier<NullableFloat8Vector.Mutator> {
-
-    public Float8Copier(int columnIndex, ResultSet result, NullableFloat8Vector.Mutator mutator) {
+    Float8Copier(int columnIndex, ResultSet result, NullableFloat8Vector.Mutator mutator) {
       super(columnIndex, result, mutator);
     }
 
@@ -373,14 +368,12 @@ class JdbcRecordReader extends AbstractRecordReader {
       if (result.wasNull()) {
         mutator.setNull(index);
       }
-
     }
-
   }
 
-  private class DecimalCopier extends Copier<NullableVarDecimalVector.Mutator> {
+  private static class DecimalCopier extends Copier<NullableVarDecimalVector.Mutator> {
 
-    public DecimalCopier(int columnIndex, ResultSet result, NullableVarDecimalVector.Mutator mutator) {
+    DecimalCopier(int columnIndex, ResultSet result, NullableVarDecimalVector.Mutator mutator) {
       super(columnIndex, result, mutator);
     }
 
@@ -391,29 +384,27 @@ class JdbcRecordReader extends AbstractRecordReader {
         mutator.setSafe(index, decimal);
       }
     }
-
   }
 
-  private class VarCharCopier extends Copier<NullableVarCharVector.Mutator> {
+  private static class VarCharCopier extends Copier<NullableVarCharVector.Mutator> {
 
-    public VarCharCopier(int columnIndex, ResultSet result, NullableVarCharVector.Mutator mutator) {
+    VarCharCopier(int columnIndex, ResultSet result, NullableVarCharVector.Mutator mutator) {
       super(columnIndex, result, mutator);
     }
 
     @Override
     void copy(int index) throws SQLException {
-      String val = resultSet.getString(columnIndex);
+      String val = result.getString(columnIndex);
       if (val != null) {
         byte[] record = val.getBytes(Charsets.UTF_8);
         mutator.setSafe(index, record, 0, record.length);
       }
     }
-
   }
 
-  private class VarBinaryCopier extends Copier<NullableVarBinaryVector.Mutator> {
+  private static class VarBinaryCopier extends Copier<NullableVarBinaryVector.Mutator> {
 
-    public VarBinaryCopier(int columnIndex, ResultSet result, NullableVarBinaryVector.Mutator mutator) {
+    VarBinaryCopier(int columnIndex, ResultSet result, NullableVarBinaryVector.Mutator mutator) {
       super(columnIndex, result, mutator);
     }
 
@@ -424,14 +415,13 @@ class JdbcRecordReader extends AbstractRecordReader {
         mutator.setSafe(index, record, 0, record.length);
       }
     }
-
   }
 
-  private class DateCopier extends Copier<NullableDateVector.Mutator> {
+  private static class DateCopier extends Copier<NullableDateVector.Mutator> {
 
     private final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-    public DateCopier(int columnIndex, ResultSet result, NullableDateVector.Mutator mutator) {
+    DateCopier(int columnIndex, ResultSet result, NullableDateVector.Mutator mutator) {
       super(columnIndex, result, mutator);
     }
 
@@ -442,14 +432,13 @@ class JdbcRecordReader extends AbstractRecordReader {
         mutator.setSafe(index, date.getTime());
       }
     }
-
   }
 
-  private class TimeCopier extends Copier<NullableTimeVector.Mutator> {
+  private static class TimeCopier extends Copier<NullableTimeVector.Mutator> {
 
     private final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-    public TimeCopier(int columnIndex, ResultSet result, NullableTimeVector.Mutator mutator) {
+    TimeCopier(int columnIndex, ResultSet result, NullableTimeVector.Mutator mutator) {
       super(columnIndex, result, mutator);
     }
 
@@ -459,17 +448,14 @@ class JdbcRecordReader extends AbstractRecordReader {
       if (time != null) {
         mutator.setSafe(index, (int) time.getTime());
       }
-
     }
-
   }
 
-
-  private class TimeStampCopier extends Copier<NullableTimeStampVector.Mutator> {
+  private static class TimeStampCopier extends Copier<NullableTimeStampVector.Mutator> {
 
     private final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-    public TimeStampCopier(int columnIndex, ResultSet result, NullableTimeStampVector.Mutator mutator) {
+    TimeStampCopier(int columnIndex, ResultSet result, NullableTimeStampVector.Mutator mutator) {
       super(columnIndex, result, mutator);
     }
 
@@ -479,14 +465,12 @@ class JdbcRecordReader extends AbstractRecordReader {
       if (stamp != null) {
         mutator.setSafe(index, stamp.getTime());
       }
-
     }
-
   }
 
-  private class BitCopier extends Copier<NullableBitVector.Mutator> {
+  private static class BitCopier extends Copier<NullableBitVector.Mutator> {
 
-    public BitCopier(int columnIndex, ResultSet result, NullableBitVector.Mutator mutator) {
+    BitCopier(int columnIndex, ResultSet result, NullableBitVector.Mutator mutator) {
       super(columnIndex, result, mutator);
     }
 
@@ -497,6 +481,5 @@ class JdbcRecordReader extends AbstractRecordReader {
         mutator.setNull(index);
       }
     }
-
   }
 }

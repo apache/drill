@@ -21,13 +21,12 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
+import org.apache.drill.exec.vector.accessor.DictWriter;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.VariantWriter;
-import org.apache.drill.exec.vector.accessor.convert.AbstractWriteConverter;
-import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
@@ -37,7 +36,6 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
  * methods so that type-specific subclasses can simply fill in the bits
  * needed for that particular class.
  */
-
 public abstract class AbstractObjectWriter implements ObjectWriter {
 
   @Override
@@ -57,6 +55,11 @@ public abstract class AbstractObjectWriter implements ObjectWriter {
 
   @Override
   public VariantWriter variant() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public DictWriter dict() {
     throw new UnsupportedOperationException();
   }
 
@@ -89,13 +92,10 @@ public abstract class AbstractObjectWriter implements ObjectWriter {
 
   public abstract void dump(HierarchicalFormatter format);
 
-  protected static ScalarWriter convertWriter(
-      ColumnConversionFactory conversionFactory,
-      ScalarWriter baseWriter) {
-    if (conversionFactory == null) {
-      return baseWriter;
-    }
-    final AbstractWriteConverter shim = conversionFactory.newWriter(baseWriter);
-    return shim == null ? baseWriter : shim;
+  @Override
+  public String toString() {
+    return "[" + getClass().getSimpleName() +
+        schema().toString() +
+        ", projected=" + isProjected() + "]";
   }
 }

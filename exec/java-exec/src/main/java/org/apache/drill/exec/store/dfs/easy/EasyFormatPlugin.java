@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -68,20 +67,20 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Base class for various file readers.
+ * Base class for file readers.
  * <p>
- * This version provides a bridge between the legacy {@link RecordReader}-style
- * readers and the newer {@link FileBatchReader} style. Over time, split the
+ * Provides a bridge between the legacy {@link RecordReader}-style
+ * readers and the newer {@link ManagedReader} style. Over time, split the
  * class, or provide a cleaner way to handle the differences.
  *
  * @param <T> the format plugin config for this reader
  */
-
 public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements FormatPlugin {
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyFormatPlugin.class);
+  private static final Logger logger = LoggerFactory.getLogger(EasyFormatPlugin.class);
 
   /**
    * Defines the static, programmer-defined options for this plugin. These
@@ -89,7 +88,6 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * defined in the class definition, provides user-defined options that can
    * vary across uses of the plugin.
    */
-
   public static class EasyFormatConfig {
     public BasicFormatMatcher matcher;
     public boolean readable = true;
@@ -106,20 +104,22 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     // instead of overriding methods.
 
     public boolean supportsProjectPushdown;
+    public boolean supportsFileImplicitColumns = true;
     public boolean supportsAutoPartitioning;
     public boolean supportsStatistics;
     public int readerOperatorType = -1;
     public int writerOperatorType = -1;
 
-    // Choose whether to use the "traditional" or "enhanced" reader
-    // structure. Can also be selected at runtime by overriding
-    // useEnhancedScan().
-
+    /**
+     *  Choose whether to use the "traditional" or "enhanced" reader
+     *  structure. Can also be selected at runtime by overriding
+     *  {@link #useEnhancedScan(OptionManager)}.
+     */
     public boolean useEnhancedScan;
   }
 
   /**
-   * Builds the readers for the V3 text scan operator.
+   * Builds the readers row-set based scan operator.
    */
   private static class EasyReaderFactory extends FileReaderFactory {
 
@@ -128,7 +128,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     private final FragmentContext context;
 
     public EasyReaderFactory(EasyFormatPlugin<? extends FormatPluginConfig> plugin,
-        final EasySubScan scan, FragmentContext context) {
+        EasySubScan scan, FragmentContext context) {
       this.plugin = plugin;
       this.scan = scan;
       this.context = context;
@@ -216,18 +216,27 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * itself handle the tasks of projecting table columns, creating null
    * columns for missing table columns, and so on?
    *
-   * @return <tt>true</tt> if the plugin supports projection push-down,
-   * <tt>false</tt> if Drill should do the task by adding a project operator
+   * @return {@code true} if the plugin supports projection push-down,
+   * {@code false} if Drill should do the task by adding a project operator
    */
-
   public boolean supportsPushDown() { return easyConfig.supportsProjectPushdown; }
+
+  /**
+   * Whether this format plugin supports implicit file columns.
+   *
+   * @return {@code true} if the plugin supports implicit file columns,
+   * {@code false} otherwise
+   */
+  public boolean supportsFileImplicitColumns() {
+    return easyConfig.supportsFileImplicitColumns;
+  }
 
   /**
    * Whether or not you can split the format based on blocks within file
    * boundaries. If not, the simple format engine will only split on file
    * boundaries.
    *
-   * @return <code>true</code> if splittable.
+   * @return {@code true} if splitable.
    */
   public boolean isBlockSplittable() { return easyConfig.blockSplittable; }
 
@@ -237,7 +246,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * internal compression scheme, such as Parquet does, then this should return
    * false.
    *
-   * @return <code>true</code> if it is compressible
+   * @return {@code true} if it is compressible
    */
   public boolean isCompressible() { return easyConfig.compressible; }
 
@@ -252,14 +261,13 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * @return a record reader for this format
    * @throws ExecutionSetupException for many reasons
    */
-
   public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
       List<SchemaPath> columns, String userName) throws ExecutionSetupException {
     throw new ExecutionSetupException("Must implement getRecordReader() if using the legacy scanner.");
   }
 
-  protected CloseableRecordBatch getReaderBatch(final FragmentContext context,
-      final EasySubScan scan) throws ExecutionSetupException {
+  protected CloseableRecordBatch getReaderBatch(FragmentContext context,
+      EasySubScan scan) throws ExecutionSetupException {
     if (useEnhancedScan(context.getOptions())) {
       return buildScan(context, scan);
     } else {
@@ -276,7 +284,6 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * @return true to use the enhanced scan framework, false for the
    * traditional scan-batch framework
    */
-
   protected boolean useEnhancedScan(OptionManager options) {
     return easyConfig.useEnhancedScan;
   }
@@ -288,7 +295,6 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * compatibility with "classic" format plugins which have not yet been
    * upgraded to use the new framework.
    */
-
   private CloseableRecordBatch buildScanBatch(FragmentContext context,
       EasySubScan scan) throws ExecutionSetupException {
     final ColumnExplorer columnExplorer =
@@ -319,8 +325,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       readers.add(recordReader);
       final List<String> partitionValues = ColumnExplorer.listPartitionValues(
           work.getPath(), scan.getSelectionRoot(), false);
-      final Map<String, String> implicitValues = columnExplorer.populateImplicitColumns(
-          work.getPath(), partitionValues, supportsFileImplicitColumns);
+      final Map<String, String> implicitValues = columnExplorer.populateColumns(
+          work.getPath(), partitionValues, supportsFileImplicitColumns, dfs);
       implicitColumns.add(implicitValues);
       if (implicitValues.size() > mapWithMaxColumns.size()) {
         mapWithMaxColumns = implicitValues;
@@ -328,7 +334,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     }
 
     // all readers should have the same number of implicit columns, add missing ones with value null
-    final Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
+    final Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant(null));
     for (final Map<String, String> map : implicitColumns) {
       map.putAll(Maps.difference(map, diff).entriesOnlyOnRight());
     }
@@ -342,9 +348,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * Handles most projection tasks automatically. Able to limit
    * vector and batch sizes. Use this for new format plugins.
    */
-
-  private CloseableRecordBatch buildScan(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
-
+  private CloseableRecordBatch buildScan(FragmentContext context,
+      EasySubScan scan) throws ExecutionSetupException {
     try {
       final FileScanBuilder builder = frameworkBuilder(context.getOptions(), scan);
 
@@ -370,36 +375,32 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * The plugin can then customize/revise options as needed.
    *
    * @param builder the scan framework builder you create in the
-   * {@link #frameworkBuilder()} method
+   * {@link #frameworkBuilder(OptionManager, EasySubScan)} method
    * @param scan the physical scan operator definition passed to
-   * the {@link #frameworkBuilder()} method
+   * the {@link #frameworkBuilder(OptionManager, EasySubScan)} method
    */
-
   protected void initScanBuilder(FileScanBuilder builder, EasySubScan scan) {
-    builder.setProjection(scan.getColumns());
-    builder.setFiles(scan.getWorkUnits());
-    builder.setConfig(easyConfig().fsConf);
+    builder.projection(scan.getColumns());
     builder.setUserName(scan.getUserName());
 
     // Pass along the output schema, if any
+    builder.providedSchema(scan.getSchema());
 
-    builder.typeConverterBuilder().providedSchema(scan.getSchema());
+    // Pass along file path information
+    builder.setFileSystemConfig(easyConfig().fsConf);
+    builder.setFiles(scan.getWorkUnits());
     final Path selectionRoot = scan.getSelectionRoot();
     if (selectionRoot != null) {
-      builder.metadataOptions().setSelectionRoot(selectionRoot);
-      builder.metadataOptions().setPartitionDepth(scan.getPartitionDepth());
+      builder.implicitColumnOptions().setSelectionRoot(selectionRoot);
+      builder.implicitColumnOptions().setPartitionDepth(scan.getPartitionDepth());
     }
 
-    builder.setContext(
-        new CustomErrorContext() {
-          @Override
-          public void addContext(UserException.Builder builder) {
-            builder.addContext("Format plugin:", easyConfig.defaultName);
-            builder.addContext("Format plugin:",
-                EasyFormatPlugin.this.getClass().getSimpleName());
-            builder.addContext("Plugin config name:", getName());
-          }
-        });
+    // Additional error context to identify this plugin
+    builder.errorContext(
+        currentBuilder -> currentBuilder
+            .addContext("Format plugin", easyConfig.defaultName)
+            .addContext("Format plugin", EasyFormatPlugin.this.getClass().getSimpleName())
+            .addContext("Plugin config name", getName()));
   }
 
   public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
@@ -420,7 +421,6 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * potentially many files
    * @throws ExecutionSetupException for all setup failures
    */
-
   protected FileScanBuilder frameworkBuilder(
       OptionManager options, EasySubScan scan) throws ExecutionSetupException {
     throw new ExecutionSetupException("Must implement frameworkBuilder() if using the enhanced framework.");
@@ -435,8 +435,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     throw new UnsupportedOperationException("unimplemented");
   }
 
-  public StatisticsRecordWriter getStatisticsRecordWriter(FragmentContext context, EasyWriter writer) throws IOException
-  {
+  public StatisticsRecordWriter getStatisticsRecordWriter(FragmentContext context,
+      EasyWriter writer) throws IOException {
     return null;
   }
 
@@ -453,9 +453,9 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     }
   }
 
-  protected ScanStats getScanStats(final PlannerSettings settings, final EasyGroupScan scan) {
+  protected ScanStats getScanStats(PlannerSettings settings, EasyGroupScan scan) {
     long data = 0;
-    for (final CompleteFileWork work : scan.getWorkIterable()) {
+    for (CompleteFileWork work : scan.getWorkIterable()) {
       data += work.getTotalBytes();
     }
 

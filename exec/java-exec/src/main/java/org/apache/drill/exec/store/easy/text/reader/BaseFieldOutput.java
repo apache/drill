@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store.easy.text.reader;
 
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.ValueWriter;
 
 public abstract class BaseFieldOutput implements TextOutput {
 
@@ -63,7 +63,6 @@ public abstract class BaseFieldOutput implements TextOutput {
    * @param projectionMask a boolean array indicating which fields are
    * to be projected to the output. Optional
    */
-
   public BaseFieldOutput(RowSetLoader writer, int maxField, boolean[] projectionMask) {
     this.writer = writer;
     this.projectionMask = projectionMask;
@@ -97,7 +96,6 @@ public abstract class BaseFieldOutput implements TextOutput {
   /**
    * Start a new record record. Resets all pointers
    */
-
   @Override
   public void startRecord() {
     currentFieldIndex = -1;
@@ -136,7 +134,6 @@ public abstract class BaseFieldOutput implements TextOutput {
     fieldBytes[currentDataPointer++] = data;
   }
 
-
   /**
    * Write a buffer of data to the underlying vector using the
    * column writer. The buffer holds a complete or partial chunk
@@ -147,12 +144,11 @@ public abstract class BaseFieldOutput implements TextOutput {
    * (This is generally OK because the previous setBytes should have
    * failed because a large int or date is not supported.)
    */
-
   protected void writeToVector() {
     if (!fieldProjected) {
       return;
     }
-    ScalarWriter colWriter = columnWriter();
+    ValueWriter colWriter = columnWriter();
     if (fieldWriteCount == 0) {
       colWriter.setBytes(fieldBytes, currentDataPointer);
     } else {
@@ -162,7 +158,7 @@ public abstract class BaseFieldOutput implements TextOutput {
     currentDataPointer = 0;
   }
 
-  protected abstract ScalarWriter columnWriter();
+  protected abstract ValueWriter columnWriter();
 
   @Override
   public boolean endField() {

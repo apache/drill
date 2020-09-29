@@ -67,7 +67,6 @@ import org.apache.drill.exec.work.ExecErrorConstants;
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -75,6 +74,7 @@ import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.IOConstants;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
@@ -91,6 +91,8 @@ import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -104,7 +106,7 @@ import java.util.stream.Collectors;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE;
 
 public class HiveUtilities {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveUtilities.class);
+  private static final Logger logger = LoggerFactory.getLogger(HiveUtilities.class);
 
   /**
    * Partition value is received in string format. Convert it into appropriate object based on the type.
@@ -445,7 +447,7 @@ public class HiveUtilities {
       }
       final HiveStorageHandler storageHandler = HiveUtils.getStorageHandler(job, storageHandlerClass);
       TableDesc tableDesc = new TableDesc();
-      tableDesc.setProperties(MetaStoreUtils.getTableMetadata(table));
+      tableDesc.setProperties(new org.apache.hadoop.hive.ql.metadata.Table(table).getMetadata());
       storageHandler.configureInputJobProperties(tableDesc, table.getParameters());
       return (Class<? extends InputFormat<?, ?>>) storageHandler.getInputFormatClass();
     } else {
@@ -466,7 +468,7 @@ public class HiveUtilities {
   }
 
   /**
-   * Wrapper around {@link MetaStoreUtils#getPartitionMetadata(org.apache.hadoop.hive.metastore.api.Partition, Table)}
+   * Wrapper around {@code MetaStoreUtils#getPartitionMetadata(org.apache.hadoop.hive.metastore.api.Partition, Table)}
    * which also adds parameters from table to properties returned by that method.
    *
    * @param partition the source of partition level parameters
@@ -475,16 +477,20 @@ public class HiveUtilities {
    */
   public static Properties getPartitionMetadata(final HivePartition partition, final HiveTableWithColumnCache table) {
     restoreColumns(table, partition);
-    Properties properties = MetaStoreUtils.getPartitionMetadata(partition, table);
+    try {
+      Properties properties = new org.apache.hadoop.hive.ql.metadata.Partition(new org.apache.hadoop.hive.ql.metadata.Table(table), partition).getMetadataFromPartitionSchema();
 
-    // SerDe expects properties from Table, but above call doesn't add Table properties.
-    // Include Table properties in final list in order to not to break SerDes that depend on
-    // Table properties. For example AvroSerDe gets the schema from properties (passed as second argument)
-    table.getParameters().entrySet().stream()
-        .filter(e -> e.getKey() != null && e.getValue() != null)
-        .forEach(e -> properties.put(e.getKey(), e.getValue()));
+      // SerDe expects properties from Table, but above call doesn't add Table properties.
+      // Include Table properties in final list in order to not to break SerDes that depend on
+      // Table properties. For example AvroSerDe gets the schema from properties (passed as second argument)
+      table.getParameters().entrySet().stream()
+          .filter(e -> e.getKey() != null && e.getValue() != null)
+          .forEach(e -> properties.put(e.getKey(), e.getValue()));
 
-    return properties;
+      return properties;
+    } catch (HiveException e) {
+      throw new DrillRuntimeException(e);
+    }
   }
 
   /**
@@ -505,17 +511,16 @@ public class HiveUtilities {
   }
 
   /**
-   * Wrapper around {@link MetaStoreUtils#getSchema(StorageDescriptor, StorageDescriptor, Map, String, String, List)}
+   * Wrapper around {@code MetaStoreUtils#getSchema(StorageDescriptor, StorageDescriptor, Map, String, String, List)}
    * which also sets columns from table cache to table and returns properties returned by
-   * {@link MetaStoreUtils#getSchema(StorageDescriptor, StorageDescriptor, Map, String, String, List)}.
+   * {@code MetaStoreUtils#getSchema(StorageDescriptor, StorageDescriptor, Map, String, String, List)}.
    *
    * @param table Hive table with cached columns
    * @return Hive table metadata
    */
   public static Properties getTableMetadata(HiveTableWithColumnCache table) {
     restoreColumns(table, null);
-    return MetaStoreUtils.getSchema(table.getSd(), table.getSd(), table.getParameters(),
-      table.getDbName(), table.getTableName(), table.getPartitionKeys());
+    return new org.apache.hadoop.hive.ql.metadata.Table(table).getMetadata();
   }
 
   /**
@@ -585,7 +590,7 @@ public class HiveUtilities {
   public static void verifyAndAddTransactionalProperties(JobConf job, StorageDescriptor sd) {
 
     if (AcidUtils.isTablePropertyTransactional(job)) {
-      AcidUtils.setTransactionalTableScan(job, true);
+      HiveConf.setBoolVar(job, HiveConf.ConfVars.HIVE_TRANSACTIONAL_TABLE_SCAN, true);
 
       // No work is needed, if schema evolution is used
       if (Utilities.isSchemaEvolutionEnabled(job, true) && job.get(IOConstants.SCHEMA_EVOLUTION_COLUMNS) != null &&
@@ -813,7 +818,7 @@ public class HiveUtilities {
       default:
         if (componentType.isStruct()) {
           // for the case when nested type is struct, it should be placed into repeated map
-          return MetadataUtils.newMapArray(name, childColumnMetadata.mapSchema());
+          return MetadataUtils.newMapArray(name, childColumnMetadata.tupleSchema());
         } else {
           // otherwise creates column metadata with repeated data mode
           return new PrimitiveColumnMetadata(

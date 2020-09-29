@@ -24,7 +24,6 @@ import com.wix.mysql.config.SchemaConfig;
 import com.wix.mysql.distribution.Version;
 import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryTestUtil;
@@ -41,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * JDBC storage plugin tests against MySQL.
- * Note: it requires libaio.so library in the system
+ * Note: it requires libaio1.so library on Linux
  */
 @Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithMySQLIT extends ClusterTest {
@@ -50,11 +49,11 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
 
   @BeforeClass
   public static void initMysql() throws Exception {
-    String mysqlPluginName = "mysql";
+    startCluster(ClusterFixture.builder(dirTestWatcher));
     String mysqlDBName = "drill_mysql_test";
     int mysqlPort = QueryTestUtil.getFreePortNumber(2215, 300);
 
-    MysqldConfig config = MysqldConfig.aMysqldConfig(Version.v5_6_21)
+    MysqldConfig config = MysqldConfig.aMysqldConfig(Version.v5_7_27)
         .withPort(mysqlPort)
         .withUser("mysqlUser", "mysqlPass")
         .withTimeZone(DateTimeZone.UTC.toTimeZone())
@@ -68,40 +67,22 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
       schemaConfig.withScripts(ScriptResolver.classPathScript("mysql-test-data-linux.sql"));
     }
 
-    mysqld = EmbeddedMysql.anEmbeddedMysql(config)
-        .addSchema(schemaConfig.build())
-        .start();
+    mysqld = EmbeddedMysql.anEmbeddedMysql(config).addSchema(schemaConfig.build()).start();
 
-    startCluster(ClusterFixture.builder(dirTestWatcher));
-
-    StoragePluginRegistryImpl pluginRegistry = (StoragePluginRegistryImpl) cluster.drillbit().getContext().getStorage();
-
-    JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig(
-        "com.mysql.cj.jdbc.Driver",
+    JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver",
         String.format("jdbc:mysql://localhost:%s/%s?useJDBCCompliantTimezoneShift=true", mysqlPort, mysqlDBName),
-        "mysqlUser",
-        "mysqlPass",
-        false);
+        "mysqlUser", "mysqlPass", false, null);
     jdbcStorageConfig.setEnabled(true);
 
-    JdbcStoragePlugin jdbcStoragePlugin = new JdbcStoragePlugin(jdbcStorageConfig,
-        cluster.drillbit().getContext(), mysqlPluginName);
-    pluginRegistry.addPluginToPersistentStoreIfAbsent(mysqlPluginName, jdbcStorageConfig, jdbcStoragePlugin);
+    cluster.defineStoragePlugin("mysql", jdbcStorageConfig);
 
     if (osName.startsWith("linux")) {
       // adds storage plugin with case insensitive table names
-      String mysqlCaseSensitivePluginName = "mysqlCaseInsensitive";
-      JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig(
-          "com.mysql.cj.jdbc.Driver",
+      JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver",
           String.format("jdbc:mysql://localhost:%s/%s?useJDBCCompliantTimezoneShift=true", mysqlPort, mysqlDBName),
-          "mysqlUser",
-          "mysqlPass",
-          true);
+          "mysqlUser", "mysqlPass", true, null);
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
-
-      JdbcStoragePlugin jdbcCaseSensitiveStoragePlugin = new JdbcStoragePlugin(jdbcCaseSensitiveStorageConfig,
-          cluster.drillbit().getContext(), mysqlCaseSensitivePluginName);
-      pluginRegistry.addPluginToPersistentStoreIfAbsent(mysqlCaseSensitivePluginName, jdbcCaseSensitiveStorageConfig, jdbcCaseSensitiveStoragePlugin);
+      cluster.defineStoragePlugin("mysqlCaseInsensitive", jdbcCaseSensitiveStorageConfig);
     }
   }
 
@@ -190,7 +171,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   }
 
   @Test
-  public void pushdownJoin() throws Exception {
+  public void pushDownJoin() throws Exception {
     String query = "select x.person_id from (select person_id from mysql.`drill_mysql_test`.person) x "
             + "join (select person_id from mysql.`drill_mysql_test`.person) y on x.person_id = y.person_id";
     queryBuilder()
@@ -201,7 +182,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   }
 
   @Test
-  public void pushdownJoinAndFilterPushDown() throws Exception {
+  public void pushDownJoinAndFilterPushDown() throws Exception {
     String query = "select * from " +
             "mysql.`drill_mysql_test`.person e " +
             "INNER JOIN " +
@@ -224,10 +205,12 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   }
 
   @Test
-  public void emptyOutput() throws Exception {
+  public void emptyOutput() {
     String query = "select * from mysql.`drill_mysql_test`.person e limit 0";
 
-    run(query);
+    testBuilder()
+        .sqlQuery(query)
+        .expectsEmptyResultSet();
   }
 
   @Test

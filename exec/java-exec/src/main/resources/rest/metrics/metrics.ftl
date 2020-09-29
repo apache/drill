@@ -22,18 +22,16 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
   <div class="row">
 
     <div class="col-md-3 sidebar">
-      <ul id="sideDiv" class="nav nav-sidebar">
-        <li> <a href="#gauges">Gauges</a> </li>
-        <li> <a href="#counters">Counters</a> </li>
-        <li> <a href="#histograms">Histograms</a> </li>
-        <li> <a href="#meters">Meters</a> </li>
-        <li> <a href="#timers">Timers</a> </li>
-      </ul>
+      <div id="sideDiv" class="list-group">
+        <a class="list-group-item" href="#gauges">Gauges</a>
+        <a class="list-group-item" href="#counters">Counters</a>
+        <a class="list-group-item" href="#histograms">Histograms</a>
+        <a class="list-group-item" href="#meters">Meters</a>
+        <a class="list-group-item" href="#timers">Timers</a>
+      </div>
       <br>
       Heap
       <div class="progress">

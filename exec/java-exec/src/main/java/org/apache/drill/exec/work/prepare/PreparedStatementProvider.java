@@ -18,14 +18,14 @@
 package org.apache.drill.exec.work.prepare;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import io.netty.buffer.ByteBuf;
+
 import io.netty.channel.ChannelFuture;
 import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
+import org.apache.drill.exec.physical.impl.materialize.QueryDataPackage;
 import org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
@@ -43,6 +43,7 @@ import org.apache.drill.exec.proto.UserProtos.RequestStatus;
 import org.apache.drill.exec.proto.UserProtos.ResultColumnMetadata;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.rpc.AbstractDisposableUserClientConnection;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.Response;
@@ -53,6 +54,8 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.exec.work.user.UserWorker;
 import org.joda.time.Period;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.net.SocketAddress;
@@ -72,11 +75,11 @@ import static org.apache.drill.exec.proto.UserProtos.RequestStatus.TIMEOUT;
  * Contains worker {@link Runnable} for creating a prepared statement and helper methods.
  */
 public class PreparedStatementProvider {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PreparedStatementProvider.class);
+  private static final Logger logger = LoggerFactory.getLogger(PreparedStatementProvider.class);
 
   /**
-   * Static list of mappings from {@link MinorType} to JDBC ResultSet class name (to be returned through
-   * {@link ResultSetMetaData#getColumnClassName(int)}.
+   * Static list of mappings from {@link MinorType} to JDBC ResultSet class name
+   * (to be returned through {@link ResultSetMetaData#getColumnClassName(int)}.
    */
   private static final Map<MinorType, String> DRILL_TYPE_TO_JDBC_CLASSNAME = ImmutableMap.<MinorType, String>builder()
       .put(MinorType.INT, Integer.class.getName())
@@ -186,9 +189,10 @@ public class PreparedStatementProvider {
   }
 
   /**
-   * Helper method to create {@link DrillPBError} and set it in <code>respBuilder</code>
+   * Helper method to create {@link DrillPBError} and set it in {@code respBuilder}
    */
-  private static void setErrorHelper(final CreatePreparedStatementResp.Builder respBuilder, final RequestStatus status,
+  private static void setErrorHelper(final CreatePreparedStatementResp.Builder respBuilder,
+      final RequestStatus status,
       final Throwable ex, final String message, final ErrorType errorType) {
     respBuilder.setStatus(status);
     final String errorId = UUID.randomUUID().toString();
@@ -211,7 +215,7 @@ public class PreparedStatementProvider {
   }
 
   /**
-   * Helper method to log error and set given {@link DrillPBError} in <code>respBuilder</code>
+   * Helper method to log error and set given {@link DrillPBError} in {@code respBuilder}
    */
   private static void setErrorHelper(final CreatePreparedStatementResp.Builder respBuilder, final DrillPBError error,
       final String message) {
@@ -250,14 +254,14 @@ public class PreparedStatementProvider {
     }
 
     @Override
-    public void sendData(RpcOutcomeListener<Ack> listener, QueryWritableBatch result) {
+    public void sendData(RpcOutcomeListener<Ack> listener, QueryDataPackage data) {
       // Save the query results schema and release the buffers.
-      if (fields == null) {
-        fields = result.getHeader().getDef().getFieldList();
-      }
-
-      for (ByteBuf buf : result.getBuffers()) {
-        buf.release();
+      VectorContainer batch = data.batch();
+      if (batch != null) {
+        if (fields == null) {
+          fields = data.fields();
+        }
+        batch.zeroVectors();
       }
 
       listener.success(Acks.OK, null);
@@ -287,16 +291,18 @@ public class PreparedStatementProvider {
     builder.setCatalogName(InfoSchemaConstants.IS_CATALOG_NAME);
 
     /**
-     * Designated column's schema name. Empty string if not applicable. Initial implementation defaults to empty string
-     * as we use LIMIT 0 queries to get the schema and schema info is lost. If we derive the schema from plan, we may
-     * get the right value.
+     * Designated column's schema name. Empty string if not applicable. Initial
+     * implementation defaults to empty string as we use LIMIT 0 queries to get
+     * the schema and schema info is lost. If we derive the schema from plan, we
+     * may get the right value.
      */
     builder.setSchemaName("");
 
     /**
-     * Designated column's table name. Not set if not applicable. Initial implementation defaults to empty string as
-     * we use LIMIT 0 queries to get the schema and table info is lost. If we derive the table from plan, we may get
-     * the right value.
+     * Designated column's table name. Not set if not applicable. Initial
+     * implementation defaults to empty string as we use LIMIT 0 queries to get
+     * the schema and table info is lost. If we derive the table from plan, we
+     * may get the right value.
      */
     builder.setTableName("");
 
@@ -327,7 +333,8 @@ public class PreparedStatementProvider {
     builder.setPrecision(Types.getPrecision(field.getMajorType()));
 
     /**
-     * Column's number of digits to right of the decimal point. 0 is returned for types where the scale is not applicable
+     * Column's number of digits to right of the decimal point. 0 is returned
+     * for types where the scale is not applicable
      */
     builder.setScale(Types.getScale(majorType));
 
@@ -342,8 +349,8 @@ public class PreparedStatementProvider {
     builder.setDisplaySize(Types.getJdbcDisplaySize(majorType));
 
     /**
-     * Is the column an aliased column. Initial implementation defaults to true as we derive schema from LIMIT 0 query and
-     * not plan
+     * Is the column an aliased column. Initial implementation defaults to true
+     * as we derive schema from LIMIT 0 query and not plan
      */
     builder.setIsAliased(true);
 

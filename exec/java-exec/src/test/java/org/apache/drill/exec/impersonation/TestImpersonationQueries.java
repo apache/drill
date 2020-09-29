@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.impersonation;
 
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
+import org.apache.drill.exec.store.avro.AvroDataGenerator;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.util.DrillFileUtils;
-import org.apache.drill.exec.store.avro.AvroTestUtil;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.categories.SlowTest;
 import org.apache.hadoop.fs.FileSystem;
@@ -168,7 +169,8 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     fs.setOwner(dfsFile, user, group);
     fs.setPermission(dfsFile, new FsPermission((short) 0700));
 
-    localFile = new Path(AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues().getFilePath());
+    AvroDataGenerator avroDataGenerator = new AvroDataGenerator(dirTestWatcher);
+    localFile = new Path(avroDataGenerator.generateSimplePrimitiveSchema_NoNullValues().getFilePath());
     dfsFile = new Path(getUserHome(user), "simple.avro");
     fs.copyFromLocalFile(localFile, dfsFile);
     fs.setOwner(dfsFile, user, group);
@@ -283,12 +285,9 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     createView(org1Users[0], org1Groups[0], "simple_avro_view",
       String.format("SELECT h_boolean, e_double FROM %s.`%s` t", MINI_DFS_STORAGE_PLUGIN_NAME,
         new Path(getUserHome(org1Users[0]), "simple.avro")));
-    try {
-      updateClient(org1Users[1]);
-      test("SELECT h_boolean FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_avro_view");
-    } catch (UserRemoteException e) {
-      assertNull("This test should pass.", e);
-    }
+
+    updateClient(org1Users[1]);
+    test("SELECT h_boolean FROM %s.%s.%s", MINI_DFS_STORAGE_PLUGIN_NAME, "tmp", "simple_avro_view");
   }
 
   @Test // DRILL-7250
@@ -306,8 +305,8 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   }
 
   @AfterClass
-  public static void removeMiniDfsBasedStorage() {
-    getDrillbitContext().getStorage().deletePlugin(MINI_DFS_STORAGE_PLUGIN_NAME);
+  public static void removeMiniDfsBasedStorage() throws PluginException {
+    getDrillbitContext().getStorage().remove(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }
 }

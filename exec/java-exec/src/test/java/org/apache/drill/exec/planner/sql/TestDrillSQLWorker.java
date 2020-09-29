@@ -32,8 +32,8 @@ import org.junit.experimental.categories.Category;
 public class TestDrillSQLWorker extends BaseTestQuery {
 
   private void validateFormattedIs(String sql, SqlParserPos pos, String expected) {
-    DrillSqlParseException ex = new DrillSqlParseException(null, pos, null, null, null);
-    String formatted = SqlConverter.formatSQLParsingError(sql, ex);
+    DrillSqlParseException ex = new DrillSqlParseException(sql, pos);
+    String formatted = ex.getSqlWithErrorPointer();
     assertEquals(expected, formatted);
   }
 

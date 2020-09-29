@@ -17,15 +17,16 @@
  */
 package org.apache.drill.exec.physical.impl.statistics;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sun.codemodel.JExpr;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -50,6 +51,8 @@ import org.apache.drill.exec.vector.complex.FieldIdUtil;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * TODO: This needs cleanup. Currently the key values are constants and we compare the constants
@@ -75,10 +78,12 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  */
 
 public class StatisticsAggBatch extends StreamingAggBatch {
+  private static final Logger logger = LoggerFactory.getLogger(StatisticsAggBatch.class);
+
   // List of statistics functions e.g. rowcount, ndv output by StatisticsAggBatch
-  private List<String> functions;
+  private final List<String> functions;
   // List of implicit columns for which we do NOT want to compute statistics
-  private Map<String, ColumnExplorer.ImplicitFileColumns> implicitFileColumnsMap;
+  private final Map<String, ColumnExplorer.ImplicitFileColumns> implicitFileColumnsMap;
 
   public StatisticsAggBatch(StatisticsAggregate popConfig, RecordBatch incoming,
       FragmentContext context) throws OutOfMemoryException {
@@ -118,8 +123,7 @@ public class StatisticsAggBatch extends StreamingAggBatch {
    * Creates the key column within the parent value vector
    */
   private void createNestedKeyColumn(MapVector parent, String name, LogicalExpression expr,
-      List<LogicalExpression> keyExprs, List<TypedFieldId> keyOutputIds)
-          throws SchemaChangeException {
+      List<LogicalExpression> keyExprs, List<TypedFieldId> keyOutputIds) {
     LogicalExpression mle = PhysicalOperatorUtil.materializeExpression(expr, incoming, context);
     TypedFieldId id = createVVFieldId(mle, name, parent);
     keyExprs.add(mle);
@@ -131,7 +135,7 @@ public class StatisticsAggBatch extends StreamingAggBatch {
    * is the column name and value is the statistic expression e.g. "salary" : NDV(emp.salary)
    */
   private void addMapVector(String name, MapVector parent, LogicalExpression expr,
-      List<LogicalExpression> valueExprs) throws SchemaChangeException {
+      List<LogicalExpression> valueExprs) {
     LogicalExpression mle = PhysicalOperatorUtil.materializeExpression(expr, incoming, context);
     TypedFieldId id = createVVFieldId(mle, name, parent);
     valueExprs.add(new ValueVectorWriteExpression(id, mle, true));
@@ -141,8 +145,7 @@ public class StatisticsAggBatch extends StreamingAggBatch {
    * Generates the code for the statistics aggregate which is subclassed from StreamingAggregator
    */
   private StreamingAggregator codegenAggregator(List<LogicalExpression> keyExprs,
-      List<LogicalExpression> valueExprs, List<TypedFieldId> keyOutputIds)
-          throws SchemaChangeException, ClassTransformationException, IOException {
+      List<LogicalExpression> valueExprs, List<TypedFieldId> keyOutputIds) {
 
     ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
@@ -168,13 +171,16 @@ public class StatisticsAggBatch extends StreamingAggBatch {
 
     container.buildSchema(SelectionVectorMode.NONE);
     StreamingAggregator agg = context.getImplementationClass(cg);
-    agg.setup(oContext, incoming, this, ValueVector.MAX_ROW_COUNT);
+    try {
+      agg.setup(oContext, incoming, this, ValueVector.MAX_ROW_COUNT);
+    } catch (SchemaChangeException e) {
+      throw schemaChangeException(e, logger);
+    }
     return agg;
   }
 
   @Override
-  protected StreamingAggregator createAggregatorInternal()
-      throws SchemaChangeException, ClassTransformationException, IOException {
+  protected StreamingAggregator createAggregatorInternal() {
     List<LogicalExpression> keyExprs = Lists.newArrayList();
     List<LogicalExpression> valueExprs = Lists.newArrayList();
     List<TypedFieldId> keyOutputIds = Lists.newArrayList();
@@ -190,7 +196,13 @@ public class StatisticsAggBatch extends StreamingAggBatch {
         if (col.equals(colMeta[0])) {
           expr = ValueExpressions.getChar(SchemaPath.getSimplePath(mf.getName()).toString(), 0);
         } else {
-          expr = ValueExpressions.getChar(DrillStatsTable.getMapper().writeValueAsString(mf.getType()), 0);
+          try {
+            expr = ValueExpressions.getChar(DrillStatsTable.getMapper().writeValueAsString(mf.getType()), 0);
+          } catch (JsonProcessingException e) {
+            throw UserException.dataWriteError(e)
+                .addContext("Failed to write statistics to JSON")
+                .build();
+          }
         }
         // Ignore implicit columns
         if (!isImplicitFileOrPartitionColumn(mf, incoming.getContext().getOptions())) {

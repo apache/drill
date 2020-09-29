@@ -107,37 +107,37 @@ public class TestResultSetLoaderLimits extends SubOperatorTest {
     // Try to set a default value larger than the hard limit. Value
     // is truncated to the limit.
 
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT + 1)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT + 1)
         .build();
     assertEquals(ValueVector.MAX_ROW_COUNT, options.rowCountLimit);
 
     // Just a bit of paranoia that we check against the vector limit,
     // not any previous value...
 
-    options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT + 1)
-        .setRowCountLimit(TEST_ROW_LIMIT)
+    options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT + 1)
+        .rowCountLimit(TEST_ROW_LIMIT)
         .build();
     assertEquals(TEST_ROW_LIMIT, options.rowCountLimit);
 
-    options = new OptionBuilder()
-        .setRowCountLimit(TEST_ROW_LIMIT)
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT + 1)
+    options = new ResultSetOptionBuilder()
+        .rowCountLimit(TEST_ROW_LIMIT)
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT + 1)
         .build();
     assertEquals(ValueVector.MAX_ROW_COUNT, options.rowCountLimit);
 
     // Can't set the limit lower than 1
 
-    options = new OptionBuilder()
-        .setRowCountLimit(0)
+    options = new ResultSetOptionBuilder()
+        .rowCountLimit(0)
         .build();
     assertEquals(1, options.rowCountLimit);
 
     // Do load with a (valid) limit lower than the default.
 
-    options = new OptionBuilder()
-        .setRowCountLimit(TEST_ROW_LIMIT)
+    options = new ResultSetOptionBuilder()
+        .rowCountLimit(TEST_ROW_LIMIT)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     assertEquals(TEST_ROW_LIMIT, rsLoader.targetRowCount());
@@ -189,8 +189,8 @@ public class TestResultSetLoaderLimits extends SubOperatorTest {
 
     // Start with a small limit.
 
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(TEST_ROW_LIMIT)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(TEST_ROW_LIMIT)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     assertEquals(TEST_ROW_LIMIT, rsLoader.targetRowCount());

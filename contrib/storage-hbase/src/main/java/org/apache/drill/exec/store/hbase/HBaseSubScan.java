@@ -41,12 +41,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
- * Contains information for reading a single HBase region
+ * Information for reading a single HBase region
  */
-
 @JsonTypeName("hbase-region-scan")
 public class HBaseSubScan extends AbstractBase implements SubScan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseSubScan.class);
 
   private final HBaseStoragePlugin hbaseStoragePlugin;
   private final List<HBaseSubScanSpec> regionScanSpecList;
@@ -59,7 +57,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
                       @JsonProperty("regionScanSpecList") LinkedList<HBaseSubScanSpec> regionScanSpecList,
                       @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     this(userName,
-        (HBaseStoragePlugin) registry.getPlugin(hbaseStoragePluginConfig),
+        registry.resolve(hbaseStoragePluginConfig, HBaseStoragePlugin.class),
         regionScanSpecList,
         columns);
   }

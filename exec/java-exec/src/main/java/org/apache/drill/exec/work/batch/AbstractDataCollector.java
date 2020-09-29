@@ -70,12 +70,13 @@ public abstract class AbstractDataCollector implements DataCollector {
     remainingRequired = new AtomicInteger(numBuffers);
 
     final boolean spooling = collector.getIsSpooling();
+    final boolean enableDynamicFc = collector.hasEnableDynamicFc();
 
     for (int i = 0; i < numBuffers; i++) {
       if (spooling) {
-        buffers[i] = new SpoolingRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId(), i);
+        buffers[i] = new SpoolingRawBatchBuffer(context, bufferCapacity, collector.getOppositeMajorFragmentId(), i, enableDynamicFc);
       } else {
-        buffers[i] = new UnlimitedRawBatchBuffer(context, bufferCapacity);
+        buffers[i] = new UnlimitedRawBatchBuffer(context, bufferCapacity, enableDynamicFc);
       }
     }
   }

@@ -18,15 +18,15 @@
 package org.apache.drill.exec.physical.resultSet.impl;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
+import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetFactory;
-import org.apache.drill.exec.physical.resultSet.ProjectionSet;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.TupleState.RowState;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
@@ -39,18 +39,17 @@ import org.slf4j.LoggerFactory;
  *
  * @see {@link ResultSetLoader}
  */
-
 public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
+  protected static final Logger logger = LoggerFactory.getLogger(ResultSetLoaderImpl.class);
 
   /**
    * Read-only set of options for the result set loader.
    */
-
   public static class ResultSetOptions {
     protected final int vectorSizeLimit;
     protected final int rowCountLimit;
     protected final ResultVectorCache vectorCache;
-    protected final ProjectionSet projectionSet;
+    protected final ProjectionFilter projectionSet;
     protected final TupleMetadata schema;
     protected final long maxBatchSize;
 
@@ -62,23 +61,34 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     public ResultSetOptions() {
       vectorSizeLimit = ValueVector.MAX_BUFFER_SIZE;
       rowCountLimit = DEFAULT_ROW_COUNT;
-      projectionSet = ProjectionSetFactory.projectAll();
+      projectionSet = ProjectionFilter.PROJECT_ALL;
       vectorCache = null;
       schema = null;
       maxBatchSize = -1;
       errorContext = null;
     }
 
-    public ResultSetOptions(OptionBuilder builder) {
+    public ResultSetOptions(ResultSetOptionBuilder builder) {
       vectorSizeLimit = builder.vectorSizeLimit;
       rowCountLimit = builder.rowCountLimit;
       vectorCache = builder.vectorCache;
-      schema = builder.schema;
+      schema = builder.readerSchema;
       maxBatchSize = builder.maxBatchSize;
-      errorContext = builder.errorContext;
-      projectionSet = builder.projectionSet == null ?
-          ProjectionSetFactory.projectAll() :
-          builder.projectionSet;
+      errorContext = builder.errorContext == null
+          ? EmptyErrorContext.INSTANCE : builder.errorContext;
+      if (builder.projectionFilter != null) {
+        projectionSet = builder.projectionFilter;
+      } else if (builder.projectionSet != null) {
+        projectionSet = ProjectionFilter.projectionFilter(builder.projectionSet, errorContext);
+      } else {
+        projectionSet = ProjectionFilter.PROJECT_ALL;
+      }
+      if (schema != null && MetadataUtils.hasDynamicColumns(schema)) {
+        throw UserException.validationError()
+          .message("Reader input schema must not contain dynamic columns")
+          .addContext(errorContext)
+          .build(logger);
+      }
     }
 
     public void dump(HierarchicalFormatter format) {
@@ -95,13 +105,11 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     /**
      * Before the first batch.
      */
-
     START,
 
     /**
      * Writing to a batch normally.
      */
-
     ACTIVE,
 
     /**
@@ -109,14 +117,12 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
      * to write to a temporary "overflow" batch until the
      * end of the current row.
      */
-
     OVERFLOW,
 
     /**
      * Temporary state to avoid batch-size related overflow while
      * an overflow is in progress.
      */
-
     IN_OVERFLOW,
 
     /**
@@ -124,14 +130,12 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
      * when saving a row.
      * No more writes allowed until harvesting the current batch.
      */
-
     FULL_BATCH,
 
     /**
      * Current batch was harvested: data is gone. No lookahead
      * batch exists.
      */
-
     HARVESTED,
 
     /**
@@ -155,41 +159,33 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
      * fine. The correct buffers are restored once a new batch is started
      * and the state moves to ACTIVE.
      */
-
     LOOK_AHEAD,
 
     /**
      * Mutator is closed: no more operations are allowed.
      */
-
     CLOSED
   }
-
-  protected static final Logger logger = LoggerFactory.getLogger(ResultSetLoaderImpl.class);
 
   /**
    * Options provided to this loader.
    */
-
   private final ResultSetOptions options;
 
   /**
    * Allocator for vectors created by this loader.
    */
-
   private final BufferAllocator allocator;
 
   /**
    * Builds columns (vector, writer, state).
    */
-
   private final ColumnBuilder columnBuilder;
 
   /**
    * Internal structure used to work with the vectors (real or dummy) used
    * by this loader.
    */
-
   private final RowState rootState;
 
   /**
@@ -200,21 +196,18 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * within the writer structure that points to the current position within
    * an array column.
    */
-
   private final WriterIndexImpl writerIndex;
 
   /**
    * The row-level writer for stepping through rows as they are written,
    * and for accessing top-level columns.
    */
-
   private final RowSetLoaderImpl rootWriter;
 
   /**
    * Tracks the state of the row set loader. Handling vector overflow requires
    * careful stepping through a variety of states as the write proceeds.
    */
-
   private State state = State.START;
 
   /**
@@ -223,7 +216,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * This allows very easy checks for schema changes: save the prior version number
    * and compare it against the current version number.
    */
-
   private int activeSchemaVersion;
 
   /**
@@ -234,21 +226,18 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * sees the schema as it existed at a prior version: the harvest schema
    * version.
    */
-
   private int harvestSchemaVersion;
 
   /**
    * Counts the batches harvested (sent downstream) from this loader. Does
    * not include the current, in-flight batch.
    */
-
   private int harvestBatchCount;
 
   /**
    * Counts the rows included in previously-harvested batches. Does not
    * include the number of rows in the current batch.
    */
-
   private int previousRowCount;
 
   /**
@@ -258,7 +247,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * overflow row is in effect, then this number is undefined (and should be
    * zero.)
    */
-
   private int pendingRowCount;
 
   /**
@@ -266,16 +254,12 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * adjusted between batches, perhaps based on the actual observed size of
    * input data.
    */
-
   private int targetRowCount;
 
   /**
    * Total bytes allocated to the current batch.
    */
-
   protected int accumulatedBatchSize;
-
-  protected final ProjectionSet projectionSet;
 
   public ResultSetLoaderImpl(BufferAllocator allocator, ResultSetOptions options) {
     this.allocator = allocator;
@@ -283,10 +267,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     targetRowCount = options.rowCountLimit;
     writerIndex = new WriterIndexImpl(this);
     columnBuilder = new ColumnBuilder();
-
-    // Set the projections
-
-    projectionSet = options.projectionSet;
 
     // Determine the root vector cache
 
@@ -321,10 +301,13 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     //
     // This accomplishes a result similar to the "legacy" readers
     // achieve by adding a dummy column.
-
-    if (projectionSet.isEmpty()) {
+    if (projectionSet().isEmpty()) {
       bumpVersion();
     }
+  }
+
+  public ProjectionFilter projectionSet() {
+    return options.projectionSet;
   }
 
   private void updateCardinality() {
@@ -349,14 +332,12 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
     activeSchemaVersion++;
     switch (state) {
-    case HARVESTED:
-    case START:
-    case LOOK_AHEAD:
-      harvestSchemaVersion = activeSchemaVersion;
-      break;
-    default:
-      break;
-
+      case HARVESTED:
+      case START:
+      case LOOK_AHEAD:
+        harvestSchemaVersion = activeSchemaVersion;
+        break;
+      default:
     }
     return activeSchemaVersion;
   }
@@ -367,27 +348,24 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   @Override
   public int schemaVersion() {
     switch (state) {
-    case ACTIVE:
-    case IN_OVERFLOW:
-    case OVERFLOW:
-    case FULL_BATCH:
+      case ACTIVE:
+      case IN_OVERFLOW:
+      case OVERFLOW:
+      case FULL_BATCH:
 
-      // Write in progress: use current writer schema
+        // Write in progress: use current writer schema
+        return activeSchemaVersion;
+      case HARVESTED:
+      case LOOK_AHEAD:
+      case START:
 
-      return activeSchemaVersion;
-    case HARVESTED:
-    case LOOK_AHEAD:
-    case START:
+        // Batch is published. Use harvest schema.
+        return harvestSchemaVersion;
+      default:
 
-      // Batch is published. Use harvest schema.
-
-      return harvestSchemaVersion;
-    default:
-
-      // Not really in a position to give a schema
-      // version.
-
-      throw new IllegalStateException("Unexpected state: " + state);
+        // Not really in a position to give a schema
+        // version.
+        throw new IllegalStateException("Unexpected state: " + state);
     }
   }
 
@@ -399,52 +377,47 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   /**
    * Start a batch to report only schema without data.
    */
-
   public void startEmptyBatch() {
     startBatch(true);
   }
 
   public void startBatch(boolean schemaOnly) {
     switch (state) {
-    case HARVESTED:
-    case START:
-      logger.trace("Start batch");
-      accumulatedBatchSize = 0;
-      updateCardinality();
-      rootState.startBatch(schemaOnly);
-      checkInitialAllocation();
+      case HARVESTED:
+      case START:
+        logger.trace("Start batch");
+        accumulatedBatchSize = 0;
+        updateCardinality();
+        rootState.startBatch(schemaOnly);
+        checkInitialAllocation();
 
-      // The previous batch ended without overflow, so start
-      // a new batch, and reset the write index to 0.
+        // The previous batch ended without overflow, so start
+        // a new batch, and reset the write index to 0.
+        writerIndex.reset();
+        rootWriter.startWrite();
+        break;
 
-      writerIndex.reset();
-      rootWriter.startWrite();
-      break;
+      case LOOK_AHEAD:
 
-    case LOOK_AHEAD:
+        // A row overflowed so keep the writer index at its current value
+        // as it points to the second row in the overflow batch. However,
+        // the last write position of each writer must be restored on
+        // a column-by-column basis, which is done by the visitor.
+        logger.trace("Start batch after overflow");
+        rootState.startBatch(schemaOnly);
 
-      // A row overflowed so keep the writer index at its current value
-      // as it points to the second row in the overflow batch. However,
-      // the last write position of each writer must be restored on
-      // a column-by-column basis, which is done by the visitor.
+        // Note: no need to do anything with the writers; they were left
+        // pointing to the correct positions in the look-ahead batch.
+        // The above simply puts the look-ahead vectors back "under"
+        // the writers.
+        break;
 
-      logger.trace("Start batch after overflow");
-      rootState.startBatch(schemaOnly);
-
-      // Note: no need to do anything with the writers; they were left
-      // pointing to the correct positions in the look-ahead batch.
-      // The above simply puts the look-ahead vectors back "under"
-      // the writers.
-
-      break;
-
-    default:
-      throw new IllegalStateException("Unexpected state: " + state);
+      default:
+        throw new IllegalStateException("Unexpected state: " + state);
     }
 
     // Update the visible schema with any pending overflow batch
-    // updates.
-
+    // updates
     harvestSchemaVersion = activeSchemaVersion;
     pendingRowCount = 0;
     state = State.ACTIVE;
@@ -453,14 +426,14 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   @Override
   public boolean hasRows() {
     switch (state) {
-    case ACTIVE:
-    case HARVESTED:
-    case FULL_BATCH:
-      return rootWriter.rowCount() > 0;
-    case LOOK_AHEAD:
-      return true;
-    default:
-      return false;
+      case ACTIVE:
+      case HARVESTED:
+      case FULL_BATCH:
+        return rootWriter.rowCount() > 0;
+      case LOOK_AHEAD:
+        return true;
+      default:
+        return false;
     }
   }
 
@@ -484,19 +457,17 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * Called before writing a new row. Implementation of
    * {@link RowSetLoader#start()}.
    */
-
   protected void startRow() {
     switch (state) {
-    case ACTIVE:
+      case ACTIVE:
 
-      // Update the visible schema with any pending overflow batch
-      // updates.
-
-      harvestSchemaVersion = activeSchemaVersion;
-      rootWriter.startRow();
-      break;
-    default:
-      throw new IllegalStateException("Unexpected state: " + state);
+        // Update the visible schema with any pending overflow batch
+        // updates.
+        harvestSchemaVersion = activeSchemaVersion;
+        rootWriter.startRow();
+        break;
+      default:
+        throw new IllegalStateException("Unexpected state: " + state);
     }
   }
 
@@ -504,44 +475,39 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * Finalize the current row. Implementation of
    * {@link RowSetLoader#save()}.
    */
-
   protected void saveRow() {
     switch (state) {
-    case ACTIVE:
-      rootWriter.endArrayValue();
-      rootWriter.saveRow();
-      if (! writerIndex.next()) {
-        state = State.FULL_BATCH;
-      }
+      case ACTIVE:
+        rootWriter.endArrayValue();
+        rootWriter.saveRow();
+        if (!writerIndex.next()) {
+          state = State.FULL_BATCH;
+        }
 
-      // No overflow row. Advertise the schema version to the client.
+        // No overflow row. Advertise the schema version to the client.
+        harvestSchemaVersion = activeSchemaVersion;
+        break;
 
-      harvestSchemaVersion = activeSchemaVersion;
-      break;
+      case OVERFLOW:
 
-    case OVERFLOW:
+        // End the value of the look-ahead row in the look-ahead vectors.
+        rootWriter.endArrayValue();
+        rootWriter.saveRow();
 
-      // End the value of the look-ahead row in the look-ahead vectors.
+        // Advance the writer index relative to the look-ahead batch.
+        writerIndex.next();
 
-      rootWriter.endArrayValue();
-      rootWriter.saveRow();
+        // Stay in the overflow state. Doing so will cause the writer
+        // to report that it is full.
+        //
+        // Also, do not change the harvest schema version. We will
+        // expose to the downstream operators the schema in effect
+        // at the start of the row. Columns added within the row won't
+        // appear until the next batch.
+        break;
 
-      // Advance the writer index relative to the look-ahead batch.
-
-      writerIndex.next();
-
-      // Stay in the overflow state. Doing so will cause the writer
-      // to report that it is full.
-      //
-      // Also, do not change the harvest schema version. We will
-      // expose to the downstream operators the schema in effect
-      // at the start of the row. Columns added within the row won't
-      // appear until the next batch.
-
-      break;
-
-    default:
-      throw new IllegalStateException("Unexpected state: " + state);
+      default:
+        throw new IllegalStateException("Unexpected state: " + state);
     }
   }
 
@@ -550,16 +516,15 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * @return true if the batch is full (reached vector capacity or the
    * row count limit), false if more rows can be added
    */
-
   protected boolean isFull() {
     switch (state) {
-    case ACTIVE:
-      return ! writerIndex.valid();
-    case OVERFLOW:
-    case FULL_BATCH:
-      return true;
-    default:
-      return false;
+      case ACTIVE:
+        return !writerIndex.valid();
+      case OVERFLOW:
+      case FULL_BATCH:
+        return true;
+      default:
+        return false;
     }
   }
 
@@ -579,16 +544,15 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * @return the number of rows to be sent downstream for this
    * batch. Does not include the overflow row.
    */
-
   protected int rowCount() {
     switch (state) {
-    case ACTIVE:
-    case FULL_BATCH:
-      return writerIndex.size();
-    case OVERFLOW:
-      return pendingRowCount;
-    default:
-      return 0;
+      case ACTIVE:
+      case FULL_BATCH:
+        return writerIndex.size();
+      case OVERFLOW:
+        return pendingRowCount;
+      default:
+        return 0;
     }
   }
 
@@ -609,19 +573,17 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   public int skipRows(int requestedCount) {
 
     // Can only skip rows when a batch is active.
-
     if (state != State.ACTIVE) {
       throw new IllegalStateException("No batch is active.");
     }
 
     // Skip as many rows as the vector limit allows.
-
     return writerIndex.skipRows(requestedCount);
   }
 
   @Override
   public boolean isProjectionEmpty() {
-    return ! rootState.hasProjections();
+    return !rootState.hasProjections();
   }
 
   @Override
@@ -655,12 +617,10 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     state = State.IN_OVERFLOW;
 
     // Preserve the number of rows in the now-complete batch.
-
     pendingRowCount = writerIndex.vectorIndex();
 
     // Roll-over will allocate new vectors. Update with the latest
     // array cardinality.
-
     updateCardinality();
 
     // Wrap up the completed rows into a batch. Sets
@@ -668,11 +628,9 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     // it can be moved, but it is now past the recorded
     // end of the vectors (though, obviously, not past the
     // physical end.)
-
     rootWriter.preRollover();
 
     // Roll over vector values.
-
     accumulatedBatchSize = 0;
     rootState.rollover();
 
@@ -680,7 +638,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     // surprisingly easy if we note that the current row is shifted to
     // the 0 position in the new vector, so we just shift all offsets
     // downward by the current row position at each repeat level.
-
     rootWriter.postRollover();
 
     // The writer index is reset back to 0. Because of the above roll-over
@@ -695,12 +652,10 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     // the array values have been moved, offset vectors adjusted, the
     // element writer adjusted, so that v4 will be written to index 3
     // to produce (v1, v2, v3, v4, v5, ...) in the look-ahead vector.
-
     writerIndex.rollover();
     checkInitialAllocation();
 
     // Remember that overflow is in effect.
-
     state = State.OVERFLOW;
   }
 
@@ -716,17 +671,17 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   public VectorContainer harvest() {
     int rowCount;
     switch (state) {
-    case ACTIVE:
-    case FULL_BATCH:
-      rowCount = harvestNormalBatch();
-      logger.trace("Harvesting {} rows", rowCount);
-      break;
-    case OVERFLOW:
-      rowCount = harvestOverflowBatch();
-      logger.trace("Harvesting {} rows after overflow", rowCount);
-      break;
-    default:
-      throw new IllegalStateException("Unexpected state: " + state);
+      case ACTIVE:
+      case FULL_BATCH:
+        rowCount = harvestNormalBatch();
+        logger.trace("Harvesting {} rows", rowCount);
+        break;
+      case OVERFLOW:
+        rowCount = harvestOverflowBatch();
+        logger.trace("Harvesting {} rows after overflow", rowCount);
+        break;
+      default:
+        throw new IllegalStateException("Unexpected state: " + state);
     }
 
     rootState.updateOutput(harvestSchemaVersion);
@@ -757,8 +712,13 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   }
 
   @Override
-  public TupleMetadata harvestSchema() {
+  public TupleMetadata outputSchema() {
     return rootState.outputSchema();
+  }
+
+  @Override
+  public TupleMetadata activeSchema() {
+    return rootState.schema();
   }
 
   @Override
@@ -770,7 +730,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
     // Do not close the vector cache; the caller owns that and
     // will, presumably, reuse those vectors for another writer.
-
     state = State.CLOSED;
   }
 
@@ -809,7 +768,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * This will occur if the target row count is incorrect for the
    * data size.
    */
-
   private void checkInitialAllocation() {
     if (options.maxBatchSize < 0) {
       logger.debug("Initial vector allocation: {}, no batch limit specified",
@@ -857,5 +815,5 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   public ColumnBuilder columnBuilder() { return columnBuilder; }
 
   @Override
-  public CustomErrorContext context() { return options.errorContext; }
+  public CustomErrorContext errorContext() { return options.errorContext; }
 }

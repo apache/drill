@@ -19,12 +19,10 @@ package org.apache.drill.common.exceptions;
 
 import java.io.IOException;
 
-public class DrillIOException extends IOException{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillIOException.class);
+@SuppressWarnings("serial")
+public class DrillIOException extends IOException {
 
-  public DrillIOException() {
-    super();
-  }
+  public DrillIOException() { }
 
   public DrillIOException(String message, Throwable cause) {
     super(message, cause);
@@ -37,6 +35,4 @@ public class DrillIOException extends IOException{
   public DrillIOException(Throwable cause) {
     super(cause);
   }
-
-
 }

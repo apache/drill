@@ -37,7 +37,7 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
  * Base class for logical/physical scan rel implemented in Drill.
  */
 public abstract class DrillScanRelBase extends TableScan implements DrillRelNode {
-  protected GroupScan groupScan;
+  protected final GroupScan groupScan;
   protected final DrillTable drillTable;
 
   public DrillScanRelBase(RelOptCluster cluster,

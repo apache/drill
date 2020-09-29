@@ -41,6 +41,7 @@ public interface UdfUtilities {
           .put(PartitionExplorer.class, "getPartitionExplorer")
           .put(ContextInformation.class, "getContextInformation")
           .put(OptionManager.class, "getOptions")
+          .put(BufferManager.class, "getManagedBufferManager")
           .build();
 
 

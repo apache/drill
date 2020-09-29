@@ -35,10 +35,10 @@ public class RecordBatchMemoryManager {
   // the incoming rows become wide, then less (than planned) would fit into the remaining current allocated memory)
   private int currentOutgoingMaxRowCount = MAX_NUM_ROWS;
   private int outgoingRowWidth;
-  private int outputBatchSize;
-  private RecordBatchSizer[] sizer;
-  private BatchStats[] inputBatchStats;
-  private BatchStats outputBatchStats;
+  private final int outputBatchSize;
+  private final RecordBatchSizer[] sizer;
+  private final BatchStats[] inputBatchStats;
+  private final BatchStats outputBatchStats;
 
   // By default, we expect one input batch stream and one output batch stream.
   // Some operators can get multiple input batch streams i.e. for example
@@ -323,7 +323,7 @@ public class RecordBatchMemoryManager {
   public void allocateVectors(VectorContainer container, int recordCount) {
     // Allocate memory for the vectors.
     // This will iteratively allocate memory for all nested columns underneath.
-    for (VectorWrapper w : container) {
+    for (VectorWrapper<?> w : container) {
       RecordBatchSizer.ColumnSize colSize = getColumnSize(w.getField().getName());
       colSize.allocateVector(w.getValueVector(), recordCount);
     }

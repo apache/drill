@@ -17,13 +17,11 @@
  */
 package org.apache.drill.exec.physical.impl.filter;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -44,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
-
   private static final Logger logger = LoggerFactory.getLogger(FilterRecordBatch.class);
 
   private SelectionVector2 sv2;
@@ -108,7 +105,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema()  {
     clearSv();
 
     switch (incoming.getSchema().getSelectionVectorMode()) {
@@ -135,8 +132,9 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
     if (container.isSchemaChanged()) {
       container.buildSchema(SelectionVectorMode.TWO_BYTE);
       return true;
+    } else {
+      return false;
     }
-    return false;
   }
 
   protected Filterer generateSV4Filterer() throws SchemaChangeException {
@@ -162,17 +160,13 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
     // allocate outgoing sv4
     container.buildSchema(SelectionVectorMode.FOUR_BYTE);
 
-    try {
-      final TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
-      final Filterer filter = context.getImplementationClass(cg);
-      filter.setup(context, incoming, this, tx);
-      return filter;
-    } catch (ClassTransformationException | IOException e) {
-      throw new SchemaChangeException("Failure while attempting to load generated class", e);
-    }
+    final TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
+    final Filterer filter = context.getImplementationClass(cg);
+    filter.setup(context, incoming, this, tx);
+    return filter;
   }
 
-  protected Filterer generateSV2Filterer() throws SchemaChangeException {
+  protected Filterer generateSV2Filterer() {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
     final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION2, context.getOptions());
@@ -182,9 +176,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector,
             context.getFunctionRegistry(), false, unionTypeEnabled);
-    if (collector.hasErrors()) {
-      throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-    }
+    collector.reportErrors(logger);
 
     cg.addExpr(new ReturnValueExpression(expr), ClassGenerator.BlkCreateMode.FALSE);
 
@@ -193,16 +185,16 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
       transfers.add(pair);
     }
 
+    final TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
+    CodeGenerator<Filterer> codeGen = cg.getCodeGenerator();
+    codeGen.plainJavaCapable(true);
+    final Filterer filter = context.getImplementationClass(codeGen);
     try {
-      final TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
-      CodeGenerator<Filterer> codeGen = cg.getCodeGenerator();
-      codeGen.plainJavaCapable(true);
-      final Filterer filter = context.getImplementationClass(codeGen);
       filter.setup(context, incoming, this, tx);
-      return filter;
-    } catch (ClassTransformationException | IOException e) {
-      throw new SchemaChangeException("Failure while attempting to load generated class", e);
+    } catch (SchemaChangeException e) {
+      throw schemaChangeException(e, logger);
     }
+    return filter;
   }
 
   @Override

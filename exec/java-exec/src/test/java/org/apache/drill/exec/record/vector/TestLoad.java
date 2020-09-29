@@ -36,7 +36,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.physical.resultSet.impl.OptionBuilder;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetOptionBuilder;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -115,8 +115,8 @@ public class TestLoad extends ExecTest {
           .addArray("chars", MinorType.VARCHAR)
           .build();
 
-      ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-          .setSchema(schema)
+      ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+          .readerSchema(schema)
           .build();
 
       ResultSetLoader resultSetLoader = new ResultSetLoaderImpl(allocator, options);

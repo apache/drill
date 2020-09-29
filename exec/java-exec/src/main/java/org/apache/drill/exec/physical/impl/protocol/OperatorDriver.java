@@ -20,6 +20,8 @@ package org.apache.drill.exec.physical.impl.protocol;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * State machine that drives the operator executable. Converts
@@ -42,6 +44,9 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
  */
 
 public class OperatorDriver {
+
+  private static final Logger logger = LoggerFactory.getLogger(OperatorDriver.class);
+
   public enum State {
 
     /**
@@ -125,7 +130,7 @@ public class OperatorDriver {
       case RUN:
         return doNext();
       default:
-        OperatorRecordBatch.logger.debug("Extra call to next() in state " + state + ": " + operatorLabel());
+        logger.debug("Extra call to next() in state {}: {}", state, operatorLabel());
         return IterOutcome.NONE;
       }
     } catch (UserException e) {
@@ -137,7 +142,7 @@ public class OperatorDriver {
       state = State.FAILED;
       throw UserException.executionError(t)
         .addContext("Exception thrown from", operatorLabel())
-        .build(OperatorRecordBatch.logger);
+        .build(logger);
     }
   }
 
@@ -235,7 +240,7 @@ public class OperatorDriver {
       }
     } catch (Throwable t) {
       // Ignore; we're already in a bad state.
-      OperatorRecordBatch.logger.error("Exception thrown from cancel() for " + operatorLabel(), t);
+      logger.error("Exception thrown from cancel() for {}", operatorLabel(), t);
     }
   }
 
@@ -254,7 +259,7 @@ public class OperatorDriver {
     } catch (Throwable t) {
       throw UserException.executionError(t)
         .addContext("Exception thrown from", operatorLabel())
-        .build(OperatorRecordBatch.logger);
+        .build(logger);
     } finally {
       opContext.close();
       state = State.CLOSED;

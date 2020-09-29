@@ -26,23 +26,29 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.convert.StandardConversions;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.ValueWriter;
 import org.apache.hadoop.mapred.FileSplit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.univocity.parsers.common.TextParsingException;
 
 import io.netty.buffer.DrillBuf;
 
 /**
- * New text reader, complies with the RFC 4180 standard for text/csv files
+ * Text reader, Complies with the RFC 4180 standard for text/csv files.
  */
 public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNegotiator> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CompliantTextBatchReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(CompliantTextBatchReader.class);
 
   private static final int MAX_RECORDS_PER_BATCH = 8096;
   private static final int READ_BUFFER = 1024 * 1024;
@@ -56,7 +62,7 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
   private TextReader reader;
   // input buffer
   private DrillBuf readBuffer;
-  // working buffer to handle whitespaces
+  // working buffer to handle whitespace
   private DrillBuf whitespaceBuffer;
   private DrillFileSystem dfs;
 
@@ -67,7 +73,6 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
 
     // Validate. Otherwise, these problems show up later as a data
     // read error which is very confusing.
-
     if (settings.getNewLineDelimiter().length == 0) {
       throw UserException
         .validationError()
@@ -83,7 +88,6 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
    * @param errorContext  operator context from which buffer's will be allocated and managed
    * @param outputMutator  Used to create the schema in the output record batch
    */
-
   @Override
   public boolean open(ColumnsSchemaNegotiator schemaNegotiator) {
     final OperatorContext context = schemaNegotiator.context();
@@ -99,16 +103,15 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
 
     readBuffer = context.getAllocator().buffer(READ_BUFFER);
     whitespaceBuffer = context.getAllocator().buffer(WHITE_SPACE_BUFFER);
-    schemaNegotiator.setBatchSize(MAX_RECORDS_PER_BATCH);
+    schemaNegotiator.batchSize(MAX_RECORDS_PER_BATCH);
 
     // setup Output, Input, and Reader
     try {
       TextOutput output;
-
-      if (settings.isUseRepeatedVarChar()) {
-        output = openWithoutHeaders(schemaNegotiator);
+      if (settings.isHeaderExtractionEnabled()) {
+        output = openWithHeaders(schemaNegotiator);
       } else {
-        output = openWithHeaders(schemaNegotiator, settings.providedHeaders());
+        output = openWithoutHeaders(schemaNegotiator);
       }
       if (output == null) {
         return false;
@@ -129,29 +132,101 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
    * with a text file that contains no headers; ignored for
    * text file with headers
    */
-
-  private TextOutput openWithHeaders(ColumnsSchemaNegotiator schemaNegotiator,
-      String[] providedHeaders) throws IOException {
-    final String [] fieldNames = providedHeaders == null ? extractHeader() : providedHeaders;
+  private TextOutput openWithHeaders(ColumnsSchemaNegotiator schemaNegotiator) throws IOException {
+    final String [] fieldNames = extractHeader();
     if (fieldNames == null) {
       return null;
     }
+    if (schemaNegotiator.hasProvidedSchema()) {
+      return buildWithSchema(schemaNegotiator, fieldNames);
+    } else {
+      return buildFromColumnHeaders(schemaNegotiator, fieldNames);
+    }
+  }
+
+  /**
+   * File has headers and a provided schema is provided. Convert from VARCHAR
+   * input type to the provided output type, but only if the column is projected.
+   */
+  private FieldVarCharOutput buildWithSchema(ColumnsSchemaNegotiator schemaNegotiator,
+      String[] fieldNames) {
+    TupleMetadata readerSchema = mergeSchemas(schemaNegotiator.providedSchema(), fieldNames);
+    schemaNegotiator.tableSchema(readerSchema, true);
+    writer = schemaNegotiator.build().writer();
+    StandardConversions conversions = conversions(schemaNegotiator.providedSchema());
+    ValueWriter[] colWriters = new ValueWriter[fieldNames.length];
+    for (int i = 0; i < fieldNames.length; i++) {
+      ScalarWriter colWriter = writer.scalar(fieldNames[i]);
+      if (writer.isProjected()) {
+        colWriters[i] = conversions.converterFor(colWriter, MinorType.VARCHAR);
+      } else {
+        colWriters[i] = colWriter;
+      }
+    }
+    return new FieldVarCharOutput(writer, colWriters);
+  }
+
+  private TupleMetadata mergeSchemas(TupleMetadata providedSchema,
+      String[] fieldNames) {
+    final TupleMetadata readerSchema = new TupleSchema();
+    for (String fieldName : fieldNames) {
+      final ColumnMetadata providedCol = providedSchema.metadata(fieldName);
+      readerSchema.addColumn(providedCol == null ? textColumn(fieldName) : providedCol);
+    }
+    return readerSchema;
+  }
+
+  private ColumnMetadata textColumn(String colName) {
+    return MetadataUtils.newScalar(colName, MinorType.VARCHAR, DataMode.REQUIRED);
+  }
+
+  /**
+   * File has column headers. No provided schema. Build schema from the
+   * column headers.
+   */
+  private FieldVarCharOutput buildFromColumnHeaders(ColumnsSchemaNegotiator schemaNegotiator,
+      String[] fieldNames) {
     final TupleMetadata schema = new TupleSchema();
     for (final String colName : fieldNames) {
-      schema.addColumn(MetadataUtils.newScalar(colName, MinorType.VARCHAR, DataMode.REQUIRED));
+      schema.addColumn(textColumn(colName));
     }
-    schemaNegotiator.setTableSchema(schema, true);
+    schemaNegotiator.tableSchema(schema, true);
     writer = schemaNegotiator.build().writer();
-    return new FieldVarCharOutput(writer);
+    ValueWriter[] colWriters = new ValueWriter[fieldNames.length];
+    for (int i = 0; i < fieldNames.length; i++) {
+      colWriters[i] = writer.column(i).scalar();
+    }
+    return new FieldVarCharOutput(writer, colWriters);
   }
 
   /**
    * When no headers, create a single array column "columns".
    */
-
   private TextOutput openWithoutHeaders(
       ColumnsSchemaNegotiator schemaNegotiator) {
-    schemaNegotiator.setTableSchema(ColumnsScanFramework.columnsSchema(), true);
+    if (schemaNegotiator.hasProvidedSchema()) {
+      return buildWithSchema(schemaNegotiator);
+    } else {
+      return buildColumnsArray(schemaNegotiator);
+    }
+  }
+
+  private FieldVarCharOutput buildWithSchema(ColumnsSchemaNegotiator schemaNegotiator) {
+    TupleMetadata providedSchema = schemaNegotiator.providedSchema();
+    schemaNegotiator.tableSchema(providedSchema, true);
+    writer = schemaNegotiator.build().writer();
+    StandardConversions conversions = conversions(providedSchema);
+    ValueWriter[] colWriters = new ValueWriter[providedSchema.size()];
+    for (int i = 0; i < colWriters.length; i++) {
+      colWriters[i] = conversions.converterFor(
+          writer.scalar(providedSchema.metadata(i).name()), MinorType.VARCHAR);
+    }
+    return new ConstrainedFieldOutput(writer, colWriters);
+  }
+
+  private TextOutput buildColumnsArray(
+      ColumnsSchemaNegotiator schemaNegotiator) {
+    schemaNegotiator.tableSchema(ColumnsScanFramework.columnsSchema(), true);
     writer = schemaNegotiator.build().writer();
     return new RepeatedVarCharOutput(writer, schemaNegotiator.projectedIndexes());
   }
@@ -167,13 +242,22 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
     reader.start();
   }
 
+  private StandardConversions conversions(TupleMetadata providedSchema) {
+
+    // CSV maps blank columns to nulls (for nullable non-string columns),
+    // or to the default value (for non-nullable non-string columns.)
+    return StandardConversions.builder()
+      .withSchema(providedSchema)
+      .blankAs(ColumnMetadata.BLANK_AS_NULL)
+      .build();
+  }
+
   /**
    * Extracts header from text file.
    * Currently it is assumed to be first line if headerExtractionEnabled is set to true
    * TODO: enhance to support more common header patterns
    * @return field name strings
    */
-
   private String[] extractHeader() throws IOException {
     assert settings.isHeaderExtractionEnabled();
 
@@ -210,7 +294,6 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
    * Generates the next record batch
    * @return  number of records in the batch
    */
-
   @Override
   public boolean next() {
     reader.resetForNextBatch();

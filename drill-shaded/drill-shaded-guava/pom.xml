@@ -28,11 +28,11 @@
   </parent>
 
   <artifactId>drill-shaded-guava</artifactId>
-  <version>23.0</version>
+  <version>28.2-jre</version>
   <name>drill-shaded/drill-shaded-guava</name>
 
   <properties>
-    <guava.version>23.0</guava.version>
+    <guava.version>${project.version}</guava.version>
   </properties>
 
   <dependencies>
@@ -52,6 +52,7 @@
           <artifactSet>
             <includes>
               <include>com.google.guava:guava</include>
+              <include>com.google.guava:failureaccess</include>
             </includes>
           </artifactSet>
           <relocations>

@@ -142,7 +142,6 @@ public class HBaseUtils {
     return Bytes.compareTo(left, right) < 0 ? left : right;
   }
 
-
   /**
    * Verify the presence of a column family in the schema path of the hbase table or whether the schema path is
    * the row key column.
@@ -158,10 +157,10 @@ public class HBaseUtils {
     for (SchemaPath column : columns) {
       if (!(column.equals(DrillHBaseConstants.ROW_KEY_PATH) ||
           hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
-        DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
+        throw DrillRuntimeException.create(
+            "The column family '%s' does not exist in the HBase table: `%s`.",
             column.getRootSegment().getPath(), hTableDesc.getNameAsString());
       }
     }
   }
-
 }

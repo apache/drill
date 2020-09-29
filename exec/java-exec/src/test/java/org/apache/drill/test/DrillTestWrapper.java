@@ -59,16 +59,20 @@ import org.apache.drill.exec.util.Text;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * An object to encapsulate the options for a Drill unit test, as well as the execution methods to perform the tests and
- * validation of results.
- *
- * To construct an instance easily, look at the TestBuilder class. From an implementation of
- * the BaseTestQuery class, and instance of the builder is accessible through the testBuilder() method.
+ * Encapsulates the options for a Drill unit test, as well as the execution
+ * methods to perform the tests and validation of results.
+ * <p>
+ * To construct an instance easily, look at the TestBuilder class. From an
+ * implementation of the BaseTestQuery class, and instance of the builder is
+ * accessible through the testBuilder() method.
  */
 public class DrillTestWrapper {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(DrillTestWrapper.class);
 
   public interface TestServices {
     BufferAllocator allocator();
@@ -95,39 +99,39 @@ public class DrillTestWrapper {
   // one case where the setup for the baseline is driven by the test query results, and this is implicit type enforcement
   // for the baseline data. In this case there needs to be a call back into the TestBuilder once we know the type information
   // from the test query.
-  private TestBuilder testBuilder;
+  private final TestBuilder testBuilder;
   /**
    * Test query to run. Type of object depends on the {@link #queryType}
    */
-  private Object query;
+  private final Object query;
   // The type of query provided
-  private UserBitShared.QueryType queryType;
+  private final UserBitShared.QueryType queryType;
   // The type of query provided for the baseline
-  private UserBitShared.QueryType baselineQueryType;
+  private final UserBitShared.QueryType baselineQueryType;
   // should ordering be enforced in the baseline check
-  private boolean ordered;
-  private TestServices services;
+  private final boolean ordered;
+  private final TestServices services;
   // queries to run before the baseline or test queries, can be used to set options
-  private String baselineOptionSettingQueries;
-  private String testOptionSettingQueries;
+  private final String baselineOptionSettingQueries;
+  private final String testOptionSettingQueries;
   // allow approximate equality tests for number types
-  private boolean approximateEquality;
+  private final boolean approximateEquality;
   // tolerance for approximate equality tests defined as |Expected - Actual|/|Expected| <= Tolerance
-  private double tolerance;
+  private final double tolerance;
   // two different methods are available for comparing ordered results, the default reads all of the records
   // into giant lists of objects, like one giant on-heap batch of 'vectors'
   // this flag enables the other approach which iterates through a hyper batch for the test query results and baseline
   // while this does work faster and use less memory, it can be harder to debug as all of the elements are not in a
   // single list
-  private boolean highPerformanceComparison;
+  private final boolean highPerformanceComparison;
   // if the baseline is a single option test writers can provide the baseline values and columns
   // without creating a file, these are provided to the builder in the baselineValues() and baselineColumns() methods
   // and translated into a map in the builder
-  private String[] baselineColumns;
-  private List<Map<String, Object>> baselineRecords;
+  private final String[] baselineColumns;
+  private final List<Map<String, Object>> baselineRecords;
 
-  private int expectedNumBatches;
-  private int expectedNumRecords;
+  private final int expectedNumBatches;
+  private final int expectedNumRecords;
 
   public DrillTestWrapper(TestBuilder testBuilder, TestServices services, Object query, QueryType queryType,
       String baselineOptionSettingQueries, String testOptionSettingQueries,
@@ -309,11 +313,7 @@ public class DrillTestWrapper {
           }
           batchLoader.clear();
           QueryDataBatch batch = dataBatches.get(index);
-          try {
-            batchLoader.load(batch.getHeader().getDef(), batch.getData());
-          } catch (SchemaChangeException e) {
-            throw new RuntimeException(e);
-          }
+          batchLoader.load(batch.getHeader().getDef(), batch.getData());
           return batchLoader;
         }
 
@@ -418,6 +418,7 @@ public class DrillTestWrapper {
           case FOUR_BYTE:
             sv4 = loader.getSelectionVector4();
             break;
+          default:
         }
         if (sv4 != null) {
           for (int j = 0; j < sv4.getCount(); j++) {

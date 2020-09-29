@@ -27,6 +27,8 @@ import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.time.Month;
 import java.util.Arrays;
 
 import java.time.LocalDateTime;
@@ -149,5 +151,47 @@ public class TestNearestDateFunctions extends ClusterTest {
     } catch (DrillRuntimeException e) {
       assertTrue(e.getMessage().contains("[BAD_DATE] is not a valid time statement. Expecting: " + Arrays.asList(NearestDateUtils.TimeInterval.values())));
     }
+  }
+
+  @Test
+  public void testDRILL7781() throws Exception {
+    LocalDateTime q1 = LocalDateTime.of(2019, Month.JANUARY, 1, 0, 0, 0);
+    LocalDateTime q2 = LocalDateTime.of(2019, Month.APRIL, 1, 0, 0, 0);
+    LocalDateTime q3 = LocalDateTime.of(2019, Month.JULY, 1, 0, 0, 0);
+    LocalDateTime q4 = LocalDateTime.of(2019, Month.OCTOBER, 1, 0, 0, 0);
+
+    String query = "SELECT nearestDate( TO_TIMESTAMP('2019-01-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS january_quarter, " +
+        "nearestDate( TO_TIMESTAMP('2019-02-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS february_quarter, " +
+        "nearestDate( TO_TIMESTAMP('2019-03-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS march_quarter, " +
+        "nearestDate( TO_TIMESTAMP('2019-04-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS april_quarter, " +
+        "nearestDate( TO_TIMESTAMP('2019-05-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS may_quarter, " +
+        "nearestDate( TO_TIMESTAMP('2019-06-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS june_quarter, " +
+        "nearestDate( TO_TIMESTAMP('2019-07-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS july_quarter, " +
+        "nearestDate( TO_TIMESTAMP('2019-08-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS august_quarter, " +
+        "nearestDate( TO_TIMESTAMP('2019-09-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS september_quarter, " +
+        "nearestDate( TO_TIMESTAMP('2019-10-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS october_quarter, " +
+        "nearestDate( TO_TIMESTAMP('2019-11-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS november_quarter, " +
+        "nearestDate( TO_TIMESTAMP('2019-12-02 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS december_quarter " +
+        "FROM (VALUES(1))";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("january_quarter",
+            "february_quarter",
+            "march_quarter",
+            "april_quarter",
+            "may_quarter",
+            "june_quarter",
+            "july_quarter",
+            "august_quarter",
+            "september_quarter",
+            "october_quarter",
+            "november_quarter",
+            "december_quarter")
+        .baselineValues(q1, q1, q1,
+            q2, q2, q2,
+            q3, q3, q3,
+            q4, q4, q4)
+        .go();
   }
 }

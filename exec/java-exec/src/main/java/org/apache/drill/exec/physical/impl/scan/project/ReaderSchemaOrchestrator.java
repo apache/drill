@@ -18,27 +18,31 @@
 package org.apache.drill.exec.physical.impl.scan.project;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumnDefn;
 import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
-import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetBuilder;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.physical.resultSet.impl.OptionBuilder;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetOptionBuilder;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.ColumnExplorer.ImplicitInternalFileColumns;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+
+import java.util.List;
 
 /**
  * Orchestrates projection tasks for a single reader within the set that the
  * scan operator manages. Vectors are reused across readers, but via a vector
  * cache. All other state is distinct between readers.
  */
-
 public class ReaderSchemaOrchestrator implements VectorSource {
 
   private final ScanSchemaOrchestrator scanOrchestrator;
-  private int readerBatchSize = ScanSchemaOrchestrator.MAX_BATCH_ROW_COUNT;
+  private int readerBatchSize;
   private ResultSetLoaderImpl tableLoader;
   private int prevTableSchemaVersion = -1;
 
@@ -48,7 +52,6 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    * schema changes in this output batch by absorbing trivial schema changes
    * that occur across readers.
    */
-
   private ResolvedRow rootTuple;
   private VectorContainer tableContainer;
 
@@ -69,11 +72,11 @@ public class ReaderSchemaOrchestrator implements VectorSource {
   }
 
   public ResultSetLoader makeTableLoader(CustomErrorContext errorContext, TupleMetadata readerSchema) {
-    OptionBuilder options = new OptionBuilder();
-    options.setRowCountLimit(Math.min(readerBatchSize, scanOrchestrator.options.scanBatchRecordLimit));
-    options.setVectorCache(scanOrchestrator.vectorCache);
-    options.setBatchSizeLimit(scanOrchestrator.options.scanBatchByteLimit);
-    options.setContext(errorContext);
+    ResultSetOptionBuilder options = new ResultSetOptionBuilder();
+    options.rowCountLimit(Math.min(readerBatchSize, scanOrchestrator.options.scanBatchRecordLimit));
+    options.vectorCache(scanOrchestrator.vectorCache);
+    options.batchSizeLimit(scanOrchestrator.options.scanBatchByteLimit);
+    options.errorContext(errorContext);
 
     // Set up a selection list if available and is a subset of
     // table columns. (Only needed for non-wildcard queries.)
@@ -81,14 +84,10 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     // whether or not they exist in the up-front schema. Handles
     // the odd case where the reader claims a fixed schema, but
     // adds a column later.
-
-    ProjectionSetBuilder projBuilder = scanOrchestrator.scanProj.projectionSet();
-    projBuilder.typeConverter(scanOrchestrator.options.typeConverter);
-    options.setProjection(projBuilder.build());
-    options.setSchema(readerSchema);
+    options.projectionFilter(scanOrchestrator.scanProj.readerProjection);
+    options.readerSchema(readerSchema);
 
     // Create the table loader
-
     tableLoader = new ResultSetLoaderImpl(scanOrchestrator.allocator, options.build());
     return tableLoader;
   }
@@ -111,25 +110,91 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    * to the output batch. First, build the metadata and/or null columns for the
    * table row count. Then, merge the sources.
    */
-
   public void endBatch() {
+    endBatch(false);
+  }
+
+  /**
+   * Build the final output batch by projecting columns from the three input sources
+   * to the output batch. First, build the metadata and/or null columns for the
+   * table row count. Then, merge the sources.
+   *
+   * @param eof is end of file
+   */
+  public void endBatch(boolean eof) {
 
     // Get the batch results in a container.
-
     tableContainer = tableLoader.harvest();
+
+    boolean projected = resolveProjectingMetadata(eof);
 
     // If the schema changed, set up the final projection based on
     // the new (or first) schema.
-
     if (prevTableSchemaVersion < tableLoader.schemaVersion()) {
       reviseOutputProjection();
     } else {
 
       // Fill in the null and metadata columns.
-
       populateNonDataColumns();
     }
+    if (projected) {
+      projectMetadata(false);
+    }
     rootTuple.setRowCount(tableContainer.getRecordCount());
+  }
+
+  /**
+   * Updates {@code PROJECT_METADATA} implicit column value to {@code "FALSE"} to handle current batch as
+   * a batch with metadata information only for the case when this batch is first and empty.
+   */
+  private boolean resolveProjectingMetadata(boolean eof) {
+    if (tableContainer.getRecordCount() == 0 && !hasSchema() && eof) {
+      if (projectMetadata(true)) {
+        tableContainer.setValueCount(tableContainer.getRecordCount() + 1);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Sets {@code PROJECT_METADATA} implicit column value.
+   *
+   * @param projectMetadata whether {@code PROJECT_METADATA} should be replaced
+   * @return {@code true} if {@code PROJECT_METADATA} implicit column
+   * is present in scan projection and its value is updated
+   */
+  private boolean projectMetadata(boolean projectMetadata) {
+    ImplicitInternalFileColumns original;
+    ImplicitInternalFileColumns newColumn;
+    if (projectMetadata) {
+      original = ImplicitInternalFileColumns.USE_METADATA;
+      newColumn = ImplicitInternalFileColumns.PROJECT_METADATA;
+    } else {
+      original = ImplicitInternalFileColumns.PROJECT_METADATA;
+      newColumn = ImplicitInternalFileColumns.USE_METADATA;
+    }
+    List<ColumnProjection> outputColumns = scanOrchestrator.scanProj.columns();
+    for (int i = 0; i < outputColumns.size(); i++) {
+      ColumnProjection outputColumn = outputColumns.get(i);
+      if (outputColumn instanceof FileMetadataColumn) {
+        FileMetadataColumn metadataColumn = (FileMetadataColumn) outputColumn;
+        if (metadataColumn.defn().defn == original) {
+
+          projectMetadata = scanOrchestrator.scanProj.requestedCols().stream()
+              .anyMatch(SchemaPath.getSimplePath(metadataColumn.name())::equals);
+
+          if (projectMetadata) {
+            outputColumns.set(i,
+                new FileMetadataColumn(
+                    metadataColumn.name(),
+                    new FileMetadataColumnDefn(metadataColumn.defn().colName(), newColumn)));
+          }
+          return projectMetadata;
+        }
+      }
+    }
+    return false;
   }
 
   private void populateNonDataColumns() {
@@ -147,37 +212,35 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    * only need be done if null columns were created when mapping from a prior
    * schema.
    */
-
   private void reviseOutputProjection() {
 
     // Do the table-schema level projection; the final matching
     // of projected columns to available columns.
 
-    TupleMetadata readerSchema = tableLoader.harvestSchema();
+    TupleMetadata readerSchema = tableLoader.outputSchema();
     if (scanOrchestrator.schemaSmoother != null) {
       doSmoothedProjection(readerSchema);
     } else {
       switch(scanOrchestrator.scanProj.projectionType()) {
-      case EMPTY:
-      case EXPLICIT:
-        doExplicitProjection(readerSchema);
-        break;
-      case SCHEMA_WILDCARD:
-      case STRICT_SCHEMA_WILDCARD:
-        doStrictWildcardProjection(readerSchema);
-        break;
-      case WILDCARD:
-        doWildcardProjection(readerSchema);
-        break;
-      default:
-        throw new IllegalStateException(scanOrchestrator.scanProj.projectionType().toString());
+        case EMPTY:
+        case EXPLICIT:
+          doExplicitProjection(readerSchema);
+          break;
+        case SCHEMA_WILDCARD:
+        case STRICT_SCHEMA_WILDCARD:
+          doStrictWildcardProjection(readerSchema);
+          break;
+        case WILDCARD:
+          doWildcardProjection(readerSchema);
+          break;
+        default:
+          throw new IllegalStateException(scanOrchestrator.scanProj.projectionType().toString());
       }
     }
 
     // Combine metadata, nulls and batch data to form the final
     // output container. Columns are created by the metadata and null
     // loaders only in response to a batch, so create the first batch.
-
     rootTuple.buildNulls(scanOrchestrator.vectorCache);
     scanOrchestrator.metadataManager.define();
     populateNonDataColumns();
@@ -194,7 +257,6 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    * Query contains a wildcard. The schema-level projection includes
    * all columns provided by the reader.
    */
-
   private void doWildcardProjection(TupleMetadata tableSchema) {
     rootTuple = newRootTuple();
     new WildcardProjection(scanOrchestrator.scanProj,
@@ -211,7 +273,7 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     return new ResolvedRow(new NullBuilderBuilder()
         .setNullType(scanOrchestrator.options.nullType)
         .allowRequiredNullColumns(scanOrchestrator.options.allowRequiredNullColumns)
-        .setOutputSchema(scanOrchestrator.options.outputSchema())
+        .setOutputSchema(scanOrchestrator.options.providedSchema())
         .build());
   }
 
@@ -223,7 +285,6 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    *
    * @param tableSchema newly arrived schema
    */
-
   private void doExplicitProjection(TupleMetadata tableSchema) {
     rootTuple = newRootTuple();
     new ExplicitSchemaProjection(scanOrchestrator.scanProj,

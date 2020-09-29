@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import org.apache.drill.categories.SqlTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassCompilerSelector;
 import org.apache.drill.test.ClusterFixture;
@@ -26,6 +27,10 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 @Category(SqlTest.class)
 public class SetOptionHandlerTest extends ClusterTest {
@@ -42,11 +47,11 @@ public class SetOptionHandlerTest extends ClusterTest {
             ClassCompilerSelector.JAVA_COMPILER_DEBUG_OPTION)
         .singletonString();
 
-    boolean newValue = !Boolean.valueOf(defaultValue);
+    boolean newValue = !Boolean.parseBoolean(defaultValue);
     try {
       client.alterSession(ClassCompilerSelector.JAVA_COMPILER_DEBUG_OPTION, newValue);
 
-      String changedValue = client.queryBuilder()
+      String changedValue = queryBuilder()
           .sql("SELECT val from sys.options where name = '%s' limit 1",
               ClassCompilerSelector.JAVA_COMPILER_DEBUG_OPTION)
           .singletonString();
@@ -59,32 +64,42 @@ public class SetOptionHandlerTest extends ClusterTest {
 
   @Test
   public void testViewSetQuery() throws Exception {
-    client.testBuilder()  // BIT
+    testBuilder()  // BIT
         .sqlQuery("SET `%s`", ExecConstants.ENABLE_ITERATOR_VALIDATION_OPTION)
         .unOrdered()
         .sqlBaselineQuery("SELECT name, val as value FROM sys.options where name = '%s' limit 1",
             ExecConstants.ENABLE_ITERATOR_VALIDATION_OPTION)
         .go();
 
-    client.testBuilder()  // BIGINT
+    testBuilder()  // BIGINT
         .sqlQuery("SET `%s`", ExecConstants.OUTPUT_BATCH_SIZE)
         .unOrdered()
         .sqlBaselineQuery("SELECT name, val as value FROM sys.options where name = '%s' limit 1",
             ExecConstants.OUTPUT_BATCH_SIZE)
         .go();
 
-    client.testBuilder()  // FLOAT
+    testBuilder()  // FLOAT
         .sqlQuery("SET `%s`", ExecConstants.OUTPUT_BATCH_SIZE_AVAIL_MEM_FACTOR)
         .unOrdered()
         .sqlBaselineQuery("SELECT name, val as value FROM sys.options where name = '%s' limit 1",
             ExecConstants.OUTPUT_BATCH_SIZE_AVAIL_MEM_FACTOR)
         .go();
 
-    client.testBuilder()  // VARCHAR
+    testBuilder()  // VARCHAR
         .sqlQuery("SET `%s`", ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL)
         .unOrdered()
         .sqlBaselineQuery("SELECT name, val as value FROM sys.options where name = '%s' limit 1",
             ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL)
         .go();
+  }
+
+  @Test
+  public void testViewSetWithIncorrectOption() throws Exception {
+    try {
+      run("set `non-existing option`");
+      fail();
+    } catch (UserRemoteException e) {
+      assertThat(e.getMessage(), startsWith("VALIDATION ERROR"));
+    }
   }
 }

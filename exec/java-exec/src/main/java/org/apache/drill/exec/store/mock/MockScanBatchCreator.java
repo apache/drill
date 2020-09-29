@@ -82,8 +82,8 @@ public class MockScanBatchCreator implements BatchCreator<MockSubScanPOP> {
     // each reader to adjust the batch size smaller if desired.
 
     ScanFrameworkBuilder builder = new ScanFrameworkBuilder();
-    builder.setBatchByteLimit(batchSizeBytes);
-    builder.setProjection(projList);
+    builder.batchByteLimit(batchSizeBytes);
+    builder.projection(projList);
     builder.setReaderFactory(new BasicScanFactory(readers.iterator()));
     ManagedScanFramework framework = new ManagedScanFramework(builder);
 

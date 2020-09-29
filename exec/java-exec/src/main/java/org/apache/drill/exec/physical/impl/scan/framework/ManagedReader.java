@@ -19,8 +19,8 @@ package org.apache.drill.exec.physical.impl.scan.framework;
 
 /**
  * Extended version of a record reader which uses a size-aware batch mutator.
- * Use this for all new readers. Replaces the original {@link RecordReader}
- * interface.
+ * Use this for all new readers. Replaces the original
+ * {@link org.apache.drill.exec.store.RecordReader} interface.
  * <p>
  * This interface is used to create readers that work with the projection
  * mechanism to provide services for handling projection, setting up the result
@@ -33,12 +33,12 @@ package org.apache.drill.exec.physical.impl.scan.framework;
  * <ul>
  * <li>Constructor: allocate no resources. Obtain a reference to a reader-specific
  * schema and projection manager.</li>
- * <li>{@link open()}: Use the provided {@link SchemaNegotiator} to configure the
+ * <li>{@link #open(SchemaNegotiator)}: Use the provided {@link SchemaNegotiator} to configure the
  * scanner framework for this reader by specifying a schema (if known), desired
  * row counts and other configuration options. Call {@link SchemaNegotiator#build()}
- * to obtain a {@link ResultSetLoader} to use to capture the rows that the reader
- * reads.</li>
- * <li>{@link next()}: called for each batch. The batch is written using the
+ * to obtain a {@link org.apache.drill.exec.physical.resultSet.RowSetLoader}
+ * to use to capture the rows that the reader reads.</li>
+ * <li>{@link #next()}: called for each batch. The batch is written using the
  * result set loader obtained above. The scanner framework handles details of
  * tracking version changes, handling overflow, limiting record counts, and
  * so on. Return <tt>true</tt> to indicate a batch is available, <tt>false</tt>
@@ -48,7 +48,7 @@ package org.apache.drill.exec.physical.impl.scan.framework;
  * <tt>next()</tt> returns </tt>false</tt>.</li>
  * <p>
  * If an error occurs, the reader can throw a {@link RuntimeException}
- * from any method. A {@link UserException} is preferred to provide
+ * from any method. A <tt>UserException</tt> is preferred to provide
  * detailed information about the source of the problem.
  */
 
@@ -59,7 +59,7 @@ public interface ManagedReader<T extends SchemaNegotiator> {
    * to <tt>next()</tt>. Allocate resources here, not in the constructor.
    * Example: open files, allocate buffers, etc.
    *
-   * @param schemaNegotiator mechanism to negotiate select and table
+   * @param negotiator mechanism to negotiate select and table
    * schemas, then create the row set reader used to load data into
    * value vectors
    *
@@ -93,7 +93,7 @@ public interface ManagedReader<T extends SchemaNegotiator> {
    * <tt>next()</tt> should be called again, <tt>false</tt> to indicate
    * that EOF was reached
    *
-   * @throws RutimeException (<tt>UserException</tt> preferred) if an
+   * @throws RuntimeException (<tt>UserException</tt> preferred) if an
    * error occurs that should fail the query.
    */
 
@@ -106,7 +106,7 @@ public interface ManagedReader<T extends SchemaNegotiator> {
    * <tt>open()</tt> returns normally; will not be called if <tt>open()</tt>
    * throws an exception.
    *
-   * @throws RutimeException (<tt>UserException</tt> preferred) if an
+   * @throws RuntimeException (<tt>UserException</tt> preferred) if an
    * error occurs that should fail the query.
    */
 

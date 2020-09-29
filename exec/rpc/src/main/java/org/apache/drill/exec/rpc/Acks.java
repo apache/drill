@@ -24,4 +24,9 @@ public class Acks {
 
   public static final Ack OK = Ack.newBuilder().setOk(true).build();
   public static final Ack FAIL = Ack.newBuilder().setOk(false).build();
+  //-------To dynamic credit value: -1 means the receiver failed to solve, 0 means no explicit credit and the sender keeps its sender credit.
+  // a value which is great than 0 means having an explicit credit value
+  public static final int FAIL_CREDIT = -1;
+
+  public static final int NO_SUGGESTED_CREDIT = 0;
 }

@@ -43,15 +43,15 @@ import org.apache.drill.exec.record.RecordBatch;
  * Additional functions can be found in the class UnionFunctions
  */
 public class GUnionFunctions {
-
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
   <#assign fields = minor.fields!type.fields />
   <#assign uncappedName = name?uncap_first/>
 
   <#if !minor.class?starts_with("Decimal")>
-
-  @SuppressWarnings("unused")
-  @FunctionTemplate(name = "IS_${name?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(
+      name = "IS_${name?upper_case}",
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      nulls = NullHandling.INTERNAL)
   public static class UnionIs${name} implements DrillSimpleFunc {
 
     @Param UnionHolder in;
@@ -68,8 +68,10 @@ public class GUnionFunctions {
     }
   }
 
-  @SuppressWarnings("unused")
-  @FunctionTemplate(name = "ASSERT_${name?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(
+      name = "ASSERT_${name?upper_case}",
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      nulls = NullHandling.INTERNAL)
   public static class CastUnion${name} implements DrillSimpleFunc {
 
     @Param UnionHolder in;
@@ -85,9 +87,6 @@ public class GUnionFunctions {
       }
     }
   }
-
   </#if>
-
   </#list></#list>
-
 }

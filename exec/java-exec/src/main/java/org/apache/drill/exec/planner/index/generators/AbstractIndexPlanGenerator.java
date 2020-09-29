@@ -23,7 +23,8 @@ import java.util.List;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
@@ -64,7 +65,7 @@ import org.apache.calcite.rex.RexNode;
 
 public abstract class AbstractIndexPlanGenerator extends SubsetTransformer<RelNode, InvalidRelException>{
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractIndexPlanGenerator.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractIndexPlanGenerator.class);
 
   final protected DrillProjectRelBase origProject;
   final protected DrillScanRelBase origScan;
@@ -92,8 +93,8 @@ public abstract class AbstractIndexPlanGenerator extends SubsetTransformer<RelNo
     this.settings = settings;
   }
 
-  //This class provides the utility functions that don't rely on index(one or multiple) or final plan (covering or not),
-  //but those helper functions that focus on serving building index plan (project-filter-indexscan)
+  // Provides the utility functions that don't rely on index(one or multiple) or final plan (covering or not),
+  // but those helper functions that focus on serving building index plan (project-filter-indexscan)
 
   public static int getRowKeyIndex(RelDataType rowType, DrillScanRelBase origScan) {
     List<String> fieldNames = rowType.getFieldNames();
@@ -158,10 +159,11 @@ public abstract class AbstractIndexPlanGenerator extends SubsetTransformer<RelNo
     return convertedRight;
   }
 
+  @Override
   public RelTraitSet newTraitSet(RelTrait... traits) {
     RelTraitSet set = indexContext.getCall().getPlanner().emptyTraitSet();
     for (RelTrait t : traits) {
-      if(t != null) {
+      if (t != null) {
         set = set.plus(t);
       }
     }
@@ -169,10 +171,7 @@ public abstract class AbstractIndexPlanGenerator extends SubsetTransformer<RelNo
   }
 
   protected static boolean toRemoveSort(RelCollation sortCollation, RelCollation inputCollation) {
-    if ( (inputCollation != null) && inputCollation.satisfies(sortCollation)) {
-      return true;
-    }
-    return false;
+    return (inputCollation != null) && inputCollation.satisfies(sortCollation);
   }
 
   public static RelNode getExchange(RelOptCluster cluster, boolean isSingleton, boolean isExchangeRequired,
@@ -240,8 +239,10 @@ public abstract class AbstractIndexPlanGenerator extends SubsetTransformer<RelNo
     return newRel;
   }
 
+  @Override
   public abstract RelNode convertChild(RelNode current, RelNode child) throws InvalidRelException;
 
+  @Override
   public boolean forceConvert(){
     return true;
   }

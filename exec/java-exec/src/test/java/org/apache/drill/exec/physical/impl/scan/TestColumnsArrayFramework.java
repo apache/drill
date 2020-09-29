@@ -34,7 +34,7 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReade
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ScanFrameworkBuilder;
-import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
@@ -55,7 +55,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the columns-array specific behavior in the columns scan framework.
  */
-
 @Category(RowSetTests.class)
 public class TestColumnsArrayFramework extends SubOperatorTest {
 
@@ -104,7 +103,7 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
       for (DummyColumnsReader reader : readers) {
         blocks.add(new DummyFileWork(reader.filePath()));
       }
-      builder.setConfig(new Configuration());
+      builder.setFileSystemConfig(new Configuration());
       builder.setFiles(blocks);
       builder.setReaderFactory(new MockFileReaderFactory(readers));
       return super.build();
@@ -127,7 +126,7 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
     @Override
     public boolean open(ColumnsSchemaNegotiator negotiator) {
       this.negotiator = negotiator;
-      negotiator.setTableSchema(schema, true);
+      negotiator.tableSchema(schema, true);
       negotiator.build();
       return true;
     }
@@ -145,7 +144,6 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
    * Test including a column other than "columns". Occurs when
    * using implicit columns.
    */
-
   @Test
   public void testNonColumnsProjection() {
 
@@ -178,7 +176,6 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
   /**
    * Test projecting just the `columns` column.
    */
-
   @Test
   public void testColumnsProjection() {
 

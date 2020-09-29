@@ -34,6 +34,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for composite vectors.
@@ -41,7 +43,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
  * This class implements common functionality of composite vectors.
  */
 public abstract class AbstractContainerVector implements ValueVector {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);
+  static final Logger logger = LoggerFactory.getLogger(AbstractContainerVector.class);
 
   protected MaterializedField field;
   protected final BufferAllocator allocator;
@@ -56,7 +58,8 @@ public abstract class AbstractContainerVector implements ValueVector {
   @Override
   public void allocateNew() throws OutOfMemoryException {
     if (!allocateNewSafe()) {
-      throw new OutOfMemoryException();
+      throw new OutOfMemoryException(
+          "Failed to allocate memory for " + getClass().getSimpleName());
     }
   }
 

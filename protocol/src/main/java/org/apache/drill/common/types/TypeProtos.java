@@ -651,6 +651,8 @@ public final class TypeProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -658,6 +660,10 @@ public final class TypeProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static MinorType forNumber(int value) {
       switch (value) {
         case 0: return LATE;
@@ -811,6 +817,8 @@ public final class TypeProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -818,6 +826,10 @@ public final class TypeProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static DataMode forNumber(int value) {
       switch (value) {
         case 0: return OPTIONAL;
@@ -878,28 +890,34 @@ public final class TypeProtos {
 
     /**
      * <code>optional .common.MinorType minor_type = 1;</code>
+     * @return Whether the minorType field is set.
      */
     boolean hasMinorType();
     /**
      * <code>optional .common.MinorType minor_type = 1;</code>
+     * @return The minorType.
      */
     org.apache.drill.common.types.TypeProtos.MinorType getMinorType();
 
     /**
      * <code>optional .common.DataMode mode = 2;</code>
+     * @return Whether the mode field is set.
      */
     boolean hasMode();
     /**
      * <code>optional .common.DataMode mode = 2;</code>
+     * @return The mode.
      */
     org.apache.drill.common.types.TypeProtos.DataMode getMode();
 
     /**
      * <code>optional int32 width = 3;</code>
+     * @return Whether the width field is set.
      */
     boolean hasWidth();
     /**
      * <code>optional int32 width = 3;</code>
+     * @return The width.
      */
     int getWidth();
 
@@ -909,6 +927,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 precision = 4;</code>
+     * @return Whether the precision field is set.
      */
     boolean hasPrecision();
     /**
@@ -917,6 +936,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 precision = 4;</code>
+     * @return The precision.
      */
     int getPrecision();
 
@@ -926,6 +946,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 scale = 5;</code>
+     * @return Whether the scale field is set.
      */
     boolean hasScale();
     /**
@@ -934,6 +955,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 scale = 5;</code>
+     * @return The scale.
      */
     int getScale();
 
@@ -943,6 +965,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 timeZone = 6;</code>
+     * @return Whether the timeZone field is set.
      */
     boolean hasTimeZone();
     /**
@@ -951,6 +974,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 timeZone = 6;</code>
+     * @return The timeZone.
      */
     int getTimeZone();
 
@@ -960,6 +984,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>repeated .common.MinorType sub_type = 7;</code>
+     * @return A list containing the subType.
      */
     java.util.List<org.apache.drill.common.types.TypeProtos.MinorType> getSubTypeList();
     /**
@@ -968,6 +993,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>repeated .common.MinorType sub_type = 7;</code>
+     * @return The count of subType.
      */
     int getSubTypeCount();
     /**
@@ -976,6 +1002,8 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>repeated .common.MinorType sub_type = 7;</code>
+     * @param index The index of the element to return.
+     * @return The subType at the given index.
      */
     org.apache.drill.common.types.TypeProtos.MinorType getSubType(int index);
   }
@@ -994,11 +1022,14 @@ public final class TypeProtos {
     private MajorType() {
       minorType_ = 0;
       mode_ = 0;
-      width_ = 0;
-      precision_ = 0;
-      scale_ = 0;
-      timeZone_ = 0;
       subType_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new MajorType();
     }
 
     @java.lang.Override
@@ -1076,7 +1107,7 @@ public final class TypeProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(7, rawValue);
               } else {
-                if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                if (!((mutable_bitField0_ & 0x00000040) != 0)) {
                   subType_ = new java.util.ArrayList<java.lang.Integer>();
                   mutable_bitField0_ |= 0x00000040;
                 }
@@ -1094,7 +1125,7 @@ public final class TypeProtos {
                 if (value == null) {
                   unknownFields.mergeVarintField(7, rawValue);
                 } else {
-                  if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                  if (!((mutable_bitField0_ & 0x00000040) != 0)) {
                     subType_ = new java.util.ArrayList<java.lang.Integer>();
                     mutable_bitField0_ |= 0x00000040;
                   }
@@ -1119,7 +1150,7 @@ public final class TypeProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((mutable_bitField0_ & 0x00000040) != 0)) {
           subType_ = java.util.Collections.unmodifiableList(subType_);
         }
         this.unknownFields = unknownFields.build();
@@ -1144,12 +1175,14 @@ public final class TypeProtos {
     private int minorType_;
     /**
      * <code>optional .common.MinorType minor_type = 1;</code>
+     * @return Whether the minorType field is set.
      */
     public boolean hasMinorType() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .common.MinorType minor_type = 1;</code>
+     * @return The minorType.
      */
     public org.apache.drill.common.types.TypeProtos.MinorType getMinorType() {
       @SuppressWarnings("deprecation")
@@ -1161,12 +1194,14 @@ public final class TypeProtos {
     private int mode_;
     /**
      * <code>optional .common.DataMode mode = 2;</code>
+     * @return Whether the mode field is set.
      */
     public boolean hasMode() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .common.DataMode mode = 2;</code>
+     * @return The mode.
      */
     public org.apache.drill.common.types.TypeProtos.DataMode getMode() {
       @SuppressWarnings("deprecation")
@@ -1178,12 +1213,14 @@ public final class TypeProtos {
     private int width_;
     /**
      * <code>optional int32 width = 3;</code>
+     * @return Whether the width field is set.
      */
     public boolean hasWidth() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional int32 width = 3;</code>
+     * @return The width.
      */
     public int getWidth() {
       return width_;
@@ -1197,9 +1234,10 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 precision = 4;</code>
+     * @return Whether the precision field is set.
      */
     public boolean hasPrecision() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -1207,6 +1245,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 precision = 4;</code>
+     * @return The precision.
      */
     public int getPrecision() {
       return precision_;
@@ -1220,9 +1259,10 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 scale = 5;</code>
+     * @return Whether the scale field is set.
      */
     public boolean hasScale() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -1230,6 +1270,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 scale = 5;</code>
+     * @return The scale.
      */
     public int getScale() {
       return scale_;
@@ -1243,9 +1284,10 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 timeZone = 6;</code>
+     * @return Whether the timeZone field is set.
      */
     public boolean hasTimeZone() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <pre>
@@ -1253,6 +1295,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>optional int32 timeZone = 6;</code>
+     * @return The timeZone.
      */
     public int getTimeZone() {
       return timeZone_;
@@ -1276,6 +1319,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>repeated .common.MinorType sub_type = 7;</code>
+     * @return A list containing the subType.
      */
     public java.util.List<org.apache.drill.common.types.TypeProtos.MinorType> getSubTypeList() {
       return new com.google.protobuf.Internal.ListAdapter<
@@ -1287,6 +1331,7 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>repeated .common.MinorType sub_type = 7;</code>
+     * @return The count of subType.
      */
     public int getSubTypeCount() {
       return subType_.size();
@@ -1297,6 +1342,8 @@ public final class TypeProtos {
      * </pre>
      *
      * <code>repeated .common.MinorType sub_type = 7;</code>
+     * @param index The index of the element to return.
+     * @return The subType at the given index.
      */
     public org.apache.drill.common.types.TypeProtos.MinorType getSubType(int index) {
       return subType_converter_.convert(subType_.get(index));
@@ -1316,22 +1363,22 @@ public final class TypeProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, minorType_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeEnum(2, mode_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt32(3, width_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeInt32(4, precision_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeInt32(5, scale_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeInt32(6, timeZone_);
       }
       for (int i = 0; i < subType_.size(); i++) {
@@ -1346,27 +1393,27 @@ public final class TypeProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, minorType_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(2, mode_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, width_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, precision_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(5, scale_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(6, timeZone_);
       }
@@ -1394,38 +1441,37 @@ public final class TypeProtos {
       }
       org.apache.drill.common.types.TypeProtos.MajorType other = (org.apache.drill.common.types.TypeProtos.MajorType) obj;
 
-      boolean result = true;
-      result = result && (hasMinorType() == other.hasMinorType());
+      if (hasMinorType() != other.hasMinorType()) return false;
       if (hasMinorType()) {
-        result = result && minorType_ == other.minorType_;
+        if (minorType_ != other.minorType_) return false;
       }
-      result = result && (hasMode() == other.hasMode());
+      if (hasMode() != other.hasMode()) return false;
       if (hasMode()) {
-        result = result && mode_ == other.mode_;
+        if (mode_ != other.mode_) return false;
       }
-      result = result && (hasWidth() == other.hasWidth());
+      if (hasWidth() != other.hasWidth()) return false;
       if (hasWidth()) {
-        result = result && (getWidth()
-            == other.getWidth());
+        if (getWidth()
+            != other.getWidth()) return false;
       }
-      result = result && (hasPrecision() == other.hasPrecision());
+      if (hasPrecision() != other.hasPrecision()) return false;
       if (hasPrecision()) {
-        result = result && (getPrecision()
-            == other.getPrecision());
+        if (getPrecision()
+            != other.getPrecision()) return false;
       }
-      result = result && (hasScale() == other.hasScale());
+      if (hasScale() != other.hasScale()) return false;
       if (hasScale()) {
-        result = result && (getScale()
-            == other.getScale());
+        if (getScale()
+            != other.getScale()) return false;
       }
-      result = result && (hasTimeZone() == other.hasTimeZone());
+      if (hasTimeZone() != other.hasTimeZone()) return false;
       if (hasTimeZone()) {
-        result = result && (getTimeZone()
-            == other.getTimeZone());
+        if (getTimeZone()
+            != other.getTimeZone()) return false;
       }
-      result = result && subType_.equals(other.subType_);
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!subType_.equals(other.subType_)) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1638,31 +1684,31 @@ public final class TypeProtos {
         org.apache.drill.common.types.TypeProtos.MajorType result = new org.apache.drill.common.types.TypeProtos.MajorType(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.minorType_ = minorType_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.mode_ = mode_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.width_ = width_;
           to_bitField0_ |= 0x00000004;
         }
-        result.width_ = width_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.precision_ = precision_;
           to_bitField0_ |= 0x00000008;
         }
-        result.precision_ = precision_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.scale_ = scale_;
           to_bitField0_ |= 0x00000010;
         }
-        result.scale_ = scale_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.timeZone_ = timeZone_;
           to_bitField0_ |= 0x00000020;
         }
-        result.timeZone_ = timeZone_;
-        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((bitField0_ & 0x00000040) != 0)) {
           subType_ = java.util.Collections.unmodifiableList(subType_);
           bitField0_ = (bitField0_ & ~0x00000040);
         }
@@ -1674,35 +1720,35 @@ public final class TypeProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1777,12 +1823,14 @@ public final class TypeProtos {
       private int minorType_ = 0;
       /**
        * <code>optional .common.MinorType minor_type = 1;</code>
+       * @return Whether the minorType field is set.
        */
       public boolean hasMinorType() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .common.MinorType minor_type = 1;</code>
+       * @return The minorType.
        */
       public org.apache.drill.common.types.TypeProtos.MinorType getMinorType() {
         @SuppressWarnings("deprecation")
@@ -1791,6 +1839,8 @@ public final class TypeProtos {
       }
       /**
        * <code>optional .common.MinorType minor_type = 1;</code>
+       * @param value The minorType to set.
+       * @return This builder for chaining.
        */
       public Builder setMinorType(org.apache.drill.common.types.TypeProtos.MinorType value) {
         if (value == null) {
@@ -1803,6 +1853,7 @@ public final class TypeProtos {
       }
       /**
        * <code>optional .common.MinorType minor_type = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMinorType() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -1814,12 +1865,14 @@ public final class TypeProtos {
       private int mode_ = 0;
       /**
        * <code>optional .common.DataMode mode = 2;</code>
+       * @return Whether the mode field is set.
        */
       public boolean hasMode() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .common.DataMode mode = 2;</code>
+       * @return The mode.
        */
       public org.apache.drill.common.types.TypeProtos.DataMode getMode() {
         @SuppressWarnings("deprecation")
@@ -1828,6 +1881,8 @@ public final class TypeProtos {
       }
       /**
        * <code>optional .common.DataMode mode = 2;</code>
+       * @param value The mode to set.
+       * @return This builder for chaining.
        */
       public Builder setMode(org.apache.drill.common.types.TypeProtos.DataMode value) {
         if (value == null) {
@@ -1840,6 +1895,7 @@ public final class TypeProtos {
       }
       /**
        * <code>optional .common.DataMode mode = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMode() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -1851,18 +1907,22 @@ public final class TypeProtos {
       private int width_ ;
       /**
        * <code>optional int32 width = 3;</code>
+       * @return Whether the width field is set.
        */
       public boolean hasWidth() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional int32 width = 3;</code>
+       * @return The width.
        */
       public int getWidth() {
         return width_;
       }
       /**
        * <code>optional int32 width = 3;</code>
+       * @param value The width to set.
+       * @return This builder for chaining.
        */
       public Builder setWidth(int value) {
         bitField0_ |= 0x00000004;
@@ -1872,6 +1932,7 @@ public final class TypeProtos {
       }
       /**
        * <code>optional int32 width = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearWidth() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1887,9 +1948,10 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 precision = 4;</code>
+       * @return Whether the precision field is set.
        */
       public boolean hasPrecision() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -1897,6 +1959,7 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 precision = 4;</code>
+       * @return The precision.
        */
       public int getPrecision() {
         return precision_;
@@ -1907,6 +1970,8 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 precision = 4;</code>
+       * @param value The precision to set.
+       * @return This builder for chaining.
        */
       public Builder setPrecision(int value) {
         bitField0_ |= 0x00000008;
@@ -1920,6 +1985,7 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 precision = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPrecision() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -1935,9 +2001,10 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 scale = 5;</code>
+       * @return Whether the scale field is set.
        */
       public boolean hasScale() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -1945,6 +2012,7 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 scale = 5;</code>
+       * @return The scale.
        */
       public int getScale() {
         return scale_;
@@ -1955,6 +2023,8 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 scale = 5;</code>
+       * @param value The scale to set.
+       * @return This builder for chaining.
        */
       public Builder setScale(int value) {
         bitField0_ |= 0x00000010;
@@ -1968,6 +2038,7 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 scale = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearScale() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -1983,9 +2054,10 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 timeZone = 6;</code>
+       * @return Whether the timeZone field is set.
        */
       public boolean hasTimeZone() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <pre>
@@ -1993,6 +2065,7 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 timeZone = 6;</code>
+       * @return The timeZone.
        */
       public int getTimeZone() {
         return timeZone_;
@@ -2003,6 +2076,8 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 timeZone = 6;</code>
+       * @param value The timeZone to set.
+       * @return This builder for chaining.
        */
       public Builder setTimeZone(int value) {
         bitField0_ |= 0x00000020;
@@ -2016,6 +2091,7 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>optional int32 timeZone = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTimeZone() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -2027,7 +2103,7 @@ public final class TypeProtos {
       private java.util.List<java.lang.Integer> subType_ =
         java.util.Collections.emptyList();
       private void ensureSubTypeIsMutable() {
-        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (!((bitField0_ & 0x00000040) != 0)) {
           subType_ = new java.util.ArrayList<java.lang.Integer>(subType_);
           bitField0_ |= 0x00000040;
         }
@@ -2038,6 +2114,7 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>repeated .common.MinorType sub_type = 7;</code>
+       * @return A list containing the subType.
        */
       public java.util.List<org.apache.drill.common.types.TypeProtos.MinorType> getSubTypeList() {
         return new com.google.protobuf.Internal.ListAdapter<
@@ -2049,6 +2126,7 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>repeated .common.MinorType sub_type = 7;</code>
+       * @return The count of subType.
        */
       public int getSubTypeCount() {
         return subType_.size();
@@ -2059,6 +2137,8 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>repeated .common.MinorType sub_type = 7;</code>
+       * @param index The index of the element to return.
+       * @return The subType at the given index.
        */
       public org.apache.drill.common.types.TypeProtos.MinorType getSubType(int index) {
         return subType_converter_.convert(subType_.get(index));
@@ -2069,6 +2149,9 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>repeated .common.MinorType sub_type = 7;</code>
+       * @param index The index to set the value at.
+       * @param value The subType to set.
+       * @return This builder for chaining.
        */
       public Builder setSubType(
           int index, org.apache.drill.common.types.TypeProtos.MinorType value) {
@@ -2086,6 +2169,8 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>repeated .common.MinorType sub_type = 7;</code>
+       * @param value The subType to add.
+       * @return This builder for chaining.
        */
       public Builder addSubType(org.apache.drill.common.types.TypeProtos.MinorType value) {
         if (value == null) {
@@ -2102,6 +2187,8 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>repeated .common.MinorType sub_type = 7;</code>
+       * @param values The subType to add.
+       * @return This builder for chaining.
        */
       public Builder addAllSubType(
           java.lang.Iterable<? extends org.apache.drill.common.types.TypeProtos.MinorType> values) {
@@ -2118,6 +2205,7 @@ public final class TypeProtos {
        * </pre>
        *
        * <code>repeated .common.MinorType sub_type = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSubType() {
         subType_ = java.util.Collections.emptyList();
@@ -2215,18 +2303,10 @@ public final class TypeProtos {
       "\n\010REQUIRED\020\001\022\014\n\010REPEATED\020\002B-\n\035org.apache" +
       ".drill.common.typesB\nTypeProtosH\001"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-        }, assigner);
+        });
     internal_static_common_MajorType_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_common_MajorType_fieldAccessorTable = new

@@ -50,16 +50,6 @@ public class TestSimpleExternalSort extends DrillTest {
   @Rule
   public final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
-  @Test
-  public void mergeSortWithSv2Managed() throws Exception {
-    mergeSortWithSv2(false);
-  }
-
-  @Test
-  public void mergeSortWithSv2Legacy() throws Exception {
-    mergeSortWithSv2(true);
-  }
-
   /**
    * Tests the external sort using an in-memory sort. Relies on default memory
    * settings to be large enough to do the in-memory sort (there is,
@@ -71,38 +61,22 @@ public class TestSimpleExternalSort extends DrillTest {
    * @throws Exception
    */
 
-  private void mergeSortWithSv2(boolean testLegacy) throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-        .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, false);
+  @Test
+  public void mergeSortWithSv2() throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
-      chooseImpl(client, testLegacy);
       List<QueryDataBatch> results = client.queryBuilder().physicalResource("xsort/one_key_sort_descending_sv2.json").results();
       assertEquals(500_000, client.countResults(results));
       validateResults(client.allocator(), results);
     }
   }
 
-  private void chooseImpl(ClientFixture client, boolean testLegacy) throws Exception {
-    client.alterSession(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION.getOptionName(), testLegacy);
-  }
-
   @Test
-  public void sortOneKeyDescendingMergeSortManaged() throws Throwable {
-    sortOneKeyDescendingMergeSort(false);
-  }
-
-  @Test
-  public void sortOneKeyDescendingMergeSortLegacy() throws Throwable {
-    sortOneKeyDescendingMergeSort(true);
-  }
-
-  private void sortOneKeyDescendingMergeSort(boolean testLegacy) throws Throwable {
-    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-        .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, false);
+  public void sortOneKeyDescendingMergeSort() throws Throwable {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
-      chooseImpl(client, testLegacy);
       List<QueryDataBatch> results = client.queryBuilder().physicalResource("xsort/one_key_sort_descending.json").results();
       assertEquals(1_000_000, client.countResults(results));
       validateResults(client.allocator(), results);
@@ -131,24 +105,13 @@ public class TestSimpleExternalSort extends DrillTest {
   }
 
   @Test
-  public void sortOneKeyDescendingExternalSortManaged() throws Throwable {
-    sortOneKeyDescendingExternalSort(false);
-  }
-
-  @Test
-  public void sortOneKeyDescendingExternalSortLegacy() throws Throwable {
-    sortOneKeyDescendingExternalSort(true);
-  }
-
-  private void sortOneKeyDescendingExternalSort(boolean testLegacy) throws Throwable {
+  public void sortOneKeyDescendingExternalSort() throws Throwable {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
         .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_THRESHOLD, 4)
         .configProperty(ExecConstants.EXTERNAL_SORT_SPILL_GROUP_SIZE, 4)
-        .configProperty(ExecConstants.EXTERNAL_SORT_BATCH_LIMIT, 4)
-        .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, false);
+        .configProperty(ExecConstants.EXTERNAL_SORT_BATCH_LIMIT, 4);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
-      chooseImpl(client,testLegacy);
       List<QueryDataBatch> results = client.queryBuilder().physicalResource("/xsort/one_key_sort_descending.json").results();
       assertEquals(1_000_000, client.countResults(results));
       validateResults(client.allocator(), results);
@@ -156,26 +119,15 @@ public class TestSimpleExternalSort extends DrillTest {
   }
 
   @Test
-  public void outOfMemoryExternalSortManaged() throws Throwable{
-    outOfMemoryExternalSort(false);
-  }
-
-  @Test
-  public void outOfMemoryExternalSortLegacy() throws Throwable{
-    outOfMemoryExternalSort(true);
-  }
-
-  private void outOfMemoryExternalSort(boolean testLegacy) throws Throwable{
+  public void outOfMemoryExternalSort() throws Throwable{
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
         // Probably do nothing in modern Drill
         .configProperty("drill.memory.fragment.max", 50_000_000)
         .configProperty("drill.memory.fragment.initial", 2_000_000)
         .configProperty("drill.memory.operator.max", 30_000_000)
-        .configProperty("drill.memory.operator.initial", 2_000_000)
-        .configProperty(ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED, testLegacy);
+        .configProperty("drill.memory.operator.initial", 2_000_000);
     try (ClusterFixture cluster = builder.build();
          ClientFixture client = cluster.clientFixture()) {
-      chooseImpl(client,testLegacy);
       List<QueryDataBatch> results = client.queryBuilder().physicalResource("/xsort/oom_sort_test.json").results();
       assertEquals(10_000_000, client.countResults(results));
 

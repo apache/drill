@@ -57,18 +57,16 @@ import org.junit.experimental.categories.Category;
 import java.util.ArrayList;
 import java.util.List;
 
-import static junit.framework.TestCase.fail;
+import static org.junit.Assert.fail;
 
 @Category(OperatorTest.class)
 public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
-
 
   // Operator Context for mock batch
   public static OperatorContext operatorContext;
 
   public static PhysicalOperator mockPopConfig;
   public static LateralJoinPOP ljPopConfig;
-
 
   @BeforeClass public static void setUpBeforeClass() throws Exception {
     mockPopConfig = new MockStorePOP(null);
@@ -84,10 +82,10 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   public void testUnnestFixedWidthColumn() {
 
     Object[][] data = {
-        { (Object) new int[] {1, 2},
-          (Object) new int[] {3, 4, 5}},
-        { (Object) new int[] {6, 7, 8, 9},
-          (Object) new int[] {10, 11, 12, 13, 14}}
+        { new int[] {1, 2},
+          new int[] {3, 4, 5}},
+        { new int[] {6, 7, 8, 9},
+          new int[] {10, 11, 12, 13, 14}}
     };
 
     // Create input schema
@@ -112,17 +110,16 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
-
   }
 
   @Test
   public void testUnnestVarWidthColumn() {
 
     Object[][] data = {
-        { (Object) new String[] {"", "zero"},
-          (Object) new String[] {"one", "two", "three"}},
-        { (Object) new String[] {"four", "five", "six", "seven"},
-          (Object) new String[] {"eight", "nine", "ten", "eleven", "twelve"}}
+        { new String[] {"", "zero"},
+          new String[] {"one", "two", "three"}},
+        { new String[] {"four", "five", "six", "seven"},
+          new String[] {"eight", "nine", "ten", "eleven", "twelve"}}
     };
 
     // Create input schema
@@ -146,7 +143,6 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
-
   }
 
   @Test
@@ -167,18 +163,17 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
-
   }
 
   @Test
   public void testUnnestEmptyList() {
 
     Object[][] data = {
-        { (Object) new String[] {},
-          (Object) new String[] {}
+        { new String[] {},
+          new String[] {}
         },
-        { (Object) new String[] {},
-          (Object) new String[] {}
+        { new String[] {},
+          new String[] {}
         }
     };
 
@@ -198,7 +193,6 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
-
   }
 
   @Test
@@ -208,14 +202,14 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     // unnest column itself has changed
     Object[][] data = {
         {
-            (Object) new String[] {"0", "1"},
-            (Object) new String[] {"2", "3", "4"}
+            new String[] {"0", "1"},
+            new String[] {"2", "3", "4"}
         },
         {
-            (Object) new String[] {"5", "6" },
+            new String[] {"5", "6" },
         },
         {
-            (Object) new String[] {"9"}
+            new String[] {"9"}
         }
     };
 
@@ -246,21 +240,20 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
-
   }
 
   @Test
   public void testUnnestSchemaChange() {
     Object[][] data = {
         {
-            (Object) new String[] {"0", "1"},
-            (Object) new String[] {"2", "3", "4"}
+            new String[] {"0", "1"},
+            new String[] {"2", "3", "4"}
         },
         {
-            (Object) new String[] {"5", "6" },
+            new String[] {"5", "6" },
         },
         {
-            (Object) new int[] {9}
+            new int[] {9}
         }
     };
 
@@ -295,7 +288,6 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
-
   }
 
   private void testUnnestBatchSizing(int inputBatchSize, int limitOutputBatchSize,
@@ -437,7 +429,6 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     } finally {
       fixture.getFragmentContext().getOptions().setLocalOption(ExecConstants.OUTPUT_BATCH_SIZE, outputBatchSize);
     }
-
   }
 
   @Test
@@ -495,17 +486,16 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     } finally {
       fixture.getFragmentContext().getOptions().setLocalOption(ExecConstants.OUTPUT_BATCH_SIZE, outputBatchSize);
     }
-
   }
 
   @Test
   public void testUnnestNonArrayColumn() {
 
     Object[][] data = {
-        { (Object) new Integer (1),
-            (Object) new Integer (3)},
-        { (Object) new Integer (6),
-            (Object) new Integer (10)}
+        { new Integer (1),
+            new Integer (3)},
+        { new Integer (6),
+            new Integer (10)}
     };
 
     // Create input schema
@@ -528,9 +518,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
-
   }
-
 
   // test unnest for various input conditions without invoking kill
   private <T> void testUnnest(
@@ -559,7 +547,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     ArrayList<RowSet.SingleRowSet> rowSets = new ArrayList<>();
     int rowNumber = 0;
     int batchNum = 0;
-    for ( Object[] recordBatch : data) {
+    for (Object[] recordBatch : data) {
       RowSetBuilder rowSetBuilder = fixture.rowSetBuilder(incomingSchemas[batchNum]);
       for ( Object rowData : recordBatch) {
         rowSetBuilder.addRow(++rowNumber, rowData);
@@ -604,28 +592,29 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
 
     // Simulate the pipeline by calling next on the incoming
 
-    // results is an array ot batches, each batch being an array of output vectors.
+    // results is an array of batches, each batch being an array of output vectors.
     List<List<ValueVector> > resultList = new ArrayList<>();
     List<List<ValueVector> > results = null;
     int batchesProcessed = 0;
     try{
-    try {
-      while (!isTerminal(lateralJoinBatch.next())) {
-        if (lateralJoinBatch.getRecordCount() > 0) {
-          addBatchToResults(resultList, lateralJoinBatch);
+      try {
+        while (!isTerminal(lateralJoinBatch.next())) {
+          if (lateralJoinBatch.getRecordCount() > 0) {
+            addBatchToResults(resultList, lateralJoinBatch);
+          }
+          batchesProcessed++;
+          if (batchesProcessed == execKill) {
+            // Errors are reported by throwing an exception.
+            // Simulate by skipping out of the loop
+            break;
+          }
+          // else nothing to do
         }
-        batchesProcessed++;
-        if (batchesProcessed == execKill) {
-          lateralJoinBatch.getContext().getExecutorState().fail(new DrillException("Testing failure of execution."));
-          lateralJoinBatch.kill(true);
-        }
-        // else nothing to do
+      } catch (UserException e) {
+        throw e;
+      } catch (Exception e) {
+        fail(e.getMessage());
       }
-    } catch (UserException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new Exception ("Test failed to execute lateralJoinBatch.next() because: " + e.getMessage());
-    }
 
       // Check results against baseline
       results = resultList;
@@ -633,7 +622,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
       int batchIndex = 0;
       int vectorIndex = 0;
       //int valueIndex = 0;
-      for ( List<ValueVector> batch: results) {
+      for (List<ValueVector> batch: results) {
         int vectorCount= batch.size();
         int expectedVectorCount = (excludeUnnestColumn) ? 0 : 1;
         expectedVectorCount += baseline[batchIndex].length;
@@ -668,7 +657,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
               if (!baseline[batchIndex][vectorIndex][valueIndex].equals(val)) {
                 fail("Test failed in validating unnest output. Value mismatch. Baseline value[" + vectorIndex + "][" + valueIndex
                     + "]" + ": "
-                    + ((Object[])baseline[batchIndex][vectorIndex])[valueIndex] + "   VV.getObject(valueIndex): " + val);
+                    + baseline[batchIndex][vectorIndex][valueIndex] + "   VV.getObject(valueIndex): " + val);
               }
             }
           }
@@ -698,7 +687,6 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
         rowSet.clear();
       }
     }
-
   }
 
   /**
@@ -824,10 +812,8 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   }
 
   private boolean isTerminal(RecordBatch.IterOutcome outcome) {
-    return (outcome == RecordBatch.IterOutcome.NONE || outcome == RecordBatch.IterOutcome.STOP) || (outcome
-        == RecordBatch.IterOutcome.OUT_OF_MEMORY);
+    return (outcome == RecordBatch.IterOutcome.NONE);
   }
-
 
   /**
    *     Run a plan like the following for various input batches :
@@ -850,8 +836,6 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
    * @param <T>
    * @throws Exception
    */
-
-
   private <T> void testNestedUnnest( TupleMetadata[] incomingSchemas,
       RecordBatch.IterOutcome[] iterOutcomes,
       int execKill, // number of batches after which to kill the execution (!)
@@ -936,7 +920,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
           batchesProcessed++;
           if (batchesProcessed == execKill) {
             lateralJoinBatch1.getContext().getExecutorState().fail(new DrillException("Testing failure of execution."));
-            lateralJoinBatch1.kill(true);
+            lateralJoinBatch1.cancel();
           }
           // else nothing to do
         }
@@ -985,7 +969,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
               if (!baseline[batchIndex][vectorIndex][valueIndex].equals(val)) {
                 fail("Test failed in validating unnest output. Value mismatch. Baseline value[" + vectorIndex + "][" + valueIndex
                     + "]" + ": "
-                    + ((Object[])baseline[batchIndex][vectorIndex])[valueIndex] + "   VV.getObject(valueIndex): " + val);
+                    + baseline[batchIndex][vectorIndex][valueIndex] + "   VV.getObject(valueIndex): " + val);
               }
             }
           }
@@ -1017,7 +1001,6 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
         rowSet.clear();
       }
     }
-
   }
 
   @Test
@@ -1038,8 +1021,6 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     } catch (Exception e) {
       fail("Failed due to exception: " + e.getMessage());
     }
-
   }
-
 }
 

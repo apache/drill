@@ -71,7 +71,7 @@ public class SchemaBuilder implements SchemaContainer {
    * but they are each unique, so don't share "guts".)
    */
 
-  private TupleBuilder tupleBuilder = new TupleBuilder();
+  private final TupleBuilder tupleBuilder = new TupleBuilder();
 
   public SchemaBuilder() { }
 
@@ -101,6 +101,11 @@ public class SchemaBuilder implements SchemaContainer {
 
   public SchemaBuilder add(MaterializedField col) {
     tupleBuilder.add(col);
+    return this;
+  }
+
+  public SchemaBuilder add(ColumnMetadata column) {
+    addColumn(column);
     return this;
   }
 
@@ -166,6 +171,18 @@ public class SchemaBuilder implements SchemaContainer {
     return this;
   }
 
+  public SchemaBuilder addDynamic(String name) {
+    tupleBuilder.addColumn(MetadataUtils.newDynamic(name));
+    return this;
+  }
+
+  public SchemaBuilder addAll(TupleMetadata from) {
+    for (ColumnMetadata col : from) {
+      tupleBuilder.addColumn(col.copy());
+    }
+    return this;
+  }
+
   /**
    * Add a map column. The returned schema builder is for the nested
    * map. Building that map, using {@link MapBuilder#resumeSchema()},
@@ -180,6 +197,22 @@ public class SchemaBuilder implements SchemaContainer {
 
   public MapBuilder addMapArray(String name) {
     return tupleBuilder.addMapArray(this, name);
+  }
+
+  public DictBuilder addDict(String name, MinorType keyType) {
+    return tupleBuilder.addDict(this, name).key(keyType);
+  }
+
+  public DictBuilder addDict(String name, MajorType keyType) {
+    return tupleBuilder.addDict(this, name).key(keyType);
+  }
+
+  public DictBuilder addDictArray(String name, MinorType keyType) {
+    return tupleBuilder.addDictArray(this, name).key(keyType);
+  }
+
+  public DictBuilder addDictArray(String name, MajorType keyType) {
+    return tupleBuilder.addDictArray(this, name).key(keyType);
   }
 
   public UnionBuilder addUnion(String name) {

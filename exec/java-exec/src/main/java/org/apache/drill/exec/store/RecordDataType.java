@@ -26,7 +26,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 /**
- * RecordDataType defines names and data types of columns in a static drill table.
+ * Defines names and data types of columns in a static drill table.
  */
 public abstract class RecordDataType {
 
@@ -66,5 +66,4 @@ public abstract class RecordDataType {
     }
     return factory.createStructType(fields, names);
   }
-
 }

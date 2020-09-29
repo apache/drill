@@ -107,13 +107,22 @@ public class FilterEvaluatorUtils {
                                   long rowCount,
                                   TupleMetadata fileMetadata,
                                   Set<SchemaPath> schemaPathsInExpr) {
-    RowsMatch rowsMatch = RowsMatch.SOME;
-    if (parquetPredicate != null) {
-      @SuppressWarnings("rawtypes")
-      StatisticsProvider<T> rangeExprEvaluator = new StatisticsProvider(columnsStatistics, rowCount);
-      rowsMatch = parquetPredicate.matches(rangeExprEvaluator);
+    if (parquetPredicate == null) {
+      return RowsMatch.SOME;
     }
-    return rowsMatch == RowsMatch.ALL && isRepeated(schemaPathsInExpr, fileMetadata) ? RowsMatch.SOME : rowsMatch;
+    @SuppressWarnings("rawtypes")
+    StatisticsProvider<T> rangeExprEvaluator = new StatisticsProvider(columnsStatistics, rowCount);
+    RowsMatch rowsMatch = parquetPredicate.matches(rangeExprEvaluator);
+
+    if (rowsMatch == RowsMatch.ALL && isMetaNotApplicable(schemaPathsInExpr, fileMetadata)) {
+      rowsMatch = RowsMatch.SOME;
+    }
+
+    return rowsMatch;
+  }
+
+  private static boolean isMetaNotApplicable(Set<SchemaPath> schemaPathsInExpr, TupleMetadata fileMetadata) {
+    return isRepeated(schemaPathsInExpr, fileMetadata) || isDictOrRepeatedMapChild(schemaPathsInExpr, fileMetadata);
   }
 
   private static boolean isRepeated(Set<SchemaPath> fields, TupleMetadata fileMetadata) {
@@ -121,6 +130,15 @@ public class FilterEvaluatorUtils {
       ColumnMetadata columnMetadata = SchemaPathUtils.getColumnMetadata(field, fileMetadata);
       TypeProtos.MajorType fieldType = columnMetadata != null ? columnMetadata.majorType() : null;
       if (fieldType != null && fieldType.getMode() == TypeProtos.DataMode.REPEATED) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isDictOrRepeatedMapChild(Set<SchemaPath> fields, TupleMetadata fileMetadata) {
+    for (SchemaPath field : fields) {
+      if (SchemaPathUtils.isFieldNestedInDictOrRepeatedMap(field, fileMetadata)) {
         return true;
       }
     }

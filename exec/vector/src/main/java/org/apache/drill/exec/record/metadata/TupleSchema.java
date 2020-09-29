@@ -66,8 +66,9 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
     this.parentMap = parentMap;
   }
 
-  public TupleMetadata copy() {
-    TupleMetadata tuple = new TupleSchema();
+  @Override
+  public TupleSchema copy() {
+    TupleSchema tuple = new TupleSchema();
     for (ColumnMetadata md : this) {
       tuple.addColumn(md.copy());
     }
@@ -161,6 +162,17 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
+    }
+    if (o == null || o.getClass() != getClass()) {
+      return false;
+    }
+    return isEquivalent((TupleMetadata) o);
+  }
+
+  @Override
   public List<MaterializedField> toFieldList() {
     List<MaterializedField> cols = new ArrayList<>();
     for (ColumnMetadata md : nameSpace) {
@@ -202,6 +214,11 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
   }
 
   public boolean isRoot() { return parentMap == null; }
+
+  @Override
+  public void replace(ColumnMetadata replaceWith) {
+    nameSpace.replace(replaceWith.name(), replaceWith);
+  }
 
   @Override
   public String toString() {

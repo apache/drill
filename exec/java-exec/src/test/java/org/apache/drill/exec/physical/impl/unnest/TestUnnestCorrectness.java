@@ -75,10 +75,10 @@ import static org.junit.Assert.assertTrue;
   public void testUnnestFixedWidthColumn() {
 
     Object[][] data = {
-        { (Object) new int[] {1, 2},
-          (Object) new int[] {3, 4, 5}},
-        { (Object) new int[] {6, 7, 8, 9},
-          (Object) new int[] {10, 11, 12, 13, 14}}
+        { new int[] {1, 2},
+          new int[] {3, 4, 5}},
+        { new int[] {6, 7, 8, 9},
+          new int[] {10, 11, 12, 13, 14}}
     };
 
     // Create input schema
@@ -107,10 +107,10 @@ import static org.junit.Assert.assertTrue;
   public void testUnnestVarWidthColumn() {
 
     Object[][] data = {
-        { (Object) new String[] {"", "zero"},
-          (Object) new String[] {"one", "two", "three"}},
-        { (Object) new String[] {"four", "five", "six", "seven"},
-          (Object) new String[] {"eight", "nine", "ten", "eleven", "twelve"}}
+        { new String[] {"", "zero"},
+          new String[] {"one", "two", "three"}},
+        { new String[] {"four", "five", "six", "seven"},
+          new String[] {"eight", "nine", "ten", "eleven", "twelve"}}
     };
 
     // Create input schema
@@ -162,11 +162,11 @@ import static org.junit.Assert.assertTrue;
   public void testUnnestEmptyList() {
 
     Object[][] data = {
-        { (Object) new String[] {},
-          (Object) new String[] {}
+        { new String[] {},
+          new String[] {}
         },
-        { (Object) new String[] {},
-          (Object) new String[] {}
+        { new String[] {},
+          new String[] {}
         }
     };
 
@@ -197,14 +197,14 @@ import static org.junit.Assert.assertTrue;
     // unnest column itself has changed
     Object[][] data = {
         {
-            (Object) new String[] {"0", "1"},
-            (Object) new String[] {"2", "3", "4"}
+            new String[] {"0", "1"},
+            new String[] {"2", "3", "4"}
         },
         {
-            (Object) new String[] {"5", "6" },
+            new String[] {"5", "6" },
         },
         {
-            (Object) new String[] {"9"}
+            new String[] {"9"}
         }
     };
 
@@ -240,14 +240,14 @@ import static org.junit.Assert.assertTrue;
   public void testUnnestSchemaChange() {
     Object[][] data = {
         {
-            (Object) new String[] {"0", "1"},
-            (Object) new String[] {"2", "3", "4"}
+            new String[] {"0", "1"},
+            new String[] {"2", "3", "4"}
         },
         {
-            (Object) new String[] {"5", "6" },
+            new String[] {"5", "6" },
         },
         {
-            (Object) new int[] {9}
+            new int[] {9}
         }
     };
 
@@ -463,10 +463,10 @@ import static org.junit.Assert.assertTrue;
   public void testUnnestNonArrayColumn() {
 
     Object[][] data = {
-        { (Object) new Integer (1),
-            (Object) new Integer (3)},
-        { (Object) new Integer (6),
-            (Object) new Integer (10)}
+        { new Integer (1),
+            new Integer (3)},
+        { new Integer (6),
+            new Integer (10)}
     };
 
     // Create input schema
@@ -567,7 +567,7 @@ import static org.junit.Assert.assertTrue;
         batchesProcessed++;
         if (batchesProcessed == execKill) {
           lateralJoinBatch.getContext().getExecutorState().fail(new DrillException("Testing failure of execution."));
-          lateralJoinBatch.kill(true);
+          lateralJoinBatch.cancel();
         }
         // else nothing to do
       }
@@ -584,7 +584,7 @@ import static org.junit.Assert.assertTrue;
         for (int j = 0; j < valueCount; j++) {
 
           if (vv instanceof MapVector) {
-            if (!compareMapBaseline((Object) baseline[i][j], vv.getAccessor().getObject(j))) {
+            if (!compareMapBaseline(baseline[i][j], vv.getAccessor().getObject(j))) {
               fail("Test failed in validating unnest(Map) output. Value mismatch");
             }
           } else if (vv instanceof VarCharVector) {
@@ -606,7 +606,7 @@ import static org.junit.Assert.assertTrue;
 
       }
 
-      assertTrue(((MockLateralJoinBatch) lateralJoinBatch).isCompleted());
+      assertTrue(lateralJoinBatch.isCompleted());
 
     } catch (UserException e) {
       throw e; // Valid exception
@@ -716,9 +716,7 @@ import static org.junit.Assert.assertTrue;
   }
 
   private boolean isTerminal(RecordBatch.IterOutcome outcome) {
-    return (outcome == RecordBatch.IterOutcome.NONE || outcome == RecordBatch.IterOutcome.STOP) || (outcome
-        == RecordBatch.IterOutcome.OUT_OF_MEMORY);
+    return (outcome == RecordBatch.IterOutcome.NONE);
   }
-
 }
 

@@ -73,7 +73,8 @@ public class HiveSubScan extends AbstractBase implements SubScan {
         hiveReadEntry,
         splitClasses,
         columns,
-        (HiveStoragePlugin) registry.getPlugin(hiveStoragePluginConfig), confProperties);
+        registry.resolve(hiveStoragePluginConfig, HiveStoragePlugin.class),
+        confProperties);
   }
 
   public HiveSubScan(final String userName,

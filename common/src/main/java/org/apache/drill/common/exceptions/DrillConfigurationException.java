@@ -17,10 +17,10 @@
  */
 package org.apache.drill.common.exceptions;
 
+@SuppressWarnings("serial")
 public class DrillConfigurationException extends DrillException {
-  public DrillConfigurationException() {
-    super();
-  }
+
+  public DrillConfigurationException() { }
 
   public DrillConfigurationException(String message, Throwable cause, boolean enableSuppression,
       boolean writableStackTrace) {
@@ -38,6 +38,4 @@ public class DrillConfigurationException extends DrillException {
   public DrillConfigurationException(Throwable cause) {
     super(cause);
   }
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfigurationException.class);
 }

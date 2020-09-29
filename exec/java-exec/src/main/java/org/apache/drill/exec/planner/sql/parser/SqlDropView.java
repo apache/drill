@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.List;
 
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.handlers.ViewHandler.DropView;
@@ -87,11 +88,7 @@ public class SqlDropView extends DrillSqlCall {
   }
 
   public List<String> getSchemaPath() {
-    if (viewName.isSimple()) {
-      return ImmutableList.of();
-    }
-
-    return viewName.names.subList(0, viewName.names.size()-1);
+    return SchemaUtilites.getSchemaPath(viewName);
   }
 
   public String getName() {

@@ -25,7 +25,6 @@ import org.junit.experimental.categories.Category;
 
 @Category({SlowTest.class})
 public class TestTpchLimit0 extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchLimit0.class);
 
   private void testLimitZero(String fileName) throws Exception {
     String query = getFile(fileName);

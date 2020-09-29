@@ -138,7 +138,7 @@ public class MaprDBTestsSuite extends BaseTest {
 
           FileSystemConfig pluginConfig = ctx.getLpPersistence().getMapper().readValue(pluginConfStr, FileSystemConfig.class);
           // create the plugin with "hbase" name so that we can run HBase unit tests against them
-          pluginRegistry.createOrUpdate("hbase", pluginConfig, true);
+          pluginRegistry.put("hbase", pluginConfig);
         }
       }
     }

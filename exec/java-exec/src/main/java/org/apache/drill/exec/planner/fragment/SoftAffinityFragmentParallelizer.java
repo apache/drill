@@ -34,9 +34,11 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Implementation of {@link FragmentParallelizer} where fragment has zero or more endpoints with affinities. Width
- * per node is depended on the affinity to the endpoint and total width (calculated using costs). Based on various
- * factors endpoints which have no affinity can be assigned to run the fragments.
+ * Implementation of {@link FragmentParallelizer} where fragment has zero or
+ * more endpoints with affinities. Width per node is depended on the affinity to
+ * the endpoint and total width (calculated using costs). Based on various
+ * factors endpoints which have no affinity can be assigned to run the
+ * fragments.
  */
 public class SoftAffinityFragmentParallelizer implements FragmentParallelizer {
   public static final SoftAffinityFragmentParallelizer INSTANCE = new SoftAffinityFragmentParallelizer();
@@ -116,7 +118,7 @@ public class SoftAffinityFragmentParallelizer implements FragmentParallelizer {
 
       // Find the maximum number of slots which should go to endpoints with affinity (See DRILL-825 for details)
       int affinedSlots =
-          Math.max(1, (int) (Math.ceil((double)parameters.getAffinityFactor() * width / activeEndpoints.size()) * sortedAffinityList.size()));
+          Math.max(1, (int) (Math.ceil(parameters.getAffinityFactor() * width / activeEndpoints.size()) * sortedAffinityList.size()));
 
       // Make sure affined slots is at least the number of mandatory nodes
       affinedSlots = Math.max(affinedSlots, numRequiredNodes);

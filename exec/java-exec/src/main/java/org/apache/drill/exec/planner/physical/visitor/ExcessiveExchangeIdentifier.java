@@ -37,7 +37,7 @@ import org.apache.drill.exec.planner.physical.UnnestPrel;
 
 public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, ExcessiveExchangeIdentifier.MajorFragmentStat, RuntimeException> {
   private final long targetSliceSize;
-  private LateralJoinPrel topMostLateralJoin = null;
+  private LateralJoinPrel topMostLateralJoin;
 
   public ExcessiveExchangeIdentifier(long targetSliceSize) {
     this.targetSliceSize = targetSliceSize;
@@ -78,11 +78,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
       return true;
     }
 
-    if (parentFrag.isRightSideOfLateral()) {
-      return true;
-    }
-
-    return false;
+    return parentFrag.isRightSideOfLateral();
   }
 
   @Override
@@ -147,7 +143,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
 
     s.setHashDistribution(prel);
 
-    for(Prel p : prel) {
+    for (Prel p : prel) {
       children.add(p.accept(this, s));
     }
     return (Prel) prel.copy(prel.getTraitSet(), children);

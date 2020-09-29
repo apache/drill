@@ -22,7 +22,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.eclipse.jetty.util.security.Constraint;
 
 public class SpnegoSecurityHandler extends DrillHttpConstraintSecurityHandler {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SpnegoSecurityHandler.class);
 
   @Override
   public String getImplName() {

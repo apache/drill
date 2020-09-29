@@ -38,11 +38,10 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @JsonPropertyOrder({ "head", "graph" })
 public class PhysicalPlan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlan.class);
 
-  PlanProperties properties;
+  protected PlanProperties properties;
 
-  Graph<PhysicalOperator, Root, Leaf> graph;
+  protected Graph<PhysicalOperator, Root, Leaf> graph;
 
   @JsonCreator
   public PhysicalPlan(@JsonProperty("head") PlanProperties properties,

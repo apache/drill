@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.aggregate;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +45,6 @@ import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
@@ -72,7 +70,6 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
-import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -99,7 +96,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   private boolean firstBatch = true;
 
   // This map saves the mapping between outgoing column and incoming column.
-  private Map<String, String> columnMapping;
+  private final Map<String, String> columnMapping;
   private final HashAggMemoryManager hashAggMemoryManager;
 
   private final GeneratorMapping UPDATE_AGGR_INSIDE =
@@ -214,10 +211,10 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     boolean fallbackEnabled = context.getOptions().getOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY).bool_val;
     final AggPrelBase.OperatorPhase phase = popConfig.getAggPhase();
 
-    if ( phase.is2nd() && !fallbackEnabled ) {
+    if (phase.is2nd() && !fallbackEnabled) {
       minBatchesNeeded *= 2;  // 2nd phase (w/o fallback) needs at least 2 partitions
     }
-    if ( configuredBatchSize > memAvail / minBatchesNeeded ) { // no cast - memAvail may be bigger than max-int
+    if (configuredBatchSize > memAvail / minBatchesNeeded) { // no cast - memAvail may be bigger than max-int
       int reducedBatchSize = (int)(memAvail / minBatchesNeeded);
       logger.trace("Reducing configured batch size from: {} to: {}, due to Mem limit: {}",
         configuredBatchSize, reducedBatchSize, memAvail);
@@ -252,24 +249,13 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         state = BatchState.DONE;
         container.buildSchema(SelectionVectorMode.NONE);
         return;
-      case OUT_OF_MEMORY:
-        state = BatchState.OUT_OF_MEMORY;
-        return;
-      case STOP:
-        state = BatchState.STOP;
-        return;
       default:
         break;
     }
 
     incomingSchema = incoming.getSchema();
-    if (!createAggregator()) {
-      state = BatchState.DONE;
-    }
-    for (VectorWrapper<?> w : container) {
-      AllocationHelper.allocatePrecomputedChildCount(w.getValueVector(), 0, 0, 0);
-    }
-    container.setEmpty();
+    createAggregator();
+    container.allocatePrecomputedChildCount(0, 0, 0);
     if (incoming.getRecordCount() > 0) {
       hashAggMemoryManager.update();
     }
@@ -287,11 +273,11 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         // or: 1st phase need to return (not fully grouped) partial output due to memory pressure
         aggregator.earlyOutput() ||
         // or: while handling an EMIT - returning output for that section
-        aggregator.handlingEmit() ) {
+        aggregator.handlingEmit()) {
       // then output the next batch downstream
       HashAggregator.AggIterOutcome aggOut = aggregator.outputCurrentBatch();
       // if Batch returned, or end of data, or Emit - then return the appropriate iter outcome
-      switch ( aggOut ) {
+      switch (aggOut) {
         case AGG_NONE:
           return IterOutcome.NONE;
         case AGG_OK:
@@ -304,82 +290,74 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       }
     }
 
-    if (wasKilled) { // if kill() was called before, then finish up
+    if (wasKilled) { // if cancel() was called before, then finish up
       aggregator.cleanup();
-      incoming.kill(false);
       return IterOutcome.NONE;
     }
 
     // Read and aggregate records
-    // ( may need to run again if the spilled partition that was read
-    //   generated new partitions that were all spilled )
+    // (may need to run again if the spilled partition that was read
+    //  generated new partitions that were all spilled)
     AggOutcome out;
     do {
-      //
       //  Read incoming batches and process their records
-      //
       out = aggregator.doWork();
     } while (out == AggOutcome.CALL_WORK_AGAIN);
 
     switch (out) {
-    case CLEANUP_AND_RETURN:
-      container.zeroVectors();
-      aggregator.cleanup();
-      state = BatchState.DONE;
-      // fall through
-    case RETURN_OUTCOME:
-      // rebuilds the schema in the case of complex writer expressions,
-      // since vectors would be added to batch run-time
-      IterOutcome outcome = aggregator.getOutcome();
-      switch (outcome) {
-        case OK:
-        case OK_NEW_SCHEMA:
-          if (firstBatch) {
-            if (CollectionUtils.isNotEmpty(complexWriters)) {
-              container.buildSchema(SelectionVectorMode.NONE);
-              outcome = IterOutcome.OK_NEW_SCHEMA;
+      case CLEANUP_AND_RETURN:
+        container.zeroVectors();
+        aggregator.cleanup();
+        state = BatchState.DONE;
+        // fall through
+      case RETURN_OUTCOME:
+        // rebuilds the schema in the case of complex writer expressions,
+        // since vectors would be added to batch run-time
+        IterOutcome outcome = aggregator.getOutcome();
+        switch (outcome) {
+          case OK:
+          case OK_NEW_SCHEMA:
+            if (firstBatch) {
+              if (CollectionUtils.isNotEmpty(complexWriters)) {
+                container.buildSchema(SelectionVectorMode.NONE);
+                // You'd be forgiven for thinking we should always return
+                // OK_NEW_SCHEMA for the first batch. It turns out, when
+                // two hash aggs are stacked, we get an error if the
+                // upstream one returns OK_NEW_SCHEMA first. Not sure the
+                // details, only know several tests fail.
+                outcome = IterOutcome.OK_NEW_SCHEMA;
+              }
+              firstBatch = false;
             }
-            firstBatch = false;
-          }
-          // fall thru
-        default:
-          return outcome;
-      }
+            break;
+          default:
+        }
+        return outcome;
 
-    case UPDATE_AGGREGATOR:
-      context.getExecutorState().fail(UserException.unsupportedError()
-          .message(SchemaChangeException.schemaChanged(
-              "Hash aggregate does not support schema change",
-              incomingSchema,
-              incoming.getSchema()).getMessage())
-          .build(logger));
-      close();
-      killIncoming(false);
-      firstBatch = false;
-      return IterOutcome.STOP;
-    default:
-      throw new IllegalStateException(String.format("Unknown state %s.", out));
+      case UPDATE_AGGREGATOR:
+        throw UserException.unsupportedError()
+            .message(SchemaChangeException.schemaChanged(
+                "Hash aggregate does not support schema change",
+                incomingSchema,
+                incoming.getSchema()).getMessage())
+            .build(logger);
+      default:
+        throw new IllegalStateException(String.format("Unknown state %s.", out));
     }
   }
 
   /**
-   * Creates a new Aggregator based on the current schema. If setup fails, this
+   * Creates a new aggregator based on the current schema. If setup fails, this
    * method is responsible for cleaning up and informing the context of the
    * failure state, as well is informing the upstream operators.
    *
    * @return true if the aggregator was setup successfully. false if there was a
    *         failure.
    */
-  private boolean createAggregator() {
+  private void createAggregator() {
     try {
       stats.startSetup();
-      this.aggregator = createAggregatorInternal();
-      return true;
-    } catch (SchemaChangeException | ClassTransformationException | IOException ex) {
-      context.getExecutorState().fail(ex);
-      container.clear();
-      incoming.kill(false);
-      return false;
+      aggregator = createAggregatorInternal();
     } finally {
       stats.stopSetup();
     }
@@ -390,8 +368,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     complexWriters.add(writer);
   }
 
-  protected HashAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException,
-      IOException {
+  protected HashAggregator createAggregatorInternal() {
     CodeGenerator<HashAggregator> top = CodeGenerator.get(HashAggregator.TEMPLATE_DEFINITION, context.getOptions());
     ClassGenerator<HashAggregator> cg = top.getRoot();
     ClassGenerator<HashAggregator> cgInner = cg.getInnerGenerator("BatchHolder");
@@ -433,9 +410,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         throw UserException.unsupportedError(new UnsupportedOperationException("Union type not supported in aggregate functions")).build(logger);
       }
 
-      if (collector.hasErrors()) {
-        throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
-      }
+      collector.reportErrors(logger);
 
       if (expr == null) {
         continue;
@@ -466,14 +441,14 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
           if (funcName.equals("sum") || funcName.equals("max") || funcName.equals("min")) {
             extraNonNullColumns++;
           }
-          List<LogicalExpression> args = ((FunctionCall) ne.getExpr()).args;
+          List<LogicalExpression> args = ((FunctionCall) ne.getExpr()).args();
           if (!args.isEmpty()) {
             if (args.get(0) instanceof SchemaPath) {
               columnMapping.put(outputField.getName(), ((SchemaPath) args.get(0)).getAsNamePart().getName());
             } else if (args.get(0) instanceof FunctionCall) {
               FunctionCall functionCall = (FunctionCall) args.get(0);
-              if (functionCall.args.get(0) instanceof SchemaPath) {
-                columnMapping.put(outputField.getName(), ((SchemaPath) functionCall.args.get(0)).getAsNamePart().getName());
+              if (functionCall.arg(0) instanceof SchemaPath) {
+                columnMapping.put(outputField.getName(), ((SchemaPath) functionCall.arg(0)).getAsNamePart().getName());
               }
             }
           }
@@ -523,22 +498,22 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   private void setupGetIndex(ClassGenerator<HashAggregator> cg) {
     switch (incoming.getSchema().getSelectionVectorMode()) {
-    case FOUR_BYTE: {
-      JVar var = cg.declareClassField("sv4_", cg.getModel()._ref(SelectionVector4.class));
-      cg.getBlock("doSetup").assign(var, JExpr.direct("incoming").invoke("getSelectionVector4"));
-      cg.getBlock("getVectorIndex")._return(var.invoke("get").arg(JExpr.direct("recordIndex")));
-      return;
-    }
-    case NONE: {
-      cg.getBlock("getVectorIndex")._return(JExpr.direct("recordIndex"));
-      return;
-    }
-    case TWO_BYTE: {
-      JVar var = cg.declareClassField("sv2_", cg.getModel()._ref(SelectionVector2.class));
-      cg.getBlock("doSetup").assign(var, JExpr.direct("incoming").invoke("getSelectionVector2"));
-      cg.getBlock("getVectorIndex")._return(var.invoke("getIndex").arg(JExpr.direct("recordIndex")));
-      return;
-    }
+      case FOUR_BYTE: {
+        JVar var = cg.declareClassField("sv4_", cg.getModel()._ref(SelectionVector4.class));
+        cg.getBlock("doSetup").assign(var, JExpr.direct("incoming").invoke("getSelectionVector4"));
+        cg.getBlock("getVectorIndex")._return(var.invoke("get").arg(JExpr.direct("recordIndex")));
+        return;
+      }
+      case NONE: {
+        cg.getBlock("getVectorIndex")._return(JExpr.direct("recordIndex"));
+        return;
+      }
+      case TWO_BYTE: {
+        JVar var = cg.declareClassField("sv2_", cg.getModel()._ref(SelectionVector2.class));
+        cg.getBlock("doSetup").assign(var, JExpr.direct("incoming").invoke("getSelectionVector2"));
+        cg.getBlock("getVectorIndex")._return(var.invoke("getIndex").arg(JExpr.direct("recordIndex")));
+        return;
+      }
     }
   }
 
@@ -572,16 +547,16 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
+  protected void cancelIncoming() {
     wasKilled = true;
-    incoming.kill(sendUpstream);
+    incoming.cancel();
   }
 
   @Override
   public void dump() {
     logger.error("HashAggBatch[container={}, aggregator={}, groupByOutFieldIds={}, aggrOutFieldIds={}, " +
-            "incomingSchema={}, wasKilled={}, numGroupByExprs={}, numAggrExprs={}, popConfig={}]",
+            "incomingSchema={}, numGroupByExprs={}, numAggrExprs={}, popConfig={}]",
         container, aggregator, Arrays.toString(groupByOutFieldIds), Arrays.toString(aggrOutFieldIds), incomingSchema,
-        wasKilled, numGroupByExprs, numAggrExprs, popConfig);
+        numGroupByExprs, numAggrExprs, popConfig);
   }
 }

@@ -24,14 +24,14 @@
   <parent>
     <artifactId>metastore-parent</artifactId>
     <groupId>org.apache.drill.metastore</groupId>
-    <version>1.17.0</version>
+    <version>1.19.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-iceberg-metastore</artifactId>
   <name>metastore/Drill Iceberg Metastore</name>
 
   <properties>
-    <iceberg.version>0.7.0-incubating</iceberg.version>
+    <iceberg.version>93d51b9</iceberg.version>
     <caffeine.version>2.7.0</caffeine.version>
   </properties>
 
@@ -47,27 +47,27 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.iceberg</groupId>
+      <groupId>com.github.apache.incubator-iceberg</groupId>
       <artifactId>iceberg-parquet</artifactId>
       <version>${iceberg.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.iceberg</groupId>
+      <groupId>com.github.apache.incubator-iceberg</groupId>
       <artifactId>iceberg-data</artifactId>
       <version>${iceberg.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.iceberg</groupId>
+      <groupId>com.github.apache.incubator-iceberg</groupId>
       <artifactId>iceberg-core</artifactId>
       <version>${iceberg.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.iceberg</groupId>
+      <groupId>com.github.apache.incubator-iceberg</groupId>
       <artifactId>iceberg-common</artifactId>
       <version>${iceberg.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.iceberg</groupId>
+      <groupId>com.github.apache.incubator-iceberg</groupId>
       <artifactId>iceberg-api</artifactId>
       <version>${iceberg.version}</version>
     </dependency>
@@ -137,6 +137,19 @@
       <groupId>org.ow2.asm</groupId>
       <artifactId>asm</artifactId>
       <version>${asm.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-tree</artifactId>
+      <version>${asm.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.metastore</groupId>
+      <artifactId>drill-metastore-api</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
   </dependencies>

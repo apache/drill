@@ -22,14 +22,12 @@
 </#macro>
 
 <#macro page_body>
-<div class="page-header">
-</div>
 <h3>${model.getName()} <span class="badge alert-info">(last ${model.getMaxLines()} lines)</span></h3>
 <p>
     <a href="/log/${model.getName()}/download">Download Full Log</a>
 </p>
     <#if (model.getLines()?size > 0)>
-    <pre>
+    <pre class="border bg-light p-2">
         <#list model.getLines() as line>
 ${line}
         </#list>

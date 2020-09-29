@@ -15,18 +15,18 @@
 function serverMessage(data) {
     const messageEl = $("#message");
     if (data.result === "Success") {
-        messageEl.removeClass("hidden")
+        messageEl.removeClass("d-none")
             .removeClass("alert-danger")
             .addClass("alert-info")
             .text(data.result).alert();
         setTimeout(function() { window.location.href = "/storage"; }, 800);
     } else {
-        messageEl.addClass("hidden");
+        messageEl.addClass("d-none");
         // Wait a fraction of a second before showing the message again. This
         // makes it clear if a second attempt gives the same error as
         // the first that a "new" message came back from the server
         setTimeout(function() {
-            messageEl.removeClass("hidden")
+            messageEl.removeClass("d-none")
                 .removeClass("alert-info")
                 .addClass("alert-danger")
                 .text("Please retry: " + data.result).alert();

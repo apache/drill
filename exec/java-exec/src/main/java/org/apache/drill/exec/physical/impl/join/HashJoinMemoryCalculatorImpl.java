@@ -28,12 +28,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 import static org.apache.drill.exec.physical.impl.join.HashJoinState.INITIALIZING;
 
 public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
-  private static final Logger log = LoggerFactory.getLogger(HashJoinMemoryCalculatorImpl.class);
 
   private final double safetyFactor;
   private final double fragmentationFactor;
@@ -56,12 +54,14 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
     this.semiJoin = semiJoin;
   }
 
+  @Override
   public void initialize(boolean doMemoryCalculation) {
     Preconditions.checkState(!initialized);
     initialized = true;
     this.doMemoryCalculation = doMemoryCalculation;
   }
 
+  @Override
   public BuildSidePartitioning next() {
     Preconditions.checkState(initialized);
 
@@ -144,7 +144,6 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
       return "No debugging for " + NoopBuildSidePartitioningImpl.class.getCanonicalName();
     }
 
-    @Nullable
     @Override
     public PostBuildCalculations next() {
       return new NoopPostBuildCalculationsImpl(recordsPerPartitionBatchProbe);
@@ -157,8 +156,6 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
   }
 
   /**
-   * <h1>Basic Functionality</h1>
-   * <p>
    * At this point we need to reserve memory for the following:
    * <ol>
    *   <li>An incoming batch</li>
@@ -168,7 +165,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
    * If we run out of room and need to start spilling, we need to specify which partitions
    * need to be spilled.
    * </p>
-   * <h1>Life Cycle</h1>
+   * <h4>Life Cycle</h4>
    * <p>
    *   <ul>
    *     <li><b>Step 0:</b> Call {@link #initialize(boolean, boolean, RecordBatch, RecordBatch, Set, boolean, long, int, int, int, int, int, int, double)}.
@@ -180,7 +177,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
    * </p>
    */
   public static class BuildSidePartitioningImpl implements BuildSidePartitioning {
-    public static final Logger log = LoggerFactory.getLogger(BuildSidePartitioning.class);
+    private static final Logger logger = LoggerFactory.getLogger(BuildSidePartitioningImpl.class);
 
     private final BatchSizePredictor.Factory batchSizePredictorFactory;
     private final HashTableSizeCalculator hashTableSizeCalculator;
@@ -192,9 +189,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
     private int maxBatchNumRecordsBuild;
     private int maxBatchNumRecordsProbe;
     private long memoryAvailable;
-    private boolean probeEmpty;
     private long maxBuildBatchSize;
-    private long maxProbeBatchSize;
     private long maxOutputBatchSize;
     private int initialPartitions;
     private int partitions;
@@ -310,7 +305,6 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
       this.reserveHash = reserveHash;
       this.keySizes = Preconditions.checkNotNull(keySizes);
       this.memoryAvailable = memoryAvailable;
-      this.probeEmpty = probeEmpty;
       this.buildSizePredictor = buildSizePredictor;
       this.probeSizePredictor = probeSizePredictor;
       this.initialPartitions = initialPartitions;
@@ -322,7 +316,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
 
       calculateMemoryUsage();
 
-      log.debug("Creating {} partitions when {} initial partitions configured.", partitions, initialPartitions);
+      logger.debug("Creating {} partitions when {} initial partitions configured.", partitions, initialPartitions);
     }
 
     @Override
@@ -351,7 +345,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
     }
 
     /**
-     * This method calculates the amount of memory we need to reserve while partitioning. It also
+     * Calculates the amount of memory we need to reserve while partitioning. It also
      * calculates the size of a partition batch.
      */
     private void calculateMemoryUsage()
@@ -364,13 +358,13 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
         partitionProbeBatchSize = probeSizePredictor.predictBatchSize(recordsPerPartitionBatchProbe, reserveHash);
       }
 
-      maxOutputBatchSize = (long) ((double)outputBatchSize * fragmentationFactor * safetyFactor);
+      maxOutputBatchSize = (long) (outputBatchSize * fragmentationFactor * safetyFactor);
 
       long probeReservedMemory = 0;
 
       for (partitions = initialPartitions;; partitions /= 2) {
         // The total amount of memory to reserve for incomplete batches across all partitions
-        long incompletePartitionsBatchSizes = ((long) partitions) * partitionBuildBatchSize;
+        long incompletePartitionsBatchSizes = (partitions) * partitionBuildBatchSize;
         // We need to reserve all the space for incomplete batches, and the incoming batch as well as the
         // probe batch we sniffed.
         reservedMemory = incompletePartitionsBatchSizes + maxBuildBatchSize;
@@ -439,7 +433,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
         }
 
         message = phase + message;
-        log.warn(message);
+        logger.warn(message);
       }
     }
 
@@ -451,7 +445,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
 
       if (reserveHash) {
         // Include the hash sizes for the batch
-        consumedMemory += ((long) IntVector.VALUE_WIDTH) * partitionStatsSet.getNumInMemoryRecords();
+        consumedMemory += (IntVector.VALUE_WIDTH) * partitionStatsSet.getNumInMemoryRecords();
       }
 
       consumedMemory += RecordBatchSizer.multiplyByFactor(partitionStatsSet.getConsumedMemory(), fragmentationFactor);
@@ -527,7 +521,6 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
       return false;
     }
 
-    @Nullable
     @Override
     public HashJoinMemoryCalculator next() {
       return null;
@@ -545,14 +538,13 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
   }
 
   /**
-   * <h1>Basic Functionality</h1>
    * <p>
    *   In this state, we need to make sure there is enough room to spill probe side batches, if
    *   spilling is necessary. If there is not enough room, we have to evict build side partitions.
    *   If we don't have to evict build side partitions in this state, then we are done. If we do have
    *   to evict build side partitions then we have to recursively repeat the process.
    * </p>
-   * <h1>Lifecycle</h1>
+   * <h4>Lifecycle</h4>
    * <p>
    *   <ul>
    *     <li><b>Step 1:</b> Call {@link #initialize(boolean)}. This
@@ -565,7 +557,8 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
    * </p>
    */
   public static class PostBuildCalculationsImpl implements PostBuildCalculations {
-    private static final Logger log = LoggerFactory.getLogger(PostBuildCalculationsImpl.class);
+
+    private static final Logger logger = LoggerFactory.getLogger(PostBuildCalculationsImpl.class);
 
     public static final int MIN_RECORDS_PER_PARTITION_BATCH_PROBE = 10;
 
@@ -703,7 +696,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
 
       if (memoryForPartitionBatches < 0) {
         // We just don't have enough memory. We should do our best though by using the minimum batch size.
-        log.warn("Not enough memory for probing:\n" +
+        logger.warn("Not enough memory for probing:\n" +
           "Memory available: {}\n" +
           "Max probe batch size: {}\n" +
           "Max output batch size: {}",
@@ -772,7 +765,6 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
       return consumedMemory > memoryAvailable;
     }
 
-    @Nullable
     @Override
     public HashJoinMemoryCalculator next() {
       Preconditions.checkState(initialized);

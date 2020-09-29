@@ -19,7 +19,6 @@ package org.apache.drill.exec.record;
 
 import java.util.Iterator;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
@@ -29,7 +28,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordbatch;
+import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -89,10 +88,6 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     FIRST,
     /** The first data batch has already been returned. */
     NOT_FIRST,
-    /** The query most likely failed, we need to propagate STOP to the root. */
-    STOP,
-    /** Out of Memory while building the Schema...Ouch! */
-    OUT_OF_MEMORY,
     /** All work is done, no more data to be sent. */
     DONE
   }
@@ -112,25 +107,21 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   public final IterOutcome next(RecordBatch b) {
-    if(!context.getExecutorState().shouldContinue()) {
-      return IterOutcome.STOP;
-    }
+    checkContinue();
     return next(0, b);
   }
 
   public final IterOutcome next(int inputIndex, RecordBatch b) {
     IterOutcome next;
-    stats.stopProcessing();
     try {
-      if (!context.getExecutorState().shouldContinue()) {
-        return IterOutcome.STOP;
-      }
+      stats.stopProcessing();
+      checkContinue();
       next = b.next();
     } finally {
       stats.startProcessing();
     }
 
-    if (b instanceof SpilledRecordbatch) {
+    if (b instanceof SpilledRecordBatch) {
       // Don't double count records which were already read and spilled.
       // TODO evaluate whether swapping out upstream record batch with a SpilledRecordBatch
       // is the right thing to do.
@@ -148,7 +139,6 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
         logger.debug("Number of records in received batch: {}", b.getRecordCount());
         break;
       default:
-        break;
     }
 
     return next;
@@ -164,14 +154,6 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
           switch (state) {
             case DONE:
               lastOutcome = IterOutcome.NONE;
-              break;
-            case OUT_OF_MEMORY:
-              // because we don't support schema changes, it is safe to fail the query right away
-              context.getExecutorState().fail(UserException.memoryError()
-                .build(logger));
-              // FALL-THROUGH
-            case STOP:
-              lastOutcome = IterOutcome.STOP;
               break;
             default:
               state = BatchState.FIRST;
@@ -189,12 +171,6 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
           break;
       }
       return lastOutcome;
-    } catch (SchemaChangeException e) {
-      lastOutcome = IterOutcome.STOP;
-      throw new DrillRuntimeException(e);
-    } catch (Exception e) {
-      lastOutcome = IterOutcome.STOP;
-      throw e;
     } finally {
       stats.stopProcessing();
     }
@@ -211,15 +187,14 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     }
   }
 
-  protected void buildSchema() throws SchemaChangeException {
-  }
+  protected void buildSchema() { }
 
   @Override
-  public void kill(boolean sendUpstream) {
-    killIncoming(sendUpstream);
+  public void cancel() {
+    cancelIncoming();
   }
 
-  protected abstract void killIncoming(boolean sendUpstream);
+  protected abstract void cancelIncoming();
 
   @Override
   public void close() {
@@ -253,17 +228,14 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   @Override
   public VectorContainer getOutgoingContainer() {
-    throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
+    throw new UnsupportedOperationException(String.format(
+        "You should not call getOutgoingContainer() for class %s",
+        getClass().getCanonicalName()));
   }
 
   @Override
   public VectorContainer getContainer() {
     return container;
-  }
-
-  @Override
-  public boolean hasFailed() {
-    return lastOutcome == IterOutcome.STOP;
   }
 
   public RecordBatchStatsContext getRecordBatchStatsContext() {
@@ -272,5 +244,26 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   public boolean isRecordBatchStatsLoggingEnabled() {
     return batchStatsContext.isEnableBatchSzLogging();
+  }
+
+  /**
+   * Checks if the query should continue. Throws a UserException if not.
+   * Operators should call this periodically to detect cancellation
+   * requests. The operator need not catch the exception: it will bubble
+   * up the operator tree and be handled like any other fatal error.
+   */
+  public void checkContinue() {
+    context.getExecutorState().checkContinue();
+  }
+
+  protected UserException schemaChangeException(SchemaChangeException e, Logger logger) {
+    return schemaChangeException(e, getClass().getSimpleName(), logger);
+  }
+
+  public static UserException schemaChangeException(SchemaChangeException e,
+      String operator, Logger logger) {
+    return UserException.schemaChangeError(e)
+      .addContext("Unexpected schema change in %s operator", operator)
+      .build(logger);
   }
 }

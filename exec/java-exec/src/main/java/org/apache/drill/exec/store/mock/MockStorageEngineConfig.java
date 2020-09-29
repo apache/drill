@@ -25,11 +25,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName(MockStorageEngineConfig.NAME)
 public class MockStorageEngineConfig extends StoragePluginConfigBase {
-
-  private String url;
-
   public static final String NAME = "mock";
   public static final MockStorageEngineConfig INSTANCE = new MockStorageEngineConfig("mock:///");
+
+  private final String url;
 
   @JsonCreator
   public MockStorageEngineConfig(@JsonProperty("url") String url) {

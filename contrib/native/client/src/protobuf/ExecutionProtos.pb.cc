@@ -5,156 +5,123 @@
 
 #include <algorithm>
 
-#include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/port.h>
 #include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/wire_format_lite_inl.h>
+#include <google/protobuf/extension_set.h>
+#include <google/protobuf/wire_format_lite.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/generated_message_reflection.h>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
-// This is a temporary google only hack
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-#include "third_party/protobuf/version.h"
-#endif
 // @@protoc_insertion_point(includes)
-
-namespace protobuf_UserBitShared_2eproto {
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_UserBitShared_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_QueryId;
-}  // namespace protobuf_UserBitShared_2eproto
+#include <google/protobuf/port_def.inc>
+extern PROTOBUF_INTERNAL_EXPORT_UserBitShared_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_QueryId_UserBitShared_2eproto;
 namespace exec {
 namespace bit {
 class FragmentHandleDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<FragmentHandle>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FragmentHandle> _instance;
 } _FragmentHandle_default_instance_;
 class ServerPreparedStatementStateDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<ServerPreparedStatementState>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ServerPreparedStatementState> _instance;
 } _ServerPreparedStatementState_default_instance_;
 }  // namespace bit
 }  // namespace exec
-namespace protobuf_ExecutionProtos_2eproto {
-static void InitDefaultsFragmentHandle() {
+static void InitDefaultsscc_info_FragmentHandle_ExecutionProtos_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::exec::bit::_FragmentHandle_default_instance_;
     new (ptr) ::exec::bit::FragmentHandle();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::exec::bit::FragmentHandle::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<1> scc_info_FragmentHandle =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsFragmentHandle}, {
-      &protobuf_UserBitShared_2eproto::scc_info_QueryId.base,}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_FragmentHandle_ExecutionProtos_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_FragmentHandle_ExecutionProtos_2eproto}, {
+      &scc_info_QueryId_UserBitShared_2eproto.base,}};
 
-static void InitDefaultsServerPreparedStatementState() {
+static void InitDefaultsscc_info_ServerPreparedStatementState_ExecutionProtos_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::exec::bit::_ServerPreparedStatementState_default_instance_;
     new (ptr) ::exec::bit::ServerPreparedStatementState();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::exec::bit::ServerPreparedStatementState::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_ServerPreparedStatementState =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsServerPreparedStatementState}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ServerPreparedStatementState_ExecutionProtos_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ServerPreparedStatementState_ExecutionProtos_2eproto}, {}};
 
-void InitDefaults() {
-  ::google::protobuf::internal::InitSCC(&scc_info_FragmentHandle.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_ServerPreparedStatementState.base);
-}
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_ExecutionProtos_2eproto[2];
+static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_ExecutionProtos_2eproto = nullptr;
+static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_ExecutionProtos_2eproto = nullptr;
 
-::google::protobuf::Metadata file_level_metadata[2];
-
-const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::FragmentHandle, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::FragmentHandle, _internal_metadata_),
+const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_ExecutionProtos_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+  PROTOBUF_FIELD_OFFSET(::exec::bit::FragmentHandle, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::FragmentHandle, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::FragmentHandle, query_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::FragmentHandle, major_fragment_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::FragmentHandle, minor_fragment_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::FragmentHandle, parent_query_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::FragmentHandle, query_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::FragmentHandle, major_fragment_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::FragmentHandle, minor_fragment_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::FragmentHandle, parent_query_id_),
   0,
   2,
   3,
   1,
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::ServerPreparedStatementState, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::ServerPreparedStatementState, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::ServerPreparedStatementState, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::ServerPreparedStatementState, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::ServerPreparedStatementState, sql_query_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::ServerPreparedStatementState, sql_query_),
   0,
 };
-static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, 9, sizeof(::exec::bit::FragmentHandle)},
   { 13, 19, sizeof(::exec::bit::ServerPreparedStatementState)},
 };
 
-static ::google::protobuf::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::google::protobuf::Message*>(&::exec::bit::_FragmentHandle_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::exec::bit::_ServerPreparedStatementState_default_instance_),
+static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::exec::bit::_FragmentHandle_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::exec::bit::_ServerPreparedStatementState_default_instance_),
 };
 
-void protobuf_AssignDescriptors() {
-  AddDescriptors();
-  AssignDescriptors(
-      "ExecutionProtos.proto", schemas, file_default_instances, TableStruct::offsets,
-      file_level_metadata, NULL, NULL);
-}
+const char descriptor_table_protodef_ExecutionProtos_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
+  "\n\025ExecutionProtos.proto\022\010exec.bit\032\022Coord"
+  "ination.proto\032\023UserBitShared.proto\"\235\001\n\016F"
+  "ragmentHandle\022&\n\010query_id\030\001 \001(\0132\024.exec.s"
+  "hared.QueryId\022\031\n\021major_fragment_id\030\002 \001(\005"
+  "\022\031\n\021minor_fragment_id\030\003 \001(\005\022-\n\017parent_qu"
+  "ery_id\030\004 \001(\0132\024.exec.shared.QueryId\"1\n\034Se"
+  "rverPreparedStatementState\022\021\n\tsql_query\030"
+  "\001 \001(\tB+\n\033org.apache.drill.exec.protoB\nEx"
+  "ecProtosH\001"
+  ;
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_ExecutionProtos_2eproto_deps[2] = {
+  &::descriptor_table_Coordination_2eproto,
+  &::descriptor_table_UserBitShared_2eproto,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_ExecutionProtos_2eproto_sccs[2] = {
+  &scc_info_FragmentHandle_ExecutionProtos_2eproto.base,
+  &scc_info_ServerPreparedStatementState_ExecutionProtos_2eproto.base,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_ExecutionProtos_2eproto_once;
+static bool descriptor_table_ExecutionProtos_2eproto_initialized = false;
+const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_ExecutionProtos_2eproto = {
+  &descriptor_table_ExecutionProtos_2eproto_initialized, descriptor_table_protodef_ExecutionProtos_2eproto, "ExecutionProtos.proto", 330,
+  &descriptor_table_ExecutionProtos_2eproto_once, descriptor_table_ExecutionProtos_2eproto_sccs, descriptor_table_ExecutionProtos_2eproto_deps, 2, 2,
+  schemas, file_default_instances, TableStruct_ExecutionProtos_2eproto::offsets,
+  file_level_metadata_ExecutionProtos_2eproto, 2, file_level_enum_descriptors_ExecutionProtos_2eproto, file_level_service_descriptors_ExecutionProtos_2eproto,
+};
 
-void protobuf_AssignDescriptorsOnce() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, protobuf_AssignDescriptors);
-}
-
-void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
-void protobuf_RegisterTypes(const ::std::string&) {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 2);
-}
-
-void AddDescriptorsImpl() {
-  InitDefaults();
-  static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\025ExecutionProtos.proto\022\010exec.bit\032\022Coord"
-      "ination.proto\032\023UserBitShared.proto\"\235\001\n\016F"
-      "ragmentHandle\022&\n\010query_id\030\001 \001(\0132\024.exec.s"
-      "hared.QueryId\022\031\n\021major_fragment_id\030\002 \001(\005"
-      "\022\031\n\021minor_fragment_id\030\003 \001(\005\022-\n\017parent_qu"
-      "ery_id\030\004 \001(\0132\024.exec.shared.QueryId\"1\n\034Se"
-      "rverPreparedStatementState\022\021\n\tsql_query\030"
-      "\001 \001(\tB+\n\033org.apache.drill.exec.protoB\nEx"
-      "ecProtosH\001"
-  };
-  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 330);
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-    "ExecutionProtos.proto", &protobuf_RegisterTypes);
-  ::protobuf_Coordination_2eproto::AddDescriptors();
-  ::protobuf_UserBitShared_2eproto::AddDescriptors();
-}
-
-void AddDescriptors() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, AddDescriptorsImpl);
-}
-// Force AddDescriptors() to be called at dynamic initialization time.
-struct StaticDescriptorInitializer {
-  StaticDescriptorInitializer() {
-    AddDescriptors();
-  }
-} static_descriptor_initializer;
-}  // namespace protobuf_ExecutionProtos_2eproto
+// Force running AddDescriptors() at dynamic initialization time.
+static bool dynamic_init_dummy_ExecutionProtos_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_ExecutionProtos_2eproto), true);
 namespace exec {
 namespace bit {
 
@@ -166,42 +133,60 @@ void FragmentHandle::InitAsDefaultInstance() {
   ::exec::bit::_FragmentHandle_default_instance_._instance.get_mutable()->parent_query_id_ = const_cast< ::exec::shared::QueryId*>(
       ::exec::shared::QueryId::internal_default_instance());
 }
+class FragmentHandle::_Internal {
+ public:
+  using HasBits = decltype(std::declval<FragmentHandle>()._has_bits_);
+  static const ::exec::shared::QueryId& query_id(const FragmentHandle* msg);
+  static void set_has_query_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
+  }
+  static void set_has_major_fragment_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 4u;
+  }
+  static void set_has_minor_fragment_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 8u;
+  }
+  static const ::exec::shared::QueryId& parent_query_id(const FragmentHandle* msg);
+  static void set_has_parent_query_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 2u;
+  }
+};
+
+const ::exec::shared::QueryId&
+FragmentHandle::_Internal::query_id(const FragmentHandle* msg) {
+  return *msg->query_id_;
+}
+const ::exec::shared::QueryId&
+FragmentHandle::_Internal::parent_query_id(const FragmentHandle* msg) {
+  return *msg->parent_query_id_;
+}
 void FragmentHandle::clear_query_id() {
-  if (query_id_ != NULL) query_id_->Clear();
-  clear_has_query_id();
+  if (query_id_ != nullptr) query_id_->Clear();
+  _has_bits_[0] &= ~0x00000001u;
 }
 void FragmentHandle::clear_parent_query_id() {
-  if (parent_query_id_ != NULL) parent_query_id_->Clear();
-  clear_has_parent_query_id();
+  if (parent_query_id_ != nullptr) parent_query_id_->Clear();
+  _has_bits_[0] &= ~0x00000002u;
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int FragmentHandle::kQueryIdFieldNumber;
-const int FragmentHandle::kMajorFragmentIdFieldNumber;
-const int FragmentHandle::kMinorFragmentIdFieldNumber;
-const int FragmentHandle::kParentQueryIdFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-
 FragmentHandle::FragmentHandle()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_ExecutionProtos_2eproto::scc_info_FragmentHandle.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:exec.bit.FragmentHandle)
 }
 FragmentHandle::FragmentHandle(const FragmentHandle& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  if (from.has_query_id()) {
+  if (from._internal_has_query_id()) {
     query_id_ = new ::exec::shared::QueryId(*from.query_id_);
   } else {
-    query_id_ = NULL;
+    query_id_ = nullptr;
   }
-  if (from.has_parent_query_id()) {
+  if (from._internal_has_parent_query_id()) {
     parent_query_id_ = new ::exec::shared::QueryId(*from.parent_query_id_);
   } else {
-    parent_query_id_ = NULL;
+    parent_query_id_ = nullptr;
   }
   ::memcpy(&major_fragment_id_, &from.major_fragment_id_,
     static_cast<size_t>(reinterpret_cast<char*>(&minor_fragment_id_) -
@@ -210,6 +195,7 @@ FragmentHandle::FragmentHandle(const FragmentHandle& from)
 }
 
 void FragmentHandle::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FragmentHandle_ExecutionProtos_2eproto.base);
   ::memset(&query_id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&minor_fragment_id_) -
       reinterpret_cast<char*>(&query_id_)) + sizeof(minor_fragment_id_));
@@ -228,35 +214,30 @@ void FragmentHandle::SharedDtor() {
 void FragmentHandle::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* FragmentHandle::descriptor() {
-  ::protobuf_ExecutionProtos_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_ExecutionProtos_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const FragmentHandle& FragmentHandle::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_ExecutionProtos_2eproto::scc_info_FragmentHandle.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FragmentHandle_ExecutionProtos_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void FragmentHandle::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.FragmentHandle)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 3u) {
+  if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(query_id_ != NULL);
+      GOOGLE_DCHECK(query_id_ != nullptr);
       query_id_->Clear();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(parent_query_id_ != NULL);
+      GOOGLE_DCHECK(parent_query_id_ != nullptr);
       parent_query_id_->Clear();
     }
   }
-  if (cached_has_bits & 12u) {
+  if (cached_has_bits & 0x0000000cu) {
     ::memset(&major_fragment_id_, 0, static_cast<size_t>(
         reinterpret_cast<char*>(&minor_fragment_id_) -
         reinterpret_cast<char*>(&major_fragment_id_)) + sizeof(minor_fragment_id_));
@@ -265,159 +246,103 @@ void FragmentHandle::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool FragmentHandle::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:exec.bit.FragmentHandle)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* FragmentHandle::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  _Internal::HasBits has_bits{};
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // optional .exec.shared.QueryId query_id = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_query_id()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_query_id(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional int32 major_fragment_id = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-          set_has_major_fragment_id();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &major_fragment_id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          _Internal::set_has_major_fragment_id(&has_bits);
+          major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional int32 minor_fragment_id = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-          set_has_minor_fragment_id();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &minor_fragment_id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          _Internal::set_has_minor_fragment_id(&has_bits);
+          minor_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional .exec.shared.QueryId parent_query_id = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_parent_query_id()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+          ptr = ctx->ParseMessage(_internal_mutable_parent_query_id(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:exec.bit.FragmentHandle)
-  return true;
+  _has_bits_.Or(has_bits);
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:exec.bit.FragmentHandle)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void FragmentHandle::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:exec.bit.FragmentHandle)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional .exec.shared.QueryId query_id = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1, this->_internal_query_id(), output);
-  }
-
-  // optional int32 major_fragment_id = 2;
-  if (cached_has_bits & 0x00000004u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->major_fragment_id(), output);
-  }
-
-  // optional int32 minor_fragment_id = 3;
-  if (cached_has_bits & 0x00000008u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->minor_fragment_id(), output);
-  }
-
-  // optional .exec.shared.QueryId parent_query_id = 4;
-  if (cached_has_bits & 0x00000002u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      4, this->_internal_parent_query_id(), output);
-  }
-
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
-  // @@protoc_insertion_point(serialize_end:exec.bit.FragmentHandle)
-}
-
-::google::protobuf::uint8* FragmentHandle::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* FragmentHandle::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:exec.bit.FragmentHandle)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
   // optional .exec.shared.QueryId query_id = 1;
   if (cached_has_bits & 0x00000001u) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        1, this->_internal_query_id(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        1, _Internal::query_id(this), target, stream);
   }
 
   // optional int32 major_fragment_id = 2;
   if (cached_has_bits & 0x00000004u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->major_fragment_id(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_major_fragment_id(), target);
   }
 
   // optional int32 minor_fragment_id = 3;
   if (cached_has_bits & 0x00000008u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->minor_fragment_id(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_minor_fragment_id(), target);
   }
 
   // optional .exec.shared.QueryId parent_query_id = 4;
   if (cached_has_bits & 0x00000002u) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        4, this->_internal_parent_query_id(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        4, _Internal::parent_query_id(this), target, stream);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.FragmentHandle)
   return target;
@@ -427,55 +352,59 @@ size_t FragmentHandle::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:exec.bit.FragmentHandle)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
-  if (_has_bits_[0 / 32] & 15u) {
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 0x0000000fu) {
     // optional .exec.shared.QueryId query_id = 1;
-    if (has_query_id()) {
+    if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
           *query_id_);
     }
 
     // optional .exec.shared.QueryId parent_query_id = 4;
-    if (has_parent_query_id()) {
+    if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
           *parent_query_id_);
     }
 
     // optional int32 major_fragment_id = 2;
-    if (has_major_fragment_id()) {
+    if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->major_fragment_id());
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+          this->_internal_major_fragment_id());
     }
 
     // optional int32 minor_fragment_id = 3;
-    if (has_minor_fragment_id()) {
+    if (cached_has_bits & 0x00000008u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->minor_fragment_id());
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+          this->_internal_minor_fragment_id());
     }
 
   }
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void FragmentHandle::MergeFrom(const ::google::protobuf::Message& from) {
+void FragmentHandle::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:exec.bit.FragmentHandle)
   GOOGLE_DCHECK_NE(&from, this);
   const FragmentHandle* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const FragmentHandle>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<FragmentHandle>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:exec.bit.FragmentHandle)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:exec.bit.FragmentHandle)
     MergeFrom(*source);
@@ -486,16 +415,16 @@ void FragmentHandle::MergeFrom(const FragmentHandle& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.FragmentHandle)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 15u) {
+  if (cached_has_bits & 0x0000000fu) {
     if (cached_has_bits & 0x00000001u) {
-      mutable_query_id()->::exec::shared::QueryId::MergeFrom(from.query_id());
+      _internal_mutable_query_id()->::exec::shared::QueryId::MergeFrom(from._internal_query_id());
     }
     if (cached_has_bits & 0x00000002u) {
-      mutable_parent_query_id()->::exec::shared::QueryId::MergeFrom(from.parent_query_id());
+      _internal_mutable_parent_query_id()->::exec::shared::QueryId::MergeFrom(from._internal_parent_query_id());
     }
     if (cached_has_bits & 0x00000004u) {
       major_fragment_id_ = from.major_fragment_id_;
@@ -507,7 +436,7 @@ void FragmentHandle::MergeFrom(const FragmentHandle& from) {
   }
 }
 
-void FragmentHandle::CopyFrom(const ::google::protobuf::Message& from) {
+void FragmentHandle::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:exec.bit.FragmentHandle)
   if (&from == this) return;
   Clear();
@@ -525,23 +454,18 @@ bool FragmentHandle::IsInitialized() const {
   return true;
 }
 
-void FragmentHandle::Swap(FragmentHandle* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void FragmentHandle::InternalSwap(FragmentHandle* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
   swap(query_id_, other->query_id_);
   swap(parent_query_id_, other->parent_query_id_);
   swap(major_fragment_id_, other->major_fragment_id_);
   swap(minor_fragment_id_, other->minor_fragment_id_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata FragmentHandle::GetMetadata() const {
-  protobuf_ExecutionProtos_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_ExecutionProtos_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata FragmentHandle::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -549,31 +473,34 @@ void FragmentHandle::InternalSwap(FragmentHandle* other) {
 
 void ServerPreparedStatementState::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int ServerPreparedStatementState::kSqlQueryFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class ServerPreparedStatementState::_Internal {
+ public:
+  using HasBits = decltype(std::declval<ServerPreparedStatementState>()._has_bits_);
+  static void set_has_sql_query(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
+  }
+};
 
 ServerPreparedStatementState::ServerPreparedStatementState()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_ExecutionProtos_2eproto::scc_info_ServerPreparedStatementState.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:exec.bit.ServerPreparedStatementState)
 }
 ServerPreparedStatementState::ServerPreparedStatementState(const ServerPreparedStatementState& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  sql_query_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_sql_query()) {
-    sql_query_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.sql_query_);
+  sql_query_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (from._internal_has_sql_query()) {
+    sql_query_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.sql_query_);
   }
   // @@protoc_insertion_point(copy_constructor:exec.bit.ServerPreparedStatementState)
 }
 
 void ServerPreparedStatementState::SharedCtor() {
-  sql_query_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ServerPreparedStatementState_ExecutionProtos_2eproto.base);
+  sql_query_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 ServerPreparedStatementState::~ServerPreparedStatementState() {
@@ -582,26 +509,21 @@ ServerPreparedStatementState::~ServerPreparedStatementState() {
 }
 
 void ServerPreparedStatementState::SharedDtor() {
-  sql_query_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  sql_query_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void ServerPreparedStatementState::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* ServerPreparedStatementState::descriptor() {
-  ::protobuf_ExecutionProtos_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_ExecutionProtos_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const ServerPreparedStatementState& ServerPreparedStatementState::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_ExecutionProtos_2eproto::scc_info_ServerPreparedStatementState.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ServerPreparedStatementState_ExecutionProtos_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void ServerPreparedStatementState::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.ServerPreparedStatementState)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -613,98 +535,66 @@ void ServerPreparedStatementState::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool ServerPreparedStatementState::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:exec.bit.ServerPreparedStatementState)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* ServerPreparedStatementState::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  _Internal::HasBits has_bits{};
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // optional string sql_query = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_sql_query()));
-          ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-            this->sql_query().data(), static_cast<int>(this->sql_query().length()),
-            ::google::protobuf::internal::WireFormat::PARSE,
-            "exec.bit.ServerPreparedStatementState.sql_query");
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_sql_query();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          #ifndef NDEBUG
+          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "exec.bit.ServerPreparedStatementState.sql_query");
+          #endif  // !NDEBUG
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:exec.bit.ServerPreparedStatementState)
-  return true;
+  _has_bits_.Or(has_bits);
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:exec.bit.ServerPreparedStatementState)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void ServerPreparedStatementState::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:exec.bit.ServerPreparedStatementState)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional string sql_query = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->sql_query().data(), static_cast<int>(this->sql_query().length()),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
-      "exec.bit.ServerPreparedStatementState.sql_query");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->sql_query(), output);
-  }
-
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
-  // @@protoc_insertion_point(serialize_end:exec.bit.ServerPreparedStatementState)
-}
-
-::google::protobuf::uint8* ServerPreparedStatementState::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* ServerPreparedStatementState::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:exec.bit.ServerPreparedStatementState)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
   // optional string sql_query = 1;
   if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->sql_query().data(), static_cast<int>(this->sql_query().length()),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
+      this->_internal_sql_query().data(), static_cast<int>(this->_internal_sql_query().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
       "exec.bit.ServerPreparedStatementState.sql_query");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->sql_query(), target);
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_sql_query(), target);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.ServerPreparedStatementState)
   return target;
@@ -714,32 +604,36 @@ size_t ServerPreparedStatementState::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:exec.bit.ServerPreparedStatementState)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // optional string sql_query = 1;
-  if (has_sql_query()) {
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->sql_query());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_sql_query());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void ServerPreparedStatementState::MergeFrom(const ::google::protobuf::Message& from) {
+void ServerPreparedStatementState::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:exec.bit.ServerPreparedStatementState)
   GOOGLE_DCHECK_NE(&from, this);
   const ServerPreparedStatementState* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const ServerPreparedStatementState>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<ServerPreparedStatementState>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:exec.bit.ServerPreparedStatementState)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:exec.bit.ServerPreparedStatementState)
     MergeFrom(*source);
@@ -750,16 +644,16 @@ void ServerPreparedStatementState::MergeFrom(const ServerPreparedStatementState&
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.ServerPreparedStatementState)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.has_sql_query()) {
-    set_has_sql_query();
-    sql_query_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.sql_query_);
+  if (from._internal_has_sql_query()) {
+    _has_bits_[0] |= 0x00000001u;
+    sql_query_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.sql_query_);
   }
 }
 
-void ServerPreparedStatementState::CopyFrom(const ::google::protobuf::Message& from) {
+void ServerPreparedStatementState::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:exec.bit.ServerPreparedStatementState)
   if (&from == this) return;
   Clear();
@@ -777,36 +671,30 @@ bool ServerPreparedStatementState::IsInitialized() const {
   return true;
 }
 
-void ServerPreparedStatementState::Swap(ServerPreparedStatementState* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void ServerPreparedStatementState::InternalSwap(ServerPreparedStatementState* other) {
   using std::swap;
-  sql_query_.Swap(&other->sql_query_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  sql_query_.Swap(&other->sql_query_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
 }
 
-::google::protobuf::Metadata ServerPreparedStatementState::GetMetadata() const {
-  protobuf_ExecutionProtos_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_ExecutionProtos_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata ServerPreparedStatementState::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace bit
 }  // namespace exec
-namespace google {
-namespace protobuf {
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::exec::bit::FragmentHandle* Arena::CreateMaybeMessage< ::exec::bit::FragmentHandle >(Arena* arena) {
+PROTOBUF_NAMESPACE_OPEN
+template<> PROTOBUF_NOINLINE ::exec::bit::FragmentHandle* Arena::CreateMaybeMessage< ::exec::bit::FragmentHandle >(Arena* arena) {
   return Arena::CreateInternal< ::exec::bit::FragmentHandle >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::exec::bit::ServerPreparedStatementState* Arena::CreateMaybeMessage< ::exec::bit::ServerPreparedStatementState >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::exec::bit::ServerPreparedStatementState* Arena::CreateMaybeMessage< ::exec::bit::ServerPreparedStatementState >(Arena* arena) {
   return Arena::CreateInternal< ::exec::bit::ServerPreparedStatementState >(arena);
 }
-}  // namespace protobuf
-}  // namespace google
+PROTOBUF_NAMESPACE_CLOSE
 
 // @@protoc_insertion_point(global_scope)
+#include <google/protobuf/port_undef.inc>

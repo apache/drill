@@ -20,6 +20,7 @@ package org.apache.drill.exec.record.metadata;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -42,7 +43,7 @@ public class VariantSchema implements VariantMetadata {
     String name = Types.typeKey(type);
     switch (type) {
     case LIST:
-      return new VariantColumnMetadata(name, type, null);
+      return VariantColumnMetadata.list(name);
     case MAP:
       // Although maps do not have a bits vector, when used in a
       // union the map must be marked as optional since the union as a
@@ -175,8 +176,7 @@ public class VariantSchema implements VariantMetadata {
     //
     // Make up a synthetic union column to be used when building
     // a reader.
-
-    return new VariantColumnMetadata("$data", MinorType.UNION, this);
+    return VariantColumnMetadata.unionOf("$data", this);
   }
 
   @Override
@@ -206,5 +206,35 @@ public class VariantSchema implements VariantMetadata {
     VariantSchema copy = new VariantSchema();
     copy.isSimple = isSimple;
     return copy;
+  }
+
+  public VariantSchema copy() {
+    VariantSchema copy = new VariantSchema();
+    copy.isSimple = isSimple;
+    for (ColumnMetadata type : types.values()) {
+      copy.addType(type);
+    }
+    return copy;
+  }
+
+  public boolean isEquivalent(VariantSchema other) {
+    // Ignore isSimple, it is a derived attribute
+    // Can't use equals(), do this the hard way.
+    if (types.size() != other.types.size()) {
+      return false;
+    }
+    if (!types.keySet().equals(other.types.keySet())) {
+      return false;
+    }
+    for (Entry<MinorType, ColumnMetadata> entry : types.entrySet()) {
+      ColumnMetadata otherType = other.types.get(entry.getKey());
+      if (otherType == null) {
+        return false;
+      }
+      if (!entry.getValue().isEquivalent(otherType)) {
+        return false;
+      }
+    }
+    return true;
   }
 }

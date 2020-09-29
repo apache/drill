@@ -27,7 +27,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
@@ -102,7 +102,7 @@ public class TestUserAgentFunctions extends ClusterTest {
   @Test
   public void testNullUserAgent() throws Exception {
     String query = "SELECT parse_user_agent(CAST(null as VARCHAR)) AS agent FROM (values(1))";
-    Map emptyMap = new HashMap();
+    Map<?, ?> emptyMap = Collections.emptyMap();
     testBuilder()
       .sqlQuery(query)
       .ordered()

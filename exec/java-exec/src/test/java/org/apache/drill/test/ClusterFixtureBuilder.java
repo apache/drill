@@ -30,8 +30,16 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * Build a Drillbit and client with the options provided. The simplest
  * builder starts an embedded Drillbit, with the "dfs" name space,
  * a max width (parallelization) of 2.
+ * <p>
+ * Designed primarily for unit tests: the builders provide control
+ * over all aspects of the Drillbit or cluster. Can also be used to
+ * create an embedded Drillbit, use the zero-argument
+ * constructor which will omit creating set of test-only directories
+ * and will skip creating the test-only storage plugins and other
+ * configuration. In this mode, you should configure the builder
+ * to read from a config file, or specify all the non-default
+ * config options needed.
  */
-
 public class ClusterFixtureBuilder {
 
   public static class RuntimeOption {
@@ -46,7 +54,6 @@ public class ClusterFixtureBuilder {
 
   // Values in the drill-module.conf file for values that are customized
   // in the defaults.
-
   public static final int DEFAULT_ZK_REFRESH = 500; // ms
 
   protected ConfigBuilder configBuilder = new ConfigBuilder();
@@ -59,6 +66,10 @@ public class ClusterFixtureBuilder {
   protected boolean usingZk;
   protected Properties clientProps;
   protected final BaseDirTestWatcher dirTestWatcher;
+
+  public ClusterFixtureBuilder() {
+    this.dirTestWatcher = null;
+  }
 
   public ClusterFixtureBuilder(BaseDirTestWatcher dirTestWatcher) {
     this.dirTestWatcher = Preconditions.checkNotNull(dirTestWatcher);
@@ -91,7 +102,6 @@ public class ClusterFixtureBuilder {
     // TypeSafe gets unhappy about a leading slash, but other functions
     // require it. Silently discard the leading slash if given to
     // preserve the test writer's sanity.
-
     configBuilder.resource(ClusterFixture.trimSlash(configResource));
     return this;
   }
@@ -195,7 +205,7 @@ public class ClusterFixtureBuilder {
    * @param bitNames array of (unique) Drillbit names
    * @return this builder
    */
-  public ClusterFixtureBuilder withBits(String bitNames[]) {
+  public ClusterFixtureBuilder withBits(String...bitNames) {
     this.bitNames = bitNames;
     bitCount = bitNames.length;
     return this;
@@ -216,7 +226,6 @@ public class ClusterFixtureBuilder {
     usingZk = true;
 
     // Using ZK. Turn refresh wait back on.
-
     return configProperty(ExecConstants.ZK_REFRESH, DEFAULT_ZK_REFRESH);
   }
 
@@ -238,7 +247,6 @@ public class ClusterFixtureBuilder {
     usingZk = true;
 
     // Using ZK. Turn refresh wait back on.
-
     configProperty(ExecConstants.ZK_REFRESH, DEFAULT_ZK_REFRESH);
     return this;
   }
@@ -276,8 +284,6 @@ public class ClusterFixtureBuilder {
    * {@link ClusterFixture#clientBuilder()}. Using the client builder
    * also lets you set client-side options in the rare cases that you
    * need them.
-   *
-   * @return
    */
   public ClusterFixture build() {
     return new ClusterFixture(this);

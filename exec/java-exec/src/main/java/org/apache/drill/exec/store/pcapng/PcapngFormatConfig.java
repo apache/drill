@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.pcapng;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import java.util.Collections;
@@ -48,5 +50,12 @@ public class PcapngFormatConfig implements FormatPluginConfig {
   @Override
   public int hashCode() {
     return Objects.hash(extensions);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .toString();
   }
 }

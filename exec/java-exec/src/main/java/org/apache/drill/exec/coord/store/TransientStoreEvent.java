@@ -54,7 +54,8 @@ public class TransientStoreEvent<V> {
   @Override
   public boolean equals(final Object obj) {
     if (obj instanceof TransientStoreEvent && obj.getClass().equals(getClass())) {
-      final TransientStoreEvent<V> other = (TransientStoreEvent<V>)obj;
+      @SuppressWarnings("unchecked")
+      final TransientStoreEvent<V> other = (TransientStoreEvent<V>) obj;
       return Objects.equal(type, other.type) && Objects.equal(key, other.key) && Objects.equal(value, other.value);
     }
     return super.equals(obj);

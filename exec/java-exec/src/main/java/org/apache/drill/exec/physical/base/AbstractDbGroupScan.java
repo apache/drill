@@ -29,7 +29,6 @@ import org.apache.drill.exec.planner.physical.PartitionFunction;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 
 public abstract class AbstractDbGroupScan extends AbstractGroupScan implements DbGroupScan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractDbGroupScan.class);
 
   private static final String ROW_KEY = "_id";
   private static final SchemaPath ROW_KEY_PATH = SchemaPath.getSimplePath(ROW_KEY);

@@ -26,13 +26,20 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
-public class DrillFuncHolderExpr extends FunctionHolderExpression implements Iterable<LogicalExpression>{
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFuncHolderExpr.class);
+/**
+ * Represents the call of a function within a query and includes
+ * the actual arguments and a reference to the function declaration (as a
+ * "function holder.")
+ */
+public class DrillFuncHolderExpr extends FunctionHolderExpression
+        implements Iterable<LogicalExpression> {
+
   private final DrillFuncHolder holder;
   private final MajorType majorType;
   private DrillSimpleFunc interpreter;
 
-  public DrillFuncHolderExpr(String nameUsed, DrillFuncHolder holder, List<LogicalExpression> args, ExpressionPosition pos) {
+  public DrillFuncHolderExpr(String nameUsed, DrillFuncHolder holder,
+      List<LogicalExpression> args, ExpressionPosition pos) {
     super(nameUsed, pos, args);
     this.holder = holder;
     // since function return type can not be changed, cache it for better performance
@@ -76,9 +83,9 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
 
   @Override
   public int getCumulativeCost() {
-    int cost = this.getSelfCost();
+    int cost = getSelfCost();
 
-    for (LogicalExpression arg : this.args) {
+    for (LogicalExpression arg : args) {
       cost += arg.getCumulativeCost();
     }
 
@@ -87,7 +94,7 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
 
   @Override
   public DrillFuncHolderExpr copy(List<LogicalExpression> args) {
-    return new DrillFuncHolderExpr(this.nameUsed, this.holder, args, this.getPosition());
+    return new DrillFuncHolderExpr(nameUsed, holder, args, getPosition());
   }
 
   public void setInterpreter(DrillSimpleFunc interpreter) {
@@ -95,8 +102,7 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
   }
 
   public DrillSimpleFunc getInterpreter() {
-    return this.interpreter;
+    return interpreter;
   }
-
 }
 

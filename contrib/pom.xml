@@ -23,7 +23,7 @@
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.17.0</version>
+    <version>1.19.0-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.drill.contrib</groupId>
@@ -39,28 +39,24 @@
   </dependencies>
 
   <modules>
+    <module>data</module>
+    <module>udfs</module>
     <module>storage-hbase</module>
     <module>format-maprdb</module>
     <module>format-syslog</module>
     <module>format-ltsv</module>
     <module>format-excel</module>
     <module>format-esri</module>
+    <module>format-hdf5</module>
+    <module>format-spss</module>
     <module>storage-hive</module>
     <module>storage-mongo</module>
     <module>storage-jdbc</module>
     <module>storage-kafka</module>
     <module>storage-kudu</module>
     <module>storage-opentsdb</module>
-    <module>data</module>
-    <module>udfs</module>
+    <module>storage-http</module>
+    <module>storage-druid</module>
   </modules>
 
-  <profiles>
-    <profile>
-      <id>travis</id>
-      <properties>
-        <skipTests>true</skipTests>
-      </properties>
-    </profile>
-  </profiles>
 </project>

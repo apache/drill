@@ -20,6 +20,7 @@ package org.apache.drill.common.types;
 import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -132,6 +133,17 @@ public class Types {
   }
 
   /**
+   * Returns true if all specified types are decimal data types.
+   *
+   * @param types types to check
+   * @return true if all specified types are decimal data type.
+   */
+  public static boolean areDecimalTypes(MinorType... types) {
+    return Arrays.stream(types)
+        .allMatch(Types::isDecimalType);
+  }
+
+  /**
    * Returns true if specified type is decimal data type.
    *
    * @param type type to check
@@ -232,6 +244,7 @@ public class Types {
       case NULL:            return "NULL";
       case UNION:           return "UNION";
       case GENERIC_OBJECT:  return "JAVA_OBJECT";
+      case LIST:            return "LIST";
 
       // Internal types not actually used at level of SQL types(?):
 
@@ -254,9 +267,11 @@ public class Types {
    * if type is a decimal
    */
   public static String getExtendedSqlTypeName(MajorType type) {
-
-    String typeName = getSqlTypeName(type);
+    String typeName = getBaseSqlTypeName(type);
     switch (type.getMinorType()) {
+    case LIST:
+      typeName = "ARRAY";
+      break;
     case DECIMAL9:
     case DECIMAL18:
     case DECIMAL28SPARSE:
@@ -792,15 +807,29 @@ public class Types {
    */
   public static MajorType.Builder calculateTypePrecisionAndScale(MajorType leftType, MajorType rightType, MajorType.Builder typeBuilder) {
     if (leftType.getMinorType().equals(rightType.getMinorType())) {
-      final boolean isScalarString = Types.isScalarStringType(leftType) && Types.isScalarStringType(rightType);
-      final boolean isDecimal = isDecimalType(leftType);
+      boolean isScalarString = Types.isScalarStringType(leftType) && Types.isScalarStringType(rightType);
+      boolean isDecimal = isDecimalType(leftType);
 
-      if ((isScalarString || isDecimal) && leftType.hasPrecision() && rightType.hasPrecision()) {
+      if (isScalarString && leftType.hasPrecision() && rightType.hasPrecision()) {
         typeBuilder.setPrecision(Math.max(leftType.getPrecision(), rightType.getPrecision()));
       }
 
-      if (isDecimal && leftType.hasScale() && rightType.hasScale()) {
-        typeBuilder.setScale(Math.max(leftType.getScale(), rightType.getScale()));
+      if (isDecimal) {
+        int scale = Math.max(leftType.getScale(), rightType.getScale());
+        // resulting precision should take into account resulting scale value and be calculated as
+        // sum of two components:
+        // - max integer digits number (precision - scale) for left and right;
+        // - resulting scale.
+        // So for the case of cast(9999 as decimal(4,0)) and cast(1.23 as decimal(3,2))
+        // resulting scale would be Max(0, 2) = 2 and resulting precision
+        // would be Max(4 - 0, 3 - 2) + 2 = 6.
+        // In this case, both values would fit into decimal(6, 2): 9999.00, 1.23
+        int leftNumberOfDigits = leftType.getPrecision() - leftType.getScale();
+        int rightNumberOfDigits = rightType.getPrecision() - rightType.getScale();
+        int precision = Math.max(leftNumberOfDigits, rightNumberOfDigits) + scale;
+
+        typeBuilder.setPrecision(precision);
+        typeBuilder.setScale(scale);
       }
     }
     return typeBuilder;
@@ -812,15 +841,27 @@ public class Types {
    *
    * @param type1 first type
    * @param type2 second type
-   * @return true if the two types are are the same minor type, mode,
+   * @return true if the two types have the same minor type, mode,
    * precision and scale
    */
-
   public static boolean isSameType(MajorType type1, MajorType type2) {
-    return type1.getMinorType() == type2.getMinorType() &&
-           type1.getMode() == type2.getMode() &&
+    return isSameTypeAndMode(type1, type2) &&
            type1.getScale() == type2.getScale() &&
            type1.getPrecision() == type2.getPrecision();
+  }
+
+  /**
+   * Check if two "core" types have the same minor type and data mode,
+   * ignoring subtypes and children. Primarily for non-complex types.
+   *
+   * @param first  first type to check
+   * @param second second type to check
+   * @return {@code true} if the two types have the same minor type and mode,
+   * {@code false} otherwise
+   */
+  public static boolean isSameTypeAndMode(MajorType first, MajorType second) {
+    return first.getMinorType() == second.getMinorType()
+        && first.getMode() == second.getMode();
   }
 
   /**
@@ -828,7 +869,6 @@ public class Types {
    * But, unset fields are equivalent to 0. Can't use the protobuf-provided
    * isEquals() which treats set and unset fields as different.
    */
-
   public static boolean isEquivalent(MajorType type1, MajorType type2) {
 
     if (!isSameType(type1, type2)) {
@@ -836,7 +876,6 @@ public class Types {
     }
 
     // Subtypes are only for unions and are seldom used.
-
     if (type1.getMinorType() != MinorType.UNION) {
       return true;
     }
@@ -854,7 +893,6 @@ public class Types {
     }
 
     // Now it gets slow because subtype lists are not ordered.
-
     final List<MinorType> copy1 = new ArrayList<>(subtypes1);
     final List<MinorType> copy2 = new ArrayList<>(subtypes2);
     Collections.sort(copy1);
@@ -871,7 +909,6 @@ public class Types {
    * @return string key to use for this type in a union vector type
    * map
    */
-
   public static String typeKey(MinorType type) {
     return type.name().toLowerCase();
   }

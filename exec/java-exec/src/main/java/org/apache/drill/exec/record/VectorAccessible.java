@@ -28,7 +28,8 @@ public interface VectorAccessible extends Iterable<VectorWrapper<?>> {
   /**
    * Get the value vector type and id for the given schema path. The TypedFieldId
    * should store a fieldId which is the same as the ordinal position of the field
-   * within the Iterator provided this classes implementation of Iterable<ValueVector>.
+   * within the Iterator provided this classes implementation of
+   * <code>Iterable&lt;ValueVector><code>.
    *
    * @param path the path where the vector should be located.
    * @return the local field id associated with this vector. If no field matches this

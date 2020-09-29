@@ -108,7 +108,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   };
 
   @Test
-  // Test filter evaluation directly without go through SQL queries.
+  // Test filter evaluation directly without going through SQL queries.
   public void testIntPredicateWithEval() throws Exception {
     // intTbl.parquet has only one int column
     //    intCol : [0, 100].
@@ -150,7 +150,6 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     testParquetRowGroupFilterEval(footer, "intCol = 50 or intCol = 160", RowsMatch.SOME);
 
     //"nonExistCol" does not exist in the table. "AND" with a filter on exist column
-
     testParquetRowGroupFilterEval(footer, "intCol > 100 and nonExistCol = 100", RowsMatch.NONE);
     testParquetRowGroupFilterEval(footer, "intCol > 50 and nonExistCol = 100", RowsMatch.NONE); // since nonExistCol = 100 -> Unknown -> could drop.
     testParquetRowGroupFilterEval(footer, "nonExistCol = 100 and intCol > 50", RowsMatch.NONE); // since nonExistCol = 100 -> Unknown -> could drop.
@@ -162,7 +161,6 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     // is ignored.
 
     //"nonExistCol" does not exist in the table. "OR" with a filter on exist column
-
     testParquetRowGroupFilterEval(footer, "intCol > 100 or nonExistCol = 100", RowsMatch.NONE); // nonExistCol = 100 -> could drop.
     testParquetRowGroupFilterEval(footer, "nonExistCol = 100 or intCol > 100", RowsMatch.NONE); // nonExistCol = 100 -> could drop.
 
@@ -449,6 +447,28 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   }
 
   @Test
+  public void testParquetFilterPDWithLargeCondition() throws Exception {
+    test("SELECT * FROM (SELECT n.n_name AS name, n.n_nationkey AS nationkey, " +
+        "cast(n.n_regionkey AS FLOAT) AS regionkey FROM cp.`/tpch/nation.parquet` n) " +
+        "WHERE ((name = 'A' AND ((regionkey >= 0.0 AND regionkey <= 120.0 AND nationkey = 0.005))) " +
+        "OR (name = 'B' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'C' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'D' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'E' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'F' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'G' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'I' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'J' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'K' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'L' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'M' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'N' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'O' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'P' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))) " +
+        "OR (name = 'Q' AND ((regionkey >= 0.0  AND regionkey <= 120.0  AND nationkey = 0.005))))");
+  }
+
+  @Test
   public void testDatePredicateAgainstCorruptedDateCol() throws Exception {
     // Table dateTblCorrupted is created by CTAS in drill 1.8.0. Per DRILL-4203, the date column is shifted by some value.
     // The CTAS are the following, then copy to drill test resource directory.
@@ -664,6 +684,19 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   }
 
   @Test
+  public void tesNonDeterministicIsNotNullWithNonExistingColumn() throws Exception {
+    String query = "select count(*) as cnt from cp.`tpch/nation.parquet`\n" +
+        "where (case when random() = 1 then true else null end * t) is not null";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(0L)
+        .go();
+  }
+
+  @Test
   public void testParquetSingleRowGroupFilterRemoving() throws Exception {
     test("create table dfs.tmp.`singleRowGroupTable` as select * from cp.`tpch/nation.parquet`");
 
@@ -726,6 +759,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       runAndCheckResults(client, sql, expectedRows, numPartitions, numPruned);
     }
   }
+
   /**
    * Test runtime pruning
    *
@@ -757,5 +791,4 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     long resultNumPruned = parquestScan0.getMetric(ParquetRecordReader.Metric.ROWGROUPS_PRUNED.ordinal());
     assertEquals(numPruned,resultNumPruned);
   }
-
 }

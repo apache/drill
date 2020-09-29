@@ -390,7 +390,7 @@ public class TestHiveArrays extends HiveClusterTest {
             "EXPR$6", "EXPR$7"
         )
         .baselineValues(
-            "ARRAY", "ARRAY", // why not ARRAY<INTEGER> | ARRAY<ARRAY<INTEGER>> ?
+            "INTEGER", "ARRAY", // why not ARRAY<INTEGER> | ARRAY<ARRAY<INTEGER>> ?
             "INT", "LIST",    // todo: is it ok ?
             "ARRAY", "ARRAY",
             "INT", "LIST"    // todo: is it ok ?

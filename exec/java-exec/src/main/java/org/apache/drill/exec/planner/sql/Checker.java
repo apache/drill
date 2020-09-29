@@ -51,7 +51,7 @@ class Checker implements SqlOperandTypeChecker {
   }
 
   private Checker(int size) {
-    range = new FixedRange(size);
+    range = SqlOperandCountRanges.of(size);
   }
 
   private Checker(int min, int max) {

@@ -27,7 +27,7 @@ import org.apache.drill.exec.planner.logical.RelOptHelper;
 public class MetadataControllerPrule extends Prule {
   public static final MetadataControllerPrule INSTANCE = new MetadataControllerPrule();
 
-  public MetadataControllerPrule() {
+  private MetadataControllerPrule() {
     super(RelOptHelper.some(MetadataControllerRel.class, DrillRel.DRILL_LOGICAL,
         RelOptHelper.any(RelNode.class)), "MetadataControllerPrule");
   }
@@ -41,6 +41,8 @@ public class MetadataControllerPrule extends Prule {
     RelNode convertedLeft = convert(left, traits);
     RelNode convertedRight = convert(right, traits);
     call.transformTo(new MetadataControllerPrel(relNode.getCluster(),
-        relNode.getTraitSet().plus(Prel.DRILL_PHYSICAL), convertedLeft, convertedRight, relNode.getContext()));
+      // force singleton execution since this is the final step for metadata collection which collects all results into one
+      relNode.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON),
+      convertedLeft, convertedRight, relNode.getContext()));
   }
 }

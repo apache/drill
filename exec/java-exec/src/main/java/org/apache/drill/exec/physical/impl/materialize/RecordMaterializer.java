@@ -17,9 +17,14 @@
  */
 package org.apache.drill.exec.physical.impl.materialize;
 
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.record.VectorContainer;
 
 public interface RecordMaterializer {
 
   public QueryWritableBatch convertNext();
 
+  public QueryId queryId();
+
+  public VectorContainer incoming();
 }

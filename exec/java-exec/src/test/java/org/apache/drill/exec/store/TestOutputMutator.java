@@ -17,14 +17,11 @@
  */
 package org.apache.drill.exec.store;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import io.netty.buffer.DrillBuf;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -36,9 +33,11 @@ import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<?>> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOutputMutator.class);
+  static final Logger logger = LoggerFactory.getLogger(TestOutputMutator.class);
 
   private final VectorContainer container = new VectorContainer();
   private final Map<MaterializedField, ValueVector> fieldVectorMap = Maps.newHashMap();
@@ -62,24 +61,12 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
     fieldVectorMap.put(vector.getField(), vector);
   }
 
-  private void replace(ValueVector newVector, SchemaPath schemaPath) {
-    List<ValueVector> vectors = Lists.newArrayList();
-    for (VectorWrapper w : container) {
-      ValueVector vector = w.getValueVector();
-      if (vector.getField().getName().equals(schemaPath.getRootSegmentPath())) {
-        vectors.add(newVector);
-      } else {
-        vectors.add(w.getValueVector());
-      }
-      container.remove(vector);
-    }
-    container.addCollection(vectors);
-  }
-
+  @Override
   public Iterator<VectorWrapper<?>> iterator() {
     return container.iterator();
   }
 
+  @Override
   public void clear() {
 
   }
@@ -94,6 +81,7 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
     return;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
     ValueVector v = TypeHelper.getNewVector(field, allocator);

@@ -17,22 +17,27 @@
  */
 package org.apache.drill.exec.store.easy.sequencefile;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import java.util.List;
+import java.util.Objects;
 
 @JsonTypeName("sequencefile") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class SequenceFileFormatConfig implements FormatPluginConfig {
 
-  public List<String> extensions = ImmutableList.of();
+  private final List<String> extensions;
 
-  @Override
-  public int hashCode() {
-    return (extensions == null)? 0 : extensions.hashCode();
+  @JsonCreator
+  public SequenceFileFormatConfig(
+      @JsonProperty("extensions") List<String> extensions) {
+    this.extensions = extensions == null ?
+        ImmutableList.of() : ImmutableList.copyOf(extensions);
   }
 
   public List<String> getExtensions() {
@@ -40,15 +45,26 @@ public class SequenceFileFormatConfig implements FormatPluginConfig {
   }
 
   @Override
+  public int hashCode() {
+    return Objects.hash(extensions);
+  }
+
+  @Override
   public boolean equals(Object obj) {
     if (this == obj) {
       return true;
-    } else if (obj == null) {
-      return false;
-    } else if (getClass() == obj.getClass()) {
-      SequenceFileFormatConfig other = (SequenceFileFormatConfig) obj;
-      return (extensions == null)? (other.extensions == null) : extensions.equals(other.extensions);
     }
-    return false;
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    SequenceFileFormatConfig other = (SequenceFileFormatConfig) obj;
+    return Objects.equals(extensions, other.extensions);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .toString();
   }
 }

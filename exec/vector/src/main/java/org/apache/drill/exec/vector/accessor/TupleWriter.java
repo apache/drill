@@ -34,7 +34,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * Consumers of this interface can define the schema up front, or can define the
  * schema as the write progresses. To avoid redundant checks to see if a column
  * is already defined, consumers can simply ask for a column by name. The
- * <tt>column()</tt> (and related) methods will throw an (unchecked)
+ * {@code column()} (and related) methods will throw an (unchecked)
  * {@link UndefinedColumnException} exception if the column is undefined. The
  * consumer can catch the exception, define the column, and fetch the column
  * writer again. New columns may be added via this interface at any time; the
@@ -49,7 +49,6 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  *
  * @see {@link SingleMapWriter}, the class which this class replaces
  */
-
 public interface TupleWriter extends ColumnWriter {
 
   /**
@@ -60,13 +59,18 @@ public interface TupleWriter extends ColumnWriter {
    * should catch the exception and define the column (using an implementation
    * that allows dynamic schema definition.)
    */
-
   @SuppressWarnings("serial")
   class UndefinedColumnException extends RuntimeException {
     public UndefinedColumnException(String colName) {
       super("Undefined column: " + colName);
     }
   }
+
+  /**
+   * Reports whether the given column is projected. Useful for
+   * clients that can simply skip over unprojected columns.
+   */
+  boolean isProjected(String columnName);
 
   /**
    * Add a column to the tuple (row or map) that backs this writer. Support for
@@ -80,7 +84,6 @@ public interface TupleWriter extends ColumnWriter {
    * @return the index of the newly added column which can be used to access the
    *         newly added writer
    */
-
   int addColumn(ColumnMetadata column);
 
   int addColumn(MaterializedField schema);
@@ -113,13 +116,17 @@ public interface TupleWriter extends ColumnWriter {
 
   VariantWriter variant(String colName);
 
+  DictWriter dict(int colIndex);
+
+  DictWriter dict(String colName);
+
   ObjectType type(int colIndex);
 
   ObjectType type(String colName);
 
   /**
    * Write a value to the given column, automatically calling the proper
-   * <tt>set<i>Type</i></tt> method for the data. While this method is
+   * <code>set<i>Type</i></code> method for the data. While this method is
    * convenient for testing, it incurs quite a bit of type-checking overhead and
    * is not suitable for production code.
    *

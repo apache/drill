@@ -18,7 +18,7 @@
 package org.apache.drill.exec.record.metadata;
 
 /**
- * Helper utilities to get/set typed values within a propertied object
+ * Utilities to get/set typed values within a propertied object
  */
 public class PropertyAccessor {
 

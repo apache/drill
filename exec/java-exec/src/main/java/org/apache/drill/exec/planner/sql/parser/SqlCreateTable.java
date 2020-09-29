@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.sql.parser;
 
 import java.util.List;
 
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
@@ -35,7 +36,6 @@ import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.util.Pointer;
@@ -131,11 +131,7 @@ public class SqlCreateTable extends DrillSqlCall {
   }
 
   public List<String> getSchemaPath() {
-    if (tblName.isSimple()) {
-      return ImmutableList.of();
-    }
-
-    return tblName.names.subList(0, tblName.names.size() - 1);
+    return SchemaUtilites.getSchemaPath(tblName);
   }
 
   public String getName() {

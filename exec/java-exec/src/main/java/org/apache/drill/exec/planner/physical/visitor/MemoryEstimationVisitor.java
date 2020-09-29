@@ -21,11 +21,13 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 
 public class MemoryEstimationVisitor extends BasePrelVisitor<Double, Void, RuntimeException> {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MemoryEstimationVisitor.class);
+  private static final Logger logger = LoggerFactory.getLogger(MemoryEstimationVisitor.class);
 
   public static boolean enoughMemory(Prel prel, OptionManager options, int numDrillbits) {
     long allottedMemory = options.getOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY).num_val * numDrillbits;
@@ -44,8 +46,7 @@ public class MemoryEstimationVisitor extends BasePrelVisitor<Double, Void, Runti
     return prel.accept(new MemoryEstimationVisitor(), null);
   }
 
-  public MemoryEstimationVisitor() {
-  }
+  public MemoryEstimationVisitor() { }
 
   @Override
   public Double visitPrel(Prel prel, Void value) throws RuntimeException {
@@ -54,6 +55,7 @@ public class MemoryEstimationVisitor extends BasePrelVisitor<Double, Void, Runti
 //    return findCost(prel, mq);
   }
 
+  @SuppressWarnings("unused")
   private double findCost(Prel prel, RelMetadataQuery mq) {
     DrillCostBase cost = (DrillCostBase) mq.getNonCumulativeCost(prel);
     double memory = cost.getMemory();
@@ -63,5 +65,4 @@ public class MemoryEstimationVisitor extends BasePrelVisitor<Double, Void, Runti
     }
     return memory;
   }
-
 }

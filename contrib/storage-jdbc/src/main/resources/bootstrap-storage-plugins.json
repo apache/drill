@@ -1,0 +1,16 @@
+{
+  "storage": {
+    "rdbms": {
+      "type": "jdbc",
+      "driver": "xxx.Driver",
+      "url": "jdbc:xxx:xxx",
+      "username": "xxx",
+      "password": "xxx",
+      "caseInsensitiveTableNames": false,
+      "sourceParameters" : {
+        "maxIdle" : 8
+      },
+      "enabled": false
+    }
+  }
+}

@@ -40,10 +40,11 @@ import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ScanPrel extends DrillScanRelBase implements Prel, HasDistributionAffinity {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(ScanPrel.class);
+  private static final Logger logger = LoggerFactory.getLogger(ScanPrel.class);
 
   private final RelDataType rowType;
 
@@ -65,6 +66,7 @@ public class ScanPrel extends DrillScanRelBase implements Prel, HasDistributionA
         this.rowType, this.getTable());
   }
 
+  @SuppressWarnings("unchecked")
   private static GroupScan getCopy(GroupScan scan){
     try {
       return (GroupScan) scan.getNewWithChildren((List<PhysicalOperator>) (Object) Collections.emptyList());
@@ -108,19 +110,21 @@ public class ScanPrel extends DrillScanRelBase implements Prel, HasDistributionA
   @Override
   public RelOptCost computeSelfCost(final RelOptPlanner planner, RelMetadataQuery mq) {
     final PlannerSettings settings = PrelUtil.getPlannerSettings(planner);
-    final ScanStats stats = this.getGroupScan().getScanStats(settings);
-    final int columnCount = this.getRowType().getFieldCount();
+    final ScanStats stats = getGroupScan().getScanStats(settings);
+    final int columnCount = getRowType().getFieldCount();
 
     if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return planner.getCostFactory().makeCost(stats.getRecordCount() * columnCount, stats.getCpuCost(), stats.getDiskCost());
     }
 
     double rowCount = mq.getRowCount(this);
-    //double rowCount = stats.getRecordCount();
 
     // As DRILL-4083 points out, when columnCount == 0, cpuCost becomes zero,
     // which makes the costs of HiveScan and HiveDrillNativeParquetScan the same
-    double cpuCost = rowCount * Math.max(columnCount, 1); // For now, assume cpu cost is proportional to row count.
+    // For now, assume cpu cost is proportional to row count.
+    // Note that this ignores the disk cost estimate (which should be a proxy for
+    // row count * row width.)
+    double cpuCost = rowCount * Math.max(columnCount, 1);
 
     // If a positive value for CPU cost is given multiply the default CPU cost by given CPU cost.
     if (stats.getCpuCost() > 0) {

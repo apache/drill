@@ -32,7 +32,6 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
  * operations are actually delegated to the result set loader, which handles
  * the details of working with overflow rows.
  */
-
 public class RowSetLoaderImpl extends AbstractTupleWriter implements RowSetLoader {
 
   private final ResultSetLoaderImpl rsLoader;
@@ -77,17 +76,14 @@ public class RowSetLoaderImpl extends AbstractTupleWriter implements RowSetLoade
     if (rsLoader.isFull()) {
 
       // Full batch? Return false.
-
       return false;
     } else if (state == State.IN_ROW) {
 
       // Already in a row? Rewind the to start of the row.
-
       restartRow();
     } else {
 
       // Otherwise, advance to the next row.
-
       rsLoader.startRow();
     }
     return true;
@@ -109,6 +105,7 @@ public class RowSetLoaderImpl extends AbstractTupleWriter implements RowSetLoade
 
   @Override
   public ColumnMetadata schema() {
+
     // The top-level tuple (the data row) is not associated
     // with a parent column. By contrast, a map tuple is
     // associated with the column that defines the map.

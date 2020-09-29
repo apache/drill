@@ -53,6 +53,8 @@ import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test the implementation of the Drill Volcano iterator protocol that
@@ -61,7 +63,7 @@ import org.junit.experimental.categories.Category;
 
 @Category(RowSetTests.class)
 public class TestOperatorRecordBatch extends SubOperatorTest {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SubOperatorTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestOperatorRecordBatch.class);
 
   /**
    * Mock operator executor that simply tracks each method call
@@ -262,7 +264,7 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
     opExec.nextCalls = 2;
 
     try (OperatorRecordBatch opBatch = makeOpBatch(opExec)) {
-      opBatch.kill(false);
+      opBatch.cancel();
       assertFalse(opExec.buildSchemaCalled);
       assertEquals(0, opExec.nextCount);
       assertFalse(opExec.cancelCalled);
@@ -284,7 +286,7 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
     try (OperatorRecordBatch opBatch = makeOpBatch(opExec)) {
       assertEquals(IterOutcome.OK_NEW_SCHEMA, opBatch.next());
       assertEquals(IterOutcome.OK, opBatch.next());
-      opBatch.kill(false);
+      opBatch.cancel();
       assertTrue(opExec.cancelCalled);
     } catch (Exception e) {
       fail();
@@ -307,7 +309,7 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
       assertEquals(IterOutcome.OK, opBatch.next());
       assertEquals(IterOutcome.OK, opBatch.next());
       assertEquals(IterOutcome.NONE, opBatch.next());
-      opBatch.kill(false);
+      opBatch.cancel();
 
       // Already hit EOF, so fail won't be passed along.
 
@@ -339,7 +341,7 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
       fail();
     }
     assertTrue(opExec.closeCalled);
-    opBatch.kill(false);
+    opBatch.cancel();
     assertFalse(opExec.cancelCalled);
   }
 

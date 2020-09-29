@@ -81,10 +81,10 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
   private final VectorAccessor unionAccessor;
   private final VectorAccessor typeAccessor;
   private final UInt1ColumnReader typeReader;
-  private final AbstractObjectReader variants[];
+  private final AbstractObjectReader[] variants;
   protected NullStateReader nullStateReader;
 
-  public UnionReaderImpl(ColumnMetadata schema, VectorAccessor va, AbstractObjectReader variants[]) {
+  public UnionReaderImpl(ColumnMetadata schema, VectorAccessor va, AbstractObjectReader[] variants) {
     this.schema = schema;
     this.unionAccessor = va;
     typeReader = new UInt1ColumnReader();
@@ -115,6 +115,7 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
       NullStateReader nullReader;
       MinorType type = MinorType.values()[i];
       switch(type) {
+      case DICT:
       case MAP:
       case LIST:
         nullReader = new NullStateReaders.ComplexMemberStateReader(typeReader, type);

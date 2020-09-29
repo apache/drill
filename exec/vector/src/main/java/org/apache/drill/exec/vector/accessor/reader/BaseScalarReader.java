@@ -29,7 +29,6 @@ import io.netty.buffer.DrillBuf;
  * throw an exception; subclasses simply override the supported
  * method(s).
  */
-
 public abstract class BaseScalarReader extends AbstractScalarReader {
 
   public abstract static class BaseFixedWidthReader extends BaseScalarReader {
@@ -72,7 +71,6 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
   /**
    * Provide access to the DrillBuf for the data vector.
    */
-
   public interface BufferAccessor {
     DrillBuf buffer();
     void rebind();
@@ -122,16 +120,13 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
       VectorAccessor va, BaseScalarReader reader) {
 
     // Reader is bound to the values vector inside the nullable vector.
-
     reader.bindVector(schema, VectorAccessors.nullableValuesAccessor(va));
 
     // The nullability of each value depends on the "bits" vector
     // in the nullable vector.
-
     reader.bindNullState(new NullStateReaders.NullableIsSetVectorStateReader(va));
 
     // Wrap the reader in an object reader.
-
     return new ScalarObjectReader(reader);
   }
 
@@ -139,15 +134,12 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
       VectorAccessor va, BaseScalarReader reader) {
 
     // Reader is bound directly to the required vector.
-
     reader.bindVector(schema, va);
 
     // The reader is required, values can't be null.
-
     reader.bindNullState(NullStateReaders.REQUIRED_STATE_READER);
 
     // Wrap the reader in an object reader.
-
     return new ScalarObjectReader(reader);
   }
 

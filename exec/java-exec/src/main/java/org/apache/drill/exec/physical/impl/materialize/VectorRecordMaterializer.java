@@ -25,16 +25,16 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 
 public class VectorRecordMaterializer implements RecordMaterializer {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorRecordMaterializer.class);
 
-  private QueryId queryId;
-  private RecordBatch batch;
-  private BufferAllocator allocator;
-  private OptionManager options;
+  private final QueryId queryId;
+  private final RecordBatch batch;
+  private final BufferAllocator allocator;
+  private final boolean resultResultsForDDL;
 
   public VectorRecordMaterializer(FragmentContext context, OperatorContext oContext, RecordBatch batch) {
     this.queryId = context.getHandle().getQueryId();
@@ -42,19 +42,27 @@ public class VectorRecordMaterializer implements RecordMaterializer {
     this.allocator = oContext.getAllocator();
     BatchSchema schema = batch.getSchema();
     assert schema != null : "Schema must be defined.";
-    options = context.getOptions();
+    OptionSet options = context.getOptions();
+    this.resultResultsForDDL = options.getBoolean(ExecConstants.RETURN_RESULT_SET_FOR_DDL);
   }
 
+  @Override
   public QueryWritableBatch convertNext() {
     WritableBatch w = batch.getWritableBatch().transfer(allocator);
     QueryData.Builder builder = QueryData.newBuilder()
         .setQueryId(queryId)
         .setRowCount(batch.getRecordCount())
         .setDef(w.getDef());
-    if (!options.getBoolean(ExecConstants.RETURN_RESULT_SET_FOR_DDL)) {
+    if (!resultResultsForDDL) {
       int count = w.getDef().getAffectedRowsCount();
       builder.setAffectedRowsCount(count == -1 ? 0 : count);
     }
     return new QueryWritableBatch(builder.build(), w.getBuffers());
   }
+
+  @Override
+  public QueryId queryId() { return queryId; }
+
+  @Override
+  public VectorContainer incoming() { return batch.getContainer(); }
 }

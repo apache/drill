@@ -27,7 +27,6 @@ import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class KuduWriterBatchCreator implements BatchCreator<KuduWriter> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduWriterBatchCreator.class);
 
   @Override
   public CloseableRecordBatch getBatch(ExecutorFragmentContext context, KuduWriter config, List<RecordBatch> children)

@@ -21,7 +21,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * An abstraction used to store and retrieve instances of given value type.
+ * Stores and retrieve instances of given value type.
  *
  * @param <V>  value type
  */
@@ -53,5 +53,4 @@ public interface PersistentStore<V> extends Store<V> {
    * Returns an iterator of entries.
    */
   Iterator<Map.Entry<String, V>> getAll();
-
 }

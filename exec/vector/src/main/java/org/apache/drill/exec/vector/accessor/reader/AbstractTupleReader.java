@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
+import org.apache.drill.exec.vector.accessor.DictReader;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
@@ -38,11 +39,12 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
 
   public static class TupleObjectReader extends AbstractObjectReader {
 
-    private final AbstractTupleReader tupleReader;
+    protected final AbstractTupleReader tupleReader;
 
     public TupleObjectReader(AbstractTupleReader tupleReader) {
       this.tupleReader = tupleReader;
     }
+
     @Override
     public TupleReader tuple() {
       return tupleReader;
@@ -65,10 +67,10 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
     public ColumnReader reader() { return tupleReader; }
   }
 
-  private final AbstractObjectReader readers[];
+  protected final AbstractObjectReader[] readers;
   protected NullStateReader nullStateReader;
 
-  protected AbstractTupleReader(AbstractObjectReader readers[]) {
+  protected AbstractTupleReader(AbstractObjectReader[] readers) {
     this.readers = readers;
   }
 
@@ -112,7 +114,8 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
   public ObjectReader column(String colName) {
     int index = tupleSchema().index(colName);
     if (index == -1) {
-      return null; }
+      return null;
+    }
     return readers[index];
   }
 
@@ -164,6 +167,16 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
   @Override
   public VariantReader variant(String colName) {
     return column(colName).variant();
+  }
+
+  @Override
+  public DictReader dict(int colIndex) {
+    return column(colIndex).dict();
+  }
+
+  @Override
+  public DictReader dict(String colName) {
+    return column(colName).dict();
   }
 
   @Override

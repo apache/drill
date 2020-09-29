@@ -23,12 +23,14 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class SampleCopierTemplate implements SampleCopier {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SampleCopierTemplate.class);
+  static final Logger logger = LoggerFactory.getLogger(SampleCopierTemplate.class);
 
   private SelectionVector4 sv4;
-  private int outputRecords = 0;
+  private int outputRecords;
 
   @Override
   public void setupCopier(FragmentContext context, SelectionVector4 sv4, VectorAccessible incoming, VectorAccessible outgoing)
@@ -42,10 +44,8 @@ public abstract class SampleCopierTemplate implements SampleCopier {
     return outputRecords;
   }
 
-
   @Override
   public boolean copyRecords(int skip, int start, int total) {
-    final int recordCount = sv4.getCount();
     int outgoingPosition = 0;
     int increment = skip > 0 ? skip : 1;
     for(int svIndex = start; svIndex < sv4.getCount() && outputRecords < total; svIndex += increment, outgoingPosition++){
@@ -60,7 +60,4 @@ public abstract class SampleCopierTemplate implements SampleCopier {
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
   public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
-
-
-
 }

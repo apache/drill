@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.union;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -31,9 +30,9 @@ import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -86,13 +85,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    left.kill(sendUpstream);
-    right.kill(sendUpstream);
-  }
-
-  @Override
-  protected void buildSchema() throws SchemaChangeException {
+  protected void buildSchema() {
     if (! prefetchFirstBatchFromBothSides()) {
       state = BatchState.DONE;
       return;
@@ -117,38 +110,30 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
 
   @Override
   public IterOutcome innerNext() {
-    try {
-      while (true) {
-        if (!unionInputIterator.hasNext()) {
-          return IterOutcome.NONE;
-        }
-
-        Pair<IterOutcome, BatchStatusWrappper> nextBatch = unionInputIterator.next();
-        IterOutcome upstream = nextBatch.left;
-        BatchStatusWrappper batchStatus = nextBatch.right;
-
-        switch (upstream) {
-        case NONE:
-        case OUT_OF_MEMORY:
-        case STOP:
-          return upstream;
-        case OK_NEW_SCHEMA:
-          return doWork(batchStatus, true);
-        case OK:
-          // skip batches with same schema as the previous one yet having 0 row.
-          if (batchStatus.batch.getRecordCount() == 0) {
-            VectorAccessibleUtilities.clear(batchStatus.batch);
-            continue;
-          }
-          return doWork(batchStatus, false);
-        default:
-          throw new IllegalStateException(String.format("Unknown state %s.", upstream));
-        }
+    while (true) {
+      if (!unionInputIterator.hasNext()) {
+        return IterOutcome.NONE;
       }
-    } catch (ClassTransformationException | IOException | SchemaChangeException ex) {
-      context.getExecutorState().fail(ex);
-      killIncoming(false);
-      return IterOutcome.STOP;
+
+      Pair<IterOutcome, BatchStatusWrappper> nextBatch = unionInputIterator.next();
+      IterOutcome upstream = nextBatch.left;
+      BatchStatusWrappper batchStatus = nextBatch.right;
+
+      switch (upstream) {
+      case NONE:
+        return upstream;
+      case OK_NEW_SCHEMA:
+        return doWork(batchStatus, true);
+      case OK:
+        // skip batches with same schema as the previous one yet having 0 row.
+        if (batchStatus.batch.getRecordCount() == 0) {
+          VectorAccessibleUtilities.clear(batchStatus.batch);
+          continue;
+        }
+        return doWork(batchStatus, false);
+      default:
+        throw new IllegalStateException(String.format("Unknown state %s.", upstream));
+      }
     }
   }
 
@@ -157,8 +142,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     return recordCount;
   }
 
-  private IterOutcome doWork(BatchStatusWrappper batchStatus, boolean newSchema)
-      throws ClassTransformationException, IOException, SchemaChangeException {
+  private IterOutcome doWork(BatchStatusWrappper batchStatus, boolean newSchema) {
     Preconditions.checkArgument(batchStatus.batch.getSchema().getFieldCount() == container.getSchema().getFieldCount(),
         "Input batch and output batch have different field counthas!");
 
@@ -188,11 +172,11 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     }
   }
 
-  private void createUnionAller(RecordBatch inputBatch) throws ClassTransformationException, IOException, SchemaChangeException {
+  private void createUnionAller(RecordBatch inputBatch) {
     transfers.clear();
     allocationVectors.clear();
 
-    final ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getOptions());
+    ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
     // cg.getCodeGenerator().saveCodeForDebugging(true);
 
@@ -201,47 +185,40 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
       ValueVector vvIn = vw.getValueVector();
       ValueVector vvOut = container.getValueVector(index).getValueVector();
 
-      final ErrorCollector collector = new ErrorCollectorImpl();
-      // According to input data names, Minortypes, Datamodes, choose to
+      MaterializedField inField = vvIn.getField();
+      MaterializedField outputField = vvOut.getField();
+
+      ErrorCollector collector = new ErrorCollectorImpl();
+      // According to input data names, MinorTypes, DataModes, choose to
       // transfer directly,
       // rename columns or
-      // cast data types (Minortype or DataMode)
-      if (container.getSchema().getColumn(index).hasSameTypeAndMode(vvIn.getField())
-          && vvIn.getField().getType().getMinorType() != TypeProtos.MinorType.MAP // Per DRILL-5521, existing bug for map transfer
-          ) {
+      // cast data types (MinorType or DataMode)
+      if (areAssignableTypes(inField.getType(), outputField.getType())) {
         // Transfer column
         TransferPair tp = vvIn.makeTransferPair(vvOut);
         transfers.add(tp);
-      } else if (vvIn.getField().getType().getMinorType() == TypeProtos.MinorType.NULL) {
+      } else if (inField.getType().getMinorType() == TypeProtos.MinorType.NULL) {
+        index++;
         continue;
       } else { // Copy data in order to rename the column
-        SchemaPath inputPath = SchemaPath.getSimplePath(vvIn.getField().getName());
-        MaterializedField inField = vvIn.getField();
-        MaterializedField outputField = vvOut.getField();
+        SchemaPath inputPath = SchemaPath.getSimplePath(inField.getName());
 
         LogicalExpression expr = ExpressionTreeMaterializer.materialize(inputPath, inputBatch, collector, context.getFunctionRegistry());
-
-        if (collector.hasErrors()) {
-          throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-        }
+        collector.reportErrors(logger);
 
         // If the inputs' DataMode is required and the outputs' DataMode is not required
         // cast to the one with the least restriction
-        if(inField.getType().getMode() == TypeProtos.DataMode.REQUIRED
+        if (inField.getType().getMode() == TypeProtos.DataMode.REQUIRED
             && outputField.getType().getMode() != TypeProtos.DataMode.REQUIRED) {
           expr = ExpressionTreeMaterializer.convertToNullableType(expr, inField.getType().getMinorType(), context.getFunctionRegistry(), collector);
-          if (collector.hasErrors()) {
-            throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-          }
+          collector.reportErrors(logger);
         }
 
-        // If two inputs' MinorTypes are different,
-        // Insert a cast before the Union operation
-        if(inField.getType().getMinorType() != outputField.getType().getMinorType()) {
+        // If two inputs' MinorTypes are different or types are decimal with different scales,
+        // inserts a cast before the Union operation
+        if (isCastRequired(inField.getType(), outputField.getType())) {
           expr = ExpressionTreeMaterializer.addCastExpression(expr, outputField.getType(), context.getFunctionRegistry(), collector);
-          if (collector.hasErrors()) {
-            throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-          }
+          collector.reportErrors(logger);
         }
 
         TypedFieldId fid = container.getValueVectorId(SchemaPath.getSimplePath(outputField.getName()));
@@ -256,7 +233,43 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     }
 
     unionall = context.getImplementationClass(cg.getCodeGenerator());
-    unionall.setup(context, inputBatch, this, transfers);
+    try {
+      unionall.setup(context, inputBatch, this, transfers);
+    } catch (SchemaChangeException e) {
+      throw schemaChangeException(e, logger);
+    }
+  }
+
+  /**
+   * Checks whether cast should be added for transitioning values from the one type to another one.
+   * {@code true} will be returned if minor types differ or scales differ for the decimal data type.
+   *
+   * @param first  first type
+   * @param second second type
+   * @return {@code true} if cast should be added, {@code false} otherwise
+   */
+  private boolean isCastRequired(MajorType first, MajorType second) {
+    return first.getMinorType() != second.getMinorType()
+        || (Types.areDecimalTypes(second.getMinorType(), first.getMinorType())
+            && second.getScale() != first.getScale());
+  }
+
+  /**
+   * Checks whether data may be transitioned between specified types without using casts.
+   * {@code true} will be returned if minor types and data modes are the same for non-decimal data types,
+   * or if minor types, data modes and scales are the same for decimal data types.
+   *
+   * @param first  first type
+   * @param second second type
+   * @return {@code true} if data may be transitioned between specified types without using casts,
+   * {@code false} otherwise
+   */
+  private boolean areAssignableTypes(MajorType first, MajorType second) {
+    boolean areDecimalTypes = Types.areDecimalTypes(first.getMinorType(), second.getMinorType());
+
+    return Types.isSameTypeAndMode(first, second)
+        && second.getMinorType() != TypeProtos.MinorType.MAP // Per DRILL-5521, existing bug for map transfer
+        && (!areDecimalTypes || first.getScale() == second.getScale()); // scale should match for decimal data types
   }
 
   // The output table's column names always follow the left table,
@@ -270,8 +283,10 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
       MaterializedField leftField  = leftIter.next();
       MaterializedField rightField = rightIter.next();
 
-      if (leftField.hasSameTypeAndMode(rightField)) {
-        TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder().setMinorType(leftField.getType().getMinorType()).setMode(leftField.getDataMode());
+      if (Types.isSameTypeAndMode(leftField.getType(), rightField.getType())) {
+        MajorType.Builder builder = MajorType.newBuilder()
+            .setMinorType(leftField.getType().getMinorType())
+            .setMode(leftField.getDataMode());
         builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
         container.addOrGet(MaterializedField.create(leftField.getName(), builder.build()), callBack);
       } else if (Types.isUntypedNull(rightField.getType())) {
@@ -281,7 +296,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
       } else {
         // If the output type is not the same,
         // cast the column of one of the table to a data type which is the Least Restrictive
-        TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder();
+        MajorType.Builder builder = MajorType.newBuilder();
         if (leftField.getType().getMinorType() == rightField.getType().getMinorType()) {
           builder.setMinorType(leftField.getType().getMinorType());
           builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
@@ -390,10 +405,6 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
             RecordBatchStats.logRecordBatchStats(topStatus.inputIndex == 0 ? RecordBatchIOType.INPUT_LEFT : RecordBatchIOType.INPUT_RIGHT,
               batchMemoryManager.getRecordBatchSizer(topStatus.inputIndex),
               getRecordBatchStatsContext());
-            return Pair.of(outcome, topStatus);
-          case OUT_OF_MEMORY:
-          case STOP:
-            batchStatusStack.pop();
             return Pair.of(outcome, topStatus);
           case NONE:
             batchStatusStack.pop();

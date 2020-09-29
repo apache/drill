@@ -46,13 +46,13 @@ public class TestDisabledPlugin extends ClusterTest {
     pluginRegistry = cluster.drillbit().getContext().getStorage();
     pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(CP_PLUGIN_NAME).getConfig();
     pluginConfig.setEnabled(false);
-    pluginRegistry.createOrUpdate(CP_PLUGIN_NAME, pluginConfig, true);
+    pluginRegistry.put(CP_PLUGIN_NAME, pluginConfig);
   }
 
   @AfterClass
   public static void restore() throws Exception {
     pluginConfig.setEnabled(true);
-    pluginRegistry.createOrUpdate(CP_PLUGIN_NAME, pluginConfig, true);
+    pluginRegistry.put(CP_PLUGIN_NAME, pluginConfig);
   }
 
   @Test

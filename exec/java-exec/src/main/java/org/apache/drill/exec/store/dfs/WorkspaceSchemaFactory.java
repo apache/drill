@@ -40,18 +40,18 @@ import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Table;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.dotdrill.DotDrillUtil;
 import org.apache.drill.exec.dotdrill.View;
-import org.apache.drill.exec.metastore.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.metastore.MetastoreMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetastoreMetadataProviderManager.MetastoreMetadataProviderConfig;
@@ -83,6 +83,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
@@ -92,7 +94,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class WorkspaceSchemaFactory {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
+  private static final Logger logger = LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 
   private final List<FormatMatcher> fileMatchers;
   private final List<FormatMatcher> dropFileMatchers;
@@ -104,7 +106,6 @@ public class WorkspaceSchemaFactory {
   private final String schemaName;
   private final FileSystemPlugin plugin;
   private final ObjectMapper mapper;
-  private final LogicalPlanPersistence logicalPlanPersistence;
   private final Path wsPath;
 
   private final FormatPluginOptionExtractor optionExtractor;
@@ -115,13 +116,12 @@ public class WorkspaceSchemaFactory {
       String storageEngineName,
       WorkspaceConfig config,
       List<FormatMatcher> formatMatchers,
-      LogicalPlanPersistence logicalPlanPersistence,
+      ObjectMapper mapper,
       ScanResult scanResult) throws ExecutionSetupException {
-    this.logicalPlanPersistence = logicalPlanPersistence;
+    this.mapper = mapper;
     this.fsConf = plugin.getFsConf();
     this.plugin = plugin;
     this.config = config;
-    this.mapper = logicalPlanPersistence.getMapper();
     this.fileMatchers = Lists.newArrayList();
     this.dirMatchers = Lists.newArrayList();
     this.storageEngineName = storageEngineName;
@@ -289,9 +289,9 @@ public class WorkspaceSchemaFactory {
   public class WorkspaceSchema extends AbstractSchema implements ExpandingConcurrentMap.MapValueFactory<TableInstance, DrillTable> {
     private final ExpandingConcurrentMap<TableInstance, DrillTable> tables = new ExpandingConcurrentMap<>(this);
     private final SchemaConfig schemaConfig;
-    private DrillFileSystem fs;
+    private final DrillFileSystem fs;
     // Drill Process User file-system
-    private DrillFileSystem dpsFs;
+    private final DrillFileSystem dpsFs;
 
     public WorkspaceSchema(List<String> parentSchemaPath, String wsName, SchemaConfig schemaConfig, DrillFileSystem fs) {
       super(parentSchemaPath, wsName);
@@ -394,7 +394,7 @@ public class WorkspaceSchemaFactory {
 
     private View getView(DotDrillFile f) throws IOException {
       assert f.getType() == DotDrillType.VIEW;
-      return f.getView(logicalPlanPersistence);
+      return f.getView(mapper);
     }
 
     @Override
@@ -410,7 +410,7 @@ public class WorkspaceSchemaFactory {
       try {
         try {
           files = DotDrillUtil.getDotDrills(getFS(), new Path(config.getLocation()),
-              FileSelection.removeLeadingSlash(tableName), DotDrillType.VIEW);
+              DrillStringUtils.removeLeadingSlash(tableName), DotDrillType.VIEW);
         } catch (AccessControlException e) {
           if (!schemaConfig.getIgnoreAuthErrors()) {
             logger.debug(e.getMessage());
@@ -424,58 +424,27 @@ public class WorkspaceSchemaFactory {
 
         for (DotDrillFile f : files) {
           switch (f.getType()) {
-          case VIEW:
-            try {
-              return new DrillViewTable(getView(f), f.getOwner(), schemaConfig.getViewExpansionContext());
-            } catch (AccessControlException e) {
-              if (!schemaConfig.getIgnoreAuthErrors()) {
-                logger.debug(e.getMessage());
-                throw UserException.permissionError(e)
-                  .message("Not authorized to read view [%s] in schema [%s]", tableName, getFullSchemaName())
-                  .build(logger);
+            case VIEW:
+              try {
+                return new DrillViewTable(getView(f), f.getOwner(), schemaConfig.getViewExpansionContext());
+              } catch (AccessControlException e) {
+                if (!schemaConfig.getIgnoreAuthErrors()) {
+                  logger.debug(e.getMessage());
+                  throw UserException.permissionError(e)
+                    .message("Not authorized to read view [%s] in schema [%s]", tableName, getFullSchemaName())
+                    .build(logger);
+                }
+              } catch (IOException e) {
+                logger.warn("Failure while trying to load {}.view.drill file in workspace [{}]", tableName, getFullSchemaName(), e);
               }
-            } catch (IOException e) {
-              logger.warn("Failure while trying to load {}.view.drill file in workspace [{}]", tableName, getFullSchemaName(), e);
-            }
+            default:
           }
         }
       } catch (UnsupportedOperationException e) {
         logger.debug("The filesystem for this workspace does not support this operation.", e);
       }
-      final DrillTable table = tables.get(tableKey);
-      if (table != null) {
-        MetadataProviderManager providerManager = null;
-
-        if (schemaConfig.getOption(ExecConstants.METASTORE_ENABLED).bool_val) {
-          try {
-            MetastoreRegistry metastoreRegistry = plugin.getContext().getMetastoreRegistry();
-            TableInfo tableInfo = TableInfo.builder()
-                .storagePlugin(plugin.getName())
-                .workspace(schemaName)
-                .name(tableName)
-                .build();
-
-            MetastoreTableInfo metastoreTableInfo = metastoreRegistry.get()
-                .tables()
-                .basicRequests()
-                .metastoreTableInfo(tableInfo);
-            if (metastoreTableInfo.isExists()) {
-              providerManager = new MetastoreMetadataProviderManager(metastoreRegistry, tableInfo,
-                  new MetastoreMetadataProviderConfig(schemaConfig.getOption(ExecConstants.METASTORE_USE_SCHEMA_METADATA).bool_val,
-                      schemaConfig.getOption(ExecConstants.METASTORE_USE_STATISTICS_METADATA).bool_val,
-                      schemaConfig.getOption(ExecConstants.METASTORE_FALLBACK_TO_FILE_METADATA).bool_val));
-            }
-          } catch (MetastoreException e) {
-            logger.warn("Exception happened during obtaining Metastore instance.", e);
-          }
-        }
-        if (providerManager == null) {
-          providerManager = FileSystemMetadataProviderManager.init();
-        }
-        setMetadataTable(providerManager, table, tableName);
-        setSchema(providerManager, tableName);
-        table.setTableMetadataProviderManager(providerManager);
-      }
+      DrillTable table = tables.get(tableKey);
+      setMetadataProviderManager(table, tableName);
       return table;
     }
 
@@ -622,59 +591,18 @@ public class WorkspaceSchemaFactory {
     @Override
     public DrillTable create(TableInstance key) {
       try {
-        final FileSelection fileSelection = FileSelection.create(getFS(), config.getLocation(), key.sig.getName(), config.allowAccessOutsideWorkspace());
-        if (fileSelection == null) {
+        FileSelectionInspector inspector = new FileSelectionInspector(key);
+        if (inspector.fileSelection == null) {
           return null;
         }
 
-        boolean hasDirectories = fileSelection.containsDirectories(getFS());
+        DrillTable table = inspector.matchFormat();
 
-        if (key.sig.getParams().size() > 0) {
-          FileSelection newSelection = detectEmptySelection(fileSelection, hasDirectories);
-
-          if (newSelection.isEmptyDirectory()) {
-            return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), fileSelection);
-          }
-
-          FormatPluginConfig formatConfig = optionExtractor.createConfigForTable(key);
-          FormatSelection selection = new FormatSelection(formatConfig, newSelection);
-          DrillTable drillTable = new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), selection);
-
-          List<TableParamDef> commonParams = key.sig.getCommonParams();
-          if (commonParams.isEmpty()) {
-            return drillTable;
-          }
-          // extract only common parameters related values
-          List<Object> paramValues = key.params.subList(key.params.size() - commonParams.size(), key.params.size());
-          return applyFunctionParameters(drillTable, commonParams, paramValues);
+        if (key.sig.getParams().size() == 0) {
+          return table;
+        } else {
+          return parseTableFunction(key, inspector, table);
         }
-
-        if (hasDirectories) {
-          for (final FormatMatcher matcher : dirMatchers) {
-            try {
-              DrillTable table = matcher.isReadable(getFS(), fileSelection, plugin, storageEngineName, schemaConfig);
-              if (table != null) {
-                return table;
-              }
-            } catch (IOException e) {
-              logger.debug("File read failed.", e);
-            }
-          }
-        }
-
-        FileSelection newSelection = detectEmptySelection(fileSelection, hasDirectories);
-        if (newSelection.isEmptyDirectory()) {
-          return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), fileSelection);
-        }
-
-        for (final FormatMatcher matcher : fileMatchers) {
-          DrillTable table = matcher.isReadable(getFS(), newSelection, plugin, storageEngineName, schemaConfig);
-          if (table != null) {
-            return table;
-          }
-        }
-        return null;
-
       } catch (AccessControlException e) {
         if (!schemaConfig.getIgnoreAuthErrors()) {
           logger.debug(e.getMessage());
@@ -685,8 +613,32 @@ public class WorkspaceSchemaFactory {
       } catch (IOException e) {
         logger.debug("Failed to create DrillTable with root {} and name {}", config.getLocation(), key, e);
       }
-
       return null;
+    }
+
+    private DrillTable parseTableFunction(TableInstance key,
+        FileSelectionInspector inspector, DrillTable table) {
+      FileSelection newSelection = inspector.selection();
+
+      if (newSelection.isEmptyDirectory()) {
+        return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(),
+            inspector.fileSelection);
+      }
+
+      FormatPluginConfig baseConfig = inspector.formatMatch == null
+          ? null : inspector.formatMatch.getFormatPlugin().getConfig();
+      FormatPluginConfig formatConfig = optionExtractor.createConfigForTable(key, mapper, baseConfig);
+      FormatSelection selection = new FormatSelection(formatConfig, newSelection);
+      DrillTable drillTable = new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), selection);
+      setMetadataProviderManager(drillTable, key.sig.getName());
+
+      List<TableParamDef> commonParams = key.sig.getCommonParams();
+      if (commonParams.isEmpty()) {
+        return drillTable;
+      }
+      // extract only common parameters related values
+      List<Object> paramValues = key.params.subList(key.params.size() - commonParams.size(), key.params.size());
+      return applyFunctionParameters(drillTable, commonParams, paramValues);
     }
 
     /**
@@ -718,6 +670,42 @@ public class WorkspaceSchemaFactory {
         logger.debug("Failed to find format matcher for file: {}", file, e);
       }
       return null;
+    }
+
+    private void setMetadataProviderManager(DrillTable table, String tableName) {
+      if (table != null) {
+        MetadataProviderManager providerManager = null;
+
+        if (schemaConfig.getOption(ExecConstants.METASTORE_ENABLED).bool_val) {
+          try {
+            MetastoreRegistry metastoreRegistry = plugin.getContext().getMetastoreRegistry();
+            TableInfo tableInfo = TableInfo.builder()
+                .storagePlugin(plugin.getName())
+                .workspace(schemaName)
+                .name(tableName)
+                .build();
+
+            MetastoreTableInfo metastoreTableInfo = metastoreRegistry.get()
+                .tables()
+                .basicRequests()
+                .metastoreTableInfo(tableInfo);
+            if (metastoreTableInfo.isExists()) {
+              providerManager = new MetastoreMetadataProviderManager(metastoreRegistry, tableInfo,
+                  new MetastoreMetadataProviderConfig(schemaConfig.getOption(ExecConstants.METASTORE_USE_SCHEMA_METADATA).bool_val,
+                      schemaConfig.getOption(ExecConstants.METASTORE_USE_STATISTICS_METADATA).bool_val,
+                      schemaConfig.getOption(ExecConstants.METASTORE_FALLBACK_TO_FILE_METADATA).bool_val));
+            }
+          } catch (MetastoreException e) {
+            logger.warn("Exception happened during obtaining Metastore instance. File system metadata provider will be used.", e);
+          }
+        }
+        if (providerManager == null) {
+          providerManager = FileSystemMetadataProviderManager.init();
+        }
+        setMetadataTable(providerManager, table, tableName);
+        setSchema(providerManager, tableName);
+        table.setTableMetadataProviderManager(providerManager);
+      }
     }
 
     @Override
@@ -834,6 +822,64 @@ public class WorkspaceSchemaFactory {
       ).collect(Collectors.toList());
     }
 
-  }
+    /**
+     * Compute and retain file selection and format match properties used
+     * by multiple functions above.
+     */
+    private class FileSelectionInspector {
+      private final TableInstance key;
+      private final DrillFileSystem fs;
+      public final FileSelection fileSelection;
+      public final boolean hasDirectories;
+      private FileSelection newSelection;
+      public FormatMatcher formatMatch;
 
+      public FileSelectionInspector(TableInstance key) throws IOException {
+        this.key = key;
+        this.fs = getFS();
+        this.fileSelection = FileSelection.create(fs, config.getLocation(), key.sig.getName(), config.allowAccessOutsideWorkspace());
+        if (fileSelection == null) {
+          this.hasDirectories = false;
+        } else {
+          this.hasDirectories = fileSelection.containsDirectories(fs);
+        }
+      }
+
+      protected DrillTable matchFormat() throws IOException {
+         if (hasDirectories) {
+          for (final FormatMatcher matcher : dirMatchers) {
+            try {
+              DrillTable table = matcher.isReadable(getFS(), fileSelection, plugin, storageEngineName, schemaConfig);
+              if (table != null) {
+                formatMatch = matcher;
+                setMetadataProviderManager(table, key.sig.getName());
+                return table;
+              }
+            } catch (IOException e) {
+              logger.debug("File read failed.", e);
+            }
+          }
+        }
+
+        newSelection = detectEmptySelection(fileSelection, hasDirectories);
+        if (newSelection.isEmptyDirectory()) {
+          return new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), fileSelection);
+        }
+
+        for (final FormatMatcher matcher : fileMatchers) {
+          DrillTable table = matcher.isReadable(getFS(), newSelection, plugin, storageEngineName, schemaConfig);
+          if (table != null) {
+            formatMatch = matcher;
+            setMetadataProviderManager(table, key.sig.getName());
+            return table;
+          }
+        }
+        return null;
+      }
+
+      public FileSelection selection() {
+        return newSelection != null ? newSelection : fileSelection;
+      }
+    }
+  }
 }

@@ -25,6 +25,7 @@ import org.apache.drill.exec.vector.complex.UnionVector;
 public class NullStateReaders {
 
   public static final RequiredStateReader REQUIRED_STATE_READER = new RequiredStateReader();
+  public static final NullStateReader NULL_STATE_READER = new AlwaysNullStateReader();
 
   private NullStateReaders() { }
 
@@ -190,4 +191,15 @@ public class NullStateReaders {
     }
   }
 
+  protected static class AlwaysNullStateReader implements NullStateReader {
+
+    @Override
+    public void bindIndex(ColumnReaderIndex rowIndex) {
+    }
+
+    @Override
+    public boolean isNull() {
+      return true;
+    }
+  }
 }

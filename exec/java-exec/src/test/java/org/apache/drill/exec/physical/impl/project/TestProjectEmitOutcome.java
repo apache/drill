@@ -18,11 +18,13 @@
 package org.apache.drill.exec.physical.impl.project;
 
 import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.physical.impl.BaseTestOpBatchEmitOutcome;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -34,8 +36,10 @@ import static org.junit.Assert.assertTrue;
 public class TestProjectEmitOutcome extends BaseTestOpBatchEmitOutcome {
 
   /**
-   * Test that if empty input batch is received with OK_NEW_SCHEMA or EMIT outcome, then Project doesn't ignores
-   * these empty batches and instead return them downstream with correct outcomes.
+   * Test that if empty input batch is received with OK_NEW_SCHEMA or EMIT
+   * outcome, then Project doesn't ignores these empty batches and instead
+   * return them downstream with correct outcomes.
+   *
    * @throws Throwable
    */
   @Test
@@ -49,19 +53,22 @@ public class TestProjectEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final Project projectConf = new Project(parseExprs("id_left+5", "id_left"), null);
-    final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
-      operatorFixture.getFragmentContext());
+    try (final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
+      operatorFixture.getFragmentContext());) {
 
-    assertTrue(projectBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
-    outputRecordCount += projectBatch.getRecordCount();
-    assertTrue(projectBatch.next() == RecordBatch.IterOutcome.EMIT);
-    outputRecordCount += projectBatch.getRecordCount();
-    assertEquals(0, outputRecordCount);
+      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+      outputRecordCount += projectBatch.getRecordCount();
+      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.EMIT);
+      outputRecordCount += projectBatch.getRecordCount();
+      assertEquals(0, outputRecordCount);
+    }
   }
 
   /**
-   * Test to show if a non-empty batch is accompanied with EMIT outcome then Project operator produces output for
-   * that batch and return the output using EMIT outcome.
+   * Test to show if a non-empty batch is accompanied with EMIT outcome then
+   * Project operator produces output for that batch and return the output using
+   * EMIT outcome.
+   *
    * @throws Throwable
    */
   @Test
@@ -75,14 +82,15 @@ public class TestProjectEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final Project projectConf = new Project(parseExprs("id_left+5", "id_left"), null);
-    final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
-      operatorFixture.getFragmentContext());
+    try (final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
+        operatorFixture.getFragmentContext());) {
 
-    assertTrue(projectBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
-    outputRecordCount += projectBatch.getRecordCount();
-    assertTrue(projectBatch.next() == RecordBatch.IterOutcome.EMIT);
-    outputRecordCount += projectBatch.getRecordCount();
-    assertEquals(1, outputRecordCount);
+      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+      outputRecordCount += projectBatch.getRecordCount();
+      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.EMIT);
+      outputRecordCount += projectBatch.getRecordCount();
+      assertEquals(1, outputRecordCount);
+    }
   }
 
   /**
@@ -101,14 +109,15 @@ public class TestProjectEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final Project projectConf = new Project(parseExprs("id_left+5", "id_left"), null);
-    final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
-      operatorFixture.getFragmentContext());
+    try (final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
+          operatorFixture.getFragmentContext());) {
 
-    assertTrue(projectBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
-    outputRecordCount += projectBatch.getRecordCount();
-    assertTrue(projectBatch.next() == RecordBatch.IterOutcome.EMIT);
-    outputRecordCount += projectBatch.getRecordCount();
-    assertEquals(1, outputRecordCount);
+      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+      outputRecordCount += projectBatch.getRecordCount();
+      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.EMIT);
+      outputRecordCount += projectBatch.getRecordCount();
+      assertEquals(1, outputRecordCount);
+    }
   }
 
   /**
@@ -134,16 +143,17 @@ public class TestProjectEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final Project projectConf = new Project(parseExprs("id_left+5", "id_left"), null);
-    final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
-      operatorFixture.getFragmentContext());
+    try (final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
+            operatorFixture.getFragmentContext());) {
 
-    assertTrue(projectBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
-    outputRecordCount += projectBatch.getRecordCount();
-    // OK will not be received since it's was accompanied with empty batch
-    assertTrue(projectBatch.next() == RecordBatch.IterOutcome.EMIT);
-    outputRecordCount += projectBatch.getRecordCount();
-    assertTrue(projectBatch.next() == RecordBatch.IterOutcome.NONE);
-    assertEquals(1, outputRecordCount);
+      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+      outputRecordCount += projectBatch.getRecordCount();
+      // OK will not be received since it's was accompanied with empty batch
+      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.EMIT);
+      outputRecordCount += projectBatch.getRecordCount();
+      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.NONE);
+      assertEquals(1, outputRecordCount);
+    }
   }
 
   /**
@@ -170,16 +180,15 @@ public class TestProjectEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final Project projectConf = new Project(parseExprs("convert_fromJSON(name_left)", "name_columns"), null);
-    final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
-      operatorFixture.getFragmentContext());
+    try (final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
+            operatorFixture.getFragmentContext());) {
 
-    try {
-      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
-      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.EMIT);
+      assertEquals(RecordBatch.IterOutcome.OK_NEW_SCHEMA, projectBatch.next());
+      projectBatch.next(); // Fails
       fail();
-    } catch (Exception e) {
+    } catch (UserException e) {
       // exception is expected because of complex writers case
-      assertTrue(e instanceof UnsupportedOperationException);
+      assertEquals(ErrorType.UNSUPPORTED_OPERATION, e.getErrorType());
     }
   }
 
@@ -209,15 +218,14 @@ public class TestProjectEmitOutcome extends BaseTestOpBatchEmitOutcome {
       inputContainer, inputOutcomes, emptyInputRowSet.container().getSchema());
 
     final Project projectConf = new Project(parseExprs("convert_fromJSON(name_left)", "name_columns"), null);
-    final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
-      operatorFixture.getFragmentContext());
+    try (final ProjectRecordBatch projectBatch = new ProjectRecordBatch(projectConf, mockInputBatch,
+            operatorFixture.getFragmentContext());) {
 
-    try {
-      assertTrue(projectBatch.next() == RecordBatch.IterOutcome.OK_NEW_SCHEMA);
+      projectBatch.next(); // Fails
       fail();
-    } catch (Exception e) {
+    } catch (UserException e) {
       // exception is expected because of complex writers case
-      assertTrue(e instanceof UnsupportedOperationException);
+      assertEquals(ErrorType.UNSUPPORTED_OPERATION, e.getErrorType());
     }
   }
 }

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -36,24 +37,7 @@ import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 
-public class FunctionGenerationHelper {
-  public static final String COMPARE_TO_NULLS_HIGH = "compare_to_nulls_high";
-  public static final String COMPARE_TO_NULLS_LOW = "compare_to_nulls_low";
-
-  public static final String EQ = "equal";
-  public static final String NE = "not_equal";
-  public static final String GT = "greater_than";
-  public static final String GE = "greater_than_or_equal_to";
-  public static final String LT = "less_than";
-  public static final String LE = "less_than_or_equal_to";
-
-  public static final String IS_NULL = "isnull";
-  public static final String IS_NOT_NULL = "isnotnull";
-  public static final String IS_TRUE = "istrue";
-  public static final String IS_NOT_TRUE = "isnottrue";
-  public static final String IS_FALSE = "isfalse";
-  public static final String IS_NOT_FALSE = "isnotfalse";
-  public static final String NOT = "not";
+public class FunctionGenerationHelper implements FunctionNames {
 
   /**
    * Finds ordering comparator ("compare_to...") FunctionHolderExpression with
@@ -113,7 +97,7 @@ public class FunctionGenerationHelper {
   private static LogicalExpression getFunctionExpression(String name, HoldingContainer... args) {
     List<MajorType> argTypes = new ArrayList<MajorType>(args.length);
     List<LogicalExpression> argExpressions = new ArrayList<LogicalExpression>(args.length);
-    for(HoldingContainer c : args) {
+    for (HoldingContainer c : args) {
       argTypes.add(c.getMajorType());
       argExpressions.add(new HoldingContainerExpression(c));
     }
@@ -132,7 +116,7 @@ public class FunctionGenerationHelper {
   private static LogicalExpression getTypeComparisonFunction(LogicalExpression comparisonFunction, HoldingContainer... args) {
     List<LogicalExpression> argExpressions = Lists.newArrayList();
     List<MajorType> argTypes = Lists.newArrayList();
-    for(HoldingContainer c : args) {
+    for (HoldingContainer c : args) {
       argTypes.add(c.getMajorType());
       argExpressions.add(new HoldingContainerExpression(c));
     }
@@ -141,7 +125,7 @@ public class FunctionGenerationHelper {
     List<LogicalExpression> newArgs = Lists.newArrayList();
     newArgs.add(call);
     newArgs.add(new IntExpression(0, ExpressionPosition.UNKNOWN));
-    FunctionCall notEqual = new FunctionCall("not_equal", newArgs, ExpressionPosition.UNKNOWN);
+    FunctionCall notEqual = new FunctionCall(FunctionNames.NE, newArgs, ExpressionPosition.UNKNOWN);
 
     IfExpression.IfCondition ifCondition = new IfCondition(notEqual, call);
     IfExpression ifExpression = IfExpression.newBuilder().setIfCondition(ifCondition).setElse(comparisonFunction).build();
@@ -175,5 +159,4 @@ public class FunctionGenerationHelper {
 
     return sb.toString();
   }
-
 }

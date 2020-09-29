@@ -18,42 +18,28 @@
 
 package org.apache.drill.exec.store.excel;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
-import org.apache.drill.exec.store.dfs.ZipCodec;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.apache.drill.exec.record.metadata.SchemaBuilder;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.CommonConfigurationKeys;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
-
-import java.io.FileInputStream;
-import java.nio.file.Paths;
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.apache.drill.categories.RowSetTests;
-import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.file.Paths;
 
+import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 @Category(RowSetTests.class)
@@ -62,9 +48,6 @@ public class TestExcelFormat extends ClusterTest {
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
-
-    ExcelFormatConfig formatConfig = new ExcelFormatConfig();
-    cluster.defineFormat("cp", "excel", formatConfig);
 
     // Needed for compressed file unit test
     dirTestWatcher.copyResourceToRoot(Paths.get("excel/"));
@@ -76,7 +59,8 @@ public class TestExcelFormat extends ClusterTest {
 
     testBuilder()
       .sqlQuery(sql)
-      .ordered().baselineColumns("id", "first_name", "last_name", "email", "gender", "birthdate", "balance", "order_count", "average_order")
+      .unOrdered()
+      .baselineColumns("id", "first_name", "last_name", "email", "gender", "birthdate", "balance", "order_count", "average_order")
       .baselineValues(1.0, "Cornelia", "Matej", "cmatej0@mtv.com", "Female", "10/31/1974", 735.29, 22.0, 33.42227272727273)
       .baselineValues(2.0, "Nydia", "Heintsch", "nheintsch1@godaddy.com", "Female", "12/10/1966", 784.14, 22.0, 35.64272727272727)
       .baselineValues(3.0, "Waiter", "Sherel", "wsherel2@utexas.edu", "Male", "3/12/1961", 172.36, 17.0, 10.138823529411766)
@@ -109,6 +93,41 @@ public class TestExcelFormat extends ClusterTest {
       .addRow(3.0, "Waiter", "Sherel", "wsherel2@utexas.edu", "Male", "3/12/1961", 172.36, 17.0, 10.13882353)
       .addRow(4.0, "Cicely", "Lyver", "clyver3@mysql.com", "Female", "5/4/2000", 987.39, 6.0, 164.565)
       .addRow(5.0, "Dorie", "Doe", "ddoe4@spotify.com", "Female", "12/28/1955", 852.48, 17.0, 50.14588235)
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+
+  @Test
+  public void testExplicitMetadataQuery() throws RpcException {
+    String sql =
+      "SELECT _category, _content_status, _content_type, _creator, _description, _identifier, _keywords, _last_modified_by_user, _revision, _subject, _title, _created," +
+        "_last_printed, _modified FROM cp.`excel/test_data.xlsx` LIMIT 1";
+
+    QueryBuilder q = client.queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("_category", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_content_status", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_content_type", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_creator", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_description", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_identifier", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_keywords", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_last_modified_by_user", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_revision", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_subject", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_title", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_created", TypeProtos.MinorType.TIMESTAMP)
+      .addNullable("_last_printed", TypeProtos.MinorType.TIMESTAMP)
+      .addNullable("_modified", TypeProtos.MinorType.TIMESTAMP)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("test_category", null, null, "test_author", null, null, "test_keywords", "Microsoft Office User", null, "test_subject", "test_title",
+        1571602578000L, null,1588212319000L)
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
@@ -323,7 +342,7 @@ public class TestExcelFormat extends ClusterTest {
 
     testBuilder()
       .sqlQuery(sql)
-      .ordered()
+      .unOrdered()
       .baselineColumns("col1", "col2", "col3")
       .baselineValues(1.0,2.0,null)
       .baselineValues(2.0,4.0,null)
@@ -342,11 +361,12 @@ public class TestExcelFormat extends ClusterTest {
 
     testBuilder()
       .sqlQuery(sql)
-      .ordered().baselineColumns("col1", "col2")
-      .baselineValues("1.0", "Bob")
-      .baselineValues("2.0", "Steve")
-      .baselineValues("3.0", "Anne")
-      .baselineValues("Bob", "3.0")
+      .unOrdered()
+      .baselineColumns("col1", "col2")
+      .baselineValues("1", "Bob")
+      .baselineValues("2", "Steve")
+      .baselineValues("3", "Anne")
+      .baselineValues("Bob", "3")
       .go();
   }
 
@@ -382,21 +402,22 @@ public class TestExcelFormat extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
-  private void generateCompressedFile(String fileName, String codecName, String outFileName) throws IOException {
-    FileSystem fs = ExecTest.getLocalFileSystem();
-    Configuration conf = fs.getConf();
-    conf.set(CommonConfigurationKeys.IO_COMPRESSION_CODECS_KEY, ZipCodec.class.getCanonicalName());
-    CompressionCodecFactory factory = new CompressionCodecFactory(conf);
+  @Test
+  public void testFileWithDoubleDates() throws Exception {
+    String sql = "SELECT `Close Date`, `Type` FROM table(cp.`excel/test_data.xlsx` (type=> 'excel', sheetName => 'comps')) WHERE style='Contemporary'";
 
-    CompressionCodec codec = factory.getCodecByName(codecName);
-    assertNotNull(codecName + " is not found", codec);
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    Path outFile = new Path(dirTestWatcher.getRootDir().getAbsolutePath(), outFileName);
-    Path inFile = new Path(dirTestWatcher.getRootDir().getAbsolutePath(), fileName);
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Close Date", TypeProtos.MinorType.TIMESTAMP)
+      .addNullable("Type", TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
 
-    try (InputStream inputStream = new FileInputStream(inFile.toUri().toString());
-         OutputStream outputStream = codec.createOutputStream(fs.create(outFile))) {
-      IOUtils.copyBytes(inputStream, outputStream, fs.getConf(), false);
-    }
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1412294400000L, "Hi Rise")
+      .addRow(1417737600000L, "Hi Rise")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 }

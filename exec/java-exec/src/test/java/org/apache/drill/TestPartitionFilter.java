@@ -24,38 +24,64 @@ import java.nio.file.Paths;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category({SqlTest.class, PlannerTest.class})
-public class TestPartitionFilter extends PlanTestBase {
+public class TestPartitionFilter extends ClusterTest {
 
-  private static void testExcludeFilter(String query, int expectedNumFiles,
-      String excludedFilterPattern, int expectedRowCount) throws Exception {
-    int actualRowCount = testSql(query);
-    assertEquals(expectedRowCount, actualRowCount);
-    String numFilesPattern = "numFiles=" + expectedNumFiles;
-    testPlanMatchingPatterns(query, new String[]{numFilesPattern}, new String[]{excludedFilterPattern});
+  @BeforeClass
+  public static void setUp() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
   }
 
-  private static void testIncludeFilter(String query, int expectedNumFiles,
-      String includedFilterPattern, int expectedRowCount) throws Exception {
-    int actualRowCount = testSql(query);
+  private void testExcludeFilter(String query, int expectedNumFiles,
+      String excludedFilterPattern, long expectedRowCount) throws Exception {
+    long actualRowCount = queryBuilder()
+        .sql(query)
+        .run()
+        .recordCount();
     assertEquals(expectedRowCount, actualRowCount);
     String numFilesPattern = "numFiles=" + expectedNumFiles;
-    testPlanMatchingPatterns(query, new String[]{numFilesPattern, includedFilterPattern}, new String[]{});
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include(numFilesPattern)
+        .exclude(excludedFilterPattern)
+        .match();
+  }
+
+  private void testIncludeFilter(String query, int expectedNumFiles,
+      String includedFilterPattern, int expectedRowCount) throws Exception {
+    long actualRowCount = queryBuilder()
+        .sql(query)
+        .run()
+        .recordCount();
+    assertEquals(expectedRowCount, actualRowCount);
+    String numFilesPattern = "numFiles=" + expectedNumFiles;
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include(numFilesPattern, includedFilterPattern)
+        .match();
   }
 
   @BeforeClass
   public static void createParquetTable() throws Exception {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel"));
 
-    test("alter session set `planner.disable_exchanges` = true");
-    test("create table dfs.tmp.parquet partition by (yr, qrtr) as select o_orderkey, o_custkey, " +
-        "o_orderstatus, o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment, cast(dir0 as int) yr, dir1 qrtr " +
-        "from dfs.`multilevel/parquet`");
-    test("alter session set `planner.disable_exchanges` = false");
+    try {
+      client.alterSession(PlannerSettings.EXCHANGE.getOptionName(), true);
+      run("create table dfs.tmp.parquet partition by (yr, qrtr) as select o_orderkey, o_custkey, " +
+          "o_orderstatus, o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment, cast(dir0 as int) yr, dir1 qrtr " +
+          "from dfs.`multilevel/parquet`");
+    } finally {
+      client.resetSession(PlannerSettings.EXCHANGE.getOptionName());
+    }
   }
 
   @Test  //Parquet: basic test with dir0 and dir1 filters
@@ -152,28 +178,28 @@ public class TestPartitionFilter extends PlanTestBase {
   public void testPartitionFilter4_Parquet() throws Exception {
     String query1 = "select t1.dir0, t1.dir1, t1.o_custkey, t1.o_orderdate, cast(t2.c_name as varchar(10)) from dfs.`multilevel/parquet` t1, cp.`tpch/customer.parquet` t2 where" +
       " t1.o_custkey = t2.c_custkey and t1.dir0=1994 and t1.dir1='Q1'";
-    test(query1);
+    run(query1);
   }
 
   @Test //Parquet: filters contain join conditions and partition filters
   public void testPartitionFilter4_Parquet_from_CTAS() throws Exception {
     String query1 = "select t1.dir0, t1.dir1, t1.o_custkey, t1.o_orderdate, cast(t2.c_name as varchar(10)) from dfs.tmp.parquet t1, cp.`tpch/customer.parquet` t2 where " +
       "t1.o_custkey = t2.c_custkey and t1.yr=1994 and t1.qrtr='Q1'";
-    test(query1);
+    run(query1);
   }
 
   @Test //Json: filters contain join conditions and partition filters
   public void testPartitionFilter4_Json() throws Exception {
     String query1 = "select t1.dir0, t1.dir1, t1.o_custkey, t1.o_orderdate, cast(t2.c_name as varchar(10)) from dfs.`multilevel/json` t1, cp.`tpch/customer.parquet` t2 where " +
     "cast(t1.o_custkey as bigint) = cast(t2.c_custkey as bigint) and t1.dir0=1994 and t1.dir1='Q1'";
-    test(query1);
+    run(query1);
   }
 
   @Test //CSV: filters contain join conditions and partition filters
   public void testPartitionFilter4_Csv() throws Exception {
     String query1 = "select t1.dir0, t1.dir1, t1.columns[1] as o_custkey, t1.columns[4] as o_orderdate, cast(t2.c_name as varchar(10)) from dfs.`multilevel/csv` t1, cp" +
     ".`tpch/customer.parquet` t2 where cast(t1.columns[1] as bigint) = cast(t2.c_custkey as bigint) and t1.dir0=1994 and t1.dir1='Q1'";
-    test(query1);
+    run(query1);
   }
 
   @Test // Parquet: IN filter
@@ -364,6 +390,14 @@ public class TestPartitionFilter extends PlanTestBase {
   }
 
   @Test
+  public void testLogicalDirPruningWithTableFunction() throws Exception {
+    // 1995/Q1 contains one valid parquet, while 1996/Q1 contains bad format parquet.
+    // If dir pruning happens in logical, the query will run fine, since the bad parquet has been pruned before we build ParquetGroupScan.
+    String query = "select dir0, o_custkey from table(dfs.`multilevel/parquetWithBadFormat` (type => 'parquet')) where dir0=1995";
+    testExcludeFilter(query, 1, "Filter\\(", 10);
+  }
+
+  @Test
   public void testLogicalDirPruning2() throws Exception {
     // 1995/Q1 contains one valid parquet, while 1996/Q1 contains bad format parquet.
     // If dir pruning happens in logical, the query will run fine, since the bad parquet has been pruned before we build ParquetGroupScan.
@@ -388,12 +422,16 @@ public class TestPartitionFilter extends PlanTestBase {
   @Test //DRILL-3710 Partition pruning should occur with varying IN-LIST size
   public void testPartitionFilterWithInSubquery() throws Exception {
     String query = "select * from dfs.`multilevel/parquet` where cast (dir0 as int) IN (1994, 1994, 1994, 1994, 1994, 1994)";
-    /* In list size exceeds threshold - no partition pruning since predicate converted to join */
-    test("alter session set `planner.in_subquery_threshold` = 2");
-    testExcludeFilter(query, 12, "Filter\\(", 40);
-    /* In list size does not exceed threshold - partition pruning */
-    test("alter session set `planner.in_subquery_threshold` = 10");
-    testExcludeFilter(query, 4, "Filter\\(", 40);
+    try {
+      /* In list size exceeds threshold - no partition pruning since predicate converted to join */
+      client.alterSession(PlannerSettings.IN_SUBQUERY_THRESHOLD.getOptionName(), 2);
+      testExcludeFilter(query, 12, "Filter\\(", 40);
+      /* In list size does not exceed threshold - partition pruning */
+      client.alterSession(PlannerSettings.IN_SUBQUERY_THRESHOLD.getOptionName(), 10);
+      testExcludeFilter(query, 4, "Filter\\(", 40);
+    } finally {
+      client.resetSession(PlannerSettings.IN_SUBQUERY_THRESHOLD.getOptionName());
+    }
   }
 
   @Test // DRILL-4825: querying same table with different filter in UNION ALL.
@@ -402,17 +440,19 @@ public class TestPartitionFilter extends PlanTestBase {
         + "( select dir0 from dfs.`multilevel/parquet` where dir0 in ('1994') union all "
         + "  select dir0 from dfs.`multilevel/parquet` where dir0 in ('1995', '1996') )";
 
-    String [] excluded = {"Filter\\("};
-
     // verify plan that filter is applied in partition pruning.
-    testPlanMatchingPatterns(query, null, excluded);
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .exclude("Filter\\(")
+        .match();
 
     // verify we get correct count(*).
     testBuilder()
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("cnt")
-        .baselineValues((long)120)
+        .baselineValues(120L)
         .build()
         .run();
   }
@@ -424,9 +464,12 @@ public class TestPartitionFilter extends PlanTestBase {
             + " ( select sum(o_custkey) as y from dfs.`multilevel/parquet` where dir0 in ('1995', '1996')) "
             + " on x = y ";
 
-    String [] excluded = {"Filter\\("};
     // verify plan that filter is applied in partition pruning.
-    testPlanMatchingPatterns(query, null, excluded);
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .exclude("Filter\\(")
+        .match();
 
     // verify we get empty result.
     testBuilder()
@@ -446,11 +489,19 @@ public class TestPartitionFilter extends PlanTestBase {
     String [] excluded = {"1995", "Filter\\("};
 
     // verify we get correct count(*).
-    int actualRowCount = testSql(query);
+    long actualRowCount = queryBuilder()
+        .sql(query)
+        .run()
+        .recordCount();
     int expectedRowCount = 800;
     assertEquals("Expected and actual row count should match", expectedRowCount, actualRowCount);
 
     // verify plan that filter is applied in partition pruning.
-    testPlanMatchingPatterns(query, expectedPlan, excluded);
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include(expectedPlan)
+        .exclude(excluded)
+        .match();
   }
 }

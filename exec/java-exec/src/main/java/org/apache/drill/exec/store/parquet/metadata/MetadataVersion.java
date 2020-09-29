@@ -42,7 +42,8 @@ public class MetadataVersion implements Comparable<MetadataVersion> {
   public MetadataVersion(String metadataVersion) {
     Matcher matcher = PATTERN.matcher(metadataVersion);
     if (!matcher.matches()) {
-      DrillRuntimeException.format("Could not parse metadata version '%s' using format '%s'", metadataVersion, FORMAT);
+      throw DrillRuntimeException.create(
+          "Could not parse metadata version '%s' using format '%s'", metadataVersion, FORMAT);
     }
     this.major = Integer.parseInt(matcher.group(1));
     this.minor = matcher.group(3) != null ? Integer.parseInt(matcher.group(3)) : 0;
@@ -103,6 +104,45 @@ public class MetadataVersion implements Comparable<MetadataVersion> {
         .result();
   }
 
+  /**
+   * Check if this version is at least (equals or higher) the one
+   * identified by {@code major} and {@code minor} versions integer literals.
+   *
+   * @param major major version
+   * @param minor minor version
+   * @return {@literal true} if the version is equal to or higher than
+   *         the one it is being checked against
+   */
+  public boolean isAtLeast(int major, int minor) {
+    return this.major > major || (this.major == major && this.minor >= minor);
+  }
+
+  /**
+   * Check if the version is the same as the one identified by
+   * {@code major} and {@code minor} versions integer literals.
+   *
+   * @param major major version
+   * @param minor minor version
+   * @return {@literal true} if the version is equal to the one
+   *         it is being checked against
+   */
+  public boolean isEqualTo(int major, int minor) {
+    return this.major == major && this.minor == minor;
+  }
+
+  /**
+   * Check if this version comes after the one identified by {@code major}
+   * and {@code minor} versions integer literals. That is, this one was introduced later.
+   *
+   * @param major major version
+   * @param minor minor version
+   * @return {@literal true} if the version is defined later than
+   *         the one it is being checked against
+   */
+  public boolean isHigherThan(int major, int minor) {
+    return this.major > major || (this.major == major && this.minor > minor);
+  }
+
 /**
  * Supported metadata versions.
  * <p>
@@ -157,6 +197,11 @@ public class MetadataVersion implements Comparable<MetadataVersion> {
     public static final String V4_1 = "4.1";
 
     /**
+     * Version 4.2: Added {@link org.apache.parquet.schema.Type.Repetition} to {@link Metadata_V4.ColumnTypeMetadata_v4}.
+     */
+    public static final String V4_2 = "4.2";
+
+    /**
      * All historical versions of the Drill metadata cache files. In case of introducing a new parquet metadata version
      * please follow the {@link MetadataVersion#FORMAT}.
      */
@@ -168,7 +213,8 @@ public class MetadataVersion implements Comparable<MetadataVersion> {
         new MetadataVersion(V3_2),
         new MetadataVersion(V3_3),
         new MetadataVersion(V4),
-        new MetadataVersion(V4_1)
+        new MetadataVersion(V4_1),
+        new MetadataVersion(V4_2)
     );
 
     /**

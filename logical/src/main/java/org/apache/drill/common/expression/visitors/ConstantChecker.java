@@ -84,7 +84,7 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
 
   @Override
   public Boolean visitBooleanOperator(BooleanOperator op, ErrorCollector errors) {
-    for (LogicalExpression e : op.args) {
+    for (LogicalExpression e : op.args()) {
       if (!e.accept(this, errors)) {
         return false;
       }

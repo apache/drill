@@ -42,7 +42,7 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
   private static final String DEFAULT_NAME = "ltsv";
 
   public LTSVFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
-    this(name, context, fsConf, storageConfig, new LTSVFormatPluginConfig());
+    this(name, context, fsConf, storageConfig, new LTSVFormatPluginConfig(null));
   }
 
   public LTSVFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, LTSVFormatPluginConfig formatPluginConfig) {

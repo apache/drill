@@ -59,7 +59,7 @@ public class ParquetRowGroupScan extends AbstractParquetRowGroupScan {
                              @JsonProperty("filter") LogicalExpression filter,
                              @JsonProperty("schema") TupleMetadata schema) throws ExecutionSetupException {
     this(userName,
-        (ParquetFormatPlugin) registry.getFormatPlugin(Preconditions.checkNotNull(storageConfig), Preconditions.checkNotNull(formatConfig)),
+        registry.resolveFormat(storageConfig, formatConfig, ParquetFormatPlugin.class),
         rowGroupReadEntries,
         columns,
         readerConfig,

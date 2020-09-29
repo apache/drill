@@ -28,10 +28,10 @@ import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.SubOperatorTest;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Test;
@@ -60,7 +60,7 @@ public class TestScanOrchestratorLateSchema extends SubOperatorTest {
 
     // SELECT * ...
 
-    builder.setProjection(RowSetTestUtils.projectAll());
+    builder.projection(RowSetTestUtils.projectAll());
     ScanSchemaOrchestrator orchestrator = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
@@ -116,7 +116,7 @@ public class TestScanOrchestratorLateSchema extends SubOperatorTest {
 
     // SELECT a, c ...
 
-    builder.setProjection(RowSetTestUtils.projectList("a", "c"));
+    builder.projection(RowSetTestUtils.projectList("a", "c"));
     ScanSchemaOrchestrator orchestrator = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM file

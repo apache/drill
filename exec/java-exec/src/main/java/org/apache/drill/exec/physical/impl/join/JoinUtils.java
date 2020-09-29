@@ -159,7 +159,7 @@ public class JoinUtils {
     // or both of them are decimal
     if (TypeCastRules.isNumericType(input1) && TypeCastRules.isNumericType(input2)
         && ((!Types.isDecimalType(input1) && !Types.isDecimalType(input2))
-          || Types.isDecimalType(input1) && Types.isDecimalType(input2))) {
+          || Types.areDecimalTypes(input1, input2))) {
       return true;
     }
 

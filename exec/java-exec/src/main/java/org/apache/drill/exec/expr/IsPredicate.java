@@ -27,6 +27,8 @@ import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -34,6 +36,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 public class IsPredicate<C extends Comparable<C>> extends LogicalExpressionBase implements FilterPredicate<C> {
+  private static final Logger logger = LoggerFactory.getLogger(IsPredicate.class);
 
   private final LogicalExpression expr;
 

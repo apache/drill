@@ -17,19 +17,23 @@
  */
 package org.apache.drill.metastore.iceberg.schema;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.MetastoreFieldDefinition;
 import org.apache.drill.metastore.iceberg.IcebergBaseTest;
 import org.apache.drill.metastore.iceberg.exceptions.IcebergMetastoreException;
+import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.iceberg.PartitionSpec;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.types.Types;
 import org.junit.Test;
+import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureVisitor;
 import org.objectweb.asm.signature.SignatureWriter;
+import org.objectweb.asm.tree.AnnotationNode;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,32 +54,32 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
 
       @Override
       void addFields(ClassWriter classWriter) {
-        FieldVisitor stringField = addField(classWriter, Opcodes.ACC_PRIVATE, "stringField", String.class);
-        annotate(stringField);
+        FieldVisitor stringField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.STORAGE_PLUGIN, String.class);
+        annotate(stringField, MetastoreColumn.STORAGE_PLUGIN, MetadataType.ALL);
 
-        FieldVisitor intField = addField(classWriter, Opcodes.ACC_PRIVATE, "intField", int.class);
-        annotate(intField);
+        FieldVisitor intField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.COLUMN, int.class);
+        annotate(intField, MetastoreColumn.COLUMN, MetadataType.TABLE);
 
-        FieldVisitor integerField = addField(classWriter, Opcodes.ACC_PRIVATE, "integerField", Integer.class);
-        annotate(integerField);
+        FieldVisitor integerField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.ROW_GROUP_INDEX, Integer.class);
+        annotate(integerField, MetastoreColumn.ROW_GROUP_INDEX, MetadataType.SEGMENT);
 
-        FieldVisitor longField = addField(classWriter, Opcodes.ACC_PRIVATE, "longField", Long.class);
-        annotate(longField);
+        FieldVisitor longField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.LAST_MODIFIED_TIME, Long.class);
+        annotate(longField, MetastoreColumn.LAST_MODIFIED_TIME, MetadataType.FILE);
 
-        FieldVisitor floatField = addField(classWriter, Opcodes.ACC_PRIVATE, "floatField", Float.class);
-        annotate(floatField);
+        FieldVisitor floatField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.COLUMNS_STATISTICS, Float.class);
+        annotate(floatField, MetastoreColumn.COLUMNS_STATISTICS, MetadataType.ALL);
 
-        FieldVisitor doubleField = addField(classWriter, Opcodes.ACC_PRIVATE, "doubleField", Double.class);
-        annotate(doubleField);
+        FieldVisitor doubleField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.ADDITIONAL_METADATA, Double.class);
+        annotate(doubleField, MetastoreColumn.ADDITIONAL_METADATA, MetadataType.TABLE);
 
-        FieldVisitor booleanField = addField(classWriter, Opcodes.ACC_PRIVATE, "booleanField", Boolean.class);
-        annotate(booleanField);
+        FieldVisitor booleanField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.INTERESTING_COLUMNS, Boolean.class);
+        annotate(booleanField, MetastoreColumn.INTERESTING_COLUMNS, MetadataType.SEGMENT);
 
-        FieldVisitor listField = addField(classWriter, Opcodes.ACC_PRIVATE, "listField", List.class, String.class);
-        annotate(listField);
+        FieldVisitor listField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.LOCATIONS, List.class, String.class);
+        annotate(listField, MetastoreColumn.LOCATIONS, MetadataType.PARTITION);
 
-        FieldVisitor mapField = addField(classWriter, Opcodes.ACC_PRIVATE, "mapField", Map.class, String.class, Float.class);
-        annotate(mapField);
+        FieldVisitor mapField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.HOST_AFFINITY, Map.class, String.class, Float.class);
+        annotate(mapField, MetastoreColumn.HOST_AFFINITY, MetadataType.ROW_GROUP);
       }
 
     }.generate();
@@ -86,16 +90,16 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
     int complexTypesIndex = IcebergTableSchema.STARTING_COMPLEX_TYPES_INDEX;
 
     Schema expectedSchema = new Schema(
-      Types.NestedField.optional(schemaIndex++, "stringField", Types.StringType.get()),
-      Types.NestedField.optional(schemaIndex++, "intField", Types.IntegerType.get()),
-      Types.NestedField.optional(schemaIndex++, "integerField", Types.IntegerType.get()),
-      Types.NestedField.optional(schemaIndex++, "longField", Types.LongType.get()),
-      Types.NestedField.optional(schemaIndex++, "floatField", Types.FloatType.get()),
-      Types.NestedField.optional(schemaIndex++, "doubleField", Types.DoubleType.get()),
-      Types.NestedField.optional(schemaIndex++, "booleanField", Types.BooleanType.get()),
-      Types.NestedField.optional(schemaIndex++, "listField",
+      Types.NestedField.optional(schemaIndex++, MetastoreColumn.STORAGE_PLUGIN.columnName(), Types.StringType.get()),
+      Types.NestedField.optional(schemaIndex++, MetastoreColumn.COLUMN.columnName(), Types.IntegerType.get()),
+      Types.NestedField.optional(schemaIndex++, MetastoreColumn.ROW_GROUP_INDEX.columnName(), Types.IntegerType.get()),
+      Types.NestedField.optional(schemaIndex++, MetastoreColumn.LAST_MODIFIED_TIME.columnName(), Types.LongType.get()),
+      Types.NestedField.optional(schemaIndex++, MetastoreColumn.COLUMNS_STATISTICS.columnName(), Types.FloatType.get()),
+      Types.NestedField.optional(schemaIndex++, MetastoreColumn.ADDITIONAL_METADATA.columnName(), Types.DoubleType.get()),
+      Types.NestedField.optional(schemaIndex++, MetastoreColumn.INTERESTING_COLUMNS.columnName(), Types.BooleanType.get()),
+      Types.NestedField.optional(schemaIndex++, MetastoreColumn.LOCATIONS.columnName(),
         Types.ListType.ofOptional(complexTypesIndex++, Types.StringType.get())),
-      Types.NestedField.optional(schemaIndex, "mapField",
+      Types.NestedField.optional(schemaIndex, MetastoreColumn.HOST_AFFINITY.columnName(),
         Types.MapType.ofOptional(complexTypesIndex++, complexTypesIndex, Types.StringType.get(), Types.FloatType.get())));
 
     assertEquals(expectedSchema.asStruct(), schema.tableSchema().asStruct());
@@ -107,16 +111,16 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
 
       @Override
       void addFields(ClassWriter classWriter) {
-        FieldVisitor stringField = addField(classWriter, Opcodes.ACC_PRIVATE, "stringField", String.class);
-        annotate(stringField);
+        FieldVisitor stringField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.STORAGE_PLUGIN, String.class);
+        annotate(stringField, MetastoreColumn.STORAGE_PLUGIN, MetadataType.ALL);
 
-        addField(classWriter, Opcodes.ACC_PRIVATE, "integerField", Integer.class);
+        addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.ADDITIONAL_METADATA, Integer.class);
       }
     }.generate();
 
     IcebergTableSchema schema = IcebergTableSchema.of(clazz, Collections.emptyList());
-    assertNotNull(schema.tableSchema().findField("stringField"));
-    assertNull(schema.tableSchema().findField("integerField"));
+    assertNotNull(schema.tableSchema().findField(MetastoreColumn.STORAGE_PLUGIN.columnName()));
+    assertNull(schema.tableSchema().findField(MetastoreColumn.ADDITIONAL_METADATA.columnName()));
   }
 
   @Test
@@ -141,8 +145,8 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
             .buildSignature();
 
         FieldVisitor listField =
-            classWriter.visitField(Opcodes.ACC_PRIVATE, "stringField", descriptor, signature, null);
-        annotate(listField);
+            classWriter.visitField(Opcodes.ACC_PRIVATE, MetastoreColumn.ADDITIONAL_METADATA.columnName(), descriptor, signature, null);
+        annotate(listField, MetastoreColumn.ADDITIONAL_METADATA, MetadataType.ALL);
       }
     }.generate();
 
@@ -157,13 +161,13 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
 
       @Override
       void addFields(ClassWriter classWriter) {
-        FieldVisitor stringField = addField(classWriter, Opcodes.ACC_PRIVATE, "stringField", String.class);
-        annotate(stringField);
+        FieldVisitor stringField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.STORAGE_PLUGIN, String.class);
+        annotate(stringField, MetastoreColumn.STORAGE_PLUGIN, MetadataType.ALL);
       }
     }.generate();
 
     IcebergTableSchema schema = IcebergTableSchema.of(clazz, Collections.emptyList());
-    assertNotNull(schema.tableSchema().findField("stringField"));
+    assertNotNull(schema.tableSchema().findField(MetastoreColumn.STORAGE_PLUGIN.columnName()));
 
     assertEquals(PartitionSpec.unpartitioned(), schema.partitionSpec());
   }
@@ -174,36 +178,37 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
 
       @Override
       void addFields(ClassWriter classWriter) {
-        FieldVisitor partKey1 = addField(classWriter, Opcodes.ACC_PRIVATE, "partKey1", String.class);
-        annotate(partKey1);
+        FieldVisitor partKey1 = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.STORAGE_PLUGIN, String.class);
+        annotate(partKey1, MetastoreColumn.STORAGE_PLUGIN, MetadataType.ALL);
 
-        FieldVisitor partKey2 = addField(classWriter, Opcodes.ACC_PRIVATE, "partKey2", String.class);
-        annotate(partKey2);
+        FieldVisitor partKey2 = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.WORKSPACE, String.class);
+        annotate(partKey2, MetastoreColumn.WORKSPACE, MetadataType.ALL);
 
-        FieldVisitor partKey3 = addField(classWriter, Opcodes.ACC_PRIVATE, "partKey3", String.class);
-        annotate(partKey3);
+        FieldVisitor partKey3 = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.TABLE_NAME, String.class);
+        annotate(partKey3, MetastoreColumn.TABLE_NAME, MetadataType.ALL);
 
-        FieldVisitor integerField = addField(classWriter, Opcodes.ACC_PRIVATE, "integerField", Integer.class);
-        annotate(integerField);
+        FieldVisitor integerField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.ROW_GROUP_INDEX, Integer.class);
+        annotate(integerField, MetastoreColumn.ROW_GROUP_INDEX, MetadataType.ROW_GROUP);
 
-        FieldVisitor booleanField = addField(classWriter, Opcodes.ACC_PRIVATE, "booleanField", Boolean.class);
-        annotate(booleanField);
+        FieldVisitor stringField = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.OWNER, Boolean.class);
+        annotate(stringField, MetastoreColumn.OWNER, MetadataType.TABLE);
       }
     }.generate();
 
-    IcebergTableSchema schema = IcebergTableSchema.of(clazz, Arrays.asList("partKey1", "partKey2", "partKey3"));
+    IcebergTableSchema schema = IcebergTableSchema.of(clazz,
+      Arrays.asList(MetastoreColumn.STORAGE_PLUGIN, MetastoreColumn.WORKSPACE, MetastoreColumn.TABLE_NAME));
 
-    Types.NestedField partKey1 = schema.tableSchema().findField("partKey1");
+    Types.NestedField partKey1 = schema.tableSchema().findField(MetastoreColumn.STORAGE_PLUGIN.columnName());
     assertNotNull(partKey1);
 
-    Types.NestedField partKey2 = schema.tableSchema().findField("partKey2");
+    Types.NestedField partKey2 = schema.tableSchema().findField(MetastoreColumn.WORKSPACE.columnName());
     assertNotNull(partKey2);
 
-    Types.NestedField partKey3 = schema.tableSchema().findField("partKey3");
+    Types.NestedField partKey3 = schema.tableSchema().findField(MetastoreColumn.TABLE_NAME.columnName());
     assertNotNull(partKey3);
 
-    assertNotNull(schema.tableSchema().findField("integerField"));
-    assertNotNull(schema.tableSchema().findField("booleanField"));
+    assertNotNull(schema.tableSchema().findField(MetastoreColumn.ROW_GROUP_INDEX.columnName()));
+    assertNotNull(schema.tableSchema().findField(MetastoreColumn.OWNER.columnName()));
 
     Schema partitionSchema = new Schema(partKey1, partKey2, partKey3);
     PartitionSpec expectedPartitionSpec = PartitionSpec.builderFor(partitionSchema)
@@ -221,17 +226,17 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
 
       @Override
       void addFields(ClassWriter classWriter) {
-        FieldVisitor partKey1 = addField(classWriter, Opcodes.ACC_PRIVATE, "partKey1", String.class);
-        annotate(partKey1);
+        FieldVisitor storagePlugin = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.STORAGE_PLUGIN, String.class);
+        annotate(storagePlugin, MetastoreColumn.STORAGE_PLUGIN, MetadataType.ALL);
 
-        FieldVisitor integerField = addField(classWriter, Opcodes.ACC_PRIVATE, "integerField", Integer.class);
-        annotate(integerField);
+        FieldVisitor tableName = addField(classWriter, Opcodes.ACC_PRIVATE, MetastoreColumn.TABLE_NAME, Integer.class);
+        annotate(tableName, MetastoreColumn.TABLE_NAME, MetadataType.ALL);
       }
     }.generate();
 
     thrown.expect(IcebergMetastoreException.class);
 
-    IcebergTableSchema.of(clazz, Arrays.asList("partKey1", "partKey2"));
+    IcebergTableSchema.of(clazz, Arrays.asList(MetastoreColumn.STORAGE_PLUGIN, MetastoreColumn.WORKSPACE));
   }
 
   /**
@@ -257,7 +262,7 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
       }.injectClass(name, bytes);
     }
 
-    public FieldVisitor addField(ClassWriter classWriter, int access, String fieldName, Class<?> clazz, Class<?>... genericTypes) {
+    public FieldVisitor addField(ClassWriter classWriter, int access, MetastoreColumn column, Class<?> clazz, Class<?>... genericTypes) {
       String descriptor = Type.getType(clazz).getDescriptor();
 
       String signature = null;
@@ -277,11 +282,23 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
             .buildSignature();
       }
 
-      return classWriter.visitField(access, fieldName, descriptor, signature, null);
+      return classWriter.visitField(access, column.columnName(), descriptor, signature, null);
     }
 
-    void annotate(FieldVisitor field) {
-      field.visitAnnotation(Type.getType(MetastoreFieldDefinition.class).getDescriptor(), true);
+    void annotate(FieldVisitor field, MetastoreColumn column, MetadataType... scopes) {
+      String annotationDescriptor = Type.getType(MetastoreFieldDefinition.class).getDescriptor();
+      AnnotationNode annotationNode = new AnnotationNode(annotationDescriptor);
+
+      annotationNode.visitEnum("column", Type.getType(MetastoreColumn.class).getDescriptor(), column.name());
+      annotationNode.visitEnd();
+
+      AnnotationVisitor scopesNode = annotationNode.visitArray("scopes");
+      Arrays.stream(scopes)
+        .forEach(scope -> scopesNode.visitEnum("scopes", Type.getType(MetadataType.class).getDescriptor(), scope.name()));
+      scopesNode.visitEnd();
+
+      AnnotationVisitor annotationVisitor = field.visitAnnotation(annotationDescriptor, true);
+      annotationNode.accept(annotationVisitor);
     }
 
     private ClassWriter generateClass() {

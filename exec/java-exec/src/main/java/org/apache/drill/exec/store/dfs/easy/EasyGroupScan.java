@@ -18,20 +18,29 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.metastore.store.MetastoreFileTableMetadataProvider;
+import org.apache.drill.exec.metastore.MetastoreMetadataProviderManager;
+import org.apache.drill.exec.metastore.store.SimpleFileTableMetadataProvider;
+import org.apache.drill.exec.metastore.analyze.AnalyzeFileInfoProviderImpl;
+import org.apache.drill.exec.metastore.analyze.AnalyzeInfoProvider;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.base.AbstractFileGroupScan;
-import org.apache.drill.exec.metastore.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
 import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.metastore.store.FileTableMetadataProviderBuilder;
+import org.apache.drill.metastore.metadata.LocationProvider;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -52,7 +61,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.metastore.metadata.TableMetadata;
+import org.apache.drill.metastore.util.TableMetadataUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
@@ -62,23 +71,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @JsonTypeName("fs-scan")
-public class EasyGroupScan extends AbstractFileGroupScan {
+public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataProvider> {
   private static final Logger logger = LoggerFactory.getLogger(EasyGroupScan.class);
-
-  protected TableMetadataProvider metadataProvider;
 
   private final EasyFormatPlugin<?> formatPlugin;
   private FileSelection selection;
   private int partitionDepth;
   private int maxWidth;
   private int minWidth = 1;
-  private List<SchemaPath> columns;
 
   private ListMultimap<Integer, CompleteFileWork> mappings;
   private List<CompleteFileWork> chunks;
   private List<EndpointAffinity> endpointAffinities;
-  private Path selectionRoot;
-  private TableMetadata tableMetadata;
+  private final Path selectionRoot;
 
   @JsonCreator
   public EasyGroupScan(
@@ -90,17 +95,15 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("selectionRoot") Path selectionRoot,
       @JsonProperty("schema") TupleMetadata schema
-      ) throws IOException, ExecutionSetupException {
-    super(ImpersonationUtil.resolveUserName(userName));
+      ) throws IOException {
+    super(ImpersonationUtil.resolveUserName(userName), columns, ValueExpressions.BooleanExpression.TRUE);
     this.selection = FileSelection.create(null, files, selectionRoot);
-    this.formatPlugin = Preconditions.checkNotNull((EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig),
-        "Unable to load format plugin for provided format config.");
+    this.formatPlugin = engineRegistry.resolveFormat(storageConfig, formatConfig, EasyFormatPlugin.class);
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
-    SimpleFileTableMetadataProviderBuilder builder =
-        (SimpleFileTableMetadataProviderBuilder) new FileSystemMetadataProviderManager().builder(MetadataProviderManager.MetadataProviderKind.SCHEMA_STATS_ONLY);
 
-    this.metadataProvider = builder.withLocation(selection.getSelectionRoot())
+    this.metadataProvider = defaultTableMetadataProviderBuilder(new FileSystemMetadataProviderManager())
+        .withSelection(selection)
         .withSchema(schema)
         .build();
     initFromSelection(selection, formatPlugin);
@@ -114,21 +117,26 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       Path selectionRoot,
       MetadataProviderManager metadataProviderManager
       ) throws IOException {
-    super(userName);
+    super(userName, columns, ValueExpressions.BooleanExpression.TRUE);
     this.selection = Preconditions.checkNotNull(selection);
-    this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
+    this.formatPlugin = Preconditions.checkNotNull(formatPlugin,
+        "Unable to load format plugin for provided format config.");
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
     if (metadataProviderManager == null) {
       // use file system metadata provider without specified schema and statistics
       metadataProviderManager = new FileSystemMetadataProviderManager();
     }
-    SimpleFileTableMetadataProviderBuilder builder =
-        (SimpleFileTableMetadataProviderBuilder) metadataProviderManager.builder(MetadataProviderManager.MetadataProviderKind.SCHEMA_STATS_ONLY);
+    DrillFileSystem fs =
+        ImpersonationUtil.createFileSystem(ImpersonationUtil.resolveUserName(userName), formatPlugin.getFsConf());
 
-    this.metadataProvider = builder.withLocation(selection.getSelectionRoot())
+    this.metadataProvider = tableMetadataProviderBuilder(metadataProviderManager)
+        .withSelection(selection)
+        .withFileSystem(fs)
         .build();
+    this.usedMetastore = metadataProviderManager.usesMetastore();
     initFromSelection(selection, formatPlugin);
+    checkMetadataConsistency(selection, formatPlugin.getFsConf());
   }
 
   public EasyGroupScan(
@@ -152,7 +160,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   }
 
   private EasyGroupScan(final EasyGroupScan that) {
-    super(that.getUserName());
+    super(that);
     selection = that.selection;
     formatPlugin = that.formatPlugin;
     columns = that.columns;
@@ -180,6 +188,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     endpointAffinities = AffinityCreator.getAffinityMap(chunks);
   }
 
+  @Override
   public Path getSelectionRoot() {
     return selectionRoot;
   }
@@ -211,12 +220,6 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     return selection.getFiles();
   }
 
-  @Override
-  @JsonProperty("columns")
-  public List<SchemaPath> getColumns() {
-    return columns;
-  }
-
   @JsonIgnore
   public FileSelection getFileSelection() {
     return selection;
@@ -228,6 +231,21 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   }
 
   @Override
+  protected boolean supportsFileImplicitColumns() {
+    return formatPlugin.supportsFileImplicitColumns();
+  }
+
+  @Override
+  public boolean supportsFilterPushDown() {
+    return usedMetastore();
+  }
+
+  @Override
+  protected List<String> getPartitionValues(LocationProvider locationProvider) {
+    return ColumnExplorer.listPartitionValues(locationProvider.getPath(), selectionRoot, false);
+  }
+
+  @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     assert children == null || children.isEmpty();
     return new EasyGroupScan(this);
@@ -236,8 +254,8 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     if (endpointAffinities == null) {
-        logger.debug("Chunks size: {}", chunks.size());
-        endpointAffinities = AffinityCreator.getAffinityMap(chunks);
+      logger.debug("Chunks size: {}", chunks.size());
+      endpointAffinities = AffinityCreator.getAffinityMap(chunks);
     }
     return endpointAffinities;
   }
@@ -252,13 +270,13 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     for (EndpointAffinity e : affinities) {
       endpoints.add(e.getEndpoint());
     }
-    this.applyAssignments(endpoints);
+    applyAssignments(endpoints);
   }
 
   @Override
   public EasySubScan getSpecificScan(int minorFragmentId) {
     if (mappings == null) {
-      createMappings(this.endpointAffinities);
+      createMappings(endpointAffinities);
     }
     assert minorFragmentId < mappings.size() : String.format(
         "Mappings length [%d] should be longer than minor fragment id [%d] but it isn't.", mappings.size(),
@@ -271,7 +289,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
 
     EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin,
         columns, selectionRoot, partitionDepth, getSchema());
-    subScan.setOperatorId(this.getOperatorId());
+    subScan.setOperatorId(getOperatorId());
     return subScan;
   }
 
@@ -295,13 +313,8 @@ public class EasyGroupScan extends AbstractFileGroupScan {
 
   @Override
   public String toString() {
-    String pattern = "EasyGroupScan [selectionRoot=%s, numFiles=%s, columns=%s, files=%s, schema=%s]";
-    return String.format(pattern, selectionRoot, getFiles().size(), columns, getFiles(), getSchema());
-  }
-
-  @Override
-  public String getDigest() {
-    return toString();
+    String pattern = "EasyGroupScan [selectionRoot=%s, numFiles=%s, columns=%s, files=%s, schema=%s, usedMetastore=%s]";
+    return String.format(pattern, selectionRoot, getFiles().size(), columns, getFiles(), getSchema(), usedMetastore());
   }
 
   @Override
@@ -329,22 +342,73 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     return formatPlugin.supportsPushDown();
   }
 
-  @JsonProperty
+  @Override
   public TupleMetadata getSchema() {
     return getTableMetadata().getSchema();
   }
 
   @Override
-  @JsonIgnore
-  public TableMetadata getTableMetadata() {
-    if (tableMetadata == null) {
-      tableMetadata = metadataProvider.getTableMetadata();
-    }
-    return tableMetadata;
+  public AnalyzeInfoProvider getAnalyzeInfoProvider() {
+    return new AnalyzeFileInfoProviderImpl(formatPlugin.getName());
   }
 
   @Override
-  public TableMetadataProvider getMetadataProvider() {
-    return metadataProvider;
+  protected GroupScanWithMetadataFilterer<?> getFilterer() {
+    return new EasyGroupScanFilterer(this);
+  }
+
+  @Override
+  protected FileTableMetadataProviderBuilder<?> tableMetadataProviderBuilder(MetadataProviderManager source) {
+    if (source.usesMetastore()) {
+      return new MetastoreFileTableMetadataProvider.Builder<>((MetastoreMetadataProviderManager) source);
+    } else {
+      return defaultTableMetadataProviderBuilder(source);
+    }
+  }
+
+  @Override
+  protected FileTableMetadataProviderBuilder<?> defaultTableMetadataProviderBuilder(MetadataProviderManager source) {
+    return new SimpleFileTableMetadataProvider.Builder(source);
+  }
+
+  /**
+   * Implementation of GroupScanWithMetadataFilterer which uses {@link EasyGroupScan} as source and
+   * builds {@link EasyGroupScan} instance with filtered metadata.
+   */
+  private static class EasyGroupScanFilterer extends GroupScanWithMetadataFilterer<EasyGroupScanFilterer> {
+
+    EasyGroupScanFilterer(EasyGroupScan source) {
+      super(source);
+    }
+
+    @Override
+    public AbstractGroupScanWithMetadata<?> build() {
+      EasyGroupScan newScan = new EasyGroupScan((EasyGroupScan) source);
+      newScan.tableMetadata = tableMetadata;
+      // updates common row count and nulls counts for every column
+      if (newScan.getTableMetadata() != null && files != null && newScan.getFilesMetadata().size() != files.size()) {
+        newScan.tableMetadata = TableMetadataUtils.updateRowCount(newScan.getTableMetadata(), files.values());
+      }
+      newScan.partitions = partitions;
+      newScan.segments = segments;
+      newScan.files = files;
+      newScan.matchAllMetadata = matchAllMetadata;
+      newScan.nonInterestingColumnsMetadata = nonInterestingColumnsMetadata;
+
+      newScan.fileSet = newScan.getFilesMetadata().keySet();
+      newScan.selection = FileSelection.create(null, new ArrayList<>(newScan.fileSet), newScan.selectionRoot);
+      try {
+        newScan.initFromSelection(newScan.selection, newScan.formatPlugin);
+      } catch (IOException e) {
+        throw new DrillRuntimeException("Failed to initialize scan from the selection.", e);
+      }
+
+      return newScan;
+    }
+
+    @Override
+    protected EasyGroupScanFilterer self() {
+      return this;
+    }
   }
 }

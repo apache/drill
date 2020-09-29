@@ -26,6 +26,8 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.WriterEvents;
 import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents the write-time state for a column including the writer and the (optional)
@@ -40,14 +42,12 @@ import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterLis
  * these differences.
  */
 public abstract class ColumnState {
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnState.class);
+  private static final Logger logger = LoggerFactory.getLogger(ColumnState.class);
 
   /**
    * Primitive (non-map) column state. Handles all three cardinalities.
    * Column metadata is hosted on the writer.
    */
-
   public static class PrimitiveColumnState extends ColumnState implements ColumnWriterListener {
 
     public PrimitiveColumnState(LoaderInternals loader,
@@ -77,7 +77,6 @@ public abstract class ColumnState {
      * Get the output schema. For a primitive (non-structured) column,
      * the output schema is the same as the internal schema.
      */
-
     @Override
     public ColumnMetadata outputSchema() { return schema(); }
 
@@ -133,14 +132,12 @@ public abstract class ColumnState {
    * here: the variables for a column and the point within the column
    * lifecycle.
    */
-
   protected enum State {
 
     /**
      * Column is in the normal state of writing with no overflow
      * in effect.
      */
-
     NORMAL,
 
     /**
@@ -150,14 +147,12 @@ public abstract class ColumnState {
      * columns will be in OVERFLOW state, unwritten columns in
      * NORMAL state.
      */
-
     OVERFLOW,
 
     /**
      * Indicates that the column has data saved
      * in the overflow batch.
      */
-
     LOOK_AHEAD,
 
     /**
@@ -165,7 +160,6 @@ public abstract class ColumnState {
      * was added after overflow, so there is no vector for the column
      * in the harvested batch.
      */
-
     NEW_LOOK_AHEAD
   }
 
@@ -183,7 +177,6 @@ public abstract class ColumnState {
    * cardinality is the total number of array items in the
    * vector.
    */
-
   protected int cardinality;
   protected int outputIndex = -1;
 
@@ -191,9 +184,9 @@ public abstract class ColumnState {
       AbstractObjectWriter writer, VectorState vectorState) {
     this.loader = loader;
     this.vectorState = vectorState;
-    addVersion = writer.isProjected() ?
+    this.addVersion = writer.isProjected() ?
         loader.bumpVersion() : loader.activeSchemaVersion();
-    state = loader.hasOverflow() ? State.NEW_LOOK_AHEAD : State.NORMAL;
+    this.state = loader.hasOverflow() ? State.NEW_LOOK_AHEAD : State.NORMAL;
     this.writer = writer;
   }
 
@@ -213,34 +206,30 @@ public abstract class ColumnState {
    * batch. Restore the look-ahead buffer to the
    * active vector so we start writing where we left off.
    */
-
   public void startBatch(boolean schemaOnly) {
     switch (state) {
-    case NORMAL:
-      if (! schemaOnly) {
-        allocateVectors();
-      }
-      break;
+      case NORMAL:
+        if (! schemaOnly) {
+          allocateVectors();
+        }
+        break;
 
-    case NEW_LOOK_AHEAD:
+      case NEW_LOOK_AHEAD:
 
-      // Column is new, was not exchanged with backup vector
+        // Column is new, was not exchanged with backup vector
+        break;
 
-      break;
+      case LOOK_AHEAD:
 
-    case LOOK_AHEAD:
+        // Restore the look-ahead values to the main vector.
+        vectorState.startBatchWithLookAhead();
+        break;
 
-      // Restore the look-ahead values to the main vector.
-
-      vectorState.startBatchWithLookAhead();
-      break;
-
-    default:
-      throw new IllegalStateException("Unexpected state: " + state);
+      default:
+        throw new IllegalStateException("Unexpected state: " + state);
     }
 
     // In all cases, we are back to normal writing.
-
     state = State.NORMAL;
   }
 
@@ -251,7 +240,6 @@ public abstract class ColumnState {
    * for some previous row, depending on exactly when and where the overflow
    * occurs.
    */
-
   public void rollover() {
     assert state == State.NORMAL;
 
@@ -263,7 +251,6 @@ public abstract class ColumnState {
     // vector to double beyond the limit, but that will require a bit
     // of thought to get right -- and, of course, completely defeats
     // the purpose of limiting vector size to avoid memory fragmentation...
-
     if (loader.rowIndex() == 0) {
       throw UserException
         .memoryError("A single column value is larger than the maximum allowed size of 16 MB")
@@ -271,11 +258,9 @@ public abstract class ColumnState {
     }
 
     // Otherwise, do the roll-over to a look-ahead vector.
-
     vectorState.rollover(cardinality);
 
     // Remember that we did this overflow processing.
-
     state = State.OVERFLOW;
   }
 
@@ -285,31 +270,27 @@ public abstract class ColumnState {
    * look-ahead vector and put the full vector buffer back into the active
    * vector.
    */
-
   public void harvestWithLookAhead() {
     switch (state) {
-    case NEW_LOOK_AHEAD:
+      case NEW_LOOK_AHEAD:
 
-      // If added after overflow, no data to save from the complete
-      // batch: the vector does not appear in the completed batch.
+        // If added after overflow, no data to save from the complete
+        // batch: the vector does not appear in the completed batch.
+        break;
 
-      break;
+      case OVERFLOW:
 
-    case OVERFLOW:
+        // Otherwise, restore the original, full buffer and
+        // last write position.
+        vectorState.harvestWithLookAhead();
 
-      // Otherwise, restore the original, full buffer and
-      // last write position.
+        // Remember that we have look-ahead values stashed away in the
+        // backup vector.
+        state = State.LOOK_AHEAD;
+        break;
 
-      vectorState.harvestWithLookAhead();
-
-      // Remember that we have look-ahead values stashed away in the
-      // backup vector.
-
-      state = State.LOOK_AHEAD;
-      break;
-
-    default:
-      throw new IllegalStateException("Unexpected state: " + state);
+      default:
+        throw new IllegalStateException("Unexpected state: " + state);
     }
   }
 
@@ -325,9 +306,15 @@ public abstract class ColumnState {
 
   public int innerCardinality() {
     ColumnMetadata schema = schema();
-    return schema.isArray()
-        ? cardinality * schema.expectedElementCount()
-        : cardinality;
+    if (schema.isArray()) {
+      // Multiply out the cardinality, but place reasonable limits:
+      // at least one row per inner array, limit by max row count to
+      // prevent cardinality explosions or deeply nested arrays.
+      int elementCount = Math.max(1, schema.expectedElementCount());
+      return Math.min(ValueVector.MAX_ROW_COUNT, cardinality * elementCount);
+    } else {
+      return cardinality;
+    }
   }
 
   public void buildOutput(TupleState tupleState) {

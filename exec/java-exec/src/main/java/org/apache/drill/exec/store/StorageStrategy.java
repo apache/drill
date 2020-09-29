@@ -24,12 +24,15 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
 
 /** Contains list of parameters that will be used to store path / files on file system. */
 public class StorageStrategy {
+  private static final Logger logger = LoggerFactory.getLogger(StorageStrategy.class);
 
   /**
    * For directories: drwxrwxr-x (owner and group have full access, others can read and execute).
@@ -45,8 +48,6 @@ public class StorageStrategy {
    * Folders and files are deleted on file system close.
    */
   public static final StorageStrategy TEMPORARY = new StorageStrategy("077", true);
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StorageStrategy.class);
 
   private final String umask;
   private final boolean deleteOnExit;

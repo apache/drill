@@ -27,11 +27,11 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
  * here. It would certainly be cleaner to have a single field, with the
  * number of dimensions as a property, but that is not how Drill evolved.
  * <p/>
- * Class can be created with and without parent container.
- * In the first case, column is added to the parent container during creation
- * and all <tt>resumeXXX</tt> methods return qualified parent container.
- * In the second case column is created without parent container as standalone entity.
- * All <tt>resumeXXX</tt> methods do not produce any action and return null.
+ * An instance can be created with and without parent container.
+ * In the first case, a column is added to the parent container during creation
+ * and all {@code resumeXXX} methods return qualified parent container.
+ * In the second case column is created without parent container as a stand-alone entity.
+ * The {@code resumeXXX} methods do not produce any action and return null.
  * To access built column {@link #buildColumn()} should be used.
  */
 public class RepeatedListBuilder implements SchemaContainer {
@@ -56,22 +56,29 @@ public class RepeatedListBuilder implements SchemaContainer {
   public MapBuilder addMapArray() {
     // Existing code uses the repeated list name as the name of
     // the vector within the list.
-
     return new MapBuilder(this, name, DataMode.REPEATED);
+  }
+
+  public DictBuilder addDictArray() {
+    // Existing code uses the repeated list name as the name of
+    // the vector within the list.
+    return new DictBuilder(this, name, DataMode.REPEATED);
   }
 
   public RepeatedListBuilder addArray(MinorType type) {
     // Existing code uses the repeated list name as the name of
     // the vector within the list.
-
-    addColumn(MetadataUtils.newScalar(name, type, DataMode.REPEATED));
+    if (type == MinorType.UNION) {
+      addColumn(VariantColumnMetadata.list(name));
+    } else {
+      addColumn(MetadataUtils.newScalar(name, type, DataMode.REPEATED));
+    }
     return this;
   }
 
   public RepeatedListBuilder addArray(MinorType type, int width) {
     // Existing code uses the repeated list name as the name of
     // the vector within the list.
-
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(type)
         .setMode(DataMode.REPEATED)
@@ -85,7 +92,6 @@ public class RepeatedListBuilder implements SchemaContainer {
   public RepeatedListBuilder addArray(MinorType type, int precision, int scale) {
     // Existing code uses the repeated list name as the name of
     // the vector within the list.
-
     TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
         .setMinorType(type)
         .setMode(DataMode.REPEATED)
@@ -95,6 +101,10 @@ public class RepeatedListBuilder implements SchemaContainer {
 
     addColumn(MetadataUtils.newScalar(name, majorType));
     return this;
+  }
+
+  public UnionBuilder addList() {
+    return new UnionBuilder(this, name, MinorType.LIST);
   }
 
   public RepeatedListColumnMetadata buildColumn() {
@@ -125,6 +135,11 @@ public class RepeatedListBuilder implements SchemaContainer {
   public MapBuilder resumeMap() {
     build();
     return (MapBuilder) parent;
+  }
+
+  public DictBuilder resumeDict() {
+    build();
+    return (DictBuilder) parent;
   }
 
   @Override

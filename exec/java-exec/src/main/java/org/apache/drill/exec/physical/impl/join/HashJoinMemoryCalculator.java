@@ -21,8 +21,6 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.record.RecordBatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
@@ -158,7 +156,7 @@ public interface HashJoinMemoryCalculator extends HashJoinStateCalculator<HashJo
    * This class represents the memory size statistics for an entire set of partitions.
    */
   class PartitionStatSet {
-    private static final Logger log = LoggerFactory.getLogger(PartitionStatSet.class);
+
     private final PartitionStat[] partitionStats;
 
     public PartitionStatSet(final PartitionStat... partitionStats) {

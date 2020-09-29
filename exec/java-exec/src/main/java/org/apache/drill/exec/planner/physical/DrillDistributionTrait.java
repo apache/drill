@@ -35,7 +35,7 @@ public class DrillDistributionTrait implements RelTrait {
 
   private final DistributionType type;
   private final List<DistributionField> fields;
-  private PartitionFunction partitionFunction = null;
+  private PartitionFunction partitionFunction;
 
   public DrillDistributionTrait(DistributionType type) {
     assert (type == DistributionType.SINGLETON || type == DistributionType.RANDOM_DISTRIBUTED || type == DistributionType.ANY
@@ -97,6 +97,7 @@ public class DrillDistributionTrait implements RelTrait {
     return this.equals(trait);
   }
 
+  @Override
   public RelTraitDef<DrillDistributionTrait> getTraitDef() {
     return DrillDistributionTraitDef.INSTANCE;
   }

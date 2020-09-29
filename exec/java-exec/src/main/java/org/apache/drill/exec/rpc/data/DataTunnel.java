@@ -19,10 +19,10 @@ package org.apache.drill.exec.rpc.data;
 
 import com.google.protobuf.MessageLite;
 import io.netty.buffer.ByteBuf;
-import java.util.concurrent.Semaphore;
+import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.BitData.RpcType;
-import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.FragmentWritableBatch;
+import org.apache.drill.exec.rpc.DynamicSemaphore;
 import org.apache.drill.exec.rpc.ListeningCommand;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
@@ -35,7 +35,7 @@ public class DataTunnel {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataTunnel.class);
 
   private final DataConnectionManager manager;
-  private final Semaphore sendingSemaphore = new Semaphore(3);
+  private final DynamicSemaphore sendingSemaphore = new DynamicSemaphore();
 
   // Needed for injecting a test pause
   private boolean isInjectionControlSet;
@@ -66,7 +66,7 @@ public class DataTunnel {
     this.testLogger = testLogger;
   }
 
-  public void sendRecordBatch(RpcOutcomeListener<Ack> outcomeListener, FragmentWritableBatch batch) {
+  public void sendRecordBatch(RpcOutcomeListener<BitData.AckWithCredit> outcomeListener, FragmentWritableBatch batch) {
     SendBatchAsyncListen b = new SendBatchAsyncListen(outcomeListener, batch);
     try {
       if (isInjectionControlSet) {
@@ -91,7 +91,7 @@ public class DataTunnel {
     }
   }
 
-  public void sendRuntimeFilter(RpcOutcomeListener<Ack> outcomeListener, RuntimeFilterWritable runtimeFilter) {
+  public void sendRuntimeFilter(RpcOutcomeListener<BitData.AckWithCredit> outcomeListener, RuntimeFilterWritable runtimeFilter) {
     SendRuntimeFilterAsyncListen cmd = new SendRuntimeFilterAsyncListen(outcomeListener, runtimeFilter);
     try{
       if (isInjectionControlSet) {
@@ -111,10 +111,10 @@ public class DataTunnel {
     }
   }
 
-  private class ThrottlingOutcomeListener implements RpcOutcomeListener<Ack>{
-    RpcOutcomeListener<Ack> inner;
+  private class ThrottlingOutcomeListener implements RpcOutcomeListener<BitData.AckWithCredit>{
+    RpcOutcomeListener<BitData.AckWithCredit> inner;
 
-    public ThrottlingOutcomeListener(RpcOutcomeListener<Ack> inner) {
+    public ThrottlingOutcomeListener(RpcOutcomeListener<BitData.AckWithCredit> inner) {
       super();
       this.inner = inner;
     }
@@ -126,7 +126,12 @@ public class DataTunnel {
     }
 
     @Override
-    public void success(Ack value, ByteBuf buffer) {
+    public void success(BitData.AckWithCredit value, ByteBuf buffer) {
+      int credit = value.getAllowedCredit();
+      if (credit > 0) {
+        //received an explicit runtime advice to transfer to the new credit
+        sendingSemaphore.tryToIncreaseCredit(credit);
+      }
       sendingSemaphore.release();
       inner.success(value, buffer);
     }
@@ -138,18 +143,18 @@ public class DataTunnel {
     }
   }
 
-  private class SendBatchAsyncListen extends ListeningCommand<Ack, DataClientConnection, RpcType, MessageLite> {
+  private class SendBatchAsyncListen extends ListeningCommand<BitData.AckWithCredit, DataClientConnection, RpcType, MessageLite> {
     final FragmentWritableBatch batch;
 
-    public SendBatchAsyncListen(RpcOutcomeListener<Ack> listener, FragmentWritableBatch batch) {
+    public SendBatchAsyncListen(RpcOutcomeListener<BitData.AckWithCredit> listener, FragmentWritableBatch batch) {
       super(listener);
       this.batch = batch;
     }
 
     @Override
-    public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, DataClientConnection connection) {
+    public void doRpcCall(RpcOutcomeListener<BitData.AckWithCredit> outcomeListener, DataClientConnection connection) {
       connection.send(new ThrottlingOutcomeListener(outcomeListener), getRpcType(), batch.getHeader(),
-        Ack.class, batch.getBuffers());
+        BitData.AckWithCredit.class, batch.getBuffers());
     }
 
     @Override
@@ -176,17 +181,17 @@ public class DataTunnel {
     }
   }
 
-  private class SendRuntimeFilterAsyncListen extends ListeningCommand<Ack, DataClientConnection, RpcType, MessageLite> {
+  private class SendRuntimeFilterAsyncListen extends ListeningCommand<BitData.AckWithCredit, DataClientConnection, RpcType, MessageLite> {
     final RuntimeFilterWritable runtimeFilter;
 
-    public SendRuntimeFilterAsyncListen(RpcOutcomeListener<Ack> listener, RuntimeFilterWritable runtimeFilter) {
+    public SendRuntimeFilterAsyncListen(RpcOutcomeListener<BitData.AckWithCredit> listener, RuntimeFilterWritable runtimeFilter) {
       super(listener);
       this.runtimeFilter = runtimeFilter;
     }
 
     @Override
-    public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, DataClientConnection connection) {
-      connection.send(outcomeListener, RpcType.REQ_RUNTIME_FILTER, runtimeFilter.getRuntimeFilterBDef(), Ack.class, runtimeFilter.getData());
+    public void doRpcCall(RpcOutcomeListener<BitData.AckWithCredit> outcomeListener, DataClientConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_RUNTIME_FILTER, runtimeFilter.getRuntimeFilterBDef(), BitData.AckWithCredit.class, runtimeFilter.getData());
     }
 
     @Override

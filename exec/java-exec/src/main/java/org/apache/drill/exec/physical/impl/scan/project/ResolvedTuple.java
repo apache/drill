@@ -28,7 +28,9 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
@@ -290,6 +292,136 @@ public abstract class ResolvedTuple implements VectorSource {
     @Override
     public void setRowCount(int rowCount) {
       cascadeRowCount(valueCount);
+    }
+  }
+
+  public static abstract class ResolvedDict extends ResolvedTuple {
+
+    protected final ResolvedDictColumn parentColumn;
+
+    public ResolvedDict(ResolvedDictColumn parentColumn) {
+      super(parentColumn.parent().nullBuilder == null
+          ? null : parentColumn.parent().nullBuilder.newChild(parentColumn.name()));
+      this.parentColumn = parentColumn;
+    }
+
+    public abstract ValueVector buildVector();
+
+    @Override
+    public String name() {
+      return parentColumn.name();
+    }
+  }
+
+  public static class ResolvedSingleDict extends ResolvedDict {
+
+    protected DictVector inputVector;
+    protected DictVector outputVector;
+
+    public ResolvedSingleDict(ResolvedDictColumn parentColumn) {
+      super(parentColumn);
+    }
+
+    @Override
+    public void addVector(ValueVector vector) {
+      outputVector.putChild(vector.getField().getName(), vector);
+    }
+
+    @Override
+    public ValueVector vector(int index) {
+      assert inputVector != null;
+      return inputVector.getChildByOrdinal(index);
+    }
+
+    @Override
+    public ValueVector buildVector() {
+      if (parentColumn.sourceIndex() != -1) {
+        ResolvedTuple parentTuple = parentColumn.parent();
+        inputVector = (DictVector) parentTuple.vector(parentColumn.sourceIndex());
+      }
+      MaterializedField colSchema = parentColumn.schema();
+      MaterializedField dictField = MaterializedField.create(colSchema.getName(), colSchema.getType());
+      outputVector = new DictVector(dictField, parentColumn.parent().allocator(), null);
+      buildColumns();
+      return outputVector;
+    }
+
+    @Override
+    public BufferAllocator allocator() {
+      return outputVector.getAllocator();
+    }
+
+    @Override
+    public String name() {
+      return parentColumn.name();
+    }
+
+    @Override
+    public void setRowCount(int rowCount) {
+      outputVector.getMutator().setValueCount(rowCount);
+      cascadeRowCount(rowCount);
+    }
+
+    @Override
+    public int innerCardinality(int outerCardinality) {
+      return outerCardinality;
+    }
+  }
+
+  public static class ResolvedDictArray extends ResolvedDict {
+
+    protected RepeatedDictVector inputVector;
+    protected RepeatedDictVector outputVector;
+
+    private int valueCount;
+
+    public ResolvedDictArray(ResolvedDictColumn parentColumn) {
+      super(parentColumn);
+    }
+
+    @Override
+    public void addVector(ValueVector vector) {
+      ((DictVector) outputVector.getDataVector()).putChild(vector.getField().getName(), vector);
+    }
+
+    @Override
+    public ValueVector vector(int index) {
+      assert inputVector != null;
+      return ((DictVector) inputVector.getDataVector()).getChildByOrdinal(index);
+    }
+
+    @Override
+    public RepeatedDictVector buildVector() {
+      if (parentColumn.sourceIndex() != -1) {
+        ResolvedTuple parentTuple = parentColumn.parent();
+        inputVector = (RepeatedDictVector) parentTuple.vector(parentColumn.sourceIndex());
+      }
+      MaterializedField colSchema = parentColumn.schema();
+      MaterializedField dictField = MaterializedField.create(colSchema.getName(), colSchema.getType());
+      outputVector = new RepeatedDictVector(dictField, parentColumn.parent().allocator(), null);
+      valueCount = inputVector.getOffsetVector().getAccessor().getValueCount();
+      buildColumns();
+      return outputVector;
+    }
+
+    @Override
+    public BufferAllocator allocator() {
+      return outputVector.getAllocator();
+    }
+
+    @Override
+    public String name() {
+      return parentColumn.name();
+    }
+
+    @Override
+    public void setRowCount(int rowCount) {
+      cascadeRowCount(valueCount);
+    }
+
+    @Override
+    public int innerCardinality(int outerCardinality) {
+      return valueCount;
     }
   }
 

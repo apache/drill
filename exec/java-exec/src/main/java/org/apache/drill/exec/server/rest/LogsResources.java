@@ -28,6 +28,8 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
@@ -56,7 +58,7 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_RO
 @Path("/")
 @RolesAllowed(ADMIN_ROLE)
 public class LogsResources {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogsResources.class);
+  private static final Logger logger = LoggerFactory.getLogger(LogsResources.class);
 
   @Inject DrillRestServer.UserAuthEnabled authEnabled;
   @Inject SecurityContext sc;
@@ -150,21 +152,22 @@ public class LogsResources {
   private File getFileByName(File folder, final String name) {
     File[] files = folder.listFiles((dir, fileName) -> fileName.equals(name));
     if (files.length == 0) {
-      throw new DrillRuntimeException (name + " doesn't exist");
+      throw new DrillRuntimeException(name + " doesn't exist");
     }
     return files[0];
   }
 
-
   @XmlRootElement
   public class Log implements Comparable<Log> {
 
-    private String name;
-    private long size;
-    private DateTime lastModified;
+    private final String name;
+    private final long size;
+    private final DateTime lastModified;
 
     @JsonCreator
-    public Log (@JsonProperty("name") String name, @JsonProperty("size") long size, @JsonProperty("lastModified") long lastModified) {
+    public Log (@JsonProperty("name") String name,
+                @JsonProperty("size") long size,
+                @JsonProperty("lastModified") long lastModified) {
       this.name = name;
       this.size = size;
       this.lastModified = new DateTime(lastModified);
@@ -190,12 +193,14 @@ public class LogsResources {
 
   @XmlRootElement
   public class LogContent {
-    private String name;
-    private Collection<String> lines;
-    private int maxLines;
+    private final String name;
+    private final Collection<String> lines;
+    private final int maxLines;
 
     @JsonCreator
-    public LogContent (@JsonProperty("name") String name, @JsonProperty("lines") Collection<String> lines, @JsonProperty("maxLines") int maxLines) {
+    public LogContent (@JsonProperty("name") String name,
+                       @JsonProperty("lines") Collection<String> lines,
+                       @JsonProperty("maxLines") int maxLines) {
       this.name = name;
       this.lines = lines;
       this.maxLines = maxLines;

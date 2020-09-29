@@ -287,6 +287,24 @@ public class TestConvertCountToDirectScan extends ClusterTest {
   }
 
   @Test
+  public void textConvertAbsentColumn() throws Exception {
+    String sql = "select count(abc) as cnt from cp.`tpch/nation.parquet`";
+
+    queryBuilder()
+        .sql(sql)
+        .planMatcher()
+        .include("DynamicPojoRecordReader")
+        .match();
+
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(0L)
+        .go();
+  }
+
+  @Test
   public void testCountsWithWildCard() throws Exception {
     run("use dfs.tmp");
     String tableName = "parquet_table_counts";

@@ -21,8 +21,14 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.TestTools;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,8 +36,8 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
 @Category({SlowTest.class})
-public class TestLargeFileCompilation extends BaseTestQuery {
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(200000); // 200 secs
+public class TestLargeFileCompilation extends ClusterTest {
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(200_000); // 200 secs
 
   private static final String LARGE_QUERY_GROUP_BY;
 
@@ -156,77 +162,107 @@ public class TestLargeFileCompilation extends BaseTestQuery {
     return sb.append("full_name\nfrom cp.`employee.json` limit 1)").toString();
   }
 
-  @Ignore // TODO DRILL-5997
+  @BeforeClass
+  public static void setUp() throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+        .configProperty(ExecConstants.USER_RPC_TIMEOUT, 5_000);
+    startCluster(builder);
+  }
+
+  @Before
+  public void setJDK() {
+    client.alterSession(ClassCompilerSelector.JAVA_COMPILER_OPTION, "JDK");
+  }
+
+  @After
+  public void resetJDK() {
+    client.resetSession(ClassCompilerSelector.JAVA_COMPILER_OPTION);
+  }
+
   @Test
   public void testTEXT_WRITER() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-    testNoResult("use dfs.tmp");
-    testNoResult("alter session set `%s`='csv'", ExecConstants.OUTPUT_FORMAT_OPTION);
-    testNoResult(LARGE_QUERY_WRITER, "wide_table_csv");
+    try {
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "csv");
+
+      run("use dfs.tmp");
+      run(LARGE_QUERY_WRITER, "wide_table_csv");
+    } finally {
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
+    }
   }
 
   @Test
   public void testPARQUET_WRITER() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-    testNoResult("use dfs.tmp");
-    testNoResult("alter session set `%s`='parquet'", ExecConstants.OUTPUT_FORMAT_OPTION);
-    testNoResult(ITERATION_COUNT, LARGE_QUERY_WRITER, "wide_table_parquet");
+    try {
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      run("use dfs.tmp");
+      for (int i = 0; i < ITERATION_COUNT; i++) {
+        run(LARGE_QUERY_WRITER, "wide_table_parquet");
+      }
+    } finally {
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
+    }
   }
 
-  @Ignore // TODO DRILL-5997
   @Test
   public void testGROUP_BY() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-    testNoResult(ITERATION_COUNT, LARGE_QUERY_GROUP_BY);
+    for (int i = 0; i < ITERATION_COUNT; i++) {
+      run(LARGE_QUERY_GROUP_BY);
+    }
   }
 
   @Test
   public void testEXTERNAL_SORT() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-    testNoResult(ITERATION_COUNT, LARGE_QUERY_ORDER_BY);
+    for (int i = 0; i < ITERATION_COUNT; i++) {
+      run(LARGE_QUERY_ORDER_BY);
+    }
   }
 
   @Test
   public void testTOP_N_SORT() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-    testNoResult(ITERATION_COUNT, LARGE_QUERY_ORDER_BY_WITH_LIMIT);
+    for (int i = 0; i < ITERATION_COUNT; i++) {
+      run(LARGE_QUERY_ORDER_BY_WITH_LIMIT);
+    }
   }
 
   @Ignore // TODO DRILL-5997
   @Test
   public void testFILTER() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-    testNoResult(ITERATION_COUNT, LARGE_QUERY_FILTER);
+    for (int i = 0; i < ITERATION_COUNT; i++) {
+      run(LARGE_QUERY_FILTER);
+    }
   }
 
   @Test
   public void testClassTransformationOOM() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-    testNoResult(ITERATION_COUNT, QUERY_FILTER);
+    for (int i = 0; i < ITERATION_COUNT; i++) {
+      run(QUERY_FILTER);
+    }
   }
 
   @Test
   public void testProject() throws Exception {
-    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-    testNoResult(ITERATION_COUNT, LARGE_QUERY_SELECT_LIST);
+    for (int i = 0; i < ITERATION_COUNT; i++) {
+      run(LARGE_QUERY_SELECT_LIST);
+    }
   }
 
   @Test
   public void testHashJoin() throws Exception {
     String tableName = "wide_table_hash_join";
     try {
-      setSessionOption("drill.exec.hashjoin.fallback.enabled", true);
-      testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-      testNoResult("alter session set `planner.enable_mergejoin` = false");
-      testNoResult("alter session set `planner.enable_nestedloopjoin` = false");
-      testNoResult("use dfs.tmp");
-      testNoResult(LARGE_TABLE_WRITER, tableName);
-      testNoResult(QUERY_WITH_JOIN, tableName);
+      client.alterSession(ExecConstants.HASHJOIN_FALLBACK_ENABLED_KEY, true);
+      client.alterSession(PlannerSettings.MERGEJOIN.getOptionName(), false);
+      client.alterSession(PlannerSettings.NESTEDLOOPJOIN.getOptionName(), false);
+
+      run("use dfs.tmp");
+      run(LARGE_TABLE_WRITER, tableName);
+      run(QUERY_WITH_JOIN, tableName);
     } finally {
-      resetSessionOption("planner.enable_mergejoin");
-      resetSessionOption("planner.enable_nestedloopjoin");
-      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
-      testNoResult("drop table if exists %s", tableName);
+      client.resetSession(ExecConstants.HASHJOIN_FALLBACK_ENABLED_KEY);
+      client.resetSession(PlannerSettings.MERGEJOIN.getOptionName());
+      client.resetSession(PlannerSettings.NESTEDLOOPJOIN.getOptionName());
+      run("drop table if exists %s", tableName);
     }
   }
 
@@ -234,17 +270,15 @@ public class TestLargeFileCompilation extends BaseTestQuery {
   public void testMergeJoin() throws Exception {
     String tableName = "wide_table_merge_join";
     try {
-      testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-      testNoResult("alter session set `planner.enable_hashjoin` = false");
-      testNoResult("alter session set `planner.enable_nestedloopjoin` = false");
-      testNoResult("use dfs.tmp");
-      testNoResult(LARGE_TABLE_WRITER, tableName);
-      testNoResult(QUERY_WITH_JOIN, tableName);
+      client.alterSession(PlannerSettings.HASHJOIN.getOptionName(), false);
+      client.alterSession(PlannerSettings.NESTEDLOOPJOIN.getOptionName(), false);
+      run("use dfs.tmp");
+      run(LARGE_TABLE_WRITER, tableName);
+      run(QUERY_WITH_JOIN, tableName);
     } finally {
-      resetSessionOption("planner.enable_hashjoin");
-      resetSessionOption("planner.enable_nestedloopjoin");
-      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
-      testNoResult("drop table if exists %s", tableName);
+      client.resetSession(PlannerSettings.HASHJOIN.getOptionName());
+      client.resetSession(PlannerSettings.NESTEDLOOPJOIN.getOptionName());
+      run("drop table if exists %s", tableName);
     }
   }
 
@@ -252,39 +286,36 @@ public class TestLargeFileCompilation extends BaseTestQuery {
   public void testNestedLoopJoin() throws Exception {
     String tableName = "wide_table_loop_join";
     try {
-      testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
-      testNoResult("alter session set `planner.enable_nljoin_for_scalar_only` = false");
-      testNoResult("alter session set `planner.enable_hashjoin` = false");
-      testNoResult("alter session set `planner.enable_mergejoin` = false");
-      testNoResult("use dfs.tmp");
-      testNoResult(LARGE_TABLE_WRITER, tableName);
-      testNoResult(QUERY_WITH_JOIN, tableName);
+      client.alterSession(PlannerSettings.HASHJOIN.getOptionName(), false);
+      client.alterSession(PlannerSettings.MERGEJOIN.getOptionName(), false);
+      client.alterSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName(), false);
+      run("use dfs.tmp");
+      run(LARGE_TABLE_WRITER, tableName);
+      run(QUERY_WITH_JOIN, tableName);
     } finally {
-      resetSessionOption("planner.enable_nljoin_for_scalar_only");
-      resetSessionOption("planner.enable_hashjoin");
-      resetSessionOption("planner.enable_mergejoin");
-      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
-      testNoResult("drop table if exists %s", tableName);
+      client.resetSession(PlannerSettings.HASHJOIN.getOptionName());
+      client.resetSession(PlannerSettings.MERGEJOIN.getOptionName());
+      client.resetSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName());
+      run("drop table if exists %s", tableName);
     }
   }
 
   @Test
   public void testJDKHugeStringConstantCompilation() throws Exception {
-    try {
-      setSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION, "JDK");
-      testNoResult(ITERATION_COUNT, HUGE_STRING_CONST_QUERY);
-    } finally {
-      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
+    for (int i = 0; i < ITERATION_COUNT; i++) {
+      run(HUGE_STRING_CONST_QUERY);
     }
   }
 
   @Test
   public void testJaninoHugeStringConstantCompilation() throws Exception {
     try {
-      setSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION, "JANINO");
-      testNoResult(ITERATION_COUNT, HUGE_STRING_CONST_QUERY);
+      client.alterSession(ClassCompilerSelector.JAVA_COMPILER_OPTION, "JANINO");
+      for (int i = 0; i < ITERATION_COUNT; i++) {
+        run(HUGE_STRING_CONST_QUERY);
+      }
     } finally {
-      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
+      client.resetSession(ClassCompilerSelector.JAVA_COMPILER_OPTION);
     }
   }
 }

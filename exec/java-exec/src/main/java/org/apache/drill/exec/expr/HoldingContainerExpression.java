@@ -25,9 +25,21 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Wrapper around a representation of a "Holder" to represent that
+ * Holder as an expression. Whether this expression represents a
+ * declaration, initialization, or reference (use) of the holder
+ * depends on the visitor applied to this expression.
+ * <p>
+ * This expression class is a run-time implementation detail; it
+ * shows up in the "unknown" bucket within the visitor, where it
+ * must be parsed out using <code>instanceof</code> (or assumed.)
+ */
 public class HoldingContainerExpression implements LogicalExpression{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HoldingContainerExpression.class);
+  static final Logger logger = LoggerFactory.getLogger(HoldingContainerExpression.class);
 
   final HoldingContainer container;
 
@@ -50,7 +62,6 @@ public class HoldingContainerExpression implements LogicalExpression{
     return visitor.visitUnknown(this, value);
   }
 
-
   public HoldingContainer getContainer() {
     return container;
   }
@@ -70,4 +81,8 @@ public class HoldingContainerExpression implements LogicalExpression{
     return 0; // TODO
   }
 
+  @Override
+  public String toString() {
+    return container.toString();
+  }
 }

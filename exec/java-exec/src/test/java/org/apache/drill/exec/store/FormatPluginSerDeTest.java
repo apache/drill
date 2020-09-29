@@ -19,7 +19,7 @@ package org.apache.drill.exec.store;
 
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.store.avro.AvroTestUtil;
+import org.apache.drill.exec.store.avro.AvroDataGenerator;
 import org.junit.Test;
 
 import java.nio.file.Paths;
@@ -63,8 +63,8 @@ public class FormatPluginSerDeTest extends PlanTestBase {
 
   @Test
   public void testAvro() throws Exception {
-    AvroTestUtil.AvroTestRecordWriter testSetup = AvroTestUtil.generateSimplePrimitiveSchema_NoNullValues(5);
-    String file = testSetup.getFileName();
+    AvroDataGenerator dataGenerator = new AvroDataGenerator(dirTestWatcher);
+    String file = dataGenerator.generateSimplePrimitiveSchema_NoNullValues(5).getFileName();
     testPhysicalPlanSubmission(
         String.format("select * from dfs.`%s`", file),
         String.format("select * from table(dfs.`%s`(type=>'avro'))", file)
@@ -135,6 +135,4 @@ public class FormatPluginSerDeTest extends PlanTestBase {
       PlanTestBase.testPhysicalPlanExecutionBasedOnQuery(query);
     }
   }
-
 }
-

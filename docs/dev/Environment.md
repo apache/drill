@@ -4,7 +4,7 @@
 
 Currently, the Apache Drill build process is known to work on Linux, Windows and OSX.  To build, you need to have the following software installed on your system to successfully complete a build. 
   * Java 8
-  * Maven 3.3.3 or greater
+  * Maven 3.6.3 or greater
 
 ## Confirm settings
     # java -version
@@ -13,7 +13,7 @@ Currently, the Apache Drill build process is known to work on Linux, Windows and
     Java HotSpot(TM) 64-Bit Server VM (build 25.161-b12, mixed mode)
 
     # mvn --version
-    Apache Maven 3.3.3
+    Apache Maven 3.6.3
 
 ## Checkout
 
@@ -22,7 +22,7 @@ Currently, the Apache Drill build process is known to work on Linux, Windows and
 ## Build
 
     cd drill
-    mvn clean install
+    mvn clean install -DskipTests
 
 ## Explode tarball in installation directory
    

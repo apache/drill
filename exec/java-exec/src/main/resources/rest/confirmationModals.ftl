@@ -27,8 +27,8 @@
     <!-- Modal content-->
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close closeX" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span></button>
-        <h3 class="modal-title" id="confirmation" style="color:orange" align="center"><span class="glyphicon glyphicon-alert">&#xe209;</span><span id="modalHeader" style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;white-space:pre">  Warning</span></h3>
+        <h3 class="modal-title col-11" id="confirmation" style="color:orange" align="center"><span class="material-icons">warning</span><span id="modalHeader" style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;white-space:pre">  Warning</span></h3>
+        <button type="button" class="close closeX" data-dismiss="modal"><span class="material-icons">close</span></button>
       </div>
       <div class="modal-body" id="modalBody" style="font-size:125%">
       ~ConfirmationMessage~

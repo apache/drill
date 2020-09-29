@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -48,6 +49,7 @@ import org.junit.Test;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Range;
 import org.junit.experimental.categories.Category;
+import org.slf4j.Logger;
 
 @Category(VectorTest.class)
 public class ExpressionTreeMaterializerTest extends ExecTest {
@@ -188,6 +190,13 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
       @Override
       public int getErrorCount() {
         return errorCount;
+      }
+
+      @Override
+      public void reportErrors(Logger logger) {
+        throw UserException.internalError(null)
+          .message("Code generation found %d errors", errorCount)
+          .build(logger);
       }
     };
 

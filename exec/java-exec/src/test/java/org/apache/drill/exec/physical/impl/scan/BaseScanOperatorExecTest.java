@@ -104,7 +104,7 @@ public class BaseScanOperatorExecTest extends SubOperatorTest {
           .add("a", MinorType.INT)
           .addNullable("b", MinorType.VARCHAR, 10)
           .buildSchema();
-      schemaNegotiator.setTableSchema(schema, true);
+      schemaNegotiator.tableSchema(schema, true);
       tableLoader = schemaNegotiator.build();
       return true;
     }

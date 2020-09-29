@@ -39,6 +39,7 @@ public interface Propertied {
    */
   void setProperties(Map<String, String> properties);
 
+  boolean hasProperties();
   Map<String, String> properties();
 
   String property(String key);
@@ -51,7 +52,6 @@ public interface Propertied {
   int intProperty(String key, int defaultValue);
   void setIntProperty(String key, int value);
   void removeProperty(String key);
-
 
   /**
    * Drill-wide properties are of the form:<br><tt>
@@ -66,7 +66,6 @@ public interface Propertied {
    * config
    * @return the "drill.<plugin name>." prefix
    */
-
   static String pluginPrefix(String pluginName) {
     return DRILL_PROP_PREFIX + pluginName + ".";
   }

@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -62,23 +63,16 @@ public class UnionVector implements ValueVector {
   public static final int NULL_MARKER = 0;
   public static final String TYPE_VECTOR_NAME = "types";
   public static final String INTERNAL_MAP_NAME = "internal";
+  public static final int TYPE_COUNT = MinorType.values().length;
 
-  private static final MajorType MAJOR_TYPES[] = new MajorType[MinorType.values().length];
+  // Types must be indexed by ordinal, not by number. That is,
+  // use type.ordinal(), not type.getNumber().
+  public static final MajorType TYPES[] = new MajorType[TYPE_COUNT];
 
   static {
-    MAJOR_TYPES[MinorType.MAP.ordinal()] = Types.optional(MinorType.MAP);
-    MAJOR_TYPES[MinorType.LIST.ordinal()] = Types.optional(MinorType.LIST);
-    MAJOR_TYPES[MinorType.DICT.ordinal()] = Types.optional(MinorType.DICT);
-    <#list vv.types as type>
-      <#list type.minor as minor>
-        <#assign name = minor.class?cap_first />
-        <#assign fields = minor.fields!type.fields />
-        <#assign uncappedName = name?uncap_first/>
-        <#if !minor.class?starts_with("Decimal")>
-    MAJOR_TYPES[MinorType.${name?upper_case}.ordinal()] = Types.optional(MinorType.${name?upper_case});
-        </#if>
-      </#list>
-    </#list>
+    for (MinorType minorType : MinorType.values()) {
+      TYPES[minorType.ordinal()] = Types.optional(minorType);
+    }
   }
 
   private MaterializedField field;
@@ -194,7 +188,7 @@ public class UnionVector implements ValueVector {
   private <T extends ValueVector> T classicAddType(MinorType type, Class<? extends ValueVector> vectorClass) {
     int vectorCount = internalMap.size();
     @SuppressWarnings("unchecked")
-    T vector = (T) internalMap.addOrGet(type.name().toLowerCase(), MAJOR_TYPES[type.ordinal()], vectorClass);
+    T vector = (T) internalMap.addOrGet(type.name().toLowerCase(), TYPES[type.ordinal()], vectorClass);
     cachedSubtypes[type.ordinal()] = vector;
     if (internalMap.size() > vectorCount) {
       vector.allocateNew();
@@ -547,26 +541,30 @@ public class UnionVector implements ValueVector {
 
     @Override
     public Object getObject(int index) {
-      int type = getTypeVector().getAccessor().get(index);
-      switch (type) {
-      case NULL_MARKER:
+      int ordinal = getTypeVector().getAccessor().get(index);
+      if (ordinal == NULL_MARKER) {
         return null;
+      }
+      // Warning: do not use valueOf as that uses Protobuf
+      // field numbers, not enum ordinals.
+      MinorType type = MinorType.values()[ordinal];
+      switch (type) {
       <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
       <#assign fields = minor.fields!type.fields />
       <#assign uncappedName = name?uncap_first/>
       <#if !minor.class?starts_with("Decimal")>
-      case MinorType.${name?upper_case}_VALUE:
+      case ${name?upper_case}:
         return get${name}Vector().getAccessor().getObject(index);
       </#if>
       </#list></#list>
-      case MinorType.MAP_VALUE:
+      case MAP:
         return getMap().getAccessor().getObject(index);
-      case MinorType.LIST_VALUE:
+      case LIST:
         return getList().getAccessor().getObject(index);
-      case MinorType.DICT_VALUE:
+      case DICT:
         return getDict().getAccessor().getObject(index);
       default:
-        throw new UnsupportedOperationException("Cannot support type: " + MinorType.forNumber(type));
+        throw new UnsupportedOperationException("Cannot support type: " + type.name());
       }
     }
 
@@ -670,7 +668,7 @@ public class UnionVector implements ValueVector {
     </#list></#list>
 
     public void setType(int index, MinorType type) {
-      getTypeVector().getMutator().setSafe(index, type.getNumber());
+      getTypeVector().getMutator().setSafe(index, type.ordinal());
     }
 
     public void setNull(int index) {

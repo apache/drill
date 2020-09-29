@@ -18,8 +18,10 @@
 package org.apache.drill.exec.planner.fragment;
 
 /**
- * Describes an operator's endpoint assignment requirements. Ordering is from no assignment requirement to mandatory
- * assignment requirements. Changes/new addition should keep the order of increasing restrictive assignment requirement.
+ * Describes an operator's endpoint assignment requirements. Ordering is from no
+ * assignment requirement to mandatory assignment requirements. Changes/new
+ * addition should keep the order of increasing restrictive assignment
+ * requirement.
  */
 public enum DistributionAffinity {
   /**
@@ -28,14 +30,15 @@ public enum DistributionAffinity {
   NONE(SoftAffinityFragmentParallelizer.INSTANCE),
 
   /**
-   * Operator has soft distribution affinity to one or more endpoints. Operator performs better when fragments are
-   * assigned to the endpoints with affinity, but not a mandatory requirement.
+   * Operator has soft distribution affinity to one or more endpoints. Operator
+   * performs better when fragments are assigned to the endpoints with affinity,
+   * but not a mandatory requirement.
    */
   SOFT(SoftAffinityFragmentParallelizer.INSTANCE),
 
   /**
-   * Hard distribution affinity to one or more endpoints. Fragments having the operator must be scheduled on the nodes
-   * with affinity.
+   * Hard distribution affinity to one or more endpoints. Fragments having the
+   * operator must be scheduled on the nodes with affinity.
    */
   HARD(HardAffinityFragmentParallelizer.INSTANCE);
 
@@ -53,9 +56,12 @@ public enum DistributionAffinity {
   }
 
   /**
-   * Is the current DistributionAffinity less restrictive than the given DistributionAffinity?
+   * Is the current DistributionAffinity less restrictive than the given
+   * DistributionAffinity?
+   *
    * @param distributionAffinity
-   * @return True if the current DistributionAffinity less restrictive than the given DistributionAffinity. False otherwise.
+   * @return True if the current DistributionAffinity less restrictive than the
+   *         given DistributionAffinity. False otherwise.
    */
   public boolean isLessRestrictiveThan(final DistributionAffinity distributionAffinity) {
     return ordinal() < distributionAffinity.ordinal();

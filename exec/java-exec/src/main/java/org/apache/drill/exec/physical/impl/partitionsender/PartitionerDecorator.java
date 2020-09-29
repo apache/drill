@@ -30,6 +30,7 @@ import java.util.concurrent.locks.LockSupport;
 
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.QueryCancelledException;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
@@ -38,20 +39,22 @@ import org.apache.drill.exec.testing.CountDownLatchInjection;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.util.concurrent.MoreExecutors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Decorator class to hide multiple Partitioner existence from the caller
- * since this class involves multithreaded processing of incoming batches
- * as well as flushing it needs special handling of OperatorStats - stats
- * since stats are not suitable for use in multithreaded environment
- * The algorithm to figure out processing versus wait time is based on following formula:
- * totalWaitTime = totalAllPartitionersProcessingTime - max(sum(processingTime) by partitioner)
+ * Decorator class to hide multiple Partitioner existence from the caller since
+ * this class involves multithreaded processing of incoming batches as well as
+ * flushing it needs special handling of OperatorStats - stats since stats are
+ * not suitable for use in multithreaded environment The algorithm to figure out
+ * processing versus wait time is based on following formula: totalWaitTime =
+ * totalAllPartitionersProcessingTime - max(sum(processingTime) by partitioner)
  */
 public final class PartitionerDecorator {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionerDecorator.class);
+  private static final Logger logger = LoggerFactory.getLogger(PartitionerDecorator.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(PartitionerDecorator.class);
 
-  private List<Partitioner> partitioners;
+  private final List<Partitioner> partitioners;
   private final OperatorStats stats;
   private final ExecutorService executor;
   private final FragmentContext context;
@@ -155,6 +158,7 @@ public final class PartitionerDecorator {
         testCountDownLatch.countDown();
       } catch (InterruptedException e) {
         logger.warn("fragment thread interrupted", e);
+        throw new QueryCancelledException();
       } catch (RejectedExecutionException e) {
         logger.warn("Failed to execute partitioner tasks. Execution service down?", e);
         executionException = new ExecutionException(e);
@@ -309,7 +313,7 @@ public final class PartitionerDecorator {
 
     private final GeneralExecuteIface iface;
     private final Partitioner partitioner;
-    private CountDownLatchInjection testCountDownLatch;
+    private final CountDownLatchInjection testCountDownLatch;
 
     private volatile ExecutionException exception;
 
@@ -392,7 +396,7 @@ public final class PartitionerDecorator {
     }
 
     public ExecutionException getException() {
-      return this.exception;
+      return exception;
     }
 
     public OperatorStats getStats() {

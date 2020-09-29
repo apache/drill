@@ -56,7 +56,6 @@ import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.joda.time.DateTimeZone;
@@ -292,7 +291,7 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertFalse(arrayReader.next());
 
     assertEquals("[0, 20, 30]", arrayReader.getAsString());
-    assertEquals(Lists.newArrayList(0, 20, 30), arrayReader.getObject());
+    assertEquals(Arrays.asList(0, 20, 30), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();
@@ -507,7 +506,7 @@ public class TestScalarAccessors extends SubOperatorTest {
 
     if (colReader.extendedType() == ValueType.LONG) {
       assertEquals("[0, 20, 30]", arrayReader.getAsString());
-      assertEquals(Lists.newArrayList(0L, 20L, 30L), arrayReader.getObject());
+      assertEquals(Arrays.asList(0L, 20L, 30L), arrayReader.getObject());
     }
 
     assertFalse(reader.next());
@@ -629,7 +628,7 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertFalse(arrayReader.next());
 
     assertEquals("[0.0, 20.5, 30.0]", arrayReader.getAsString());
-    assertEquals(Lists.newArrayList(0.0D, 20.5D, 30D), arrayReader.getObject());
+    assertEquals(Arrays.asList(0.0D, 20.5D, 30D), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();
@@ -821,7 +820,7 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertFalse(arrayReader.next());
 
     assertEquals("[\"fred\", \"\", \"wilma\"]", arrayReader.getAsString());
-    assertEquals(Lists.newArrayList("fred", "", "wilma"), arrayReader.getObject());
+    assertEquals(Arrays.asList("fred", "", "wilma"), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();

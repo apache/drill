@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -41,29 +42,18 @@ public class SchemaUtilites {
    *
    * @param defaultSchema Reference to the default schema in complete schema tree.
    * @param schemaPath Schema path to search.
-   * @return SchemaPlus object.
+   * @return SchemaPlus object from default or root schema, or null if not found.
    */
   public static SchemaPlus findSchema(final SchemaPlus defaultSchema, final List<String> schemaPath) {
     if (schemaPath.size() == 0) {
       return defaultSchema;
     }
-
-    SchemaPlus schema;
-    if ((schema = searchSchemaTree(defaultSchema, schemaPath)) != null) {
-      return schema;
+    SchemaPlus schema = searchSchemaTree(defaultSchema, schemaPath);
+    SchemaPlus rootSchema;
+    if (schema == null && (rootSchema = rootSchema(defaultSchema)) != defaultSchema) {
+      schema = searchSchemaTree(rootSchema, schemaPath);
     }
-
-    SchemaPlus rootSchema = defaultSchema;
-    while(rootSchema.getParentSchema() != null) {
-      rootSchema = rootSchema.getParentSchema();
-    }
-
-    if (rootSchema != defaultSchema &&
-        (schema = searchSchemaTree(rootSchema, schemaPath)) != null) {
-      return schema;
-    }
-
-    return null;
+    return schema;
   }
 
   /**
@@ -226,15 +216,15 @@ public class SchemaUtilites {
       throwSchemaNotFoundException(defaultSchema, SCHEMA_PATH_JOINER.join(schemaPath));
     }
 
-    if (isRootSchema(schema)) {
+    if (checkMutable && isRootSchema(schema)) {
       throw UserException.validationError()
-          .message("Root schema is immutable. Creating or dropping tables/views is not allowed in root schema." +
+          .message("Root schema is immutable. Drill does not allow creating or deleting tables or views in the root schema. " +
               "Select a schema using 'USE schema' command.")
           .build(logger);
     }
 
     final AbstractSchema drillSchema = unwrapAsDrillSchemaInstance(schema);
-    if (!drillSchema.isMutable()) {
+    if (checkMutable && !drillSchema.isMutable()) {
       throw UserException.validationError()
           .message("Unable to create or drop objects. Schema [%s] is immutable.", getSchemaPath(schema))
           .build(logger);
@@ -327,4 +317,28 @@ public class SchemaUtilites {
     }
   }
 
+  /**
+   * Finds root of given schema.
+   * @param schema current schema
+   * @return root schema
+   */
+  public static SchemaPlus rootSchema(SchemaPlus schema) {
+    while (!isRootSchema(schema)) {
+      schema = schema.getParentSchema();
+    }
+    return schema;
+  }
+
+  /**
+   * Returns schema path which corresponds to the specified table identifier.
+   * If table identifier contains only table name, empty list will be returned.
+   *
+   * @param tableIdentifier table identifier
+   * @return schema path which corresponds to the specified table identifier
+   */
+  public static List<String> getSchemaPath(SqlIdentifier tableIdentifier) {
+    return tableIdentifier.isSimple()
+        ? Collections.emptyList()
+        : tableIdentifier.names.subList(0, tableIdentifier.names.size() - 1);
+  }
 }

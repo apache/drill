@@ -16,20 +16,17 @@
 # limitations under the License.
 #
 
-FROM centos:7
+# This Dockerfile may be used during development. It adds built binaries from distribution/target folder
+# into the target image based on openjdk:8u232-jdk image.
+
+FROM openjdk:8u232-jdk
 
 # Project version defined in pom.xml is passed as an argument
 ARG VERSION
 
-# JDK 8 is a pre-requisite to run Drill ; 'which' package is needed for drill-config.sh
-RUN yum install -y java-1.8.0-openjdk-devel which ; yum clean all ; rm -rf /var/cache/yum
-
-# The drill tarball is generated upon building the Drill project
-COPY target/apache-drill-$VERSION.tar.gz /tmp
-
-# Drill binaries are extracted into the '/opt/drill' directory
 RUN mkdir /opt/drill
-RUN tar -xvzf /tmp/apache-drill-$VERSION.tar.gz --directory=/opt/drill --strip-components 1
+
+COPY target/apache-drill-$VERSION/apache-drill-$VERSION /opt/drill
 
 # Starts Drill in embedded mode and connects to Sqlline
 ENTRYPOINT /opt/drill/bin/drill-embedded

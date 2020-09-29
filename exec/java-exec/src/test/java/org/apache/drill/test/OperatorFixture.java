@@ -23,6 +23,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.util.concurrent.ListenableFuture;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -54,6 +55,7 @@ import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -61,6 +63,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
@@ -71,6 +74,7 @@ import org.apache.drill.exec.physical.rowSet.IndirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
 import java.util.concurrent.TimeUnit;
 
@@ -124,8 +128,10 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
         configBuilder.put(ClassBuilder.CODE_DIR_OPTION, dirTestWatcher.getCodegenDir().getAbsolutePath());
         configBuilder.put(ExecConstants.DRILL_TMP_DIR, dirTestWatcher.getTmpDir().getAbsolutePath());
         configBuilder.put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
-        configBuilder.put(ExecConstants.SPILL_DIRS, Lists.newArrayList(dirTestWatcher.getSpillDir().getAbsolutePath()));
-        configBuilder.put(ExecConstants.HASHJOIN_SPILL_DIRS, Lists.newArrayList(dirTestWatcher.getSpillDir().getAbsolutePath()));
+        configBuilder.put(ExecConstants.SPILL_DIRS, Arrays.asList(dirTestWatcher.getSpillDir().getAbsolutePath()));
+        configBuilder.put(ExecConstants.HASHJOIN_SPILL_DIRS, Arrays.asList(dirTestWatcher.getSpillDir().getAbsolutePath()));
+        configBuilder.put(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getHomeDir().getAbsolutePath());
+        configBuilder.put(ExecConstants.UDF_DIRECTORY_FS, FileSystem.DEFAULT_FS);
       }
     }
 
@@ -171,8 +177,8 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     private final List<OperatorContext> contexts = Lists.newLinkedList();
 
 
-    private ExecutorState executorState = new OperatorFixture.MockExecutorState();
-    private ExecutionControls controls;
+    private final ExecutorState executorState = new OperatorFixture.MockExecutorState();
+    private final ExecutionControls controls;
 
     public MockFragmentContext(final DrillConfig config,
                                final OptionManager options,
@@ -339,11 +345,16 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     public MetastoreRegistry getMetastoreRegistry() {
       return null;
     }
+
+    @Override
+    public void requestMemory(RecordBatch requestor) {
+      // Does nothing in a mock fragment.
+    }
   }
 
   private final SystemOptionManager options;
   private final MockFragmentContext context;
-  private LocalPersistentStoreProvider provider;
+  private PersistentStoreProvider provider;
 
   protected OperatorFixture(Builder builder) {
     config = builder.configBuilder().build();
@@ -351,21 +362,19 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     options = createOptionManager();
     context = new MockFragmentContext(config, options, allocator, builder.scanExecutor, builder.scanDecoderExecutor);
     applySystemOptions(builder.systemOptions);
-   }
+  }
 
-   private void applySystemOptions(List<RuntimeOption> systemOptions) {
+  private void applySystemOptions(List<RuntimeOption> systemOptions) {
     for (RuntimeOption option : systemOptions) {
       options.setLocalOption(option.key, option.value);
     }
   }
 
-  public OptionManager getOptionManager()
-  {
+  public OptionManager getOptionManager() {
     return options;
   }
 
-  private SystemOptionManager createOptionManager()
-  {
+  private SystemOptionManager createOptionManager() {
     try {
       provider = new LocalPersistentStoreProvider(config);
       provider.start();
@@ -382,7 +391,7 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
 
     return options;
-   }
+  }
 
   public FragmentContext getFragmentContext() { return context; }
 
@@ -458,27 +467,22 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
   }
 
-  public static class MockExecutorState implements FragmentContext.ExecutorState
-  {
+  public static class MockExecutorState
+      implements FragmentContext.ExecutorState {
     @Override
-    public boolean shouldContinue() {
-      return true;
-    }
+    public boolean shouldContinue() { return true; }
 
     @Override
-    public void fail(Throwable t) {
-
-    }
+    public void fail(Throwable t) { }
 
     @Override
-    public boolean isFailed() {
-      return false;
-    }
+    public boolean isFailed() { return false; }
 
     @Override
-    public Throwable getFailureCause() {
-      return null;
-    }
+    public Throwable getFailureCause() { return null; }
+
+    @Override
+    public void checkContinue() { }
   }
 
   public OperatorContext newOperatorContext(PhysicalOperator popConfig) {

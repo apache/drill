@@ -22,11 +22,13 @@ import io.netty.channel.EventLoopGroup;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.metrics.DrillCounters;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
@@ -54,7 +56,6 @@ import java.util.concurrent.ExecutorService;
 import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
 
 public class DrillbitContext implements AutoCloseable {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
 
   private final BootStrapContext context;
   private final PhysicalPlanReader reader;
@@ -76,6 +77,7 @@ public class DrillbitContext implements AutoCloseable {
   private final QueryProfileStoreContext profileStoreContext;
   private ResourceManager resourceManager;
   private final MetastoreRegistry metastoreRegistry;
+  private final DrillCounters counters;
 
   public DrillbitContext(
       DrillbitEndpoint endpoint,
@@ -109,8 +111,8 @@ public class DrillbitContext implements AutoCloseable {
     DrillConfig config = context.getConfig();
     lpPersistence = new LogicalPlanPersistence(config, classpathScan);
 
-    storagePlugins = config
-        .getInstance(StoragePluginRegistry.STORAGE_PLUGIN_REGISTRY_IMPL, StoragePluginRegistry.class, this);
+    storagePlugins = config.getInstance(
+        ExecConstants.STORAGE_PLUGIN_REGISTRY_IMPL, StoragePluginRegistry.class, this);
 
     reader = new PhysicalPlanReader(config, classpathScan, lpPersistence, endpoint, storagePlugins);
     operatorCreatorRegistry = new OperatorCreatorRegistry(classpathScan);
@@ -124,6 +126,8 @@ public class DrillbitContext implements AutoCloseable {
     //This profile store context is built from the profileStoreProvider
     profileStoreContext = new QueryProfileStoreContext(config, profileStoreProvider, coord);
     this.metastoreRegistry = new MetastoreRegistry(config);
+
+    this.counters = DrillCounters.getInstance();
   }
 
   public QueryProfileStoreContext getProfileStoreContext() {
@@ -308,5 +312,9 @@ public class DrillbitContext implements AutoCloseable {
 
   public MetastoreRegistry getMetastoreRegistry() {
     return metastoreRegistry;
+  }
+
+  public DrillCounters getCounters() {
+    return counters;
   }
 }

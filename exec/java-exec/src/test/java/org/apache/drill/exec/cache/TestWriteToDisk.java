@@ -18,95 +18,61 @@
 package org.apache.drill.exec.cache;
 
 import java.io.File;
-import java.util.List;
 
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
-import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSets;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
-import org.apache.drill.test.TestTools;
+import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarBinaryVector;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.junit.Rule;
 import org.junit.Test;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.junit.rules.TestRule;
-
-public class TestWriteToDisk extends ExecTest {
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(90000); // 90secs
+public class TestWriteToDisk extends SubOperatorTest {
 
   @Test
-  @SuppressWarnings("static-method")
   public void test() throws Exception {
-    final List<ValueVector> vectorList = Lists.newArrayList();
-    final DrillConfig config = DrillConfig.create();
-    try (final RemoteServiceSet serviceSet = RemoteServiceSet
-        .getLocalServiceSet();
-        final Drillbit bit = new Drillbit(config, serviceSet)) {
-      bit.run();
-      final DrillbitContext context = bit.getContext();
+    VectorContainer container = expectedRowSet().container();
 
-      final MaterializedField intField = MaterializedField.create("int", Types.required(TypeProtos.MinorType.INT));
-      final MaterializedField binField = MaterializedField.create("binary", Types.required(TypeProtos.MinorType.VARBINARY));
-      try (final IntVector intVector = (IntVector) TypeHelper.getNewVector(intField, context.getAllocator());
-          final VarBinaryVector binVector =
-              (VarBinaryVector) TypeHelper.getNewVector(binField, context.getAllocator())) {
-        AllocationHelper.allocate(intVector, 4, 4);
-        AllocationHelper.allocate(binVector, 4, 5);
-        vectorList.add(intVector);
-        vectorList.add(binVector);
+    WritableBatch batch = WritableBatch.getBatchNoHVWrap(container.getRecordCount(), container, false);
 
-        intVector.getMutator().setSafe(0, 0);
-        binVector.getMutator().setSafe(0, "ZERO".getBytes());
-        intVector.getMutator().setSafe(1, 1);
-        binVector.getMutator().setSafe(1, "ONE".getBytes());
-        intVector.getMutator().setSafe(2, 2);
-        binVector.getMutator().setSafe(2, "TWO".getBytes());
-        intVector.getMutator().setSafe(3, 3);
-        binVector.getMutator().setSafe(3, "THREE".getBytes());
-        intVector.getMutator().setValueCount(4);
-        binVector.getMutator().setValueCount(4);
+    VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, fixture.allocator());
 
-        VectorContainer container = new VectorContainer();
-        container.addCollection(vectorList);
-        container.setRecordCount(4);
-        WritableBatch batch = WritableBatch.getBatchNoHVWrap(
-            container.getRecordCount(), container, false);
-        VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(
-            batch, context.getAllocator());
+    VectorAccessibleSerializable newWrap = new VectorAccessibleSerializable(fixture.allocator());
+    try (FileSystem fs = ExecTest.getLocalFileSystem()) {
+      File tempDir = dirTestWatcher.getTmpDir();
+      tempDir.deleteOnExit();
+      Path path = new Path(tempDir.getAbsolutePath(), "drillSerializable");
+      try (FSDataOutputStream out = fs.create(path)) {
+        wrap.writeToStream(out);
+      }
 
-        final VectorAccessibleSerializable newWrap = new VectorAccessibleSerializable(
-            context.getAllocator());
-        try (final FileSystem fs = getLocalFileSystem()) {
-          final File tempDir = Files.createTempDir();
-          tempDir.deleteOnExit();
-          final Path path = new Path(tempDir.getAbsolutePath(), "drillSerializable");
-          try (final FSDataOutputStream out = fs.create(path)) {
-            wrap.writeToStream(out);
-          }
-
-          try (final FSDataInputStream in = fs.open(path)) {
-            newWrap.readFromStream(in);
-          }
-        }
-
-        newWrap.get();
+      try (FSDataInputStream in = fs.open(path)) {
+        newWrap.readFromStream(in);
       }
     }
+
+    RowSetUtilities.verify(expectedRowSet(), RowSets.wrap(newWrap.get()));
+  }
+
+  private RowSet expectedRowSet() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("int", TypeProtos.MinorType.INT)
+        .add("binary", TypeProtos.MinorType.VARBINARY)
+        .build();
+
+    return fixture.rowSetBuilder(schema)
+        .addRow(0, "ZERO".getBytes())
+        .addRow(1, "ONE".getBytes())
+        .addRow(2, "TWO".getBytes())
+        .addRow(3, "THREE".getBytes())
+        .build();
   }
 }

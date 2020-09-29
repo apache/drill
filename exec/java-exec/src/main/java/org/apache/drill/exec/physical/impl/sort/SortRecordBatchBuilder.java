@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.AllocationReservation;
 import org.apache.drill.exec.memory.BaseAllocator;
@@ -39,16 +40,18 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SortRecordBatchBuilder implements AutoCloseable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortRecordBatchBuilder.class);
+  static final Logger logger = LoggerFactory.getLogger(SortRecordBatchBuilder.class);
 
   private final ArrayListMultimap<BatchSchema, RecordBatchData> batches = ArrayListMultimap.create();
 
   private int recordCount;
   private long runningBatches;
   private SelectionVector4 sv4;
-  private BufferAllocator allocator;
+  private final BufferAllocator allocator;
   final AllocationReservation reservation;
 
   public SortRecordBatchBuilder(BufferAllocator a) {
@@ -134,13 +137,17 @@ public class SortRecordBatchBuilder implements AutoCloseable {
     return batches.isEmpty();
   }
 
-  public void build(VectorContainer outputContainer) throws SchemaChangeException {
+  public void build(VectorContainer outputContainer) {
     outputContainer.clear();
     if (batches.keySet().size() > 1) {
-      throw new SchemaChangeException("Sort currently only supports a single schema.");
+      throw UserException.validationError(null)
+          .message("Sort currently only supports a single schema.")
+          .build(logger);
     }
     if (batches.size() > Character.MAX_VALUE) {
-      throw new SchemaChangeException("Sort cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
+      throw UserException.internalError(null)
+      .message("Sort cannot work on more than %d batches at a time.", Character.MAX_VALUE)
+      .build(logger);
     }
     if (batches.keys().size() < 1) {
       assert false : "Invalid to have an empty set of batches with no schemas.";

@@ -26,9 +26,11 @@ import java.util.Set;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OperatorCreatorRegistry {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorCreatorRegistry.class);
+  private static final Logger logger = LoggerFactory.getLogger(OperatorCreatorRegistry.class);
 
   private volatile Map<Class<?>, Constructor<?>> constructorRegistry = new HashMap<Class<?>, Constructor<?>>();
   private volatile Map<Class<?>, Object> instanceRegistry = new HashMap<Class<?>, Object>();
@@ -97,5 +99,4 @@ public class OperatorCreatorRegistry {
       }
     }
   }
-
 }

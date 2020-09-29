@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.scan.columns;
 
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTableColumn;
 import org.apache.drill.exec.physical.impl.scan.project.VectorSource;
-import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
+import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
 import org.apache.drill.exec.record.MaterializedField;
 
 public class ResolvedColumnsArrayColumn extends ResolvedTableColumn {

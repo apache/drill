@@ -810,11 +810,10 @@ public class TestHiveMaps extends HiveClusterTest {
         .sqlQuery("SELECT sqlTypeOf(%1$s) sto, typeOf(%1$s) to, modeOf(%1$s) mo, drillTypeOf(%1$s) dto " +
             "FROM hive.map_tbl LIMIT 1", "int_string")
         .unOrdered()
-        .baselineColumns("sto", "to", "mo", "dto")
-        .baselineValues("MAP", "DICT<INT,VARCHAR>", "NOT NULL", "DICT<INT,VARCHAR>")
+        .baselineColumns("sto", "to",                "mo",       "dto")
+        .baselineValues( "MAP", "DICT<INT,VARCHAR>", "NOT NULL", "DICT")
         .go();
   }
-
 
   @Test
   public void mapStringToUnion() throws Exception {

@@ -31,13 +31,15 @@ import org.codehaus.janino.Java.CompilationUnit;
 import org.codehaus.janino.Parser;
 import org.codehaus.janino.Scanner;
 import org.mortbay.util.IO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * To avoid the cost of initializing all functions up front,
- * this class contains all information required to initializing a function when it is used.
+ * To avoid the cost of initializing all functions up front, this class contains
+ * all information required to initializing a function when it is used.
  */
 public class FunctionInitializer {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionInitializer.class);
+  private static final Logger logger = LoggerFactory.getLogger(FunctionInitializer.class);
 
   private final String className;
   private final ClassLoader classLoader;
@@ -46,9 +48,12 @@ public class FunctionInitializer {
   private volatile boolean isLoaded;
 
   /**
-   * @param className the fully qualified name of the class implementing the function
-   * @param classLoader class loader associated with the function, is unique for each jar that holds function
-   *                    to prevent classpath collisions during loading an unloading jars
+   * @param className
+   *          the fully qualified name of the class implementing the function
+   * @param classLoader
+   *          class loader associated with the function, is unique for each jar
+   *          that holds function to prevent classpath collisions during loading
+   *          an unloading jars
    */
   public FunctionInitializer(String className, ClassLoader classLoader) {
     this.className = className;

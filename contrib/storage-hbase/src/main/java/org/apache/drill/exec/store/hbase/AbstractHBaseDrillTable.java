@@ -27,6 +27,8 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,7 +37,7 @@ import java.util.Set;
 import static org.apache.drill.exec.store.hbase.DrillHBaseConstants.ROW_KEY;
 
 public abstract class AbstractHBaseDrillTable extends DrillTable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractHBaseDrillTable.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractHBaseDrillTable.class);
 
   protected HTableDescriptor tableDesc;
 

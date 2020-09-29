@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  */
 final class TableEntryCacheLoader extends CacheLoader<TableName, HiveReadEntry> {
 
-  private static final Logger logger = LoggerFactory.getLogger(TableNameCacheLoader.class);
+  private static final Logger logger = LoggerFactory.getLogger(TableEntryCacheLoader.class);
 
   private final DrillHiveMetaStoreClient client;
 

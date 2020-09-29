@@ -174,7 +174,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
     // serviceCache before discovery to prevent
     // double releasing and disallowing jvm to spit bothering warnings. simply
     // put, we are great!
-    AutoCloseables.close(serviceCache, discovery, curator, factory);
+    AutoCloseables.close(serviceCache, discovery, factory, curator);
   }
 
   @Override

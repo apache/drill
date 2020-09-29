@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.sql;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
@@ -30,7 +31,7 @@ public class DrillSqlAggOperatorWithoutInference extends DrillSqlAggOperator {
   public DrillSqlAggOperatorWithoutInference(String name, int argCount, boolean isVarArg) {
     super(name,
         new ArrayList<>(),
-        isVarArg ? VarArgOperandTypeChecker.INSTANCE : Checker.getChecker(argCount, argCount),
+        isVarArg ? OperandTypes.VARIADIC : Checker.getChecker(argCount, argCount),
         DynamicReturnType.INSTANCE);
   }
 

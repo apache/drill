@@ -53,21 +53,27 @@ public interface FormatPlugin {
 
   FormatMatcher getMatcher();
 
-  AbstractWriter getWriter(PhysicalOperator child, String location, List<String> partitionColumns) throws IOException;
+  AbstractWriter getWriter(PhysicalOperator child, String location,
+      List<String> partitionColumns) throws IOException;
 
   Set<StoragePluginOptimizerRule> getOptimizerRules();
 
-  AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns) throws IOException;
+  AbstractGroupScan getGroupScan(String userName, FileSelection selection,
+      List<SchemaPath> columns) throws IOException;
 
-  default AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, OptionManager options) throws IOException {
+  default AbstractGroupScan getGroupScan(String userName, FileSelection selection,
+      List<SchemaPath> columns, OptionManager options) throws IOException {
     return getGroupScan(userName, selection, columns);
   }
 
-  default AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, MetadataProviderManager metadataProviderManager) throws IOException {
+  default AbstractGroupScan getGroupScan(String userName, FileSelection selection,
+      List<SchemaPath> columns, MetadataProviderManager metadataProviderManager) throws IOException {
     return getGroupScan(userName, selection, columns);
   }
 
-  default AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns, OptionManager options, MetadataProviderManager metadataProvider) throws IOException {
+  default AbstractGroupScan getGroupScan(String userName, FileSelection selection,
+      List<SchemaPath> columns, OptionManager options,
+      MetadataProviderManager metadataProvider) throws IOException {
     return getGroupScan(userName, selection, columns, metadataProvider);
   }
 

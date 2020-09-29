@@ -39,6 +39,8 @@ import javax.json.JsonValue;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Parses a query profile and provides access to various bits of the profile
@@ -46,7 +48,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  */
 
 public class ProfileParser {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileParser.class);
+  private static final Logger logger = LoggerFactory.getLogger(ProfileParser.class);
 
   /**
    * The original JSON profile.
@@ -394,7 +396,7 @@ public class ProfileParser {
           logger.info("Can't find operator def: {}-{}", major.id, op.opId);
           continue;
         }
-        op.opName = CoreOperatorType.valueOf(op.type).name();
+        op.opName = CoreOperatorType.forNumber(op.type).name();
         op.opName = op.opName.replace("_", " ");
         op.name = opDef.name;
         if (op.name.equalsIgnoreCase(op.opName)) {

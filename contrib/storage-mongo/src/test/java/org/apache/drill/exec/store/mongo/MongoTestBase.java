@@ -32,14 +32,14 @@ public class MongoTestBase extends ClusterTest implements MongoTestConstants {
     startCluster(ClusterFixture.builder(dirTestWatcher));
     pluginRegistry = cluster.drillbit().getContext().getStorage();
 
-    MongoTestSuit.initMongo();
-    initMongoStoragePlugin(MongoTestSuit.getConnectionURL());
+    MongoTestSuite.initMongo();
+    initMongoStoragePlugin(MongoTestSuite.getConnectionURL());
   }
 
   private static void initMongoStoragePlugin(String connectionURI) throws Exception {
     MongoStoragePluginConfig storagePluginConfig = new MongoStoragePluginConfig(connectionURI);
     storagePluginConfig.setEnabled(true);
-    pluginRegistry.createOrUpdate(MongoStoragePluginConfig.NAME, storagePluginConfig, true);
+    pluginRegistry.put(MongoStoragePluginConfig.NAME, storagePluginConfig);
 
     client.testBuilder()
         .sqlQuery("alter session set `%s` = %s",
@@ -51,8 +51,7 @@ public class MongoTestBase extends ClusterTest implements MongoTestConstants {
 
   @AfterClass
   public static void tearDownMongoTestBase() throws Exception {
-    pluginRegistry.deletePlugin(MongoStoragePluginConfig.NAME);
-    MongoTestSuit.tearDownCluster();
+    pluginRegistry.remove(MongoStoragePluginConfig.NAME);
+    MongoTestSuite.tearDownCluster();
   }
-
 }

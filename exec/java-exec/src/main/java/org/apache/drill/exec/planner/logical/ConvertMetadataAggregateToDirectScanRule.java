@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.logical;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.RelNode;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.IsPredicate;
 import org.apache.drill.exec.metastore.ColumnNamesOptions;
@@ -30,11 +31,15 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.DictColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.ColumnExplorer.ImplicitFileColumns;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.direct.DirectGroupScan;
+import org.apache.drill.exec.store.parquet.BaseParquetMetadataProvider;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 import org.apache.drill.exec.store.pojo.DynamicPojoRecordReader;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -89,10 +94,10 @@ import java.util.stream.IntStream;
  * </pre>
  */
 public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
+  private static final Logger logger = LoggerFactory.getLogger(ConvertMetadataAggregateToDirectScanRule.class);
+
   public static final ConvertMetadataAggregateToDirectScanRule INSTANCE =
       new ConvertMetadataAggregateToDirectScanRule();
-
-  private static final Logger logger = LoggerFactory.getLogger(ConvertMetadataAggregateToDirectScanRule.class);
 
   public ConvertMetadataAggregateToDirectScanRule() {
     super(
@@ -202,6 +207,12 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
       // populates record list with row group column metadata
       for (SchemaPath schemaPath : interestingColumns) {
         ColumnStatistics<?> columnStatistics = rowGroupMetadata.getColumnsStatistics().get(schemaPath);
+
+        // do not gather statistics for array columns as it is not supported by Metastore
+        if (containsArrayColumn(rowGroupMetadata.getSchema(), schemaPath)) {
+          continue;
+        }
+
         if (IsPredicate.isNullOrEmpty(columnStatistics)) {
           logger.debug("Statistics for {} column wasn't found within {} row group.", schemaPath, path);
           return null;
@@ -215,12 +226,14 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
           } else {
             statsValue = columnStatistics.get(statisticsKind);
           }
-          String columnStatisticsFieldName = AnalyzeColumnUtils.getColumnStatisticsFieldName(schemaPath.getRootSegmentPath(), statisticsKind);
+          String columnStatisticsFieldName = AnalyzeColumnUtils.getColumnStatisticsFieldName(schemaPath.toExpr(), statisticsKind);
           if (statsValue != null) {
             schema.putIfAbsent(
                 columnStatisticsFieldName,
                 statsValue.getClass());
             recordsTable.put(columnStatisticsFieldName, rowIndex, statsValue);
+          } else {
+            recordsTable.put(columnStatisticsFieldName, rowIndex, BaseParquetMetadataProvider.NULL_VALUE);
           }
         }
       }
@@ -233,6 +246,8 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
         if (statisticsValue != null) {
           schema.putIfAbsent(metadataStatisticsFieldName, statisticsValue.getClass());
           recordsTable.put(metadataStatisticsFieldName, rowIndex, statisticsValue);
+        } else {
+          recordsTable.put(metadataStatisticsFieldName, rowIndex, BaseParquetMetadataProvider.NULL_VALUE);
         }
       }
 
@@ -247,15 +262,19 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
 
     // DynamicPojoRecordReader requires LinkedHashMap with fields order
     // which corresponds to the value position in record list.
-    LinkedHashMap<String, Class<?>> orderedSchema = recordsTable.rowKeySet().stream()
-        .collect(Collectors.toMap(
-            Function.identity(),
-            column -> schema.getOrDefault(column, Integer.class),
-            (o, n) -> n,
-            LinkedHashMap::new));
+    LinkedHashMap<String, Class<?>> orderedSchema = new LinkedHashMap<>();
+    for (String s : recordsTable.rowKeySet()) {
+      Class<?> clazz = schema.get(s);
+      if (clazz != null) {
+        orderedSchema.put(s, clazz);
+      } else {
+        return null;
+      }
+    }
 
     IntFunction<List<Object>> collectRecord = currentIndex -> orderedSchema.keySet().stream()
         .map(column -> recordsTable.get(column, currentIndex))
+        .map(value -> value != BaseParquetMetadataProvider.NULL_VALUE ? value : null)
         .collect(Collectors.toList());
 
     List<List<Object>> records = IntStream.range(0, rowIndex)
@@ -267,5 +286,31 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
     ScanStats scanStats = new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, records.size(), 1, schema.size());
 
     return new DirectGroupScan(reader, scanStats);
+  }
+
+  /**
+   * Checks whether schema path contains array segment.
+   *
+   * @param schema tuple schema
+   * @param schemaPath schema path
+   * @return {@code true} if any segment in the schema path is an array, {@code false} otherwise
+   */
+  private static boolean containsArrayColumn(TupleMetadata schema, SchemaPath schemaPath) {
+    PathSegment currentPath = schemaPath.getRootSegment();
+    ColumnMetadata columnMetadata = schema.metadata(currentPath.getNameSegment().getPath());
+    while (columnMetadata != null) {
+      if (columnMetadata.isArray()) {
+        return true;
+      } else if (columnMetadata.isMap()) {
+        currentPath = currentPath.getChild();
+        columnMetadata = columnMetadata.tupleSchema().metadata(currentPath.getNameSegment().getPath());
+      } else if (columnMetadata.isDict()) {
+        currentPath = currentPath.getChild();
+        columnMetadata = ((DictColumnMetadata) columnMetadata).valueColumnMetadata();
+      } else {
+        return false;
+      }
+    }
+    return false;
   }
 }

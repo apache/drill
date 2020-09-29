@@ -22,7 +22,6 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import java.util.List;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.PartitionLimit;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
@@ -43,7 +42,8 @@ import org.slf4j.LoggerFactory;
  * implicit column for rowId for each row.
  */
 public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<PartitionLimit> {
-  private static final Logger logger = LoggerFactory.getLogger(LimitRecordBatch.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(PartitionLimitRecordBatch.class);
 
   private final SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;
@@ -83,7 +83,7 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() {
     container.clear();
     transfers.clear();
 

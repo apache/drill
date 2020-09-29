@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
+import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import io.netty.buffer.ByteBuf;
@@ -32,7 +33,6 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.MaterializedField;
@@ -94,6 +94,39 @@ public class TestBitRpc extends ExecTest {
     Thread.sleep(5000);
   }
 
+  @Test
+  public void testConnectionBackpressureWithDynamicCredit() throws Exception {
+    WorkerBee bee = mock(WorkerBee.class);
+    WorkEventBus workBus = mock(WorkEventBus.class);
+    DrillConfig config1 = DrillConfig.create();
+    BootStrapContext c = new BootStrapContext(config1, SystemOptionManager.createDefaultOptionDefinitions(), ClassPathScanner.fromPrescan(config1));
+    FragmentContextImpl fcon = mock(FragmentContextImpl.class);
+    when(fcon.getAllocator()).thenReturn(c.getAllocator());
+
+    final FragmentManager fman = new MockFragmentManagerWithDynamicCredit(c);
+
+    when(workBus.getFragmentManager(any(FragmentHandle.class))).thenReturn(fman);
+
+    int port = 1234;
+
+    DataConnectionConfig config = new DataConnectionConfig(c.getAllocator(), c,
+            new DataServerRequestHandler(workBus, bee));
+    DataServer server = new DataServer(config);
+
+    port = server.bind(port, true);
+    DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
+    DataConnectionManager manager = new DataConnectionManager(ep, config);
+    DataTunnel tunnel = new DataTunnel(manager);
+    AtomicLong max = new AtomicLong(0);
+    for (int i = 0; i < 40; i++) {
+      long t1 = System.currentTimeMillis();
+      tunnel.sendRecordBatch(new TimingOutcome(max), new FragmentWritableBatch(false, QueryId.getDefaultInstance(), 1,
+              1, 1, 1, getRandomBatch(c.getAllocator(), 5000)));
+    }
+    assertTrue(max.get() > 2700);
+    Thread.sleep(5000);
+  }
+
   private static WritableBatch getRandomBatch(BufferAllocator allocator, int records) {
     List<ValueVector> vectors = Lists.newArrayList();
     for (int i = 0; i < 5; i++) {
@@ -107,7 +140,7 @@ public class TestBitRpc extends ExecTest {
     return WritableBatch.getBatchNoHV(records, vectors, false);
   }
 
-  private class TimingOutcome implements RpcOutcomeListener<Ack> {
+  private class TimingOutcome implements RpcOutcomeListener<BitData.AckWithCredit> {
     private AtomicLong max;
     private Stopwatch watch = Stopwatch.createStarted();
 
@@ -122,7 +155,7 @@ public class TestBitRpc extends ExecTest {
     }
 
     @Override
-    public void success(Ack value, ByteBuf buffer) {
+    public void success(BitData.AckWithCredit value, ByteBuf buffer) {
       long micros = watch.elapsed(TimeUnit.MILLISECONDS);
       while (true) {
         long nowMax = max.get();
@@ -164,6 +197,78 @@ public class TestBitRpc extends ExecTest {
       }
       RawFragmentBatch rfb = batch.newRawFragmentBatch(c.getAllocator());
       rfb.sendOk();
+      rfb.release();
+
+      return true;
+    }
+
+    @Override
+    public FragmentExecutor getRunnable() {
+      return null;
+    }
+
+    @Override
+    public void cancel() {
+
+    }
+
+    @Override
+    public boolean isCancelled() {
+      return false;
+    }
+
+    @Override
+    public void unpause() {
+
+    }
+
+    @Override
+    public boolean isWaiting() {
+      return false;
+    }
+
+    @Override
+    public FragmentHandle getHandle() {
+      return null;
+    }
+
+    @Override
+    public FragmentContext getFragmentContext() {
+      return null;
+    }
+
+    @Override
+    public void receivingFragmentFinished(FragmentHandle handle) {
+
+    }
+  }
+
+  public static class MockFragmentManagerWithDynamicCredit implements FragmentManager {
+    private final BootStrapContext c;
+    private int v;
+    private int times = 0;
+
+    public MockFragmentManagerWithDynamicCredit(BootStrapContext c) {
+      this.c = c;
+    }
+
+    @Override
+    public boolean handle(IncomingDataBatch batch) throws FragmentSetupException, IOException {
+      try {
+        v++;
+        if (v % 10 == 0) {
+          Thread.sleep(3000);
+        }
+      } catch (InterruptedException e) {
+
+      }
+      times++;
+      RawFragmentBatch rfb = batch.newRawFragmentBatch(c.getAllocator());
+      if (times > 3) {
+        rfb.sendOk(4);
+      } else {
+        rfb.sendOk();
+      }
       rfb.release();
 
       return true;

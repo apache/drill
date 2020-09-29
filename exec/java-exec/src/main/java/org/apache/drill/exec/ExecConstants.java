@@ -77,6 +77,7 @@ public final class ExecConstants {
   public static final String INCOMING_BUFFER_SIZE = "drill.exec.buffer.size";
   public static final String SPOOLING_BUFFER_DELETE = "drill.exec.buffer.spooling.delete";
   public static final String SPOOLING_BUFFER_MEMORY = "drill.exec.buffer.spooling.size";
+  public static final String UNLIMITED_BUFFER_MAX_MEMORY_SIZE = "drill.exec.buffer.unlimited_receiver.max_size";
   public static final String BATCH_PURGE_THRESHOLD = "drill.exec.sort.purge.threshold";
 
   // Spill boot-time Options common to all spilling operators
@@ -105,7 +106,6 @@ public final class ExecConstants {
   public static final String EXTERNAL_SORT_SPILL_FILESYSTEM = "drill.exec.sort.external.spill.fs";
   public static final String EXTERNAL_SORT_SPILL_FILE_SIZE = "drill.exec.sort.external.spill.file_size";
   public static final String EXTERNAL_SORT_MSORT_MAX_BATCHSIZE = "drill.exec.sort.external.msort.batch.maxsize";
-  public static final String EXTERNAL_SORT_DISABLE_MANAGED = "drill.exec.sort.external.disable_managed";
   public static final String EXTERNAL_SORT_MERGE_LIMIT = "drill.exec.sort.external.merge_limit";
   public static final String EXTERNAL_SORT_SPILL_BATCH_SIZE = "drill.exec.sort.external.spill.spill_batch_size";
   public static final String EXTERNAL_SORT_MERGE_BATCH_SIZE = "drill.exec.sort.external.spill.merge_batch_size";
@@ -114,6 +114,9 @@ public final class ExecConstants {
 
   // External Sort Runtime options
 
+  @Deprecated // Managed sort is the only implementation
+  public static final String EXTERNAL_SORT_DISABLE_MANAGED = "drill.exec.sort.external.disable_managed";
+  @Deprecated
   public static final BooleanValidator EXTERNAL_SORT_DISABLE_MANAGED_OPTION = new BooleanValidator("exec.sort.disable_managed", null);
 
   // Hash Join Options
@@ -159,7 +162,6 @@ public final class ExecConstants {
   public static final PositiveLongValidator HASHJOIN_RUNTIME_FILTER_MAX_WAITING_TIME = new PositiveLongValidator(HASHJOIN_RUNTIME_FILTER_MAX_WAITING_TIME_KEY, Character.MAX_VALUE, null);
 
 
-
   // Hash Aggregate Options
   public static final String HASHAGG_NUM_PARTITIONS_KEY = "exec.hashagg.num_partitions";
   public static final LongValidator HASHAGG_NUM_PARTITIONS_VALIDATOR = new RangeLongValidator(HASHAGG_NUM_PARTITIONS_KEY, 1, 128,
@@ -186,6 +188,12 @@ public final class ExecConstants {
   public static final BooleanValidator HASHAGG_FALLBACK_ENABLED_VALIDATOR = new BooleanValidator(HASHAGG_FALLBACK_ENABLED_KEY,
       new OptionDescription("Hash Aggregates ignore memory limits when enabled (true). When disabled (false), Hash Aggregates fail when memory is set too low."));
 
+  // Partitioner options
+  public static final String PARTITIONER_MEMORY_REDUCTION_THRESHOLD_KEY = "exec.partition.mem_throttle";
+  public static final LongValidator PARTITIONER_MEMORY_REDUCTION_THRESHOLD_VALIDATOR =
+      new RangeLongValidator(PARTITIONER_MEMORY_REDUCTION_THRESHOLD_KEY, 0, Integer.MAX_VALUE,
+      new OptionDescription("Linearly reduces partition sender buffer row count after this number of receivers. Default is 0 (disabled). (Since Drill 1.18)"));
+
   public static final String SSL_PROVIDER = "drill.exec.ssl.provider"; // valid values are "JDK", "OPENSSL" // default JDK
   public static final String SSL_PROTOCOL = "drill.exec.ssl.protocol"; // valid values are SSL, SSLV2, SSLV3, TLS, TLSV1, TLSv1.1, TLSv1.2(default)
   public static final String SSL_KEYSTORE_TYPE = "drill.exec.ssl.keyStoreType";
@@ -196,6 +204,7 @@ public final class ExecConstants {
   public static final String SSL_TRUSTSTORE_PATH = "drill.exec.ssl.trustStorePath"; // path to keystore. default : $JRE_HOME/lib/security/cacerts.jks
   public static final String SSL_TRUSTSTORE_PASSWORD = "drill.exec.ssl.trustStorePassword"; // default: changeit
   public static final String SSL_USE_HADOOP_CONF = "drill.exec.ssl.useHadoopConfig"; // Initialize ssl params from hadoop if not provided by drill. default: true
+  public static final String SSL_USE_MAPR_CONFIG = "drill.exec.ssl.useMapRSSLConfig"; // Use keyStore and trustStore credentials provided by MapR platform.
   public static final String SSL_HANDSHAKE_TIMEOUT = "drill.exec.security.user.encryption.ssl.handshakeTimeout"; // Default 10 seconds
 
   public static final String TEXT_LINE_READER_BATCH_SIZE = "drill.exec.storage.file.text.batch.size";
@@ -206,10 +215,44 @@ public final class ExecConstants {
   public static final String HTTP_PROFILES_PER_PAGE = "drill.exec.http.profiles_per_page";
   public static final String HTTP_PORT = "drill.exec.http.port";
   public static final String HTTP_PORT_HUNT = "drill.exec.http.porthunt";
+  public static final String HTTP_JETTY_SERVER_DUMP_AFTER_START = "drill.exec.http.jetty.server.dumpAfterStart";
   public static final String HTTP_JETTY_SERVER_ACCEPTORS = "drill.exec.http.jetty.server.acceptors";
   public static final String HTTP_JETTY_SERVER_SELECTORS = "drill.exec.http.jetty.server.selectors";
   public static final String HTTP_JETTY_SERVER_HANDLERS = "drill.exec.http.jetty.server.handlers";
+  public static final String HTTP_JETTY_SERVER_RESPONSE_HEADERS = "drill.exec.http.jetty.server.response.headers";
+  public static final String HTTP_JETTY_SSL_CONTEXT_FACTORY_OPTIONS_PREFIX = "drill.exec.http.jetty.server.sslContextFactory";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_CERT_ALIAS = "drill.exec.http.jetty.server.sslContextFactory.certAlias";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_CRL_PATH = "drill.exec.http.jetty.server.sslContextFactory.crlPath";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_ENABLE_CRLDP = "drill.exec.http.jetty.server.sslContextFactory.enableCRLDP";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_ENABLE_OCSP = "drill.exec.http.jetty.server.sslContextFactory.enableOCSP";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_ENDPOINT_IDENTIFICATION_ALGORITHM = "drill.exec.http.jetty.server.sslContextFactory.endpointIdentificationAlgorithm";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_EXCLUDE_CIPHER_SUITES = "drill.exec.http.jetty.server.sslContextFactory.excludeCipherSuites";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_EXCLUDE_PROTOCOLS = "drill.exec.http.jetty.server.sslContextFactory.excludeProtocols";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_INCLUDE_CIPHER_SUITES = "drill.exec.http.jetty.server.sslContextFactory.includeCipherSuites";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_INCLUDE_PROTOCOLS = "drill.exec.http.jetty.server.sslContextFactory.includeProtocols";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_KEY_MANAGER_FACTORY_ALGORITHM = "drill.exec.http.jetty.server.sslContextFactory.keyManagerFactoryAlgorithm";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_KEYSTORE_PROVIDER = "drill.exec.http.jetty.server.sslContextFactory.keyStoreProvider";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_KEYSTORE_TYPE = "drill.exec.http.jetty.server.sslContextFactory.keyStoreType";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_MAX_CERT_PATH_LENGTH = "drill.exec.http.jetty.server.sslContextFactory.maxCertPathLength";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_NEED_CLIENT_AUTH = "drill.exec.http.jetty.server.sslContextFactory.needClientAuth";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_OCSP_RESPONDER_URL = "drill.exec.http.jetty.server.sslContextFactory.ocspResponderURL";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_PROVIDER = "drill.exec.http.jetty.server.sslContextFactory.provider";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_RENEGOTIATION_ALLOWED = "drill.exec.http.jetty.server.sslContextFactory.renegotiationAllowed";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_RENEGOTIATION_LIMIT = "drill.exec.http.jetty.server.sslContextFactory.renegotiationLimit";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_SECURE_RANDOM_ALGORITHM = "drill.exec.http.jetty.server.sslContextFactory.secureRandomAlgorithm";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_SESSION_CACHING_ENABLED = "drill.exec.http.jetty.server.sslContextFactory.sessionCachingEnabled";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_SSL_SESSION_CACHE_SIZE = "drill.exec.http.jetty.server.sslContextFactory.sslSessionCacheSize";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_SSL_SESSION_TIMEOUT = "drill.exec.http.jetty.server.sslContextFactory.sslSessionTimeout";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_TRUSTMANAGERFACTORY_ALGORITHM = "drill.exec.http.jetty.server.sslContextFactory.trustManagerFactoryAlgorithm";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_TRUSTSTORE_PROVIDER = "drill.exec.http.jetty.server.sslContextFactory.trustStoreProvider";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_TRUSTSTORE_TYPE = "drill.exec.http.jetty.server.sslContextFactory.trustStoreType";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_USE_CIPHER_SUITE_ORDER = "drill.exec.http.jetty.server.sslContextFactory.useCipherSuiteOrder";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_VALIDATE_CERTS = "drill.exec.http.jetty.server.sslContextFactory.validateCerts";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_VALIDATE_PEER_CERTS = "drill.exec.http.jetty.server.sslContextFactory.validatePeerCerts";
+  public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_WANT_CLIENT_AUTH = "drill.exec.http.jetty.server.sslContextFactory.wantClientAuth";
+
   public static final String HTTP_ENABLE_SSL = "drill.exec.http.ssl_enabled";
+  public static final String HTTP_CLIENT_TIMEOUT = "drill.exec.http.client.timeout";
   public static final String HTTP_CORS_ENABLED = "drill.exec.http.cors.enabled";
   public static final String HTTP_CORS_ALLOWED_ORIGINS = "drill.exec.http.cors.allowedOrigins";
   public static final String HTTP_CORS_ALLOWED_METHODS = "drill.exec.http.cors.allowedMethods";
@@ -243,6 +286,7 @@ public final class ExecConstants {
   public static final String AUTHENTICATION_MECHANISMS = "drill.exec.security.auth.mechanisms";
   public static final String USER_AUTHENTICATION_ENABLED = "drill.exec.security.user.auth.enabled";
   public static final String USER_AUTHENTICATOR_IMPL = "drill.exec.security.user.auth.impl";
+  public static final String HTPASSWD_AUTHENTICATOR_PATH = "drill.exec.security.user.auth.htpasswd.path";
   public static final String PAM_AUTHENTICATOR_PROFILES = "drill.exec.security.user.auth.pam_profiles";
   public static final String BIT_AUTHENTICATION_ENABLED = "drill.exec.security.bit.auth.enabled";
   public static final String BIT_AUTHENTICATION_MECHANISM = "drill.exec.security.bit.auth.mechanism";
@@ -416,11 +460,14 @@ public final class ExecConstants {
   public static final String JSON_ALL_TEXT_MODE = "store.json.all_text_mode";
   public static final BooleanValidator JSON_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(JSON_ALL_TEXT_MODE,
       new OptionDescription("Drill reads all data from the JSON files as VARCHAR. Prevents schema change errors."));
-  public static final BooleanValidator JSON_EXTENDED_TYPES = new BooleanValidator("store.json.extended_types",
+  public static final String JSON_EXTENDED_TYPES_KEY = "store.json.extended_types";
+  public static final BooleanValidator JSON_EXTENDED_TYPES = new BooleanValidator(JSON_EXTENDED_TYPES_KEY,
       new OptionDescription("Turns on special JSON structures that Drill serializes for storing more type information than the four basic JSON types."));
-  public static final BooleanValidator JSON_WRITER_UGLIFY = new BooleanValidator("store.json.writer.uglify",
+  public static final String JSON_WRITER_UGLIFY_KEY = "store.json.writer.uglify";
+  public static final BooleanValidator JSON_WRITER_UGLIFY = new BooleanValidator(JSON_WRITER_UGLIFY_KEY,
       new OptionDescription("Enables Drill to return compact JSON output files; Drill does not separate records. Default is false. (Drill 1.4+)"));
-  public static final BooleanValidator JSON_WRITER_SKIPNULLFIELDS = new BooleanValidator("store.json.writer.skip_null_fields",
+  public static final String JSON_WRITER_SKIP_NULL_FIELDS_KEY = "store.json.writer.skip_null_fields";
+  public static final BooleanValidator JSON_WRITER_SKIPNULLFIELDS = new BooleanValidator(JSON_WRITER_SKIP_NULL_FIELDS_KEY,
       new OptionDescription("Enables Drill to skip extraneous NULL fields in JSON output files when executing the CTAS statement. Default is true. (Drill 1.6+)"));
   public static final String JSON_READER_SKIP_INVALID_RECORDS_FLAG = "store.json.reader.skip_invalid_records";
   public static final BooleanValidator JSON_SKIP_MALFORMED_RECORDS_VALIDATOR = new BooleanValidator(JSON_READER_SKIP_INVALID_RECORDS_FLAG,
@@ -428,7 +475,8 @@ public final class ExecConstants {
   public static final String JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG = "store.json.reader.print_skipped_invalid_record_number";
   public static final BooleanValidator JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG_VALIDATOR = new BooleanValidator(JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG,
       new OptionDescription("Enables Drill to log the bad records that the JSON record reader skips when reading JSON files. Default is false. (Drill 1.9+)"));
-  public static final DoubleValidator TEXT_ESTIMATED_ROW_SIZE = new RangeDoubleValidator("store.text.estimated_row_size_bytes", 1, Long.MAX_VALUE,
+  public static final String TEXT_ESTIMATED_ROW_SIZE_KEY = "store.text.estimated_row_size_bytes";
+  public static final DoubleValidator TEXT_ESTIMATED_ROW_SIZE = new RangeDoubleValidator(TEXT_ESTIMATED_ROW_SIZE_KEY, 1, Long.MAX_VALUE,
       new OptionDescription("Estimate of the row size in a delimited text file, such as csv. The closer to actual, the better the query plan. Used for all csv files in the system/session where the value is set. Impacts the decision to plan a broadcast join or not."));
 
   public static final String TEXT_WRITER_ADD_HEADER = "store.text.writer.add_header";
@@ -484,29 +532,34 @@ public final class ExecConstants {
   public static final OptionValidator IMPLICIT_SUFFIX_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_SUFFIX_COLUMN_LABEL,
       new OptionDescription("Available as of Drill 1.10. Sets the implicit column name for the suffix column."));
   public static final String IMPLICIT_FQN_COLUMN_LABEL = "drill.exec.storage.implicit.fqn.column.label";
-  public static final OptionValidator IMPLICIT_FQN_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_FQN_COLUMN_LABEL,
+  public static final StringValidator IMPLICIT_FQN_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_FQN_COLUMN_LABEL,
       new OptionDescription("Available as of Drill 1.10. Sets the implicit column name for the fqn column."));
   public static final String IMPLICIT_FILEPATH_COLUMN_LABEL = "drill.exec.storage.implicit.filepath.column.label";
-  public static final OptionValidator IMPLICIT_FILEPATH_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_FILEPATH_COLUMN_LABEL,
+  public static final StringValidator IMPLICIT_FILEPATH_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_FILEPATH_COLUMN_LABEL,
       new OptionDescription("Available as of Drill 1.10. Sets the implicit column name for the filepath column."));
   public static final String IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL = "drill.exec.storage.implicit.row_group_index.column.label";
-  public static final OptionValidator IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL,
+  public static final StringValidator IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL,
       new OptionDescription("Available as of Drill 1.17. Sets the implicit column name for the row group index (rgi) column. " +
           "For internal usage when producing Metastore analyze."));
 
   public static final String IMPLICIT_ROW_GROUP_START_COLUMN_LABEL = "drill.exec.storage.implicit.row_group_start.column.label";
-  public static final OptionValidator IMPLICIT_ROW_GROUP_START_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_ROW_GROUP_START_COLUMN_LABEL,
+  public static final StringValidator IMPLICIT_ROW_GROUP_START_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_ROW_GROUP_START_COLUMN_LABEL,
       new OptionDescription("Available as of Drill 1.17. Sets the implicit column name for the row group start (rgs) column. " +
           "For internal usage when producing Metastore analyze."));
 
   public static final String IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL = "drill.exec.storage.implicit.row_group_length.column.label";
-  public static final OptionValidator IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL,
+  public static final StringValidator IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL,
       new OptionDescription("Available as of Drill 1.17. Sets the implicit column name for the row group length (rgl) column. " +
           "For internal usage when producing Metastore analyze."));
 
   public static final String IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL = "drill.exec.storage.implicit.last_modified_time.column.label";
-  public static final OptionValidator IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL,
+  public static final StringValidator IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL,
       new OptionDescription("Available as of Drill 1.17. Sets the implicit column name for the lastModifiedTime column. " +
+          "For internal usage when producing Metastore analyze."));
+
+  public static final String IMPLICIT_PROJECT_METADATA_COLUMN_LABEL = "drill.exec.storage.implicit.project_metadata.column.label";
+  public static final StringValidator IMPLICIT_PROJECT_METADATA_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_PROJECT_METADATA_COLUMN_LABEL,
+      new OptionDescription("Available as of Drill 1.18. Sets the implicit column name for the $project_metadata$ column. " +
           "For internal usage when producing Metastore analyze."));
 
   public static final String JSON_READ_NUMBERS_AS_DOUBLE = "store.json.read_numbers_as_double";
@@ -782,9 +835,6 @@ public final class ExecConstants {
   public static final String MIN_READER_WIDTH_KEY = "exec.storage.min_width";
   public static final OptionValidator MIN_READER_WIDTH = new LongValidator(MIN_READER_WIDTH_KEY,
       new OptionDescription("Min width for text readers, mostly for testing."));
-
-  public static final String BOOTSTRAP_STORAGE_PLUGINS_FILE = "bootstrap-storage-plugins.json";
-  public static final String BOOTSTRAP_FORMAT_PLUGINS_FILE = "bootstrap-format-plugins.json";
 
   public static final String SKIP_RUNTIME_ROWGROUP_PRUNING_KEY = "exec.storage.skip_runtime_rowgroup_pruning";
   public static final OptionValidator SKIP_RUNTIME_ROWGROUP_PRUNING = new BooleanValidator(SKIP_RUNTIME_ROWGROUP_PRUNING_KEY,
@@ -1106,14 +1156,14 @@ public final class ExecConstants {
    */
   public static final String METASTORE_USE_SCHEMA_METADATA = "metastore.metadata.use_schema";
   public static final BooleanValidator METASTORE_USE_SCHEMA_METADATA_VALIDATOR = new BooleanValidator(METASTORE_USE_SCHEMA_METADATA,
-      new OptionDescription("Enables schema usage, stored to the Metastore. Default is false. (Drill 1.17+)"));
+      new OptionDescription("Enables schema usage, stored to the Metastore. Default is true. (Drill 1.17+)"));
 
   /**
    * Option for enabling statistics usage, stored in the Metastore, at the planning stage.
    */
   public static final String METASTORE_USE_STATISTICS_METADATA = "metastore.metadata.use_statistics";
   public static final BooleanValidator METASTORE_USE_STATISTICS_METADATA_VALIDATOR = new BooleanValidator(METASTORE_USE_STATISTICS_METADATA,
-      new OptionDescription("Enables statistics usage, stored in the Metastore, at the planning stage. Default is false. (Drill 1.17+)"));
+      new OptionDescription("Enables statistics usage, stored in the Metastore, at the planning stage. Default is true. (Drill 1.17+)"));
 
   /**
    * Option for collecting schema and / or column statistics for every table after CTAS and CTTAS execution.
@@ -1145,4 +1195,41 @@ public final class ExecConstants {
   public static final String PARQUET_READER_ENABLE_MAP_SUPPORT = "store.parquet.reader.enable_map_support";
   public static final BooleanValidator PARQUET_READER_ENABLE_MAP_SUPPORT_VALIDATOR = new BooleanValidator(
       PARQUET_READER_ENABLE_MAP_SUPPORT, new OptionDescription("Enables Drill Parquet reader to read Parquet MAP type correctly. (Drill 1.17+)"));
+
+  // Storage-plugin related config constants
+
+  // Bootstrap plugin files configuration keys
+  public static final String BOOTSTRAP_STORAGE_PLUGINS_FILE = "drill.exec.storage.bootstrap.storage";
+  public static final String BOOTSTRAP_FORMAT_PLUGINS_FILE =  "drill.exec.storage.bootstrap.format";
+
+  public static final String UPGRADE_STORAGE_PLUGINS_FILE = "drill.exec.storage.upgrade.storage";
+
+  public static final String STORAGE_PLUGIN_REGISTRY_IMPL = "drill.exec.storage.registry";
+  public static final String ACTION_ON_STORAGE_PLUGINS_OVERRIDE_FILE = "drill.exec.storage.action_on_plugins_override_file";
+
+  // Extra private plugin classes, used for testing
+  public static final String PRIVATE_CONNECTORS = "drill.exec.storage.private_connectors";
+
+  public static final String ENABLE_DYNAMIC_CREDIT_BASED_FC = "exec.enable_dynamic_fc";
+  public static final BooleanValidator ENABLE_DYNAMIC_CREDIT_BASED_FC_VALIDATOR = new BooleanValidator(
+          ENABLE_DYNAMIC_CREDIT_BASED_FC, new OptionDescription("Enable dynamic credit based flow control.This feature allows " +
+          "the sender to send out its data more rapidly, but you should know that it has a risk to OOM when the system is solving parallel " +
+          "large queries until we have a more accurate resource manager."));
+
+  // HTTP proxy configuration (Drill config)
+  public static final String NET_PROXY_BASE = "drill.exec.net_proxy";
+  // HTTP proxy config
+  public static final String HTTP_PROXY_URL = NET_PROXY_BASE + ".http_url";
+  public static final String HTTP_PROXY_TYPE = NET_PROXY_BASE + ".http.type";
+  public static final String HTTP_PROXY_HOST = NET_PROXY_BASE + ".http.host";
+  public static final String HTTP_PROXY_PORT = NET_PROXY_BASE + ".http.port";
+  public static final String HTTP_PROXY_USER_NAME = NET_PROXY_BASE + ".http.user_name";
+  public static final String HTTP_PROXY_PASSWORD = NET_PROXY_BASE + ".http.password";
+  // HTTPS proxy config
+  public static final String HTTPS_PROXY_URL = NET_PROXY_BASE + ".https_url";
+  public static final String HTTPS_PROXY_TYPE = NET_PROXY_BASE + ".https.type";
+  public static final String HTTPS_PROXY_HOST = NET_PROXY_BASE + ".https.host";
+  public static final String HTTPS_PROXY_PORT = NET_PROXY_BASE + ".https.port";
+  public static final String HTTPS_PROXY_USER_NAME = NET_PROXY_BASE + ".https.user_name";
+  public static final String HTTPS_PROXY_PASSWORD = NET_PROXY_BASE + ".https.password";
 }

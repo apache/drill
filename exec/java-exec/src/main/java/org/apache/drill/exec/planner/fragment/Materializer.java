@@ -38,31 +38,27 @@ import org.apache.drill.exec.physical.config.UnnestPOP;
 import org.apache.drill.exec.physical.config.RowKeyJoinPOP;
 
 public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Materializer.IndexedFragmentNode, ExecutionSetupException>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Materializer.class);
 
   public static final Materializer INSTANCE = new Materializer();
 
-  private Materializer() {
-  }
+  private Materializer() { }
 
   @Override
   public PhysicalOperator visitExchange(Exchange exchange, IndexedFragmentNode iNode) throws ExecutionSetupException {
     iNode.addAllocation(exchange);
-    if(exchange == iNode.getNode().getSendingExchange()){
+    if (exchange == iNode.getNode().getSendingExchange()) {
 
       // this is a sending exchange.
       PhysicalOperator child = exchange.getChild().accept(this, iNode);
       PhysicalOperator materializedSender = exchange.getSender(iNode.getMinorFragmentId(), child);
       materializedSender.setOperatorId(0);
       materializedSender.setCost(exchange.getCost());
-//      logger.debug("Visit sending exchange, materialized {} with child {}.", materializedSender, child);
       return materializedSender;
 
-    }else{
+    } else {
       // receiving exchange.
       PhysicalOperator materializedReceiver = exchange.getReceiver(iNode.getMinorFragmentId());
       materializedReceiver.setOperatorId(Short.MAX_VALUE & exchange.getOperatorId());
-//      logger.debug("Visit receiving exchange, materialized receiver: {}.", materializedReceiver);
       materializedReceiver.setCost(exchange.getCost());
       return materializedReceiver;
     }
@@ -95,7 +91,6 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     try {
       PhysicalOperator o = store.getSpecificStore(child, iNode.getMinorFragmentId());
       o.setOperatorId(Short.MAX_VALUE & store.getOperatorId());
-//      logger.debug("New materialized store node {} with child {}", o, child);
       return o;
     } catch (PhysicalOperatorSetupException e) {
       throw new FragmentSetupException("Failure while generating a specific Store materialization.");
@@ -105,9 +100,8 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
   @Override
   public PhysicalOperator visitOp(PhysicalOperator op, IndexedFragmentNode iNode) throws ExecutionSetupException {
     iNode.addAllocation(op);
-//    logger.debug("Visiting catch all: {}", op);
     List<PhysicalOperator> children = Lists.newArrayList();
-    for(PhysicalOperator child : op){
+    for (PhysicalOperator child : op) {
       children.add(child.accept(this, iNode));
     }
     PhysicalOperator newOp = op.getNewWithChildren(children);
@@ -115,7 +109,6 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     newOp.setOperatorId(Short.MAX_VALUE & op.getOperatorId());
     return newOp;
   }
-
 
   @Override
   public PhysicalOperator visitLateralJoin(LateralJoinPOP op, IndexedFragmentNode iNode) throws ExecutionSetupException {
@@ -168,7 +161,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     private final BiFunction<Wrapper, Integer, DrillbitEndpoint> endpoint;
     private final int minorFragmentId;
     private final BiFunction<DrillbitEndpoint, PhysicalOperator, Long> memoryPerOperPerDrillbit;
-    SubScan subScan = null;
+    SubScan subScan;
 
     private final Deque<UnnestPOP> unnest = new ArrayDeque<>();
 
@@ -217,5 +210,4 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
       return this.subScan;
     }
   }
-
 }

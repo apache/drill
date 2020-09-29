@@ -60,7 +60,7 @@ public interface RecordBatch extends VectorAccessible {
    *   </li>
    * </ul>
    * <p>
-   *  <strong>Details</strong>:
+   *  <h4>Details</h4>
    * </p>
    * <p>
    *   For normal completion, the basic sequence of return values from calls to
@@ -80,27 +80,35 @@ public interface RecordBatch extends VectorAccessible {
    *   </li>
    * </ol>
    * <p>
-   *   In addition to that basic sequence, {@link #NOT_YET} and
-   *   {@link #OUT_OF_MEMORY} values can appear anywhere in the subsequence
+   *   In addition to that basic sequence, {@link #NOT_YET}
+   *   values can appear anywhere in the subsequence
    *   before the terminal value ({@code NONE} or {@code STOP}).
    * </p>
    * <p>
    *   For abnormal termination, the sequence is truncated (before the
-   *   {@code NONE}) and ends with {@link #STOP}.  That is, the sequence begins
+   *   {@code NONE}) and ends with an exception.  That is, the sequence begins
    *   with a subsequence that is some prefix of a normal-completion sequence
-   *   and that does not contain {@code NONE}, and ends with {@code STOP}.
+   *   and that does not contain {@code NONE}, and ends with the
+   *   caller throwing a (query-fatal) exception.
    * </p>
    * <p>
-   *   (The normal-completion return sequence is matched by the following
+   *   The normal-completion return sequence is matched by the following
    *   regular-expression-style grammar:
    *   <pre>
-   *     ( ( NOT_YET | OUT_OF_MEMORY )*  OK_NEW_SCHEMA
-   *       ( NOT_YET | OUT_OF_MEMORY )*  OK )*
+   *     ( NOT_YET*  OK_NEW_SCHEMA
+   *       NOT_YET*  OK )*
    *     )+
-   *     ( NOT_YET | OUT_OF_+MEMORY )*  NONE
-   *   </pre>
-   *   )
+   *     NOT_YET*    &lt;exception></pre>
    * </p>
+   * <h4>Obsolete Outcomes</h4>
+   *
+   * The former {@code OUT_OF_MEMORY} state was never really used.
+   * It is now handled by calling
+   * {@link FragmentContext#requestMemory()}
+   * at the point that the operator realizes it is short on memory.
+   * <p>
+   * The former {@code STOP} state was replaced with a "fail fast"
+   * approach that throws an exception when an error is detected.
    */
   enum IterOutcome {
     /**
@@ -158,21 +166,6 @@ public interface RecordBatch extends VectorAccessible {
     OK_NEW_SCHEMA(false),
 
     /**
-     * Non-completion (abnormal) termination.
-     * <p>
-     *   The call to {@link #next()}
-     *   reports that the query has terminated other than by normal completion,
-     *   and that the caller must not call any of the schema-access or
-     *   data-access methods nor call {@code next()} again.
-     * </p>
-     * <p>
-     *   The caller can consume its QueryContext to understand the current state
-     *   of things.
-     * </p>
-     */
-    STOP(true),
-
-    /**
      * No data yet.
      * <p>
      *   The call to {@link #next()}
@@ -193,20 +186,6 @@ public interface RecordBatch extends VectorAccessible {
      * </p>
      */
     NOT_YET(false),
-
-    /**
-     * Out of memory (not fatal).
-     * <p>
-     *   The call to {@link #next()},
-     *   including upstream operators, was unable to allocate memory
-     *   and did not read any records,
-     *   and the batch will have more results to return (at least completion or
-     *     abnormal termination ({@code NONE} or {@code STOP})).
-     *   The caller should release memory if it can (including by returning
-     *     {@code OUT_OF_MEMORY} to its caller) and call {@code next()} again.
-     * </p>
-     */
-    OUT_OF_MEMORY(true),
 
     /**
      * Emit record to produce output batches.
@@ -233,7 +212,7 @@ public interface RecordBatch extends VectorAccessible {
      */
     EMIT(false);
 
-    private boolean error;
+    private final boolean error;
 
     IterOutcome(boolean error) {
       this.error = error;
@@ -265,10 +244,17 @@ public interface RecordBatch extends VectorAccessible {
   BatchSchema getSchema();
 
   /**
-   * Informs child nodes that this query should be terminated.  Child nodes
-   * should use the QueryContext to determine what has happened.
+   * Informs child operators that no more data is needed. Only called
+   * for "normal" cancellation to avoid unnecessary compute in any worker
+   * threads. For the error case, the fragment
+   * executor will call close() on each child automatically.
+   * <p>
+   * The operator which triggers the cancel MUST send a <code>NONE</code>
+   * status downstream, or throw an exception. It is not legal to
+   * call <code>next()</code> on an operator after calling its
+   * <code>cancel()</code> method.
    */
-  void kill(boolean sendUpstream);
+  void cancel();
 
   VectorContainer getOutgoingContainer();
 
@@ -283,7 +269,7 @@ public interface RecordBatch extends VectorAccessible {
    * Gets the value vector type and ID for the given schema path.  The
    * TypedFieldId should store a fieldId which is the same as the ordinal
    * position of the field within the Iterator provided this class's
-   * implementation of Iterable<ValueVector>.
+   * implementation of {@code Iterable<ValueVector>}.
    *
    * @param path
    *          The path where the vector should be located.
@@ -325,14 +311,4 @@ public interface RecordBatch extends VectorAccessible {
    * Perform dump of this batch's state to logs.
    */
   void dump();
-
-  /**
-   * Use this method to see if the batch has failed. Currently used when logging {@code RecordBatch}'s
-   * state using {@link #dump()} method.
-   *
-   * @return {@code true} if either {@link org.apache.drill.exec.record.RecordBatch.IterOutcome#STOP}
-   * was returned by its or child's {@link #next()} invocation or there was an {@code Exception} thrown
-   * during execution of the batch; {@code false} otherwise
-   */
-  boolean hasFailed();
 }

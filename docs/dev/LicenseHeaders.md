@@ -15,7 +15,7 @@ allows us to inforce requiring all license headers to be wrapped only in `/*` an
 
 ## Doing License Checks
 
-The license checks are disabled locally by default and are enabled on Travis. If you'd like to perform
+The license checks are disabled locally by default and are enabled on Github Actions. If you'd like to perform
 license checks locally you can do the following:
 
 ```

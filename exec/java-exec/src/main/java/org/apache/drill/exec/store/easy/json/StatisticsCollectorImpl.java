@@ -240,6 +240,7 @@ public class StatisticsCollectorImpl extends JSONBaseStatisticsRecordWriter {
       }
       switch (nextField) {
         case Statistic.COLNAME:
+          // column name is escaped, so SchemaPath.parseFromString() should be used here
           ((DrillStatsTable.ColumnStatistics_v1) columnStatistics).setName(SchemaPath.parseFromString(reader.readText().toString()));
           break;
         case Statistic.COLTYPE:

@@ -54,7 +54,7 @@ public class PacketDecoder extends Packet {
   protected int processIpV6Packet() {
     try {
       return super.processIpV6Packet();
-    } catch (IllegalStateException ise) {
+    } catch (IllegalStateException | ArrayIndexOutOfBoundsException e) {
       return -1;
     }
   }

@@ -23,8 +23,6 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.parser.LogicalExpressionParser;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -35,8 +33,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 @JsonSerialize(using = LogicalExpression.Se.class)
-public interface LogicalExpression extends Iterable<LogicalExpression>{
-  Logger logger = LoggerFactory.getLogger(LogicalExpression.class);
+public interface LogicalExpression extends Iterable<LogicalExpression> {
 
   MajorType getMajorType();
 
@@ -66,7 +63,6 @@ public interface LogicalExpression extends Iterable<LogicalExpression>{
 
       return LogicalExpressionParser.parse(expr);
     }
-
   }
 
   @SuppressWarnings("serial")

@@ -20,8 +20,7 @@ package org.apache.drill.exec.vector.complex.writer;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 
-public class TestComplexTypeWriter  extends BaseTestQuery{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestComplexTypeReader.class);
+public class TestComplexTypeWriter  extends BaseTestQuery {
 
   @Test
   //basic case. convert varchar into json.

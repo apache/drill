@@ -32,6 +32,7 @@ import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.hadoop.fs.ByteBufferReadable;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -43,11 +44,14 @@ import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.fs.Syncable;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * This class provides a Syncable local extension of the hadoop FileSystem
+ * A syncable local extension of the Hadoop FileSystem
  */
 public class LocalSyncableFileSystem extends FileSystem {
+  private static final Logger logger = LoggerFactory.getLogger(LocalSyncableFileSystem.class);
 
   @Override
   public URI getUri() {
@@ -64,8 +68,10 @@ public class LocalSyncableFileSystem extends FileSystem {
   }
 
   @Override
-  public FSDataOutputStream create(Path path, FsPermission fsPermission, boolean b, int i, short i2, long l, Progressable progressable) throws IOException {
-    return new FSDataOutputStream(new LocalSyncableOutputStream(path), FileSystem.getStatistics(path.toUri().getScheme(), getClass()));
+  public FSDataOutputStream create(Path path, FsPermission fsPermission,
+      boolean b, int i, short i2, long l, Progressable progressable) throws IOException {
+    return new FSDataOutputStream(new LocalSyncableOutputStream(path),
+        FileSystem.getStatistics(path.toUri().getScheme(), getClass()));
   }
 
   @Override
@@ -106,8 +112,7 @@ public class LocalSyncableFileSystem extends FileSystem {
   }
 
   @Override
-  public void setWorkingDirectory(Path path) {
-  }
+  public void setWorkingDirectory(Path path) { }
 
   @Override
   public Path getWorkingDirectory() {
@@ -126,8 +131,8 @@ public class LocalSyncableFileSystem extends FileSystem {
   }
 
   public class LocalSyncableOutputStream extends OutputStream implements Syncable {
-    private FileOutputStream fos;
-    private BufferedOutputStream output;
+    private final FileOutputStream fos;
+    private final BufferedOutputStream output;
 
     public LocalSyncableOutputStream(Path path) throws FileNotFoundException {
       File dir = new File(path.getParent().toString());
@@ -166,12 +171,14 @@ public class LocalSyncableFileSystem extends FileSystem {
   public class LocalInputStream extends InputStream implements Seekable, PositionedReadable, ByteBufferReadable {
 
     private BufferedInputStream input;
-    private String path;
-    private long position = 0;
+    private final String path;
+    private long position;
 
+    @SuppressWarnings("resource")
     public LocalInputStream(Path path)  throws IOException {
       this.path = path.toString();
-      input = new BufferedInputStream(new FileInputStream(new RandomAccessFile(this.path, "r").getFD()), 1024*1024);
+      this.input = new BufferedInputStream(new FileInputStream(
+          new RandomAccessFile(this.path, "r").getFD()), 1024*1024);
     }
 
     @Override
@@ -192,6 +199,7 @@ public class LocalSyncableFileSystem extends FileSystem {
     @Override
     public void seek(long l) throws IOException {
       input.close();
+      @SuppressWarnings("resource")
       RandomAccessFile raf = new RandomAccessFile(path, "r");
       raf.seek(l);
       input = new BufferedInputStream(new FileInputStream(raf.getFD()), 1024*1024);
@@ -208,8 +216,6 @@ public class LocalSyncableFileSystem extends FileSystem {
       throw new IOException("seekToNewSource not supported");
     }
 
-
-
     @Override
     public int read(ByteBuffer buf) throws IOException {
       buf.reset();
@@ -224,9 +230,7 @@ public class LocalSyncableFileSystem extends FileSystem {
         buf.put(b);
         return read;
       }
-
     }
-
 
     @Override
     public int read(byte[] b) throws IOException {
@@ -243,7 +247,19 @@ public class LocalSyncableFileSystem extends FileSystem {
       byte[] b = new byte[1];
       input.read(b);
       position++;
-      return (int) b[0] & 0xFF;
+      return b[0] & 0xFF;
+    }
+
+    @Override
+    public void close() {
+      try {
+        input.close();
+      } catch (IOException e) {
+        throw UserException.dataWriteError(e)
+          .addContext(
+              "Failed to close local syncable file system %s, possible data loss.", path)
+          .build(logger);
+      }
     }
   }
 }

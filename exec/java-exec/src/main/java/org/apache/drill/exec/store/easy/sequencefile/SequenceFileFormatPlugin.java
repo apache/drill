@@ -44,7 +44,7 @@ import org.apache.hadoop.mapred.FileSplit;
 public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileFormatConfig> {
   public SequenceFileFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
                                   StoragePluginConfig storageConfig) {
-    this(name, context, fsConf, storageConfig, new SequenceFileFormatConfig());
+    this(name, context, fsConf, storageConfig, new SequenceFileFormatConfig(null));
   }
 
   public SequenceFileFormatPlugin(String name, DrillbitContext context, Configuration fsConf,

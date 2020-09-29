@@ -40,7 +40,7 @@ public class NullResultVectorCacheImpl implements ResultVectorCache {
   public BufferAllocator allocator() { return allocator; }
 
   @Override
-  public ValueVector addOrGet(MaterializedField colSchema) {
+  public ValueVector vectorFor(MaterializedField colSchema) {
     return TypeHelper.getNewVector(colSchema, allocator, null);
   }
 

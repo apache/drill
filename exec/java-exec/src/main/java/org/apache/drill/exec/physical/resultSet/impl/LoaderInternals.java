@@ -17,20 +17,19 @@
  */
 package org.apache.drill.exec.physical.resultSet.impl;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.memory.BufferAllocator;
 
 /**
  * The internal view of the result set loader. Provides operations to manage the batch
  * and batch schema.
  */
-
 interface LoaderInternals {
 
   /**
    * Allocator to use when allocating buffers for vectors
    * @return buffer allocator
    */
-
   BufferAllocator allocator();
 
   /**
@@ -39,7 +38,6 @@ interface LoaderInternals {
    *
    * @return the new schema version
    */
-
   int bumpVersion();
 
   /**
@@ -56,7 +54,6 @@ interface LoaderInternals {
    * @param allocationBytes number of bytes allocated to a vector
    * in the batch setup step
    */
-
   void tallyAllocations(int allocationBytes);
 
   /**
@@ -64,10 +61,9 @@ interface LoaderInternals {
    * state occurs when a vector has become full, but before the batch
    * is harvested.
    *
-   * @return <tt>true</tt> if an overflow has occurred in the present
+   * @return {@code true</tt> if an overflow has occurred in the present
    * row
    */
-
   boolean hasOverflow();
 
   /**
@@ -78,7 +74,6 @@ interface LoaderInternals {
    * @return true if the vector can expand, false if an overflow
    * event should occur
    */
-
   boolean canExpand(int delta);
 
   /**
@@ -88,7 +83,6 @@ interface LoaderInternals {
    * position, that should allow saving of the in-flight value (unless
    * that one value is larger than the maximum vector size.)
    */
-
   void overflowed();
 
   /**
@@ -96,7 +90,6 @@ interface LoaderInternals {
    *
    * @return the current write row index
    */
-
   int rowIndex();
 
   /**
@@ -104,7 +97,6 @@ interface LoaderInternals {
    *
    * @return the target row count
    */
-
   int targetRowCount();
 
   /**
@@ -112,10 +104,11 @@ interface LoaderInternals {
    * occurs when a batch has been started, before the batch overflows
    * or is harvested.
    *
-   * @return <tt>true if values can be written to vectors
+   * @return {@code true} if values can be written to vectors
    */
-
   boolean writeable();
 
   ColumnBuilder columnBuilder();
+
+  CustomErrorContext errorContext();
 }

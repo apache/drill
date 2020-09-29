@@ -32,6 +32,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.metastore.ColumnNamesOptions;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -97,7 +98,7 @@ public class ColumnExplorer {
     Map<String, ImplicitFileColumns> map = CaseInsensitiveMap.newHashMap();
     for (ImplicitFileColumns e : ImplicitFileColumns.values()) {
       OptionValue optionValue;
-      if ((optionValue = optionManager.getOption(e.name)) != null) {
+      if ((optionValue = optionManager.getOption(e.optionName)) != null) {
         map.put(optionValue.string_val, e);
       }
     }
@@ -130,7 +131,7 @@ public class ColumnExplorer {
     List<String> implicitColumns = Lists.newArrayList();
     for (ImplicitFileColumns e : ImplicitFileColumns.values()) {
       OptionValue optionValue;
-      if ((optionValue = schemaConfig.getOption(e.name)) != null) {
+      if ((optionValue = schemaConfig.getOption(e.optionName)) != null) {
         implicitColumns.add(optionValue.string_val);
       }
     }
@@ -163,11 +164,6 @@ public class ColumnExplorer {
     return matcher.matches();
   }
 
-  public boolean isImplicitColumn(String name) {
-    return isPartitionColumn(partitionDesignator, name) ||
-        isImplicitOrInternalFileColumn(name);
-  }
-
   /**
    * Checks whether given column is implicit or internal.
    *
@@ -177,26 +173,6 @@ public class ColumnExplorer {
   public boolean isImplicitOrInternalFileColumn(String name) {
     return allImplicitColumns.get(name) != null
         || allInternalColumns.get(name) != null;
-  }
-
-  public boolean isImplicitFileColumn(String name) {
-    return allImplicitColumns.get(name) != null;
-  }
-
-  /**
-   * Returns list with partition column names.
-   * For the case when table has several levels of nesting, max level is chosen.
-   *
-   * @param selection    the source of file paths
-   * @param schemaConfig the source of session option value for partition column label
-   * @return list with partition column names.
-   */
-  public static List<String> getPartitionColumnNames(FileSelection selection, SchemaConfig schemaConfig) {
-
-    String partitionColumnLabel = schemaConfig.getOption(
-        ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
-
-    return getPartitionColumnNames(selection, partitionColumnLabel);
   }
 
   /**
@@ -291,37 +267,112 @@ public class ColumnExplorer {
    * @param partitionValues            list of partition values
    * @param includeFileImplicitColumns if file implicit columns should be included into the result
    * @param fs                         file system
-   * @param index                      index of row group to populate
    * @return implicit columns map
    */
-  public Map<String, String> populateImplicitAndInternalColumns(Path filePath,
-      List<String> partitionValues, boolean includeFileImplicitColumns, FileSystem fs, int index, long start, long length) {
-
+  public Map<String, String> populateColumns(Path filePath,
+      List<String> partitionValues, boolean includeFileImplicitColumns, FileSystem fs) {
     Map<String, String> implicitValues =
         new LinkedHashMap<>(populateImplicitColumns(filePath, partitionValues, includeFileImplicitColumns));
 
-    selectedInternalColumns.forEach((key, value) -> {
-      switch (value) {
+    selectedInternalColumns.forEach(
+        (key, value) -> implicitValues.put(key, getImplicitColumnValue(value, filePath, fs)));
+
+    return implicitValues;
+  }
+
+  /**
+   * Creates map with implicit and internal columns where key is column name, value is columns actual value.
+   * This map contains partition, implicit and internal file columns (if requested).
+   * Partition columns names are formed based in partition designator and value index.
+   *
+   * @param filePath                   file path, used to populate file implicit columns
+   * @param partitionValues            list of partition values
+   * @param includeFileImplicitColumns if file implicit columns should be included into the result
+   * @param fs                         file system
+   * @param index                      index of row group to populate
+   * @param start                      start of row group to populate
+   * @param length                     length of row group to populate
+   * @return implicit columns map
+   */
+  public Map<String, String> populateColumns(Path filePath,
+      List<String> partitionValues, boolean includeFileImplicitColumns, FileSystem fs, int index, long start, long length) {
+
+    Map<String, String> implicitValues =
+        new LinkedHashMap<>(populateColumns(filePath, partitionValues, includeFileImplicitColumns, fs));
+
+    selectedInternalColumns.forEach(
+        (key, value) -> implicitValues.put(key, getImplicitColumnValue(value, filePath, fs, index, start, length)));
+
+    return implicitValues;
+  }
+
+  /**
+   * Returns implicit column value for specified implicit file column.
+   *
+   * @param column   implicit file column
+   * @param filePath file path, used to populate file implicit columns
+   * @param fs       file system
+   * @param index    row group index
+   * @param start    row group start
+   * @param length   row group length
+   * @return implicit column value for specified implicit file column
+   */
+  public static String getImplicitColumnValue(ImplicitFileColumn column, Path filePath,
+      FileSystem fs, Integer index, Long start, Long length) {
+    if (column instanceof ImplicitFileColumns) {
+      ImplicitFileColumns fileColumn = (ImplicitFileColumns) column;
+      return fileColumn.getValue(filePath);
+    } else if (column instanceof ImplicitInternalFileColumns) {
+      ImplicitInternalFileColumns fileColumn = (ImplicitInternalFileColumns) column;
+      switch (fileColumn) {
         case ROW_GROUP_INDEX:
-          implicitValues.put(key, String.valueOf(index));
-          break;
+          return index != null ? String.valueOf(index) : null;
         case ROW_GROUP_START:
-          implicitValues.put(key, String.valueOf(start));
-          break;
+          return start != null ? String.valueOf(start) : null;
         case ROW_GROUP_LENGTH:
-          implicitValues.put(key, String.valueOf(length));
-          break;
+          return length != null ? String.valueOf(length) : null;
+        case PROJECT_METADATA:
+          return Boolean.FALSE.toString();
+        case USE_METADATA:
+          return null;
         case LAST_MODIFIED_TIME:
           try {
-            implicitValues.put(key, String.valueOf(fs.getFileStatus(filePath).getModificationTime()));
+            return fs != null ? String.valueOf(fs.getFileStatus(filePath).getModificationTime()) : null;
           } catch (IOException e) {
             throw new DrillRuntimeException(e);
           }
-          break;
       }
-    });
+    }
+    return null;
+  }
 
-    return implicitValues;
+  /**
+   * Returns implicit column value for specified implicit file column.
+   *
+   * @param column   implicit file column
+   * @param filePath file path
+   * @param fs       file system
+   * @return implicit column value for specified implicit file column
+   */
+  public static String getImplicitColumnValue(ImplicitFileColumn column, Path filePath, FileSystem fs) {
+    return getImplicitColumnValue(column, filePath, fs, null, null, null);
+  }
+
+  /**
+   * Returns list of implicit file columns which includes all elements from
+   * {@link ImplicitFileColumns},
+   * {@link ImplicitInternalFileColumns#LAST_MODIFIED_TIME} and
+   * {@link ImplicitInternalFileColumns#USE_METADATA} columns.
+   *
+   * @return list of implicit file columns
+   */
+  public static List<ImplicitFileColumn> getImplicitFileColumns() {
+    List<ImplicitFileColumn> implicitColumns = new ArrayList<>();
+    Collections.addAll(implicitColumns, ImplicitFileColumns.values());
+
+    implicitColumns.add(ImplicitInternalFileColumns.LAST_MODIFIED_TIME);
+    implicitColumns.add(ImplicitInternalFileColumns.USE_METADATA);
+    return implicitColumns;
   }
 
   /**
@@ -441,12 +492,12 @@ public class ColumnExplorer {
    * Columns that give information from where file data comes from.
    * Columns are implicit, so should be called explicitly in query
    */
-  public enum ImplicitFileColumns {
+  public enum ImplicitFileColumns implements ImplicitFileColumn {
 
     /**
      * Fully qualified name, contains full path to file and file name
      */
-    FQN (ExecConstants.IMPLICIT_FQN_COLUMN_LABEL) {
+    FQN (ExecConstants.IMPLICIT_FQN_COLUMN_LABEL, ColumnMetadata.IMPLICIT_FQN) {
       @Override
       public String getValue(Path path) {
         return path.toUri().getPath();
@@ -456,7 +507,7 @@ public class ColumnExplorer {
     /**
      * Full path to file without file name
      */
-    FILEPATH (ExecConstants.IMPLICIT_FILEPATH_COLUMN_LABEL) {
+    FILEPATH (ExecConstants.IMPLICIT_FILEPATH_COLUMN_LABEL, ColumnMetadata.IMPLICIT_FILEPATH) {
       @Override
       public String getValue(Path path) {
         return path.getParent().toUri().getPath();
@@ -466,7 +517,7 @@ public class ColumnExplorer {
     /**
      * File name with extension without path
      */
-    FILENAME (ExecConstants.IMPLICIT_FILENAME_COLUMN_LABEL) {
+    FILENAME (ExecConstants.IMPLICIT_FILENAME_COLUMN_LABEL, ColumnMetadata.IMPLICIT_FILENAME) {
       @Override
       public String getValue(Path path) {
         return path.getName();
@@ -476,20 +527,36 @@ public class ColumnExplorer {
     /**
      * File suffix (without dot at the beginning)
      */
-    SUFFIX (ExecConstants.IMPLICIT_SUFFIX_COLUMN_LABEL) {
+    SUFFIX (ExecConstants.IMPLICIT_SUFFIX_COLUMN_LABEL, ColumnMetadata.IMPLICIT_SUFFIX) {
       @Override
       public String getValue(Path path) {
         return Files.getFileExtension(path.getName());
       }
     };
 
-    String name;
+    String optionName;
+    String propValue;
 
-    ImplicitFileColumns(String name) {
-      this.name = name;
-    }
+    ImplicitFileColumns(String optionName, String propValue) {
+      this.optionName = optionName;
+      this.propValue = propValue;
+     }
 
-    public String optionName() { return name; }
+    /**
+     * The name of the session/system option that gives the effective
+     * name of this implicit column when parsing columns by name.
+     */
+    @Override
+    public String optionName() { return optionName; }
+
+    /**
+     * The name of the column property that indicates the implicit
+     * column type when using a provided schema. The property value
+     * lives in a name space separate from column names and so is
+     * fixed: it remains the same independent of system/session
+     * options.
+     */
+    public String propertyValue() { return propValue; }
 
     /**
      * Using file path calculates value for each implicit file column
@@ -501,7 +568,7 @@ public class ColumnExplorer {
    * Columns that give internal information about file or its parts.
    * Columns are implicit, so should be called explicitly in query.
    */
-  public enum ImplicitInternalFileColumns {
+  public enum ImplicitInternalFileColumns implements ImplicitFileColumn {
 
     LAST_MODIFIED_TIME(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL),
 
@@ -509,12 +576,50 @@ public class ColumnExplorer {
 
     ROW_GROUP_START(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL),
 
-    ROW_GROUP_LENGTH(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL);
+    ROW_GROUP_LENGTH(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL),
+
+    USE_METADATA(ExecConstants.IMPLICIT_PROJECT_METADATA_COLUMN_LABEL) {
+      @Override
+      public boolean isOptional() {
+        return true;
+      }
+    },
+
+    PROJECT_METADATA(ExecConstants.IMPLICIT_PROJECT_METADATA_COLUMN_LABEL) {
+      @Override
+      public boolean isOptional() {
+        return true;
+      }
+    };
 
     private final String name;
 
     ImplicitInternalFileColumns(String name) {
       this.name = name;
+    }
+
+    @Override
+    public String optionName() {
+      return name;
+    }
+  }
+
+  public interface ImplicitFileColumn {
+
+    /**
+     * Returns option name for obtaining implicit column name.
+     *
+     * @return option name for obtaining implicit column name.
+     */
+    String optionName();
+
+    /**
+     * Whether implicit column is optional or required.
+     *
+     * @return {@code true} if implicit column is optional, {@code false} otherwise
+     */
+    default boolean isOptional() {
+      return false;
     }
   }
 }

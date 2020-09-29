@@ -35,7 +35,7 @@ public class JdbcBatchCreator implements BatchCreator<JdbcSubScan> {
       List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     JdbcStoragePlugin plugin = config.getPlugin();
-    RecordReader reader = new JdbcRecordReader(plugin.getSource(),
+    RecordReader reader = new JdbcRecordReader(plugin.getDataSource(),
         config.getSql(), plugin.getName(), config.getColumns());
     return new ScanBatch(config, context, Collections.singletonList(reader));
   }

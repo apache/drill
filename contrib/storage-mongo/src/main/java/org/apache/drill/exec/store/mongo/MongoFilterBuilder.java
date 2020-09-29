@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.mongo;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -30,12 +31,10 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-
 public class MongoFilterBuilder extends
     AbstractExprVisitor<MongoScanSpec, Void, RuntimeException> implements
     DrillMongoConstants {
-  static final Logger logger = LoggerFactory
+  private static final Logger logger = LoggerFactory
       .getLogger(MongoFilterBuilder.class);
   final MongoGroupScan groupScan;
   final LogicalExpression le;
@@ -50,7 +49,7 @@ public class MongoFilterBuilder extends
   public MongoScanSpec parseTree() {
     MongoScanSpec parsedSpec = le.accept(this, null);
     if (parsedSpec != null) {
-      parsedSpec = mergeScanSpecs("booleanAnd", this.groupScan.getScanSpec(),
+      parsedSpec = mergeScanSpecs(FunctionNames.AND, this.groupScan.getScanSpec(),
           parsedSpec);
     }
     return parsedSpec;
@@ -61,7 +60,7 @@ public class MongoFilterBuilder extends
     Document newFilter = new Document();
 
     switch (functionName) {
-    case "booleanAnd":
+    case FunctionNames.AND:
       if (leftScanSpec.getFilters() != null
           && rightScanSpec.getFilters() != null) {
         newFilter = MongoUtils.andFilterAtIndex(leftScanSpec.getFilters(),
@@ -72,7 +71,7 @@ public class MongoFilterBuilder extends
         newFilter = rightScanSpec.getFilters();
       }
       break;
-    case "booleanOr":
+    case FunctionNames.OR:
       newFilter = MongoUtils.orFilterAtIndex(leftScanSpec.getFilters(),
           rightScanSpec.getFilters());
     }
@@ -93,13 +92,13 @@ public class MongoFilterBuilder extends
 
   @Override
   public MongoScanSpec visitBooleanOperator(BooleanOperator op, Void value) {
-    List<LogicalExpression> args = op.args;
+    List<LogicalExpression> args = op.args();
     MongoScanSpec nodeScanSpec = null;
     String functionName = op.getName();
     for (int i = 0; i < args.size(); ++i) {
       switch (functionName) {
-      case "booleanAnd":
-      case "booleanOr":
+      case FunctionNames.AND:
+      case FunctionNames.OR:
         if (nodeScanSpec == null) {
           nodeScanSpec = args.get(i).accept(this, null);
         } else {
@@ -121,7 +120,7 @@ public class MongoFilterBuilder extends
       throws RuntimeException {
     MongoScanSpec nodeScanSpec = null;
     String functionName = call.getName();
-    ImmutableList<LogicalExpression> args = call.args;
+    List<LogicalExpression> args = call.args();
 
     if (MongoCompareFunctionProcessor.isCompareFunction(functionName)) {
       MongoCompareFunctionProcessor processor = MongoCompareFunctionProcessor
@@ -137,8 +136,8 @@ public class MongoFilterBuilder extends
       }
     } else {
       switch (functionName) {
-      case "booleanAnd":
-      case "booleanOr":
+      case FunctionNames.AND:
+      case FunctionNames.OR:
         MongoScanSpec leftScanSpec = args.get(0).accept(this, null);
         MongoScanSpec rightScanSpec = args.get(1).accept(this, null);
         if (leftScanSpec != null && rightScanSpec != null) {
@@ -146,7 +145,7 @@ public class MongoFilterBuilder extends
               rightScanSpec);
         } else {
           allExpressionsConverted = false;
-          if ("booleanAnd".equals(functionName)) {
+          if (FunctionNames.AND.equals(functionName)) {
             nodeScanSpec = leftScanSpec == null ? rightScanSpec : leftScanSpec;
           }
         }
@@ -168,30 +167,30 @@ public class MongoFilterBuilder extends
     String fieldName = field.getRootSegmentPath();
     MongoCompareOp compareOp = null;
     switch (functionName) {
-    case "equal":
+    case FunctionNames.EQ:
       compareOp = MongoCompareOp.EQUAL;
       break;
-    case "not_equal":
+    case FunctionNames.NE:
       compareOp = MongoCompareOp.NOT_EQUAL;
       break;
-    case "greater_than_or_equal_to":
+    case FunctionNames.GE:
       compareOp = MongoCompareOp.GREATER_OR_EQUAL;
       break;
-    case "greater_than":
+    case FunctionNames.GT:
       compareOp = MongoCompareOp.GREATER;
       break;
-    case "less_than_or_equal_to":
+    case FunctionNames.LE:
       compareOp = MongoCompareOp.LESS_OR_EQUAL;
       break;
-    case "less_than":
+    case FunctionNames.LT:
       compareOp = MongoCompareOp.LESS;
       break;
-    case "isnull":
+    case FunctionNames.IS_NULL:
     case "isNull":
     case "is null":
       compareOp = MongoCompareOp.IFNULL;
       break;
-    case "isnotnull":
+    case FunctionNames.IS_NOT_NULL:
     case "isNotNull":
     case "is not null":
       compareOp = MongoCompareOp.IFNOTNULL;
@@ -215,5 +214,4 @@ public class MongoFilterBuilder extends
     }
     return null;
   }
-
 }

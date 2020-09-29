@@ -82,6 +82,7 @@ public final class DrillProperties extends Properties {
   public static final String TLS_HANDSHAKE_TIMEOUT = "TLSHandshakeTimeout";
   public static final String TLS_PROVIDER = "TLSProvider";
   public static final String USE_SYSTEM_TRUSTSTORE = "useSystemTrustStore";
+  public static final String USE_MAPR_SSL_CONFIG = "useMapRSSLConfig";
 
   public static final String QUERY_TAGS = "queryTags";
 

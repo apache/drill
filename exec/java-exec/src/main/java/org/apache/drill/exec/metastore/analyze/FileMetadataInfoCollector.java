@@ -32,6 +32,7 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.BasicTablesRequests;
 import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.apache.drill.metastore.metadata.MetadataType;
@@ -62,13 +63,13 @@ import java.util.stream.Collectors;
  * Implementation of {@link MetadataInfoCollector} for file-based tables.
  */
 public class FileMetadataInfoCollector implements MetadataInfoCollector {
-  private final List<MetadataInfo> allMetaToHandle;
   private final List<MetadataInfo> metadataToRemove;
 
   private final BasicTablesRequests basicRequests;
   private final TableInfo tableInfo;
   private final MetadataType metadataLevel;
 
+  private List<MetadataInfo> allMetaToHandle;
   private List<MetadataInfo> rowGroupsInfo = Collections.emptyList();
   private List<MetadataInfo> filesInfo = Collections.emptyList();
   private Multimap<Integer, MetadataInfo> segmentsInfo = ArrayListMultimap.create();
@@ -83,7 +84,6 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
     this.basicRequests = basicRequests;
     this.tableInfo = tableInfo;
     this.metadataLevel = metadataLevel;
-    this.allMetaToHandle = new ArrayList<>();
     this.metadataToRemove = new ArrayList<>();
     init(selection, settings, tableScanSupplier, interestingColumns, segmentColumnsCount);
   }
@@ -128,6 +128,7 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
     List<SchemaPath> metastoreInterestingColumns =
         Optional.ofNullable(basicRequests.interestingColumnsAndPartitionKeys(tableInfo).interestingColumns())
             .map(metastoreInterestingColumnNames -> metastoreInterestingColumnNames.stream()
+                // interesting column names are escaped, so SchemaPath.parseFromString() should be used here
                 .map(SchemaPath::parseFromString)
                 .collect(Collectors.toList()))
         .orElse(null);
@@ -218,14 +219,12 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
           .collect(Collectors.toList());
 
       List<MetadataInfo> segmentsToUpdate = getMetadataInfoList(selectionRoot, scanAndRemovedFiles, MetadataType.SEGMENT, 0);
-      Streams.concat(allSegments.values().stream(), allFilesInfo.stream(), allRowGroupsInfo.stream())
+      allMetaToHandle = Streams.concat(allSegments.values().stream(), allFilesInfo.stream(), allRowGroupsInfo.stream())
           .filter(child -> segmentsToUpdate.stream().anyMatch(parent -> MetadataIdentifierUtils.isMetadataKeyParent(parent.identifier(), child.identifier())))
           .filter(parent ->
               removedFilesMetadata.stream().noneMatch(child -> MetadataIdentifierUtils.isMetadataKeyParent(parent.identifier(), child.identifier()))
                   || filesInfo.stream().anyMatch(child -> MetadataIdentifierUtils.isMetadataKeyParent(parent.identifier(), child.identifier())))
-          .forEach(allMetaToHandle::add);
-
-      allMetaToHandle.addAll(segmentsToUpdate);
+          .collect(Collectors.toList());
 
       // removed top-level segments are handled separately since their metadata is not overridden when producing writing to the Metastore
       List<MetadataInfo> removedTopSegments = getMetadataInfoList(selectionRoot, removedFiles, MetadataType.SEGMENT, 0).stream()
@@ -234,6 +233,10 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
                   && allFilesInfo.stream().noneMatch(child -> MetadataIdentifierUtils.isMetadataKeyParent(parent.identifier(), child.identifier())))
           .collect(Collectors.toList());
       metadataToRemove.addAll(removedTopSegments);
+
+      segmentsToUpdate.stream()
+          .filter(segment -> !removedTopSegments.contains(segment))
+          .forEach(allMetaToHandle::add);
     } else {
       // table metadata may still be actual
       outdated = false;
@@ -288,8 +291,8 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
         .tableInfo(tableInfo)
         .metadataKeys(metadataKeys)
         .paths(allFiles)
-        .metadataType(MetadataType.ROW_GROUP.name())
-        .requestColumns(Arrays.asList(MetadataInfo.METADATA_KEY, MetadataInfo.METADATA_IDENTIFIER, MetadataInfo.METADATA_TYPE))
+        .metadataType(MetadataType.ROW_GROUP)
+        .requestColumns(Arrays.asList(MetastoreColumn.METADATA_KEY, MetastoreColumn.METADATA_IDENTIFIER, MetastoreColumn.METADATA_TYPE))
         .build();
 
     return basicRequests.request(requestMetadata).stream()

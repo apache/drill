@@ -93,7 +93,7 @@ public class ExcelFormatPlugin extends EasyFormatPlugin<ExcelFormatConfig> {
     builder.setReaderFactory(new ExcelReaderFactory(readerConfig));
 
     initScanBuilder(builder, scan);
-    builder.setNullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;
   }
 

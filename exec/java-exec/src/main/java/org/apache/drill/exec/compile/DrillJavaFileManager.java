@@ -28,17 +28,14 @@ import javax.tools.JavaFileObject.Kind;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Predicate;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /* package */
 class DrillJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillJavaFileManager.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillJavaFileManager.class);
 
-  public static final Predicate<Kind> NO_SOURCES_KIND = new Predicate<Kind>() {
-    @Override
-    public boolean apply(Kind input) {
-      return input != Kind.SOURCE;
-    }
-  };
+  public static final Predicate<Kind> NO_SOURCES_KIND = input -> input != Kind.SOURCE;
 
   private final ClassLoader classLoader;
 
@@ -60,8 +57,8 @@ class DrillJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
   @Override
   public JavaFileObject getJavaFileForOutput(Location location, String className, Kind kind, FileObject sibling) throws IOException {
     logger.trace("Creating JavaFileForOutput@(location:{}, className:{}, kinds:{})", location, className, kind);
-    if (sibling != null && sibling instanceof DrillJavaFileObject) {
-      return ((DrillJavaFileObject)sibling).addOutputJavaFile(className);
+    if (sibling instanceof DrillJavaFileObject) {
+      return ((DrillJavaFileObject) sibling).addOutputJavaFile(className);
     }
     throw new IOException("The source file passed to getJavaFileForOutput() is not a DrillJavaFileObject: " + sibling);
   }

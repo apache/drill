@@ -27,7 +27,7 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserException.Builder;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorEvents;
-import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
+import org.apache.drill.exec.physical.impl.scan.file.ImplicitColumnManager.ImplicitColumnOptions;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
@@ -38,6 +38,8 @@ import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The file scan framework adds into the scan framework support for implicit
@@ -60,11 +62,8 @@ import org.apache.hadoop.mapred.FileSplit;
  * <p>
  * @See {AbstractScanFramework} for details.
  */
-
 public class FileScanFramework extends ManagedScanFramework {
-
-  private static final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(FileScanFramework.class);
+  private static final Logger logger = LoggerFactory.getLogger(FileScanFramework.class);
 
   /**
    * The file schema negotiator adds no behavior at present, but is
@@ -76,7 +75,6 @@ public class FileScanFramework extends ManagedScanFramework {
    * exists. Those are out of scope of this first round of changes which
    * focus on schema.
    */
-
   public interface FileSchemaNegotiator extends SchemaNegotiator {
 
     /**
@@ -98,7 +96,6 @@ public class FileScanFramework extends ManagedScanFramework {
    * file-specific features exist. This class shows, however, where we would
    * add such features.
    */
-
   public static class FileSchemaNegotiatorImpl extends SchemaNegotiatorImpl
       implements FileSchemaNegotiator {
 
@@ -141,13 +138,12 @@ public class FileScanFramework extends ManagedScanFramework {
   /**
    * Options for a file-based scan.
    */
-
   public static class FileScanBuilder extends ScanFrameworkBuilder {
     private List<? extends FileWork> files;
     private Configuration fsConf;
-    private FileMetadataOptions metadataOptions = new FileMetadataOptions();
+    private final ImplicitColumnOptions metadataOptions = new ImplicitColumnOptions();
 
-    public void setConfig(Configuration fsConf) {
+    public void setFileSystemConfig(Configuration fsConf) {
       this.fsConf = fsConf;
     }
 
@@ -155,7 +151,7 @@ public class FileScanFramework extends ManagedScanFramework {
       this.files = files;
     }
 
-    public FileMetadataOptions metadataOptions() { return metadataOptions; }
+    public ImplicitColumnOptions implicitColumnOptions() { return metadataOptions; }
 
     @Override
     public ScanOperatorEvents buildEvents() {
@@ -170,7 +166,6 @@ public class FileScanFramework extends ManagedScanFramework {
    * makes clear that the constructor for the reader should do nothing;
    * work should be done in the open() call.
    */
-
   public abstract static class FileReaderFactory implements ReaderFactory {
 
     private FileScanFramework fileFramework;
@@ -195,9 +190,9 @@ public class FileScanFramework extends ManagedScanFramework {
     public abstract ManagedReader<? extends FileSchemaNegotiator> newReader();
   }
 
-  private FileMetadataManager metadataManager;
+  private ImplicitColumnManager metadataManager;
   private DrillFileSystem dfs;
-  private List<FileSplit> spilts = new ArrayList<>();
+  private final List<FileSplit> spilts = new ArrayList<>();
   private Iterator<FileSplit> splitIter;
   private FileSplit currentSplit;
 
@@ -241,12 +236,12 @@ public class FileScanFramework extends ManagedScanFramework {
 
     // Create the metadata manager to handle file metadata columns
     // (so-called implicit columns and partition columns.)
-
-    options.metadataOptions().setFiles(paths);
-    metadataManager = new FileMetadataManager(
+    options.implicitColumnOptions().setFiles(paths);
+    metadataManager = new ImplicitColumnManager(
         context.getFragmentContext().getOptions(),
-        options.metadataOptions());
-    builder.withMetadata(metadataManager);
+        options.implicitColumnOptions(),
+        dfs);
+    builder.withImplicitColumns(metadataManager);
   }
 
   protected FileSplit nextSplit() {
@@ -258,7 +253,6 @@ public class FileScanFramework extends ManagedScanFramework {
 
     // Tell the metadata manager about the current file so it can
     // populate the metadata columns, if requested.
-
     metadataManager.startFile(currentSplit.getPath());
     return currentSplit;
   }

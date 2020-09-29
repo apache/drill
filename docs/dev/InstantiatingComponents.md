@@ -2,8 +2,8 @@
 
 There are a few techniques for creating instances classes in unit tests:
 
-* Use a mocking library. **(Depracated)**
-* Provide a simple impementation of an interface
+* Use a mocking library. **(Deprecated)**
+* Provide a simple implementation of an interface
 * Build a real instance of class using the class's builders / constructors
 * Use the [ClusterFixture](ClusterFixture.md) or [OperatorFixture](OperatorFixture.md) classes to create instances of objects.
 

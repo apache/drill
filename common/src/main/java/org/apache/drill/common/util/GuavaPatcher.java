@@ -73,8 +73,13 @@ public class GuavaPatcher {
 
       logger.info("Google's Stopwatch patched for old HBase Guava version.");
     } catch (Exception e) {
-      logger.warn("Unable to patch Guava classes.", e);
+      logUnableToPatchException(e);
     }
+  }
+
+  private static void logUnableToPatchException(Exception e) {
+    logger.warn("Unable to patch Guava classes: {}", e.getMessage());
+    logger.debug("Exception:", e);
   }
 
   private static void patchCloseables() {
@@ -93,7 +98,7 @@ public class GuavaPatcher {
 
       logger.info("Google's Closeables patched for old HBase Guava version.");
     } catch (Exception e) {
-      logger.warn("Unable to patch Guava classes.", e);
+      logUnableToPatchException(e);
     }
   }
 
@@ -191,7 +196,7 @@ public class GuavaPatcher {
       cc.toClass();
       logger.info("Google's Preconditions were patched to hold new methods.");
     } catch (Exception e) {
-      logger.warn("Unable to patch Guava classes.", e);
+      logUnableToPatchException(e);
     }
   }
 

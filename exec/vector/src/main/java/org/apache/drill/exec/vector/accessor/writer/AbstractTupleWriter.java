@@ -28,6 +28,7 @@ import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
+import org.apache.drill.exec.vector.accessor.DictWriter;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
@@ -100,16 +101,14 @@ import org.slf4j.LoggerFactory;
  *     then that row's values are discarded. Then, the batch is ended.</li>
  * </ul>
  */
-
 public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
 
   /**
    * Generic object wrapper for the tuple writer.
    */
-
   public static class TupleObjectWriter extends AbstractObjectWriter {
 
-    private final AbstractTupleWriter tupleWriter;
+    protected final AbstractTupleWriter tupleWriter;
 
     public TupleObjectWriter(AbstractTupleWriter tupleWriter) {
       this.tupleWriter = tupleWriter;
@@ -140,12 +139,41 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
    * tuple writer. If no listener is bound, then an attempt to add a column
    * throws an exception.
    */
-
   public static interface TupleWriterListener {
 
     ObjectWriter addColumn(TupleWriter tuple, ColumnMetadata column);
 
     ObjectWriter addColumn(TupleWriter tuple, MaterializedField field);
+
+    boolean isProjected(String columnName);
+  }
+
+  /**
+   * Wrap the outer index to avoid incrementing the array index
+   * on the call to <tt>nextElement().</tt> The increment
+   * is done at the tuple level, not the column level.
+   */
+  static class MemberWriterIndex implements ColumnWriterIndex {
+    private final ColumnWriterIndex baseIndex;
+
+    MemberWriterIndex(ColumnWriterIndex baseIndex) {
+      this.baseIndex = baseIndex;
+    }
+
+    @Override public int rowStartIndex() { return baseIndex.rowStartIndex(); }
+    @Override public int vectorIndex() { return baseIndex.vectorIndex(); }
+    @Override public void nextElement() { }
+    @Override public void prevElement() { }
+    @Override public void rollover() { }
+
+    @Override public ColumnWriterIndex outerIndex() {
+      return baseIndex.outerIndex();
+    }
+
+    @Override
+    public String toString() {
+      return "[" + getClass().getSimpleName() + " baseIndex = " + baseIndex.toString() + "]";
+    }
   }
 
   protected static final Logger logger = LoggerFactory.getLogger(AbstractTupleWriter.class);
@@ -154,7 +182,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   protected final List<AbstractObjectWriter> writers;
   protected ColumnWriterIndex vectorIndex;
   protected ColumnWriterIndex childIndex;
-  protected AbstractTupleWriter.TupleWriterListener listener;
+  protected TupleWriterListener listener;
   protected State state = State.IDLE;
 
   protected AbstractTupleWriter(TupleMetadata schema, List<AbstractObjectWriter> writers) {
@@ -195,7 +223,6 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
    *
    * @param colWriter the column writer to add
    */
-
   public int addColumnWriter(AbstractObjectWriter colWriter) {
     assert writers.size() == tupleSchema.size();
     final int colIndex = tupleSchema.addColumn(colWriter.schema());
@@ -211,17 +238,23 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   }
 
   @Override
+  public boolean isProjected(String columnName) {
+    return listener == null ? true
+        : listener.isProjected(columnName);
+  }
+
+  @Override
   public int addColumn(ColumnMetadata column) {
     verifyAddColumn(column.name());
-    final AbstractObjectWriter colWriter = (AbstractObjectWriter) listener.addColumn(this, column);
-    return addColumnWriter(colWriter);
+    return addColumnWriter(
+        (AbstractObjectWriter) listener.addColumn(this, column));
   }
 
   @Override
   public int addColumn(MaterializedField field) {
     verifyAddColumn(field.getName());
-    final AbstractObjectWriter colWriter = (AbstractObjectWriter) listener.addColumn(this, field);
-    return addColumnWriter(colWriter);
+    return addColumnWriter(
+        (AbstractObjectWriter) listener.addColumn(this, field));
   }
 
   private void verifyAddColumn(String colName) {
@@ -232,7 +265,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     if (tupleSchema().column(colName) != null) {
       throw UserException
         .validationError()
-        .message("Duplicate column name: ", colName)
+        .message("Duplicate column name: %s", colName)
         .build(logger);
     }
   }
@@ -428,6 +461,16 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   @Override
   public VariantWriter variant(String colName) {
     return column(colName).variant();
+  }
+
+  @Override
+  public DictWriter dict(int colIndex) {
+    return column(colIndex).dict();
+  }
+
+  @Override
+  public DictWriter dict(String colName) {
+    return column(colName).dict();
   }
 
   @Override

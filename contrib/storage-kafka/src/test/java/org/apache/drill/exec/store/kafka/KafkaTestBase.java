@@ -52,7 +52,7 @@ public class KafkaTestBase extends PlanTestBase {
     kafkaConsumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "drill-test-consumer");
     storagePluginConfig = new KafkaStoragePluginConfig(kafkaConsumerProps);
     storagePluginConfig.setEnabled(true);
-    pluginRegistry.createOrUpdate(KafkaStoragePluginConfig.NAME, storagePluginConfig, true);
+    pluginRegistry.put(KafkaStoragePluginConfig.NAME, storagePluginConfig);
     testNoResult(String.format("alter session set `%s` = '%s'", ExecConstants.KAFKA_RECORD_READER,
         "org.apache.drill.exec.store.kafka.decoders.JsonMessageReader"));
     testNoResult(String.format("alter session set `%s` = %d", ExecConstants.KAFKA_POLL_TIMEOUT, 5000));

@@ -35,12 +35,14 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for MapVectors. Currently used by AbstractRepeatedMapVector and MapVector
  */
 public abstract class AbstractMapVector extends AbstractContainerVector {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractContainerVector.class);
 
   // Maintains a map with key as field name and value is the vector itself
   private final MapWithOrdinal<String, ValueVector> vectors = new MapWithOrdinal<>();

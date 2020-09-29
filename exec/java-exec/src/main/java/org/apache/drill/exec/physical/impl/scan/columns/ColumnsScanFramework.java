@@ -110,5 +110,6 @@ public class ColumnsScanFramework extends FileScanFramework {
   public static TupleMetadata columnsSchema() {
     return new SchemaBuilder()
       .addArray(ColumnsScanFramework.COLUMNS_COL, MinorType.VARCHAR)
-      .buildSchema();  }
+      .buildSchema();
+  }
 }

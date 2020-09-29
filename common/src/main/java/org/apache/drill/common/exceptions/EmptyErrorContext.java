@@ -21,6 +21,8 @@ import org.apache.drill.common.exceptions.UserException.Builder;
 
 public class EmptyErrorContext implements CustomErrorContext {
 
+  public static final CustomErrorContext INSTANCE = new EmptyErrorContext();
+
   @Override
   public void addContext(Builder builder) { }
 }

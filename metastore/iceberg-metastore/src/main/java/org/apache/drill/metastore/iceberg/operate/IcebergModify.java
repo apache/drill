@@ -17,70 +17,67 @@
  */
 package org.apache.drill.metastore.iceberg.operate;
 
-import org.apache.drill.metastore.operate.Modify;
 import org.apache.drill.metastore.expressions.FilterExpression;
-import org.apache.drill.metastore.iceberg.MetastoreContext;
+import org.apache.drill.metastore.iceberg.IcebergMetastoreContext;
 import org.apache.drill.metastore.iceberg.transform.OperationTransformer;
+import org.apache.drill.metastore.operate.AbstractModify;
+import org.apache.drill.metastore.operate.MetadataTypeValidator;
+import org.apache.drill.metastore.operate.Modify;
 import org.apache.iceberg.Transaction;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * Implementation of {@link Modify} interface.
+ * Implementation of {@link Modify} interface based on {@link AbstractModify} parent class.
  * Modifies information in Iceberg table based on given overwrite or delete operations.
  * Executes given operations in one transaction.
  *
  * @param <T> Metastore component unit type
  */
-public class IcebergModify<T> implements Modify<T> {
+public class IcebergModify<T> extends AbstractModify<T> {
 
-  private final MetastoreContext<T> context;
-  private final List<T> overwriteUnits = new ArrayList<>();
-  private final List<FilterExpression> deleteFilters = new ArrayList<>();
-  private boolean purge = false;
+  private final OperationTransformer<T> transformer;
+  private final IcebergMetastoreContext<T> context;
+  private final List<IcebergOperation> operations = new ArrayList<>();
 
-  public IcebergModify(MetastoreContext<T> context) {
+  public IcebergModify(MetadataTypeValidator metadataTypeValidator, IcebergMetastoreContext<T> context) {
+    super(metadataTypeValidator);
     this.context = context;
-  }
-
-  @Override
-  public Modify<T> overwrite(List<T> units) {
-    overwriteUnits.addAll(units);
-    return this;
-  }
-
-  @Override
-  public Modify<T> delete(FilterExpression filter) {
-    deleteFilters.add(filter);
-    return this;
-  }
-
-  @Override
-  public Modify<T> purge() {
-    purge = true;
-    return this;
+    this.transformer = context.transformer().operation();
   }
 
   @Override
   public void execute() {
-    OperationTransformer<T> transformer = context.transformer().operation();
-    List<IcebergOperation> operations = new ArrayList<>(transformer.toOverwrite(overwriteUnits));
-    operations.addAll(transformer.toDelete(deleteFilters));
-
-    if (purge) {
-      operations.add(transformer.toDelete((FilterExpression) null));
-    }
-
     if (operations.isEmpty()) {
       return;
     }
+    executeOperations(operations);
+  }
 
+  @Override
+  public void purge() {
+    executeOperations(Collections.singletonList(transformer.toDelete((FilterExpression) null)));
+  }
+
+  @Override
+  protected void addOverwrite(List<T> units) {
+    operations.addAll(transformer.toOverwrite(units));
+  }
+
+  @Override
+  protected void addDelete(org.apache.drill.metastore.operate.Delete delete) {
+    operations.add(transformer.toDelete(delete));
+  }
+
+  private void executeOperations(List<IcebergOperation> operations) {
     Transaction transaction = context.table().newTransaction();
     operations.forEach(op -> op.add(transaction));
     transaction.commitTransaction();
 
-    // check if Iceberg table metadata needs to be expired after each modification operation
-    context.expirationHandler().expire(context.table());
+    // expiration process should not intervene with data modification operations
+    // if expiration fails, will attempt to expire the next time
+    context.expirationHandler().expireQuietly();
   }
 }

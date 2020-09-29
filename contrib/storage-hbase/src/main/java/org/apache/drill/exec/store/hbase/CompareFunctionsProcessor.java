@@ -25,6 +25,7 @@ import java.nio.ByteOrder;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
@@ -59,7 +60,7 @@ public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, Logi
 
   private byte[] value;
   private boolean success;
-  private boolean isEqualityFn;
+  private final boolean isEqualityFn;
   private SchemaPath path;
   private String functionName;
   private boolean sortOrderAscending;
@@ -86,8 +87,8 @@ public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, Logi
   protected static <T extends CompareFunctionsProcessor> T createFunctionsProcessorInstanceInternal(FunctionCall call,
                                                                                                     boolean nullComparatorSupported,
                                                                                                     T evaluator) {
-    LogicalExpression nameArg = call.args.get(0);
-    LogicalExpression valueArg = call.args.size() >= 2 ? call.args.get(1) : null;
+    LogicalExpression nameArg = call.arg(0);
+    LogicalExpression valueArg = call.argCount() >= 2 ? call.arg(1) : null;
     if (valueArg != null) { // binary function
       if (VALUE_EXPRESSION_CLASSES.contains(nameArg.getClass())) {
         LogicalExpression swapArg = valueArg;
@@ -96,7 +97,7 @@ public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, Logi
         evaluator.setFunctionName(COMPARE_FUNCTIONS_TRANSPOSE_MAP.get(evaluator.getFunctionName()));
       }
       evaluator.setSuccess(nameArg.accept(evaluator, valueArg));
-    } else if (nullComparatorSupported && call.args.get(0) instanceof SchemaPath) {
+    } else if (nullComparatorSupported && call.arg(0) instanceof SchemaPath) {
       evaluator.setSuccess(true);
       evaluator.setPath((SchemaPath) nameArg);
     }
@@ -198,9 +199,9 @@ public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, Logi
           return false;
         }
 
-        LogicalExpression nameArg = call.args.get(0);
-        LogicalExpression valueArg1 = call.args.size() >= 2 ? call.args.get(1) : null;
-        LogicalExpression valueArg2 = call.args.size() >= 3 ? call.args.get(2) : null;
+        LogicalExpression nameArg = call.arg(0);
+        LogicalExpression valueArg1 = call.argCount() >= 2 ? call.arg(1) : null;
+        LogicalExpression valueArg2 = call.argCount() >= 3 ? call.arg(2) : null;
 
         if (!(nameArg instanceof SchemaPath)
             || (valueArg1 == null) || !(valueArg1 instanceof IntExpression)
@@ -381,21 +382,21 @@ public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, Logi
 
       // For TIME_EPOCH_BE/BIGINT_BE encoding, the operators that we push-down are =, <>, <, <=, >, >=
       switch (functionName) {
-        case "equal":
+        case FunctionNames.EQ:
           rowKeyPrefixFilter = new PrefixFilter(ByteBuffer.allocate(4).putInt(val).array());
           rowKeyPrefixStartRow = ByteBuffer.allocate(4).putInt(val).array();
           rowKeyPrefixStopRow = ByteBuffer.allocate(4).putInt(val + 1).array();
           return true;
-        case "greater_than_or_equal_to":
+        case FunctionNames.GE:
           rowKeyPrefixStartRow = ByteBuffer.allocate(4).putInt(val).array();
           return true;
-        case "greater_than":
+        case FunctionNames.GT:
           rowKeyPrefixStartRow = ByteBuffer.allocate(4).putInt(val + 1).array();
           return true;
-        case "less_than_or_equal_to":
+        case FunctionNames.LE:
           rowKeyPrefixStopRow = ByteBuffer.allocate(4).putInt(val + 1).array();
           return true;
-        case "less_than":
+        case FunctionNames.LT:
           rowKeyPrefixStopRow = ByteBuffer.allocate(4).putInt(val).array();
           return true;
       }
@@ -437,21 +438,21 @@ public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, Logi
 
       // For TIME_EPOCH_BE/BIGINT_BE encoding, the operators that we push-down are =, <>, <, <=, >, >=
       switch (functionName) {
-        case "equal":
+        case FunctionNames.EQ:
           rowKeyPrefixFilter = new PrefixFilter(ByteBuffer.allocate(8).putLong(val).array());
           rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(val).array();
           rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(val + 1).array();
           return true;
-        case "greater_than_or_equal_to":
+        case FunctionNames.GE:
           rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(val).array();
           return true;
-        case "greater_than":
+        case FunctionNames.GT:
           rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(val + 1).array();
           return true;
-        case "less_than_or_equal_to":
+        case FunctionNames.LE:
           rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(val + 1).array();
           return true;
-        case "less_than":
+        case FunctionNames.LT:
           rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(val).array();
           return true;
       }
@@ -472,25 +473,25 @@ public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, Logi
       long dateToSet;
       // For DATE encoding, the operators that we push-down are =, <>, <, <=, >, >=
       switch (functionName) {
-        case "equal":
+        case FunctionNames.EQ:
           long startDate = ((DateExpression) valueArg).getDate();
           rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(startDate).array();
           long stopDate = ((DateExpression) valueArg).getDate() + MILLISECONDS_IN_A_DAY;
           rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(stopDate).array();
           return true;
-        case "greater_than_or_equal_to":
+        case FunctionNames.GE:
           dateToSet = ((DateExpression) valueArg).getDate();
           rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
           return true;
-        case "greater_than":
+        case FunctionNames.GT:
           dateToSet = ((DateExpression) valueArg).getDate() + MILLISECONDS_IN_A_DAY;
           rowKeyPrefixStartRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
           return true;
-        case "less_than_or_equal_to":
+        case FunctionNames.LE:
           dateToSet = ((DateExpression) valueArg).getDate() + MILLISECONDS_IN_A_DAY;
           rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
           return true;
-        case "less_than":
+        case FunctionNames.LT:
           dateToSet = ((DateExpression) valueArg).getDate();
           rowKeyPrefixStopRow = ByteBuffer.allocate(8).putLong(dateToSet).array();
           return true;
@@ -522,7 +523,9 @@ public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, Logi
     Matcher matcher = convertFromPattern.matcher(call.getName());
     if (matcher.find()) {
       // convert function call to ConvertExpression
-      ConvertExpression convert = new ConvertExpression(ConvertExpression.CONVERT_FROM, matcher.group(1), call.args.get(0), call.getPosition());
+      ConvertExpression convert = new ConvertExpression(
+          ConvertExpression.CONVERT_FROM, matcher.group(1),
+          call.arg(0), call.getPosition());
       return visitConvertExpression(convert, valueArg);
     }
     return false;
@@ -554,20 +557,20 @@ public class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, Logi
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     COMPARE_FUNCTIONS_TRANSPOSE_MAP = builder
         // unary functions
-        .put("isnotnull", "isnotnull")
+        .put(FunctionNames.IS_NOT_NULL, FunctionNames.IS_NOT_NULL)
         .put("isNotNull", "isNotNull")
         .put("is not null", "is not null")
-        .put("isnull", "isnull")
+        .put(FunctionNames.IS_NULL, FunctionNames.IS_NULL)
         .put("isNull", "isNull")
         .put("is null", "is null")
         // binary functions
-        .put("like", "like")
-        .put("equal", "equal")
-        .put("not_equal", "not_equal")
-        .put("greater_than_or_equal_to", "less_than_or_equal_to")
-        .put("greater_than", "less_than")
-        .put("less_than_or_equal_to", "greater_than_or_equal_to")
-        .put("less_than", "greater_than")
+        .put(FunctionNames.LIKE, FunctionNames.LIKE)
+        .put(FunctionNames.EQ, FunctionNames.EQ)
+        .put(FunctionNames.NE, FunctionNames.NE)
+        .put(FunctionNames.GE, FunctionNames.LE)
+        .put(FunctionNames.GT, FunctionNames.LT)
+        .put(FunctionNames.LE, FunctionNames.GE)
+        .put(FunctionNames.LT, FunctionNames.GT)
         .build();
   }
 }

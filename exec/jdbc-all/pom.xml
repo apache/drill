@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.17.0</version>
+    <version>1.19.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-jdbc-all</artifactId>
@@ -435,6 +435,7 @@
                <exclude>META-INF/services/javax.ws.*</exclude>
                <exclude>META-INF/**/*.properties</exclude>
                <exclude>**/org.codehaus.commons.compiler.properties</exclude>
+               <exclude>module-info.class</exclude>
                <exclude>**/*.SF</exclude>
                <exclude>**/*.RSA</exclude>
                <exclude>**/*.DSA</exclude>
@@ -459,6 +460,7 @@
                <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Tree*</exclude>
                <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Standard*</exclude>
                <exclude>org/apache/drill/shaded/guava/com/google/common/io/BaseEncoding*</exclude>
+               <exclude>org/apache/drill/shaded/guava/com/google/common/graph/**</exclude>
                <exclude>com/google/common/math</exclude>
                <exclude>com/google/common/net</exclude>
                <exclude>com/google/common/primitives</exclude>
@@ -536,7 +538,7 @@
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                   </message>
-                  <maxsize>43000000</maxsize>
+                  <maxsize>46000000</maxsize>
                   <minsize>15000000</minsize>
                   <files>
                    <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -596,7 +598,7 @@
                           This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                         </message>
-                        <maxsize>37500000</maxsize>
+                        <maxsize>46000000</maxsize>
                         <minsize>15000000</minsize>
                         <files>
                           <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -764,6 +766,7 @@
                       <exclude>META-INF/services/javax.ws.*</exclude>
                       <exclude>META-INF/**/*.properties</exclude>
                       <exclude>**/org.codehaus.commons.compiler.properties</exclude>
+                      <exclude>module-info.class</exclude>
                       <exclude>**/*.SF</exclude>
                       <exclude>**/*.RSA</exclude>
                       <exclude>**/*.DSA</exclude>
@@ -787,6 +790,7 @@
                       <exclude>org/apache/drill/shaded/guava/com/google/common/graph/**</exclude>
                       <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Tree*</exclude>
                       <exclude>org/apache/drill/shaded/guava/com/google/common/collect/Standard*</exclude>
+                      <exclude>org/apache/drill/shaded/guava/com/google/common/graph/**</exclude>
                       <exclude>com/google/common/math</exclude>
                       <exclude>com/google/common/net</exclude>
                       <exclude>com/google/common/primitives</exclude>
@@ -893,12 +897,6 @@
           </plugin>
         </plugins>
       </build>
-    </profile>
-    <profile>
-      <id>travis</id>
-      <properties>
-        <skipTests>true</skipTests>
-      </properties>
     </profile>
   </profiles>
 

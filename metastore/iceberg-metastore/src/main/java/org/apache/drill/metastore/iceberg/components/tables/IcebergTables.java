@@ -17,17 +17,19 @@
  */
 package org.apache.drill.metastore.iceberg.components.tables;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.Tables;
+import org.apache.drill.metastore.components.tables.TablesMetadataTypeValidator;
 import org.apache.drill.metastore.iceberg.operate.ExpirationHandler;
+import org.apache.drill.metastore.iceberg.operate.IcebergRead;
 import org.apache.drill.metastore.operate.Metadata;
 import org.apache.drill.metastore.operate.Modify;
 import org.apache.drill.metastore.operate.Read;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
-import org.apache.drill.metastore.iceberg.MetastoreContext;
+import org.apache.drill.metastore.iceberg.IcebergMetastoreContext;
 import org.apache.drill.metastore.iceberg.operate.IcebergMetadata;
 import org.apache.drill.metastore.iceberg.schema.IcebergTableSchema;
 import org.apache.drill.metastore.iceberg.operate.IcebergModify;
-import org.apache.drill.metastore.iceberg.operate.IcebergRead;
 import org.apache.drill.metastore.iceberg.transform.Transformer;
 import org.apache.drill.metastore.iceberg.write.FileWriter;
 import org.apache.drill.metastore.iceberg.write.ParquetFileWriter;
@@ -40,30 +42,29 @@ import java.util.List;
  * Metastore Tables component which stores tables metadata in the corresponding Iceberg table.
  * Provides methods to read and modify tables metadata.
  */
-public class IcebergTables implements Tables, MetastoreContext<TableMetadataUnit> {
-
-  public static final String STORAGE_PLUGIN = "storagePlugin";
-  public static final String WORKSPACE = "workspace";
-  public static final String TABLE_NAME = "tableName";
-  public static final String METADATA_KEY = "metadataKey";
+public class IcebergTables implements Tables, IcebergMetastoreContext<TableMetadataUnit> {
 
   /**
    * Metastore Tables component partition keys, order of partitioning will be determined based
    * on order in {@link List} holder.
    */
-  private static final List<String> PARTITION_KEYS = Arrays.asList(STORAGE_PLUGIN, WORKSPACE, TABLE_NAME, METADATA_KEY);
+  private static final List<MetastoreColumn> PARTITION_KEYS = Arrays.asList(
+    MetastoreColumn.STORAGE_PLUGIN,
+    MetastoreColumn.WORKSPACE,
+    MetastoreColumn.TABLE_NAME,
+    MetastoreColumn.METADATA_KEY);
 
   public static IcebergTableSchema SCHEMA = IcebergTableSchema.of(TableMetadataUnit.class, PARTITION_KEYS);
 
   private final Table table;
   private final ExpirationHandler expirationHandler;
 
-  public IcebergTables(Table table, ExpirationHandler expirationHandler) {
+  public IcebergTables(Table table) {
     this.table = table;
-    this.expirationHandler = expirationHandler;
+    this.expirationHandler = new ExpirationHandler(table);
   }
 
-  public MetastoreContext<TableMetadataUnit> context() {
+  public IcebergMetastoreContext<TableMetadataUnit> context() {
     return this;
   }
 
@@ -74,12 +75,12 @@ public class IcebergTables implements Tables, MetastoreContext<TableMetadataUnit
 
   @Override
   public Read<TableMetadataUnit> read() {
-    return new IcebergRead<>(context());
+    return new IcebergRead<>(TablesMetadataTypeValidator.INSTANCE, context());
   }
 
   @Override
   public Modify<TableMetadataUnit> modify() {
-    return new IcebergModify<>(context());
+    return new IcebergModify<>(TablesMetadataTypeValidator.INSTANCE, context());
   }
 
   @Override

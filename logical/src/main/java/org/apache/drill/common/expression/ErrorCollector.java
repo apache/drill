@@ -20,26 +20,39 @@ package org.apache.drill.common.expression;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Range;
+import org.slf4j.Logger;
 
 public interface ErrorCollector {
 
-    public void addGeneralError(ExpressionPosition expr, String s);
+  public void addGeneralError(ExpressionPosition expr, String s);
 
-    public void addUnexpectedArgumentType(ExpressionPosition expr, String name, MajorType actual, MajorType[] expected, int argumentIndex);
+  public void addUnexpectedArgumentType(ExpressionPosition expr, String name,
+      MajorType actual, MajorType[] expected, int argumentIndex);
 
-    public void addUnexpectedArgumentCount(ExpressionPosition expr, int actual, Range<Integer> expected);
+  public void addUnexpectedArgumentCount(ExpressionPosition expr,
+      int actual,  Range<Integer> expected);
 
-    public void addUnexpectedArgumentCount(ExpressionPosition expr, int actual, int expected);
+  public void addUnexpectedArgumentCount(ExpressionPosition expr,
+      int actual, int expected);
 
-    public void addNonNumericType(ExpressionPosition expr, MajorType actual);
+  public void addNonNumericType(ExpressionPosition expr, MajorType actual);
 
-    public void addUnexpectedType(ExpressionPosition expr, int index, MajorType actual);
+  public void addUnexpectedType(ExpressionPosition expr, int index, MajorType actual);
 
-    public void addExpectedConstantValue(ExpressionPosition expr, int actual, String s);
+  public void addExpectedConstantValue(ExpressionPosition expr, int actual, String s);
 
-    boolean hasErrors();
+  boolean hasErrors();
 
-    public int getErrorCount();
+  public int getErrorCount();
 
-    String toErrorString();
+  String toErrorString();
+
+  /**
+   * Checks for errors and throws a user exception if any are found.
+   * The caller thus need not implement its own error checking; just
+   * call this method.
+   *
+   * @param logger
+   */
+  void reportErrors(Logger logger);
 }

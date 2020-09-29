@@ -63,12 +63,12 @@ public class ValueExpressions {
   }
 
   public static LogicalExpression getTime(GregorianCalendar time) {
-      int millis = time.get(GregorianCalendar.HOUR_OF_DAY) * 60 * 60 * 1000 +
-                   time.get(GregorianCalendar.MINUTE) * 60 * 1000 +
-                   time.get(GregorianCalendar.SECOND) * 1000 +
-                   time.get(GregorianCalendar.MILLISECOND);
+    int millis = time.get(GregorianCalendar.HOUR_OF_DAY) * 60 * 60 * 1000 +
+                 time.get(GregorianCalendar.MINUTE) * 60 * 1000 +
+                 time.get(GregorianCalendar.SECOND) * 1000 +
+                 time.get(GregorianCalendar.MILLISECOND);
 
-      return new TimeExpression(millis);
+    return new TimeExpression(millis);
   }
 
   public static LogicalExpression getTime(int milliSeconds) {
@@ -98,28 +98,22 @@ public class ValueExpressions {
   public static LogicalExpression getNumericExpression(String sign, String s, ExpressionPosition ep) {
     String numStr = (sign == null) ? s : sign+s;
     try {
-        int a = Integer.parseInt(numStr);
-        return new IntExpression(a, ep);
-    } catch (Exception e) {
+      int a = Integer.parseInt(numStr);
+      return new IntExpression(a, ep);
+    } catch (Exception e) { }
 
-    }
     try {
       long l = Long.parseLong(numStr);
       return new LongExpression(l, ep);
-    } catch (Exception e) {
-
-    }
+    } catch (Exception e) { }
 
     try {
       double d = Double.parseDouble(numStr);
       return new DoubleExpression(d, ep);
-    } catch (Exception e) {
-
-    }
+    } catch (Exception e) { }
 
     throw new IllegalArgumentException(String.format("Unable to parse string %s as integer or floating point number.",
         numStr));
-
   }
 
   public static LogicalExpression getParameterExpression(String name, MajorType type) {
@@ -151,7 +145,6 @@ public class ValueExpressions {
       super(value, pos);
     }
 
-
     @Override
     protected Boolean parseValue(String s) {
       return Boolean.parseBoolean(s);
@@ -170,11 +163,10 @@ public class ValueExpressions {
     public boolean getBoolean() {
       return value;
     }
-
   }
 
   public static class FloatExpression extends LogicalExpressionBase {
-    private float f;
+    private final float f;
 
     private static final MajorType FLOAT_CONSTANT = Types.required(MinorType.FLOAT4);
 
@@ -201,14 +193,13 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
 
   public static class IntExpression extends LogicalExpressionBase {
 
     private static final MajorType INT_CONSTANT = Types.required(MinorType.INT);
 
-    private int i;
+    private final int i;
 
     public IntExpression(int i, ExpressionPosition pos) {
       super(pos);
@@ -233,14 +224,13 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
 
   public static class Decimal9Expression extends LogicalExpressionBase {
 
-    private int decimal;
-    private int scale;
-    private int precision;
+    private final int decimal;
+    private final int scale;
+    private final int precision;
 
     public Decimal9Expression(BigDecimal input, ExpressionPosition pos) {
       super(pos);
@@ -248,7 +238,6 @@ public class ValueExpressions {
       this.precision = input.precision();
       this.decimal = input.setScale(scale, BigDecimal.ROUND_HALF_UP).intValue();
     }
-
 
     public int getIntFromDecimal() {
       return decimal;
@@ -280,9 +269,9 @@ public class ValueExpressions {
 
   public static class Decimal18Expression extends LogicalExpressionBase {
 
-    private long decimal;
-    private int scale;
-    private int precision;
+    private final long decimal;
+    private final int scale;
+    private final int precision;
 
     public Decimal18Expression(BigDecimal input, ExpressionPosition pos) {
       super(pos);
@@ -290,7 +279,6 @@ public class ValueExpressions {
       this.precision = input.precision();
       this.decimal = input.setScale(scale, BigDecimal.ROUND_HALF_UP).longValue();
     }
-
 
     public long getLongFromDecimal() {
       return decimal;
@@ -318,18 +306,16 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
 
   public static class Decimal28Expression extends LogicalExpressionBase {
 
-    private BigDecimal bigDecimal;
+    private final BigDecimal bigDecimal;
 
     public Decimal28Expression(BigDecimal input, ExpressionPosition pos) {
       super(pos);
       this.bigDecimal = input;
     }
-
 
     public BigDecimal getBigDecimal() {
       return bigDecimal;
@@ -349,12 +335,11 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
 
   public static class Decimal38Expression extends LogicalExpressionBase {
 
-    private BigDecimal bigDecimal;
+    private final BigDecimal bigDecimal;
 
     public Decimal38Expression(BigDecimal input, ExpressionPosition pos) {
       super(pos);
@@ -379,7 +364,6 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
 
   public static class VarDecimalExpression extends LogicalExpressionBase {
@@ -422,7 +406,7 @@ public class ValueExpressions {
   }
 
   public static class DoubleExpression extends LogicalExpressionBase {
-    private double d;
+    private final double d;
 
     private static final MajorType DOUBLE_CONSTANT = Types.required(MinorType.FLOAT8);
 
@@ -449,20 +433,19 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
 
   public static class LongExpression extends LogicalExpressionBase {
 
     private static final MajorType LONG_CONSTANT = Types.required(MinorType.BIGINT);
 
-    private long l;
+    private final long l;
 
     public LongExpression(long l) {
       this(l, ExpressionPosition.UNKNOWN);
     }
 
-      public LongExpression(long l, ExpressionPosition pos) {
+    public LongExpression(long l, ExpressionPosition pos) {
       super(pos);
       this.l = l;
     }
@@ -485,21 +468,19 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
-
 
   public static class DateExpression extends LogicalExpressionBase {
 
     private static final MajorType DATE_CONSTANT = Types.required(MinorType.DATE);
 
-    private long dateInMillis;
+    private final long dateInMillis;
 
     public DateExpression(long l) {
       this(l, ExpressionPosition.UNKNOWN);
     }
 
-      public DateExpression(long dateInMillis, ExpressionPosition pos) {
+    public DateExpression(long dateInMillis, ExpressionPosition pos) {
       super(pos);
       this.dateInMillis = dateInMillis;
     }
@@ -522,21 +503,19 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
-
 
   public static class TimeExpression extends LogicalExpressionBase {
 
     private static final MajorType TIME_CONSTANT = Types.required(MinorType.TIME);
 
-    private int timeInMillis;
+    private final int timeInMillis;
 
     public TimeExpression(int timeInMillis) {
       this(timeInMillis, ExpressionPosition.UNKNOWN);
     }
 
-      public TimeExpression(int timeInMillis, ExpressionPosition pos) {
+    public TimeExpression(int timeInMillis, ExpressionPosition pos) {
       super(pos);
       this.timeInMillis = timeInMillis;
     }
@@ -559,20 +538,19 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
 
   public static class TimeStampExpression extends LogicalExpressionBase {
 
     private static final MajorType TIMESTAMP_CONSTANT = Types.required(MinorType.TIMESTAMP);
 
-    private long timeInMillis;
+    private final long timeInMillis;
 
     public TimeStampExpression(long timeInMillis) {
       this(timeInMillis, ExpressionPosition.UNKNOWN);
     }
 
-      public TimeStampExpression(long timeInMillis, ExpressionPosition pos) {
+    public TimeStampExpression(long timeInMillis, ExpressionPosition pos) {
       super(pos);
       this.timeInMillis = timeInMillis;
     }
@@ -595,20 +573,19 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
 
   public static class IntervalYearExpression extends LogicalExpressionBase {
 
     private static final MajorType INTERVALYEAR_CONSTANT = Types.required(MinorType.INTERVALYEAR);
 
-    private int months;
+    private final int months;
 
     public IntervalYearExpression(int months) {
       this(months, ExpressionPosition.UNKNOWN);
     }
 
-      public IntervalYearExpression(int months, ExpressionPosition pos) {
+    public IntervalYearExpression(int months, ExpressionPosition pos) {
       super(pos);
       this.months = months;
     }
@@ -631,7 +608,6 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
 
   public static class IntervalDayExpression extends LogicalExpressionBase {
@@ -639,14 +615,14 @@ public class ValueExpressions {
     private static final MajorType INTERVALDAY_CONSTANT = Types.required(MinorType.INTERVALDAY);
     private static final long MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
 
-    private int days;
-    private int millis;
+    private final int days;
+    private final int millis;
 
     public IntervalDayExpression(long intervalInMillis) {
       this((int) (intervalInMillis / MILLIS_IN_DAY), (int) (intervalInMillis % MILLIS_IN_DAY), ExpressionPosition.UNKNOWN);
     }
 
-      public IntervalDayExpression(int days, int millis, ExpressionPosition pos) {
+    public IntervalDayExpression(int days, int millis, ExpressionPosition pos) {
       super(pos);
       this.days = days;
       this.millis = millis;
@@ -674,7 +650,6 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Collections.emptyIterator();
     }
-
   }
 
   public static class QuotedString extends ValueExpression<String> {
@@ -709,7 +684,7 @@ public class ValueExpressions {
   }
 
   /**
-   * Is used to identify method parameter based on given name and type.
+   * Identifies method parameter based on given name and type.
    */
   public static class ParameterExpression extends LogicalExpressionBase {
 
@@ -741,5 +716,4 @@ public class ValueExpressions {
       return ImmutableList.<LogicalExpression>of().iterator();
     }
   }
-
 }

@@ -22,12 +22,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -40,6 +42,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
@@ -172,12 +175,9 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   @Override
-  public void kill(boolean sendUpstream) {
-    if (sendUpstream) {
-      done = true;
-    } else {
-      releaseAssets();
-    }
+  public void cancel() {
+    done = true;
+    releaseAssets();
   }
 
   /**
@@ -202,7 +202,7 @@ public class ScanBatch implements CloseableRecordBatch {
    * @return whether we could continue iteration
    * @throws Exception
    */
-  private boolean shouldContinueAfterNoRecords() throws Exception {
+  private boolean shouldContinueAfterNoRecords() {
     logger.trace("scan got 0 record.");
     if (isRepeatableScan) {
       if (!currentReader.hasNext()) {
@@ -212,13 +212,17 @@ public class ScanBatch implements CloseableRecordBatch {
       }
       return true;
     } else { // Regular scan
-      currentReader.close();
-      currentReader = null;
+      closeCurrentReader();
       return true; // In regular case, we always continue the iteration, if no more reader, we will break out at the head of loop
     }
   }
 
-  private IterOutcome internalNext() throws Exception {
+  private void closeCurrentReader() {
+    AutoCloseables.closeSilently(currentReader);
+    currentReader = null;
+  }
+
+  private IterOutcome internalNext() {
     while (true) {
       if (currentReader == null && !getNextReaderIfHas()) {
         logger.trace("currentReader is null");
@@ -231,6 +235,21 @@ public class ScanBatch implements CloseableRecordBatch {
       logger.trace("currentReader.next return recordCount={}", recordCount);
       Preconditions.checkArgument(recordCount >= 0, "recordCount from RecordReader.next() should not be negative");
       boolean isNewSchema = mutator.isNewSchema();
+      // If scan is done for collecting metadata, additional implicit column `$project_metadata$`
+      // will be projected to handle the case when scan may return empty results (scan on empty file or row group).
+      // Scan will return single row for the case when empty file or row group is present with correct
+      // values of other implicit columns (like `fqn`, `rgi`), so this metadata will be stored to the Metastore.
+      if (implicitValues != null) {
+        String projectMetadataColumn = context.getOptions().getOption(ExecConstants.IMPLICIT_PROJECT_METADATA_COLUMN_LABEL_VALIDATOR);
+        if (recordCount > 0) {
+          // Sets the implicit value to null to signal that some results were returned and there is no need for creating an additional record.
+          implicitValues.replace(projectMetadataColumn, null);
+        } else if (Boolean.FALSE.toString().equals(implicitValues.get(projectMetadataColumn))) {
+          recordCount++;
+          // Sets implicit value to true to avoid affecting resulting count value.
+          implicitValues.put(projectMetadataColumn, Boolean.TRUE.toString());
+        }
+      }
       populateImplicitVectors();
       mutator.container.setValueCount(recordCount);
       oContext.getStats().batchReceived(0, recordCount, isNewSchema);
@@ -279,25 +298,10 @@ public class ScanBatch implements CloseableRecordBatch {
       return internalNext();
     } catch (OutOfMemoryException ex) {
       clearFieldVectorMap();
-      lastOutcome = IterOutcome.STOP;
       throw UserException.memoryError(ex).build(logger);
-    } catch (ExecutionSetupException e) {
-      if (currentReader != null) {
-        try {
-          currentReader.close();
-        } catch (final Exception e2) {
-          logger.error("Close failed for reader " + currentReaderClassName, e2);
-        }
-      }
-      lastOutcome = IterOutcome.STOP;
-      throw UserException.internalError(e)
-          .addContext("Setup failed for", currentReaderClassName)
-          .build(logger);
     } catch (UserException ex) {
-      lastOutcome = IterOutcome.STOP;
       throw ex;
     } catch (Exception ex) {
-      lastOutcome = IterOutcome.STOP;
       throw UserException.internalError(ex).build(logger);
     } finally {
       oContext.getStats().stopProcessing();
@@ -309,15 +313,11 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   private void clearFieldVectorMap() {
-    for (final ValueVector v : mutator.fieldVectorMap().values()) {
-      v.clear();
-    }
-    for (final ValueVector v : mutator.implicitFieldVectorMap.values()) {
-      v.clear();
-    }
+    VectorAccessibleUtilities.clear(mutator.fieldVectorMap().values());
+    VectorAccessibleUtilities.clear(mutator.implicitFieldVectorMap.values());
   }
 
-  private boolean getNextReaderIfHas() throws ExecutionSetupException {
+  private boolean getNextReaderIfHas() {
     if (!readers.hasNext()) {
       return false;
     }
@@ -326,8 +326,15 @@ public class ScanBatch implements CloseableRecordBatch {
       readers.remove();
     }
     implicitValues = implicitColumns.hasNext() ? implicitColumns.next() : null;
-    currentReader.setup(oContext, mutator);
     currentReaderClassName = currentReader.getClass().getSimpleName();
+    try {
+      currentReader.setup(oContext, mutator);
+    } catch (ExecutionSetupException e) {
+      closeCurrentReader();
+      throw UserException.executionError(e)
+          .addContext("Failed to setup reader", currentReaderClassName)
+          .build(logger);
+    }
     return true;
   }
 
@@ -405,7 +412,6 @@ public class ScanBatch implements CloseableRecordBatch {
     return fqn;
   }
 
-
   /**
    * Row set mutator implementation provided to record readers created by
    * this scan batch. Made visible so that tests can create this mutator
@@ -414,7 +420,6 @@ public class ScanBatch implements CloseableRecordBatch {
    * in turn, the only use of the generated vector readers in the vector
    * package.)
    */
-
   @VisibleForTesting
   public static class Mutator implements OutputMutator {
     /** Flag keeping track whether top-level schema has changed since last inquiry (via #isNewSchema}).
@@ -589,9 +594,7 @@ public class ScanBatch implements CloseableRecordBatch {
   public void close() throws Exception {
     container.clear();
     mutator.clear();
-    if (currentReader != null) {
-      currentReader.close();
-    }
+    closeCurrentReader();
   }
 
   @Override
@@ -634,11 +637,6 @@ public class ScanBatch implements CloseableRecordBatch {
     }
 
     return true;
-  }
-
-  @Override
-  public boolean hasFailed() {
-    return lastOutcome == IterOutcome.STOP;
   }
 
   @Override

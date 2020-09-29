@@ -29,11 +29,8 @@ import java.util.Iterator;
  * Empty batch without schema and data.
  */
 public class SchemalessBatch implements CloseableRecordBatch {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemalessBatch.class);
 
-  public SchemalessBatch() {
-    logger.debug("Empty schemaless batch is created");
-  }
+  public SchemalessBatch() { }
 
   @Override
   public FragmentContext getContext() {
@@ -63,8 +60,7 @@ public class SchemalessBatch implements CloseableRecordBatch {
   }
 
   @Override
-  public void kill(boolean sendUpstream) {
-  }
+  public void cancel() { }
 
   @Override
   public VectorContainer getOutgoingContainer() {
@@ -109,12 +105,5 @@ public class SchemalessBatch implements CloseableRecordBatch {
   public VectorContainer getContainer() { return null; }
 
   @Override
-  public boolean hasFailed() {
-    return false;
-  }
-
-  @Override
-  public void dump() {
-    logger.error("SchemalessBatch[]");
-  }
+  public void dump() { }
 }

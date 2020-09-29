@@ -32,6 +32,7 @@ import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class HBaseScanBatchCreator implements BatchCreator<HBaseSubScan> {
+
   @Override
   public ScanBatch getBatch(ExecutorFragmentContext context, HBaseSubScan subScan, List<RecordBatch> children)
       throws ExecutionSetupException {
@@ -50,5 +51,4 @@ public class HBaseScanBatchCreator implements BatchCreator<HBaseSubScan> {
     }
     return new ScanBatch(subScan, context, readers);
   }
-
 }

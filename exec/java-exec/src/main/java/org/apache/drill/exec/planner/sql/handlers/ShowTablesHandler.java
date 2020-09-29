@@ -17,14 +17,9 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_SCHEMA_NAME;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
-
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -37,16 +32,18 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.calcite.util.NlsString;
-import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
-import org.apache.drill.exec.planner.sql.SqlConverter;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.ischema.InfoSchemaTableType;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
+
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.IS_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
 
 public class ShowTablesHandler extends DefaultSqlHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ShowTablesHandler.class);
@@ -117,14 +114,27 @@ public class ShowTablesHandler extends DefaultSqlHandler {
         fromClause, where, null, null, null, null, null, null);
   }
 
+  /**
+   * Rewritten SHOW TABLES query should be executed against root schema. Otherwise if
+   * query executed against, for example, jdbc plugin, returned table_schema column values
+   * won't be consistent with Drill's values for same column. Also after jdbc filter push down
+   * schema condition will be broken because it may contain name of Drill's storage plugin or
+   * name of jdbc catalog which isn't present in table_schema column.
+   *
+   * @param sqlNode node produced by {@link #rewrite(SqlNode)}
+   * @return converted rel node
+   * @throws ForemanSetupException when fragment setup or ser/de failed
+   * @throws RelConversionException when conversion failed
+   * @throws ValidationException when sql node validation failed
+   */
   @Override
-  protected Pair<SqlNode, RelDataType> validateNode(SqlNode sqlNode) throws ValidationException,
-      RelConversionException, ForemanSetupException {
-    SqlConverter converter = config.getConverter();
-    // set this to true since INFORMATION_SCHEMA in the root schema, not in the default
-    converter.useRootSchemaAsDefault(true);
-    Pair<SqlNode, RelDataType> sqlNodeRelDataTypePair = super.validateNode(sqlNode);
-    converter.useRootSchemaAsDefault(false);
-    return sqlNodeRelDataTypePair;
+  protected ConvertedRelNode validateAndConvert(SqlNode sqlNode) throws
+      ForemanSetupException, RelConversionException, ValidationException {
+    try {
+      config.getConverter().useRootSchemaAsDefault(true);
+      return super.validateAndConvert(sqlNode);
+    } finally {
+      config.getConverter().useRootSchemaAsDefault(false);
+    }
   }
 }

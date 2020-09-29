@@ -23,43 +23,47 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.junit.runner.Description;
 
 /**
  * <h4>Overview</h4>
  * <p>
- * This is a {@link DirTestWatcher} which creates all the temporary directories required by a Drillbit and the various <b>dfs.*</b> storage workspaces. It also
- * provides convenience methods that do the following:
+ * This is a {@link DirTestWatcher} which creates all the temporary directories
+ * required by a Drillbit and the various <b>dfs.*</b> storage workspaces. It
+ * also provides convenience methods that do the following:
  *
  * <ol>
- *   <li>Copy project files to temp directories. This is useful for copying the sample data into a temp directory.</li>
- *   <li>Copy resource files to temp.</li>
- *   <li>Updating parquet metadata files.</li>
+ * <li>Copy project files to temp directories. This is useful for copying the
+ * sample data into a temp directory.</li>
+ * <li>Copy resource files to temp.</li>
+ * <li>Updating parquet metadata files.</li>
  * </ol>
- * </p>
+ * </p><p>
+ * The {@link BaseDirTestWatcher} creates the following directories in the
+ * <b>base temp directory</b> (for a description of where the <b>base temp
+ * directory</b> is located please read the docs for {@link DirTestWatcher}):
  *
- * <p>
- *   The {@link BaseDirTestWatcher} creates the following directories in the <b>base temp directory</b> (for a description of where the <b>base temp directory</b>
- *   is located please read the docs for {@link DirTestWatcher}):
- *
- *   <ul>
- *     <li><b>tmp:</b> {@link #getTmpDir()}</li>
- *     <li><b>store:</b> {@link #getStoreDir()}</li>
- *     <li><b>root:</b> {@link #getRootDir()}</li>
- *     <li><b>dfsTestTmp:</b> {@link #getDfsTestTmpDir()}</li>
- *   </ul>
+ * <ul>
+ * <li><b>tmp:</b> {@link #getTmpDir()}</li>
+ * <li><b>store:</b> {@link #getStoreDir()}</li>
+ * <li><b>root:</b> {@link #getRootDir()}</li>
+ * <li><b>dfsTestTmp:</b> {@link #getDfsTestTmpDir()}</li>
+ * </ul>
  * </p>
  *
  * <h4>Examples</h4>
  * <p>
- *   The {@link BaseDirTestWatcher} is used in {@link BaseTestQuery} and an example of how it is used in conjunction with the {@link ClusterFixture} can be found in
- *   {@link ExampleTest}.
+ * The {@link BaseDirTestWatcher} is used in {@link BaseTestQuery} and an
+ * example of how it is used in conjunction with the {@link ClusterFixture} can
+ * be found in {@link ExampleTest}.
  * </p>
  */
 public class BaseDirTestWatcher extends DirTestWatcher {
   /**
-   * An enum used to represent the directories mapped to the <b>dfs.root</b> and <b>dfs.tmp</b> workspaces repectively.
+   * An enum used to represent the directories mapped to the <b>dfs.root</b> and
+   * <b>dfs.tmp</b> workspaces respectively.
    */
   public enum DirType {
     ROOT, // Corresponds to the directory that should be mapped to dfs.root
@@ -73,6 +77,7 @@ public class BaseDirTestWatcher extends DirTestWatcher {
   private File dfsTestTmpParentDir;
   private File dfsTestTmpDir;
   private File rootDir;
+  private File homeDir;
 
   /**
    * Creates a {@link BaseDirTestWatcher} which does not delete it's temp directories at the end of tests.
@@ -83,7 +88,10 @@ public class BaseDirTestWatcher extends DirTestWatcher {
 
   /**
    * Creates a {@link BaseDirTestWatcher}.
-   * @param deleteDirAtEnd If true, temp directories are deleted at the end of tests. If false, temp directories are not deleted at the end of tests.
+   *
+   * @param deleteDirAtEnd
+   *          If true, temp directories are deleted at the end of tests. If
+   *          false, temp directories are not deleted at the end of tests.
    */
   public BaseDirTestWatcher(boolean deleteDirAtEnd) {
     super(deleteDirAtEnd);
@@ -101,8 +109,9 @@ public class BaseDirTestWatcher extends DirTestWatcher {
     spillDir = makeSubDir(Paths.get("spill"));
     rootDir = makeSubDir(Paths.get("root"));
     tmpDir = makeSubDir(Paths.get("tmp"));
-    storeDir = makeSubDir(Paths.get("store"));
+    storeDir = makeSubDir(Paths.get(StoragePluginRegistry.PSTORE_NAME));
     dfsTestTmpParentDir = makeSubDir(Paths.get("dfsTestTmp"));
+    homeDir = makeSubDir(Paths.get("home"));
 
     newDfsTestTmpDir();
   }
@@ -118,22 +127,34 @@ public class BaseDirTestWatcher extends DirTestWatcher {
       FileUtils.cleanDirectory(tmpDir);
       FileUtils.cleanDirectory(storeDir);
       FileUtils.cleanDirectory(dfsTestTmpDir);
+      FileUtils.cleanDirectory(homeDir);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   /**
-   * Gets the temp directory that should be used as a Drillbit's tmp directory.
-   * @return The temp directory that should be used as a Drillbit's tmp directory.
+   * Gets the temp directory that should be used as a Drillbit's temp tmp directory.
+   * @return The temp directory that should be used as a Drillbit's temp tmp directory.
    */
   public File getTmpDir() {
     return tmpDir;
   }
 
   /**
-   * Gets the temp directory that should be used by the {@link org.apache.drill.exec.store.sys.store.LocalPersistentStore}.
-   * @return The temp directory that should be used by the {@link org.apache.drill.exec.store.sys.store.LocalPersistentStore}.
+   * Gets the temp directory that is a proxy for the user's home directory.
+   * @return proxy for the user's home directory
+   */
+  public File getHomeDir() {
+    return homeDir;
+  }
+
+  /**
+   * Gets the temp directory that should be used by the
+   * {@link org.apache.drill.exec.store.sys.store.LocalPersistentStore}.
+   *
+   * @return The temp directory that should be used by the
+   *         {@link org.apache.drill.exec.store.sys.store.LocalPersistentStore}.
    */
   public File getStoreDir() {
     return storeDir;
@@ -148,8 +169,11 @@ public class BaseDirTestWatcher extends DirTestWatcher {
   }
 
   /**
-   * Gets the temp directory that should be used to hold the contents of the <b>dfs.root</b> workspace.
-   * @return The temp directory that should be used to hold the contents of the <b>dfs.root</b> workspace.
+   * Gets the temp directory that should be used to hold the contents of the
+   * <b>dfs.root</b> workspace.
+   *
+   * @return The temp directory that should be used to hold the contents of the
+   *         <b>dfs.root</b> workspace.
    */
   public File getRootDir() {
     return rootDir;
@@ -175,8 +199,10 @@ public class BaseDirTestWatcher extends DirTestWatcher {
   }
 
   /**
-   * A helper method which returns the correct directory corresponding to the given {@link DirType}.
-   * @param type The directory to return.
+   * Returns the correct directory corresponding to the given {@link DirType}.
+   *
+   * @param type
+   *          The directory to return.
    * @return The directory corresponding to the given {@link DirType}.
    */
   private File getDir(DirType type) {
@@ -191,18 +217,28 @@ public class BaseDirTestWatcher extends DirTestWatcher {
   }
 
   /**
-   * Creates a directory in the temp root directory (corresponding to <b>dfs.root</b>) at the given relative path.
-   * @param relPath The relative path in the temp root directory at which to create a directory.
-   * @return The {@link java.io.File} corresponding to the sub directory that was created.
+   * Creates a directory in the temp root directory (corresponding to
+   * <b>dfs.root</b>) at the given relative path.
+   *
+   * @param relPath
+   *          The relative path in the temp root directory at which to create a
+   *          directory.
+   * @return The {@link java.io.File} corresponding to the sub directory that
+   *         was created.
    */
   public File makeRootSubDir(Path relPath) {
     return makeSubDir(relPath, DirType.ROOT);
   }
 
   /**
-   * Creates a directory in the temp tmp directory (corresponding to <b>dfs.tmp</b>) at the given relative path.
-   * @param relPath The relative path in the temp tmp directory at which to create a directory.
-   * @return The {@link java.io.File} corresponding to the sub directory that was created.
+   * Creates a directory in the tmp directory (corresponding to <b>dfs.tmp</b>)
+   * at the given relative path.
+   *
+   * @param relPath
+   *          The relative path in the tmp directory at which to create a
+   *          directory.
+   * @return The {@link java.io.File} corresponding to the sub directory that
+   *         was created.
    */
   public File makeTestTmpSubDir(Path relPath) {
     return makeSubDir(relPath, DirType.TEST_TMP);
@@ -218,31 +254,50 @@ public class BaseDirTestWatcher extends DirTestWatcher {
   }
 
   /**
-   * This copies a file or directory from <b>src/test/resources</b> into the temp root directory (corresponding to <b>dfs.root</b>). The relative path of the file or
-   * directory in <b>src/test/resources</b> is preserved in the temp root directory.
-   * @param relPath The relative path of the file or directory in <b>src/test/resources</b> to copy into the root temp folder.
-   * @return The {@link java.io.File} corresponding to the copied file or directory in the temp root directory.
+   * This copies a file or directory from {@code src/test/resources} into the
+   * temp root directory (corresponding to {@code dfs.root}). The relative path
+   * of the file or directory in {@code src/test/resources} is preserved in the
+   * temp root directory.
+   *
+   * @param relPath
+   *          The relative path of the file or directory in
+   *          {@code src/test/resources} to copy into the root temp folder.
+   * @return The {@link java.io.File} corresponding to the copied file or
+   *         directory in the temp root directory.
    */
   public File copyResourceToRoot(Path relPath) {
     return copyTo(relPath, relPath, TestTools.FileSource.RESOURCE, DirType.ROOT);
   }
 
   /**
-   * This copies a filed or directory from the maven project into the temp root directory (corresponding to <b>dfs.root</b>). The relative path of the file or directory
-   * in the maven module is preserved in the temp root directory.
-   * @param relPath The relative path of the file or directory in the maven module to copy into the root temp folder.
-   * @return The {@link java.io.File} corresponding to the copied file or directory in the temp root directory.
+   * This copies a filed or directory from the maven project into the temp root
+   * directory (corresponding to <b>dfs.root</b>). The relative path of the file
+   * or directory in the maven module is preserved in the temp root directory.
+   *
+   * @param relPath
+   *          The relative path of the file or directory in the maven module to
+   *          copy into the root temp folder.
+   * @return The {@link java.io.File} corresponding to the copied file or
+   *         directory in the temp root directory.
    */
   public File copyFileToRoot(Path relPath) {
     return copyTo(relPath, relPath, TestTools.FileSource.PROJECT, DirType.ROOT);
   }
 
   /**
-   * This copies a file or directory from <b>src/test/resources</b> into the temp root directory (corresponding to <b>dfs.root</b>). The file or directory is copied
-   * to the provided relative destPath in the temp root directory.
-   * @param relPath The source relative path of a file or directory from <b>src/test/resources</b> that will be copied.
-   * @param destPath The destination relative path of the file or directory in the temp root directory.
-   * @return The {@link java.io.File} corresponding to the final copied file or directory in the temp root directory.
+   * This copies a file or directory from <b>src/test/resources</b> into the
+   * temp root directory (corresponding to <b>dfs.root</b>). The file or
+   * directory is copied to the provided relative destPath in the temp root
+   * directory.
+   *
+   * @param relPath
+   *          The source relative path of a file or directory from
+   *          <b>src/test/resources</b> that will be copied.
+   * @param destPath
+   *          The destination relative path of the file or directory in the temp
+   *          root directory.
+   * @return The {@link java.io.File} corresponding to the final copied file or
+   *         directory in the temp root directory.
    */
   public File copyResourceToRoot(Path relPath, Path destPath) {
     return copyTo(relPath, destPath, TestTools.FileSource.RESOURCE, DirType.ROOT);
@@ -265,11 +320,19 @@ public class BaseDirTestWatcher extends DirTestWatcher {
   }
 
   /**
-   * This copies a file or directory from <b>src/test/resources</b> into the temp root directory (corresponding to <b>dfs.root</b>). The file or directory is copied
-   * to the provided relative destPath in the temp root directory.
-   * @param relPath The source relative path of a file or directory from <b>src/test/resources</b> that will be copied.
-   * @param destPath The destination relative path of the file or directory in the temp root directory.
-   * @return The {@link java.io.File} corresponding to the final copied file or directory in the temp root directory.
+   * This copies a file or directory from {@code src/test/resources} into the
+   * temp root directory (corresponding to {@code dfs.root}). The file or
+   * directory is copied to the provided relative destPath in the temp root
+   * directory.
+   *
+   * @param relPath
+   *          The source relative path of a file or directory from
+   *          <b>src/test/resources</b> that will be copied.
+   * @param destPath
+   *          The destination relative path of the file or directory in the temp
+   *          root directory.
+   * @return The {@link java.io.File} corresponding to the final copied file or
+   *         directory in the temp root directory.
    */
   public File copyResourceToTestTmp(Path relPath, Path destPath) {
     return copyTo(relPath, destPath, TestTools.FileSource.RESOURCE, DirType.TEST_TMP);
@@ -307,10 +370,16 @@ public class BaseDirTestWatcher extends DirTestWatcher {
   }
 
   /**
-   * This is a convenience method that replaces placeholders in test parquet metadata files.
-   * @param metaDataFile The parquet metadata file to do string replacement on.
-   * @param replacePath The path to replace <b>REPLACED_IN_TEST</b> with in the parquet metadata file.
-   * @param customStringReplacement If this is provided a <b>CUSTOM_STRING_REPLACEMENT</b> is replaced in the parquet metadata file with this string.
+   * Replaces placeholders in test Parquet metadata files.
+   *
+   * @param metaDataFile
+   *          The Parquet metadata file to do string replacement on.
+   * @param replacePath
+   *          The path to replace {@code >REPLACED_IN_TEST} with in the Parquet
+   *          metadata file.
+   * @param customStringReplacement
+   *          If this is provided a {@code CUSTOM_STRING_REPLACEMENT} is replaced
+   *          in the Parquet metadata file with this string.
    */
   public void replaceMetaDataContents(File metaDataFile, File replacePath, String customStringReplacement) {
     try {

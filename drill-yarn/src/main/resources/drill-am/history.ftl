@@ -18,9 +18,6 @@
 
 -->
 <#include "*/generic.ftl">
-<#macro page_head>
-  <meta http-equiv="refresh" content="${refreshSecs}" >
-</#macro>
 
 <#macro page_body>
   <h4>Drillbit History</h4>

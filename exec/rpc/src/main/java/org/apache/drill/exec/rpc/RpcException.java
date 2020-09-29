@@ -26,9 +26,8 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 /**
  * Parent class for all rpc exceptions.
  */
-public class RpcException extends DrillIOException{
+public class RpcException extends DrillIOException {
   private static final long serialVersionUID = -5964230316010502319L;
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RpcException.class);
 
   public RpcException() {
     super();
@@ -52,7 +51,7 @@ public class RpcException extends DrillIOException{
 
   public static RpcException mapException(Throwable t) {
     while (t instanceof ExecutionException) {
-      t = ((ExecutionException)t).getCause();
+      t = t.getCause();
     }
     if (t instanceof RpcException) {
       return ((RpcException) t);
@@ -62,16 +61,16 @@ public class RpcException extends DrillIOException{
 
   public static RpcException mapException(String message, Throwable t) {
     while (t instanceof ExecutionException) {
-      t = ((ExecutionException)t).getCause();
+      t = t.getCause();
     }
     return new RpcException(message, t);
   }
 
-  public boolean isRemote(){
+  public boolean isRemote() {
     return false;
   }
 
-  public DrillPBError getRemoteError(){
+  public DrillPBError getRemoteError() {
     throw new UnsupportedOperationException();
   }
 }

@@ -18,7 +18,7 @@
 package org.apache.drill.metastore.iceberg.transform;
 
 import org.apache.drill.metastore.expressions.FilterExpression;
-import org.apache.drill.metastore.iceberg.MetastoreContext;
+import org.apache.drill.metastore.iceberg.IcebergMetastoreContext;
 import org.apache.drill.metastore.iceberg.operate.Delete;
 import org.apache.drill.metastore.iceberg.operate.Overwrite;
 import org.apache.drill.metastore.iceberg.write.File;
@@ -28,7 +28,6 @@ import org.apache.iceberg.expressions.Expression;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Base class to transforms given input into
@@ -38,9 +37,9 @@ import java.util.stream.Collectors;
  */
 public abstract class OperationTransformer<T> {
 
-  protected final MetastoreContext<T> context;
+  protected final IcebergMetastoreContext<T> context;
 
-  protected OperationTransformer(MetastoreContext<T> context) {
+  protected OperationTransformer(IcebergMetastoreContext<T> context) {
     this.context = context;
   }
 
@@ -64,14 +63,14 @@ public abstract class OperationTransformer<T> {
     return new Overwrite(dataFile, expression);
   }
 
-  public List<Delete> toDelete(List<FilterExpression> filters) {
-    return filters.stream()
-      .map(this::toDelete)
-      .collect(Collectors.toList());
-  }
-
   public Delete toDelete(FilterExpression filter) {
     return new Delete(context.transformer().filter().transform(filter));
+  }
+
+  public Delete toDelete(org.apache.drill.metastore.operate.Delete delete) {
+    // metadata types are ignored during delete since they are not part of the partition key
+    FilterTransformer filterTransformer = context.transformer().filter();
+    return new Delete(filterTransformer.transform(delete.filter()));
   }
 
   /**

@@ -177,6 +177,8 @@ public class BuildFromSchema {
       return buildSingleList(parent, colSchema);
     } else if (colSchema.isVariant()) {
       return buildVariant(parent, colSchema);
+    } else if (colSchema.isDict()) {
+      return buildDict(parent, colSchema);
     } else {
       return buildPrimitive(parent, colSchema);
     }
@@ -208,9 +210,9 @@ public class BuildFromSchema {
 
   private void expandMap(ObjectWriter colWriter, ColumnMetadata colSchema) {
     if (colSchema.isArray()) {
-      buildTuple(colWriter.array().tuple(), colSchema.mapSchema());
+      buildTuple(colWriter.array().tuple(), colSchema.tupleSchema());
     } else {
-      buildTuple(colWriter.tuple(), colSchema.mapSchema());
+      buildTuple(colWriter.tuple(), colSchema.tupleSchema());
     }
   }
 
@@ -267,8 +269,7 @@ public class BuildFromSchema {
    */
 
   private ObjectWriter buildRepeatedList(ParentShim parent, ColumnMetadata colSchema) {
-    final ColumnMetadata seed = colSchema.cloneEmpty();
-    final ObjectWriter objWriter = parent.add(seed);
+    final ObjectWriter objWriter = parent.add(colSchema.cloneEmpty());
     final RepeatedListWriter listWriter = (RepeatedListWriter) objWriter.array();
     final ColumnMetadata elements = colSchema.childSchema();
     if (elements != null) {
@@ -280,7 +281,7 @@ public class BuildFromSchema {
 
   /**
    * We've just built a writer for column. If the column is structured
-   * (AKA "complex", meaning a map or list or array), then we need to
+   * (AKA "complex", meaning a map, list, array or dict), then we need to
    * build writer for the components of the column. We do that recursively
    * here.
    *
@@ -300,8 +301,24 @@ public class BuildFromSchema {
       assert false;
     } else if (colSchema.isVariant()) {
       expandVariant(colWriter, colSchema);
+    } else if (colSchema.isDict()) {
+      expandDict(colWriter, colSchema);
     // } else {
       // Nothing to expand for primitives
+    }
+  }
+
+  private ObjectWriter buildDict(ParentShim parent, ColumnMetadata colSchema) {
+    final ObjectWriter colWriter = parent.add(colSchema.cloneEmpty());
+    expandDict(colWriter, colSchema);
+    return colWriter;
+  }
+
+  private void expandDict(ObjectWriter colWriter, ColumnMetadata colSchema) {
+    if (colSchema.isArray()) {
+      buildTuple(colWriter.array().dict().tuple(), colSchema.tupleSchema());
+    } else {
+      buildTuple(colWriter.dict().tuple(), colSchema.tupleSchema());
     }
   }
 }

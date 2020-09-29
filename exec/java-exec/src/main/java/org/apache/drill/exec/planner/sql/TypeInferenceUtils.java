@@ -21,7 +21,8 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -59,7 +60,7 @@ import java.util.Set;
 
 @SuppressWarnings("WeakerAccess")
 public class TypeInferenceUtils {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeInferenceUtils.class);
+  private static final Logger logger = LoggerFactory.getLogger(TypeInferenceUtils.class);
 
   public static final TypeProtos.MajorType UNKNOWN_TYPE = TypeProtos.MajorType.getDefaultInstance();
   private static final ImmutableMap<TypeProtos.MinorType, SqlTypeName> DRILL_TO_CALCITE_TYPE_MAPPING
@@ -351,7 +352,7 @@ public class TypeInferenceUtils {
       final DrillFuncHolder func = resolveDrillFuncHolder(opBinding, functions, functionCall);
 
       final RelDataType returnType = getReturnType(opBinding,
-          func.getReturnType(functionCall.args), func.getNullHandling());
+          func.getReturnType(functionCall.args()), func.getNullHandling());
 
       return returnType.getSqlTypeName() == SqlTypeName.VARBINARY
           ? createCalciteTypeWithNullability(factory, SqlTypeName.ANY, returnType.isNullable())
@@ -1018,7 +1019,7 @@ public class TypeInferenceUtils {
       args.add(new MajorTypeInLogicalExpression(builder.build()));
     }
 
-    final String drillFuncName = FunctionCallFactory.replaceOpWithFuncName(opBinding.getOperator().getName());
+    final String drillFuncName = FunctionCallFactory.convertToDrillFunctionName(opBinding.getOperator().getName());
     return new FunctionCall(
         drillFuncName,
         args,

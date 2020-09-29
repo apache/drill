@@ -24,12 +24,11 @@ import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -48,7 +47,7 @@ import org.junit.experimental.categories.Category;
  * The focus here is on the schema mechanism, which can be explored
  * with simple tables of just a few rows.
  */
-@Category(RowSetTests.class)
+@Category(EvfTest.class)
 public class TestCsvWithSchema extends BaseCsvTest {
 
   protected static final String FILE1_NAME = "file1.csv";
@@ -321,8 +320,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           RowSet result = client.queryBuilder().sql(sql).rowSet();
           assertEquals(4, result.rowCount());
           result.clear();
-        } catch (RpcException e) {
-          assertTrue(e.getCause() instanceof UserRemoteException);
+        } catch (UserRemoteException e) {
           sawError = true;
           break;
         }

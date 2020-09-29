@@ -17,8 +17,14 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Objects;
+
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -26,8 +32,19 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("parquet") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ParquetFormatConfig implements FormatPluginConfig {
 
-  public boolean autoCorrectCorruptDates = true;
-  public boolean enableStringsSignedMinMax = false;
+  private final boolean autoCorrectCorruptDates;
+  private final boolean enableStringsSignedMinMax;
+
+  public ParquetFormatConfig() {
+    this(true, false);
+  }
+
+  @JsonCreator
+  public ParquetFormatConfig(@JsonProperty("autoCorrectCorruptDates") Boolean autoCorrectCorruptDates,
+      @JsonProperty("enableStringsSignedMinMax") boolean enableStringsSignedMinMax) {
+    this.autoCorrectCorruptDates = autoCorrectCorruptDates == null ? true : autoCorrectCorruptDates;
+    this.enableStringsSignedMinMax = enableStringsSignedMinMax;
+  }
 
   /**
    * @return true if auto correction of corrupt dates is enabled, false otherwise
@@ -62,26 +79,20 @@ public class ParquetFormatConfig implements FormatPluginConfig {
     }
 
     ParquetFormatConfig that = (ParquetFormatConfig) o;
-
-    if (autoCorrectCorruptDates != that.autoCorrectCorruptDates) {
-      return false;
-    }
-
-    return enableStringsSignedMinMax == that.enableStringsSignedMinMax;
+    return Objects.equals(autoCorrectCorruptDates, that.autoCorrectCorruptDates) &&
+           Objects.equals(enableStringsSignedMinMax, that.enableStringsSignedMinMax);
   }
 
   @Override
   public int hashCode() {
-    int result = (autoCorrectCorruptDates ? 1231 : 1237);
-    result = 31 * result + (enableStringsSignedMinMax ? 1231 : 1237);
-    return result;
+    return Objects.hash(autoCorrectCorruptDates, enableStringsSignedMinMax);
   }
 
   @Override
   public String toString() {
-    return "ParquetFormatConfig{"
-      + "autoCorrectCorruptDates=" + autoCorrectCorruptDates
-      + ", enableStringsSignedMinMax=" + enableStringsSignedMinMax
-      + '}';
+    return new PlanStringBuilder(this)
+        .field("autoCorrectCorruptDates", autoCorrectCorruptDates)
+        .field("enableStringsSignedMinMax", enableStringsSignedMinMax)
+        .toString();
   }
 }

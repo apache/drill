@@ -110,6 +110,11 @@ public class MapBuilder implements SchemaContainer {
     return addDecimal(name, type, DataMode.REPEATED, precision, scale);
   }
 
+  public MapBuilder addDynamic(String name) {
+    tupleBuilder.addColumn(MetadataUtils.newDynamic(name));
+    return this;
+  }
+
   public MapBuilder addDecimal(String name, MinorType type,
       DataMode mode, int precision, int scale) {
     tupleBuilder.addDecimal(name, type, mode, precision, scale);
@@ -144,6 +149,22 @@ public class MapBuilder implements SchemaContainer {
     return tupleBuilder.addRepeatedList(this, name);
   }
 
+  public DictBuilder addDict(String name, MinorType keyType) {
+    return tupleBuilder.addDict(this, name).key(keyType);
+  }
+
+  public DictBuilder addDict(String name, MajorType keyType) {
+    return tupleBuilder.addDict(this, name).key(keyType);
+  }
+
+  public DictBuilder addDictArray(String name, MinorType keyType) {
+    return tupleBuilder.addDictArray(this, name).key(keyType);
+  }
+
+  public DictBuilder addDictArray(String name, MajorType keyType) {
+    return tupleBuilder.addDictArray(this, name).key(keyType);
+  }
+
   public MapColumnMetadata buildColumn() {
     return new MapColumnMetadata(memberName, mode, tupleBuilder.schema());
   }
@@ -175,5 +196,10 @@ public class MapBuilder implements SchemaContainer {
 
     build();
     return (UnionBuilder) parent;
+  }
+
+  public DictBuilder resumeDict() {
+    build();
+    return (DictBuilder) parent;
   }
 }

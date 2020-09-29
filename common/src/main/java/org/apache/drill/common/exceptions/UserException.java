@@ -28,6 +28,7 @@ import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * Base class for all user exception. The goal is to separate out common error conditions where we can give users
  * useful feedback.
@@ -45,7 +46,7 @@ import org.slf4j.Logger;
  */
 public class UserException extends DrillRuntimeException {
   private static final long serialVersionUID = -6720929331624621840L;
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserException.class);
+  private static final Logger logger = LoggerFactory.getLogger(UserException.class);
 
   public static final String MEMORY_ERROR_MSG = "One or more nodes ran out of memory while executing the query.";
 
@@ -356,6 +357,22 @@ public class UserException extends DrillRuntimeException {
   }
 
   /**
+   * Report an unsupported schema change.
+   *
+   * @param cause the <tt>SchemaChangeException</tt>. (Not typed because that
+   * class is not visible to this package.)
+   * @return user exception builder.
+   */
+  public static Builder schemaChangeError(final Throwable cause) {
+    return new Builder(DrillPBError.ErrorType.UNSUPPORTED_OPERATION, cause)
+        .addContext("Unsupported schema change");
+  }
+
+  public static Builder schemaChangeError() {
+    return schemaChangeError(null);
+  }
+
+  /**
    * Wraps an error that arises from execution due to issues in the query, in
    * the environment and so on -- anything other than "this should never occur"
    * type checks.
@@ -381,6 +398,10 @@ public class UserException extends DrillRuntimeException {
     return new Builder(DrillPBError.ErrorType.INTERNAL_ERROR, cause);
   }
 
+  public static Builder internalError() {
+    return new Builder(DrillPBError.ErrorType.INTERNAL_ERROR, null);
+  }
+
   /**
    * Indicates an unspecified error: code caught the exception, but does not have
    * visibility into the cause well enough to pick one of the more specific
@@ -394,7 +415,6 @@ public class UserException extends DrillRuntimeException {
   public static Builder unspecifiedError(final Throwable cause) {
     return new Builder(DrillPBError.ErrorType.UNSPECIFIED_ERROR, cause);
   }
-
 
   /**
    * Builder class for DrillUserException. You can wrap an existing exception, in this case it will first check if

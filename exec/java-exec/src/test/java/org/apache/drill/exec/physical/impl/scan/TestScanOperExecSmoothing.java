@@ -52,7 +52,7 @@ public class TestScanOperExecSmoothing extends BaseScanOperatorExecTest {
           .add("a", MinorType.VARCHAR)
           .addNullable("b", MinorType.VARCHAR, 10)
           .buildSchema();
-      schemaNegotiator.setTableSchema(schema, true);
+      schemaNegotiator.tableSchema(schema, true);
       schemaNegotiator.build();
       tableLoader = schemaNegotiator.build();
       return true;
@@ -79,7 +79,7 @@ public class TestScanOperExecSmoothing extends BaseScanOperatorExecTest {
       TupleMetadata schema = new SchemaBuilder()
           .add("a", MinorType.INT)
           .buildSchema();
-      schemaNegotiator.setTableSchema(schema, true);
+      schemaNegotiator.tableSchema(schema, true);
       tableLoader = schemaNegotiator.build();
       return true;
     }

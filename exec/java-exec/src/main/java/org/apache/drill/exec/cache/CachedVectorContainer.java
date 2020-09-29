@@ -23,22 +23,31 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.WritableBatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CachedVectorContainer extends LoopedAbstractDrillSerializable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CachedVectorContainer.class);
+  private static final Logger logger = LoggerFactory.getLogger(CachedVectorContainer.class);
 
   private byte[] data;
   private final BufferAllocator allocator;
   private VectorContainer container;
 
-  public CachedVectorContainer(WritableBatch batch, BufferAllocator allocator) throws IOException {
+  public CachedVectorContainer(WritableBatch batch, BufferAllocator allocator) {
     VectorAccessibleSerializable va = new VectorAccessibleSerializable(batch, allocator);
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    va.writeToStream(baos);
+    try {
+      va.writeToStream(baos);
+    } catch (IOException e) {
+      throw UserException.dataWriteError(e)
+          .addContext("Failed to write a cached batch to storage")
+          .build(logger);
+    }
     this.allocator = allocator;
     this.data = baos.toByteArray();
     va.clear();

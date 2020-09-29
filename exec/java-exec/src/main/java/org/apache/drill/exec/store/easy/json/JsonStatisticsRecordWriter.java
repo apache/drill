@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.StatisticsRecordWriter;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.JSONBaseStatisticsRecordWriter;
@@ -40,13 +41,13 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter i
   private String prefix;
   private String extension;
   private FileSystem fs = null;
-  private Configuration fsConf;
-  private FormatPlugin formatPlugin;
+  private final Configuration fsConf;
+  private final FormatPlugin formatPlugin;
   private Path fileName = null;
 
   private long recordsWritten = -1;
 
-  private StatisticsCollectorImpl statisticsCollector = new StatisticsCollectorImpl();
+  private final StatisticsCollectorImpl statisticsCollector = new StatisticsCollectorImpl();
 
   public JsonStatisticsRecordWriter(Configuration fsConf, FormatPlugin formatPlugin) {
     this.fsConf = fsConf;
@@ -54,7 +55,7 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter i
   }
 
   @Override
-  public void init(Map<String, String> writerOptions) throws IOException {
+  public void init(Map<String, String> writerOptions) {
     this.location = writerOptions.get("location");
     this.prefix = writerOptions.get("prefix");
     this.extension = writerOptions.get("extension");
@@ -70,8 +71,9 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter i
         fs.delete(fileName, false);
       }
     } catch (IOException ex) {
-      logger.error("Unable to delete tmp file (corrupt): " + fileName, ex);
-      throw ex;
+      throw UserException.dataWriteError(ex)
+        .addContext("Unable to delete tmp statistics file", fileName)
+        .build(logger);
     }
     try {
       // Delete the tmp file and .stats.drill on exit. After writing out the permanent file
@@ -81,8 +83,9 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter i
       fs.deleteOnExit(new Path(location));
       logger.debug("Created file: {}", fileName);
     } catch (IOException ex) {
-      logger.error("Unable to create file: " + fileName, ex);
-      throw ex;
+      throw UserException.dataWriteError(ex)
+        .addContext("Unable to create stistics file", fileName)
+        .build(logger);
     }
   }
 
@@ -186,13 +189,13 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter i
   }
 
   @Override
-  public void abort() throws IOException {
+  public void abort() {
     // Invoke cleanup to clear any .tmp files and/or empty statistics directory
     cleanup();
   }
 
   @Override
-  public void cleanup() throws IOException {
+  public void cleanup() {
     Path permFileName = new Path(location, prefix + "." + extension);
     try {
       // Remove the .tmp file, if any
@@ -206,8 +209,8 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter i
         logger.debug("Deleted directory: {}", location);
       }
     } catch (IOException ex) {
-      logger.error("Unable to delete tmp file: " + fileName, ex);
-      throw ex;
+      // Warn but continue
+      logger.warn("Unable to delete tmp satistics file: " + fileName, ex);
     }
   }
 }

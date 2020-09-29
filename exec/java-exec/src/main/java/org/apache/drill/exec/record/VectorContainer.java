@@ -30,6 +30,7 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
@@ -440,6 +441,14 @@ public class VectorContainer implements VectorAccessible {
     return wrappers.size();
   }
 
+  public void allocate(int recordCount) {
+    for (VectorWrapper<?> w : wrappers) {
+      ValueVector v = w.getValueVector();
+      v.setInitialCapacity(recordCount);
+      v.allocateNew();
+    }
+  }
+
   public void allocateNew() {
     for (VectorWrapper<?> w : wrappers) {
       w.getValueVector().allocateNew();
@@ -558,5 +567,20 @@ public class VectorContainer implements VectorAccessible {
     for (VectorWrapper<?> wrapper : other) {
       addOrGet(wrapper.getField());
     }
+  }
+
+  public void buildFrom(BatchSchema sourceSchema) {
+    for (MaterializedField field : sourceSchema) {
+      add(TypeHelper.getNewVector(field, allocator));
+    }
+  }
+
+  public void allocatePrecomputedChildCount(int valueCount,
+      int bytesPerValue, int childValCount) {
+    for (VectorWrapper<?> w : wrappers) {
+      AllocationHelper.allocatePrecomputedChildCount(w.getValueVector(),
+          valueCount, bytesPerValue, childValCount);
+    }
+    setEmpty();
   }
 }

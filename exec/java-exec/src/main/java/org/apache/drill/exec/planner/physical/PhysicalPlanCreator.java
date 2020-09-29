@@ -38,13 +38,11 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 
 public class PhysicalPlanCreator {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlanCreator.class);
 
   private final Map<Prel, OpId> opIdMap;
-
-  private List<PhysicalOperator> popList;
+  private final List<PhysicalOperator> popList;
   private final QueryContext context;
-  PhysicalPlan plan = null;
+  private PhysicalPlan plan;
 
   public PhysicalPlanCreator(QueryContext context, Map<Prel, OpId> opIdMap) {
     this.context = context;
@@ -88,7 +86,6 @@ public class PhysicalPlanCreator {
     propsBuilder.resultMode(ResultMode.EXEC);
     propsBuilder.generator(PhysicalPlanCreator.class.getName(), "");
 
-
     try {
       // invoke getPhysicalOperator on the root Prel which will recursively invoke it
       // on the descendants and we should have a well-formed physical operator tree
@@ -105,5 +102,4 @@ public class PhysicalPlanCreator {
 
     return plan;
   }
-
 }

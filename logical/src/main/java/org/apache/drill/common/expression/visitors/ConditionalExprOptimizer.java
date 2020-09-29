@@ -39,16 +39,12 @@ public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpress
 
   @Override
   public LogicalExpression visitBooleanOperator(BooleanOperator op, Void value) throws RuntimeException {
-
     List<LogicalExpression> newArgs = Lists.newArrayList();
-
-    newArgs.addAll(op.args);
-
+    newArgs.addAll(op.args());
     Collections.sort(newArgs, costComparator);
 
     return new BooleanOperator(op.getName(), newArgs, op.getPosition());
   }
-
 
   @Override
   public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression holder, Void value) throws RuntimeException {
@@ -59,8 +55,7 @@ public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpress
       args.add(newExpr);
     }
 
-    //replace with a new function call, since its argument could be changed.
-
+    // Replace with a new function call, since its argument could be changed.
     return holder.copy(args);
   }
 
@@ -68,7 +63,6 @@ public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpress
   public LogicalExpression visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
     return e;
   }
-
 
   @Override
   public LogicalExpression visitIfExpression(IfExpression ifExpr, Void value) throws RuntimeException{
@@ -94,7 +88,6 @@ public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpress
         + "It should have been converted to FunctionHolderExpression in materialization");
   }
 
-
   @Override
   public LogicalExpression visitConvertExpression(ConvertExpression cast, Void value) throws RuntimeException {
     throw new UnsupportedOperationException("ConvertExpression is not expected here. "
@@ -108,11 +101,9 @@ public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpress
   }
 
   private static Comparator<LogicalExpression> costComparator = new Comparator<LogicalExpression> () {
+    @Override
     public int compare(LogicalExpression e1, LogicalExpression e2) {
       return e1.getCumulativeCost() <= e2.getCumulativeCost() ? -1 : 1;
     }
   };
-
-
-
 }

@@ -43,19 +43,10 @@ public interface MetadataProviderManager {
   TableMetadataProvider getTableMetadataProvider();
 
   /**
-   * Returns builder responsible for constructing required {@link TableMetadataProvider} instances
-   * based on specified providers.
+   * Returns {@code true} if current {@link MetadataProviderManager} instance uses Drill Metastore.
    *
-   * @param kind kind of {@link TableMetadataProvider} whose builder should be obtained
-   * @return builder responsible for constructing required {@link TableMetadataProvider}
+   * @return {@code true} if current {@link MetadataProviderManager} instance uses Drill Metastore,
+   * {@code false} otherwise.
    */
-  TableMetadataProviderBuilder builder(MetadataProviderKind kind);
-
-  /**
-   * Kinds of {@link TableMetadataProvider} whose builder should be obtained.
-   */
-  enum MetadataProviderKind {
-    PARQUET_TABLE,
-    SCHEMA_STATS_ONLY
-  }
+  boolean usesMetastore();
 }

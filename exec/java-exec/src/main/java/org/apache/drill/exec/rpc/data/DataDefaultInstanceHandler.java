@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
+import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.BitData.BitServerHandshake;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
@@ -38,7 +39,8 @@ public class DataDefaultInstanceHandler {
       return BitServerHandshake.getDefaultInstance();
     case RpcType.SASL_MESSAGE_VALUE:
       return SaslMessage.getDefaultInstance();
-
+    case RpcType.DATA_ACK_WITH_CREDIT_VALUE:
+        return BitData.AckWithCredit.getDefaultInstance();
     default:
       throw new UnsupportedOperationException();
     }

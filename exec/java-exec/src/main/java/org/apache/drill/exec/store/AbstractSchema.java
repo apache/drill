@@ -36,6 +36,8 @@ import org.apache.drill.exec.store.table.function.TableParamDef;
 import org.apache.drill.exec.store.table.function.TableSignature;
 import org.apache.drill.exec.store.table.function.WithOptionsTableMacro;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.calcite.linq4j.tree.DefaultExpression;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
@@ -51,14 +53,15 @@ import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 
 public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer, AutoCloseable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);
+  static final Logger logger = LoggerFactory.getLogger(AbstractSchema.class);
 
   private static final Expression EXPRESSION = new DefaultExpression(Object.class);
 
   private static final String SCHEMA_PARAMETER_NAME = "schema";
 
   /**
-   * Schema parameter for table function which creates schema provider based on given parameter value.
+   * Schema parameter for table function which creates schema provider based on
+   * given parameter value.
    */
   private static final TableParamDef SCHEMA_PARAMETER = TableParamDef.optional(
     SCHEMA_PARAMETER_NAME, String.class, (drillTable, value) -> {
@@ -118,14 +121,25 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
     return Joiner.on(SCHEMA_SEPARATOR).join(schemaPath);
   }
 
+  @Override
+  public final String toString() {
+    return getFullSchemaName();
+  }
+
+  /**
+   * Returns string describing schema type which shows where the schema came from.
+   * Good practice here is to return json type name of storage plugin's config.
+   *
+   * @return schema type name
+   */
   public abstract String getTypeName();
 
   /**
    * The schema can be a top level schema which doesn't have its own tables, but refers
    * to one of the default sub schemas for table look up.
-   *
+   * <p>
    * Default implementation returns itself.
-   *
+   * <p>
    * Ex. "dfs" schema refers to the tables in "default" workspace when querying for
    * tables in "dfs" schema.
    *
@@ -250,6 +264,8 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
       Table table = getTable(name);
       if (table instanceof DrillTable) {
         return applyFunctionParameters((DrillTable) table, parameters, arguments);
+      } else if (table == null) {
+        return null;
       }
       throw new DrillRuntimeException(String.format("Table [%s] is not of Drill table instance. " +
         "Given instance is of [%s].", name, table.getClass().getName()));
@@ -391,5 +407,4 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   public boolean areTableNamesCaseSensitive() {
     return true;
   }
-
 }

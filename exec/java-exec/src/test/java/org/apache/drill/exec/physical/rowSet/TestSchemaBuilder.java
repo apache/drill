@@ -46,7 +46,6 @@ import org.junit.experimental.categories.Category;
  * lists and repeated lists. This test verifies that it assembles the various
  * pieces correctly for the various nesting combinations.
  */
-
 @Category(RowSetTests.class)
 public class TestSchemaBuilder extends DrillTest {
 
@@ -94,7 +93,6 @@ public class TestSchemaBuilder extends DrillTest {
         .add(aField);
 
     // Internal method, does not return builder itself.
-
     builder.addColumn(bCol);
 
     TupleMetadata schema = builder.buildSchema();
@@ -116,7 +114,6 @@ public class TestSchemaBuilder extends DrillTest {
    * Tests creating a map within a row.
    * Also the basic map add column methods.
    */
-
   @Test
   public void testMapInRow() {
     TupleMetadata schema = new SchemaBuilder()
@@ -135,7 +132,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertTrue(m.isMap());
     assertEquals(DataMode.REQUIRED, m.mode());
 
-    TupleMetadata mapSchema = m.mapSchema();
+    TupleMetadata mapSchema = m.tupleSchema();
     assertNotNull(mapSchema);
     assertEquals(4, mapSchema.size());
 
@@ -164,7 +161,6 @@ public class TestSchemaBuilder extends DrillTest {
    * Test building a union in the top-level schema.
    * Also tests the basic union add type methods.
    */
-
   @Test
   public void testUnionInRow() {
     TupleMetadata schema = new SchemaBuilder()
@@ -205,7 +201,6 @@ public class TestSchemaBuilder extends DrillTest {
   /**
    * Test building a list (of unions) in the top-level schema.
    */
-
   @Test
   public void testListInRow() {
     TupleMetadata schema = new SchemaBuilder()
@@ -227,7 +222,6 @@ public class TestSchemaBuilder extends DrillTest {
     // optional list has one set of semantics (in ListVector, not
     // really supported), while a repeated list has entirely different
     // semantics (in the RepeatedListVector) and is supported.
-
     assertEquals(DataMode.OPTIONAL, list.mode());
 
     VariantMetadata variant = list.variantSchema();
@@ -252,7 +246,6 @@ public class TestSchemaBuilder extends DrillTest {
   /**
    * Test building a repeated list in the top-level schema.
    */
-
   @Test
   public void testRepeatedListInRow() {
     TupleMetadata schema = new SchemaBuilder()
@@ -281,12 +274,45 @@ public class TestSchemaBuilder extends DrillTest {
   }
 
   /**
+   * Tests creating a dict within a row.
+   * Also the basic dict add key and value columns methods.
+   */
+  @Test
+  public void testDictInRow() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addDict("d", MinorType.VARCHAR)
+          .nullableValue(MinorType.FLOAT8)
+          .resumeSchema()
+        .buildSchema();
+
+    assertEquals(1, schema.size());
+
+    ColumnMetadata d = schema.metadata(0);
+    assertEquals("d", d.name());
+    assertTrue(d.isDict());
+    assertEquals(DataMode.REQUIRED, d.mode());
+
+    TupleMetadata dictSchema = d.tupleSchema();
+    assertNotNull(dictSchema);
+    assertEquals(2, dictSchema.size());
+
+    ColumnMetadata keyMetadata = dictSchema.metadata(0);
+    assertEquals("key", keyMetadata.name());
+    assertEquals(MinorType.VARCHAR, keyMetadata.type());
+    assertEquals(DataMode.REQUIRED, keyMetadata.mode());
+
+    ColumnMetadata valueMetadata = dictSchema.metadata(1);
+    assertEquals("value", valueMetadata.name());
+    assertEquals(MinorType.FLOAT8, valueMetadata.type());
+    assertEquals(DataMode.OPTIONAL, valueMetadata.mode());
+  }
+
+  /**
    * Test methods to provide a width (precision) for VarChar
    * columns. The schema builder does not provide shortcuts for
    * VarChar in lists, unions or repeated lists because these
    * cases are obscure and seldom (never?) used.
    */
-
   @Test
   public void testVarCharPrecision() {
     TupleMetadata schema = new SchemaBuilder()
@@ -304,7 +330,7 @@ public class TestSchemaBuilder extends DrillTest {
 
     assertEquals(21, schema.metadata("a").precision());
     assertEquals(22, schema.metadata("b").precision());
-    TupleMetadata mapSchema = schema.metadata("m").mapSchema();
+    TupleMetadata mapSchema = schema.metadata("m").tupleSchema();
     assertEquals(23, mapSchema.metadata("c").precision());
     assertEquals(24, mapSchema.metadata("d").precision());
   }
@@ -314,7 +340,6 @@ public class TestSchemaBuilder extends DrillTest {
    * broken in Drill, so we don't bother about decimals in unions,
    * lists or repeated lists, though those methods could be added.
    */
-
   @Test
   public void testDecimal() {
     TupleMetadata schema = new SchemaBuilder()
@@ -343,7 +368,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertEquals(7, c.precision());
     assertEquals(4, c.scale());
 
-    ColumnMetadata d = schema.metadata("m").mapSchema().metadata("d");
+    ColumnMetadata d = schema.metadata("m").tupleSchema().metadata("d");
     assertEquals(DataMode.OPTIONAL, d.mode());
     assertEquals(8, d.precision());
     assertEquals(1, d.scale());
@@ -364,7 +389,6 @@ public class TestSchemaBuilder extends DrillTest {
         .buildSchema();
 
     // Use name methods, just for variety
-
     ColumnMetadata a = schema.metadata("a");
     assertEquals(MinorType.VARDECIMAL, a.type());
     assertEquals(DataMode.OPTIONAL, a.mode());
@@ -395,13 +419,13 @@ public class TestSchemaBuilder extends DrillTest {
     assertEquals(38, g.precision());
     assertEquals(4, g.scale());
 
-    ColumnMetadata d = schema.metadata("m").mapSchema().metadata("d");
+    ColumnMetadata d = schema.metadata("m").tupleSchema().metadata("d");
     assertEquals(MinorType.VARDECIMAL, d.type());
     assertEquals(DataMode.OPTIONAL, d.mode());
     assertEquals(8, d.precision());
     assertEquals(1, d.scale());
 
-    ColumnMetadata f = schema.metadata("m").mapSchema().metadata("f");
+    ColumnMetadata f = schema.metadata("m").tupleSchema().metadata("f");
     assertEquals(MinorType.VARDECIMAL, f.type());
     assertEquals(DataMode.REQUIRED, f.mode());
     assertEquals(38, f.precision());
@@ -451,7 +475,6 @@ public class TestSchemaBuilder extends DrillTest {
   /**
    * Verify that the map-in-map plumbing works.
    */
-
   @Test
   public void testMapInMap() {
     TupleMetadata schema = new SchemaBuilder()
@@ -463,8 +486,8 @@ public class TestSchemaBuilder extends DrillTest {
           .resumeSchema()
         .buildSchema();
 
-    TupleMetadata m1Schema = schema.metadata("m1").mapSchema();
-    TupleMetadata m2Schema = m1Schema.metadata("m2").mapSchema();
+    TupleMetadata m1Schema = schema.metadata("m1").tupleSchema();
+    TupleMetadata m2Schema = m1Schema.metadata("m2").tupleSchema();
 
     ColumnMetadata a = m2Schema.metadata(0);
     assertEquals("a", a.name());
@@ -478,7 +501,6 @@ public class TestSchemaBuilder extends DrillTest {
   /**
    * Verify that the union-in-map plumbing works.
    */
-
   @Test
   public void testUnionInMap() {
     TupleMetadata schema = new SchemaBuilder()
@@ -490,7 +512,7 @@ public class TestSchemaBuilder extends DrillTest {
           .resumeSchema()
         .buildSchema();
 
-    TupleMetadata m1Schema = schema.metadata("m1").mapSchema();
+    TupleMetadata m1Schema = schema.metadata("m1").tupleSchema();
     VariantMetadata uSchema = m1Schema.metadata("u").variantSchema();
 
     assertTrue(uSchema.hasType(MinorType.INT));
@@ -504,7 +526,6 @@ public class TestSchemaBuilder extends DrillTest {
   /**
    * Verify that the repeated list-in-map plumbing works.
    */
-
   @Test
   public void testRepeatedListInMap() {
     TupleMetadata schema = new SchemaBuilder()
@@ -516,7 +537,7 @@ public class TestSchemaBuilder extends DrillTest {
           .resumeSchema()
         .buildSchema();
 
-    TupleMetadata m1Schema = schema.metadata("m1").mapSchema();
+    TupleMetadata m1Schema = schema.metadata("m1").tupleSchema();
 
     ColumnMetadata r = m1Schema.metadata(0);
     assertEquals("r", r.name());
@@ -550,7 +571,7 @@ public class TestSchemaBuilder extends DrillTest {
     ColumnMetadata mapType = variant.member(MinorType.MAP);
     assertNotNull(mapType);
 
-    TupleMetadata mapSchema = mapType.mapSchema();
+    TupleMetadata mapSchema = mapType.tupleSchema();
     assertEquals(2, mapSchema.size());
 
     assertTrue(variant.hasType(MinorType.FLOAT8));
@@ -586,7 +607,6 @@ public class TestSchemaBuilder extends DrillTest {
   // and repeated lists key off of the same type code: LIST, so it is
   // ambiguous which is supported. The schema builder muddles through this
   // case, but the rest of the code might not.
-
   @Test
   public void testListInUnion() {
     TupleMetadata schema = new SchemaBuilder()
@@ -611,7 +631,6 @@ public class TestSchemaBuilder extends DrillTest {
   }
 
   // Note: union-in-union not supported in Drill
-
   @Test
   public void testMapInRepeatedList() {
     TupleMetadata schema = new SchemaBuilder()
@@ -626,7 +645,7 @@ public class TestSchemaBuilder extends DrillTest {
     ColumnMetadata list = schema.metadata("x");
     ColumnMetadata mapCol = list.childSchema();
     assertTrue(mapCol.isMap());
-    TupleMetadata mapSchema = mapCol.mapSchema();
+    TupleMetadata mapSchema = mapCol.tupleSchema();
 
     ColumnMetadata a = mapSchema.metadata("a");
     assertEquals(MinorType.INT, a.type());
@@ -641,7 +660,6 @@ public class TestSchemaBuilder extends DrillTest {
    * Test that repeated lists can be nested to provide 3D or
    * higher dimensions.
    */
-
   @Test
   public void testRepeatedListInRepeatedList() {
     TupleMetadata schema = new SchemaBuilder()
@@ -715,7 +733,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertTrue(columnMetadata.isNullable());
     assertEquals("m1", columnMetadata.name());
 
-    TupleMetadata schema = columnMetadata.mapSchema();
+    TupleMetadata schema = columnMetadata.tupleSchema();
 
     ColumnMetadata col0 = schema.metadata(0);
     assertEquals("b", col0.name());
@@ -727,7 +745,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertTrue(col1.isMap());
     assertFalse(col1.isNullable());
 
-    ColumnMetadata child = col1.mapSchema().metadata(0);
+    ColumnMetadata child = col1.tupleSchema().metadata(0);
     assertEquals("v", child.name());
     assertEquals(MinorType.VARCHAR, child.type());
     assertTrue(child.isNullable());
@@ -751,7 +769,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertTrue(child.isArray());
     assertTrue(child.isMap());
 
-    TupleMetadata mapSchema = child.mapSchema();
+    TupleMetadata mapSchema = child.tupleSchema();
 
     ColumnMetadata col0 = mapSchema.metadata(0);
     assertEquals("v", col0.name());
@@ -766,7 +784,7 @@ public class TestSchemaBuilder extends DrillTest {
 
   @Test
   public void testStandaloneUnionBuilder() {
-    ColumnMetadata columnMetadata = new UnionBuilder("u", MinorType.VARCHAR)
+    ColumnMetadata columnMetadata = new UnionBuilder("u", MinorType.UNION)
       .addType(MinorType.INT)
       .addType(MinorType.VARCHAR)
       .buildColumn();
@@ -778,5 +796,4 @@ public class TestSchemaBuilder extends DrillTest {
     assertTrue(variantMetadata.hasType(MinorType.INT));
     assertTrue(variantMetadata.hasType(MinorType.VARCHAR));
   }
-
 }

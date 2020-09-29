@@ -31,6 +31,8 @@ import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.scanner.persistence.AnnotatedClassDescriptor;
@@ -56,10 +58,11 @@ public class LocalFunctionRegistry implements AutoCloseable {
 
   public static final String BUILT_IN = "built-in";
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalFunctionRegistry.class);
+  private static final Logger logger = LoggerFactory.getLogger(LocalFunctionRegistry.class);
   private static final String functionSignaturePattern = "%s(%s)";
 
-  private static final ImmutableMap<String, Pair<Integer, Integer>> registeredFuncNameToArgRange = ImmutableMap.<String, Pair<Integer, Integer>> builder()
+  private static final ImmutableMap<String, Pair<Integer, Integer>> registeredFuncNameToArgRange =
+      ImmutableMap.<String, Pair<Integer, Integer>> builder()
       // CONCAT is allowed to take [1, infinity) number of arguments.
       // Currently, this flexibility is offered by DrillOptiq to rewrite it as
       // a nested structure
@@ -97,7 +100,8 @@ public class LocalFunctionRegistry implements AutoCloseable {
   }
 
   /**
-   * @return remote function registry version number with which local function registry is synced
+   * @return remote function registry version number with which local function
+   *         registry is synced
    */
   public int getVersion() {
     return registryHolder.getVersion();

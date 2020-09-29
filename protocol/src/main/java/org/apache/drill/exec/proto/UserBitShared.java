@@ -69,6 +69,8 @@ public final class UserBitShared {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -76,6 +78,10 @@ public final class UserBitShared {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static RpcChannel forNumber(int value) {
       switch (value) {
         case 0: return BIT_CONTROL;
@@ -192,6 +198,8 @@ public final class UserBitShared {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -199,6 +207,10 @@ public final class UserBitShared {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static QueryType forNumber(int value) {
       switch (value) {
         case 1: return SQL;
@@ -325,6 +337,8 @@ public final class UserBitShared {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -332,6 +346,10 @@ public final class UserBitShared {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static FragmentState forNumber(int value) {
       switch (value) {
         case 0: return SENDING;
@@ -648,6 +666,10 @@ public final class UserBitShared {
      */
     LTSV_SUB_SCAN(62),
     /**
+     * <code>HDF5_SUB_SCAN = 63;</code>
+     */
+    HDF5_SUB_SCAN(63),
+    /**
      * <code>EXCEL_SUB_SCAN = 64;</code>
      */
     EXCEL_SUB_SCAN(64),
@@ -663,6 +685,18 @@ public final class UserBitShared {
      * <code>METADATA_CONTROLLER = 67;</code>
      */
     METADATA_CONTROLLER(67),
+    /**
+     * <code>DRUID_SUB_SCAN = 68;</code>
+     */
+    DRUID_SUB_SCAN(68),
+    /**
+     * <code>SPSS_SUB_SCAN = 69;</code>
+     */
+    SPSS_SUB_SCAN(69),
+    /**
+     * <code>HTTP_SUB_SCAN = 70;</code>
+     */
+    HTTP_SUB_SCAN(70),
     ;
 
     /**
@@ -918,6 +952,10 @@ public final class UserBitShared {
      */
     public static final int LTSV_SUB_SCAN_VALUE = 62;
     /**
+     * <code>HDF5_SUB_SCAN = 63;</code>
+     */
+    public static final int HDF5_SUB_SCAN_VALUE = 63;
+    /**
      * <code>EXCEL_SUB_SCAN = 64;</code>
      */
     public static final int EXCEL_SUB_SCAN_VALUE = 64;
@@ -933,6 +971,18 @@ public final class UserBitShared {
      * <code>METADATA_CONTROLLER = 67;</code>
      */
     public static final int METADATA_CONTROLLER_VALUE = 67;
+    /**
+     * <code>DRUID_SUB_SCAN = 68;</code>
+     */
+    public static final int DRUID_SUB_SCAN_VALUE = 68;
+    /**
+     * <code>SPSS_SUB_SCAN = 69;</code>
+     */
+    public static final int SPSS_SUB_SCAN_VALUE = 69;
+    /**
+     * <code>HTTP_SUB_SCAN = 70;</code>
+     */
+    public static final int HTTP_SUB_SCAN_VALUE = 70;
 
 
     public final int getNumber() {
@@ -940,6 +990,8 @@ public final class UserBitShared {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -947,6 +999,10 @@ public final class UserBitShared {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static CoreOperatorType forNumber(int value) {
       switch (value) {
         case 0: return SINGLE_SENDER;
@@ -1012,10 +1068,14 @@ public final class UserBitShared {
         case 60: return UNPIVOT_MAPS;
         case 61: return STATISTICS_MERGE;
         case 62: return LTSV_SUB_SCAN;
+        case 63: return HDF5_SUB_SCAN;
         case 64: return EXCEL_SUB_SCAN;
         case 65: return SHP_SUB_SCAN;
         case 66: return METADATA_HANDLER;
         case 67: return METADATA_CONTROLLER;
+        case 68: return DRUID_SUB_SCAN;
+        case 69: return SPSS_SUB_SCAN;
+        case 70: return HTTP_SUB_SCAN;
         default: return null;
       }
     }
@@ -1119,6 +1179,8 @@ public final class UserBitShared {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -1126,6 +1188,10 @@ public final class UserBitShared {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static SaslStatus forNumber(int value) {
       switch (value) {
         case 0: return SASL_UNKNOWN;
@@ -1188,14 +1254,17 @@ public final class UserBitShared {
 
     /**
      * <code>optional string user_name = 1;</code>
+     * @return Whether the userName field is set.
      */
     boolean hasUserName();
     /**
      * <code>optional string user_name = 1;</code>
+     * @return The userName.
      */
     java.lang.String getUserName();
     /**
      * <code>optional string user_name = 1;</code>
+     * @return The bytes for userName.
      */
     com.google.protobuf.ByteString
         getUserNameBytes();
@@ -1214,6 +1283,13 @@ public final class UserBitShared {
     }
     private UserCredentials() {
       userName_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new UserCredentials();
     }
 
     @java.lang.Override
@@ -1283,12 +1359,14 @@ public final class UserBitShared {
     private volatile java.lang.Object userName_;
     /**
      * <code>optional string user_name = 1;</code>
+     * @return Whether the userName field is set.
      */
     public boolean hasUserName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string user_name = 1;</code>
+     * @return The userName.
      */
     public java.lang.String getUserName() {
       java.lang.Object ref = userName_;
@@ -1306,6 +1384,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string user_name = 1;</code>
+     * @return The bytes for userName.
      */
     public com.google.protobuf.ByteString
         getUserNameBytes() {
@@ -1335,7 +1414,7 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, userName_);
       }
       unknownFields.writeTo(output);
@@ -1347,7 +1426,7 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, userName_);
       }
       size += unknownFields.getSerializedSize();
@@ -1365,14 +1444,13 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.UserCredentials other = (org.apache.drill.exec.proto.UserBitShared.UserCredentials) obj;
 
-      boolean result = true;
-      result = result && (hasUserName() == other.hasUserName());
+      if (hasUserName() != other.hasUserName()) return false;
       if (hasUserName()) {
-        result = result && getUserName()
-            .equals(other.getUserName());
+        if (!getUserName()
+            .equals(other.getUserName())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1549,7 +1627,7 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.UserCredentials result = new org.apache.drill.exec.proto.UserBitShared.UserCredentials(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.userName_ = userName_;
@@ -1560,35 +1638,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1640,12 +1718,14 @@ public final class UserBitShared {
       private java.lang.Object userName_ = "";
       /**
        * <code>optional string user_name = 1;</code>
+       * @return Whether the userName field is set.
        */
       public boolean hasUserName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string user_name = 1;</code>
+       * @return The userName.
        */
       public java.lang.String getUserName() {
         java.lang.Object ref = userName_;
@@ -1663,6 +1743,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user_name = 1;</code>
+       * @return The bytes for userName.
        */
       public com.google.protobuf.ByteString
           getUserNameBytes() {
@@ -1679,6 +1760,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user_name = 1;</code>
+       * @param value The userName to set.
+       * @return This builder for chaining.
        */
       public Builder setUserName(
           java.lang.String value) {
@@ -1692,6 +1775,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user_name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearUserName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -1701,6 +1785,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user_name = 1;</code>
+       * @param value The bytes for userName to set.
+       * @return This builder for chaining.
        */
       public Builder setUserNameBytes(
           com.google.protobuf.ByteString value) {
@@ -1771,19 +1857,23 @@ public final class UserBitShared {
 
     /**
      * <code>optional sfixed64 part1 = 1;</code>
+     * @return Whether the part1 field is set.
      */
     boolean hasPart1();
     /**
      * <code>optional sfixed64 part1 = 1;</code>
+     * @return The part1.
      */
     long getPart1();
 
     /**
      * <code>optional sfixed64 part2 = 2;</code>
+     * @return Whether the part2 field is set.
      */
     boolean hasPart2();
     /**
      * <code>optional sfixed64 part2 = 2;</code>
+     * @return The part2.
      */
     long getPart2();
   }
@@ -1800,8 +1890,13 @@ public final class UserBitShared {
       super(builder);
     }
     private QueryId() {
-      part1_ = 0L;
-      part2_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new QueryId();
     }
 
     @java.lang.Override
@@ -1875,12 +1970,14 @@ public final class UserBitShared {
     private long part1_;
     /**
      * <code>optional sfixed64 part1 = 1;</code>
+     * @return Whether the part1 field is set.
      */
     public boolean hasPart1() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional sfixed64 part1 = 1;</code>
+     * @return The part1.
      */
     public long getPart1() {
       return part1_;
@@ -1890,12 +1987,14 @@ public final class UserBitShared {
     private long part2_;
     /**
      * <code>optional sfixed64 part2 = 2;</code>
+     * @return Whether the part2 field is set.
      */
     public boolean hasPart2() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional sfixed64 part2 = 2;</code>
+     * @return The part2.
      */
     public long getPart2() {
       return part2_;
@@ -1915,10 +2014,10 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeSFixed64(1, part1_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeSFixed64(2, part2_);
       }
       unknownFields.writeTo(output);
@@ -1930,11 +2029,11 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSFixed64Size(1, part1_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSFixed64Size(2, part2_);
       }
@@ -1953,19 +2052,18 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.QueryId other = (org.apache.drill.exec.proto.UserBitShared.QueryId) obj;
 
-      boolean result = true;
-      result = result && (hasPart1() == other.hasPart1());
+      if (hasPart1() != other.hasPart1()) return false;
       if (hasPart1()) {
-        result = result && (getPart1()
-            == other.getPart1());
+        if (getPart1()
+            != other.getPart1()) return false;
       }
-      result = result && (hasPart2() == other.hasPart2());
+      if (hasPart2() != other.hasPart2()) return false;
       if (hasPart2()) {
-        result = result && (getPart2()
-            == other.getPart2());
+        if (getPart2()
+            != other.getPart2()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2150,14 +2248,14 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.QueryId result = new org.apache.drill.exec.proto.UserBitShared.QueryId(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.part1_ = part1_;
           to_bitField0_ |= 0x00000001;
         }
-        result.part1_ = part1_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.part2_ = part2_;
           to_bitField0_ |= 0x00000002;
         }
-        result.part2_ = part2_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2165,35 +2263,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2246,18 +2344,22 @@ public final class UserBitShared {
       private long part1_ ;
       /**
        * <code>optional sfixed64 part1 = 1;</code>
+       * @return Whether the part1 field is set.
        */
       public boolean hasPart1() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional sfixed64 part1 = 1;</code>
+       * @return The part1.
        */
       public long getPart1() {
         return part1_;
       }
       /**
        * <code>optional sfixed64 part1 = 1;</code>
+       * @param value The part1 to set.
+       * @return This builder for chaining.
        */
       public Builder setPart1(long value) {
         bitField0_ |= 0x00000001;
@@ -2267,6 +2369,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional sfixed64 part1 = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPart1() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -2278,18 +2381,22 @@ public final class UserBitShared {
       private long part2_ ;
       /**
        * <code>optional sfixed64 part2 = 2;</code>
+       * @return Whether the part2 field is set.
        */
       public boolean hasPart2() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional sfixed64 part2 = 2;</code>
+       * @return The part2.
        */
       public long getPart2() {
         return part2_;
       }
       /**
        * <code>optional sfixed64 part2 = 2;</code>
+       * @param value The part2 to set.
+       * @return This builder for chaining.
        */
       public Builder setPart2(long value) {
         bitField0_ |= 0x00000002;
@@ -2299,6 +2406,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional sfixed64 part2 = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPart2() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -2369,6 +2477,7 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional string error_id = 1;</code>
+     * @return Whether the errorId field is set.
      */
     boolean hasErrorId();
     /**
@@ -2377,6 +2486,7 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional string error_id = 1;</code>
+     * @return The errorId.
      */
     java.lang.String getErrorId();
     /**
@@ -2385,16 +2495,19 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional string error_id = 1;</code>
+     * @return The bytes for errorId.
      */
     com.google.protobuf.ByteString
         getErrorIdBytes();
 
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 2;</code>
+     * @return Whether the endpoint field is set.
      */
     boolean hasEndpoint();
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 2;</code>
+     * @return The endpoint.
      */
     org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getEndpoint();
     /**
@@ -2404,33 +2517,40 @@ public final class UserBitShared {
 
     /**
      * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
+     * @return Whether the errorType field is set.
      */
     boolean hasErrorType();
     /**
      * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
+     * @return The errorType.
      */
     org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType getErrorType();
 
     /**
      * <code>optional string message = 4;</code>
+     * @return Whether the message field is set.
      */
     boolean hasMessage();
     /**
      * <code>optional string message = 4;</code>
+     * @return The message.
      */
     java.lang.String getMessage();
     /**
      * <code>optional string message = 4;</code>
+     * @return The bytes for message.
      */
     com.google.protobuf.ByteString
         getMessageBytes();
 
     /**
      * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+     * @return Whether the exception field is set.
      */
     boolean hasException();
     /**
      * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+     * @return The exception.
      */
     org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getException();
     /**
@@ -2502,6 +2622,13 @@ public final class UserBitShared {
     }
 
     @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new DrillPBError();
+    }
+
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
     getUnknownFields() {
       return this.unknownFields;
@@ -2533,7 +2660,7 @@ public final class UserBitShared {
             }
             case 18: {
               org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = endpoint_.toBuilder();
               }
               endpoint_ = input.readMessage(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.PARSER, extensionRegistry);
@@ -2564,7 +2691,7 @@ public final class UserBitShared {
             }
             case 42: {
               org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+              if (((bitField0_ & 0x00000010) != 0)) {
                 subBuilder = exception_.toBuilder();
               }
               exception_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.PARSER, extensionRegistry);
@@ -2576,7 +2703,7 @@ public final class UserBitShared {
               break;
             }
             case 50: {
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+              if (!((mutable_bitField0_ & 0x00000020) != 0)) {
                 parsingError_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.ParsingError>();
                 mutable_bitField0_ |= 0x00000020;
               }
@@ -2599,7 +2726,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((mutable_bitField0_ & 0x00000020) != 0)) {
           parsingError_ = java.util.Collections.unmodifiableList(parsingError_);
         }
         this.unknownFields = unknownFields.build();
@@ -2913,6 +3040,8 @@ public final class UserBitShared {
       }
 
       /**
+       * @param value The numeric wire value of the corresponding enum entry.
+       * @return The enum associated with the given numeric wire value.
        * @deprecated Use {@link #forNumber(int)} instead.
        */
       @java.lang.Deprecated
@@ -2920,6 +3049,10 @@ public final class UserBitShared {
         return forNumber(value);
       }
 
+      /**
+       * @param value The numeric wire value of the corresponding enum entry.
+       * @return The enum associated with the given numeric wire value.
+       */
       public static ErrorType forNumber(int value) {
         switch (value) {
           case 0: return CONNECTION;
@@ -2994,9 +3127,10 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional string error_id = 1;</code>
+     * @return Whether the errorId field is set.
      */
     public boolean hasErrorId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -3004,6 +3138,7 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional string error_id = 1;</code>
+     * @return The errorId.
      */
     public java.lang.String getErrorId() {
       java.lang.Object ref = errorId_;
@@ -3025,6 +3160,7 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional string error_id = 1;</code>
+     * @return The bytes for errorId.
      */
     public com.google.protobuf.ByteString
         getErrorIdBytes() {
@@ -3044,12 +3180,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_;
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 2;</code>
+     * @return Whether the endpoint field is set.
      */
     public boolean hasEndpoint() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 2;</code>
+     * @return The endpoint.
      */
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getEndpoint() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
@@ -3065,12 +3203,14 @@ public final class UserBitShared {
     private int errorType_;
     /**
      * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
+     * @return Whether the errorType field is set.
      */
     public boolean hasErrorType() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
+     * @return The errorType.
      */
     public org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType getErrorType() {
       @SuppressWarnings("deprecation")
@@ -3082,12 +3222,14 @@ public final class UserBitShared {
     private volatile java.lang.Object message_;
     /**
      * <code>optional string message = 4;</code>
+     * @return Whether the message field is set.
      */
     public boolean hasMessage() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional string message = 4;</code>
+     * @return The message.
      */
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
@@ -3105,6 +3247,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string message = 4;</code>
+     * @return The bytes for message.
      */
     public com.google.protobuf.ByteString
         getMessageBytes() {
@@ -3124,12 +3267,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper exception_;
     /**
      * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+     * @return Whether the exception field is set.
      */
     public boolean hasException() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+     * @return The exception.
      */
     public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getException() {
       return exception_ == null ? org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance() : exception_;
@@ -3210,19 +3355,19 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, errorId_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getEndpoint());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeEnum(3, errorType_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, message_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeMessage(5, getException());
       }
       for (int i = 0; i < parsingError_.size(); i++) {
@@ -3237,21 +3382,21 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, errorId_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getEndpoint());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(3, errorType_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, message_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, getException());
       }
@@ -3274,35 +3419,34 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.DrillPBError other = (org.apache.drill.exec.proto.UserBitShared.DrillPBError) obj;
 
-      boolean result = true;
-      result = result && (hasErrorId() == other.hasErrorId());
+      if (hasErrorId() != other.hasErrorId()) return false;
       if (hasErrorId()) {
-        result = result && getErrorId()
-            .equals(other.getErrorId());
+        if (!getErrorId()
+            .equals(other.getErrorId())) return false;
       }
-      result = result && (hasEndpoint() == other.hasEndpoint());
+      if (hasEndpoint() != other.hasEndpoint()) return false;
       if (hasEndpoint()) {
-        result = result && getEndpoint()
-            .equals(other.getEndpoint());
+        if (!getEndpoint()
+            .equals(other.getEndpoint())) return false;
       }
-      result = result && (hasErrorType() == other.hasErrorType());
+      if (hasErrorType() != other.hasErrorType()) return false;
       if (hasErrorType()) {
-        result = result && errorType_ == other.errorType_;
+        if (errorType_ != other.errorType_) return false;
       }
-      result = result && (hasMessage() == other.hasMessage());
+      if (hasMessage() != other.hasMessage()) return false;
       if (hasMessage()) {
-        result = result && getMessage()
-            .equals(other.getMessage());
+        if (!getMessage()
+            .equals(other.getMessage())) return false;
       }
-      result = result && (hasException() == other.hasException());
+      if (hasException() != other.hasException()) return false;
       if (hasException()) {
-        result = result && getException()
-            .equals(other.getException());
+        if (!getException()
+            .equals(other.getException())) return false;
       }
-      result = result && getParsingErrorList()
-          .equals(other.getParsingErrorList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getParsingErrorList()
+          .equals(other.getParsingErrorList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -3524,36 +3668,36 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.DrillPBError result = new org.apache.drill.exec.proto.UserBitShared.DrillPBError(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.errorId_ = errorId_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (endpointBuilder_ == null) {
+            result.endpoint_ = endpoint_;
+          } else {
+            result.endpoint_ = endpointBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (endpointBuilder_ == null) {
-          result.endpoint_ = endpoint_;
-        } else {
-          result.endpoint_ = endpointBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.errorType_ = errorType_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.message_ = message_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          if (exceptionBuilder_ == null) {
+            result.exception_ = exception_;
+          } else {
+            result.exception_ = exceptionBuilder_.build();
+          }
           to_bitField0_ |= 0x00000010;
         }
-        if (exceptionBuilder_ == null) {
-          result.exception_ = exception_;
-        } else {
-          result.exception_ = exceptionBuilder_.build();
-        }
         if (parsingErrorBuilder_ == null) {
-          if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          if (((bitField0_ & 0x00000020) != 0)) {
             parsingError_ = java.util.Collections.unmodifiableList(parsingError_);
             bitField0_ = (bitField0_ & ~0x00000020);
           }
@@ -3568,35 +3712,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3692,9 +3836,10 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional string error_id = 1;</code>
+       * @return Whether the errorId field is set.
        */
       public boolean hasErrorId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -3702,6 +3847,7 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional string error_id = 1;</code>
+       * @return The errorId.
        */
       public java.lang.String getErrorId() {
         java.lang.Object ref = errorId_;
@@ -3723,6 +3869,7 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional string error_id = 1;</code>
+       * @return The bytes for errorId.
        */
       public com.google.protobuf.ByteString
           getErrorIdBytes() {
@@ -3743,6 +3890,8 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional string error_id = 1;</code>
+       * @param value The errorId to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorId(
           java.lang.String value) {
@@ -3760,6 +3909,7 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional string error_id = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearErrorId() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -3773,6 +3923,8 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional string error_id = 1;</code>
+       * @param value The bytes for errorId to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorIdBytes(
           com.google.protobuf.ByteString value) {
@@ -3785,17 +3937,19 @@ public final class UserBitShared {
         return this;
       }
 
-      private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_ = null;
+      private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> endpointBuilder_;
       /**
        * <code>optional .exec.DrillbitEndpoint endpoint = 2;</code>
+       * @return Whether the endpoint field is set.
        */
       public boolean hasEndpoint() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.DrillbitEndpoint endpoint = 2;</code>
+       * @return The endpoint.
        */
       public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getEndpoint() {
         if (endpointBuilder_ == null) {
@@ -3839,7 +3993,7 @@ public final class UserBitShared {
        */
       public Builder mergeEndpoint(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint value) {
         if (endpointBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               endpoint_ != null &&
               endpoint_ != org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance()) {
             endpoint_ =
@@ -3906,12 +4060,14 @@ public final class UserBitShared {
       private int errorType_ = 0;
       /**
        * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
+       * @return Whether the errorType field is set.
        */
       public boolean hasErrorType() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
+       * @return The errorType.
        */
       public org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType getErrorType() {
         @SuppressWarnings("deprecation")
@@ -3920,6 +4076,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
+       * @param value The errorType to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorType(org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType value) {
         if (value == null) {
@@ -3932,6 +4090,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearErrorType() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -3943,12 +4102,14 @@ public final class UserBitShared {
       private java.lang.Object message_ = "";
       /**
        * <code>optional string message = 4;</code>
+       * @return Whether the message field is set.
        */
       public boolean hasMessage() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional string message = 4;</code>
+       * @return The message.
        */
       public java.lang.String getMessage() {
         java.lang.Object ref = message_;
@@ -3966,6 +4127,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string message = 4;</code>
+       * @return The bytes for message.
        */
       public com.google.protobuf.ByteString
           getMessageBytes() {
@@ -3982,6 +4144,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string message = 4;</code>
+       * @param value The message to set.
+       * @return This builder for chaining.
        */
       public Builder setMessage(
           java.lang.String value) {
@@ -3995,6 +4159,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string message = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMessage() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -4004,6 +4169,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string message = 4;</code>
+       * @param value The bytes for message to set.
+       * @return This builder for chaining.
        */
       public Builder setMessageBytes(
           com.google.protobuf.ByteString value) {
@@ -4016,17 +4183,19 @@ public final class UserBitShared {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper exception_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper exception_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder> exceptionBuilder_;
       /**
        * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+       * @return Whether the exception field is set.
        */
       public boolean hasException() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
+       * @return The exception.
        */
       public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getException() {
         if (exceptionBuilder_ == null) {
@@ -4070,7 +4239,7 @@ public final class UserBitShared {
        */
       public Builder mergeException(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper value) {
         if (exceptionBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+          if (((bitField0_ & 0x00000010) != 0) &&
               exception_ != null &&
               exception_ != org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance()) {
             exception_ =
@@ -4137,7 +4306,7 @@ public final class UserBitShared {
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.ParsingError> parsingError_ =
         java.util.Collections.emptyList();
       private void ensureParsingErrorIsMutable() {
-        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (!((bitField0_ & 0x00000020) != 0)) {
           parsingError_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.ParsingError>(parsingError_);
           bitField0_ |= 0x00000020;
          }
@@ -4438,7 +4607,7 @@ public final class UserBitShared {
           parsingErrorBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserBitShared.ParsingError, org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder, org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder>(
                   parsingError_,
-                  ((bitField0_ & 0x00000020) == 0x00000020),
+                  ((bitField0_ & 0x00000020) != 0),
                   getParentForChildren(),
                   isClean());
           parsingError_ = null;
@@ -4504,28 +4673,34 @@ public final class UserBitShared {
 
     /**
      * <code>optional string exception_class = 1;</code>
+     * @return Whether the exceptionClass field is set.
      */
     boolean hasExceptionClass();
     /**
      * <code>optional string exception_class = 1;</code>
+     * @return The exceptionClass.
      */
     java.lang.String getExceptionClass();
     /**
      * <code>optional string exception_class = 1;</code>
+     * @return The bytes for exceptionClass.
      */
     com.google.protobuf.ByteString
         getExceptionClassBytes();
 
     /**
      * <code>optional string message = 2;</code>
+     * @return Whether the message field is set.
      */
     boolean hasMessage();
     /**
      * <code>optional string message = 2;</code>
+     * @return The message.
      */
     java.lang.String getMessage();
     /**
      * <code>optional string message = 2;</code>
+     * @return The bytes for message.
      */
     com.google.protobuf.ByteString
         getMessageBytes();
@@ -4556,10 +4731,12 @@ public final class UserBitShared {
 
     /**
      * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+     * @return Whether the cause field is set.
      */
     boolean hasCause();
     /**
      * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+     * @return The cause.
      */
     org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getCause();
     /**
@@ -4583,6 +4760,13 @@ public final class UserBitShared {
       exceptionClass_ = "";
       message_ = "";
       stackTrace_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ExceptionWrapper();
     }
 
     @java.lang.Override
@@ -4622,7 +4806,7 @@ public final class UserBitShared {
               break;
             }
             case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
                 stackTrace_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper>();
                 mutable_bitField0_ |= 0x00000004;
               }
@@ -4632,7 +4816,7 @@ public final class UserBitShared {
             }
             case 34: {
               org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = cause_.toBuilder();
               }
               cause_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.PARSER, extensionRegistry);
@@ -4658,7 +4842,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
           stackTrace_ = java.util.Collections.unmodifiableList(stackTrace_);
         }
         this.unknownFields = unknownFields.build();
@@ -4683,12 +4867,14 @@ public final class UserBitShared {
     private volatile java.lang.Object exceptionClass_;
     /**
      * <code>optional string exception_class = 1;</code>
+     * @return Whether the exceptionClass field is set.
      */
     public boolean hasExceptionClass() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string exception_class = 1;</code>
+     * @return The exceptionClass.
      */
     public java.lang.String getExceptionClass() {
       java.lang.Object ref = exceptionClass_;
@@ -4706,6 +4892,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string exception_class = 1;</code>
+     * @return The bytes for exceptionClass.
      */
     public com.google.protobuf.ByteString
         getExceptionClassBytes() {
@@ -4725,12 +4912,14 @@ public final class UserBitShared {
     private volatile java.lang.Object message_;
     /**
      * <code>optional string message = 2;</code>
+     * @return Whether the message field is set.
      */
     public boolean hasMessage() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional string message = 2;</code>
+     * @return The message.
      */
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
@@ -4748,6 +4937,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string message = 2;</code>
+     * @return The bytes for message.
      */
     public com.google.protobuf.ByteString
         getMessageBytes() {
@@ -4802,12 +4992,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper cause_;
     /**
      * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+     * @return Whether the cause field is set.
      */
     public boolean hasCause() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+     * @return The cause.
      */
     public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getCause() {
       return cause_ == null ? org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance() : cause_;
@@ -4833,16 +5025,16 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, exceptionClass_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, message_);
       }
       for (int i = 0; i < stackTrace_.size(); i++) {
         output.writeMessage(3, stackTrace_.get(i));
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(4, getCause());
       }
       unknownFields.writeTo(output);
@@ -4854,17 +5046,17 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, exceptionClass_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, message_);
       }
       for (int i = 0; i < stackTrace_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, stackTrace_.get(i));
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getCause());
       }
@@ -4883,26 +5075,25 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper other = (org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper) obj;
 
-      boolean result = true;
-      result = result && (hasExceptionClass() == other.hasExceptionClass());
+      if (hasExceptionClass() != other.hasExceptionClass()) return false;
       if (hasExceptionClass()) {
-        result = result && getExceptionClass()
-            .equals(other.getExceptionClass());
+        if (!getExceptionClass()
+            .equals(other.getExceptionClass())) return false;
       }
-      result = result && (hasMessage() == other.hasMessage());
+      if (hasMessage() != other.hasMessage()) return false;
       if (hasMessage()) {
-        result = result && getMessage()
-            .equals(other.getMessage());
+        if (!getMessage()
+            .equals(other.getMessage())) return false;
       }
-      result = result && getStackTraceList()
-          .equals(other.getStackTraceList());
-      result = result && (hasCause() == other.hasCause());
+      if (!getStackTraceList()
+          .equals(other.getStackTraceList())) return false;
+      if (hasCause() != other.hasCause()) return false;
       if (hasCause()) {
-        result = result && getCause()
-            .equals(other.getCause());
+        if (!getCause()
+            .equals(other.getCause())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -5107,16 +5298,16 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper result = new org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.exceptionClass_ = exceptionClass_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.message_ = message_;
         if (stackTraceBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          if (((bitField0_ & 0x00000004) != 0)) {
             stackTrace_ = java.util.Collections.unmodifiableList(stackTrace_);
             bitField0_ = (bitField0_ & ~0x00000004);
           }
@@ -5124,13 +5315,13 @@ public final class UserBitShared {
         } else {
           result.stackTrace_ = stackTraceBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (causeBuilder_ == null) {
+            result.cause_ = cause_;
+          } else {
+            result.cause_ = causeBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
-        }
-        if (causeBuilder_ == null) {
-          result.cause_ = cause_;
-        } else {
-          result.cause_ = causeBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -5139,35 +5330,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -5253,12 +5444,14 @@ public final class UserBitShared {
       private java.lang.Object exceptionClass_ = "";
       /**
        * <code>optional string exception_class = 1;</code>
+       * @return Whether the exceptionClass field is set.
        */
       public boolean hasExceptionClass() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string exception_class = 1;</code>
+       * @return The exceptionClass.
        */
       public java.lang.String getExceptionClass() {
         java.lang.Object ref = exceptionClass_;
@@ -5276,6 +5469,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string exception_class = 1;</code>
+       * @return The bytes for exceptionClass.
        */
       public com.google.protobuf.ByteString
           getExceptionClassBytes() {
@@ -5292,6 +5486,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string exception_class = 1;</code>
+       * @param value The exceptionClass to set.
+       * @return This builder for chaining.
        */
       public Builder setExceptionClass(
           java.lang.String value) {
@@ -5305,6 +5501,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string exception_class = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearExceptionClass() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -5314,6 +5511,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string exception_class = 1;</code>
+       * @param value The bytes for exceptionClass to set.
+       * @return This builder for chaining.
        */
       public Builder setExceptionClassBytes(
           com.google.protobuf.ByteString value) {
@@ -5329,12 +5528,14 @@ public final class UserBitShared {
       private java.lang.Object message_ = "";
       /**
        * <code>optional string message = 2;</code>
+       * @return Whether the message field is set.
        */
       public boolean hasMessage() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional string message = 2;</code>
+       * @return The message.
        */
       public java.lang.String getMessage() {
         java.lang.Object ref = message_;
@@ -5352,6 +5553,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string message = 2;</code>
+       * @return The bytes for message.
        */
       public com.google.protobuf.ByteString
           getMessageBytes() {
@@ -5368,6 +5570,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string message = 2;</code>
+       * @param value The message to set.
+       * @return This builder for chaining.
        */
       public Builder setMessage(
           java.lang.String value) {
@@ -5381,6 +5585,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string message = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMessage() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -5390,6 +5595,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string message = 2;</code>
+       * @param value The bytes for message to set.
+       * @return This builder for chaining.
        */
       public Builder setMessageBytes(
           com.google.protobuf.ByteString value) {
@@ -5405,7 +5612,7 @@ public final class UserBitShared {
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper> stackTrace_ =
         java.util.Collections.emptyList();
       private void ensureStackTraceIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000004) != 0)) {
           stackTrace_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper>(stackTrace_);
           bitField0_ |= 0x00000004;
          }
@@ -5634,7 +5841,7 @@ public final class UserBitShared {
           stackTraceBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder>(
                   stackTrace_,
-                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  ((bitField0_ & 0x00000004) != 0),
                   getParentForChildren(),
                   isClean());
           stackTrace_ = null;
@@ -5642,17 +5849,19 @@ public final class UserBitShared {
         return stackTraceBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper cause_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper cause_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder> causeBuilder_;
       /**
        * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+       * @return Whether the cause field is set.
        */
       public boolean hasCause() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
+       * @return The cause.
        */
       public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getCause() {
         if (causeBuilder_ == null) {
@@ -5696,7 +5905,7 @@ public final class UserBitShared {
        */
       public Builder mergeCause(org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper value) {
         if (causeBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               cause_ != null &&
               cause_ != org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance()) {
             cause_ =
@@ -5818,61 +6027,74 @@ public final class UserBitShared {
 
     /**
      * <code>optional string class_name = 1;</code>
+     * @return Whether the className field is set.
      */
     boolean hasClassName();
     /**
      * <code>optional string class_name = 1;</code>
+     * @return The className.
      */
     java.lang.String getClassName();
     /**
      * <code>optional string class_name = 1;</code>
+     * @return The bytes for className.
      */
     com.google.protobuf.ByteString
         getClassNameBytes();
 
     /**
      * <code>optional string file_name = 2;</code>
+     * @return Whether the fileName field is set.
      */
     boolean hasFileName();
     /**
      * <code>optional string file_name = 2;</code>
+     * @return The fileName.
      */
     java.lang.String getFileName();
     /**
      * <code>optional string file_name = 2;</code>
+     * @return The bytes for fileName.
      */
     com.google.protobuf.ByteString
         getFileNameBytes();
 
     /**
      * <code>optional int32 line_number = 3;</code>
+     * @return Whether the lineNumber field is set.
      */
     boolean hasLineNumber();
     /**
      * <code>optional int32 line_number = 3;</code>
+     * @return The lineNumber.
      */
     int getLineNumber();
 
     /**
      * <code>optional string method_name = 4;</code>
+     * @return Whether the methodName field is set.
      */
     boolean hasMethodName();
     /**
      * <code>optional string method_name = 4;</code>
+     * @return The methodName.
      */
     java.lang.String getMethodName();
     /**
      * <code>optional string method_name = 4;</code>
+     * @return The bytes for methodName.
      */
     com.google.protobuf.ByteString
         getMethodNameBytes();
 
     /**
      * <code>optional bool is_native_method = 5;</code>
+     * @return Whether the isNativeMethod field is set.
      */
     boolean hasIsNativeMethod();
     /**
      * <code>optional bool is_native_method = 5;</code>
+     * @return The isNativeMethod.
      */
     boolean getIsNativeMethod();
   }
@@ -5891,9 +6113,14 @@ public final class UserBitShared {
     private StackTraceElementWrapper() {
       className_ = "";
       fileName_ = "";
-      lineNumber_ = 0;
       methodName_ = "";
-      isNativeMethod_ = false;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new StackTraceElementWrapper();
     }
 
     @java.lang.Override
@@ -5985,12 +6212,14 @@ public final class UserBitShared {
     private volatile java.lang.Object className_;
     /**
      * <code>optional string class_name = 1;</code>
+     * @return Whether the className field is set.
      */
     public boolean hasClassName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string class_name = 1;</code>
+     * @return The className.
      */
     public java.lang.String getClassName() {
       java.lang.Object ref = className_;
@@ -6008,6 +6237,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string class_name = 1;</code>
+     * @return The bytes for className.
      */
     public com.google.protobuf.ByteString
         getClassNameBytes() {
@@ -6027,12 +6257,14 @@ public final class UserBitShared {
     private volatile java.lang.Object fileName_;
     /**
      * <code>optional string file_name = 2;</code>
+     * @return Whether the fileName field is set.
      */
     public boolean hasFileName() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional string file_name = 2;</code>
+     * @return The fileName.
      */
     public java.lang.String getFileName() {
       java.lang.Object ref = fileName_;
@@ -6050,6 +6282,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string file_name = 2;</code>
+     * @return The bytes for fileName.
      */
     public com.google.protobuf.ByteString
         getFileNameBytes() {
@@ -6069,12 +6302,14 @@ public final class UserBitShared {
     private int lineNumber_;
     /**
      * <code>optional int32 line_number = 3;</code>
+     * @return Whether the lineNumber field is set.
      */
     public boolean hasLineNumber() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional int32 line_number = 3;</code>
+     * @return The lineNumber.
      */
     public int getLineNumber() {
       return lineNumber_;
@@ -6084,12 +6319,14 @@ public final class UserBitShared {
     private volatile java.lang.Object methodName_;
     /**
      * <code>optional string method_name = 4;</code>
+     * @return Whether the methodName field is set.
      */
     public boolean hasMethodName() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional string method_name = 4;</code>
+     * @return The methodName.
      */
     public java.lang.String getMethodName() {
       java.lang.Object ref = methodName_;
@@ -6107,6 +6344,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string method_name = 4;</code>
+     * @return The bytes for methodName.
      */
     public com.google.protobuf.ByteString
         getMethodNameBytes() {
@@ -6126,12 +6364,14 @@ public final class UserBitShared {
     private boolean isNativeMethod_;
     /**
      * <code>optional bool is_native_method = 5;</code>
+     * @return Whether the isNativeMethod field is set.
      */
     public boolean hasIsNativeMethod() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional bool is_native_method = 5;</code>
+     * @return The isNativeMethod.
      */
     public boolean getIsNativeMethod() {
       return isNativeMethod_;
@@ -6151,19 +6391,19 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, className_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, fileName_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt32(3, lineNumber_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, methodName_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeBool(5, isNativeMethod_);
       }
       unknownFields.writeTo(output);
@@ -6175,20 +6415,20 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, className_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, fileName_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, lineNumber_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, methodName_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(5, isNativeMethod_);
       }
@@ -6207,34 +6447,33 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper other = (org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper) obj;
 
-      boolean result = true;
-      result = result && (hasClassName() == other.hasClassName());
+      if (hasClassName() != other.hasClassName()) return false;
       if (hasClassName()) {
-        result = result && getClassName()
-            .equals(other.getClassName());
+        if (!getClassName()
+            .equals(other.getClassName())) return false;
       }
-      result = result && (hasFileName() == other.hasFileName());
+      if (hasFileName() != other.hasFileName()) return false;
       if (hasFileName()) {
-        result = result && getFileName()
-            .equals(other.getFileName());
+        if (!getFileName()
+            .equals(other.getFileName())) return false;
       }
-      result = result && (hasLineNumber() == other.hasLineNumber());
+      if (hasLineNumber() != other.hasLineNumber()) return false;
       if (hasLineNumber()) {
-        result = result && (getLineNumber()
-            == other.getLineNumber());
+        if (getLineNumber()
+            != other.getLineNumber()) return false;
       }
-      result = result && (hasMethodName() == other.hasMethodName());
+      if (hasMethodName() != other.hasMethodName()) return false;
       if (hasMethodName()) {
-        result = result && getMethodName()
-            .equals(other.getMethodName());
+        if (!getMethodName()
+            .equals(other.getMethodName())) return false;
       }
-      result = result && (hasIsNativeMethod() == other.hasIsNativeMethod());
+      if (hasIsNativeMethod() != other.hasIsNativeMethod()) return false;
       if (hasIsNativeMethod()) {
-        result = result && (getIsNativeMethod()
-            == other.getIsNativeMethod());
+        if (getIsNativeMethod()
+            != other.getIsNativeMethod()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -6436,26 +6675,26 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper result = new org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.className_ = className_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.fileName_ = fileName_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.lineNumber_ = lineNumber_;
           to_bitField0_ |= 0x00000004;
         }
-        result.lineNumber_ = lineNumber_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.methodName_ = methodName_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.isNativeMethod_ = isNativeMethod_;
           to_bitField0_ |= 0x00000010;
         }
-        result.isNativeMethod_ = isNativeMethod_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6463,35 +6702,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -6559,12 +6798,14 @@ public final class UserBitShared {
       private java.lang.Object className_ = "";
       /**
        * <code>optional string class_name = 1;</code>
+       * @return Whether the className field is set.
        */
       public boolean hasClassName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string class_name = 1;</code>
+       * @return The className.
        */
       public java.lang.String getClassName() {
         java.lang.Object ref = className_;
@@ -6582,6 +6823,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string class_name = 1;</code>
+       * @return The bytes for className.
        */
       public com.google.protobuf.ByteString
           getClassNameBytes() {
@@ -6598,6 +6840,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string class_name = 1;</code>
+       * @param value The className to set.
+       * @return This builder for chaining.
        */
       public Builder setClassName(
           java.lang.String value) {
@@ -6611,6 +6855,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string class_name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearClassName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -6620,6 +6865,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string class_name = 1;</code>
+       * @param value The bytes for className to set.
+       * @return This builder for chaining.
        */
       public Builder setClassNameBytes(
           com.google.protobuf.ByteString value) {
@@ -6635,12 +6882,14 @@ public final class UserBitShared {
       private java.lang.Object fileName_ = "";
       /**
        * <code>optional string file_name = 2;</code>
+       * @return Whether the fileName field is set.
        */
       public boolean hasFileName() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional string file_name = 2;</code>
+       * @return The fileName.
        */
       public java.lang.String getFileName() {
         java.lang.Object ref = fileName_;
@@ -6658,6 +6907,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string file_name = 2;</code>
+       * @return The bytes for fileName.
        */
       public com.google.protobuf.ByteString
           getFileNameBytes() {
@@ -6674,6 +6924,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string file_name = 2;</code>
+       * @param value The fileName to set.
+       * @return This builder for chaining.
        */
       public Builder setFileName(
           java.lang.String value) {
@@ -6687,6 +6939,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string file_name = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFileName() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -6696,6 +6949,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string file_name = 2;</code>
+       * @param value The bytes for fileName to set.
+       * @return This builder for chaining.
        */
       public Builder setFileNameBytes(
           com.google.protobuf.ByteString value) {
@@ -6711,18 +6966,22 @@ public final class UserBitShared {
       private int lineNumber_ ;
       /**
        * <code>optional int32 line_number = 3;</code>
+       * @return Whether the lineNumber field is set.
        */
       public boolean hasLineNumber() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional int32 line_number = 3;</code>
+       * @return The lineNumber.
        */
       public int getLineNumber() {
         return lineNumber_;
       }
       /**
        * <code>optional int32 line_number = 3;</code>
+       * @param value The lineNumber to set.
+       * @return This builder for chaining.
        */
       public Builder setLineNumber(int value) {
         bitField0_ |= 0x00000004;
@@ -6732,6 +6991,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 line_number = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLineNumber() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -6743,12 +7003,14 @@ public final class UserBitShared {
       private java.lang.Object methodName_ = "";
       /**
        * <code>optional string method_name = 4;</code>
+       * @return Whether the methodName field is set.
        */
       public boolean hasMethodName() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional string method_name = 4;</code>
+       * @return The methodName.
        */
       public java.lang.String getMethodName() {
         java.lang.Object ref = methodName_;
@@ -6766,6 +7028,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string method_name = 4;</code>
+       * @return The bytes for methodName.
        */
       public com.google.protobuf.ByteString
           getMethodNameBytes() {
@@ -6782,6 +7045,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string method_name = 4;</code>
+       * @param value The methodName to set.
+       * @return This builder for chaining.
        */
       public Builder setMethodName(
           java.lang.String value) {
@@ -6795,6 +7060,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string method_name = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMethodName() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -6804,6 +7070,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string method_name = 4;</code>
+       * @param value The bytes for methodName to set.
+       * @return This builder for chaining.
        */
       public Builder setMethodNameBytes(
           com.google.protobuf.ByteString value) {
@@ -6819,18 +7087,22 @@ public final class UserBitShared {
       private boolean isNativeMethod_ ;
       /**
        * <code>optional bool is_native_method = 5;</code>
+       * @return Whether the isNativeMethod field is set.
        */
       public boolean hasIsNativeMethod() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional bool is_native_method = 5;</code>
+       * @return The isNativeMethod.
        */
       public boolean getIsNativeMethod() {
         return isNativeMethod_;
       }
       /**
        * <code>optional bool is_native_method = 5;</code>
+       * @param value The isNativeMethod to set.
+       * @return This builder for chaining.
        */
       public Builder setIsNativeMethod(boolean value) {
         bitField0_ |= 0x00000010;
@@ -6840,6 +7112,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional bool is_native_method = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearIsNativeMethod() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -6906,37 +7179,45 @@ public final class UserBitShared {
 
     /**
      * <code>optional int32 start_column = 2;</code>
+     * @return Whether the startColumn field is set.
      */
     boolean hasStartColumn();
     /**
      * <code>optional int32 start_column = 2;</code>
+     * @return The startColumn.
      */
     int getStartColumn();
 
     /**
      * <code>optional int32 start_row = 3;</code>
+     * @return Whether the startRow field is set.
      */
     boolean hasStartRow();
     /**
      * <code>optional int32 start_row = 3;</code>
+     * @return The startRow.
      */
     int getStartRow();
 
     /**
      * <code>optional int32 end_column = 4;</code>
+     * @return Whether the endColumn field is set.
      */
     boolean hasEndColumn();
     /**
      * <code>optional int32 end_column = 4;</code>
+     * @return The endColumn.
      */
     int getEndColumn();
 
     /**
      * <code>optional int32 end_row = 5;</code>
+     * @return Whether the endRow field is set.
      */
     boolean hasEndRow();
     /**
      * <code>optional int32 end_row = 5;</code>
+     * @return The endRow.
      */
     int getEndRow();
   }
@@ -6953,10 +7234,13 @@ public final class UserBitShared {
       super(builder);
     }
     private ParsingError() {
-      startColumn_ = 0;
-      startRow_ = 0;
-      endColumn_ = 0;
-      endRow_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ParsingError();
     }
 
     @java.lang.Override
@@ -7040,12 +7324,14 @@ public final class UserBitShared {
     private int startColumn_;
     /**
      * <code>optional int32 start_column = 2;</code>
+     * @return Whether the startColumn field is set.
      */
     public boolean hasStartColumn() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional int32 start_column = 2;</code>
+     * @return The startColumn.
      */
     public int getStartColumn() {
       return startColumn_;
@@ -7055,12 +7341,14 @@ public final class UserBitShared {
     private int startRow_;
     /**
      * <code>optional int32 start_row = 3;</code>
+     * @return Whether the startRow field is set.
      */
     public boolean hasStartRow() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional int32 start_row = 3;</code>
+     * @return The startRow.
      */
     public int getStartRow() {
       return startRow_;
@@ -7070,12 +7358,14 @@ public final class UserBitShared {
     private int endColumn_;
     /**
      * <code>optional int32 end_column = 4;</code>
+     * @return Whether the endColumn field is set.
      */
     public boolean hasEndColumn() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional int32 end_column = 4;</code>
+     * @return The endColumn.
      */
     public int getEndColumn() {
       return endColumn_;
@@ -7085,12 +7375,14 @@ public final class UserBitShared {
     private int endRow_;
     /**
      * <code>optional int32 end_row = 5;</code>
+     * @return Whether the endRow field is set.
      */
     public boolean hasEndRow() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional int32 end_row = 5;</code>
+     * @return The endRow.
      */
     public int getEndRow() {
       return endRow_;
@@ -7110,16 +7402,16 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeInt32(2, startColumn_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeInt32(3, startRow_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt32(4, endColumn_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeInt32(5, endRow_);
       }
       unknownFields.writeTo(output);
@@ -7131,19 +7423,19 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, startColumn_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, startRow_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, endColumn_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(5, endRow_);
       }
@@ -7162,29 +7454,28 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.ParsingError other = (org.apache.drill.exec.proto.UserBitShared.ParsingError) obj;
 
-      boolean result = true;
-      result = result && (hasStartColumn() == other.hasStartColumn());
+      if (hasStartColumn() != other.hasStartColumn()) return false;
       if (hasStartColumn()) {
-        result = result && (getStartColumn()
-            == other.getStartColumn());
+        if (getStartColumn()
+            != other.getStartColumn()) return false;
       }
-      result = result && (hasStartRow() == other.hasStartRow());
+      if (hasStartRow() != other.hasStartRow()) return false;
       if (hasStartRow()) {
-        result = result && (getStartRow()
-            == other.getStartRow());
+        if (getStartRow()
+            != other.getStartRow()) return false;
       }
-      result = result && (hasEndColumn() == other.hasEndColumn());
+      if (hasEndColumn() != other.hasEndColumn()) return false;
       if (hasEndColumn()) {
-        result = result && (getEndColumn()
-            == other.getEndColumn());
+        if (getEndColumn()
+            != other.getEndColumn()) return false;
       }
-      result = result && (hasEndRow() == other.hasEndRow());
+      if (hasEndRow() != other.hasEndRow()) return false;
       if (hasEndRow()) {
-        result = result && (getEndRow()
-            == other.getEndRow());
+        if (getEndRow()
+            != other.getEndRow()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -7379,22 +7670,22 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.ParsingError result = new org.apache.drill.exec.proto.UserBitShared.ParsingError(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.startColumn_ = startColumn_;
           to_bitField0_ |= 0x00000001;
         }
-        result.startColumn_ = startColumn_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.startRow_ = startRow_;
           to_bitField0_ |= 0x00000002;
         }
-        result.startRow_ = startRow_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.endColumn_ = endColumn_;
           to_bitField0_ |= 0x00000004;
         }
-        result.endColumn_ = endColumn_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.endRow_ = endRow_;
           to_bitField0_ |= 0x00000008;
         }
-        result.endRow_ = endRow_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -7402,35 +7693,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -7489,18 +7780,22 @@ public final class UserBitShared {
       private int startColumn_ ;
       /**
        * <code>optional int32 start_column = 2;</code>
+       * @return Whether the startColumn field is set.
        */
       public boolean hasStartColumn() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional int32 start_column = 2;</code>
+       * @return The startColumn.
        */
       public int getStartColumn() {
         return startColumn_;
       }
       /**
        * <code>optional int32 start_column = 2;</code>
+       * @param value The startColumn to set.
+       * @return This builder for chaining.
        */
       public Builder setStartColumn(int value) {
         bitField0_ |= 0x00000001;
@@ -7510,6 +7805,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 start_column = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStartColumn() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -7521,18 +7817,22 @@ public final class UserBitShared {
       private int startRow_ ;
       /**
        * <code>optional int32 start_row = 3;</code>
+       * @return Whether the startRow field is set.
        */
       public boolean hasStartRow() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional int32 start_row = 3;</code>
+       * @return The startRow.
        */
       public int getStartRow() {
         return startRow_;
       }
       /**
        * <code>optional int32 start_row = 3;</code>
+       * @param value The startRow to set.
+       * @return This builder for chaining.
        */
       public Builder setStartRow(int value) {
         bitField0_ |= 0x00000002;
@@ -7542,6 +7842,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 start_row = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStartRow() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -7553,18 +7854,22 @@ public final class UserBitShared {
       private int endColumn_ ;
       /**
        * <code>optional int32 end_column = 4;</code>
+       * @return Whether the endColumn field is set.
        */
       public boolean hasEndColumn() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional int32 end_column = 4;</code>
+       * @return The endColumn.
        */
       public int getEndColumn() {
         return endColumn_;
       }
       /**
        * <code>optional int32 end_column = 4;</code>
+       * @param value The endColumn to set.
+       * @return This builder for chaining.
        */
       public Builder setEndColumn(int value) {
         bitField0_ |= 0x00000004;
@@ -7574,6 +7879,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 end_column = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearEndColumn() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -7585,18 +7891,22 @@ public final class UserBitShared {
       private int endRow_ ;
       /**
        * <code>optional int32 end_row = 5;</code>
+       * @return Whether the endRow field is set.
        */
       public boolean hasEndRow() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional int32 end_row = 5;</code>
+       * @return The endRow.
        */
       public int getEndRow() {
         return endRow_;
       }
       /**
        * <code>optional int32 end_row = 5;</code>
+       * @param value The endRow to set.
+       * @return This builder for chaining.
        */
       public Builder setEndRow(int value) {
         bitField0_ |= 0x00000008;
@@ -7606,6 +7916,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 end_row = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearEndRow() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -7672,10 +7983,12 @@ public final class UserBitShared {
 
     /**
      * <code>optional int32 record_count = 1;</code>
+     * @return Whether the recordCount field is set.
      */
     boolean hasRecordCount();
     /**
      * <code>optional int32 record_count = 1;</code>
+     * @return The recordCount.
      */
     int getRecordCount();
 
@@ -7705,10 +8018,12 @@ public final class UserBitShared {
 
     /**
      * <code>optional bool carries_two_byte_selection_vector = 3;</code>
+     * @return Whether the carriesTwoByteSelectionVector field is set.
      */
     boolean hasCarriesTwoByteSelectionVector();
     /**
      * <code>optional bool carries_two_byte_selection_vector = 3;</code>
+     * @return The carriesTwoByteSelectionVector.
      */
     boolean getCarriesTwoByteSelectionVector();
 
@@ -7719,6 +8034,7 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional int32 affected_rows_count = 4;</code>
+     * @return Whether the affectedRowsCount field is set.
      */
     boolean hasAffectedRowsCount();
     /**
@@ -7728,6 +8044,7 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional int32 affected_rows_count = 4;</code>
+     * @return The affectedRowsCount.
      */
     int getAffectedRowsCount();
   }
@@ -7744,10 +8061,14 @@ public final class UserBitShared {
       super(builder);
     }
     private RecordBatchDef() {
-      recordCount_ = 0;
       field_ = java.util.Collections.emptyList();
-      carriesTwoByteSelectionVector_ = false;
-      affectedRowsCount_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new RecordBatchDef();
     }
 
     @java.lang.Override
@@ -7780,7 +8101,7 @@ public final class UserBitShared {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 field_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.SerializedField>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -7813,7 +8134,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           field_ = java.util.Collections.unmodifiableList(field_);
         }
         this.unknownFields = unknownFields.build();
@@ -7838,12 +8159,14 @@ public final class UserBitShared {
     private int recordCount_;
     /**
      * <code>optional int32 record_count = 1;</code>
+     * @return Whether the recordCount field is set.
      */
     public boolean hasRecordCount() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional int32 record_count = 1;</code>
+     * @return The recordCount.
      */
     public int getRecordCount() {
       return recordCount_;
@@ -7888,12 +8211,14 @@ public final class UserBitShared {
     private boolean carriesTwoByteSelectionVector_;
     /**
      * <code>optional bool carries_two_byte_selection_vector = 3;</code>
+     * @return Whether the carriesTwoByteSelectionVector field is set.
      */
     public boolean hasCarriesTwoByteSelectionVector() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional bool carries_two_byte_selection_vector = 3;</code>
+     * @return The carriesTwoByteSelectionVector.
      */
     public boolean getCarriesTwoByteSelectionVector() {
       return carriesTwoByteSelectionVector_;
@@ -7908,9 +8233,10 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional int32 affected_rows_count = 4;</code>
+     * @return Whether the affectedRowsCount field is set.
      */
     public boolean hasAffectedRowsCount() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -7919,6 +8245,7 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional int32 affected_rows_count = 4;</code>
+     * @return The affectedRowsCount.
      */
     public int getAffectedRowsCount() {
       return affectedRowsCount_;
@@ -7938,16 +8265,16 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeInt32(1, recordCount_);
       }
       for (int i = 0; i < field_.size(); i++) {
         output.writeMessage(2, field_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBool(3, carriesTwoByteSelectionVector_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt32(4, affectedRowsCount_);
       }
       unknownFields.writeTo(output);
@@ -7959,7 +8286,7 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, recordCount_);
       }
@@ -7967,11 +8294,11 @@ public final class UserBitShared {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, field_.get(i));
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(3, carriesTwoByteSelectionVector_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, affectedRowsCount_);
       }
@@ -7990,26 +8317,25 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.RecordBatchDef other = (org.apache.drill.exec.proto.UserBitShared.RecordBatchDef) obj;
 
-      boolean result = true;
-      result = result && (hasRecordCount() == other.hasRecordCount());
+      if (hasRecordCount() != other.hasRecordCount()) return false;
       if (hasRecordCount()) {
-        result = result && (getRecordCount()
-            == other.getRecordCount());
+        if (getRecordCount()
+            != other.getRecordCount()) return false;
       }
-      result = result && getFieldList()
-          .equals(other.getFieldList());
-      result = result && (hasCarriesTwoByteSelectionVector() == other.hasCarriesTwoByteSelectionVector());
+      if (!getFieldList()
+          .equals(other.getFieldList())) return false;
+      if (hasCarriesTwoByteSelectionVector() != other.hasCarriesTwoByteSelectionVector()) return false;
       if (hasCarriesTwoByteSelectionVector()) {
-        result = result && (getCarriesTwoByteSelectionVector()
-            == other.getCarriesTwoByteSelectionVector());
+        if (getCarriesTwoByteSelectionVector()
+            != other.getCarriesTwoByteSelectionVector()) return false;
       }
-      result = result && (hasAffectedRowsCount() == other.hasAffectedRowsCount());
+      if (hasAffectedRowsCount() != other.hasAffectedRowsCount()) return false;
       if (hasAffectedRowsCount()) {
-        result = result && (getAffectedRowsCount()
-            == other.getAffectedRowsCount());
+        if (getAffectedRowsCount()
+            != other.getAffectedRowsCount()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -8210,12 +8536,12 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.RecordBatchDef result = new org.apache.drill.exec.proto.UserBitShared.RecordBatchDef(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.recordCount_ = recordCount_;
           to_bitField0_ |= 0x00000001;
         }
-        result.recordCount_ = recordCount_;
         if (fieldBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             field_ = java.util.Collections.unmodifiableList(field_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -8223,14 +8549,14 @@ public final class UserBitShared {
         } else {
           result.field_ = fieldBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.carriesTwoByteSelectionVector_ = carriesTwoByteSelectionVector_;
           to_bitField0_ |= 0x00000002;
         }
-        result.carriesTwoByteSelectionVector_ = carriesTwoByteSelectionVector_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.affectedRowsCount_ = affectedRowsCount_;
           to_bitField0_ |= 0x00000004;
         }
-        result.affectedRowsCount_ = affectedRowsCount_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -8238,35 +8564,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -8348,18 +8674,22 @@ public final class UserBitShared {
       private int recordCount_ ;
       /**
        * <code>optional int32 record_count = 1;</code>
+       * @return Whether the recordCount field is set.
        */
       public boolean hasRecordCount() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional int32 record_count = 1;</code>
+       * @return The recordCount.
        */
       public int getRecordCount() {
         return recordCount_;
       }
       /**
        * <code>optional int32 record_count = 1;</code>
+       * @param value The recordCount to set.
+       * @return This builder for chaining.
        */
       public Builder setRecordCount(int value) {
         bitField0_ |= 0x00000001;
@@ -8369,6 +8699,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 record_count = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearRecordCount() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -8380,7 +8711,7 @@ public final class UserBitShared {
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> field_ =
         java.util.Collections.emptyList();
       private void ensureFieldIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           field_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.SerializedField>(field_);
           bitField0_ |= 0x00000002;
          }
@@ -8609,7 +8940,7 @@ public final class UserBitShared {
           fieldBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>(
                   field_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           field_ = null;
@@ -8620,18 +8951,22 @@ public final class UserBitShared {
       private boolean carriesTwoByteSelectionVector_ ;
       /**
        * <code>optional bool carries_two_byte_selection_vector = 3;</code>
+       * @return Whether the carriesTwoByteSelectionVector field is set.
        */
       public boolean hasCarriesTwoByteSelectionVector() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional bool carries_two_byte_selection_vector = 3;</code>
+       * @return The carriesTwoByteSelectionVector.
        */
       public boolean getCarriesTwoByteSelectionVector() {
         return carriesTwoByteSelectionVector_;
       }
       /**
        * <code>optional bool carries_two_byte_selection_vector = 3;</code>
+       * @param value The carriesTwoByteSelectionVector to set.
+       * @return This builder for chaining.
        */
       public Builder setCarriesTwoByteSelectionVector(boolean value) {
         bitField0_ |= 0x00000004;
@@ -8641,6 +8976,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional bool carries_two_byte_selection_vector = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCarriesTwoByteSelectionVector() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -8657,9 +8993,10 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional int32 affected_rows_count = 4;</code>
+       * @return Whether the affectedRowsCount field is set.
        */
       public boolean hasAffectedRowsCount() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -8668,6 +9005,7 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional int32 affected_rows_count = 4;</code>
+       * @return The affectedRowsCount.
        */
       public int getAffectedRowsCount() {
         return affectedRowsCount_;
@@ -8679,6 +9017,8 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional int32 affected_rows_count = 4;</code>
+       * @param value The affectedRowsCount to set.
+       * @return This builder for chaining.
        */
       public Builder setAffectedRowsCount(int value) {
         bitField0_ |= 0x00000008;
@@ -8693,6 +9033,7 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional int32 affected_rows_count = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAffectedRowsCount() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -8759,33 +9100,40 @@ public final class UserBitShared {
 
     /**
      * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+     * @return Whether the type field is set.
      */
     boolean hasType();
     /**
      * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+     * @return The type.
      */
     org.apache.drill.exec.proto.UserBitShared.NamePart.Type getType();
 
     /**
      * <code>optional string name = 2;</code>
+     * @return Whether the name field is set.
      */
     boolean hasName();
     /**
      * <code>optional string name = 2;</code>
+     * @return The name.
      */
     java.lang.String getName();
     /**
      * <code>optional string name = 2;</code>
+     * @return The bytes for name.
      */
     com.google.protobuf.ByteString
         getNameBytes();
 
     /**
      * <code>optional .exec.shared.NamePart child = 3;</code>
+     * @return Whether the child field is set.
      */
     boolean hasChild();
     /**
      * <code>optional .exec.shared.NamePart child = 3;</code>
+     * @return The child.
      */
     org.apache.drill.exec.proto.UserBitShared.NamePart getChild();
     /**
@@ -8808,6 +9156,13 @@ public final class UserBitShared {
     private NamePart() {
       type_ = 0;
       name_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new NamePart();
     }
 
     @java.lang.Override
@@ -8854,7 +9209,7 @@ public final class UserBitShared {
             }
             case 26: {
               org.apache.drill.exec.proto.UserBitShared.NamePart.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = child_.toBuilder();
               }
               child_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.NamePart.PARSER, extensionRegistry);
@@ -8927,6 +9282,8 @@ public final class UserBitShared {
       }
 
       /**
+       * @param value The numeric wire value of the corresponding enum entry.
+       * @return The enum associated with the given numeric wire value.
        * @deprecated Use {@link #forNumber(int)} instead.
        */
       @java.lang.Deprecated
@@ -8934,6 +9291,10 @@ public final class UserBitShared {
         return forNumber(value);
       }
 
+      /**
+       * @param value The numeric wire value of the corresponding enum entry.
+       * @return The enum associated with the given numeric wire value.
+       */
       public static Type forNumber(int value) {
         switch (value) {
           case 0: return NAME;
@@ -8992,12 +9353,14 @@ public final class UserBitShared {
     private int type_;
     /**
      * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+     * @return Whether the type field is set.
      */
     public boolean hasType() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+     * @return The type.
      */
     public org.apache.drill.exec.proto.UserBitShared.NamePart.Type getType() {
       @SuppressWarnings("deprecation")
@@ -9009,12 +9372,14 @@ public final class UserBitShared {
     private volatile java.lang.Object name_;
     /**
      * <code>optional string name = 2;</code>
+     * @return Whether the name field is set.
      */
     public boolean hasName() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional string name = 2;</code>
+     * @return The name.
      */
     public java.lang.String getName() {
       java.lang.Object ref = name_;
@@ -9032,6 +9397,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string name = 2;</code>
+     * @return The bytes for name.
      */
     public com.google.protobuf.ByteString
         getNameBytes() {
@@ -9051,12 +9417,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.UserBitShared.NamePart child_;
     /**
      * <code>optional .exec.shared.NamePart child = 3;</code>
+     * @return Whether the child field is set.
      */
     public boolean hasChild() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.NamePart child = 3;</code>
+     * @return The child.
      */
     public org.apache.drill.exec.proto.UserBitShared.NamePart getChild() {
       return child_ == null ? org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance() : child_;
@@ -9082,13 +9450,13 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, type_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, name_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getChild());
       }
       unknownFields.writeTo(output);
@@ -9100,14 +9468,14 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, type_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, name_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getChild());
       }
@@ -9126,23 +9494,22 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.NamePart other = (org.apache.drill.exec.proto.UserBitShared.NamePart) obj;
 
-      boolean result = true;
-      result = result && (hasType() == other.hasType());
+      if (hasType() != other.hasType()) return false;
       if (hasType()) {
-        result = result && type_ == other.type_;
+        if (type_ != other.type_) return false;
       }
-      result = result && (hasName() == other.hasName());
+      if (hasName() != other.hasName()) return false;
       if (hasName()) {
-        result = result && getName()
-            .equals(other.getName());
+        if (!getName()
+            .equals(other.getName())) return false;
       }
-      result = result && (hasChild() == other.hasChild());
+      if (hasChild() != other.hasChild()) return false;
       if (hasChild()) {
-        result = result && getChild()
-            .equals(other.getChild());
+        if (!getChild()
+            .equals(other.getChild())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -9336,21 +9703,21 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.NamePart result = new org.apache.drill.exec.proto.UserBitShared.NamePart(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.type_ = type_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.name_ = name_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (childBuilder_ == null) {
+            result.child_ = child_;
+          } else {
+            result.child_ = childBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
-        }
-        if (childBuilder_ == null) {
-          result.child_ = child_;
-        } else {
-          result.child_ = childBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -9359,35 +9726,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -9445,12 +9812,14 @@ public final class UserBitShared {
       private int type_ = 0;
       /**
        * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+       * @return Whether the type field is set.
        */
       public boolean hasType() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+       * @return The type.
        */
       public org.apache.drill.exec.proto.UserBitShared.NamePart.Type getType() {
         @SuppressWarnings("deprecation")
@@ -9459,6 +9828,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
        */
       public Builder setType(org.apache.drill.exec.proto.UserBitShared.NamePart.Type value) {
         if (value == null) {
@@ -9471,6 +9842,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -9482,12 +9854,14 @@ public final class UserBitShared {
       private java.lang.Object name_ = "";
       /**
        * <code>optional string name = 2;</code>
+       * @return Whether the name field is set.
        */
       public boolean hasName() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional string name = 2;</code>
+       * @return The name.
        */
       public java.lang.String getName() {
         java.lang.Object ref = name_;
@@ -9505,6 +9879,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string name = 2;</code>
+       * @return The bytes for name.
        */
       public com.google.protobuf.ByteString
           getNameBytes() {
@@ -9521,6 +9896,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string name = 2;</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
        */
       public Builder setName(
           java.lang.String value) {
@@ -9534,6 +9911,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string name = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearName() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -9543,6 +9921,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string name = 2;</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
        */
       public Builder setNameBytes(
           com.google.protobuf.ByteString value) {
@@ -9555,17 +9935,19 @@ public final class UserBitShared {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.NamePart child_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.NamePart child_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder> childBuilder_;
       /**
        * <code>optional .exec.shared.NamePart child = 3;</code>
+       * @return Whether the child field is set.
        */
       public boolean hasChild() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.NamePart child = 3;</code>
+       * @return The child.
        */
       public org.apache.drill.exec.proto.UserBitShared.NamePart getChild() {
         if (childBuilder_ == null) {
@@ -9609,7 +9991,7 @@ public final class UserBitShared {
        */
       public Builder mergeChild(org.apache.drill.exec.proto.UserBitShared.NamePart value) {
         if (childBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               child_ != null &&
               child_ != org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance()) {
             child_ =
@@ -9735,6 +10117,7 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional .common.MajorType major_type = 1;</code>
+     * @return Whether the majorType field is set.
      */
     boolean hasMajorType();
     /**
@@ -9743,6 +10126,7 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional .common.MajorType major_type = 1;</code>
+     * @return The majorType.
      */
     org.apache.drill.common.types.TypeProtos.MajorType getMajorType();
     /**
@@ -9756,10 +10140,12 @@ public final class UserBitShared {
 
     /**
      * <code>optional .exec.shared.NamePart name_part = 2;</code>
+     * @return Whether the namePart field is set.
      */
     boolean hasNamePart();
     /**
      * <code>optional .exec.shared.NamePart name_part = 2;</code>
+     * @return The namePart.
      */
     org.apache.drill.exec.proto.UserBitShared.NamePart getNamePart();
     /**
@@ -9813,28 +10199,34 @@ public final class UserBitShared {
 
     /**
      * <code>optional int32 value_count = 4;</code>
+     * @return Whether the valueCount field is set.
      */
     boolean hasValueCount();
     /**
      * <code>optional int32 value_count = 4;</code>
+     * @return The valueCount.
      */
     int getValueCount();
 
     /**
      * <code>optional int32 var_byte_length = 5;</code>
+     * @return Whether the varByteLength field is set.
      */
     boolean hasVarByteLength();
     /**
      * <code>optional int32 var_byte_length = 5;</code>
+     * @return The varByteLength.
      */
     int getVarByteLength();
 
     /**
      * <code>optional int32 buffer_length = 7;</code>
+     * @return Whether the bufferLength field is set.
      */
     boolean hasBufferLength();
     /**
      * <code>optional int32 buffer_length = 7;</code>
+     * @return The bufferLength.
      */
     int getBufferLength();
   }
@@ -9852,9 +10244,13 @@ public final class UserBitShared {
     }
     private SerializedField() {
       child_ = java.util.Collections.emptyList();
-      valueCount_ = 0;
-      varByteLength_ = 0;
-      bufferLength_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SerializedField();
     }
 
     @java.lang.Override
@@ -9883,7 +10279,7 @@ public final class UserBitShared {
               break;
             case 10: {
               org.apache.drill.common.types.TypeProtos.MajorType.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = majorType_.toBuilder();
               }
               majorType_ = input.readMessage(org.apache.drill.common.types.TypeProtos.MajorType.PARSER, extensionRegistry);
@@ -9896,7 +10292,7 @@ public final class UserBitShared {
             }
             case 18: {
               org.apache.drill.exec.proto.UserBitShared.NamePart.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = namePart_.toBuilder();
               }
               namePart_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.NamePart.PARSER, extensionRegistry);
@@ -9908,7 +10304,7 @@ public final class UserBitShared {
               break;
             }
             case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
                 child_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.SerializedField>();
                 mutable_bitField0_ |= 0x00000004;
               }
@@ -9946,7 +10342,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
           child_ = java.util.Collections.unmodifiableList(child_);
         }
         this.unknownFields = unknownFields.build();
@@ -9975,9 +10371,10 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional .common.MajorType major_type = 1;</code>
+     * @return Whether the majorType field is set.
      */
     public boolean hasMajorType() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -9985,6 +10382,7 @@ public final class UserBitShared {
      * </pre>
      *
      * <code>optional .common.MajorType major_type = 1;</code>
+     * @return The majorType.
      */
     public org.apache.drill.common.types.TypeProtos.MajorType getMajorType() {
       return majorType_ == null ? org.apache.drill.common.types.TypeProtos.MajorType.getDefaultInstance() : majorType_;
@@ -10004,12 +10402,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.UserBitShared.NamePart namePart_;
     /**
      * <code>optional .exec.shared.NamePart name_part = 2;</code>
+     * @return Whether the namePart field is set.
      */
     public boolean hasNamePart() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.NamePart name_part = 2;</code>
+     * @return The namePart.
      */
     public org.apache.drill.exec.proto.UserBitShared.NamePart getNamePart() {
       return namePart_ == null ? org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance() : namePart_;
@@ -10080,12 +10480,14 @@ public final class UserBitShared {
     private int valueCount_;
     /**
      * <code>optional int32 value_count = 4;</code>
+     * @return Whether the valueCount field is set.
      */
     public boolean hasValueCount() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional int32 value_count = 4;</code>
+     * @return The valueCount.
      */
     public int getValueCount() {
       return valueCount_;
@@ -10095,12 +10497,14 @@ public final class UserBitShared {
     private int varByteLength_;
     /**
      * <code>optional int32 var_byte_length = 5;</code>
+     * @return Whether the varByteLength field is set.
      */
     public boolean hasVarByteLength() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional int32 var_byte_length = 5;</code>
+     * @return The varByteLength.
      */
     public int getVarByteLength() {
       return varByteLength_;
@@ -10110,12 +10514,14 @@ public final class UserBitShared {
     private int bufferLength_;
     /**
      * <code>optional int32 buffer_length = 7;</code>
+     * @return Whether the bufferLength field is set.
      */
     public boolean hasBufferLength() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional int32 buffer_length = 7;</code>
+     * @return The bufferLength.
      */
     public int getBufferLength() {
       return bufferLength_;
@@ -10135,22 +10541,22 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getMajorType());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getNamePart());
       }
       for (int i = 0; i < child_.size(); i++) {
         output.writeMessage(3, child_.get(i));
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt32(4, valueCount_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeInt32(5, varByteLength_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeInt32(7, bufferLength_);
       }
       unknownFields.writeTo(output);
@@ -10162,11 +10568,11 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getMajorType());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getNamePart());
       }
@@ -10174,15 +10580,15 @@ public final class UserBitShared {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, child_.get(i));
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, valueCount_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(5, varByteLength_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(7, bufferLength_);
       }
@@ -10201,36 +10607,35 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.SerializedField other = (org.apache.drill.exec.proto.UserBitShared.SerializedField) obj;
 
-      boolean result = true;
-      result = result && (hasMajorType() == other.hasMajorType());
+      if (hasMajorType() != other.hasMajorType()) return false;
       if (hasMajorType()) {
-        result = result && getMajorType()
-            .equals(other.getMajorType());
+        if (!getMajorType()
+            .equals(other.getMajorType())) return false;
       }
-      result = result && (hasNamePart() == other.hasNamePart());
+      if (hasNamePart() != other.hasNamePart()) return false;
       if (hasNamePart()) {
-        result = result && getNamePart()
-            .equals(other.getNamePart());
+        if (!getNamePart()
+            .equals(other.getNamePart())) return false;
       }
-      result = result && getChildList()
-          .equals(other.getChildList());
-      result = result && (hasValueCount() == other.hasValueCount());
+      if (!getChildList()
+          .equals(other.getChildList())) return false;
+      if (hasValueCount() != other.hasValueCount()) return false;
       if (hasValueCount()) {
-        result = result && (getValueCount()
-            == other.getValueCount());
+        if (getValueCount()
+            != other.getValueCount()) return false;
       }
-      result = result && (hasVarByteLength() == other.hasVarByteLength());
+      if (hasVarByteLength() != other.hasVarByteLength()) return false;
       if (hasVarByteLength()) {
-        result = result && (getVarByteLength()
-            == other.getVarByteLength());
+        if (getVarByteLength()
+            != other.getVarByteLength()) return false;
       }
-      result = result && (hasBufferLength() == other.hasBufferLength());
+      if (hasBufferLength() != other.hasBufferLength()) return false;
       if (hasBufferLength()) {
-        result = result && (getBufferLength()
-            == other.getBufferLength());
+        if (getBufferLength()
+            != other.getBufferLength()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -10452,24 +10857,24 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.SerializedField result = new org.apache.drill.exec.proto.UserBitShared.SerializedField(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (majorTypeBuilder_ == null) {
+            result.majorType_ = majorType_;
+          } else {
+            result.majorType_ = majorTypeBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (majorTypeBuilder_ == null) {
-          result.majorType_ = majorType_;
-        } else {
-          result.majorType_ = majorTypeBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (namePartBuilder_ == null) {
+            result.namePart_ = namePart_;
+          } else {
+            result.namePart_ = namePartBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (namePartBuilder_ == null) {
-          result.namePart_ = namePart_;
-        } else {
-          result.namePart_ = namePartBuilder_.build();
-        }
         if (childBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          if (((bitField0_ & 0x00000004) != 0)) {
             child_ = java.util.Collections.unmodifiableList(child_);
             bitField0_ = (bitField0_ & ~0x00000004);
           }
@@ -10477,18 +10882,18 @@ public final class UserBitShared {
         } else {
           result.child_ = childBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.valueCount_ = valueCount_;
           to_bitField0_ |= 0x00000004;
         }
-        result.valueCount_ = valueCount_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.varByteLength_ = varByteLength_;
           to_bitField0_ |= 0x00000008;
         }
-        result.varByteLength_ = varByteLength_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.bufferLength_ = bufferLength_;
           to_bitField0_ |= 0x00000010;
         }
-        result.bufferLength_ = bufferLength_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -10496,35 +10901,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -10609,7 +11014,7 @@ public final class UserBitShared {
       }
       private int bitField0_;
 
-      private org.apache.drill.common.types.TypeProtos.MajorType majorType_ = null;
+      private org.apache.drill.common.types.TypeProtos.MajorType majorType_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.common.types.TypeProtos.MajorType, org.apache.drill.common.types.TypeProtos.MajorType.Builder, org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder> majorTypeBuilder_;
       /**
@@ -10618,9 +11023,10 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional .common.MajorType major_type = 1;</code>
+       * @return Whether the majorType field is set.
        */
       public boolean hasMajorType() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -10628,6 +11034,7 @@ public final class UserBitShared {
        * </pre>
        *
        * <code>optional .common.MajorType major_type = 1;</code>
+       * @return The majorType.
        */
       public org.apache.drill.common.types.TypeProtos.MajorType getMajorType() {
         if (majorTypeBuilder_ == null) {
@@ -10683,7 +11090,7 @@ public final class UserBitShared {
        */
       public Builder mergeMajorType(org.apache.drill.common.types.TypeProtos.MajorType value) {
         if (majorTypeBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               majorType_ != null &&
               majorType_ != org.apache.drill.common.types.TypeProtos.MajorType.getDefaultInstance()) {
             majorType_ =
@@ -10763,17 +11170,19 @@ public final class UserBitShared {
         return majorTypeBuilder_;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.NamePart namePart_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.NamePart namePart_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder> namePartBuilder_;
       /**
        * <code>optional .exec.shared.NamePart name_part = 2;</code>
+       * @return Whether the namePart field is set.
        */
       public boolean hasNamePart() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.shared.NamePart name_part = 2;</code>
+       * @return The namePart.
        */
       public org.apache.drill.exec.proto.UserBitShared.NamePart getNamePart() {
         if (namePartBuilder_ == null) {
@@ -10817,7 +11226,7 @@ public final class UserBitShared {
        */
       public Builder mergeNamePart(org.apache.drill.exec.proto.UserBitShared.NamePart value) {
         if (namePartBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               namePart_ != null &&
               namePart_ != org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance()) {
             namePart_ =
@@ -10884,7 +11293,7 @@ public final class UserBitShared {
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> child_ =
         java.util.Collections.emptyList();
       private void ensureChildIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000004) != 0)) {
           child_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.SerializedField>(child_);
           bitField0_ |= 0x00000004;
          }
@@ -11185,7 +11594,7 @@ public final class UserBitShared {
           childBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>(
                   child_,
-                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  ((bitField0_ & 0x00000004) != 0),
                   getParentForChildren(),
                   isClean());
           child_ = null;
@@ -11196,18 +11605,22 @@ public final class UserBitShared {
       private int valueCount_ ;
       /**
        * <code>optional int32 value_count = 4;</code>
+       * @return Whether the valueCount field is set.
        */
       public boolean hasValueCount() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional int32 value_count = 4;</code>
+       * @return The valueCount.
        */
       public int getValueCount() {
         return valueCount_;
       }
       /**
        * <code>optional int32 value_count = 4;</code>
+       * @param value The valueCount to set.
+       * @return This builder for chaining.
        */
       public Builder setValueCount(int value) {
         bitField0_ |= 0x00000008;
@@ -11217,6 +11630,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 value_count = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearValueCount() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -11228,18 +11642,22 @@ public final class UserBitShared {
       private int varByteLength_ ;
       /**
        * <code>optional int32 var_byte_length = 5;</code>
+       * @return Whether the varByteLength field is set.
        */
       public boolean hasVarByteLength() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional int32 var_byte_length = 5;</code>
+       * @return The varByteLength.
        */
       public int getVarByteLength() {
         return varByteLength_;
       }
       /**
        * <code>optional int32 var_byte_length = 5;</code>
+       * @param value The varByteLength to set.
+       * @return This builder for chaining.
        */
       public Builder setVarByteLength(int value) {
         bitField0_ |= 0x00000010;
@@ -11249,6 +11667,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 var_byte_length = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVarByteLength() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -11260,18 +11679,22 @@ public final class UserBitShared {
       private int bufferLength_ ;
       /**
        * <code>optional int32 buffer_length = 7;</code>
+       * @return Whether the bufferLength field is set.
        */
       public boolean hasBufferLength() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <code>optional int32 buffer_length = 7;</code>
+       * @return The bufferLength.
        */
       public int getBufferLength() {
         return bufferLength_;
       }
       /**
        * <code>optional int32 buffer_length = 7;</code>
+       * @param value The bufferLength to set.
+       * @return This builder for chaining.
        */
       public Builder setBufferLength(int value) {
         bitField0_ |= 0x00000020;
@@ -11281,6 +11704,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 buffer_length = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBufferLength() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -11347,19 +11771,23 @@ public final class UserBitShared {
 
     /**
      * <code>optional int32 node_id = 1;</code>
+     * @return Whether the nodeId field is set.
      */
     boolean hasNodeId();
     /**
      * <code>optional int32 node_id = 1;</code>
+     * @return The nodeId.
      */
     int getNodeId();
 
     /**
      * <code>optional int64 memory_footprint = 2;</code>
+     * @return Whether the memoryFootprint field is set.
      */
     boolean hasMemoryFootprint();
     /**
      * <code>optional int64 memory_footprint = 2;</code>
+     * @return The memoryFootprint.
      */
     long getMemoryFootprint();
   }
@@ -11376,8 +11804,13 @@ public final class UserBitShared {
       super(builder);
     }
     private NodeStatus() {
-      nodeId_ = 0;
-      memoryFootprint_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new NodeStatus();
     }
 
     @java.lang.Override
@@ -11451,12 +11884,14 @@ public final class UserBitShared {
     private int nodeId_;
     /**
      * <code>optional int32 node_id = 1;</code>
+     * @return Whether the nodeId field is set.
      */
     public boolean hasNodeId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional int32 node_id = 1;</code>
+     * @return The nodeId.
      */
     public int getNodeId() {
       return nodeId_;
@@ -11466,12 +11901,14 @@ public final class UserBitShared {
     private long memoryFootprint_;
     /**
      * <code>optional int64 memory_footprint = 2;</code>
+     * @return Whether the memoryFootprint field is set.
      */
     public boolean hasMemoryFootprint() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional int64 memory_footprint = 2;</code>
+     * @return The memoryFootprint.
      */
     public long getMemoryFootprint() {
       return memoryFootprint_;
@@ -11491,10 +11928,10 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeInt32(1, nodeId_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeInt64(2, memoryFootprint_);
       }
       unknownFields.writeTo(output);
@@ -11506,11 +11943,11 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, nodeId_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(2, memoryFootprint_);
       }
@@ -11529,19 +11966,18 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.NodeStatus other = (org.apache.drill.exec.proto.UserBitShared.NodeStatus) obj;
 
-      boolean result = true;
-      result = result && (hasNodeId() == other.hasNodeId());
+      if (hasNodeId() != other.hasNodeId()) return false;
       if (hasNodeId()) {
-        result = result && (getNodeId()
-            == other.getNodeId());
+        if (getNodeId()
+            != other.getNodeId()) return false;
       }
-      result = result && (hasMemoryFootprint() == other.hasMemoryFootprint());
+      if (hasMemoryFootprint() != other.hasMemoryFootprint()) return false;
       if (hasMemoryFootprint()) {
-        result = result && (getMemoryFootprint()
-            == other.getMemoryFootprint());
+        if (getMemoryFootprint()
+            != other.getMemoryFootprint()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -11725,14 +12161,14 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.NodeStatus result = new org.apache.drill.exec.proto.UserBitShared.NodeStatus(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.nodeId_ = nodeId_;
           to_bitField0_ |= 0x00000001;
         }
-        result.nodeId_ = nodeId_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.memoryFootprint_ = memoryFootprint_;
           to_bitField0_ |= 0x00000002;
         }
-        result.memoryFootprint_ = memoryFootprint_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -11740,35 +12176,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -11821,18 +12257,22 @@ public final class UserBitShared {
       private int nodeId_ ;
       /**
        * <code>optional int32 node_id = 1;</code>
+       * @return Whether the nodeId field is set.
        */
       public boolean hasNodeId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional int32 node_id = 1;</code>
+       * @return The nodeId.
        */
       public int getNodeId() {
         return nodeId_;
       }
       /**
        * <code>optional int32 node_id = 1;</code>
+       * @param value The nodeId to set.
+       * @return This builder for chaining.
        */
       public Builder setNodeId(int value) {
         bitField0_ |= 0x00000001;
@@ -11842,6 +12282,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 node_id = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearNodeId() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -11853,18 +12294,22 @@ public final class UserBitShared {
       private long memoryFootprint_ ;
       /**
        * <code>optional int64 memory_footprint = 2;</code>
+       * @return Whether the memoryFootprint field is set.
        */
       public boolean hasMemoryFootprint() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional int64 memory_footprint = 2;</code>
+       * @return The memoryFootprint.
        */
       public long getMemoryFootprint() {
         return memoryFootprint_;
       }
       /**
        * <code>optional int64 memory_footprint = 2;</code>
+       * @param value The memoryFootprint to set.
+       * @return This builder for chaining.
        */
       public Builder setMemoryFootprint(long value) {
         bitField0_ |= 0x00000002;
@@ -11874,6 +12319,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 memory_footprint = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMemoryFootprint() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -11940,19 +12386,23 @@ public final class UserBitShared {
 
     /**
      * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
+     * @return Whether the queryState field is set.
      */
     boolean hasQueryState();
     /**
      * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
+     * @return The queryState.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getQueryState();
 
     /**
      * <code>optional .exec.shared.QueryId query_id = 2;</code>
+     * @return Whether the queryId field is set.
      */
     boolean hasQueryId();
     /**
      * <code>optional .exec.shared.QueryId query_id = 2;</code>
+     * @return The queryId.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId();
     /**
@@ -12006,6 +12456,13 @@ public final class UserBitShared {
     }
 
     @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new QueryResult();
+    }
+
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
     getUnknownFields() {
       return this.unknownFields;
@@ -12043,7 +12500,7 @@ public final class UserBitShared {
             }
             case 18: {
               org.apache.drill.exec.proto.UserBitShared.QueryId.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = queryId_.toBuilder();
               }
               queryId_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.QueryId.PARSER, extensionRegistry);
@@ -12055,7 +12512,7 @@ public final class UserBitShared {
               break;
             }
             case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
                 error_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.DrillPBError>();
                 mutable_bitField0_ |= 0x00000004;
               }
@@ -12078,7 +12535,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
           error_ = java.util.Collections.unmodifiableList(error_);
         }
         this.unknownFields = unknownFields.build();
@@ -12240,6 +12697,8 @@ public final class UserBitShared {
       }
 
       /**
+       * @param value The numeric wire value of the corresponding enum entry.
+       * @return The enum associated with the given numeric wire value.
        * @deprecated Use {@link #forNumber(int)} instead.
        */
       @java.lang.Deprecated
@@ -12247,6 +12706,10 @@ public final class UserBitShared {
         return forNumber(value);
       }
 
+      /**
+       * @param value The numeric wire value of the corresponding enum entry.
+       * @return The enum associated with the given numeric wire value.
+       */
       public static QueryState forNumber(int value) {
         switch (value) {
           case 0: return STARTING;
@@ -12312,12 +12775,14 @@ public final class UserBitShared {
     private int queryState_;
     /**
      * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
+     * @return Whether the queryState field is set.
      */
     public boolean hasQueryState() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
+     * @return The queryState.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getQueryState() {
       @SuppressWarnings("deprecation")
@@ -12329,12 +12794,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
     /**
      * <code>optional .exec.shared.QueryId query_id = 2;</code>
+     * @return Whether the queryId field is set.
      */
     public boolean hasQueryId() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryId query_id = 2;</code>
+     * @return The queryId.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
@@ -12395,10 +12862,10 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, queryState_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getQueryId());
       }
       for (int i = 0; i < error_.size(); i++) {
@@ -12413,11 +12880,11 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, queryState_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getQueryId());
       }
@@ -12440,20 +12907,19 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.QueryResult other = (org.apache.drill.exec.proto.UserBitShared.QueryResult) obj;
 
-      boolean result = true;
-      result = result && (hasQueryState() == other.hasQueryState());
+      if (hasQueryState() != other.hasQueryState()) return false;
       if (hasQueryState()) {
-        result = result && queryState_ == other.queryState_;
+        if (queryState_ != other.queryState_) return false;
       }
-      result = result && (hasQueryId() == other.hasQueryId());
+      if (hasQueryId() != other.hasQueryId()) return false;
       if (hasQueryId()) {
-        result = result && getQueryId()
-            .equals(other.getQueryId());
+        if (!getQueryId()
+            .equals(other.getQueryId())) return false;
       }
-      result = result && getErrorList()
-          .equals(other.getErrorList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getErrorList()
+          .equals(other.getErrorList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -12656,20 +13122,20 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.QueryResult result = new org.apache.drill.exec.proto.UserBitShared.QueryResult(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.queryState_ = queryState_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (queryIdBuilder_ == null) {
+            result.queryId_ = queryId_;
+          } else {
+            result.queryId_ = queryIdBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (queryIdBuilder_ == null) {
-          result.queryId_ = queryId_;
-        } else {
-          result.queryId_ = queryIdBuilder_.build();
-        }
         if (errorBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          if (((bitField0_ & 0x00000004) != 0)) {
             error_ = java.util.Collections.unmodifiableList(error_);
             bitField0_ = (bitField0_ & ~0x00000004);
           }
@@ -12684,35 +13150,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -12791,12 +13257,14 @@ public final class UserBitShared {
       private int queryState_ = 0;
       /**
        * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
+       * @return Whether the queryState field is set.
        */
       public boolean hasQueryState() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
+       * @return The queryState.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getQueryState() {
         @SuppressWarnings("deprecation")
@@ -12805,6 +13273,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
+       * @param value The queryState to set.
+       * @return This builder for chaining.
        */
       public Builder setQueryState(org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState value) {
         if (value == null) {
@@ -12817,6 +13287,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearQueryState() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -12825,17 +13296,19 @@ public final class UserBitShared {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> queryIdBuilder_;
       /**
        * <code>optional .exec.shared.QueryId query_id = 2;</code>
+       * @return Whether the queryId field is set.
        */
       public boolean hasQueryId() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryId query_id = 2;</code>
+       * @return The queryId.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
         if (queryIdBuilder_ == null) {
@@ -12879,7 +13352,7 @@ public final class UserBitShared {
        */
       public Builder mergeQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
         if (queryIdBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               queryId_ != null &&
               queryId_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
             queryId_ =
@@ -12946,7 +13419,7 @@ public final class UserBitShared {
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.DrillPBError> error_ =
         java.util.Collections.emptyList();
       private void ensureErrorIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000004) != 0)) {
           error_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.DrillPBError>(error_);
           bitField0_ |= 0x00000004;
          }
@@ -13175,7 +13648,7 @@ public final class UserBitShared {
           errorBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder>(
                   error_,
-                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  ((bitField0_ & 0x00000004) != 0),
                   getParentForChildren(),
                   isClean());
           error_ = null;
@@ -13241,10 +13714,12 @@ public final class UserBitShared {
 
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return Whether the queryId field is set.
      */
     boolean hasQueryId();
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return The queryId.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId();
     /**
@@ -13254,19 +13729,23 @@ public final class UserBitShared {
 
     /**
      * <code>optional int32 row_count = 2;</code>
+     * @return Whether the rowCount field is set.
      */
     boolean hasRowCount();
     /**
      * <code>optional int32 row_count = 2;</code>
+     * @return The rowCount.
      */
     int getRowCount();
 
     /**
      * <code>optional .exec.shared.RecordBatchDef def = 3;</code>
+     * @return Whether the def field is set.
      */
     boolean hasDef();
     /**
      * <code>optional .exec.shared.RecordBatchDef def = 3;</code>
+     * @return The def.
      */
     org.apache.drill.exec.proto.UserBitShared.RecordBatchDef getDef();
     /**
@@ -13276,10 +13755,12 @@ public final class UserBitShared {
 
     /**
      * <code>optional int32 affected_rows_count = 4;</code>
+     * @return Whether the affectedRowsCount field is set.
      */
     boolean hasAffectedRowsCount();
     /**
      * <code>optional int32 affected_rows_count = 4;</code>
+     * @return The affectedRowsCount.
      */
     int getAffectedRowsCount();
   }
@@ -13300,8 +13781,13 @@ public final class UserBitShared {
       super(builder);
     }
     private QueryData() {
-      rowCount_ = 0;
-      affectedRowsCount_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new QueryData();
     }
 
     @java.lang.Override
@@ -13330,7 +13816,7 @@ public final class UserBitShared {
               break;
             case 10: {
               org.apache.drill.exec.proto.UserBitShared.QueryId.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = queryId_.toBuilder();
               }
               queryId_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.QueryId.PARSER, extensionRegistry);
@@ -13348,7 +13834,7 @@ public final class UserBitShared {
             }
             case 26: {
               org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000004) != 0)) {
                 subBuilder = def_.toBuilder();
               }
               def_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.PARSER, extensionRegistry);
@@ -13401,12 +13887,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return Whether the queryId field is set.
      */
     public boolean hasQueryId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return The queryId.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
@@ -13422,12 +13910,14 @@ public final class UserBitShared {
     private int rowCount_;
     /**
      * <code>optional int32 row_count = 2;</code>
+     * @return Whether the rowCount field is set.
      */
     public boolean hasRowCount() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional int32 row_count = 2;</code>
+     * @return The rowCount.
      */
     public int getRowCount() {
       return rowCount_;
@@ -13437,12 +13927,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.UserBitShared.RecordBatchDef def_;
     /**
      * <code>optional .exec.shared.RecordBatchDef def = 3;</code>
+     * @return Whether the def field is set.
      */
     public boolean hasDef() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.RecordBatchDef def = 3;</code>
+     * @return The def.
      */
     public org.apache.drill.exec.proto.UserBitShared.RecordBatchDef getDef() {
       return def_ == null ? org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.getDefaultInstance() : def_;
@@ -13458,12 +13950,14 @@ public final class UserBitShared {
     private int affectedRowsCount_;
     /**
      * <code>optional int32 affected_rows_count = 4;</code>
+     * @return Whether the affectedRowsCount field is set.
      */
     public boolean hasAffectedRowsCount() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional int32 affected_rows_count = 4;</code>
+     * @return The affectedRowsCount.
      */
     public int getAffectedRowsCount() {
       return affectedRowsCount_;
@@ -13483,16 +13977,16 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getQueryId());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeInt32(2, rowCount_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeMessage(3, getDef());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeInt32(4, affectedRowsCount_);
       }
       unknownFields.writeTo(output);
@@ -13504,19 +13998,19 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getQueryId());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, rowCount_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getDef());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, affectedRowsCount_);
       }
@@ -13535,29 +14029,28 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.QueryData other = (org.apache.drill.exec.proto.UserBitShared.QueryData) obj;
 
-      boolean result = true;
-      result = result && (hasQueryId() == other.hasQueryId());
+      if (hasQueryId() != other.hasQueryId()) return false;
       if (hasQueryId()) {
-        result = result && getQueryId()
-            .equals(other.getQueryId());
+        if (!getQueryId()
+            .equals(other.getQueryId())) return false;
       }
-      result = result && (hasRowCount() == other.hasRowCount());
+      if (hasRowCount() != other.hasRowCount()) return false;
       if (hasRowCount()) {
-        result = result && (getRowCount()
-            == other.getRowCount());
+        if (getRowCount()
+            != other.getRowCount()) return false;
       }
-      result = result && (hasDef() == other.hasDef());
+      if (hasDef() != other.hasDef()) return false;
       if (hasDef()) {
-        result = result && getDef()
-            .equals(other.getDef());
+        if (!getDef()
+            .equals(other.getDef())) return false;
       }
-      result = result && (hasAffectedRowsCount() == other.hasAffectedRowsCount());
+      if (hasAffectedRowsCount() != other.hasAffectedRowsCount()) return false;
       if (hasAffectedRowsCount()) {
-        result = result && (getAffectedRowsCount()
-            == other.getAffectedRowsCount());
+        if (getAffectedRowsCount()
+            != other.getAffectedRowsCount()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -13766,30 +14259,30 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.QueryData result = new org.apache.drill.exec.proto.UserBitShared.QueryData(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (queryIdBuilder_ == null) {
+            result.queryId_ = queryId_;
+          } else {
+            result.queryId_ = queryIdBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (queryIdBuilder_ == null) {
-          result.queryId_ = queryId_;
-        } else {
-          result.queryId_ = queryIdBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.rowCount_ = rowCount_;
           to_bitField0_ |= 0x00000002;
         }
-        result.rowCount_ = rowCount_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (defBuilder_ == null) {
+            result.def_ = def_;
+          } else {
+            result.def_ = defBuilder_.build();
+          }
           to_bitField0_ |= 0x00000004;
         }
-        if (defBuilder_ == null) {
-          result.def_ = def_;
-        } else {
-          result.def_ = defBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.affectedRowsCount_ = affectedRowsCount_;
           to_bitField0_ |= 0x00000008;
         }
-        result.affectedRowsCount_ = affectedRowsCount_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -13797,35 +14290,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -13881,17 +14374,19 @@ public final class UserBitShared {
       }
       private int bitField0_;
 
-      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> queryIdBuilder_;
       /**
        * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       * @return Whether the queryId field is set.
        */
       public boolean hasQueryId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       * @return The queryId.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
         if (queryIdBuilder_ == null) {
@@ -13935,7 +14430,7 @@ public final class UserBitShared {
        */
       public Builder mergeQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
         if (queryIdBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               queryId_ != null &&
               queryId_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
             queryId_ =
@@ -14002,18 +14497,22 @@ public final class UserBitShared {
       private int rowCount_ ;
       /**
        * <code>optional int32 row_count = 2;</code>
+       * @return Whether the rowCount field is set.
        */
       public boolean hasRowCount() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional int32 row_count = 2;</code>
+       * @return The rowCount.
        */
       public int getRowCount() {
         return rowCount_;
       }
       /**
        * <code>optional int32 row_count = 2;</code>
+       * @param value The rowCount to set.
+       * @return This builder for chaining.
        */
       public Builder setRowCount(int value) {
         bitField0_ |= 0x00000002;
@@ -14023,6 +14522,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 row_count = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearRowCount() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -14031,17 +14531,19 @@ public final class UserBitShared {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.RecordBatchDef def_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.RecordBatchDef def_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.RecordBatchDef, org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.Builder, org.apache.drill.exec.proto.UserBitShared.RecordBatchDefOrBuilder> defBuilder_;
       /**
        * <code>optional .exec.shared.RecordBatchDef def = 3;</code>
+       * @return Whether the def field is set.
        */
       public boolean hasDef() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.RecordBatchDef def = 3;</code>
+       * @return The def.
        */
       public org.apache.drill.exec.proto.UserBitShared.RecordBatchDef getDef() {
         if (defBuilder_ == null) {
@@ -14085,7 +14587,7 @@ public final class UserBitShared {
        */
       public Builder mergeDef(org.apache.drill.exec.proto.UserBitShared.RecordBatchDef value) {
         if (defBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               def_ != null &&
               def_ != org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.getDefaultInstance()) {
             def_ =
@@ -14152,18 +14654,22 @@ public final class UserBitShared {
       private int affectedRowsCount_ ;
       /**
        * <code>optional int32 affected_rows_count = 4;</code>
+       * @return Whether the affectedRowsCount field is set.
        */
       public boolean hasAffectedRowsCount() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional int32 affected_rows_count = 4;</code>
+       * @return The affectedRowsCount.
        */
       public int getAffectedRowsCount() {
         return affectedRowsCount_;
       }
       /**
        * <code>optional int32 affected_rows_count = 4;</code>
+       * @param value The affectedRowsCount to set.
+       * @return This builder for chaining.
        */
       public Builder setAffectedRowsCount(int value) {
         bitField0_ |= 0x00000008;
@@ -14173,6 +14679,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 affected_rows_count = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAffectedRowsCount() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -14239,56 +14746,68 @@ public final class UserBitShared {
 
     /**
      * <code>optional string query = 1;</code>
+     * @return Whether the query field is set.
      */
     boolean hasQuery();
     /**
      * <code>optional string query = 1;</code>
+     * @return The query.
      */
     java.lang.String getQuery();
     /**
      * <code>optional string query = 1;</code>
+     * @return The bytes for query.
      */
     com.google.protobuf.ByteString
         getQueryBytes();
 
     /**
      * <code>optional int64 start = 2;</code>
+     * @return Whether the start field is set.
      */
     boolean hasStart();
     /**
      * <code>optional int64 start = 2;</code>
+     * @return The start.
      */
     long getStart();
 
     /**
      * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
+     * @return Whether the state field is set.
      */
     boolean hasState();
     /**
      * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
+     * @return The state.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState();
 
     /**
      * <code>optional string user = 4 [default = "-"];</code>
+     * @return Whether the user field is set.
      */
     boolean hasUser();
     /**
      * <code>optional string user = 4 [default = "-"];</code>
+     * @return The user.
      */
     java.lang.String getUser();
     /**
      * <code>optional string user = 4 [default = "-"];</code>
+     * @return The bytes for user.
      */
     com.google.protobuf.ByteString
         getUserBytes();
 
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 5;</code>
+     * @return Whether the foreman field is set.
      */
     boolean hasForeman();
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 5;</code>
+     * @return The foreman.
      */
     org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getForeman();
     /**
@@ -14298,37 +14817,45 @@ public final class UserBitShared {
 
     /**
      * <code>optional string options_json = 6;</code>
+     * @return Whether the optionsJson field is set.
      */
     boolean hasOptionsJson();
     /**
      * <code>optional string options_json = 6;</code>
+     * @return The optionsJson.
      */
     java.lang.String getOptionsJson();
     /**
      * <code>optional string options_json = 6;</code>
+     * @return The bytes for optionsJson.
      */
     com.google.protobuf.ByteString
         getOptionsJsonBytes();
 
     /**
      * <code>optional double total_cost = 7;</code>
+     * @return Whether the totalCost field is set.
      */
     boolean hasTotalCost();
     /**
      * <code>optional double total_cost = 7;</code>
+     * @return The totalCost.
      */
     double getTotalCost();
 
     /**
      * <code>optional string queue_name = 8 [default = "-"];</code>
+     * @return Whether the queueName field is set.
      */
     boolean hasQueueName();
     /**
      * <code>optional string queue_name = 8 [default = "-"];</code>
+     * @return The queueName.
      */
     java.lang.String getQueueName();
     /**
      * <code>optional string queue_name = 8 [default = "-"];</code>
+     * @return The bytes for queueName.
      */
     com.google.protobuf.ByteString
         getQueueNameBytes();
@@ -14347,12 +14874,17 @@ public final class UserBitShared {
     }
     private QueryInfo() {
       query_ = "";
-      start_ = 0L;
       state_ = 0;
       user_ = "-";
       optionsJson_ = "";
-      totalCost_ = 0D;
       queueName_ = "-";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new QueryInfo();
     }
 
     @java.lang.Override
@@ -14410,7 +14942,7 @@ public final class UserBitShared {
             }
             case 42: {
               org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+              if (((bitField0_ & 0x00000010) != 0)) {
                 subBuilder = foreman_.toBuilder();
               }
               foreman_ = input.readMessage(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.PARSER, extensionRegistry);
@@ -14475,12 +15007,14 @@ public final class UserBitShared {
     private volatile java.lang.Object query_;
     /**
      * <code>optional string query = 1;</code>
+     * @return Whether the query field is set.
      */
     public boolean hasQuery() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string query = 1;</code>
+     * @return The query.
      */
     public java.lang.String getQuery() {
       java.lang.Object ref = query_;
@@ -14498,6 +15032,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string query = 1;</code>
+     * @return The bytes for query.
      */
     public com.google.protobuf.ByteString
         getQueryBytes() {
@@ -14517,12 +15052,14 @@ public final class UserBitShared {
     private long start_;
     /**
      * <code>optional int64 start = 2;</code>
+     * @return Whether the start field is set.
      */
     public boolean hasStart() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional int64 start = 2;</code>
+     * @return The start.
      */
     public long getStart() {
       return start_;
@@ -14532,12 +15069,14 @@ public final class UserBitShared {
     private int state_;
     /**
      * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
+     * @return Whether the state field is set.
      */
     public boolean hasState() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
+     * @return The state.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState() {
       @SuppressWarnings("deprecation")
@@ -14549,12 +15088,14 @@ public final class UserBitShared {
     private volatile java.lang.Object user_;
     /**
      * <code>optional string user = 4 [default = "-"];</code>
+     * @return Whether the user field is set.
      */
     public boolean hasUser() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional string user = 4 [default = "-"];</code>
+     * @return The user.
      */
     public java.lang.String getUser() {
       java.lang.Object ref = user_;
@@ -14572,6 +15113,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string user = 4 [default = "-"];</code>
+     * @return The bytes for user.
      */
     public com.google.protobuf.ByteString
         getUserBytes() {
@@ -14591,12 +15133,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint foreman_;
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 5;</code>
+     * @return Whether the foreman field is set.
      */
     public boolean hasForeman() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 5;</code>
+     * @return The foreman.
      */
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getForeman() {
       return foreman_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : foreman_;
@@ -14612,12 +15156,14 @@ public final class UserBitShared {
     private volatile java.lang.Object optionsJson_;
     /**
      * <code>optional string options_json = 6;</code>
+     * @return Whether the optionsJson field is set.
      */
     public boolean hasOptionsJson() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <code>optional string options_json = 6;</code>
+     * @return The optionsJson.
      */
     public java.lang.String getOptionsJson() {
       java.lang.Object ref = optionsJson_;
@@ -14635,6 +15181,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string options_json = 6;</code>
+     * @return The bytes for optionsJson.
      */
     public com.google.protobuf.ByteString
         getOptionsJsonBytes() {
@@ -14654,12 +15201,14 @@ public final class UserBitShared {
     private double totalCost_;
     /**
      * <code>optional double total_cost = 7;</code>
+     * @return Whether the totalCost field is set.
      */
     public boolean hasTotalCost() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <code>optional double total_cost = 7;</code>
+     * @return The totalCost.
      */
     public double getTotalCost() {
       return totalCost_;
@@ -14669,12 +15218,14 @@ public final class UserBitShared {
     private volatile java.lang.Object queueName_;
     /**
      * <code>optional string queue_name = 8 [default = "-"];</code>
+     * @return Whether the queueName field is set.
      */
     public boolean hasQueueName() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <code>optional string queue_name = 8 [default = "-"];</code>
+     * @return The queueName.
      */
     public java.lang.String getQueueName() {
       java.lang.Object ref = queueName_;
@@ -14692,6 +15243,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string queue_name = 8 [default = "-"];</code>
+     * @return The bytes for queueName.
      */
     public com.google.protobuf.ByteString
         getQueueNameBytes() {
@@ -14721,28 +15273,28 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, query_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeInt64(2, start_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeEnum(3, state_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, user_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeMessage(5, getForeman());
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 6, optionsJson_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeDouble(7, totalCost_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 8, queueName_);
       }
       unknownFields.writeTo(output);
@@ -14754,32 +15306,32 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, query_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(2, start_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(3, state_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, user_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, getForeman());
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, optionsJson_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(7, totalCost_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, queueName_);
       }
       size += unknownFields.getSerializedSize();
@@ -14797,50 +15349,48 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.QueryInfo other = (org.apache.drill.exec.proto.UserBitShared.QueryInfo) obj;
 
-      boolean result = true;
-      result = result && (hasQuery() == other.hasQuery());
+      if (hasQuery() != other.hasQuery()) return false;
       if (hasQuery()) {
-        result = result && getQuery()
-            .equals(other.getQuery());
+        if (!getQuery()
+            .equals(other.getQuery())) return false;
       }
-      result = result && (hasStart() == other.hasStart());
+      if (hasStart() != other.hasStart()) return false;
       if (hasStart()) {
-        result = result && (getStart()
-            == other.getStart());
+        if (getStart()
+            != other.getStart()) return false;
       }
-      result = result && (hasState() == other.hasState());
+      if (hasState() != other.hasState()) return false;
       if (hasState()) {
-        result = result && state_ == other.state_;
+        if (state_ != other.state_) return false;
       }
-      result = result && (hasUser() == other.hasUser());
+      if (hasUser() != other.hasUser()) return false;
       if (hasUser()) {
-        result = result && getUser()
-            .equals(other.getUser());
+        if (!getUser()
+            .equals(other.getUser())) return false;
       }
-      result = result && (hasForeman() == other.hasForeman());
+      if (hasForeman() != other.hasForeman()) return false;
       if (hasForeman()) {
-        result = result && getForeman()
-            .equals(other.getForeman());
+        if (!getForeman()
+            .equals(other.getForeman())) return false;
       }
-      result = result && (hasOptionsJson() == other.hasOptionsJson());
+      if (hasOptionsJson() != other.hasOptionsJson()) return false;
       if (hasOptionsJson()) {
-        result = result && getOptionsJson()
-            .equals(other.getOptionsJson());
+        if (!getOptionsJson()
+            .equals(other.getOptionsJson())) return false;
       }
-      result = result && (hasTotalCost() == other.hasTotalCost());
+      if (hasTotalCost() != other.hasTotalCost()) return false;
       if (hasTotalCost()) {
-        result = result && (
-            java.lang.Double.doubleToLongBits(getTotalCost())
-            == java.lang.Double.doubleToLongBits(
-                other.getTotalCost()));
+        if (java.lang.Double.doubleToLongBits(getTotalCost())
+            != java.lang.Double.doubleToLongBits(
+                other.getTotalCost())) return false;
       }
-      result = result && (hasQueueName() == other.hasQueueName());
+      if (hasQueueName() != other.hasQueueName()) return false;
       if (hasQueueName()) {
-        result = result && getQueueName()
-            .equals(other.getQueueName());
+        if (!getQueueName()
+            .equals(other.getQueueName())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -15066,39 +15616,39 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.QueryInfo result = new org.apache.drill.exec.proto.UserBitShared.QueryInfo(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.query_ = query_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.start_ = start_;
           to_bitField0_ |= 0x00000002;
         }
-        result.start_ = start_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.state_ = state_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.user_ = user_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          if (foremanBuilder_ == null) {
+            result.foreman_ = foreman_;
+          } else {
+            result.foreman_ = foremanBuilder_.build();
+          }
           to_bitField0_ |= 0x00000010;
         }
-        if (foremanBuilder_ == null) {
-          result.foreman_ = foreman_;
-        } else {
-          result.foreman_ = foremanBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
           to_bitField0_ |= 0x00000020;
         }
         result.optionsJson_ = optionsJson_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.totalCost_ = totalCost_;
           to_bitField0_ |= 0x00000040;
         }
-        result.totalCost_ = totalCost_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
           to_bitField0_ |= 0x00000080;
         }
         result.queueName_ = queueName_;
@@ -15109,35 +15659,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -15216,12 +15766,14 @@ public final class UserBitShared {
       private java.lang.Object query_ = "";
       /**
        * <code>optional string query = 1;</code>
+       * @return Whether the query field is set.
        */
       public boolean hasQuery() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string query = 1;</code>
+       * @return The query.
        */
       public java.lang.String getQuery() {
         java.lang.Object ref = query_;
@@ -15239,6 +15791,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string query = 1;</code>
+       * @return The bytes for query.
        */
       public com.google.protobuf.ByteString
           getQueryBytes() {
@@ -15255,6 +15808,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string query = 1;</code>
+       * @param value The query to set.
+       * @return This builder for chaining.
        */
       public Builder setQuery(
           java.lang.String value) {
@@ -15268,6 +15823,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string query = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearQuery() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -15277,6 +15833,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string query = 1;</code>
+       * @param value The bytes for query to set.
+       * @return This builder for chaining.
        */
       public Builder setQueryBytes(
           com.google.protobuf.ByteString value) {
@@ -15292,18 +15850,22 @@ public final class UserBitShared {
       private long start_ ;
       /**
        * <code>optional int64 start = 2;</code>
+       * @return Whether the start field is set.
        */
       public boolean hasStart() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional int64 start = 2;</code>
+       * @return The start.
        */
       public long getStart() {
         return start_;
       }
       /**
        * <code>optional int64 start = 2;</code>
+       * @param value The start to set.
+       * @return This builder for chaining.
        */
       public Builder setStart(long value) {
         bitField0_ |= 0x00000002;
@@ -15313,6 +15875,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 start = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStart() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -15324,12 +15887,14 @@ public final class UserBitShared {
       private int state_ = 0;
       /**
        * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
+       * @return Whether the state field is set.
        */
       public boolean hasState() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
+       * @return The state.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState() {
         @SuppressWarnings("deprecation")
@@ -15338,6 +15903,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
+       * @param value The state to set.
+       * @return This builder for chaining.
        */
       public Builder setState(org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState value) {
         if (value == null) {
@@ -15350,6 +15917,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearState() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -15361,12 +15929,14 @@ public final class UserBitShared {
       private java.lang.Object user_ = "-";
       /**
        * <code>optional string user = 4 [default = "-"];</code>
+       * @return Whether the user field is set.
        */
       public boolean hasUser() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional string user = 4 [default = "-"];</code>
+       * @return The user.
        */
       public java.lang.String getUser() {
         java.lang.Object ref = user_;
@@ -15384,6 +15954,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user = 4 [default = "-"];</code>
+       * @return The bytes for user.
        */
       public com.google.protobuf.ByteString
           getUserBytes() {
@@ -15400,6 +15971,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user = 4 [default = "-"];</code>
+       * @param value The user to set.
+       * @return This builder for chaining.
        */
       public Builder setUser(
           java.lang.String value) {
@@ -15413,6 +15986,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user = 4 [default = "-"];</code>
+       * @return This builder for chaining.
        */
       public Builder clearUser() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -15422,6 +15996,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user = 4 [default = "-"];</code>
+       * @param value The bytes for user to set.
+       * @return This builder for chaining.
        */
       public Builder setUserBytes(
           com.google.protobuf.ByteString value) {
@@ -15434,17 +16010,19 @@ public final class UserBitShared {
         return this;
       }
 
-      private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint foreman_ = null;
+      private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint foreman_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> foremanBuilder_;
       /**
        * <code>optional .exec.DrillbitEndpoint foreman = 5;</code>
+       * @return Whether the foreman field is set.
        */
       public boolean hasForeman() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional .exec.DrillbitEndpoint foreman = 5;</code>
+       * @return The foreman.
        */
       public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getForeman() {
         if (foremanBuilder_ == null) {
@@ -15488,7 +16066,7 @@ public final class UserBitShared {
        */
       public Builder mergeForeman(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint value) {
         if (foremanBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+          if (((bitField0_ & 0x00000010) != 0) &&
               foreman_ != null &&
               foreman_ != org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance()) {
             foreman_ =
@@ -15555,12 +16133,14 @@ public final class UserBitShared {
       private java.lang.Object optionsJson_ = "";
       /**
        * <code>optional string options_json = 6;</code>
+       * @return Whether the optionsJson field is set.
        */
       public boolean hasOptionsJson() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <code>optional string options_json = 6;</code>
+       * @return The optionsJson.
        */
       public java.lang.String getOptionsJson() {
         java.lang.Object ref = optionsJson_;
@@ -15578,6 +16158,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string options_json = 6;</code>
+       * @return The bytes for optionsJson.
        */
       public com.google.protobuf.ByteString
           getOptionsJsonBytes() {
@@ -15594,6 +16175,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string options_json = 6;</code>
+       * @param value The optionsJson to set.
+       * @return This builder for chaining.
        */
       public Builder setOptionsJson(
           java.lang.String value) {
@@ -15607,6 +16190,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string options_json = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearOptionsJson() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -15616,6 +16200,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string options_json = 6;</code>
+       * @param value The bytes for optionsJson to set.
+       * @return This builder for chaining.
        */
       public Builder setOptionsJsonBytes(
           com.google.protobuf.ByteString value) {
@@ -15631,18 +16217,22 @@ public final class UserBitShared {
       private double totalCost_ ;
       /**
        * <code>optional double total_cost = 7;</code>
+       * @return Whether the totalCost field is set.
        */
       public boolean hasTotalCost() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <code>optional double total_cost = 7;</code>
+       * @return The totalCost.
        */
       public double getTotalCost() {
         return totalCost_;
       }
       /**
        * <code>optional double total_cost = 7;</code>
+       * @param value The totalCost to set.
+       * @return This builder for chaining.
        */
       public Builder setTotalCost(double value) {
         bitField0_ |= 0x00000040;
@@ -15652,6 +16242,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional double total_cost = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTotalCost() {
         bitField0_ = (bitField0_ & ~0x00000040);
@@ -15663,12 +16254,14 @@ public final class UserBitShared {
       private java.lang.Object queueName_ = "-";
       /**
        * <code>optional string queue_name = 8 [default = "-"];</code>
+       * @return Whether the queueName field is set.
        */
       public boolean hasQueueName() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <code>optional string queue_name = 8 [default = "-"];</code>
+       * @return The queueName.
        */
       public java.lang.String getQueueName() {
         java.lang.Object ref = queueName_;
@@ -15686,6 +16279,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queue_name = 8 [default = "-"];</code>
+       * @return The bytes for queueName.
        */
       public com.google.protobuf.ByteString
           getQueueNameBytes() {
@@ -15702,6 +16296,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queue_name = 8 [default = "-"];</code>
+       * @param value The queueName to set.
+       * @return This builder for chaining.
        */
       public Builder setQueueName(
           java.lang.String value) {
@@ -15715,6 +16311,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queue_name = 8 [default = "-"];</code>
+       * @return This builder for chaining.
        */
       public Builder clearQueueName() {
         bitField0_ = (bitField0_ & ~0x00000080);
@@ -15724,6 +16321,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queue_name = 8 [default = "-"];</code>
+       * @param value The bytes for queueName to set.
+       * @return This builder for chaining.
        */
       public Builder setQueueNameBytes(
           com.google.protobuf.ByteString value) {
@@ -15794,10 +16393,12 @@ public final class UserBitShared {
 
     /**
      * <code>optional .exec.shared.QueryId id = 1;</code>
+     * @return Whether the id field is set.
      */
     boolean hasId();
     /**
      * <code>optional .exec.shared.QueryId id = 1;</code>
+     * @return The id.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryId getId();
     /**
@@ -15807,65 +16408,79 @@ public final class UserBitShared {
 
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return Whether the type field is set.
      */
     boolean hasType();
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return The type.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryType getType();
 
     /**
      * <code>optional int64 start = 3;</code>
+     * @return Whether the start field is set.
      */
     boolean hasStart();
     /**
      * <code>optional int64 start = 3;</code>
+     * @return The start.
      */
     long getStart();
 
     /**
      * <code>optional int64 end = 4;</code>
+     * @return Whether the end field is set.
      */
     boolean hasEnd();
     /**
      * <code>optional int64 end = 4;</code>
+     * @return The end.
      */
     long getEnd();
 
     /**
      * <code>optional string query = 5;</code>
+     * @return Whether the query field is set.
      */
     boolean hasQuery();
     /**
      * <code>optional string query = 5;</code>
+     * @return The query.
      */
     java.lang.String getQuery();
     /**
      * <code>optional string query = 5;</code>
+     * @return The bytes for query.
      */
     com.google.protobuf.ByteString
         getQueryBytes();
 
     /**
      * <code>optional string plan = 6;</code>
+     * @return Whether the plan field is set.
      */
     boolean hasPlan();
     /**
      * <code>optional string plan = 6;</code>
+     * @return The plan.
      */
     java.lang.String getPlan();
     /**
      * <code>optional string plan = 6;</code>
+     * @return The bytes for plan.
      */
     com.google.protobuf.ByteString
         getPlanBytes();
 
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 7;</code>
+     * @return Whether the foreman field is set.
      */
     boolean hasForeman();
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 7;</code>
+     * @return The foreman.
      */
     org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getForeman();
     /**
@@ -15875,28 +16490,34 @@ public final class UserBitShared {
 
     /**
      * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
+     * @return Whether the state field is set.
      */
     boolean hasState();
     /**
      * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
+     * @return The state.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState();
 
     /**
      * <code>optional int32 total_fragments = 9;</code>
+     * @return Whether the totalFragments field is set.
      */
     boolean hasTotalFragments();
     /**
      * <code>optional int32 total_fragments = 9;</code>
+     * @return The totalFragments.
      */
     int getTotalFragments();
 
     /**
      * <code>optional int32 finished_fragments = 10;</code>
+     * @return Whether the finishedFragments field is set.
      */
     boolean hasFinishedFragments();
     /**
      * <code>optional int32 finished_fragments = 10;</code>
+     * @return The finishedFragments.
      */
     int getFinishedFragments();
 
@@ -15926,149 +16547,181 @@ public final class UserBitShared {
 
     /**
      * <code>optional string user = 12 [default = "-"];</code>
+     * @return Whether the user field is set.
      */
     boolean hasUser();
     /**
      * <code>optional string user = 12 [default = "-"];</code>
+     * @return The user.
      */
     java.lang.String getUser();
     /**
      * <code>optional string user = 12 [default = "-"];</code>
+     * @return The bytes for user.
      */
     com.google.protobuf.ByteString
         getUserBytes();
 
     /**
      * <code>optional string error = 13;</code>
+     * @return Whether the error field is set.
      */
     boolean hasError();
     /**
      * <code>optional string error = 13;</code>
+     * @return The error.
      */
     java.lang.String getError();
     /**
      * <code>optional string error = 13;</code>
+     * @return The bytes for error.
      */
     com.google.protobuf.ByteString
         getErrorBytes();
 
     /**
      * <code>optional string verboseError = 14;</code>
+     * @return Whether the verboseError field is set.
      */
     boolean hasVerboseError();
     /**
      * <code>optional string verboseError = 14;</code>
+     * @return The verboseError.
      */
     java.lang.String getVerboseError();
     /**
      * <code>optional string verboseError = 14;</code>
+     * @return The bytes for verboseError.
      */
     com.google.protobuf.ByteString
         getVerboseErrorBytes();
 
     /**
      * <code>optional string error_id = 15;</code>
+     * @return Whether the errorId field is set.
      */
     boolean hasErrorId();
     /**
      * <code>optional string error_id = 15;</code>
+     * @return The errorId.
      */
     java.lang.String getErrorId();
     /**
      * <code>optional string error_id = 15;</code>
+     * @return The bytes for errorId.
      */
     com.google.protobuf.ByteString
         getErrorIdBytes();
 
     /**
      * <code>optional string error_node = 16;</code>
+     * @return Whether the errorNode field is set.
      */
     boolean hasErrorNode();
     /**
      * <code>optional string error_node = 16;</code>
+     * @return The errorNode.
      */
     java.lang.String getErrorNode();
     /**
      * <code>optional string error_node = 16;</code>
+     * @return The bytes for errorNode.
      */
     com.google.protobuf.ByteString
         getErrorNodeBytes();
 
     /**
      * <code>optional string options_json = 17;</code>
+     * @return Whether the optionsJson field is set.
      */
     boolean hasOptionsJson();
     /**
      * <code>optional string options_json = 17;</code>
+     * @return The optionsJson.
      */
     java.lang.String getOptionsJson();
     /**
      * <code>optional string options_json = 17;</code>
+     * @return The bytes for optionsJson.
      */
     com.google.protobuf.ByteString
         getOptionsJsonBytes();
 
     /**
      * <code>optional int64 planEnd = 18;</code>
+     * @return Whether the planEnd field is set.
      */
     boolean hasPlanEnd();
     /**
      * <code>optional int64 planEnd = 18;</code>
+     * @return The planEnd.
      */
     long getPlanEnd();
 
     /**
      * <code>optional int64 queueWaitEnd = 19;</code>
+     * @return Whether the queueWaitEnd field is set.
      */
     boolean hasQueueWaitEnd();
     /**
      * <code>optional int64 queueWaitEnd = 19;</code>
+     * @return The queueWaitEnd.
      */
     long getQueueWaitEnd();
 
     /**
      * <code>optional double total_cost = 20;</code>
+     * @return Whether the totalCost field is set.
      */
     boolean hasTotalCost();
     /**
      * <code>optional double total_cost = 20;</code>
+     * @return The totalCost.
      */
     double getTotalCost();
 
     /**
      * <code>optional string queue_name = 21 [default = "-"];</code>
+     * @return Whether the queueName field is set.
      */
     boolean hasQueueName();
     /**
      * <code>optional string queue_name = 21 [default = "-"];</code>
+     * @return The queueName.
      */
     java.lang.String getQueueName();
     /**
      * <code>optional string queue_name = 21 [default = "-"];</code>
+     * @return The bytes for queueName.
      */
     com.google.protobuf.ByteString
         getQueueNameBytes();
 
     /**
      * <code>optional string queryId = 22;</code>
+     * @return Whether the queryId field is set.
      */
     boolean hasQueryId();
     /**
      * <code>optional string queryId = 22;</code>
+     * @return The queryId.
      */
     java.lang.String getQueryId();
     /**
      * <code>optional string queryId = 22;</code>
+     * @return The bytes for queryId.
      */
     com.google.protobuf.ByteString
         getQueryIdBytes();
 
     /**
      * <code>optional int32 autoLimit = 23;</code>
+     * @return Whether the autoLimit field is set.
      */
     boolean hasAutoLimit();
     /**
      * <code>optional int32 autoLimit = 23;</code>
+     * @return The autoLimit.
      */
     int getAutoLimit();
   }
@@ -16086,13 +16739,9 @@ public final class UserBitShared {
     }
     private QueryProfile() {
       type_ = 1;
-      start_ = 0L;
-      end_ = 0L;
       query_ = "";
       plan_ = "";
       state_ = 0;
-      totalFragments_ = 0;
-      finishedFragments_ = 0;
       fragmentProfile_ = java.util.Collections.emptyList();
       user_ = "-";
       error_ = "";
@@ -16100,12 +16749,15 @@ public final class UserBitShared {
       errorId_ = "";
       errorNode_ = "";
       optionsJson_ = "";
-      planEnd_ = 0L;
-      queueWaitEnd_ = 0L;
-      totalCost_ = 0D;
       queueName_ = "-";
       queryId_ = "";
-      autoLimit_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new QueryProfile();
     }
 
     @java.lang.Override
@@ -16134,7 +16786,7 @@ public final class UserBitShared {
               break;
             case 10: {
               org.apache.drill.exec.proto.UserBitShared.QueryId.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = id_.toBuilder();
               }
               id_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.QueryId.PARSER, extensionRegistry);
@@ -16181,7 +16833,7 @@ public final class UserBitShared {
             }
             case 58: {
               org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000040) == 0x00000040)) {
+              if (((bitField0_ & 0x00000040) != 0)) {
                 subBuilder = foreman_.toBuilder();
               }
               foreman_ = input.readMessage(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.PARSER, extensionRegistry);
@@ -16215,7 +16867,7 @@ public final class UserBitShared {
               break;
             }
             case 90: {
-              if (!((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+              if (!((mutable_bitField0_ & 0x00000400) != 0)) {
                 fragmentProfile_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile>();
                 mutable_bitField0_ |= 0x00000400;
               }
@@ -16306,7 +16958,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000400) == 0x00000400)) {
+        if (((mutable_bitField0_ & 0x00000400) != 0)) {
           fragmentProfile_ = java.util.Collections.unmodifiableList(fragmentProfile_);
         }
         this.unknownFields = unknownFields.build();
@@ -16331,12 +16983,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.UserBitShared.QueryId id_;
     /**
      * <code>optional .exec.shared.QueryId id = 1;</code>
+     * @return Whether the id field is set.
      */
     public boolean hasId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryId id = 1;</code>
+     * @return The id.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryId getId() {
       return id_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : id_;
@@ -16352,12 +17006,14 @@ public final class UserBitShared {
     private int type_;
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return Whether the type field is set.
      */
     public boolean hasType() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
+     * @return The type.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryType getType() {
       @SuppressWarnings("deprecation")
@@ -16369,12 +17025,14 @@ public final class UserBitShared {
     private long start_;
     /**
      * <code>optional int64 start = 3;</code>
+     * @return Whether the start field is set.
      */
     public boolean hasStart() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional int64 start = 3;</code>
+     * @return The start.
      */
     public long getStart() {
       return start_;
@@ -16384,12 +17042,14 @@ public final class UserBitShared {
     private long end_;
     /**
      * <code>optional int64 end = 4;</code>
+     * @return Whether the end field is set.
      */
     public boolean hasEnd() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional int64 end = 4;</code>
+     * @return The end.
      */
     public long getEnd() {
       return end_;
@@ -16399,12 +17059,14 @@ public final class UserBitShared {
     private volatile java.lang.Object query_;
     /**
      * <code>optional string query = 5;</code>
+     * @return Whether the query field is set.
      */
     public boolean hasQuery() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional string query = 5;</code>
+     * @return The query.
      */
     public java.lang.String getQuery() {
       java.lang.Object ref = query_;
@@ -16422,6 +17084,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string query = 5;</code>
+     * @return The bytes for query.
      */
     public com.google.protobuf.ByteString
         getQueryBytes() {
@@ -16441,12 +17104,14 @@ public final class UserBitShared {
     private volatile java.lang.Object plan_;
     /**
      * <code>optional string plan = 6;</code>
+     * @return Whether the plan field is set.
      */
     public boolean hasPlan() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <code>optional string plan = 6;</code>
+     * @return The plan.
      */
     public java.lang.String getPlan() {
       java.lang.Object ref = plan_;
@@ -16464,6 +17129,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string plan = 6;</code>
+     * @return The bytes for plan.
      */
     public com.google.protobuf.ByteString
         getPlanBytes() {
@@ -16483,12 +17149,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint foreman_;
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 7;</code>
+     * @return Whether the foreman field is set.
      */
     public boolean hasForeman() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 7;</code>
+     * @return The foreman.
      */
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getForeman() {
       return foreman_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : foreman_;
@@ -16504,12 +17172,14 @@ public final class UserBitShared {
     private int state_;
     /**
      * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
+     * @return Whether the state field is set.
      */
     public boolean hasState() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
+     * @return The state.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState() {
       @SuppressWarnings("deprecation")
@@ -16521,12 +17191,14 @@ public final class UserBitShared {
     private int totalFragments_;
     /**
      * <code>optional int32 total_fragments = 9;</code>
+     * @return Whether the totalFragments field is set.
      */
     public boolean hasTotalFragments() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000100) != 0);
     }
     /**
      * <code>optional int32 total_fragments = 9;</code>
+     * @return The totalFragments.
      */
     public int getTotalFragments() {
       return totalFragments_;
@@ -16536,12 +17208,14 @@ public final class UserBitShared {
     private int finishedFragments_;
     /**
      * <code>optional int32 finished_fragments = 10;</code>
+     * @return Whether the finishedFragments field is set.
      */
     public boolean hasFinishedFragments() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
+      return ((bitField0_ & 0x00000200) != 0);
     }
     /**
      * <code>optional int32 finished_fragments = 10;</code>
+     * @return The finishedFragments.
      */
     public int getFinishedFragments() {
       return finishedFragments_;
@@ -16586,12 +17260,14 @@ public final class UserBitShared {
     private volatile java.lang.Object user_;
     /**
      * <code>optional string user = 12 [default = "-"];</code>
+     * @return Whether the user field is set.
      */
     public boolean hasUser() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00000400) != 0);
     }
     /**
      * <code>optional string user = 12 [default = "-"];</code>
+     * @return The user.
      */
     public java.lang.String getUser() {
       java.lang.Object ref = user_;
@@ -16609,6 +17285,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string user = 12 [default = "-"];</code>
+     * @return The bytes for user.
      */
     public com.google.protobuf.ByteString
         getUserBytes() {
@@ -16628,12 +17305,14 @@ public final class UserBitShared {
     private volatile java.lang.Object error_;
     /**
      * <code>optional string error = 13;</code>
+     * @return Whether the error field is set.
      */
     public boolean hasError() {
-      return ((bitField0_ & 0x00000800) == 0x00000800);
+      return ((bitField0_ & 0x00000800) != 0);
     }
     /**
      * <code>optional string error = 13;</code>
+     * @return The error.
      */
     public java.lang.String getError() {
       java.lang.Object ref = error_;
@@ -16651,6 +17330,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string error = 13;</code>
+     * @return The bytes for error.
      */
     public com.google.protobuf.ByteString
         getErrorBytes() {
@@ -16670,12 +17350,14 @@ public final class UserBitShared {
     private volatile java.lang.Object verboseError_;
     /**
      * <code>optional string verboseError = 14;</code>
+     * @return Whether the verboseError field is set.
      */
     public boolean hasVerboseError() {
-      return ((bitField0_ & 0x00001000) == 0x00001000);
+      return ((bitField0_ & 0x00001000) != 0);
     }
     /**
      * <code>optional string verboseError = 14;</code>
+     * @return The verboseError.
      */
     public java.lang.String getVerboseError() {
       java.lang.Object ref = verboseError_;
@@ -16693,6 +17375,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string verboseError = 14;</code>
+     * @return The bytes for verboseError.
      */
     public com.google.protobuf.ByteString
         getVerboseErrorBytes() {
@@ -16712,12 +17395,14 @@ public final class UserBitShared {
     private volatile java.lang.Object errorId_;
     /**
      * <code>optional string error_id = 15;</code>
+     * @return Whether the errorId field is set.
      */
     public boolean hasErrorId() {
-      return ((bitField0_ & 0x00002000) == 0x00002000);
+      return ((bitField0_ & 0x00002000) != 0);
     }
     /**
      * <code>optional string error_id = 15;</code>
+     * @return The errorId.
      */
     public java.lang.String getErrorId() {
       java.lang.Object ref = errorId_;
@@ -16735,6 +17420,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string error_id = 15;</code>
+     * @return The bytes for errorId.
      */
     public com.google.protobuf.ByteString
         getErrorIdBytes() {
@@ -16754,12 +17440,14 @@ public final class UserBitShared {
     private volatile java.lang.Object errorNode_;
     /**
      * <code>optional string error_node = 16;</code>
+     * @return Whether the errorNode field is set.
      */
     public boolean hasErrorNode() {
-      return ((bitField0_ & 0x00004000) == 0x00004000);
+      return ((bitField0_ & 0x00004000) != 0);
     }
     /**
      * <code>optional string error_node = 16;</code>
+     * @return The errorNode.
      */
     public java.lang.String getErrorNode() {
       java.lang.Object ref = errorNode_;
@@ -16777,6 +17465,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string error_node = 16;</code>
+     * @return The bytes for errorNode.
      */
     public com.google.protobuf.ByteString
         getErrorNodeBytes() {
@@ -16796,12 +17485,14 @@ public final class UserBitShared {
     private volatile java.lang.Object optionsJson_;
     /**
      * <code>optional string options_json = 17;</code>
+     * @return Whether the optionsJson field is set.
      */
     public boolean hasOptionsJson() {
-      return ((bitField0_ & 0x00008000) == 0x00008000);
+      return ((bitField0_ & 0x00008000) != 0);
     }
     /**
      * <code>optional string options_json = 17;</code>
+     * @return The optionsJson.
      */
     public java.lang.String getOptionsJson() {
       java.lang.Object ref = optionsJson_;
@@ -16819,6 +17510,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string options_json = 17;</code>
+     * @return The bytes for optionsJson.
      */
     public com.google.protobuf.ByteString
         getOptionsJsonBytes() {
@@ -16838,12 +17530,14 @@ public final class UserBitShared {
     private long planEnd_;
     /**
      * <code>optional int64 planEnd = 18;</code>
+     * @return Whether the planEnd field is set.
      */
     public boolean hasPlanEnd() {
-      return ((bitField0_ & 0x00010000) == 0x00010000);
+      return ((bitField0_ & 0x00010000) != 0);
     }
     /**
      * <code>optional int64 planEnd = 18;</code>
+     * @return The planEnd.
      */
     public long getPlanEnd() {
       return planEnd_;
@@ -16853,12 +17547,14 @@ public final class UserBitShared {
     private long queueWaitEnd_;
     /**
      * <code>optional int64 queueWaitEnd = 19;</code>
+     * @return Whether the queueWaitEnd field is set.
      */
     public boolean hasQueueWaitEnd() {
-      return ((bitField0_ & 0x00020000) == 0x00020000);
+      return ((bitField0_ & 0x00020000) != 0);
     }
     /**
      * <code>optional int64 queueWaitEnd = 19;</code>
+     * @return The queueWaitEnd.
      */
     public long getQueueWaitEnd() {
       return queueWaitEnd_;
@@ -16868,12 +17564,14 @@ public final class UserBitShared {
     private double totalCost_;
     /**
      * <code>optional double total_cost = 20;</code>
+     * @return Whether the totalCost field is set.
      */
     public boolean hasTotalCost() {
-      return ((bitField0_ & 0x00040000) == 0x00040000);
+      return ((bitField0_ & 0x00040000) != 0);
     }
     /**
      * <code>optional double total_cost = 20;</code>
+     * @return The totalCost.
      */
     public double getTotalCost() {
       return totalCost_;
@@ -16883,12 +17581,14 @@ public final class UserBitShared {
     private volatile java.lang.Object queueName_;
     /**
      * <code>optional string queue_name = 21 [default = "-"];</code>
+     * @return Whether the queueName field is set.
      */
     public boolean hasQueueName() {
-      return ((bitField0_ & 0x00080000) == 0x00080000);
+      return ((bitField0_ & 0x00080000) != 0);
     }
     /**
      * <code>optional string queue_name = 21 [default = "-"];</code>
+     * @return The queueName.
      */
     public java.lang.String getQueueName() {
       java.lang.Object ref = queueName_;
@@ -16906,6 +17606,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string queue_name = 21 [default = "-"];</code>
+     * @return The bytes for queueName.
      */
     public com.google.protobuf.ByteString
         getQueueNameBytes() {
@@ -16925,12 +17626,14 @@ public final class UserBitShared {
     private volatile java.lang.Object queryId_;
     /**
      * <code>optional string queryId = 22;</code>
+     * @return Whether the queryId field is set.
      */
     public boolean hasQueryId() {
-      return ((bitField0_ & 0x00100000) == 0x00100000);
+      return ((bitField0_ & 0x00100000) != 0);
     }
     /**
      * <code>optional string queryId = 22;</code>
+     * @return The queryId.
      */
     public java.lang.String getQueryId() {
       java.lang.Object ref = queryId_;
@@ -16948,6 +17651,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string queryId = 22;</code>
+     * @return The bytes for queryId.
      */
     public com.google.protobuf.ByteString
         getQueryIdBytes() {
@@ -16967,12 +17671,14 @@ public final class UserBitShared {
     private int autoLimit_;
     /**
      * <code>optional int32 autoLimit = 23;</code>
+     * @return Whether the autoLimit field is set.
      */
     public boolean hasAutoLimit() {
-      return ((bitField0_ & 0x00200000) == 0x00200000);
+      return ((bitField0_ & 0x00200000) != 0);
     }
     /**
      * <code>optional int32 autoLimit = 23;</code>
+     * @return The autoLimit.
      */
     public int getAutoLimit() {
       return autoLimit_;
@@ -16992,73 +17698,73 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getId());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeEnum(2, type_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt64(3, start_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeInt64(4, end_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 5, query_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 6, plan_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeMessage(7, getForeman());
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         output.writeEnum(8, state_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         output.writeInt32(9, totalFragments_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         output.writeInt32(10, finishedFragments_);
       }
       for (int i = 0; i < fragmentProfile_.size(); i++) {
         output.writeMessage(11, fragmentProfile_.get(i));
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000400) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 12, user_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00000800) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 13, error_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00001000) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 14, verboseError_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00002000) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 15, errorId_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00004000) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 16, errorNode_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00008000) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 17, optionsJson_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00010000) != 0)) {
         output.writeInt64(18, planEnd_);
       }
-      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+      if (((bitField0_ & 0x00020000) != 0)) {
         output.writeInt64(19, queueWaitEnd_);
       }
-      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((bitField0_ & 0x00040000) != 0)) {
         output.writeDouble(20, totalCost_);
       }
-      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+      if (((bitField0_ & 0x00080000) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 21, queueName_);
       }
-      if (((bitField0_ & 0x00100000) == 0x00100000)) {
+      if (((bitField0_ & 0x00100000) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 22, queryId_);
       }
-      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+      if (((bitField0_ & 0x00200000) != 0)) {
         output.writeInt32(23, autoLimit_);
       }
       unknownFields.writeTo(output);
@@ -17070,41 +17776,41 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getId());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(2, type_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(3, start_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(4, end_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, query_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, plan_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, getForeman());
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(8, state_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(9, totalFragments_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(10, finishedFragments_);
       }
@@ -17112,43 +17818,43 @@ public final class UserBitShared {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(11, fragmentProfile_.get(i));
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000400) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(12, user_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00000800) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(13, error_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00001000) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(14, verboseError_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00002000) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(15, errorId_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00004000) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(16, errorNode_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00008000) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(17, optionsJson_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00010000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(18, planEnd_);
       }
-      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+      if (((bitField0_ & 0x00020000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(19, queueWaitEnd_);
       }
-      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((bitField0_ & 0x00040000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(20, totalCost_);
       }
-      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+      if (((bitField0_ & 0x00080000) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(21, queueName_);
       }
-      if (((bitField0_ & 0x00100000) == 0x00100000)) {
+      if (((bitField0_ & 0x00100000) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(22, queryId_);
       }
-      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+      if (((bitField0_ & 0x00200000) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(23, autoLimit_);
       }
@@ -17167,121 +17873,119 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.QueryProfile other = (org.apache.drill.exec.proto.UserBitShared.QueryProfile) obj;
 
-      boolean result = true;
-      result = result && (hasId() == other.hasId());
+      if (hasId() != other.hasId()) return false;
       if (hasId()) {
-        result = result && getId()
-            .equals(other.getId());
+        if (!getId()
+            .equals(other.getId())) return false;
       }
-      result = result && (hasType() == other.hasType());
+      if (hasType() != other.hasType()) return false;
       if (hasType()) {
-        result = result && type_ == other.type_;
+        if (type_ != other.type_) return false;
       }
-      result = result && (hasStart() == other.hasStart());
+      if (hasStart() != other.hasStart()) return false;
       if (hasStart()) {
-        result = result && (getStart()
-            == other.getStart());
+        if (getStart()
+            != other.getStart()) return false;
       }
-      result = result && (hasEnd() == other.hasEnd());
+      if (hasEnd() != other.hasEnd()) return false;
       if (hasEnd()) {
-        result = result && (getEnd()
-            == other.getEnd());
+        if (getEnd()
+            != other.getEnd()) return false;
       }
-      result = result && (hasQuery() == other.hasQuery());
+      if (hasQuery() != other.hasQuery()) return false;
       if (hasQuery()) {
-        result = result && getQuery()
-            .equals(other.getQuery());
+        if (!getQuery()
+            .equals(other.getQuery())) return false;
       }
-      result = result && (hasPlan() == other.hasPlan());
+      if (hasPlan() != other.hasPlan()) return false;
       if (hasPlan()) {
-        result = result && getPlan()
-            .equals(other.getPlan());
+        if (!getPlan()
+            .equals(other.getPlan())) return false;
       }
-      result = result && (hasForeman() == other.hasForeman());
+      if (hasForeman() != other.hasForeman()) return false;
       if (hasForeman()) {
-        result = result && getForeman()
-            .equals(other.getForeman());
+        if (!getForeman()
+            .equals(other.getForeman())) return false;
       }
-      result = result && (hasState() == other.hasState());
+      if (hasState() != other.hasState()) return false;
       if (hasState()) {
-        result = result && state_ == other.state_;
+        if (state_ != other.state_) return false;
       }
-      result = result && (hasTotalFragments() == other.hasTotalFragments());
+      if (hasTotalFragments() != other.hasTotalFragments()) return false;
       if (hasTotalFragments()) {
-        result = result && (getTotalFragments()
-            == other.getTotalFragments());
+        if (getTotalFragments()
+            != other.getTotalFragments()) return false;
       }
-      result = result && (hasFinishedFragments() == other.hasFinishedFragments());
+      if (hasFinishedFragments() != other.hasFinishedFragments()) return false;
       if (hasFinishedFragments()) {
-        result = result && (getFinishedFragments()
-            == other.getFinishedFragments());
+        if (getFinishedFragments()
+            != other.getFinishedFragments()) return false;
       }
-      result = result && getFragmentProfileList()
-          .equals(other.getFragmentProfileList());
-      result = result && (hasUser() == other.hasUser());
+      if (!getFragmentProfileList()
+          .equals(other.getFragmentProfileList())) return false;
+      if (hasUser() != other.hasUser()) return false;
       if (hasUser()) {
-        result = result && getUser()
-            .equals(other.getUser());
+        if (!getUser()
+            .equals(other.getUser())) return false;
       }
-      result = result && (hasError() == other.hasError());
+      if (hasError() != other.hasError()) return false;
       if (hasError()) {
-        result = result && getError()
-            .equals(other.getError());
+        if (!getError()
+            .equals(other.getError())) return false;
       }
-      result = result && (hasVerboseError() == other.hasVerboseError());
+      if (hasVerboseError() != other.hasVerboseError()) return false;
       if (hasVerboseError()) {
-        result = result && getVerboseError()
-            .equals(other.getVerboseError());
+        if (!getVerboseError()
+            .equals(other.getVerboseError())) return false;
       }
-      result = result && (hasErrorId() == other.hasErrorId());
+      if (hasErrorId() != other.hasErrorId()) return false;
       if (hasErrorId()) {
-        result = result && getErrorId()
-            .equals(other.getErrorId());
+        if (!getErrorId()
+            .equals(other.getErrorId())) return false;
       }
-      result = result && (hasErrorNode() == other.hasErrorNode());
+      if (hasErrorNode() != other.hasErrorNode()) return false;
       if (hasErrorNode()) {
-        result = result && getErrorNode()
-            .equals(other.getErrorNode());
+        if (!getErrorNode()
+            .equals(other.getErrorNode())) return false;
       }
-      result = result && (hasOptionsJson() == other.hasOptionsJson());
+      if (hasOptionsJson() != other.hasOptionsJson()) return false;
       if (hasOptionsJson()) {
-        result = result && getOptionsJson()
-            .equals(other.getOptionsJson());
+        if (!getOptionsJson()
+            .equals(other.getOptionsJson())) return false;
       }
-      result = result && (hasPlanEnd() == other.hasPlanEnd());
+      if (hasPlanEnd() != other.hasPlanEnd()) return false;
       if (hasPlanEnd()) {
-        result = result && (getPlanEnd()
-            == other.getPlanEnd());
+        if (getPlanEnd()
+            != other.getPlanEnd()) return false;
       }
-      result = result && (hasQueueWaitEnd() == other.hasQueueWaitEnd());
+      if (hasQueueWaitEnd() != other.hasQueueWaitEnd()) return false;
       if (hasQueueWaitEnd()) {
-        result = result && (getQueueWaitEnd()
-            == other.getQueueWaitEnd());
+        if (getQueueWaitEnd()
+            != other.getQueueWaitEnd()) return false;
       }
-      result = result && (hasTotalCost() == other.hasTotalCost());
+      if (hasTotalCost() != other.hasTotalCost()) return false;
       if (hasTotalCost()) {
-        result = result && (
-            java.lang.Double.doubleToLongBits(getTotalCost())
-            == java.lang.Double.doubleToLongBits(
-                other.getTotalCost()));
+        if (java.lang.Double.doubleToLongBits(getTotalCost())
+            != java.lang.Double.doubleToLongBits(
+                other.getTotalCost())) return false;
       }
-      result = result && (hasQueueName() == other.hasQueueName());
+      if (hasQueueName() != other.hasQueueName()) return false;
       if (hasQueueName()) {
-        result = result && getQueueName()
-            .equals(other.getQueueName());
+        if (!getQueueName()
+            .equals(other.getQueueName())) return false;
       }
-      result = result && (hasQueryId() == other.hasQueryId());
+      if (hasQueryId() != other.hasQueryId()) return false;
       if (hasQueryId()) {
-        result = result && getQueryId()
-            .equals(other.getQueryId());
+        if (!getQueryId()
+            .equals(other.getQueryId())) return false;
       }
-      result = result && (hasAutoLimit() == other.hasAutoLimit());
+      if (hasAutoLimit() != other.hasAutoLimit()) return false;
       if (hasAutoLimit()) {
-        result = result && (getAutoLimit()
-            == other.getAutoLimit());
+        if (getAutoLimit()
+            != other.getAutoLimit()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -17610,56 +18314,56 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.QueryProfile result = new org.apache.drill.exec.proto.UserBitShared.QueryProfile(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (idBuilder_ == null) {
+            result.id_ = id_;
+          } else {
+            result.id_ = idBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (idBuilder_ == null) {
-          result.id_ = id_;
-        } else {
-          result.id_ = idBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.type_ = type_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.start_ = start_;
           to_bitField0_ |= 0x00000004;
         }
-        result.start_ = start_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.end_ = end_;
           to_bitField0_ |= 0x00000008;
         }
-        result.end_ = end_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.query_ = query_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
           to_bitField0_ |= 0x00000020;
         }
         result.plan_ = plan_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          if (foremanBuilder_ == null) {
+            result.foreman_ = foreman_;
+          } else {
+            result.foreman_ = foremanBuilder_.build();
+          }
           to_bitField0_ |= 0x00000040;
         }
-        if (foremanBuilder_ == null) {
-          result.foreman_ = foreman_;
-        } else {
-          result.foreman_ = foremanBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
           to_bitField0_ |= 0x00000080;
         }
         result.state_ = state_;
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          result.totalFragments_ = totalFragments_;
           to_bitField0_ |= 0x00000100;
         }
-        result.totalFragments_ = totalFragments_;
-        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+        if (((from_bitField0_ & 0x00000200) != 0)) {
+          result.finishedFragments_ = finishedFragments_;
           to_bitField0_ |= 0x00000200;
         }
-        result.finishedFragments_ = finishedFragments_;
         if (fragmentProfileBuilder_ == null) {
-          if (((bitField0_ & 0x00000400) == 0x00000400)) {
+          if (((bitField0_ & 0x00000400) != 0)) {
             fragmentProfile_ = java.util.Collections.unmodifiableList(fragmentProfile_);
             bitField0_ = (bitField0_ & ~0x00000400);
           }
@@ -17667,54 +18371,54 @@ public final class UserBitShared {
         } else {
           result.fragmentProfile_ = fragmentProfileBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+        if (((from_bitField0_ & 0x00000800) != 0)) {
           to_bitField0_ |= 0x00000400;
         }
         result.user_ = user_;
-        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+        if (((from_bitField0_ & 0x00001000) != 0)) {
           to_bitField0_ |= 0x00000800;
         }
         result.error_ = error_;
-        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+        if (((from_bitField0_ & 0x00002000) != 0)) {
           to_bitField0_ |= 0x00001000;
         }
         result.verboseError_ = verboseError_;
-        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+        if (((from_bitField0_ & 0x00004000) != 0)) {
           to_bitField0_ |= 0x00002000;
         }
         result.errorId_ = errorId_;
-        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+        if (((from_bitField0_ & 0x00008000) != 0)) {
           to_bitField0_ |= 0x00004000;
         }
         result.errorNode_ = errorNode_;
-        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+        if (((from_bitField0_ & 0x00010000) != 0)) {
           to_bitField0_ |= 0x00008000;
         }
         result.optionsJson_ = optionsJson_;
-        if (((from_bitField0_ & 0x00020000) == 0x00020000)) {
+        if (((from_bitField0_ & 0x00020000) != 0)) {
+          result.planEnd_ = planEnd_;
           to_bitField0_ |= 0x00010000;
         }
-        result.planEnd_ = planEnd_;
-        if (((from_bitField0_ & 0x00040000) == 0x00040000)) {
+        if (((from_bitField0_ & 0x00040000) != 0)) {
+          result.queueWaitEnd_ = queueWaitEnd_;
           to_bitField0_ |= 0x00020000;
         }
-        result.queueWaitEnd_ = queueWaitEnd_;
-        if (((from_bitField0_ & 0x00080000) == 0x00080000)) {
+        if (((from_bitField0_ & 0x00080000) != 0)) {
+          result.totalCost_ = totalCost_;
           to_bitField0_ |= 0x00040000;
         }
-        result.totalCost_ = totalCost_;
-        if (((from_bitField0_ & 0x00100000) == 0x00100000)) {
+        if (((from_bitField0_ & 0x00100000) != 0)) {
           to_bitField0_ |= 0x00080000;
         }
         result.queueName_ = queueName_;
-        if (((from_bitField0_ & 0x00200000) == 0x00200000)) {
+        if (((from_bitField0_ & 0x00200000) != 0)) {
           to_bitField0_ |= 0x00100000;
         }
         result.queryId_ = queryId_;
-        if (((from_bitField0_ & 0x00400000) == 0x00400000)) {
+        if (((from_bitField0_ & 0x00400000) != 0)) {
+          result.autoLimit_ = autoLimit_;
           to_bitField0_ |= 0x00200000;
         }
-        result.autoLimit_ = autoLimit_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -17722,35 +18426,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -17906,17 +18610,19 @@ public final class UserBitShared {
       }
       private int bitField0_;
 
-      private org.apache.drill.exec.proto.UserBitShared.QueryId id_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId id_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> idBuilder_;
       /**
        * <code>optional .exec.shared.QueryId id = 1;</code>
+       * @return Whether the id field is set.
        */
       public boolean hasId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryId id = 1;</code>
+       * @return The id.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryId getId() {
         if (idBuilder_ == null) {
@@ -17960,7 +18666,7 @@ public final class UserBitShared {
        */
       public Builder mergeId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
         if (idBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               id_ != null &&
               id_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
             id_ =
@@ -18027,12 +18733,14 @@ public final class UserBitShared {
       private int type_ = 1;
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @return Whether the type field is set.
        */
       public boolean hasType() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @return The type.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryType getType() {
         @SuppressWarnings("deprecation")
@@ -18041,6 +18749,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
        */
       public Builder setType(org.apache.drill.exec.proto.UserBitShared.QueryType value) {
         if (value == null) {
@@ -18053,6 +18763,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -18064,18 +18775,22 @@ public final class UserBitShared {
       private long start_ ;
       /**
        * <code>optional int64 start = 3;</code>
+       * @return Whether the start field is set.
        */
       public boolean hasStart() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional int64 start = 3;</code>
+       * @return The start.
        */
       public long getStart() {
         return start_;
       }
       /**
        * <code>optional int64 start = 3;</code>
+       * @param value The start to set.
+       * @return This builder for chaining.
        */
       public Builder setStart(long value) {
         bitField0_ |= 0x00000004;
@@ -18085,6 +18800,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 start = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStart() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -18096,18 +18812,22 @@ public final class UserBitShared {
       private long end_ ;
       /**
        * <code>optional int64 end = 4;</code>
+       * @return Whether the end field is set.
        */
       public boolean hasEnd() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional int64 end = 4;</code>
+       * @return The end.
        */
       public long getEnd() {
         return end_;
       }
       /**
        * <code>optional int64 end = 4;</code>
+       * @param value The end to set.
+       * @return This builder for chaining.
        */
       public Builder setEnd(long value) {
         bitField0_ |= 0x00000008;
@@ -18117,6 +18837,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 end = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearEnd() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -18128,12 +18849,14 @@ public final class UserBitShared {
       private java.lang.Object query_ = "";
       /**
        * <code>optional string query = 5;</code>
+       * @return Whether the query field is set.
        */
       public boolean hasQuery() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional string query = 5;</code>
+       * @return The query.
        */
       public java.lang.String getQuery() {
         java.lang.Object ref = query_;
@@ -18151,6 +18874,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string query = 5;</code>
+       * @return The bytes for query.
        */
       public com.google.protobuf.ByteString
           getQueryBytes() {
@@ -18167,6 +18891,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string query = 5;</code>
+       * @param value The query to set.
+       * @return This builder for chaining.
        */
       public Builder setQuery(
           java.lang.String value) {
@@ -18180,6 +18906,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string query = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearQuery() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -18189,6 +18916,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string query = 5;</code>
+       * @param value The bytes for query to set.
+       * @return This builder for chaining.
        */
       public Builder setQueryBytes(
           com.google.protobuf.ByteString value) {
@@ -18204,12 +18933,14 @@ public final class UserBitShared {
       private java.lang.Object plan_ = "";
       /**
        * <code>optional string plan = 6;</code>
+       * @return Whether the plan field is set.
        */
       public boolean hasPlan() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <code>optional string plan = 6;</code>
+       * @return The plan.
        */
       public java.lang.String getPlan() {
         java.lang.Object ref = plan_;
@@ -18227,6 +18958,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string plan = 6;</code>
+       * @return The bytes for plan.
        */
       public com.google.protobuf.ByteString
           getPlanBytes() {
@@ -18243,6 +18975,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string plan = 6;</code>
+       * @param value The plan to set.
+       * @return This builder for chaining.
        */
       public Builder setPlan(
           java.lang.String value) {
@@ -18256,6 +18990,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string plan = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPlan() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -18265,6 +19000,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string plan = 6;</code>
+       * @param value The bytes for plan to set.
+       * @return This builder for chaining.
        */
       public Builder setPlanBytes(
           com.google.protobuf.ByteString value) {
@@ -18277,17 +19014,19 @@ public final class UserBitShared {
         return this;
       }
 
-      private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint foreman_ = null;
+      private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint foreman_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> foremanBuilder_;
       /**
        * <code>optional .exec.DrillbitEndpoint foreman = 7;</code>
+       * @return Whether the foreman field is set.
        */
       public boolean hasForeman() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <code>optional .exec.DrillbitEndpoint foreman = 7;</code>
+       * @return The foreman.
        */
       public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getForeman() {
         if (foremanBuilder_ == null) {
@@ -18331,7 +19070,7 @@ public final class UserBitShared {
        */
       public Builder mergeForeman(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint value) {
         if (foremanBuilder_ == null) {
-          if (((bitField0_ & 0x00000040) == 0x00000040) &&
+          if (((bitField0_ & 0x00000040) != 0) &&
               foreman_ != null &&
               foreman_ != org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance()) {
             foreman_ =
@@ -18398,12 +19137,14 @@ public final class UserBitShared {
       private int state_ = 0;
       /**
        * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
+       * @return Whether the state field is set.
        */
       public boolean hasState() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
+       * @return The state.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState() {
         @SuppressWarnings("deprecation")
@@ -18412,6 +19153,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
+       * @param value The state to set.
+       * @return This builder for chaining.
        */
       public Builder setState(org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState value) {
         if (value == null) {
@@ -18424,6 +19167,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
+       * @return This builder for chaining.
        */
       public Builder clearState() {
         bitField0_ = (bitField0_ & ~0x00000080);
@@ -18435,18 +19179,22 @@ public final class UserBitShared {
       private int totalFragments_ ;
       /**
        * <code>optional int32 total_fragments = 9;</code>
+       * @return Whether the totalFragments field is set.
        */
       public boolean hasTotalFragments() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <code>optional int32 total_fragments = 9;</code>
+       * @return The totalFragments.
        */
       public int getTotalFragments() {
         return totalFragments_;
       }
       /**
        * <code>optional int32 total_fragments = 9;</code>
+       * @param value The totalFragments to set.
+       * @return This builder for chaining.
        */
       public Builder setTotalFragments(int value) {
         bitField0_ |= 0x00000100;
@@ -18456,6 +19204,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 total_fragments = 9;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTotalFragments() {
         bitField0_ = (bitField0_ & ~0x00000100);
@@ -18467,18 +19216,22 @@ public final class UserBitShared {
       private int finishedFragments_ ;
       /**
        * <code>optional int32 finished_fragments = 10;</code>
+       * @return Whether the finishedFragments field is set.
        */
       public boolean hasFinishedFragments() {
-        return ((bitField0_ & 0x00000200) == 0x00000200);
+        return ((bitField0_ & 0x00000200) != 0);
       }
       /**
        * <code>optional int32 finished_fragments = 10;</code>
+       * @return The finishedFragments.
        */
       public int getFinishedFragments() {
         return finishedFragments_;
       }
       /**
        * <code>optional int32 finished_fragments = 10;</code>
+       * @param value The finishedFragments to set.
+       * @return This builder for chaining.
        */
       public Builder setFinishedFragments(int value) {
         bitField0_ |= 0x00000200;
@@ -18488,6 +19241,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 finished_fragments = 10;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFinishedFragments() {
         bitField0_ = (bitField0_ & ~0x00000200);
@@ -18499,7 +19253,7 @@ public final class UserBitShared {
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile> fragmentProfile_ =
         java.util.Collections.emptyList();
       private void ensureFragmentProfileIsMutable() {
-        if (!((bitField0_ & 0x00000400) == 0x00000400)) {
+        if (!((bitField0_ & 0x00000400) != 0)) {
           fragmentProfile_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile>(fragmentProfile_);
           bitField0_ |= 0x00000400;
          }
@@ -18728,7 +19482,7 @@ public final class UserBitShared {
           fragmentProfileBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.Builder, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder>(
                   fragmentProfile_,
-                  ((bitField0_ & 0x00000400) == 0x00000400),
+                  ((bitField0_ & 0x00000400) != 0),
                   getParentForChildren(),
                   isClean());
           fragmentProfile_ = null;
@@ -18739,12 +19493,14 @@ public final class UserBitShared {
       private java.lang.Object user_ = "-";
       /**
        * <code>optional string user = 12 [default = "-"];</code>
+       * @return Whether the user field is set.
        */
       public boolean hasUser() {
-        return ((bitField0_ & 0x00000800) == 0x00000800);
+        return ((bitField0_ & 0x00000800) != 0);
       }
       /**
        * <code>optional string user = 12 [default = "-"];</code>
+       * @return The user.
        */
       public java.lang.String getUser() {
         java.lang.Object ref = user_;
@@ -18762,6 +19518,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user = 12 [default = "-"];</code>
+       * @return The bytes for user.
        */
       public com.google.protobuf.ByteString
           getUserBytes() {
@@ -18778,6 +19535,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user = 12 [default = "-"];</code>
+       * @param value The user to set.
+       * @return This builder for chaining.
        */
       public Builder setUser(
           java.lang.String value) {
@@ -18791,6 +19550,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user = 12 [default = "-"];</code>
+       * @return This builder for chaining.
        */
       public Builder clearUser() {
         bitField0_ = (bitField0_ & ~0x00000800);
@@ -18800,6 +19560,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string user = 12 [default = "-"];</code>
+       * @param value The bytes for user to set.
+       * @return This builder for chaining.
        */
       public Builder setUserBytes(
           com.google.protobuf.ByteString value) {
@@ -18815,12 +19577,14 @@ public final class UserBitShared {
       private java.lang.Object error_ = "";
       /**
        * <code>optional string error = 13;</code>
+       * @return Whether the error field is set.
        */
       public boolean hasError() {
-        return ((bitField0_ & 0x00001000) == 0x00001000);
+        return ((bitField0_ & 0x00001000) != 0);
       }
       /**
        * <code>optional string error = 13;</code>
+       * @return The error.
        */
       public java.lang.String getError() {
         java.lang.Object ref = error_;
@@ -18838,6 +19602,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error = 13;</code>
+       * @return The bytes for error.
        */
       public com.google.protobuf.ByteString
           getErrorBytes() {
@@ -18854,6 +19619,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error = 13;</code>
+       * @param value The error to set.
+       * @return This builder for chaining.
        */
       public Builder setError(
           java.lang.String value) {
@@ -18867,6 +19634,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error = 13;</code>
+       * @return This builder for chaining.
        */
       public Builder clearError() {
         bitField0_ = (bitField0_ & ~0x00001000);
@@ -18876,6 +19644,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error = 13;</code>
+       * @param value The bytes for error to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorBytes(
           com.google.protobuf.ByteString value) {
@@ -18891,12 +19661,14 @@ public final class UserBitShared {
       private java.lang.Object verboseError_ = "";
       /**
        * <code>optional string verboseError = 14;</code>
+       * @return Whether the verboseError field is set.
        */
       public boolean hasVerboseError() {
-        return ((bitField0_ & 0x00002000) == 0x00002000);
+        return ((bitField0_ & 0x00002000) != 0);
       }
       /**
        * <code>optional string verboseError = 14;</code>
+       * @return The verboseError.
        */
       public java.lang.String getVerboseError() {
         java.lang.Object ref = verboseError_;
@@ -18914,6 +19686,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string verboseError = 14;</code>
+       * @return The bytes for verboseError.
        */
       public com.google.protobuf.ByteString
           getVerboseErrorBytes() {
@@ -18930,6 +19703,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string verboseError = 14;</code>
+       * @param value The verboseError to set.
+       * @return This builder for chaining.
        */
       public Builder setVerboseError(
           java.lang.String value) {
@@ -18943,6 +19718,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string verboseError = 14;</code>
+       * @return This builder for chaining.
        */
       public Builder clearVerboseError() {
         bitField0_ = (bitField0_ & ~0x00002000);
@@ -18952,6 +19728,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string verboseError = 14;</code>
+       * @param value The bytes for verboseError to set.
+       * @return This builder for chaining.
        */
       public Builder setVerboseErrorBytes(
           com.google.protobuf.ByteString value) {
@@ -18967,12 +19745,14 @@ public final class UserBitShared {
       private java.lang.Object errorId_ = "";
       /**
        * <code>optional string error_id = 15;</code>
+       * @return Whether the errorId field is set.
        */
       public boolean hasErrorId() {
-        return ((bitField0_ & 0x00004000) == 0x00004000);
+        return ((bitField0_ & 0x00004000) != 0);
       }
       /**
        * <code>optional string error_id = 15;</code>
+       * @return The errorId.
        */
       public java.lang.String getErrorId() {
         java.lang.Object ref = errorId_;
@@ -18990,6 +19770,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error_id = 15;</code>
+       * @return The bytes for errorId.
        */
       public com.google.protobuf.ByteString
           getErrorIdBytes() {
@@ -19006,6 +19787,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error_id = 15;</code>
+       * @param value The errorId to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorId(
           java.lang.String value) {
@@ -19019,6 +19802,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error_id = 15;</code>
+       * @return This builder for chaining.
        */
       public Builder clearErrorId() {
         bitField0_ = (bitField0_ & ~0x00004000);
@@ -19028,6 +19812,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error_id = 15;</code>
+       * @param value The bytes for errorId to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorIdBytes(
           com.google.protobuf.ByteString value) {
@@ -19043,12 +19829,14 @@ public final class UserBitShared {
       private java.lang.Object errorNode_ = "";
       /**
        * <code>optional string error_node = 16;</code>
+       * @return Whether the errorNode field is set.
        */
       public boolean hasErrorNode() {
-        return ((bitField0_ & 0x00008000) == 0x00008000);
+        return ((bitField0_ & 0x00008000) != 0);
       }
       /**
        * <code>optional string error_node = 16;</code>
+       * @return The errorNode.
        */
       public java.lang.String getErrorNode() {
         java.lang.Object ref = errorNode_;
@@ -19066,6 +19854,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error_node = 16;</code>
+       * @return The bytes for errorNode.
        */
       public com.google.protobuf.ByteString
           getErrorNodeBytes() {
@@ -19082,6 +19871,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error_node = 16;</code>
+       * @param value The errorNode to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorNode(
           java.lang.String value) {
@@ -19095,6 +19886,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error_node = 16;</code>
+       * @return This builder for chaining.
        */
       public Builder clearErrorNode() {
         bitField0_ = (bitField0_ & ~0x00008000);
@@ -19104,6 +19896,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string error_node = 16;</code>
+       * @param value The bytes for errorNode to set.
+       * @return This builder for chaining.
        */
       public Builder setErrorNodeBytes(
           com.google.protobuf.ByteString value) {
@@ -19119,12 +19913,14 @@ public final class UserBitShared {
       private java.lang.Object optionsJson_ = "";
       /**
        * <code>optional string options_json = 17;</code>
+       * @return Whether the optionsJson field is set.
        */
       public boolean hasOptionsJson() {
-        return ((bitField0_ & 0x00010000) == 0x00010000);
+        return ((bitField0_ & 0x00010000) != 0);
       }
       /**
        * <code>optional string options_json = 17;</code>
+       * @return The optionsJson.
        */
       public java.lang.String getOptionsJson() {
         java.lang.Object ref = optionsJson_;
@@ -19142,6 +19938,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string options_json = 17;</code>
+       * @return The bytes for optionsJson.
        */
       public com.google.protobuf.ByteString
           getOptionsJsonBytes() {
@@ -19158,6 +19955,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string options_json = 17;</code>
+       * @param value The optionsJson to set.
+       * @return This builder for chaining.
        */
       public Builder setOptionsJson(
           java.lang.String value) {
@@ -19171,6 +19970,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string options_json = 17;</code>
+       * @return This builder for chaining.
        */
       public Builder clearOptionsJson() {
         bitField0_ = (bitField0_ & ~0x00010000);
@@ -19180,6 +19980,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string options_json = 17;</code>
+       * @param value The bytes for optionsJson to set.
+       * @return This builder for chaining.
        */
       public Builder setOptionsJsonBytes(
           com.google.protobuf.ByteString value) {
@@ -19195,18 +19997,22 @@ public final class UserBitShared {
       private long planEnd_ ;
       /**
        * <code>optional int64 planEnd = 18;</code>
+       * @return Whether the planEnd field is set.
        */
       public boolean hasPlanEnd() {
-        return ((bitField0_ & 0x00020000) == 0x00020000);
+        return ((bitField0_ & 0x00020000) != 0);
       }
       /**
        * <code>optional int64 planEnd = 18;</code>
+       * @return The planEnd.
        */
       public long getPlanEnd() {
         return planEnd_;
       }
       /**
        * <code>optional int64 planEnd = 18;</code>
+       * @param value The planEnd to set.
+       * @return This builder for chaining.
        */
       public Builder setPlanEnd(long value) {
         bitField0_ |= 0x00020000;
@@ -19216,6 +20022,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 planEnd = 18;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPlanEnd() {
         bitField0_ = (bitField0_ & ~0x00020000);
@@ -19227,18 +20034,22 @@ public final class UserBitShared {
       private long queueWaitEnd_ ;
       /**
        * <code>optional int64 queueWaitEnd = 19;</code>
+       * @return Whether the queueWaitEnd field is set.
        */
       public boolean hasQueueWaitEnd() {
-        return ((bitField0_ & 0x00040000) == 0x00040000);
+        return ((bitField0_ & 0x00040000) != 0);
       }
       /**
        * <code>optional int64 queueWaitEnd = 19;</code>
+       * @return The queueWaitEnd.
        */
       public long getQueueWaitEnd() {
         return queueWaitEnd_;
       }
       /**
        * <code>optional int64 queueWaitEnd = 19;</code>
+       * @param value The queueWaitEnd to set.
+       * @return This builder for chaining.
        */
       public Builder setQueueWaitEnd(long value) {
         bitField0_ |= 0x00040000;
@@ -19248,6 +20059,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 queueWaitEnd = 19;</code>
+       * @return This builder for chaining.
        */
       public Builder clearQueueWaitEnd() {
         bitField0_ = (bitField0_ & ~0x00040000);
@@ -19259,18 +20071,22 @@ public final class UserBitShared {
       private double totalCost_ ;
       /**
        * <code>optional double total_cost = 20;</code>
+       * @return Whether the totalCost field is set.
        */
       public boolean hasTotalCost() {
-        return ((bitField0_ & 0x00080000) == 0x00080000);
+        return ((bitField0_ & 0x00080000) != 0);
       }
       /**
        * <code>optional double total_cost = 20;</code>
+       * @return The totalCost.
        */
       public double getTotalCost() {
         return totalCost_;
       }
       /**
        * <code>optional double total_cost = 20;</code>
+       * @param value The totalCost to set.
+       * @return This builder for chaining.
        */
       public Builder setTotalCost(double value) {
         bitField0_ |= 0x00080000;
@@ -19280,6 +20096,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional double total_cost = 20;</code>
+       * @return This builder for chaining.
        */
       public Builder clearTotalCost() {
         bitField0_ = (bitField0_ & ~0x00080000);
@@ -19291,12 +20108,14 @@ public final class UserBitShared {
       private java.lang.Object queueName_ = "-";
       /**
        * <code>optional string queue_name = 21 [default = "-"];</code>
+       * @return Whether the queueName field is set.
        */
       public boolean hasQueueName() {
-        return ((bitField0_ & 0x00100000) == 0x00100000);
+        return ((bitField0_ & 0x00100000) != 0);
       }
       /**
        * <code>optional string queue_name = 21 [default = "-"];</code>
+       * @return The queueName.
        */
       public java.lang.String getQueueName() {
         java.lang.Object ref = queueName_;
@@ -19314,6 +20133,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queue_name = 21 [default = "-"];</code>
+       * @return The bytes for queueName.
        */
       public com.google.protobuf.ByteString
           getQueueNameBytes() {
@@ -19330,6 +20150,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queue_name = 21 [default = "-"];</code>
+       * @param value The queueName to set.
+       * @return This builder for chaining.
        */
       public Builder setQueueName(
           java.lang.String value) {
@@ -19343,6 +20165,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queue_name = 21 [default = "-"];</code>
+       * @return This builder for chaining.
        */
       public Builder clearQueueName() {
         bitField0_ = (bitField0_ & ~0x00100000);
@@ -19352,6 +20175,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queue_name = 21 [default = "-"];</code>
+       * @param value The bytes for queueName to set.
+       * @return This builder for chaining.
        */
       public Builder setQueueNameBytes(
           com.google.protobuf.ByteString value) {
@@ -19367,12 +20192,14 @@ public final class UserBitShared {
       private java.lang.Object queryId_ = "";
       /**
        * <code>optional string queryId = 22;</code>
+       * @return Whether the queryId field is set.
        */
       public boolean hasQueryId() {
-        return ((bitField0_ & 0x00200000) == 0x00200000);
+        return ((bitField0_ & 0x00200000) != 0);
       }
       /**
        * <code>optional string queryId = 22;</code>
+       * @return The queryId.
        */
       public java.lang.String getQueryId() {
         java.lang.Object ref = queryId_;
@@ -19390,6 +20217,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queryId = 22;</code>
+       * @return The bytes for queryId.
        */
       public com.google.protobuf.ByteString
           getQueryIdBytes() {
@@ -19406,6 +20234,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queryId = 22;</code>
+       * @param value The queryId to set.
+       * @return This builder for chaining.
        */
       public Builder setQueryId(
           java.lang.String value) {
@@ -19419,6 +20249,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queryId = 22;</code>
+       * @return This builder for chaining.
        */
       public Builder clearQueryId() {
         bitField0_ = (bitField0_ & ~0x00200000);
@@ -19428,6 +20259,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string queryId = 22;</code>
+       * @param value The bytes for queryId to set.
+       * @return This builder for chaining.
        */
       public Builder setQueryIdBytes(
           com.google.protobuf.ByteString value) {
@@ -19443,18 +20276,22 @@ public final class UserBitShared {
       private int autoLimit_ ;
       /**
        * <code>optional int32 autoLimit = 23;</code>
+       * @return Whether the autoLimit field is set.
        */
       public boolean hasAutoLimit() {
-        return ((bitField0_ & 0x00400000) == 0x00400000);
+        return ((bitField0_ & 0x00400000) != 0);
       }
       /**
        * <code>optional int32 autoLimit = 23;</code>
+       * @return The autoLimit.
        */
       public int getAutoLimit() {
         return autoLimit_;
       }
       /**
        * <code>optional int32 autoLimit = 23;</code>
+       * @param value The autoLimit to set.
+       * @return This builder for chaining.
        */
       public Builder setAutoLimit(int value) {
         bitField0_ |= 0x00400000;
@@ -19464,6 +20301,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 autoLimit = 23;</code>
+       * @return This builder for chaining.
        */
       public Builder clearAutoLimit() {
         bitField0_ = (bitField0_ & ~0x00400000);
@@ -19530,10 +20368,12 @@ public final class UserBitShared {
 
     /**
      * <code>optional int32 major_fragment_id = 1;</code>
+     * @return Whether the majorFragmentId field is set.
      */
     boolean hasMajorFragmentId();
     /**
      * <code>optional int32 major_fragment_id = 1;</code>
+     * @return The majorFragmentId.
      */
     int getMajorFragmentId();
 
@@ -19574,8 +20414,14 @@ public final class UserBitShared {
       super(builder);
     }
     private MajorFragmentProfile() {
-      majorFragmentId_ = 0;
       minorFragmentProfile_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new MajorFragmentProfile();
     }
 
     @java.lang.Override
@@ -19608,7 +20454,7 @@ public final class UserBitShared {
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 minorFragmentProfile_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile>();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -19631,7 +20477,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           minorFragmentProfile_ = java.util.Collections.unmodifiableList(minorFragmentProfile_);
         }
         this.unknownFields = unknownFields.build();
@@ -19656,12 +20502,14 @@ public final class UserBitShared {
     private int majorFragmentId_;
     /**
      * <code>optional int32 major_fragment_id = 1;</code>
+     * @return Whether the majorFragmentId field is set.
      */
     public boolean hasMajorFragmentId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional int32 major_fragment_id = 1;</code>
+     * @return The majorFragmentId.
      */
     public int getMajorFragmentId() {
       return majorFragmentId_;
@@ -19716,7 +20564,7 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeInt32(1, majorFragmentId_);
       }
       for (int i = 0; i < minorFragmentProfile_.size(); i++) {
@@ -19731,7 +20579,7 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, majorFragmentId_);
       }
@@ -19754,16 +20602,15 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile other = (org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile) obj;
 
-      boolean result = true;
-      result = result && (hasMajorFragmentId() == other.hasMajorFragmentId());
+      if (hasMajorFragmentId() != other.hasMajorFragmentId()) return false;
       if (hasMajorFragmentId()) {
-        result = result && (getMajorFragmentId()
-            == other.getMajorFragmentId());
+        if (getMajorFragmentId()
+            != other.getMajorFragmentId()) return false;
       }
-      result = result && getMinorFragmentProfileList()
-          .equals(other.getMinorFragmentProfileList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getMinorFragmentProfileList()
+          .equals(other.getMinorFragmentProfileList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -19951,12 +20798,12 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile result = new org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.majorFragmentId_ = majorFragmentId_;
           to_bitField0_ |= 0x00000001;
         }
-        result.majorFragmentId_ = majorFragmentId_;
         if (minorFragmentProfileBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             minorFragmentProfile_ = java.util.Collections.unmodifiableList(minorFragmentProfile_);
             bitField0_ = (bitField0_ & ~0x00000002);
           }
@@ -19971,35 +20818,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -20075,18 +20922,22 @@ public final class UserBitShared {
       private int majorFragmentId_ ;
       /**
        * <code>optional int32 major_fragment_id = 1;</code>
+       * @return Whether the majorFragmentId field is set.
        */
       public boolean hasMajorFragmentId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional int32 major_fragment_id = 1;</code>
+       * @return The majorFragmentId.
        */
       public int getMajorFragmentId() {
         return majorFragmentId_;
       }
       /**
        * <code>optional int32 major_fragment_id = 1;</code>
+       * @param value The majorFragmentId to set.
+       * @return This builder for chaining.
        */
       public Builder setMajorFragmentId(int value) {
         bitField0_ |= 0x00000001;
@@ -20096,6 +20947,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 major_fragment_id = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMajorFragmentId() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -20107,7 +20959,7 @@ public final class UserBitShared {
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile> minorFragmentProfile_ =
         java.util.Collections.emptyList();
       private void ensureMinorFragmentProfileIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           minorFragmentProfile_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile>(minorFragmentProfile_);
           bitField0_ |= 0x00000002;
          }
@@ -20336,7 +21188,7 @@ public final class UserBitShared {
           minorFragmentProfileBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder>(
                   minorFragmentProfile_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           minorFragmentProfile_ = null;
@@ -20402,19 +21254,23 @@ public final class UserBitShared {
 
     /**
      * <code>optional .exec.shared.FragmentState state = 1;</code>
+     * @return Whether the state field is set.
      */
     boolean hasState();
     /**
      * <code>optional .exec.shared.FragmentState state = 1;</code>
+     * @return The state.
      */
     org.apache.drill.exec.proto.UserBitShared.FragmentState getState();
 
     /**
      * <code>optional .exec.shared.DrillPBError error = 2;</code>
+     * @return Whether the error field is set.
      */
     boolean hasError();
     /**
      * <code>optional .exec.shared.DrillPBError error = 2;</code>
+     * @return The error.
      */
     org.apache.drill.exec.proto.UserBitShared.DrillPBError getError();
     /**
@@ -20424,10 +21280,12 @@ public final class UserBitShared {
 
     /**
      * <code>optional int32 minor_fragment_id = 3;</code>
+     * @return Whether the minorFragmentId field is set.
      */
     boolean hasMinorFragmentId();
     /**
      * <code>optional int32 minor_fragment_id = 3;</code>
+     * @return The minorFragmentId.
      */
     int getMinorFragmentId();
 
@@ -20457,46 +21315,56 @@ public final class UserBitShared {
 
     /**
      * <code>optional int64 start_time = 5;</code>
+     * @return Whether the startTime field is set.
      */
     boolean hasStartTime();
     /**
      * <code>optional int64 start_time = 5;</code>
+     * @return The startTime.
      */
     long getStartTime();
 
     /**
      * <code>optional int64 end_time = 6;</code>
+     * @return Whether the endTime field is set.
      */
     boolean hasEndTime();
     /**
      * <code>optional int64 end_time = 6;</code>
+     * @return The endTime.
      */
     long getEndTime();
 
     /**
      * <code>optional int64 memory_used = 7;</code>
+     * @return Whether the memoryUsed field is set.
      */
     boolean hasMemoryUsed();
     /**
      * <code>optional int64 memory_used = 7;</code>
+     * @return The memoryUsed.
      */
     long getMemoryUsed();
 
     /**
      * <code>optional int64 max_memory_used = 8;</code>
+     * @return Whether the maxMemoryUsed field is set.
      */
     boolean hasMaxMemoryUsed();
     /**
      * <code>optional int64 max_memory_used = 8;</code>
+     * @return The maxMemoryUsed.
      */
     long getMaxMemoryUsed();
 
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 9;</code>
+     * @return Whether the endpoint field is set.
      */
     boolean hasEndpoint();
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 9;</code>
+     * @return The endpoint.
      */
     org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getEndpoint();
     /**
@@ -20506,19 +21374,23 @@ public final class UserBitShared {
 
     /**
      * <code>optional int64 last_update = 10;</code>
+     * @return Whether the lastUpdate field is set.
      */
     boolean hasLastUpdate();
     /**
      * <code>optional int64 last_update = 10;</code>
+     * @return The lastUpdate.
      */
     long getLastUpdate();
 
     /**
      * <code>optional int64 last_progress = 11;</code>
+     * @return Whether the lastProgress field is set.
      */
     boolean hasLastProgress();
     /**
      * <code>optional int64 last_progress = 11;</code>
+     * @return The lastProgress.
      */
     long getLastProgress();
   }
@@ -20536,14 +21408,14 @@ public final class UserBitShared {
     }
     private MinorFragmentProfile() {
       state_ = 0;
-      minorFragmentId_ = 0;
       operatorProfile_ = java.util.Collections.emptyList();
-      startTime_ = 0L;
-      endTime_ = 0L;
-      memoryUsed_ = 0L;
-      maxMemoryUsed_ = 0L;
-      lastUpdate_ = 0L;
-      lastProgress_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new MinorFragmentProfile();
     }
 
     @java.lang.Override
@@ -20584,7 +21456,7 @@ public final class UserBitShared {
             }
             case 18: {
               org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = error_.toBuilder();
               }
               error_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.DrillPBError.PARSER, extensionRegistry);
@@ -20601,7 +21473,7 @@ public final class UserBitShared {
               break;
             }
             case 34: {
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+              if (!((mutable_bitField0_ & 0x00000008) != 0)) {
                 operatorProfile_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.OperatorProfile>();
                 mutable_bitField0_ |= 0x00000008;
               }
@@ -20631,7 +21503,7 @@ public final class UserBitShared {
             }
             case 74: {
               org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000080) == 0x00000080)) {
+              if (((bitField0_ & 0x00000080) != 0)) {
                 subBuilder = endpoint_.toBuilder();
               }
               endpoint_ = input.readMessage(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.PARSER, extensionRegistry);
@@ -20667,7 +21539,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((mutable_bitField0_ & 0x00000008) != 0)) {
           operatorProfile_ = java.util.Collections.unmodifiableList(operatorProfile_);
         }
         this.unknownFields = unknownFields.build();
@@ -20692,12 +21564,14 @@ public final class UserBitShared {
     private int state_;
     /**
      * <code>optional .exec.shared.FragmentState state = 1;</code>
+     * @return Whether the state field is set.
      */
     public boolean hasState() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.shared.FragmentState state = 1;</code>
+     * @return The state.
      */
     public org.apache.drill.exec.proto.UserBitShared.FragmentState getState() {
       @SuppressWarnings("deprecation")
@@ -20709,12 +21583,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
     /**
      * <code>optional .exec.shared.DrillPBError error = 2;</code>
+     * @return Whether the error field is set.
      */
     public boolean hasError() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.DrillPBError error = 2;</code>
+     * @return The error.
      */
     public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
       return error_ == null ? org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance() : error_;
@@ -20730,12 +21606,14 @@ public final class UserBitShared {
     private int minorFragmentId_;
     /**
      * <code>optional int32 minor_fragment_id = 3;</code>
+     * @return Whether the minorFragmentId field is set.
      */
     public boolean hasMinorFragmentId() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional int32 minor_fragment_id = 3;</code>
+     * @return The minorFragmentId.
      */
     public int getMinorFragmentId() {
       return minorFragmentId_;
@@ -20780,12 +21658,14 @@ public final class UserBitShared {
     private long startTime_;
     /**
      * <code>optional int64 start_time = 5;</code>
+     * @return Whether the startTime field is set.
      */
     public boolean hasStartTime() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional int64 start_time = 5;</code>
+     * @return The startTime.
      */
     public long getStartTime() {
       return startTime_;
@@ -20795,12 +21675,14 @@ public final class UserBitShared {
     private long endTime_;
     /**
      * <code>optional int64 end_time = 6;</code>
+     * @return Whether the endTime field is set.
      */
     public boolean hasEndTime() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional int64 end_time = 6;</code>
+     * @return The endTime.
      */
     public long getEndTime() {
       return endTime_;
@@ -20810,12 +21692,14 @@ public final class UserBitShared {
     private long memoryUsed_;
     /**
      * <code>optional int64 memory_used = 7;</code>
+     * @return Whether the memoryUsed field is set.
      */
     public boolean hasMemoryUsed() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <code>optional int64 memory_used = 7;</code>
+     * @return The memoryUsed.
      */
     public long getMemoryUsed() {
       return memoryUsed_;
@@ -20825,12 +21709,14 @@ public final class UserBitShared {
     private long maxMemoryUsed_;
     /**
      * <code>optional int64 max_memory_used = 8;</code>
+     * @return Whether the maxMemoryUsed field is set.
      */
     public boolean hasMaxMemoryUsed() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <code>optional int64 max_memory_used = 8;</code>
+     * @return The maxMemoryUsed.
      */
     public long getMaxMemoryUsed() {
       return maxMemoryUsed_;
@@ -20840,12 +21726,14 @@ public final class UserBitShared {
     private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_;
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 9;</code>
+     * @return Whether the endpoint field is set.
      */
     public boolean hasEndpoint() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 9;</code>
+     * @return The endpoint.
      */
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getEndpoint() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
@@ -20861,12 +21749,14 @@ public final class UserBitShared {
     private long lastUpdate_;
     /**
      * <code>optional int64 last_update = 10;</code>
+     * @return Whether the lastUpdate field is set.
      */
     public boolean hasLastUpdate() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000100) != 0);
     }
     /**
      * <code>optional int64 last_update = 10;</code>
+     * @return The lastUpdate.
      */
     public long getLastUpdate() {
       return lastUpdate_;
@@ -20876,12 +21766,14 @@ public final class UserBitShared {
     private long lastProgress_;
     /**
      * <code>optional int64 last_progress = 11;</code>
+     * @return Whether the lastProgress field is set.
      */
     public boolean hasLastProgress() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
+      return ((bitField0_ & 0x00000200) != 0);
     }
     /**
      * <code>optional int64 last_progress = 11;</code>
+     * @return The lastProgress.
      */
     public long getLastProgress() {
       return lastProgress_;
@@ -20901,37 +21793,37 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, state_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getError());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt32(3, minorFragmentId_);
       }
       for (int i = 0; i < operatorProfile_.size(); i++) {
         output.writeMessage(4, operatorProfile_.get(i));
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeInt64(5, startTime_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeInt64(6, endTime_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeInt64(7, memoryUsed_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeInt64(8, maxMemoryUsed_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         output.writeMessage(9, getEndpoint());
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         output.writeInt64(10, lastUpdate_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         output.writeInt64(11, lastProgress_);
       }
       unknownFields.writeTo(output);
@@ -20943,15 +21835,15 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, state_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getError());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, minorFragmentId_);
       }
@@ -20959,31 +21851,31 @@ public final class UserBitShared {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, operatorProfile_.get(i));
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(5, startTime_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(6, endTime_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(7, memoryUsed_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(8, maxMemoryUsed_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(9, getEndpoint());
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(10, lastUpdate_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000200) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(11, lastProgress_);
       }
@@ -21002,60 +21894,59 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile other = (org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile) obj;
 
-      boolean result = true;
-      result = result && (hasState() == other.hasState());
+      if (hasState() != other.hasState()) return false;
       if (hasState()) {
-        result = result && state_ == other.state_;
+        if (state_ != other.state_) return false;
       }
-      result = result && (hasError() == other.hasError());
+      if (hasError() != other.hasError()) return false;
       if (hasError()) {
-        result = result && getError()
-            .equals(other.getError());
+        if (!getError()
+            .equals(other.getError())) return false;
       }
-      result = result && (hasMinorFragmentId() == other.hasMinorFragmentId());
+      if (hasMinorFragmentId() != other.hasMinorFragmentId()) return false;
       if (hasMinorFragmentId()) {
-        result = result && (getMinorFragmentId()
-            == other.getMinorFragmentId());
+        if (getMinorFragmentId()
+            != other.getMinorFragmentId()) return false;
       }
-      result = result && getOperatorProfileList()
-          .equals(other.getOperatorProfileList());
-      result = result && (hasStartTime() == other.hasStartTime());
+      if (!getOperatorProfileList()
+          .equals(other.getOperatorProfileList())) return false;
+      if (hasStartTime() != other.hasStartTime()) return false;
       if (hasStartTime()) {
-        result = result && (getStartTime()
-            == other.getStartTime());
+        if (getStartTime()
+            != other.getStartTime()) return false;
       }
-      result = result && (hasEndTime() == other.hasEndTime());
+      if (hasEndTime() != other.hasEndTime()) return false;
       if (hasEndTime()) {
-        result = result && (getEndTime()
-            == other.getEndTime());
+        if (getEndTime()
+            != other.getEndTime()) return false;
       }
-      result = result && (hasMemoryUsed() == other.hasMemoryUsed());
+      if (hasMemoryUsed() != other.hasMemoryUsed()) return false;
       if (hasMemoryUsed()) {
-        result = result && (getMemoryUsed()
-            == other.getMemoryUsed());
+        if (getMemoryUsed()
+            != other.getMemoryUsed()) return false;
       }
-      result = result && (hasMaxMemoryUsed() == other.hasMaxMemoryUsed());
+      if (hasMaxMemoryUsed() != other.hasMaxMemoryUsed()) return false;
       if (hasMaxMemoryUsed()) {
-        result = result && (getMaxMemoryUsed()
-            == other.getMaxMemoryUsed());
+        if (getMaxMemoryUsed()
+            != other.getMaxMemoryUsed()) return false;
       }
-      result = result && (hasEndpoint() == other.hasEndpoint());
+      if (hasEndpoint() != other.hasEndpoint()) return false;
       if (hasEndpoint()) {
-        result = result && getEndpoint()
-            .equals(other.getEndpoint());
+        if (!getEndpoint()
+            .equals(other.getEndpoint())) return false;
       }
-      result = result && (hasLastUpdate() == other.hasLastUpdate());
+      if (hasLastUpdate() != other.hasLastUpdate()) return false;
       if (hasLastUpdate()) {
-        result = result && (getLastUpdate()
-            == other.getLastUpdate());
+        if (getLastUpdate()
+            != other.getLastUpdate()) return false;
       }
-      result = result && (hasLastProgress() == other.hasLastProgress());
+      if (hasLastProgress() != other.hasLastProgress()) return false;
       if (hasLastProgress()) {
-        result = result && (getLastProgress()
-            == other.getLastProgress());
+        if (getLastProgress()
+            != other.getLastProgress()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -21313,24 +22204,24 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile result = new org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.state_ = state_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (errorBuilder_ == null) {
+            result.error_ = error_;
+          } else {
+            result.error_ = errorBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (errorBuilder_ == null) {
-          result.error_ = error_;
-        } else {
-          result.error_ = errorBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.minorFragmentId_ = minorFragmentId_;
           to_bitField0_ |= 0x00000004;
         }
-        result.minorFragmentId_ = minorFragmentId_;
         if (operatorProfileBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          if (((bitField0_ & 0x00000008) != 0)) {
             operatorProfile_ = java.util.Collections.unmodifiableList(operatorProfile_);
             bitField0_ = (bitField0_ & ~0x00000008);
           }
@@ -21338,38 +22229,38 @@ public final class UserBitShared {
         } else {
           result.operatorProfile_ = operatorProfileBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.startTime_ = startTime_;
           to_bitField0_ |= 0x00000008;
         }
-        result.startTime_ = startTime_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.endTime_ = endTime_;
           to_bitField0_ |= 0x00000010;
         }
-        result.endTime_ = endTime_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.memoryUsed_ = memoryUsed_;
           to_bitField0_ |= 0x00000020;
         }
-        result.memoryUsed_ = memoryUsed_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          result.maxMemoryUsed_ = maxMemoryUsed_;
           to_bitField0_ |= 0x00000040;
         }
-        result.maxMemoryUsed_ = maxMemoryUsed_;
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          if (endpointBuilder_ == null) {
+            result.endpoint_ = endpoint_;
+          } else {
+            result.endpoint_ = endpointBuilder_.build();
+          }
           to_bitField0_ |= 0x00000080;
         }
-        if (endpointBuilder_ == null) {
-          result.endpoint_ = endpoint_;
-        } else {
-          result.endpoint_ = endpointBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+        if (((from_bitField0_ & 0x00000200) != 0)) {
+          result.lastUpdate_ = lastUpdate_;
           to_bitField0_ |= 0x00000100;
         }
-        result.lastUpdate_ = lastUpdate_;
-        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+        if (((from_bitField0_ & 0x00000400) != 0)) {
+          result.lastProgress_ = lastProgress_;
           to_bitField0_ |= 0x00000200;
         }
-        result.lastProgress_ = lastProgress_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -21377,35 +22268,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -21508,12 +22399,14 @@ public final class UserBitShared {
       private int state_ = 0;
       /**
        * <code>optional .exec.shared.FragmentState state = 1;</code>
+       * @return Whether the state field is set.
        */
       public boolean hasState() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.shared.FragmentState state = 1;</code>
+       * @return The state.
        */
       public org.apache.drill.exec.proto.UserBitShared.FragmentState getState() {
         @SuppressWarnings("deprecation")
@@ -21522,6 +22415,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.FragmentState state = 1;</code>
+       * @param value The state to set.
+       * @return This builder for chaining.
        */
       public Builder setState(org.apache.drill.exec.proto.UserBitShared.FragmentState value) {
         if (value == null) {
@@ -21534,6 +22429,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.FragmentState state = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearState() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -21542,17 +22438,19 @@ public final class UserBitShared {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.DrillPBError error_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.DrillPBError, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder, org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> errorBuilder_;
       /**
        * <code>optional .exec.shared.DrillPBError error = 2;</code>
+       * @return Whether the error field is set.
        */
       public boolean hasError() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.shared.DrillPBError error = 2;</code>
+       * @return The error.
        */
       public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
         if (errorBuilder_ == null) {
@@ -21596,7 +22494,7 @@ public final class UserBitShared {
        */
       public Builder mergeError(org.apache.drill.exec.proto.UserBitShared.DrillPBError value) {
         if (errorBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               error_ != null &&
               error_ != org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance()) {
             error_ =
@@ -21663,18 +22561,22 @@ public final class UserBitShared {
       private int minorFragmentId_ ;
       /**
        * <code>optional int32 minor_fragment_id = 3;</code>
+       * @return Whether the minorFragmentId field is set.
        */
       public boolean hasMinorFragmentId() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional int32 minor_fragment_id = 3;</code>
+       * @return The minorFragmentId.
        */
       public int getMinorFragmentId() {
         return minorFragmentId_;
       }
       /**
        * <code>optional int32 minor_fragment_id = 3;</code>
+       * @param value The minorFragmentId to set.
+       * @return This builder for chaining.
        */
       public Builder setMinorFragmentId(int value) {
         bitField0_ |= 0x00000004;
@@ -21684,6 +22586,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 minor_fragment_id = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMinorFragmentId() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -21695,7 +22598,7 @@ public final class UserBitShared {
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.OperatorProfile> operatorProfile_ =
         java.util.Collections.emptyList();
       private void ensureOperatorProfileIsMutable() {
-        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+        if (!((bitField0_ & 0x00000008) != 0)) {
           operatorProfile_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.OperatorProfile>(operatorProfile_);
           bitField0_ |= 0x00000008;
          }
@@ -21924,7 +22827,7 @@ public final class UserBitShared {
           operatorProfileBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserBitShared.OperatorProfile, org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder, org.apache.drill.exec.proto.UserBitShared.OperatorProfileOrBuilder>(
                   operatorProfile_,
-                  ((bitField0_ & 0x00000008) == 0x00000008),
+                  ((bitField0_ & 0x00000008) != 0),
                   getParentForChildren(),
                   isClean());
           operatorProfile_ = null;
@@ -21935,18 +22838,22 @@ public final class UserBitShared {
       private long startTime_ ;
       /**
        * <code>optional int64 start_time = 5;</code>
+       * @return Whether the startTime field is set.
        */
       public boolean hasStartTime() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional int64 start_time = 5;</code>
+       * @return The startTime.
        */
       public long getStartTime() {
         return startTime_;
       }
       /**
        * <code>optional int64 start_time = 5;</code>
+       * @param value The startTime to set.
+       * @return This builder for chaining.
        */
       public Builder setStartTime(long value) {
         bitField0_ |= 0x00000010;
@@ -21956,6 +22863,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 start_time = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStartTime() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -21967,18 +22875,22 @@ public final class UserBitShared {
       private long endTime_ ;
       /**
        * <code>optional int64 end_time = 6;</code>
+       * @return Whether the endTime field is set.
        */
       public boolean hasEndTime() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <code>optional int64 end_time = 6;</code>
+       * @return The endTime.
        */
       public long getEndTime() {
         return endTime_;
       }
       /**
        * <code>optional int64 end_time = 6;</code>
+       * @param value The endTime to set.
+       * @return This builder for chaining.
        */
       public Builder setEndTime(long value) {
         bitField0_ |= 0x00000020;
@@ -21988,6 +22900,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 end_time = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearEndTime() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -21999,18 +22912,22 @@ public final class UserBitShared {
       private long memoryUsed_ ;
       /**
        * <code>optional int64 memory_used = 7;</code>
+       * @return Whether the memoryUsed field is set.
        */
       public boolean hasMemoryUsed() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <code>optional int64 memory_used = 7;</code>
+       * @return The memoryUsed.
        */
       public long getMemoryUsed() {
         return memoryUsed_;
       }
       /**
        * <code>optional int64 memory_used = 7;</code>
+       * @param value The memoryUsed to set.
+       * @return This builder for chaining.
        */
       public Builder setMemoryUsed(long value) {
         bitField0_ |= 0x00000040;
@@ -22020,6 +22937,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 memory_used = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMemoryUsed() {
         bitField0_ = (bitField0_ & ~0x00000040);
@@ -22031,18 +22949,22 @@ public final class UserBitShared {
       private long maxMemoryUsed_ ;
       /**
        * <code>optional int64 max_memory_used = 8;</code>
+       * @return Whether the maxMemoryUsed field is set.
        */
       public boolean hasMaxMemoryUsed() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <code>optional int64 max_memory_used = 8;</code>
+       * @return The maxMemoryUsed.
        */
       public long getMaxMemoryUsed() {
         return maxMemoryUsed_;
       }
       /**
        * <code>optional int64 max_memory_used = 8;</code>
+       * @param value The maxMemoryUsed to set.
+       * @return This builder for chaining.
        */
       public Builder setMaxMemoryUsed(long value) {
         bitField0_ |= 0x00000080;
@@ -22052,6 +22974,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 max_memory_used = 8;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMaxMemoryUsed() {
         bitField0_ = (bitField0_ & ~0x00000080);
@@ -22060,17 +22983,19 @@ public final class UserBitShared {
         return this;
       }
 
-      private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_ = null;
+      private org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint endpoint_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder> endpointBuilder_;
       /**
        * <code>optional .exec.DrillbitEndpoint endpoint = 9;</code>
+       * @return Whether the endpoint field is set.
        */
       public boolean hasEndpoint() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000100) != 0);
       }
       /**
        * <code>optional .exec.DrillbitEndpoint endpoint = 9;</code>
+       * @return The endpoint.
        */
       public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getEndpoint() {
         if (endpointBuilder_ == null) {
@@ -22114,7 +23039,7 @@ public final class UserBitShared {
        */
       public Builder mergeEndpoint(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint value) {
         if (endpointBuilder_ == null) {
-          if (((bitField0_ & 0x00000100) == 0x00000100) &&
+          if (((bitField0_ & 0x00000100) != 0) &&
               endpoint_ != null &&
               endpoint_ != org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance()) {
             endpoint_ =
@@ -22181,18 +23106,22 @@ public final class UserBitShared {
       private long lastUpdate_ ;
       /**
        * <code>optional int64 last_update = 10;</code>
+       * @return Whether the lastUpdate field is set.
        */
       public boolean hasLastUpdate() {
-        return ((bitField0_ & 0x00000200) == 0x00000200);
+        return ((bitField0_ & 0x00000200) != 0);
       }
       /**
        * <code>optional int64 last_update = 10;</code>
+       * @return The lastUpdate.
        */
       public long getLastUpdate() {
         return lastUpdate_;
       }
       /**
        * <code>optional int64 last_update = 10;</code>
+       * @param value The lastUpdate to set.
+       * @return This builder for chaining.
        */
       public Builder setLastUpdate(long value) {
         bitField0_ |= 0x00000200;
@@ -22202,6 +23131,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 last_update = 10;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLastUpdate() {
         bitField0_ = (bitField0_ & ~0x00000200);
@@ -22213,18 +23143,22 @@ public final class UserBitShared {
       private long lastProgress_ ;
       /**
        * <code>optional int64 last_progress = 11;</code>
+       * @return Whether the lastProgress field is set.
        */
       public boolean hasLastProgress() {
-        return ((bitField0_ & 0x00000400) == 0x00000400);
+        return ((bitField0_ & 0x00000400) != 0);
       }
       /**
        * <code>optional int64 last_progress = 11;</code>
+       * @return The lastProgress.
        */
       public long getLastProgress() {
         return lastProgress_;
       }
       /**
        * <code>optional int64 last_progress = 11;</code>
+       * @param value The lastProgress to set.
+       * @return This builder for chaining.
        */
       public Builder setLastProgress(long value) {
         bitField0_ |= 0x00000400;
@@ -22234,6 +23168,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 last_progress = 11;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLastProgress() {
         bitField0_ = (bitField0_ & ~0x00000400);
@@ -22324,46 +23259,56 @@ public final class UserBitShared {
 
     /**
      * <code>optional int32 operator_id = 3;</code>
+     * @return Whether the operatorId field is set.
      */
     boolean hasOperatorId();
     /**
      * <code>optional int32 operator_id = 3;</code>
+     * @return The operatorId.
      */
     int getOperatorId();
 
     /**
      * <code>optional int32 operator_type = 4;</code>
+     * @return Whether the operatorType field is set.
      */
     boolean hasOperatorType();
     /**
      * <code>optional int32 operator_type = 4;</code>
+     * @return The operatorType.
      */
     int getOperatorType();
 
     /**
      * <code>optional int64 setup_nanos = 5;</code>
+     * @return Whether the setupNanos field is set.
      */
     boolean hasSetupNanos();
     /**
      * <code>optional int64 setup_nanos = 5;</code>
+     * @return The setupNanos.
      */
     long getSetupNanos();
 
     /**
      * <code>optional int64 process_nanos = 6;</code>
+     * @return Whether the processNanos field is set.
      */
     boolean hasProcessNanos();
     /**
      * <code>optional int64 process_nanos = 6;</code>
+     * @return The processNanos.
      */
     long getProcessNanos();
 
     /**
      * <code>optional int64 peak_local_memory_allocated = 7;</code>
+     * @return Whether the peakLocalMemoryAllocated field is set.
      */
     boolean hasPeakLocalMemoryAllocated();
     /**
      * <code>optional int64 peak_local_memory_allocated = 7;</code>
+     * @return The peakLocalMemoryAllocated.
      */
     long getPeakLocalMemoryAllocated();
 
@@ -22393,10 +23338,12 @@ public final class UserBitShared {
 
     /**
      * <code>optional int64 wait_nanos = 9;</code>
+     * @return Whether the waitNanos field is set.
      */
     boolean hasWaitNanos();
     /**
      * <code>optional int64 wait_nanos = 9;</code>
+     * @return The waitNanos.
      */
     long getWaitNanos();
   }
@@ -22414,13 +23361,14 @@ public final class UserBitShared {
     }
     private OperatorProfile() {
       inputProfile_ = java.util.Collections.emptyList();
-      operatorId_ = 0;
-      operatorType_ = 0;
-      setupNanos_ = 0L;
-      processNanos_ = 0L;
-      peakLocalMemoryAllocated_ = 0L;
       metric_ = java.util.Collections.emptyList();
-      waitNanos_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new OperatorProfile();
     }
 
     @java.lang.Override
@@ -22448,7 +23396,7 @@ public final class UserBitShared {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 inputProfile_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.StreamProfile>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -22482,7 +23430,7 @@ public final class UserBitShared {
               break;
             }
             case 66: {
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+              if (!((mutable_bitField0_ & 0x00000040) != 0)) {
                 metric_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.MetricValue>();
                 mutable_bitField0_ |= 0x00000040;
               }
@@ -22510,10 +23458,10 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           inputProfile_ = java.util.Collections.unmodifiableList(inputProfile_);
         }
-        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((mutable_bitField0_ & 0x00000040) != 0)) {
           metric_ = java.util.Collections.unmodifiableList(metric_);
         }
         this.unknownFields = unknownFields.build();
@@ -22573,12 +23521,14 @@ public final class UserBitShared {
     private int operatorId_;
     /**
      * <code>optional int32 operator_id = 3;</code>
+     * @return Whether the operatorId field is set.
      */
     public boolean hasOperatorId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional int32 operator_id = 3;</code>
+     * @return The operatorId.
      */
     public int getOperatorId() {
       return operatorId_;
@@ -22588,12 +23538,14 @@ public final class UserBitShared {
     private int operatorType_;
     /**
      * <code>optional int32 operator_type = 4;</code>
+     * @return Whether the operatorType field is set.
      */
     public boolean hasOperatorType() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional int32 operator_type = 4;</code>
+     * @return The operatorType.
      */
     public int getOperatorType() {
       return operatorType_;
@@ -22603,12 +23555,14 @@ public final class UserBitShared {
     private long setupNanos_;
     /**
      * <code>optional int64 setup_nanos = 5;</code>
+     * @return Whether the setupNanos field is set.
      */
     public boolean hasSetupNanos() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional int64 setup_nanos = 5;</code>
+     * @return The setupNanos.
      */
     public long getSetupNanos() {
       return setupNanos_;
@@ -22618,12 +23572,14 @@ public final class UserBitShared {
     private long processNanos_;
     /**
      * <code>optional int64 process_nanos = 6;</code>
+     * @return Whether the processNanos field is set.
      */
     public boolean hasProcessNanos() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional int64 process_nanos = 6;</code>
+     * @return The processNanos.
      */
     public long getProcessNanos() {
       return processNanos_;
@@ -22633,12 +23589,14 @@ public final class UserBitShared {
     private long peakLocalMemoryAllocated_;
     /**
      * <code>optional int64 peak_local_memory_allocated = 7;</code>
+     * @return Whether the peakLocalMemoryAllocated field is set.
      */
     public boolean hasPeakLocalMemoryAllocated() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <code>optional int64 peak_local_memory_allocated = 7;</code>
+     * @return The peakLocalMemoryAllocated.
      */
     public long getPeakLocalMemoryAllocated() {
       return peakLocalMemoryAllocated_;
@@ -22683,12 +23641,14 @@ public final class UserBitShared {
     private long waitNanos_;
     /**
      * <code>optional int64 wait_nanos = 9;</code>
+     * @return Whether the waitNanos field is set.
      */
     public boolean hasWaitNanos() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <code>optional int64 wait_nanos = 9;</code>
+     * @return The waitNanos.
      */
     public long getWaitNanos() {
       return waitNanos_;
@@ -22711,25 +23671,25 @@ public final class UserBitShared {
       for (int i = 0; i < inputProfile_.size(); i++) {
         output.writeMessage(1, inputProfile_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeInt32(3, operatorId_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeInt32(4, operatorType_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt64(5, setupNanos_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeInt64(6, processNanos_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeInt64(7, peakLocalMemoryAllocated_);
       }
       for (int i = 0; i < metric_.size(); i++) {
         output.writeMessage(8, metric_.get(i));
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeInt64(9, waitNanos_);
       }
       unknownFields.writeTo(output);
@@ -22745,23 +23705,23 @@ public final class UserBitShared {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, inputProfile_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, operatorId_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, operatorType_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(5, setupNanos_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(6, processNanos_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(7, peakLocalMemoryAllocated_);
       }
@@ -22769,7 +23729,7 @@ public final class UserBitShared {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, metric_.get(i));
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(9, waitNanos_);
       }
@@ -22788,43 +23748,42 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.OperatorProfile other = (org.apache.drill.exec.proto.UserBitShared.OperatorProfile) obj;
 
-      boolean result = true;
-      result = result && getInputProfileList()
-          .equals(other.getInputProfileList());
-      result = result && (hasOperatorId() == other.hasOperatorId());
+      if (!getInputProfileList()
+          .equals(other.getInputProfileList())) return false;
+      if (hasOperatorId() != other.hasOperatorId()) return false;
       if (hasOperatorId()) {
-        result = result && (getOperatorId()
-            == other.getOperatorId());
+        if (getOperatorId()
+            != other.getOperatorId()) return false;
       }
-      result = result && (hasOperatorType() == other.hasOperatorType());
+      if (hasOperatorType() != other.hasOperatorType()) return false;
       if (hasOperatorType()) {
-        result = result && (getOperatorType()
-            == other.getOperatorType());
+        if (getOperatorType()
+            != other.getOperatorType()) return false;
       }
-      result = result && (hasSetupNanos() == other.hasSetupNanos());
+      if (hasSetupNanos() != other.hasSetupNanos()) return false;
       if (hasSetupNanos()) {
-        result = result && (getSetupNanos()
-            == other.getSetupNanos());
+        if (getSetupNanos()
+            != other.getSetupNanos()) return false;
       }
-      result = result && (hasProcessNanos() == other.hasProcessNanos());
+      if (hasProcessNanos() != other.hasProcessNanos()) return false;
       if (hasProcessNanos()) {
-        result = result && (getProcessNanos()
-            == other.getProcessNanos());
+        if (getProcessNanos()
+            != other.getProcessNanos()) return false;
       }
-      result = result && (hasPeakLocalMemoryAllocated() == other.hasPeakLocalMemoryAllocated());
+      if (hasPeakLocalMemoryAllocated() != other.hasPeakLocalMemoryAllocated()) return false;
       if (hasPeakLocalMemoryAllocated()) {
-        result = result && (getPeakLocalMemoryAllocated()
-            == other.getPeakLocalMemoryAllocated());
+        if (getPeakLocalMemoryAllocated()
+            != other.getPeakLocalMemoryAllocated()) return false;
       }
-      result = result && getMetricList()
-          .equals(other.getMetricList());
-      result = result && (hasWaitNanos() == other.hasWaitNanos());
+      if (!getMetricList()
+          .equals(other.getMetricList())) return false;
+      if (hasWaitNanos() != other.hasWaitNanos()) return false;
       if (hasWaitNanos()) {
-        result = result && (getWaitNanos()
-            == other.getWaitNanos());
+        if (getWaitNanos()
+            != other.getWaitNanos()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -23058,7 +24017,7 @@ public final class UserBitShared {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (inputProfileBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             inputProfile_ = java.util.Collections.unmodifiableList(inputProfile_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -23066,28 +24025,28 @@ public final class UserBitShared {
         } else {
           result.inputProfile_ = inputProfileBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.operatorId_ = operatorId_;
           to_bitField0_ |= 0x00000001;
         }
-        result.operatorId_ = operatorId_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.operatorType_ = operatorType_;
           to_bitField0_ |= 0x00000002;
         }
-        result.operatorType_ = operatorType_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.setupNanos_ = setupNanos_;
           to_bitField0_ |= 0x00000004;
         }
-        result.setupNanos_ = setupNanos_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.processNanos_ = processNanos_;
           to_bitField0_ |= 0x00000008;
         }
-        result.processNanos_ = processNanos_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.peakLocalMemoryAllocated_ = peakLocalMemoryAllocated_;
           to_bitField0_ |= 0x00000010;
         }
-        result.peakLocalMemoryAllocated_ = peakLocalMemoryAllocated_;
         if (metricBuilder_ == null) {
-          if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          if (((bitField0_ & 0x00000040) != 0)) {
             metric_ = java.util.Collections.unmodifiableList(metric_);
             bitField0_ = (bitField0_ & ~0x00000040);
           }
@@ -23095,10 +24054,10 @@ public final class UserBitShared {
         } else {
           result.metric_ = metricBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          result.waitNanos_ = waitNanos_;
           to_bitField0_ |= 0x00000020;
         }
-        result.waitNanos_ = waitNanos_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -23106,35 +24065,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -23251,7 +24210,7 @@ public final class UserBitShared {
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.StreamProfile> inputProfile_ =
         java.util.Collections.emptyList();
       private void ensureInputProfileIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           inputProfile_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.StreamProfile>(inputProfile_);
           bitField0_ |= 0x00000001;
          }
@@ -23480,7 +24439,7 @@ public final class UserBitShared {
           inputProfileBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserBitShared.StreamProfile, org.apache.drill.exec.proto.UserBitShared.StreamProfile.Builder, org.apache.drill.exec.proto.UserBitShared.StreamProfileOrBuilder>(
                   inputProfile_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           inputProfile_ = null;
@@ -23491,18 +24450,22 @@ public final class UserBitShared {
       private int operatorId_ ;
       /**
        * <code>optional int32 operator_id = 3;</code>
+       * @return Whether the operatorId field is set.
        */
       public boolean hasOperatorId() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional int32 operator_id = 3;</code>
+       * @return The operatorId.
        */
       public int getOperatorId() {
         return operatorId_;
       }
       /**
        * <code>optional int32 operator_id = 3;</code>
+       * @param value The operatorId to set.
+       * @return This builder for chaining.
        */
       public Builder setOperatorId(int value) {
         bitField0_ |= 0x00000002;
@@ -23512,6 +24475,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 operator_id = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearOperatorId() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -23523,18 +24487,22 @@ public final class UserBitShared {
       private int operatorType_ ;
       /**
        * <code>optional int32 operator_type = 4;</code>
+       * @return Whether the operatorType field is set.
        */
       public boolean hasOperatorType() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional int32 operator_type = 4;</code>
+       * @return The operatorType.
        */
       public int getOperatorType() {
         return operatorType_;
       }
       /**
        * <code>optional int32 operator_type = 4;</code>
+       * @param value The operatorType to set.
+       * @return This builder for chaining.
        */
       public Builder setOperatorType(int value) {
         bitField0_ |= 0x00000004;
@@ -23544,6 +24512,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 operator_type = 4;</code>
+       * @return This builder for chaining.
        */
       public Builder clearOperatorType() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -23555,18 +24524,22 @@ public final class UserBitShared {
       private long setupNanos_ ;
       /**
        * <code>optional int64 setup_nanos = 5;</code>
+       * @return Whether the setupNanos field is set.
        */
       public boolean hasSetupNanos() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional int64 setup_nanos = 5;</code>
+       * @return The setupNanos.
        */
       public long getSetupNanos() {
         return setupNanos_;
       }
       /**
        * <code>optional int64 setup_nanos = 5;</code>
+       * @param value The setupNanos to set.
+       * @return This builder for chaining.
        */
       public Builder setSetupNanos(long value) {
         bitField0_ |= 0x00000008;
@@ -23576,6 +24549,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 setup_nanos = 5;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSetupNanos() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -23587,18 +24561,22 @@ public final class UserBitShared {
       private long processNanos_ ;
       /**
        * <code>optional int64 process_nanos = 6;</code>
+       * @return Whether the processNanos field is set.
        */
       public boolean hasProcessNanos() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <code>optional int64 process_nanos = 6;</code>
+       * @return The processNanos.
        */
       public long getProcessNanos() {
         return processNanos_;
       }
       /**
        * <code>optional int64 process_nanos = 6;</code>
+       * @param value The processNanos to set.
+       * @return This builder for chaining.
        */
       public Builder setProcessNanos(long value) {
         bitField0_ |= 0x00000010;
@@ -23608,6 +24586,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 process_nanos = 6;</code>
+       * @return This builder for chaining.
        */
       public Builder clearProcessNanos() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -23619,18 +24598,22 @@ public final class UserBitShared {
       private long peakLocalMemoryAllocated_ ;
       /**
        * <code>optional int64 peak_local_memory_allocated = 7;</code>
+       * @return Whether the peakLocalMemoryAllocated field is set.
        */
       public boolean hasPeakLocalMemoryAllocated() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <code>optional int64 peak_local_memory_allocated = 7;</code>
+       * @return The peakLocalMemoryAllocated.
        */
       public long getPeakLocalMemoryAllocated() {
         return peakLocalMemoryAllocated_;
       }
       /**
        * <code>optional int64 peak_local_memory_allocated = 7;</code>
+       * @param value The peakLocalMemoryAllocated to set.
+       * @return This builder for chaining.
        */
       public Builder setPeakLocalMemoryAllocated(long value) {
         bitField0_ |= 0x00000020;
@@ -23640,6 +24623,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 peak_local_memory_allocated = 7;</code>
+       * @return This builder for chaining.
        */
       public Builder clearPeakLocalMemoryAllocated() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -23651,7 +24635,7 @@ public final class UserBitShared {
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.MetricValue> metric_ =
         java.util.Collections.emptyList();
       private void ensureMetricIsMutable() {
-        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (!((bitField0_ & 0x00000040) != 0)) {
           metric_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.MetricValue>(metric_);
           bitField0_ |= 0x00000040;
          }
@@ -23880,7 +24864,7 @@ public final class UserBitShared {
           metricBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserBitShared.MetricValue, org.apache.drill.exec.proto.UserBitShared.MetricValue.Builder, org.apache.drill.exec.proto.UserBitShared.MetricValueOrBuilder>(
                   metric_,
-                  ((bitField0_ & 0x00000040) == 0x00000040),
+                  ((bitField0_ & 0x00000040) != 0),
                   getParentForChildren(),
                   isClean());
           metric_ = null;
@@ -23891,18 +24875,22 @@ public final class UserBitShared {
       private long waitNanos_ ;
       /**
        * <code>optional int64 wait_nanos = 9;</code>
+       * @return Whether the waitNanos field is set.
        */
       public boolean hasWaitNanos() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <code>optional int64 wait_nanos = 9;</code>
+       * @return The waitNanos.
        */
       public long getWaitNanos() {
         return waitNanos_;
       }
       /**
        * <code>optional int64 wait_nanos = 9;</code>
+       * @param value The waitNanos to set.
+       * @return This builder for chaining.
        */
       public Builder setWaitNanos(long value) {
         bitField0_ |= 0x00000080;
@@ -23912,6 +24900,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 wait_nanos = 9;</code>
+       * @return This builder for chaining.
        */
       public Builder clearWaitNanos() {
         bitField0_ = (bitField0_ & ~0x00000080);
@@ -23978,28 +24967,34 @@ public final class UserBitShared {
 
     /**
      * <code>optional int64 records = 1;</code>
+     * @return Whether the records field is set.
      */
     boolean hasRecords();
     /**
      * <code>optional int64 records = 1;</code>
+     * @return The records.
      */
     long getRecords();
 
     /**
      * <code>optional int64 batches = 2;</code>
+     * @return Whether the batches field is set.
      */
     boolean hasBatches();
     /**
      * <code>optional int64 batches = 2;</code>
+     * @return The batches.
      */
     long getBatches();
 
     /**
      * <code>optional int64 schemas = 3;</code>
+     * @return Whether the schemas field is set.
      */
     boolean hasSchemas();
     /**
      * <code>optional int64 schemas = 3;</code>
+     * @return The schemas.
      */
     long getSchemas();
   }
@@ -24016,9 +25011,13 @@ public final class UserBitShared {
       super(builder);
     }
     private StreamProfile() {
-      records_ = 0L;
-      batches_ = 0L;
-      schemas_ = 0L;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new StreamProfile();
     }
 
     @java.lang.Override
@@ -24097,12 +25096,14 @@ public final class UserBitShared {
     private long records_;
     /**
      * <code>optional int64 records = 1;</code>
+     * @return Whether the records field is set.
      */
     public boolean hasRecords() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional int64 records = 1;</code>
+     * @return The records.
      */
     public long getRecords() {
       return records_;
@@ -24112,12 +25113,14 @@ public final class UserBitShared {
     private long batches_;
     /**
      * <code>optional int64 batches = 2;</code>
+     * @return Whether the batches field is set.
      */
     public boolean hasBatches() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional int64 batches = 2;</code>
+     * @return The batches.
      */
     public long getBatches() {
       return batches_;
@@ -24127,12 +25130,14 @@ public final class UserBitShared {
     private long schemas_;
     /**
      * <code>optional int64 schemas = 3;</code>
+     * @return Whether the schemas field is set.
      */
     public boolean hasSchemas() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional int64 schemas = 3;</code>
+     * @return The schemas.
      */
     public long getSchemas() {
       return schemas_;
@@ -24152,13 +25157,13 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeInt64(1, records_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeInt64(2, batches_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt64(3, schemas_);
       }
       unknownFields.writeTo(output);
@@ -24170,15 +25175,15 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(1, records_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(2, batches_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(3, schemas_);
       }
@@ -24197,24 +25202,23 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.StreamProfile other = (org.apache.drill.exec.proto.UserBitShared.StreamProfile) obj;
 
-      boolean result = true;
-      result = result && (hasRecords() == other.hasRecords());
+      if (hasRecords() != other.hasRecords()) return false;
       if (hasRecords()) {
-        result = result && (getRecords()
-            == other.getRecords());
+        if (getRecords()
+            != other.getRecords()) return false;
       }
-      result = result && (hasBatches() == other.hasBatches());
+      if (hasBatches() != other.hasBatches()) return false;
       if (hasBatches()) {
-        result = result && (getBatches()
-            == other.getBatches());
+        if (getBatches()
+            != other.getBatches()) return false;
       }
-      result = result && (hasSchemas() == other.hasSchemas());
+      if (hasSchemas() != other.hasSchemas()) return false;
       if (hasSchemas()) {
-        result = result && (getSchemas()
-            == other.getSchemas());
+        if (getSchemas()
+            != other.getSchemas()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -24406,18 +25410,18 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.StreamProfile result = new org.apache.drill.exec.proto.UserBitShared.StreamProfile(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.records_ = records_;
           to_bitField0_ |= 0x00000001;
         }
-        result.records_ = records_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.batches_ = batches_;
           to_bitField0_ |= 0x00000002;
         }
-        result.batches_ = batches_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.schemas_ = schemas_;
           to_bitField0_ |= 0x00000004;
         }
-        result.schemas_ = schemas_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -24425,35 +25429,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -24509,18 +25513,22 @@ public final class UserBitShared {
       private long records_ ;
       /**
        * <code>optional int64 records = 1;</code>
+       * @return Whether the records field is set.
        */
       public boolean hasRecords() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional int64 records = 1;</code>
+       * @return The records.
        */
       public long getRecords() {
         return records_;
       }
       /**
        * <code>optional int64 records = 1;</code>
+       * @param value The records to set.
+       * @return This builder for chaining.
        */
       public Builder setRecords(long value) {
         bitField0_ |= 0x00000001;
@@ -24530,6 +25538,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 records = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearRecords() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -24541,18 +25550,22 @@ public final class UserBitShared {
       private long batches_ ;
       /**
        * <code>optional int64 batches = 2;</code>
+       * @return Whether the batches field is set.
        */
       public boolean hasBatches() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional int64 batches = 2;</code>
+       * @return The batches.
        */
       public long getBatches() {
         return batches_;
       }
       /**
        * <code>optional int64 batches = 2;</code>
+       * @param value The batches to set.
+       * @return This builder for chaining.
        */
       public Builder setBatches(long value) {
         bitField0_ |= 0x00000002;
@@ -24562,6 +25575,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 batches = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearBatches() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -24573,18 +25587,22 @@ public final class UserBitShared {
       private long schemas_ ;
       /**
        * <code>optional int64 schemas = 3;</code>
+       * @return Whether the schemas field is set.
        */
       public boolean hasSchemas() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional int64 schemas = 3;</code>
+       * @return The schemas.
        */
       public long getSchemas() {
         return schemas_;
       }
       /**
        * <code>optional int64 schemas = 3;</code>
+       * @param value The schemas to set.
+       * @return This builder for chaining.
        */
       public Builder setSchemas(long value) {
         bitField0_ |= 0x00000004;
@@ -24594,6 +25612,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 schemas = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSchemas() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -24660,28 +25679,34 @@ public final class UserBitShared {
 
     /**
      * <code>optional int32 metric_id = 1;</code>
+     * @return Whether the metricId field is set.
      */
     boolean hasMetricId();
     /**
      * <code>optional int32 metric_id = 1;</code>
+     * @return The metricId.
      */
     int getMetricId();
 
     /**
      * <code>optional int64 long_value = 2;</code>
+     * @return Whether the longValue field is set.
      */
     boolean hasLongValue();
     /**
      * <code>optional int64 long_value = 2;</code>
+     * @return The longValue.
      */
     long getLongValue();
 
     /**
      * <code>optional double double_value = 3;</code>
+     * @return Whether the doubleValue field is set.
      */
     boolean hasDoubleValue();
     /**
      * <code>optional double double_value = 3;</code>
+     * @return The doubleValue.
      */
     double getDoubleValue();
   }
@@ -24698,9 +25723,13 @@ public final class UserBitShared {
       super(builder);
     }
     private MetricValue() {
-      metricId_ = 0;
-      longValue_ = 0L;
-      doubleValue_ = 0D;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new MetricValue();
     }
 
     @java.lang.Override
@@ -24779,12 +25808,14 @@ public final class UserBitShared {
     private int metricId_;
     /**
      * <code>optional int32 metric_id = 1;</code>
+     * @return Whether the metricId field is set.
      */
     public boolean hasMetricId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional int32 metric_id = 1;</code>
+     * @return The metricId.
      */
     public int getMetricId() {
       return metricId_;
@@ -24794,12 +25825,14 @@ public final class UserBitShared {
     private long longValue_;
     /**
      * <code>optional int64 long_value = 2;</code>
+     * @return Whether the longValue field is set.
      */
     public boolean hasLongValue() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional int64 long_value = 2;</code>
+     * @return The longValue.
      */
     public long getLongValue() {
       return longValue_;
@@ -24809,12 +25842,14 @@ public final class UserBitShared {
     private double doubleValue_;
     /**
      * <code>optional double double_value = 3;</code>
+     * @return Whether the doubleValue field is set.
      */
     public boolean hasDoubleValue() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional double double_value = 3;</code>
+     * @return The doubleValue.
      */
     public double getDoubleValue() {
       return doubleValue_;
@@ -24834,13 +25869,13 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeInt32(1, metricId_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeInt64(2, longValue_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeDouble(3, doubleValue_);
       }
       unknownFields.writeTo(output);
@@ -24852,15 +25887,15 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, metricId_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(2, longValue_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(3, doubleValue_);
       }
@@ -24879,26 +25914,24 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.MetricValue other = (org.apache.drill.exec.proto.UserBitShared.MetricValue) obj;
 
-      boolean result = true;
-      result = result && (hasMetricId() == other.hasMetricId());
+      if (hasMetricId() != other.hasMetricId()) return false;
       if (hasMetricId()) {
-        result = result && (getMetricId()
-            == other.getMetricId());
+        if (getMetricId()
+            != other.getMetricId()) return false;
       }
-      result = result && (hasLongValue() == other.hasLongValue());
+      if (hasLongValue() != other.hasLongValue()) return false;
       if (hasLongValue()) {
-        result = result && (getLongValue()
-            == other.getLongValue());
+        if (getLongValue()
+            != other.getLongValue()) return false;
       }
-      result = result && (hasDoubleValue() == other.hasDoubleValue());
+      if (hasDoubleValue() != other.hasDoubleValue()) return false;
       if (hasDoubleValue()) {
-        result = result && (
-            java.lang.Double.doubleToLongBits(getDoubleValue())
-            == java.lang.Double.doubleToLongBits(
-                other.getDoubleValue()));
+        if (java.lang.Double.doubleToLongBits(getDoubleValue())
+            != java.lang.Double.doubleToLongBits(
+                other.getDoubleValue())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -25089,18 +26122,18 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.MetricValue result = new org.apache.drill.exec.proto.UserBitShared.MetricValue(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.metricId_ = metricId_;
           to_bitField0_ |= 0x00000001;
         }
-        result.metricId_ = metricId_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.longValue_ = longValue_;
           to_bitField0_ |= 0x00000002;
         }
-        result.longValue_ = longValue_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.doubleValue_ = doubleValue_;
           to_bitField0_ |= 0x00000004;
         }
-        result.doubleValue_ = doubleValue_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -25108,35 +26141,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -25192,18 +26225,22 @@ public final class UserBitShared {
       private int metricId_ ;
       /**
        * <code>optional int32 metric_id = 1;</code>
+       * @return Whether the metricId field is set.
        */
       public boolean hasMetricId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional int32 metric_id = 1;</code>
+       * @return The metricId.
        */
       public int getMetricId() {
         return metricId_;
       }
       /**
        * <code>optional int32 metric_id = 1;</code>
+       * @param value The metricId to set.
+       * @return This builder for chaining.
        */
       public Builder setMetricId(int value) {
         bitField0_ |= 0x00000001;
@@ -25213,6 +26250,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int32 metric_id = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMetricId() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -25224,18 +26262,22 @@ public final class UserBitShared {
       private long longValue_ ;
       /**
        * <code>optional int64 long_value = 2;</code>
+       * @return Whether the longValue field is set.
        */
       public boolean hasLongValue() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional int64 long_value = 2;</code>
+       * @return The longValue.
        */
       public long getLongValue() {
         return longValue_;
       }
       /**
        * <code>optional int64 long_value = 2;</code>
+       * @param value The longValue to set.
+       * @return This builder for chaining.
        */
       public Builder setLongValue(long value) {
         bitField0_ |= 0x00000002;
@@ -25245,6 +26287,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional int64 long_value = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearLongValue() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -25256,18 +26299,22 @@ public final class UserBitShared {
       private double doubleValue_ ;
       /**
        * <code>optional double double_value = 3;</code>
+       * @return Whether the doubleValue field is set.
        */
       public boolean hasDoubleValue() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional double double_value = 3;</code>
+       * @return The doubleValue.
        */
       public double getDoubleValue() {
         return doubleValue_;
       }
       /**
        * <code>optional double double_value = 3;</code>
+       * @param value The doubleValue to set.
+       * @return This builder for chaining.
        */
       public Builder setDoubleValue(double value) {
         bitField0_ |= 0x00000004;
@@ -25277,6 +26324,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional double double_value = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearDoubleValue() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -25391,6 +26439,13 @@ public final class UserBitShared {
     }
 
     @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Registry();
+    }
+
+    @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
     getUnknownFields() {
       return this.unknownFields;
@@ -25415,7 +26470,7 @@ public final class UserBitShared {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 jar_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.Jar>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -25438,7 +26493,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           jar_ = java.util.Collections.unmodifiableList(jar_);
         }
         this.unknownFields = unknownFields.build();
@@ -25538,11 +26593,10 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.Registry other = (org.apache.drill.exec.proto.UserBitShared.Registry) obj;
 
-      boolean result = true;
-      result = result && getJarList()
-          .equals(other.getJarList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getJarList()
+          .equals(other.getJarList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -25733,7 +26787,7 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.Registry result = new org.apache.drill.exec.proto.UserBitShared.Registry(this);
         int from_bitField0_ = bitField0_;
         if (jarBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             jar_ = java.util.Collections.unmodifiableList(jar_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -25747,35 +26801,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -25848,7 +26902,7 @@ public final class UserBitShared {
       private java.util.List<org.apache.drill.exec.proto.UserBitShared.Jar> jar_ =
         java.util.Collections.emptyList();
       private void ensureJarIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           jar_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.Jar>(jar_);
           bitField0_ |= 0x00000001;
          }
@@ -26077,7 +27131,7 @@ public final class UserBitShared {
           jarBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.apache.drill.exec.proto.UserBitShared.Jar, org.apache.drill.exec.proto.UserBitShared.Jar.Builder, org.apache.drill.exec.proto.UserBitShared.JarOrBuilder>(
                   jar_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           jar_ = null;
@@ -26143,33 +27197,42 @@ public final class UserBitShared {
 
     /**
      * <code>optional string name = 1;</code>
+     * @return Whether the name field is set.
      */
     boolean hasName();
     /**
      * <code>optional string name = 1;</code>
+     * @return The name.
      */
     java.lang.String getName();
     /**
      * <code>optional string name = 1;</code>
+     * @return The bytes for name.
      */
     com.google.protobuf.ByteString
         getNameBytes();
 
     /**
      * <code>repeated string function_signature = 2;</code>
+     * @return A list containing the functionSignature.
      */
     java.util.List<java.lang.String>
         getFunctionSignatureList();
     /**
      * <code>repeated string function_signature = 2;</code>
+     * @return The count of functionSignature.
      */
     int getFunctionSignatureCount();
     /**
      * <code>repeated string function_signature = 2;</code>
+     * @param index The index of the element to return.
+     * @return The functionSignature at the given index.
      */
     java.lang.String getFunctionSignature(int index);
     /**
      * <code>repeated string function_signature = 2;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the functionSignature at the given index.
      */
     com.google.protobuf.ByteString
         getFunctionSignatureBytes(int index);
@@ -26194,6 +27257,13 @@ public final class UserBitShared {
     private Jar() {
       name_ = "";
       functionSignature_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Jar();
     }
 
     @java.lang.Override
@@ -26228,7 +27298,7 @@ public final class UserBitShared {
             }
             case 18: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 functionSignature_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000002;
               }
@@ -26250,7 +27320,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           functionSignature_ = functionSignature_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
@@ -26275,12 +27345,14 @@ public final class UserBitShared {
     private volatile java.lang.Object name_;
     /**
      * <code>optional string name = 1;</code>
+     * @return Whether the name field is set.
      */
     public boolean hasName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string name = 1;</code>
+     * @return The name.
      */
     public java.lang.String getName() {
       java.lang.Object ref = name_;
@@ -26298,6 +27370,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string name = 1;</code>
+     * @return The bytes for name.
      */
     public com.google.protobuf.ByteString
         getNameBytes() {
@@ -26317,6 +27390,7 @@ public final class UserBitShared {
     private com.google.protobuf.LazyStringList functionSignature_;
     /**
      * <code>repeated string function_signature = 2;</code>
+     * @return A list containing the functionSignature.
      */
     public com.google.protobuf.ProtocolStringList
         getFunctionSignatureList() {
@@ -26324,18 +27398,23 @@ public final class UserBitShared {
     }
     /**
      * <code>repeated string function_signature = 2;</code>
+     * @return The count of functionSignature.
      */
     public int getFunctionSignatureCount() {
       return functionSignature_.size();
     }
     /**
      * <code>repeated string function_signature = 2;</code>
+     * @param index The index of the element to return.
+     * @return The functionSignature at the given index.
      */
     public java.lang.String getFunctionSignature(int index) {
       return functionSignature_.get(index);
     }
     /**
      * <code>repeated string function_signature = 2;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the functionSignature at the given index.
      */
     public com.google.protobuf.ByteString
         getFunctionSignatureBytes(int index) {
@@ -26356,7 +27435,7 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
       }
       for (int i = 0; i < functionSignature_.size(); i++) {
@@ -26371,7 +27450,7 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
       }
       {
@@ -26397,16 +27476,15 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.Jar other = (org.apache.drill.exec.proto.UserBitShared.Jar) obj;
 
-      boolean result = true;
-      result = result && (hasName() == other.hasName());
+      if (hasName() != other.hasName()) return false;
       if (hasName()) {
-        result = result && getName()
-            .equals(other.getName());
+        if (!getName()
+            .equals(other.getName())) return false;
       }
-      result = result && getFunctionSignatureList()
-          .equals(other.getFunctionSignatureList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getFunctionSignatureList()
+          .equals(other.getFunctionSignatureList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -26594,11 +27672,11 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.Jar result = new org.apache.drill.exec.proto.UserBitShared.Jar(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.name_ = name_;
-        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((bitField0_ & 0x00000002) != 0)) {
           functionSignature_ = functionSignature_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000002);
         }
@@ -26610,35 +27688,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -26700,12 +27778,14 @@ public final class UserBitShared {
       private java.lang.Object name_ = "";
       /**
        * <code>optional string name = 1;</code>
+       * @return Whether the name field is set.
        */
       public boolean hasName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string name = 1;</code>
+       * @return The name.
        */
       public java.lang.String getName() {
         java.lang.Object ref = name_;
@@ -26723,6 +27803,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string name = 1;</code>
+       * @return The bytes for name.
        */
       public com.google.protobuf.ByteString
           getNameBytes() {
@@ -26739,6 +27820,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string name = 1;</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
        */
       public Builder setName(
           java.lang.String value) {
@@ -26752,6 +27835,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string name = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearName() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -26761,6 +27845,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string name = 1;</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
        */
       public Builder setNameBytes(
           com.google.protobuf.ByteString value) {
@@ -26775,13 +27861,14 @@ public final class UserBitShared {
 
       private com.google.protobuf.LazyStringList functionSignature_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureFunctionSignatureIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           functionSignature_ = new com.google.protobuf.LazyStringArrayList(functionSignature_);
           bitField0_ |= 0x00000002;
          }
       }
       /**
        * <code>repeated string function_signature = 2;</code>
+       * @return A list containing the functionSignature.
        */
       public com.google.protobuf.ProtocolStringList
           getFunctionSignatureList() {
@@ -26789,18 +27876,23 @@ public final class UserBitShared {
       }
       /**
        * <code>repeated string function_signature = 2;</code>
+       * @return The count of functionSignature.
        */
       public int getFunctionSignatureCount() {
         return functionSignature_.size();
       }
       /**
        * <code>repeated string function_signature = 2;</code>
+       * @param index The index of the element to return.
+       * @return The functionSignature at the given index.
        */
       public java.lang.String getFunctionSignature(int index) {
         return functionSignature_.get(index);
       }
       /**
        * <code>repeated string function_signature = 2;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the functionSignature at the given index.
        */
       public com.google.protobuf.ByteString
           getFunctionSignatureBytes(int index) {
@@ -26808,6 +27900,9 @@ public final class UserBitShared {
       }
       /**
        * <code>repeated string function_signature = 2;</code>
+       * @param index The index to set the value at.
+       * @param value The functionSignature to set.
+       * @return This builder for chaining.
        */
       public Builder setFunctionSignature(
           int index, java.lang.String value) {
@@ -26821,6 +27916,8 @@ public final class UserBitShared {
       }
       /**
        * <code>repeated string function_signature = 2;</code>
+       * @param value The functionSignature to add.
+       * @return This builder for chaining.
        */
       public Builder addFunctionSignature(
           java.lang.String value) {
@@ -26834,6 +27931,8 @@ public final class UserBitShared {
       }
       /**
        * <code>repeated string function_signature = 2;</code>
+       * @param values The functionSignature to add.
+       * @return This builder for chaining.
        */
       public Builder addAllFunctionSignature(
           java.lang.Iterable<java.lang.String> values) {
@@ -26845,6 +27944,7 @@ public final class UserBitShared {
       }
       /**
        * <code>repeated string function_signature = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearFunctionSignature() {
         functionSignature_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -26854,6 +27954,8 @@ public final class UserBitShared {
       }
       /**
        * <code>repeated string function_signature = 2;</code>
+       * @param value The bytes of the functionSignature to add.
+       * @return This builder for chaining.
        */
       public Builder addFunctionSignatureBytes(
           com.google.protobuf.ByteString value) {
@@ -26924,33 +28026,40 @@ public final class UserBitShared {
 
     /**
      * <code>optional string mechanism = 1;</code>
+     * @return Whether the mechanism field is set.
      */
     boolean hasMechanism();
     /**
      * <code>optional string mechanism = 1;</code>
+     * @return The mechanism.
      */
     java.lang.String getMechanism();
     /**
      * <code>optional string mechanism = 1;</code>
+     * @return The bytes for mechanism.
      */
     com.google.protobuf.ByteString
         getMechanismBytes();
 
     /**
      * <code>optional bytes data = 2;</code>
+     * @return Whether the data field is set.
      */
     boolean hasData();
     /**
      * <code>optional bytes data = 2;</code>
+     * @return The data.
      */
     com.google.protobuf.ByteString getData();
 
     /**
      * <code>optional .exec.shared.SaslStatus status = 3;</code>
+     * @return Whether the status field is set.
      */
     boolean hasStatus();
     /**
      * <code>optional .exec.shared.SaslStatus status = 3;</code>
+     * @return The status.
      */
     org.apache.drill.exec.proto.UserBitShared.SaslStatus getStatus();
   }
@@ -26970,6 +28079,13 @@ public final class UserBitShared {
       mechanism_ = "";
       data_ = com.google.protobuf.ByteString.EMPTY;
       status_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new SaslMessage();
     }
 
     @java.lang.Override
@@ -27056,12 +28172,14 @@ public final class UserBitShared {
     private volatile java.lang.Object mechanism_;
     /**
      * <code>optional string mechanism = 1;</code>
+     * @return Whether the mechanism field is set.
      */
     public boolean hasMechanism() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string mechanism = 1;</code>
+     * @return The mechanism.
      */
     public java.lang.String getMechanism() {
       java.lang.Object ref = mechanism_;
@@ -27079,6 +28197,7 @@ public final class UserBitShared {
     }
     /**
      * <code>optional string mechanism = 1;</code>
+     * @return The bytes for mechanism.
      */
     public com.google.protobuf.ByteString
         getMechanismBytes() {
@@ -27098,12 +28217,14 @@ public final class UserBitShared {
     private com.google.protobuf.ByteString data_;
     /**
      * <code>optional bytes data = 2;</code>
+     * @return Whether the data field is set.
      */
     public boolean hasData() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional bytes data = 2;</code>
+     * @return The data.
      */
     public com.google.protobuf.ByteString getData() {
       return data_;
@@ -27113,12 +28234,14 @@ public final class UserBitShared {
     private int status_;
     /**
      * <code>optional .exec.shared.SaslStatus status = 3;</code>
+     * @return Whether the status field is set.
      */
     public boolean hasStatus() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.SaslStatus status = 3;</code>
+     * @return The status.
      */
     public org.apache.drill.exec.proto.UserBitShared.SaslStatus getStatus() {
       @SuppressWarnings("deprecation")
@@ -27140,13 +28263,13 @@ public final class UserBitShared {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, mechanism_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, data_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeEnum(3, status_);
       }
       unknownFields.writeTo(output);
@@ -27158,14 +28281,14 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, mechanism_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, data_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(3, status_);
       }
@@ -27184,23 +28307,22 @@ public final class UserBitShared {
       }
       org.apache.drill.exec.proto.UserBitShared.SaslMessage other = (org.apache.drill.exec.proto.UserBitShared.SaslMessage) obj;
 
-      boolean result = true;
-      result = result && (hasMechanism() == other.hasMechanism());
+      if (hasMechanism() != other.hasMechanism()) return false;
       if (hasMechanism()) {
-        result = result && getMechanism()
-            .equals(other.getMechanism());
+        if (!getMechanism()
+            .equals(other.getMechanism())) return false;
       }
-      result = result && (hasData() == other.hasData());
+      if (hasData() != other.hasData()) return false;
       if (hasData()) {
-        result = result && getData()
-            .equals(other.getData());
+        if (!getData()
+            .equals(other.getData())) return false;
       }
-      result = result && (hasStatus() == other.hasStatus());
+      if (hasStatus() != other.hasStatus()) return false;
       if (hasStatus()) {
-        result = result && status_ == other.status_;
+        if (status_ != other.status_) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -27389,15 +28511,15 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.SaslMessage result = new org.apache.drill.exec.proto.UserBitShared.SaslMessage(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.mechanism_ = mechanism_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.data_ = data_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.status_ = status_;
@@ -27408,35 +28530,35 @@ public final class UserBitShared {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -27494,12 +28616,14 @@ public final class UserBitShared {
       private java.lang.Object mechanism_ = "";
       /**
        * <code>optional string mechanism = 1;</code>
+       * @return Whether the mechanism field is set.
        */
       public boolean hasMechanism() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string mechanism = 1;</code>
+       * @return The mechanism.
        */
       public java.lang.String getMechanism() {
         java.lang.Object ref = mechanism_;
@@ -27517,6 +28641,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string mechanism = 1;</code>
+       * @return The bytes for mechanism.
        */
       public com.google.protobuf.ByteString
           getMechanismBytes() {
@@ -27533,6 +28658,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string mechanism = 1;</code>
+       * @param value The mechanism to set.
+       * @return This builder for chaining.
        */
       public Builder setMechanism(
           java.lang.String value) {
@@ -27546,6 +28673,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string mechanism = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMechanism() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -27555,6 +28683,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional string mechanism = 1;</code>
+       * @param value The bytes for mechanism to set.
+       * @return This builder for chaining.
        */
       public Builder setMechanismBytes(
           com.google.protobuf.ByteString value) {
@@ -27570,18 +28700,22 @@ public final class UserBitShared {
       private com.google.protobuf.ByteString data_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>optional bytes data = 2;</code>
+       * @return Whether the data field is set.
        */
       public boolean hasData() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional bytes data = 2;</code>
+       * @return The data.
        */
       public com.google.protobuf.ByteString getData() {
         return data_;
       }
       /**
        * <code>optional bytes data = 2;</code>
+       * @param value The data to set.
+       * @return This builder for chaining.
        */
       public Builder setData(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -27594,6 +28728,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional bytes data = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearData() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -27605,12 +28740,14 @@ public final class UserBitShared {
       private int status_ = 0;
       /**
        * <code>optional .exec.shared.SaslStatus status = 3;</code>
+       * @return Whether the status field is set.
        */
       public boolean hasStatus() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.SaslStatus status = 3;</code>
+       * @return The status.
        */
       public org.apache.drill.exec.proto.UserBitShared.SaslStatus getStatus() {
         @SuppressWarnings("deprecation")
@@ -27619,6 +28756,8 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.SaslStatus status = 3;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
        */
       public Builder setStatus(org.apache.drill.exec.proto.UserBitShared.SaslStatus value) {
         if (value == null) {
@@ -27631,6 +28770,7 @@ public final class UserBitShared {
       }
       /**
        * <code>optional .exec.shared.SaslStatus status = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearStatus() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -27915,7 +29055,7 @@ public final class UserBitShared {
       "ATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000" +
       "\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014" +
       "\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022" +
-      "\032\n\026CANCELLATION_REQUESTED\020\006*\321\n\n\020CoreOper" +
+      "\032\n\026CANCELLATION_REQUESTED\020\006*\236\013\n\020CoreOper" +
       "atorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST" +
       "_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020" +
       "\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH" +
@@ -27947,29 +29087,23 @@ public final class UserBitShared {
       "N\0207\022\022\n\016RUNTIME_FILTER\0208\022\017\n\013ROWKEY_JOIN\0209" +
       "\022\023\n\017SYSLOG_SUB_SCAN\020:\022\030\n\024STATISTICS_AGGR" +
       "EGATE\020;\022\020\n\014UNPIVOT_MAPS\020<\022\024\n\020STATISTICS_" +
-      "MERGE\020=\022\021\n\rLTSV_SUB_SCAN\020>\022\022\n\016EXCEL_SUB_" +
-      "SCAN\020@\022\020\n\014SHP_SUB_SCAN\020A\022\024\n\020METADATA_HAN" +
-      "DLER\020B\022\027\n\023METADATA_CONTROLLER\020C*g\n\nSaslS" +
-      "tatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022" +
-      "\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022" +
-      "\017\n\013SASL_FAILED\020\004B.\n\033org.apache.drill.exe" +
-      "c.protoB\rUserBitSharedH\001"
+      "MERGE\020=\022\021\n\rLTSV_SUB_SCAN\020>\022\021\n\rHDF5_SUB_S" +
+      "CAN\020?\022\022\n\016EXCEL_SUB_SCAN\020@\022\020\n\014SHP_SUB_SCA" +
+      "N\020A\022\024\n\020METADATA_HANDLER\020B\022\027\n\023METADATA_CO" +
+      "NTROLLER\020C\022\022\n\016DRUID_SUB_SCAN\020D\022\021\n\rSPSS_S" +
+      "UB_SCAN\020E\022\021\n\rHTTP_SUB_SCAN\020F*g\n\nSaslStat" +
+      "us\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020" +
+      "SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013" +
+      "SASL_FAILED\020\004B.\n\033org.apache.drill.exec.p" +
+      "rotoB\rUserBitSharedH\001"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.apache.drill.common.types.TypeProtos.getDescriptor(),
           org.apache.drill.exec.proto.CoordinationProtos.getDescriptor(),
           org.apache.drill.exec.proto.SchemaDefProtos.getDescriptor(),
-        }, assigner);
+        });
     internal_static_exec_shared_UserCredentials_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_exec_shared_UserCredentials_fieldAccessorTable = new

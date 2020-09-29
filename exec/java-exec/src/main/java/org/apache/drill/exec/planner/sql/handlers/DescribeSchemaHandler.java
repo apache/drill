@@ -23,18 +23,20 @@ import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StoragePlugin;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
@@ -45,13 +47,11 @@ import java.util.Map;
 import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
 public class DescribeSchemaHandler extends DefaultSqlHandler {
+  private static final Logger logger = LoggerFactory.getLogger(DescribeSchemaHandler.class);
 
-  public DescribeSchemaHandler(SqlHandlerConfig config) {
-    super(config);
-  }
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DescribeSchemaHandler.class);
-  private static final ObjectMapper mapper = new ObjectMapper(new ObjectMapper().getFactory().setCharacterEscapes(new CharacterEscapes() {
+  @SuppressWarnings("serial")
+  private static final ObjectMapper mapper = new ObjectMapper(
+      new ObjectMapper().getFactory().setCharacterEscapes(new CharacterEscapes() {
     @Override
     public int[] getEscapeCodesForAscii() {
       // add standard set of escaping characters
@@ -68,6 +68,10 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
     }
   })).enable(INDENT_OUTPUT);
 
+
+  public DescribeSchemaHandler(SqlHandlerConfig config) {
+    super(config);
+  }
 
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ForemanSetupException {
@@ -88,7 +92,7 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
         throw new DrillRuntimeException(String.format("Unable to find storage plugin with the following name [%s].",
           drillSchema.getSchemaPath().get(0)));
       }
-    } catch (ExecutionSetupException e) {
+    } catch (PluginException e) {
       throw new DrillRuntimeException("Failure while retrieving storage plugin", e);
     }
 
@@ -131,5 +135,4 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
       this.properties = properties;
     }
   }
-
 }

@@ -71,7 +71,8 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
-    throw new UnsupportedOperationException(String.format("%s does not implement clone(columns) method!", this.getClass().getCanonicalName()));
+    throw new UnsupportedOperationException(String.format(
+        "%s does not implement clone(columns) method!", this.getClass().getCanonicalName()));
   }
 
   @Override
@@ -132,7 +133,8 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
    */
   @Override
   public long getColumnValueCount(SchemaPath column) {
-    throw new UnsupportedOperationException(String.format("%s does not have exact column value count!", this.getClass().getCanonicalName()));
+    throw new UnsupportedOperationException(String.format(
+        "%s does not have exact column value count!", getClass().getCanonicalName()));
   }
 
   @Override
@@ -195,7 +197,8 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   }
 
   @Override
-  public GroupScan applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities, FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
+  public GroupScan applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities,
+      FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
     return null;
   }
 
@@ -217,5 +220,10 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   @Override
   public AnalyzeInfoProvider getAnalyzeInfoProvider() {
     return null;
+  }
+
+  @Override
+  public boolean supportsFilterPushDown() {
+    return false;
   }
 }

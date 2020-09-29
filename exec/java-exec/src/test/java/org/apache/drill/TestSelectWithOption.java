@@ -28,15 +28,28 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 import org.apache.drill.categories.SqlTest;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.TestBuilder;
+import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 @Category(SqlTest.class)
-public class TestSelectWithOption extends BaseTestQuery {
+public class TestSelectWithOption extends ClusterTest {
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+
+  @BeforeClass
+  public static void setUp() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+  }
 
   private File genCSVFile(String name, String... rows) throws IOException {
     File file = new File(format("%s/%s.csv", dirTestWatcher.getRootDir(), name));
@@ -126,8 +139,7 @@ public class TestSelectWithOption extends BaseTestQuery {
     String tableName = genCSVTable("testTextLineDelimiterWithCarriageReturn",
         "1, a\r",
         "2, b\r");
-    String lineDelimiter = new String(new char[]{92, 114, 92, 110}); // represents \r\n
-    testWithResult(format("select columns from table(%s(type=>'TeXT', lineDelimiter => '%s'))", tableName, lineDelimiter),
+    testWithResult(format("select columns from table(%s(type=>'TeXT', fieldDelimiter => '*', lineDelimiter => '\\r\\n'))", tableName),
         listOf("1, a"),
         listOf("2, b"));
   }
@@ -208,18 +220,20 @@ public class TestSelectWithOption extends BaseTestQuery {
     String csvTableName = genCSVTable("testVariationsCSV",
         "a,b",
         "c|d");
+    // The default field delimiter is ',', change it to something else.
     // Using the defaults in TextFormatConfig (the field delimiter is neither "," not "|")
-    testWithResult(format("select columns from table(%s (type => 'TeXT'))", csvTableName),
+    testWithResult(format("select columns from table(%s (type => 'TeXT', fieldDelimiter => '*'))", csvTableName),
       listOf("a,b"),
       listOf("c|d"));
     // the drill config file binds .csv to "," delimited
     testWithResult(format("select columns from %s", csvTableName),
           listOf("a", "b"),
           listOf("c|d"));
-    // setting the delimiter
-    testWithResult(format("select columns from table(%s (type => 'TeXT', fieldDelimiter => ','))", csvTableName),
+    // Default delimiter for csv
+    testWithResult(format("select columns from table(%s (type => 'TeXT'))", csvTableName),
         listOf("a", "b"),
         listOf("c|d"));
+    // Setting the delimiter
     testWithResult(format("select columns from table(%s (type => 'TeXT', fieldDelimiter => '|'))", csvTableName),
         listOf("a,b"),
         listOf("c", "d"));
@@ -237,7 +251,7 @@ public class TestSelectWithOption extends BaseTestQuery {
     // CSV would require:
     // "{""columns"": [""f"",""g""]}"
     // A bug in older versions appeared to have the perverse
-    // effect of allowing the above to kinds-sorta work.
+    // effect of allowing the above to kinda-sorta work.
     String[] jsonQueries = {
         format("select columns from table(%s(type => 'JSON'))", jsonTableName),
         // we can use named format plugin configurations too!
@@ -254,12 +268,12 @@ public class TestSelectWithOption extends BaseTestQuery {
         "{\"columns\": [\"f\",\"g\"]}");
     String jsonTableName = String.format("dfs.`%s`", f.getName());
     // the extension is actually csv
-    test("use dfs");
+    run("use dfs");
     try {
       testWithResult(format("select columns from table(%s(type => 'JSON'))", jsonTableName), listOf("f","g"));
       testWithResult(format("select length(columns[0]) as columns from table(%s (type => 'JSON'))", jsonTableName), 1L);
     } finally {
-      test("use sys");
+      run("use sys");
     }
   }
 
@@ -268,7 +282,7 @@ public class TestSelectWithOption extends BaseTestQuery {
     String schema = "cp.default";
     String tableName = "absent_table";
     try {
-      test("select * from table(`%s`.`%s`(type=>'parquet'))", schema, tableName);
+      run("select * from table(`%s`.`%s`(type=>'parquet'))", schema, tableName);
     } catch (UserRemoteException e) {
       assertThat(e.getMessage(), containsString(String.format("Unable to find table [%s]", tableName)));
       throw e;
@@ -279,10 +293,10 @@ public class TestSelectWithOption extends BaseTestQuery {
   public void testTableFunctionWithDirectoryExpansion() throws Exception {
     String tableName = "dirTable";
     String query = "select 'A' as col from (values(1))";
-    test("use dfs.tmp");
+    run("use dfs.tmp");
     try {
-      alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "csv");
-      test("create table %s as %s", tableName, query);
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "csv");
+      run("create table %s as %s", tableName, query);
 
       testBuilder()
         .sqlQuery("select * from table(%s(type=>'text', fieldDelimiter => ',', extractHeader => true))", tableName)
@@ -290,8 +304,8 @@ public class TestSelectWithOption extends BaseTestQuery {
         .sqlBaselineQuery(query)
         .go();
     } finally {
-      resetSessionOption(ExecConstants.OUTPUT_FORMAT_OPTION);
-      test("drop table if exists %s", tableName);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
+      run("drop table if exists %s", tableName);
     }
   }
 
@@ -303,6 +317,13 @@ public class TestSelectWithOption extends BaseTestQuery {
       .sqlQuery("select * from table(dfs.tmp.`%s`(type=>'text', fieldDelimiter => ',', extractHeader => true))", tableName)
       .expectsEmptyResultSet()
       .go();
+  }
+
+  @Test
+  public void testTableFunctionWithNonExistingTable() throws Exception {
+    thrown.expect(UserException.class);
+    thrown.expectMessage("Unable to find table");
+    run("select * from table(dfs.tmp.`nonExistingTable`(schema=>'inline=(mykey int)'))");
   }
 
 }

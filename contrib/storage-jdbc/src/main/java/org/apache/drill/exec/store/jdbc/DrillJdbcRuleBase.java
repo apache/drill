@@ -58,8 +58,8 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
 
   static class DrillJdbcProjectRule extends DrillJdbcRuleBase {
 
-    public DrillJdbcProjectRule(JdbcConvention out) {
-      super(LogicalProject.class, Convention.NONE, out, "JdbcProjectRule");
+    DrillJdbcProjectRule(JdbcConvention out) {
+      super(LogicalProject.class, Convention.NONE, out, "DrillJdbcProjectRule");
     }
 
     public RelNode convert(RelNode rel) {
@@ -89,7 +89,7 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
 
   static class DrillJdbcFilterRule extends DrillJdbcRuleBase {
 
-    public DrillJdbcFilterRule(JdbcConvention out) {
+    DrillJdbcFilterRule(JdbcConvention out) {
       super(LogicalFilter.class, Convention.NONE, out, "DrillJdbcFilterRule");
     }
 
@@ -113,9 +113,8 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
         return true;
 
       } catch (ExecutionException e) {
-        throw new IllegalStateException("Failure while trying to evaluate pushdown.", e);
+        throw new IllegalStateException("Failure while trying to evaluate push down.", e);
       }
     }
   }
-
 }

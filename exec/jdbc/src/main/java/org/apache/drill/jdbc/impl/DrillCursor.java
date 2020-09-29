@@ -40,7 +40,6 @@ import org.apache.calcite.avatica.util.Cursor;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -55,17 +54,16 @@ import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.jdbc.SchemaChangeListener;
 import org.apache.drill.jdbc.SqlTimeoutException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
-
 
 public class DrillCursor implements Cursor {
 
   ////////////////////////////////////////
   // ResultsListener:
   static class ResultsListener implements UserResultsListener {
-    private static final org.slf4j.Logger logger =
-        org.slf4j.LoggerFactory.getLogger(ResultsListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResultsListener.class);
 
     private static volatile int nextInstanceId = 1;
 
@@ -89,13 +87,13 @@ public class DrillCursor implements Cursor {
     // that the _query_ has _terminated_ (not necessarily _completing_
     // normally), while some uses imply that it's some other state of the
     // ResultListener.  Some uses seem redundant.)
-    volatile boolean completed = false;
+    volatile boolean completed;
 
     /** Whether throttling of incoming data is active. */
-    private final AtomicBoolean throttled = new AtomicBoolean( false );
+    private final AtomicBoolean throttled = new AtomicBoolean(false);
     private volatile ConnectionThrottle throttle;
 
-    private volatile boolean closed = false;
+    private volatile boolean closed;
 
     private final CountDownLatch firstMessageReceived = new CountDownLatch(1);
 
@@ -103,7 +101,7 @@ public class DrillCursor implements Cursor {
         Queues.newLinkedBlockingDeque();
 
     private final DrillCursor parent;
-    Stopwatch elapsedTimer = null;
+    Stopwatch elapsedTimer;
 
     /**
      * ...
@@ -112,11 +110,11 @@ public class DrillCursor implements Cursor {
      * @param batchQueueThrottlingThreshold
      *        queue size threshold for throttling server
      */
-    ResultsListener(DrillCursor parent, int batchQueueThrottlingThreshold ) {
+    ResultsListener(DrillCursor parent, int batchQueueThrottlingThreshold) {
       this.parent = parent;
       instanceId = nextInstanceId++;
       this.batchQueueThrottlingThreshold = batchQueueThrottlingThreshold;
-      logger.debug( "[#{}] Query listener created.", instanceId );
+      logger.debug("[#{}] Query listener created.", instanceId);
     }
 
     /**
@@ -124,9 +122,9 @@ public class DrillCursor implements Cursor {
      * @param  throttle  the "throttlable" object to throttle
      * @return  true if actually started (wasn't throttling already)
      */
-    private boolean startThrottlingIfNot( ConnectionThrottle throttle ) {
-      final boolean started = throttled.compareAndSet( false, true );
-      if ( started ) {
+    private boolean startThrottlingIfNot(ConnectionThrottle throttle) {
+      final boolean started = throttled.compareAndSet(false, true);
+      if (started) {
         this.throttle = throttle;
         throttle.setAutoRead(false);
       }
@@ -138,8 +136,8 @@ public class DrillCursor implements Cursor {
      * @return  true if actually stopped (was throttling)
      */
     private boolean stopThrottlingIfSo() {
-      final boolean stopped = throttled.compareAndSet( true, false );
-      if ( stopped ) {
+      final boolean stopped = throttled.compareAndSet(true, false);
+      if (stopped) {
         throttle.setAutoRead(true);
         throttle = null;
       }
@@ -148,10 +146,10 @@ public class DrillCursor implements Cursor {
 
     public void awaitFirstMessage() throws InterruptedException, SQLTimeoutException {
       //Check if a non-zero timeout has been set
-      if ( parent.timeoutInMilliseconds > 0 ) {
+      if (parent.timeoutInMilliseconds > 0) {
         //Identifying remaining in milliseconds to maintain a granularity close to integer value of timeout
         long timeToTimeout = parent.timeoutInMilliseconds - parent.elapsedTimer.elapsed(TimeUnit.MILLISECONDS);
-        if ( timeToTimeout <= 0 || !firstMessageReceived.await(timeToTimeout, TimeUnit.MILLISECONDS)) {
+        if (timeToTimeout <= 0 || !firstMessageReceived.await(timeToTimeout, TimeUnit.MILLISECONDS)) {
             throw new SqlTimeoutException(TimeUnit.MILLISECONDS.toSeconds(parent.timeoutInMilliseconds));
         }
       } else {
@@ -165,25 +163,25 @@ public class DrillCursor implements Cursor {
 
     @Override
     public void queryIdArrived(QueryId queryId) {
-      logger.debug( "[#{}] Received query ID: {}.",
-                    instanceId, QueryIdHelper.getQueryId( queryId ) );
+      logger.debug("[#{}] Received query ID: {}.",
+                    instanceId, QueryIdHelper.getQueryId(queryId));
       this.queryId = queryId;
     }
 
     @Override
     public void submissionFailed(UserException ex) {
-      logger.debug( "Received query failure:", instanceId, ex );
+      logger.debug("Received query failure:", instanceId, ex);
       this.executionFailureException = ex;
       completed = true;
       close();
-      logger.info( "[#{}] Query failed: ", instanceId, ex );
+      logger.info("[#{}] Query failed: ", instanceId, ex);
     }
 
     @Override
     public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
       lastReceivedBatchNumber++;
-      logger.debug( "[#{}] Received query data batch #{}: {}.",
-                    instanceId, lastReceivedBatchNumber, result );
+      logger.debug("[#{}] Received query data batch #{}: {}.",
+                    instanceId, lastReceivedBatchNumber, result);
 
       // If we're in a closed state, just release the message.
       if (closed) {
@@ -198,10 +196,10 @@ public class DrillCursor implements Cursor {
       batchQueue.add(result);
 
       // Throttle server if queue size has exceed threshold.
-      if (batchQueue.size() > batchQueueThrottlingThreshold ) {
-        if ( startThrottlingIfNot( throttle ) ) {
-          logger.debug( "[#{}] Throttling started at queue size {}.",
-                        instanceId, batchQueue.size() );
+      if (batchQueue.size() > batchQueueThrottlingThreshold) {
+        if (startThrottlingIfNot(throttle)) {
+          logger.debug("[#{}] Throttling started at queue size {}.",
+                        instanceId, batchQueue.size());
         }
       }
 
@@ -210,7 +208,7 @@ public class DrillCursor implements Cursor {
 
     @Override
     public void queryCompleted(QueryState state) {
-      logger.debug( "[#{}] Received query completion: {}.", instanceId, state );
+      logger.debug("[#{}] Received query completion: {}.", instanceId, state);
       releaseIfFirst();
       completed = true;
     }
@@ -218,7 +216,6 @@ public class DrillCursor implements Cursor {
     QueryId getQueryId() {
       return queryId;
     }
-
 
     /**
      * Gets the next batch of query results from the queue.
@@ -231,8 +228,8 @@ public class DrillCursor implements Cursor {
     QueryDataBatch getNext() throws UserException, InterruptedException, SQLTimeoutException {
       while (true) {
         if (executionFailureException != null) {
-          logger.debug( "[#{}] Dequeued query failure exception: {}.",
-                        instanceId, executionFailureException );
+          logger.debug("[#{}] Dequeued query failure exception: {}.",
+                        instanceId, executionFailureException);
           throw executionFailureException;
         }
         if (completed && batchQueue.isEmpty()) {
@@ -241,23 +238,23 @@ public class DrillCursor implements Cursor {
           QueryDataBatch qdb = batchQueue.poll(50, TimeUnit.MILLISECONDS);
           if (qdb != null) {
             lastDequeuedBatchNumber++;
-            logger.debug( "[#{}] Dequeued query data batch #{}: {}.",
-                          instanceId, lastDequeuedBatchNumber, qdb );
+            logger.debug("[#{}] Dequeued query data batch #{}: {}.",
+                          instanceId, lastDequeuedBatchNumber, qdb);
 
             // Unthrottle server if queue size has dropped enough below threshold:
-            if ( batchQueue.size() < batchQueueThrottlingThreshold / 2
+            if (batchQueue.size() < batchQueueThrottlingThreshold / 2
                  || batchQueue.size() == 0  // (in case threshold < 2)
-                 ) {
-              if ( stopThrottlingIfSo() ) {
-                logger.debug( "[#{}] Throttling stopped at queue size {}.",
-                              instanceId, batchQueue.size() );
+                ) {
+              if (stopThrottlingIfSo()) {
+                logger.debug("[#{}] Throttling stopped at queue size {}.",
+                              instanceId, batchQueue.size());
               }
             }
             return qdb;
           }
 
           // Check and throw SQLTimeoutException
-          if ( parent.timeoutInMilliseconds > 0 && parent.elapsedTimer.elapsed(TimeUnit.MILLISECONDS) >= parent.timeoutInMilliseconds ) {
+          if (parent.timeoutInMilliseconds > 0 && parent.elapsedTimer.elapsed(TimeUnit.MILLISECONDS) >= parent.timeoutInMilliseconds) {
             throw new SqlTimeoutException(TimeUnit.MILLISECONDS.toSeconds(parent.timeoutInMilliseconds));
           }
         }
@@ -265,11 +262,11 @@ public class DrillCursor implements Cursor {
     }
 
     void close() {
-      logger.debug( "[#{}] Query listener closing.", instanceId );
+      logger.debug("[#{}] Query listener closing.", instanceId);
       closed = true;
-      if ( stopThrottlingIfSo() ) {
-        logger.debug( "[#{}] Throttling stopped at close() (at queue size {}).",
-                      instanceId, batchQueue.size() );
+      if (stopThrottlingIfSo()) {
+        logger.debug("[#{}] Throttling stopped at close() (at queue size {}).",
+                      instanceId, batchQueue.size());
       }
       while (!batchQueue.isEmpty()) {
         // Don't bother with query timeout, we're closing the cursor
@@ -284,10 +281,9 @@ public class DrillCursor implements Cursor {
       firstMessageReceived.countDown(); // TODO:  Why not call releaseIfFirst as used elsewhere?
       completed = true;
     }
-
   }
 
-  private static final Logger logger = getLogger( DrillCursor.class );
+  private static final Logger logger = getLogger(DrillCursor.class);
 
   /** JDBC-specified string for unknown catalog, schema, and table names. */
   private static final String UNKNOWN_NAME_STRING = "";
@@ -311,10 +307,10 @@ public class DrillCursor implements Cursor {
   private DrillColumnMetaDataList columnMetaDataList;
 
   /** Whether loadInitialSchema() has been called. */
-  private boolean initialSchemaLoaded = false;
+  private boolean initialSchemaLoaded;
 
   /** Whether after first batch.  (Re skipping spurious empty batches.) */
-  private boolean afterFirstBatch = false;
+  private boolean afterFirstBatch;
 
   /**
    * Whether the next call to {@code this.}{@link #next()} should just return
@@ -330,10 +326,10 @@ public class DrillCursor implements Cursor {
    *   and schema before {@code Statement.execute...(...)} even returns.)
    * </p>
    */
-  private boolean returnTrueForNextCallToNext = false;
+  private boolean returnTrueForNextCallToNext;
 
   /** Whether cursor is after the end of the sequence of records/rows. */
-  private boolean afterLastRow = false;
+  private boolean afterLastRow;
 
   private int currentRowNumber = -1;
   /** Zero-based offset of current record in record batch.
@@ -341,7 +337,7 @@ public class DrillCursor implements Cursor {
   private int currentRecordNumber = -1;
 
   //Track timeout period
-  private long timeoutInMilliseconds = 0L;
+  private long timeoutInMilliseconds;
   private Stopwatch elapsedTimer;
 
   /**
@@ -358,7 +354,7 @@ public class DrillCursor implements Cursor {
     DrillClient client = connection.getClient();
     final int batchQueueThrottlingThreshold =
         client.getConfig().getInt(
-            ExecConstants.JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD );
+            ExecConstants.JDBC_BATCH_QUEUE_THROTTLING_THRESHOLD);
     resultsListener = new ResultsListener(this, batchQueueThrottlingThreshold);
     currentBatchHolder = new RecordBatchLoader(client.getAllocator());
 
@@ -430,10 +426,10 @@ public class DrillCursor implements Cursor {
     final List<Class<?>> getObjectClasses = new ArrayList<>();
     // (Can't use modern for loop because, for some incompletely clear reason,
     // DrillAccessorList blocks iterator() (throwing exception).)
-    for ( int ax = 0; ax < accessors.size(); ax++ ) {
+    for (int ax = 0; ax < accessors.size(); ax++) {
       final AvaticaDrillSqlAccessor accessor =
-          accessors.get( ax );
-      getObjectClasses.add( accessor.getObjectClass() );
+          accessors.get(ax);
+      getObjectClasses.add(accessor.getObjectClass());
     }
 
     // Update metadata for result set.
@@ -442,7 +438,7 @@ public class DrillCursor implements Cursor {
         UNKNOWN_NAME_STRING,  // schema name
         UNKNOWN_NAME_STRING,  // table name
         schema,
-        getObjectClasses );
+        getObjectClasses);
 
     if (changeListener != null) {
       changeListener.schemaChanged(schema);
@@ -479,7 +475,7 @@ public class DrillCursor implements Cursor {
           while (qrb != null
               && (qrb.getHeader().getRowCount() == 0 && qrb.getData() == null)) {
             // Empty message--dispose of and try to get another.
-            logger.warn( "Spurious batch read: {}", qrb );
+            logger.warn("Spurious batch read: {}", qrb);
 
             qrb.release();
 
@@ -529,29 +525,22 @@ public class DrillCursor implements Cursor {
           return true;
         }
       }
-      catch ( UserException e ) {
+      catch (UserException e) {
         // A normally expected case--for any server-side error (e.g., syntax
         // error in SQL statement).
         // Construct SQLException with message text from the UserException.
         // TODO:  Map UserException error type to SQLException subclass (once
-        // error type is accessible, of course. :-( )
-        throw new SQLException( e.getMessage(), e );
+        // error type is accessible, of course. :-()
+        throw new SQLException(e.getMessage(), e);
       }
-      catch ( InterruptedException e ) {
+      catch (InterruptedException e) {
         // Not normally expected--Drill doesn't interrupt in this area (right?)--
         // but JDBC client certainly could.
-        throw new SQLException( "Interrupted.", e );
+        throw new SQLException("Interrupted.", e);
       }
-      catch ( SchemaChangeException e ) {
-        // TODO:  Clean:  DRILL-2933:  RecordBatchLoader.load(...) no longer
-        // throws SchemaChangeException, so check/clean catch clause.
-        throw new SQLException(
-            "Unexpected SchemaChangeException from RecordBatchLoader.load(...)" );
+      catch (RuntimeException e) {
+        throw new SQLException("Unexpected RuntimeException: " + e.toString(), e);
       }
-      catch ( RuntimeException e ) {
-        throw new SQLException( "Unexpected RuntimeException: " + e.toString(), e );
-      }
-
     }
   }
 
@@ -563,9 +552,9 @@ public class DrillCursor implements Cursor {
    * <p>
    */
   void loadInitialSchema() throws SQLException {
-    if ( initialSchemaLoaded ) {
+    if (initialSchemaLoaded) {
       throw new IllegalStateException(
-          "loadInitialSchema() called a second time" );
+          "loadInitialSchema() called a second time");
     }
 
     assert ! afterLastRow : "afterLastRow already true in loadInitialSchema()";
@@ -594,7 +583,7 @@ public class DrillCursor implements Cursor {
 
     try {
       resultsListener.awaitFirstMessage();
-    } catch ( InterruptedException e ) {
+    } catch (InterruptedException e) {
       // Preserve evidence that the interruption occurred so that code higher up
       // on the call stack can learn of the interruption and respond to it if it
       // wants to.
@@ -602,7 +591,7 @@ public class DrillCursor implements Cursor {
 
       // Not normally expected--Drill doesn't interrupt in this area (right?)--
       // but JDBC client certainly could.
-      throw new SQLException("Interrupted", e );
+      throw new SQLException("Interrupted", e);
     }
 
     returnTrueForNextCallToNext = true;
@@ -621,17 +610,17 @@ public class DrillCursor implements Cursor {
    */
   @Override
   public boolean next() throws SQLException {
-    if ( ! initialSchemaLoaded ) {
+    if (! initialSchemaLoaded) {
       throw new IllegalStateException(
-          "next() called but loadInitialSchema() was not called" );
+          "next() called but loadInitialSchema() was not called");
     }
     assert afterFirstBatch : "afterFirstBatch still false in next()";
 
-    if ( afterLastRow ) {
+    if (afterLastRow) {
       // We're already after end of rows/records--just report that after end.
       return false;
     }
-    else if ( returnTrueForNextCallToNext ) {
+    else if (returnTrueForNextCallToNext) {
       ++currentRowNumber;
       // We have a deferred "not after end" to report--reset and report that.
       returnTrueForNextCallToNext = false;
@@ -667,5 +656,4 @@ public class DrillCursor implements Cursor {
   public Stopwatch getElapsedTimer() {
     return elapsedTimer;
   }
-
 }

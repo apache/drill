@@ -33,6 +33,4 @@ public class KuduScanSpec {
   public String getTableName() {
     return tableName;
   }
-
-
 }

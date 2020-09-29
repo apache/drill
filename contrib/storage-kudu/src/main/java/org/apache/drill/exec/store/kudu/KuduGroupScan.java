@@ -54,7 +54,6 @@ import org.apache.kudu.client.LocatedTablet.Replica;
 
 @JsonTypeName("kudu-scan")
 public class KuduGroupScan extends AbstractGroupScan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduGroupScan.class);
   private static final long DEFAULT_TABLET_SIZE = 1000;
 
   private KuduStoragePlugin kuduStoragePlugin;
@@ -72,7 +71,7 @@ public class KuduGroupScan extends AbstractGroupScan {
                         @JsonProperty("kuduStoragePluginConfig") KuduStoragePluginConfig kuduStoragePluginConfig,
                         @JsonProperty("columns") List<SchemaPath> columns,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-    this((KuduStoragePlugin) pluginRegistry.getPlugin(kuduStoragePluginConfig), kuduScanSpec, columns);
+    this(pluginRegistry.resolve(kuduStoragePluginConfig, KuduStoragePlugin.class), kuduScanSpec, columns);
   }
 
   public KuduGroupScan(KuduStoragePlugin kuduStoragePlugin,
@@ -112,9 +111,9 @@ public class KuduGroupScan extends AbstractGroupScan {
 
   private static class KuduWork implements CompleteWork {
 
-    private EndpointByteMapImpl byteMap = new EndpointByteMapImpl();
-    private byte[] partitionKeyStart;
-    private byte[] partitionKeyEnd;
+    private final EndpointByteMapImpl byteMap = new EndpointByteMapImpl();
+    private final byte[] partitionKeyStart;
+    private final byte[] partitionKeyEnd;
 
     public KuduWork(byte[] partitionKeyStart, byte[] partitionKeyEnd) {
       this.partitionKeyStart = partitionKeyStart;

@@ -30,9 +30,12 @@ import javassist.scopedpool.ScopedClassPoolRepositoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.MessageFormat;
+
 public class ProtobufPatcher {
 
   private static final Logger logger = LoggerFactory.getLogger(ProtobufPatcher.class);
+  private static final String protobufPackage = "com.google.protobuf.";
 
   private static boolean patchingAttempted = false;
 
@@ -57,15 +60,15 @@ public class ProtobufPatcher {
   private static void patchByteString() {
     try {
       ClassPool classPool = getClassPool();
-      CtClass byteString = classPool.get("com.google.protobuf.ByteString");
+      CtClass byteString = classPool.get(protobufPackage + "ByteString");
       removeFinal(byteString.getDeclaredMethod("toString"));
       removeFinal(byteString.getDeclaredMethod("hashCode"));
       removeFinal(byteString.getDeclaredMethod("iterator"));
 
       // Need to inherit from these classes to make them accessible by the old path.
-      CtClass googleLiteralByteString = classPool.get("com.google.protobuf.ByteString$LiteralByteString");
+      CtClass googleLiteralByteString = classPool.get(protobufPackage + "ByteString$LiteralByteString");
       removePrivate(googleLiteralByteString);
-      CtClass googleBoundedByteString = classPool.get("com.google.protobuf.ByteString$BoundedByteString");
+      CtClass googleBoundedByteString = classPool.get(protobufPackage + "ByteString$BoundedByteString");
       removePrivate(googleBoundedByteString);
       removeFinal(googleBoundedByteString);
       for (CtMethod ctMethod : googleLiteralByteString.getDeclaredMethods()) {
@@ -76,10 +79,10 @@ public class ProtobufPatcher {
       googleBoundedByteString.toClass();
 
       // Adding the classes back to the old path.
-      CtClass literalByteString = classPool.makeClass("com.google.protobuf.LiteralByteString");
+      CtClass literalByteString = classPool.makeClass(protobufPackage + "LiteralByteString");
       literalByteString.setSuperclass(googleLiteralByteString);
       literalByteString.toClass();
-      CtClass boundedByteString = classPool.makeClass("com.google.protobuf.BoundedByteString");
+      CtClass boundedByteString = classPool.makeClass(protobufPackage + "BoundedByteString");
       boundedByteString.setSuperclass(googleBoundedByteString);
       boundedByteString.toClass();
     } catch (Exception e) {
@@ -95,7 +98,7 @@ public class ProtobufPatcher {
   private static void patchGeneratedMessageLite() {
     try {
       ClassPool classPool = getClassPool();
-      CtClass generatedMessageLite = classPool.get("com.google.protobuf.GeneratedMessageLite");
+      CtClass generatedMessageLite = classPool.get(protobufPackage + "GeneratedMessageLite");
       removeFinal(generatedMessageLite.getDeclaredMethod("getParserForType"));
       removeFinal(generatedMessageLite.getDeclaredMethod("isInitialized"));
 
@@ -104,22 +107,28 @@ public class ProtobufPatcher {
       generatedMessageLite.addMethod(CtNewMethod.make("protected void makeExtensionsImmutable() { }", generatedMessageLite));
 
       // A constructor with this signature was removed. Adding it back.
-      String className = "com.google.protobuf.GeneratedMessageLite.Builder";
+      String className = protobufPackage + "GeneratedMessageLite.Builder";
       generatedMessageLite.addConstructor(CtNewConstructor.make("protected GeneratedMessageLite(" + className + " builder) { }", generatedMessageLite));
 
       // This single method was added instead of several abstract methods.
       // MapR-DB client doesn't use it, but it was added in overridden equals() method.
       // Adding default implementation.
       CtMethod dynamicMethod = generatedMessageLite.getDeclaredMethod("dynamicMethod", new CtClass[]{
-          classPool.get("com.google.protobuf.GeneratedMessageLite$MethodToInvoke"),
+          classPool.get(protobufPackage + "GeneratedMessageLite$MethodToInvoke"),
           classPool.get("java.lang.Object"),
           classPool.get("java.lang.Object")});
-      className = "com.google.protobuf.GeneratedMessageLite.MethodToInvoke";
-      addImplementation(dynamicMethod, "if ($1.equals(" + className + ".GET_DEFAULT_INSTANCE)) {" +
+      className = protobufPackage + "GeneratedMessageLite.MethodToInvoke";
+      String dynamicMethodBody = MessageFormat.format("if ($1.equals({0}.GET_DEFAULT_INSTANCE)) '{'" +
           "  return this;" +
-          "} else {" +
+          "'}' else if ($1.equals({0}.BUILD_MESSAGE_INFO)) '{' " +
+          "  {1}StructuralMessageInfo.Builder builder = {1}StructuralMessageInfo.newBuilder();" +
+          "  builder.withSyntax({1}ProtoSyntax.PROTO2);" +
+          "  builder.withDefaultInstance(this);" +
+          "  return builder.build();" +
+          "'}' else '{'" +
           "  return null;" +
-          "}");
+          "'}'", className, protobufPackage);
+      addImplementation(dynamicMethod, dynamicMethodBody);
       generatedMessageLite.toClass();
     } catch (Exception e) {
       logger.warn("Unable to patch Protobuf.", e);
@@ -135,7 +144,7 @@ public class ProtobufPatcher {
   private static void patchGeneratedMessageLiteBuilder() {
     try {
       ClassPool classPool = getClassPool();
-      CtClass builder = classPool.get("com.google.protobuf.GeneratedMessageLite$Builder");
+      CtClass builder = classPool.get(protobufPackage + "GeneratedMessageLite$Builder");
       removeFinal(builder.getDeclaredMethod("isInitialized"));
       removeFinal(builder.getDeclaredMethod("clear"));
       builder.addConstructor(CtNewConstructor.defaultConstructor(builder));

@@ -118,12 +118,12 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setMinorType(MinorType.INT)
           .setMode(DataMode.REQUIRED)
           .build());
-    final ValueVector vector1 = cache.addOrGet(required);
+    final ValueVector vector1 = cache.vectorFor(required);
     assertTrue(vector1.getField().isEquivalent(required));
 
     // Request the same schema, should get the same vector.
 
-    final ValueVector vector2 = cache.addOrGet(required);
+    final ValueVector vector2 = cache.vectorFor(required);
     assertSame(vector1, vector2);
 
     // Non-permissive. Change in mode means different vector.
@@ -133,7 +133,7 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setMinorType(MinorType.INT)
           .setMode(DataMode.OPTIONAL)
           .build());
-    final ValueVector vector3 = cache.addOrGet(optional);
+    final ValueVector vector3 = cache.vectorFor(optional);
     assertTrue(vector3.getField().isEquivalent(optional));
     assertNotSame(vector1, vector3);
 
@@ -141,7 +141,7 @@ public class TestResultVectorCache extends SubOperatorTest {
     // Name is the key, and we can have only one type associated
     // with each name.
 
-    final ValueVector vector4 = cache.addOrGet(required);
+    final ValueVector vector4 = cache.vectorFor(required);
     assertTrue(vector4.getField().isEquivalent(required));
     assertNotSame(vector3, vector4);
     assertNotSame(vector1, vector4);
@@ -154,7 +154,7 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setMode(DataMode.REQUIRED)
           .build());
 
-    final ValueVector vector5 = cache.addOrGet(varchar1);
+    final ValueVector vector5 = cache.vectorFor(varchar1);
     assertTrue(vector5.getField().isEquivalent(varchar1));
 
     // Varchar, with precision, no match.
@@ -166,13 +166,13 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setPrecision(10)
           .build());
 
-    final ValueVector vector6 = cache.addOrGet(varchar2);
+    final ValueVector vector6 = cache.vectorFor(varchar2);
     assertTrue(vector6.getField().isEquivalent(varchar2));
     assertNotSame(vector5, vector6);
 
     // Does match if same precision.
 
-    final ValueVector vector7 = cache.addOrGet(varchar2);
+    final ValueVector vector7 = cache.vectorFor(varchar2);
     assertTrue(vector7.getField().isEquivalent(varchar2));
     assertSame(vector6, vector7);
 
@@ -185,10 +185,10 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setPrecision(10)
           .build());
 
-    final ValueVector vector8 = cache.addOrGet(varchar3);
+    final ValueVector vector8 = cache.vectorFor(varchar3);
     assertTrue(vector8.getField().isEquivalent(varchar3));
-    assertSame(vector7, cache.addOrGet(varchar2));
-    assertSame(vector8, cache.addOrGet(varchar3));
+    assertSame(vector7, cache.vectorFor(varchar2));
+    assertSame(vector8, cache.vectorFor(varchar3));
 
     ((ResultVectorCacheImpl) cache).close();
   }
@@ -204,7 +204,7 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setMinorType(MinorType.INT)
           .setMode(DataMode.OPTIONAL)
           .build());
-    final ValueVector vector1 = cache.addOrGet(optional);
+    final ValueVector vector1 = cache.vectorFor(optional);
 
     // Ask for a required version of the same name and type.
     // Should return the nullable version.
@@ -214,7 +214,7 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setMinorType(MinorType.INT)
           .setMode(DataMode.REQUIRED)
           .build());
-    final ValueVector vector2 = cache.addOrGet(required);
+    final ValueVector vector2 = cache.vectorFor(required);
     assertTrue(vector2.getField().isEquivalent(optional));
     assertSame(vector1, vector2);
 
@@ -226,7 +226,7 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setMode(DataMode.OPTIONAL)
           .build());
 
-    final ValueVector vector3 = cache.addOrGet(varchar1);
+    final ValueVector vector3 = cache.vectorFor(varchar1);
 
     final MaterializedField varchar2 = MaterializedField.create("a",
         MajorType.newBuilder()
@@ -234,7 +234,7 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setMode(DataMode.REQUIRED)
           .build());
 
-    final ValueVector vector4 = cache.addOrGet(varchar2);
+    final ValueVector vector4 = cache.vectorFor(varchar2);
     assertSame(vector3, vector4);
 
     // Larger precision. Needs new vector.
@@ -246,13 +246,13 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setPrecision(10)
           .build());
 
-    final ValueVector vector5 = cache.addOrGet(varchar3);
+    final ValueVector vector5 = cache.vectorFor(varchar3);
     assertTrue(vector5.getField().isEquivalent(varchar3));
     assertNotSame(vector4, vector5);
 
     // Smaller precision, reuse vector.
 
-    final ValueVector vector6 = cache.addOrGet(varchar1);
+    final ValueVector vector6 = cache.vectorFor(varchar1);
     assertTrue(vector6.getField().isEquivalent(varchar3));
     assertSame(vector5, vector6);
 
@@ -265,7 +265,7 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setPrecision(5)
           .build());
 
-    final ValueVector vector7 = cache.addOrGet(varchar4);
+    final ValueVector vector7 = cache.vectorFor(varchar4);
     assertTrue(vector7.getField().isEquivalent(varchar3));
     assertSame(vector5, vector7);
 
@@ -285,7 +285,7 @@ public class TestResultVectorCache extends SubOperatorTest {
           .setMinorType(MinorType.INT)
           .setMode(DataMode.REQUIRED)
           .build());
-    final IntVector vector1 = (IntVector) cache.addOrGet(required);
+    final IntVector vector1 = (IntVector) cache.vectorFor(required);
     vector1.allocateNew(100);
 
     // Close the cache. Note: close is on the implementation, not

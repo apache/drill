@@ -34,6 +34,7 @@ public interface ObjectReader extends ColumnReader {
   TupleReader tuple();
   ArrayReader array();
   VariantReader variant();
+  DictReader dict();
 
   /**
    * Gets the reader as a generic type, for dynamic

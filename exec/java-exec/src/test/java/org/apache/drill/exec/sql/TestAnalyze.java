@@ -18,25 +18,26 @@
 package org.apache.drill.exec.sql;
 
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import org.apache.drill.PlanTestBase;
-import org.apache.drill.exec.proto.UserBitShared.QueryType;
-import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetReader;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+
+import org.apache.drill.exec.vector.accessor.ObjectReader;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestAnalyze extends BaseTestQuery {
+public class TestAnalyze extends ClusterTest {
 
   @BeforeClass
   public static void copyData() throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
+    startCluster(builder);
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel", "parquet"));
   }
 
@@ -44,12 +45,12 @@ public class TestAnalyze extends BaseTestQuery {
   @Test
   public void basic1() throws Exception {
     try {
-      test("ALTER SESSION SET `planner.slice_target` = 1");
-      test("ALTER SESSION SET `store.format` = 'parquet'");
-      test("CREATE TABLE dfs.tmp.region_basic1 AS SELECT * from cp.`region.json`");
-      test("ANALYZE TABLE dfs.tmp.region_basic1 COMPUTE STATISTICS");
-      test("SELECT * FROM dfs.tmp.`region_basic1/.stats.drill`");
-      test("create table dfs.tmp.flatstats1 as select flatten(`directories`[0].`columns`) as `columns`"
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      run("CREATE TABLE dfs.tmp.region_basic1 AS SELECT * from cp.`region.json`");
+      run("ANALYZE TABLE dfs.tmp.region_basic1 COMPUTE STATISTICS");
+      run("SELECT * FROM dfs.tmp.`region_basic1/.stats.drill`");
+      run("create table dfs.tmp.flatstats1 as select flatten(`directories`[0].`columns`) as `columns`"
               + " from dfs.tmp.`region_basic1/.stats.drill`");
 
       testBuilder()
@@ -68,8 +69,8 @@ public class TestAnalyze extends BaseTestQuery {
           .baselineValues("`sales_district_id`", 110.0, 110.0, 23L, 8.0)
           .go();
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
     }
   }
 
@@ -77,12 +78,12 @@ public class TestAnalyze extends BaseTestQuery {
   @Test
   public void basic2() throws Exception {
     try {
-      test("ALTER SESSION SET `planner.slice_target` = 1");
-      test("ALTER SESSION SET `store.format` = 'parquet'");
-      test("CREATE TABLE dfs.tmp.employee_basic2 AS SELECT * from cp.`employee.json`");
-      test("ANALYZE TABLE dfs.tmp.employee_basic2 COMPUTE STATISTICS (employee_id, birth_date)");
-      test("SELECT * FROM dfs.tmp.`employee_basic2/.stats.drill`");
-      test("create table dfs.tmp.flatstats2 as select flatten(`directories`[0].`columns`) as `columns`"
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      run("CREATE TABLE dfs.tmp.employee_basic2 AS SELECT * from cp.`employee.json`");
+      run("ANALYZE TABLE dfs.tmp.employee_basic2 COMPUTE STATISTICS (employee_id, birth_date)");
+      run("SELECT * FROM dfs.tmp.`employee_basic2/.stats.drill`");
+      run("create table dfs.tmp.flatstats2 as select flatten(`directories`[0].`columns`) as `columns`"
           + " from dfs.tmp.`employee_basic2/.stats.drill`");
 
       testBuilder()
@@ -96,8 +97,8 @@ public class TestAnalyze extends BaseTestQuery {
           .baselineValues("`birth_date`", 1155.0, 1155.0, 52L, 10.0)
           .go();
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
     }
   }
 
@@ -105,49 +106,47 @@ public class TestAnalyze extends BaseTestQuery {
   @Test
   public void basic3() throws Exception {
     try {
-      test("ALTER SESSION SET `planner.slice_target` = 1");
-      test("ALTER SESSION SET `store.format` = 'parquet'");
-      test("ALTER SESSION SET `exec.statistics.deterministic_sampling` = true");
-      test("CREATE TABLE dfs.tmp.employee_basic3 AS SELECT * from cp.`employee.json`");
-      test("ANALYZE TABLE dfs.tmp.employee_basic3 COMPUTE STATISTICS (employee_id, birth_date) SAMPLE 55 PERCENT");
-      test("SELECT * FROM dfs.tmp.`employee_basic3/.stats.drill`");
-      test("create table dfs.tmp.flatstats3 as select flatten(`directories`[0].`columns`) as `columns`"
-              + " from dfs.tmp.`employee_basic3/.stats.drill`");
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      client.alterSession(ExecConstants.DETERMINISTIC_SAMPLING, true);
+      run("CREATE TABLE dfs.tmp.employee_basic3 AS SELECT * from cp.`employee.json`");
+      run("ANALYZE TABLE table(dfs.tmp.employee_basic3 (type => 'parquet')) COMPUTE STATISTICS (employee_id, birth_date) SAMPLE 55 PERCENT");
 
       testBuilder()
-              .sqlQuery("SELECT tbl.`columns`.`column` as `column`, tbl.`columns`.rowcount as rowcount,"
-                      + " tbl.`columns`.nonnullrowcount as nonnullrowcount, tbl.`columns`.ndv as ndv,"
-                      + " tbl.`columns`.avgwidth as avgwidth"
-                      + " FROM dfs.tmp.flatstats3 tbl")
-              .unOrdered()
-              .baselineColumns("column", "rowcount", "nonnullrowcount", "ndv", "avgwidth")
-              .baselineValues("`employee_id`", 1138.0, 1138.0, 1138L, 8.00127815945039)
-              .baselineValues("`birth_date`", 1138.0, 1138.0, 38L, 10.001597699312988)
-              .go();
+          .sqlQuery("SELECT tbl.`columns`.`column` as `column`, tbl.`columns`.rowcount is not null as has_rowcount,"
+              + " tbl.`columns`.nonnullrowcount is not null as has_nonnullrowcount, tbl.`columns`.ndv is not null as has_ndv,"
+              + " tbl.`columns`.avgwidth is not null as has_avgwidth"
+              + " FROM (select flatten(`directories`[0].`columns`) as `columns` from dfs.tmp.`employee_basic3/.stats.drill`) tbl")
+          .unOrdered()
+          .baselineColumns("column", "has_rowcount", "has_nonnullrowcount", "has_ndv", "has_avgwidth")
+          .baselineValues("`employee_id`", true, true, true, true)
+          .baselineValues("`birth_date`", true, true, true, true)
+          .go();
     } finally {
-      resetSessionOption("exec.statistics.deterministic_sampling");
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
+      client.resetSession(ExecConstants.DETERMINISTIC_SAMPLING);
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
+      run("drop table if exists dfs.tmp.employee_basic3");
     }
   }
 
   @Test
   public void join() throws Exception {
     try {
-      test("ALTER SESSION SET `planner.slice_target` = 1");
-      test("ALTER SESSION SET `store.format` = 'parquet'");
-      test("CREATE TABLE dfs.tmp.lineitem AS SELECT * FROM cp.`tpch/lineitem.parquet`");
-      test("CREATE TABLE dfs.tmp.orders AS select * FROM cp.`tpch/orders.parquet`");
-      test("ANALYZE TABLE dfs.tmp.lineitem COMPUTE STATISTICS");
-      test("ANALYZE TABLE dfs.tmp.orders COMPUTE STATISTICS");
-      test("SELECT * FROM dfs.tmp.`lineitem/.stats.drill`");
-      test("SELECT * FROM dfs.tmp.`orders/.stats.drill`");
-      test("ALTER SESSION SET `planner.statistics.use` = true");
-      test("SELECT * FROM dfs.tmp.`lineitem` l JOIN dfs.tmp.`orders` o ON l.l_orderkey = o.o_orderkey");
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      run("CREATE TABLE dfs.tmp.lineitem AS SELECT * FROM cp.`tpch/lineitem.parquet`");
+      run("CREATE TABLE dfs.tmp.orders AS select * FROM cp.`tpch/orders.parquet`");
+      run("ANALYZE TABLE dfs.tmp.lineitem COMPUTE STATISTICS");
+      run("ANALYZE TABLE dfs.tmp.orders COMPUTE STATISTICS");
+      run("SELECT * FROM dfs.tmp.`lineitem/.stats.drill`");
+      run("SELECT * FROM dfs.tmp.`orders/.stats.drill`");
+      client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), true);
+      run("SELECT * FROM dfs.tmp.`lineitem` l JOIN dfs.tmp.`orders` o ON l.l_orderkey = o.o_orderkey");
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
-      resetSessionOption("planner.statistics.use");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
+      client.resetSession(PlannerSettings.STATISTICS_USE.getOptionName());
     }
   }
 
@@ -155,23 +154,23 @@ public class TestAnalyze extends BaseTestQuery {
   public void testAnalyzeSupportedFormats() throws Exception {
     //Only allow computing statistics on PARQUET files.
     try {
-      test("ALTER SESSION SET `planner.slice_target` = 1");
-      test("ALTER SESSION SET `store.format` = 'json'");
-      test("CREATE TABLE dfs.tmp.employee_basic4 AS SELECT * from cp.`employee.json`");
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "json");
+      run("CREATE TABLE dfs.tmp.employee_basic4 AS SELECT * from cp.`employee.json`");
       //Should display not supported
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.employee_basic4 COMPUTE STATISTICS",
           "Table employee_basic4 is not supported by ANALYZE. "
           + "Support is currently limited to directory-based Parquet tables.");
 
-      test("DROP TABLE dfs.tmp.employee_basic4");
-      test("ALTER SESSION SET `store.format` = 'parquet'");
-      test("CREATE TABLE dfs.tmp.employee_basic4 AS SELECT * from cp.`employee.json`");
+      run("DROP TABLE dfs.tmp.employee_basic4");
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      run("CREATE TABLE dfs.tmp.employee_basic4 AS SELECT * from cp.`employee.json`");
       //Should complete successfully (16 columns in employee.json)
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.employee_basic4 COMPUTE STATISTICS",
           "16");
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
     }
   }
 
@@ -180,13 +179,13 @@ public class TestAnalyze extends BaseTestQuery {
   public void testAnalyzePartitionedTables() throws Exception {
     //Computing statistics on columns, dir0, dir1
     try {
-      final String tmpLocation = "/multilevel/parquet";
-      test("ALTER SESSION SET `planner.slice_target` = 1");
-      test("ALTER SESSION SET `store.format` = 'parquet'");
-      test("CREATE TABLE dfs.tmp.parquet1 AS SELECT * from dfs.`%s`", tmpLocation);
+      String tmpLocation = "/multilevel/parquet";
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      run("CREATE TABLE dfs.tmp.parquet1 AS SELECT * from dfs.`%s`", tmpLocation);
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquet1 COMPUTE STATISTICS", "11");
-      test("SELECT * FROM dfs.tmp.`parquet1/.stats.drill`");
-      test("create table dfs.tmp.flatstats4 as select flatten(`directories`[0].`columns`) as `columns` " +
+      run("SELECT * FROM dfs.tmp.`parquet1/.stats.drill`");
+      run("create table dfs.tmp.flatstats4 as select flatten(`directories`[0].`columns`) as `columns` " +
            "from dfs.tmp.`parquet1/.stats.drill`");
       //Verify statistics
       testBuilder()
@@ -209,19 +208,19 @@ public class TestAnalyze extends BaseTestQuery {
           .baselineValues("`dir1`", 120.0, 120.0, 4L, 2.0)
           .go();
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
     }
   }
 
   @Test
   public void testStaleness() throws Exception {
     // copy the data into the temporary location
-    final String tmpLocation = "/multilevel/parquet";
-    test("ALTER SESSION SET `planner.slice_target` = 1");
-    test("ALTER SESSION SET `store.format` = 'parquet'");
+    String tmpLocation = "/multilevel/parquet";
+    client.alterSession(ExecConstants.SLICE_TARGET, 1);
+    client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
     try {
-      test("CREATE TABLE dfs.tmp.parquetStale AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
+      run("CREATE TABLE dfs.tmp.parquetStale AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
            "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", tmpLocation);
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS",
@@ -230,57 +229,77 @@ public class TestAnalyze extends BaseTestQuery {
       // time after ANALYZE so that the timestamps are different.
       Thread.sleep(1000);
       final String Q4 = "/multilevel/parquet/1996/Q4";
-      test("CREATE TABLE dfs.tmp.`parquetStale/1996/Q5` AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
+      run("CREATE TABLE dfs.tmp.`parquetStale/1996/Q5` AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
            "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", Q4);
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
       Thread.sleep(1000);
-      test("DROP TABLE dfs.tmp.`parquetStale/1996/Q5`");
+      run("DROP TABLE dfs.tmp.`parquetStale/1996/Q5`");
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
     }
   }
 
   @Test
   public void testUseStatistics() throws Exception {
     //Test ndv/rowcount for scan
-    test("ALTER SESSION SET `planner.slice_target` = 1");
-    test("ALTER SESSION SET `store.format` = 'parquet'");
+    client.alterSession(ExecConstants.SLICE_TARGET, 1);
+    client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
     try {
-      test("CREATE TABLE dfs.tmp.employeeUseStat AS SELECT * from cp.`employee.json`");
-      test("CREATE TABLE dfs.tmp.departmentUseStat AS SELECT * from cp.`department.json`");
-      test("ANALYZE TABLE dfs.tmp.employeeUseStat COMPUTE STATISTICS");
-      test("ANALYZE TABLE dfs.tmp.departmentUseStat COMPUTE STATISTICS");
-      test("ALTER SESSION SET `planner.statistics.use` = true");
-      String query = " select employee_id from dfs.tmp.employeeUseStat where department_id = 2";
+      run("CREATE TABLE dfs.tmp.employeeUseStat AS SELECT * from cp.`employee.json`");
+      run("CREATE TABLE dfs.tmp.departmentUseStat AS SELECT * from cp.`department.json`");
+      run("ANALYZE TABLE dfs.tmp.employeeUseStat COMPUTE STATISTICS");
+      run("ANALYZE TABLE dfs.tmp.departmentUseStat COMPUTE STATISTICS");
+      client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), true);
+      String query = "select employee_id from dfs.tmp.employeeUseStat where department_id = 2";
       String[] expectedPlan1 = {"Filter\\(condition.*\\).*rowcount = 96.25,.*",
               "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan1)
+          .match();
 
-      query = " select employee_id from dfs.tmp.employeeUseStat where department_id IN (2, 5)";
+      query = "select employee_id from dfs.tmp.employeeUseStat where department_id IN (2, 5)";
       String[] expectedPlan2 = {"Filter\\(condition.*\\).*rowcount = 192.5,.*",
               "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan2, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan2)
+          .match();
 
       query = "select employee_id from dfs.tmp.employeeUseStat where department_id IN (2, 5) and employee_id = 5";
       String[] expectedPlan3 = {"Filter\\(condition.*\\).*rowcount = 1.0,.*",
               "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan3, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan3)
+          .match();
 
       query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
           + " on emp.department_id = dept.department_id";
       String[] expectedPlan4 = {"HashJoin\\(condition.*\\).*rowcount = 1155.0,.*",
               "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
               "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan4, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan4)
+          .match();
 
       query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
               + " on emp.department_id = dept.department_id where dept.department_id = 5";
       String[] expectedPlan5 = {"HashJoin\\(condition.*\\).*rowcount = 96.25,.*",
               "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
               "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan5, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan5)
+          .match();
 
       query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
               + " on emp.department_id = dept.department_id"
@@ -290,14 +309,22 @@ public class TestAnalyze extends BaseTestQuery {
               "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
               "Filter\\(condition=\\[=\\(\\$0, 5\\)\\]\\).*rowcount = 1.0,.*",
               "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan6, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan6)
+          .match();
 
       query = " select emp.employee_id, count(*)"
               + " from dfs.tmp.employeeUseStat emp"
               + " group by emp.employee_id";
       String[] expectedPlan7 = {"HashAgg\\(group=\\[\\{0\\}\\], EXPR\\$1=\\[COUNT\\(\\)\\]\\).*rowcount = 1155.0,.*",
               "Scan.*columns=\\[`employee_id`\\].*rowcount = 1155.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan7, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan7)
+          .match();
 
       query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
               + " on emp.department_id = dept.department_id "
@@ -306,7 +333,11 @@ public class TestAnalyze extends BaseTestQuery {
               "HashJoin\\(condition.*\\).*rowcount = 1155.0,.*",
               "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
               "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan8, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan8)
+          .match();
 
       query = "select emp.employee_id, dept.department_description"
               + " from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
@@ -318,7 +349,11 @@ public class TestAnalyze extends BaseTestQuery {
               "Scan.*columns=\\[`department_id`, `employee_id`, `store_id`\\].*rowcount = 1155.0.*",
               "Filter\\(condition=\\[=\\(\\$1, 'FINANCE'\\)\\]\\).*rowcount = 1.0,.*",
               "Scan.*columns=\\[`department_id`, `department_description`\\].*rowcount = 12.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan9, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan9)
+          .match();
 
       query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept\n"
               + " on emp.department_id = dept.department_id "
@@ -329,7 +364,11 @@ public class TestAnalyze extends BaseTestQuery {
               "Filter\\(condition=\\[=\\(\\$2, 7\\)\\]\\).*rowcount = 46.2,.*",
               "Scan.*columns=\\[`department_id`, `employee_id`, `store_id`\\].*rowcount = 1155.0.*",
               "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan10, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan10)
+          .match();
 
       query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept\n"
               + " on emp.department_id = dept.department_id "
@@ -340,53 +379,69 @@ public class TestAnalyze extends BaseTestQuery {
               "Filter\\(condition=\\[=\\(\\$1, 7\\)\\]\\).*rowcount = 1.0.*",
               "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*",
               "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan11, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan11)
+          .match();
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
     }
   }
 
   @Test
   public void testWithMetadataCaching() throws Exception {
-    test("ALTER SESSION SET `planner.slice_target` = 1");
-    test("ALTER SESSION SET `store.format` = 'parquet'");
-    test("ALTER SESSION SET `planner.statistics.use` = true");
-    final String tmpLocation = "/multilevel/parquet";
+    client.alterSession(ExecConstants.SLICE_TARGET, 1);
+    client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+    client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), true);
+    String tmpLocation = "/multilevel/parquet";
     try {
       // copy the data into the temporary location
-      test("DROP TABLE dfs.tmp.parquetStale");
-      test("CREATE TABLE dfs.tmp.parquetStale AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
+      run("DROP TABLE dfs.tmp.parquetStale");
+      run("CREATE TABLE dfs.tmp.parquetStale AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
               "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", tmpLocation);
       String query = "select count(distinct o_orderkey) from dfs.tmp.parquetStale";
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
-      test("REFRESH TABLE METADATA dfs.tmp.parquetStale");
+      run("REFRESH TABLE METADATA dfs.tmp.parquetStale");
       // Verify we recompute statistics once a new file/directory is added. Update the directory some
       // time after ANALYZE so that the timestamps are different.
       Thread.sleep(1000);
-      final String Q4 = "/multilevel/parquet/1996/Q4";
-      test("CREATE TABLE dfs.tmp.`parquetStale/1996/Q5` AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
+      String Q4 = "/multilevel/parquet/1996/Q4";
+      run("CREATE TABLE dfs.tmp.`parquetStale/1996/Q5` AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
               "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", Q4);
       // query should use STALE statistics
       String[] expectedStalePlan = {"StreamAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 119.0.*",
           "Scan.*rowcount = 130.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedStalePlan, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedStalePlan)
+          .match();
       // Query should use Parquet Metadata, since statistics not available. In this case, NDV is computed as
       // 1/10*rowcount (Calcite default). Hence, NDV is 13.0 instead of the correct 119.0
-      test("DROP TABLE dfs.tmp.`parquetStale/.stats.drill`");
+      run("DROP TABLE dfs.tmp.`parquetStale/.stats.drill`");
       String[] expectedPlan1 = {"HashAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 13.0.*",
           "Scan.*rowcount = 130.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan1)
+          .match();
       // query should use the new statistics. NDV remains unaffected since we copy the Q4 into Q5
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
       String[] expectedPlan2 = {"StreamAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 119.0.*",
           "Scan.*rowcount = 130.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan2, new String[]{});
-      test("DROP TABLE dfs.tmp.`parquetStale/1996/Q5`");
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan2)
+          .match();
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
-      resetSessionOption("planner.statistics.use");
+      run("DROP TABLE dfs.tmp.`parquetStale/1996/Q5`");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
+      client.resetSession(PlannerSettings.STATISTICS_USE.getOptionName());
     }
   }
 
@@ -397,14 +452,14 @@ public class TestAnalyze extends BaseTestQuery {
   @Test
   public void testHistogramWithDataTypes1() throws Exception {
     try {
-      test("ALTER SESSION SET `planner.slice_target` = 1");
-      test("ALTER SESSION SET `store.format` = 'parquet'");
-      test("CREATE TABLE dfs.tmp.employee1 AS SELECT  employee_id, full_name, "
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      run("CREATE TABLE dfs.tmp.employee1 AS SELECT  employee_id, full_name, "
               + "case when gender = 'M' then cast(1 as boolean) else cast(0 as boolean) end as is_male, "
               + " cast(store_id as int) as store_id, cast(department_id as bigint) as department_id, "
               + " cast(birth_date as date) as birth_date, cast(hire_date as timestamp) as hire_date_and_time, "
               + " cast(salary as double) as salary from cp.`employee.json` where department_id > 10");
-      test("ANALYZE TABLE dfs.tmp.employee1 COMPUTE STATISTICS");
+      run("ANALYZE TABLE dfs.tmp.employee1 COMPUTE STATISTICS");
 
       testBuilder()
               .sqlQuery("SELECT tbl.`columns`.`column` as `column`, "
@@ -424,54 +479,78 @@ public class TestAnalyze extends BaseTestQuery {
               .go();
 
       // test the use of the just created histogram
-      test("alter session set `planner.statistics.use` = true");
+      client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), true);
 
       // check boundary conditions: last bucket
       String query = "select 1 from dfs.tmp.employee1 where store_id > 21";
       String[] expectedPlan1 = {"Filter\\(condition.*\\).*rowcount = 112.*,.*",
               "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan1)
+          .match();
 
       query = "select 1 from dfs.tmp.employee1 where store_id < 15";
       String[] expectedPlan2 = {"Filter\\(condition.*\\).*rowcount = 676.*,.*",
               "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan2, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan2)
+          .match();
 
       query = "select 1 from dfs.tmp.employee1 where store_id between 1 and 23";
       String[] expectedPlan3 = {"Filter\\(condition.*\\).*rowcount = 1090.*,.*",
         "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan3, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan3)
+          .match();
 
       query = "select count(*) from dfs.tmp.employee1 where store_id between 10 and 20";
       String[] expectedPlan4 = {"Filter\\(condition.*\\).*rowcount = 5??.*,.*",
         "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan4, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan4)
+          .match();
 
       // col > end_point of last bucket
       query = "select 1 from dfs.tmp.employee1 where store_id > 24";
       String[] expectedPlan5 = {"Filter\\(condition.*\\).*rowcount = 1.0,.*",
         "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan5, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan5)
+          .match();
 
       // col < start_point of first bucket
       query = "select 1 from dfs.tmp.employee1 where store_id < 1";
       String[] expectedPlan6 = {"Filter\\(condition.*\\).*rowcount = 1.0,.*",
         "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan6, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan6)
+          .match();
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
-      resetSessionOption("planner.statistics.use");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
+      client.resetSession(PlannerSettings.STATISTICS_USE.getOptionName());
     }
   }
 
   @Test
   public void testHistogramWithSubsetColumnsAndSampling() throws Exception {
     try {
-      test("ALTER SESSION SET `planner.slice_target` = 1");
-      test("ALTER SESSION SET `store.format` = 'parquet'");
-      test("CREATE TABLE dfs.tmp.customer1 AS SELECT  * from cp.`tpch/customer.parquet`");
-      test("ANALYZE TABLE dfs.tmp.customer1 COMPUTE STATISTICS (c_custkey, c_nationkey, c_acctbal) SAMPLE 55 PERCENT");
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      run("CREATE TABLE dfs.tmp.customer1 AS SELECT  * from cp.`tpch/customer.parquet`");
+      run("ANALYZE TABLE dfs.tmp.customer1 COMPUTE STATISTICS (c_custkey, c_nationkey, c_acctbal) SAMPLE 55 PERCENT");
 
       testBuilder()
               .sqlQuery("SELECT tbl.`columns`.`column` as `column`, "
@@ -485,23 +564,23 @@ public class TestAnalyze extends BaseTestQuery {
               .baselineValues("`c_acctbal`", 11)
               .go();
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
     }
   }
 
   @Test
   public void testHistogramWithColumnsWithAllNulls() throws Exception {
     try {
-      test("ALTER SESSION SET `planner.slice_target` = 1");
-      test("ALTER SESSION SET `store.format` = 'parquet'");
-      test("CREATE TABLE dfs.tmp.all_nulls AS SELECT employee_id, cast(null as int) as null_int_col, "
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      run("CREATE TABLE dfs.tmp.all_nulls AS SELECT employee_id, cast(null as int) as null_int_col, "
               + "cast(null as bigint) as null_bigint_col, cast(null as float) as null_float_col, "
               + "cast(null as double) as null_double_col, cast(null as date) as null_date_col, "
               + "cast(null as timestamp) as null_timestamp_col, cast(null as time) as null_time_col, "
               + "cast(null as boolean) as null_boolean_col "
               + "from cp.`employee.json` ");
-      test("ANALYZE TABLE dfs.tmp.all_nulls COMPUTE STATISTICS ");
+      run("ANALYZE TABLE dfs.tmp.all_nulls COMPUTE STATISTICS ");
 
       testBuilder()
               .sqlQuery("SELECT tbl.`columns`.`column` as `column`, "
@@ -522,46 +601,47 @@ public class TestAnalyze extends BaseTestQuery {
               .go();
 
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
     }
   }
 
   @Test
   public void testHistogramWithIntervalPredicate() throws Exception {
     try {
-      test("ALTER SESSION SET `planner.slice_target` = 1");
-      test("ALTER SESSION SET `store.format` = 'parquet'");
-      test("create table dfs.tmp.orders2 as select * from cp.`tpch/orders.parquet`");
-      test("analyze table dfs.tmp.orders2 compute statistics");
-      test("alter session set `planner.statistics.use` = true");
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
+      run("create table dfs.tmp.orders2 as select * from cp.`tpch/orders.parquet`");
+      run("analyze table dfs.tmp.orders2 compute statistics");
+      client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), true);
 
       String query = "select 1 from dfs.tmp.orders2 o where o.o_orderdate >= date '1996-10-01' and o.o_orderdate < date '1996-10-01' + interval '3' month";
       String[] expectedPlan1 = {"Filter\\(condition.*\\).*rowcount = 59?.*,.*", "Scan.*columns=\\[`o_orderdate`\\].*rowcount = 15000.0.*"};
-      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
+      queryBuilder()
+          .sql(query)
+          .detailedPlanMatcher()
+          .include(expectedPlan1)
+          .match();
     } finally {
-      resetSessionOption("planner.slice_target");
-      resetSessionOption("store.format");
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
     }
   }
 
   //Helper function to verify output of ANALYZE statement
   private void verifyAnalyzeOutput(String query, String message) throws Exception {
-    List<QueryDataBatch>result = testRunAndReturn(QueryType.SQL, query);
-    List<List<String>> output = new ArrayList<>();
-    assertTrue(result.size() == 1);
-    final QueryDataBatch batch = result.get(0);
-    final RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
-    loader.load(batch.getHeader().getDef(), batch.getData());
-    output.add(new ArrayList<String>());
-    for (VectorWrapper<?> vw: loader) {
-      ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
-      Object o = accessor.getObject(0);
-      output.get(0).add(o == null ? null: o.toString());
+    DirectRowSet rowSet = queryBuilder().sql(query).rowSet();
+    try {
+      assertEquals(1, rowSet.rowCount());
+
+      RowSetReader reader = rowSet.reader();
+      assertEquals(2, reader.columnCount());
+      while (reader.next()) {
+        ObjectReader column = reader.column(1);
+        assertEquals(message, column.isNull() ? null : column.getObject().toString());
+      }
+    } finally {
+      rowSet.clear();
     }
-    batch.release();
-    loader.clear();
-    assertTrue(output.get(0).size() == 2);
-    assertEquals(message, output.get(0).get(1));
   }
 }

@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.scan.project;
 
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
-import org.apache.drill.exec.physical.resultSet.impl.OptionBuilder;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetOptionBuilder;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.record.VectorContainer;
 
@@ -36,8 +36,8 @@ public abstract class StaticColumnLoader {
 
   public StaticColumnLoader(ResultVectorCache vectorCache) {
 
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-          .setVectorCache(vectorCache)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+          .vectorCache(vectorCache)
           .build();
     loader = new ResultSetLoaderImpl(vectorCache.allocator(), options);
     this.vectorCache = vectorCache;

@@ -33,19 +33,17 @@ import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
  * empty, direct, single row sets. Rewriting is not allowed, nor is writing
  * to a hyper row set.
  */
-
 public class RowSetWriterImpl extends AbstractTupleWriter implements RowSetWriter {
 
   /**
    * Writer index that points to each row in the row set. The index starts at
    * the 0th row and advances one row on each increment. This allows writers to
    * start positioned at the first row. Writes happen in the current row.
-   * Calling <tt>next()</tt> advances to the next position, effectively saving
+   * Calling {@code next()} advances to the next position, effectively saving
    * the current row. The most recent row can be abandoned easily simply by not
-   * calling <tt>next()</tt>. This means that the number of completed rows is
+   * calling {@code next()}. This means that the number of completed rows is
    * the same as the row index.
    */
-
   static class WriterIndexImpl implements ColumnWriterIndex {
 
     public enum State { OK, VECTOR_OVERFLOW, END_OF_BATCH }
@@ -142,7 +140,6 @@ public class RowSetWriterImpl extends AbstractTupleWriter implements RowSetWrite
 
     // For convenience, start a new row after each save.
     // The last (unused) row is abandoned when the batch is full.
-
     if (writerIndex.next()) {
       startRow();
     }

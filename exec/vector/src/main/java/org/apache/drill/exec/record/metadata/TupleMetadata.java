@@ -110,6 +110,7 @@ public interface TupleMetadata extends Propertied, Iterable<ColumnMetadata> {
   String fullName(ColumnMetadata column);
   String fullName(int index);
   TupleMetadata copy();
+  void replace(ColumnMetadata replaceWith);
 
   /**
    * Converts current {@link TupleMetadata} implementation into JSON string representation.

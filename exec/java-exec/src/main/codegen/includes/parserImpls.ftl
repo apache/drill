@@ -700,15 +700,16 @@ Pair<SqlNodeList, SqlNodeList> ParenthesizedCompoundIdentifierList() :
 /**
  * Parses a analyze statements:
  * <ul>
- * <li>ANALYZE TABLE [table_name] [COLUMNS (col1, col2, ...)] REFRESH METADATA [partition LEVEL] {COMPUTE | ESTIMATE} | STATISTICS [(column1, column2, ...)] [ SAMPLE numeric PERCENT ]
+ * <li>ANALYZE TABLE [table_name | table({table function name}(parameters))] [COLUMNS {(col1, col2, ...) | NONE}] REFRESH METADATA ['level' LEVEL] [{COMPUTE | ESTIMATE} | STATISTICS [ SAMPLE number PERCENT ]]
  * <li>ANALYZE TABLE [table_name] DROP [METADATA|STATISTICS] [IF EXISTS]
- * <li>ANALYZE TABLE [table_name] {COMPUTE | ESTIMATE} | STATISTICS [(column1, column2, ...)] [ SAMPLE numeric PERCENT ]
+ * <li>ANALYZE TABLE [table_name | table({table function name}(parameters))] {COMPUTE | ESTIMATE} | STATISTICS [(column1, column2, ...)] [ SAMPLE numeric PERCENT ]
  * </ul>
  */
 SqlNode SqlAnalyzeTable() :
 {
     SqlParserPos pos;
-    SqlIdentifier tblName;
+    SqlNode tableRef;
+    Span s = null;
     SqlNodeList fieldList = null;
     SqlNode level = null;
     SqlLiteral estimate = null;
@@ -719,7 +720,13 @@ SqlNode SqlAnalyzeTable() :
 {
     <ANALYZE> { pos = getPos(); }
     <TABLE>
-    tblName = CompoundIdentifier()
+    (
+        tableRef = CompoundIdentifier()
+    |
+        <TABLE> { s = span(); } <LPAREN>
+        tableRef = TableFunctionCall(s.pos())
+        <RPAREN>
+    )
     [
         (
             (
@@ -749,7 +756,7 @@ SqlNode SqlAnalyzeTable() :
             ]
             {
                 if (percent == null) { percent = SqlLiteral.createExactNumeric("100.0", pos); }
-                return new SqlAnalyzeTable(pos, tblName, estimate, fieldList, percent);
+                return new SqlAnalyzeTable(pos, tableRef, estimate, fieldList, percent);
             }
         )
         |
@@ -792,7 +799,7 @@ SqlNode SqlAnalyzeTable() :
                 }
             ]
             {
-                return new SqlMetastoreAnalyzeTable(pos, tblName, fieldList, level, estimate, percent);
+                return new SqlMetastoreAnalyzeTable(pos, tableRef, fieldList, level, estimate, percent);
             }
         )
         |
@@ -816,7 +823,10 @@ SqlNode SqlAnalyzeTable() :
                 if (checkMetadataExistence == null) {
                   checkMetadataExistence = SqlLiteral.createBoolean(true, pos);
                 }
-                return new SqlDropTableMetadata(pos, tblName, dropMetadata, checkMetadataExistence);
+                if (s != null) {
+                  throw new ParseException("Table functions shouldn't be used in DROP METADATA statement.");
+                }
+                return new SqlDropTableMetadata(pos, (SqlIdentifier) tableRef, dropMetadata, checkMetadataExistence);
             }
         )
     ]

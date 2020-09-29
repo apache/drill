@@ -183,8 +183,8 @@ expiration process is launched.
 Iceberg table generates metadata for each modification operation:
 snapshot, manifest file, table metadata file. Also when performing delete operation,
 previously stored data files are not deleted. These files with the time
-can occupy lots of space. `ExpirationHandler` allows to expire outdated metadata and
-data files after configured time period (`drill.metastore.iceberg.expiration.period`).
-If expiration period is not indicated, zero or negative, expiration won't be performed.
-`ExpirationHandler` is called after each modification operation, it checks if expiration period
-has elapsed and submits expiration process in a separate thread.
+can occupy lots of space. Two table properties `write.metadata.delete-after-commit.enabled`
+and `write.metadata.previous-versions-max` control expiration process.
+Metadata files will be expired automatically if `write.metadata.delete-after-commit.enabled` 
+is enabled. Snapshots and data files will be expired using `ExpirationHandler` 
+after each commit operation based on the same table properties values.

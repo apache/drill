@@ -27,17 +27,19 @@ import org.apache.drill.exec.physical.resultSet.model.MetadataProvider;
 import org.apache.drill.exec.physical.resultSet.model.MetadataProvider.VectorDescrip;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
 import org.apache.drill.exec.vector.accessor.writer.ListWriterImpl;
 import org.apache.drill.exec.vector.accessor.writer.MapWriter;
+import org.apache.drill.exec.vector.accessor.writer.ObjectDictWriter;
 import org.apache.drill.exec.vector.accessor.writer.RepeatedListWriter;
 import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl.VariantObjectWriter;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.ListVector;
+import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
@@ -52,14 +54,7 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * variant (LIST, UNION) and tuple (MAP) columns, the tree grows
  * quite complex.
  */
-
 public abstract class BaseWriterBuilder {
-
-  private final ColumnConversionFactory conversionFactory;
-
-  protected BaseWriterBuilder(ColumnConversionFactory conversionFactory) {
-    this.conversionFactory = conversionFactory;
-  }
 
   protected List<AbstractObjectWriter> buildContainerChildren(VectorContainer container,
       MetadataProvider mdProvider) {
@@ -75,19 +70,32 @@ public abstract class BaseWriterBuilder {
   private AbstractObjectWriter buildVectorWriter(ValueVector vector, VectorDescrip descrip) {
     final MajorType type = vector.getField().getType();
     switch (type.getMinorType()) {
-    case MAP:
-      return MapWriter.buildMapWriter(descrip.metadata,
-          (AbstractMapVector) vector,
-          buildMap((AbstractMapVector) vector, descrip));
+      case DICT:
+        return buildDict(vector, descrip);
+      case MAP:
+        return MapWriter.buildMapWriter(descrip.metadata,
+            (AbstractMapVector) vector,
+            buildMap((AbstractMapVector) vector, descrip));
 
-    case UNION:
-      return buildUnion((UnionVector) vector, descrip);
+      case UNION:
+        return buildUnion((UnionVector) vector, descrip);
 
-    case LIST:
-      return buildList(vector, descrip);
+      case LIST:
+        return buildList(vector, descrip);
 
-    default:
-      return ColumnWriterFactory.buildColumnWriter(descrip.metadata, conversionFactory, vector);
+      default:
+        return ColumnWriterFactory.buildColumnWriter(descrip.metadata, vector);
+    }
+  }
+
+  private AbstractObjectWriter buildDict(ValueVector vector, VectorDescrip descrip) {
+    if (vector.getField().getType().getMode() == DataMode.REPEATED) {
+      ValueVector dataVector = ((RepeatedDictVector) vector).getDataVector();
+      List<AbstractObjectWriter> writers = buildMap((AbstractMapVector) dataVector, descrip);
+      return ObjectDictWriter.buildDictArray(descrip.metadata, (RepeatedDictVector) vector, writers);
+    } else {
+      List<AbstractObjectWriter> writers = buildMap((AbstractMapVector) vector, descrip);
+      return ObjectDictWriter.buildDict(descrip.metadata, (DictVector) vector, writers);
     }
   }
 
@@ -163,7 +171,6 @@ public abstract class BaseWriterBuilder {
 
       // If the list holds a union, then the list and union are collapsed
       // together in the metadata layer.
-
       dataMetadata = descrip;
     } else {
       dataMetadata = new VectorDescrip(descrip.childProvider(), 0, dataVector.getField());

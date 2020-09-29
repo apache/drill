@@ -37,10 +37,12 @@ public final class ExecProtos {
 
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return Whether the queryId field is set.
      */
     boolean hasQueryId();
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return The queryId.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId();
     /**
@@ -50,28 +52,34 @@ public final class ExecProtos {
 
     /**
      * <code>optional int32 major_fragment_id = 2;</code>
+     * @return Whether the majorFragmentId field is set.
      */
     boolean hasMajorFragmentId();
     /**
      * <code>optional int32 major_fragment_id = 2;</code>
+     * @return The majorFragmentId.
      */
     int getMajorFragmentId();
 
     /**
      * <code>optional int32 minor_fragment_id = 3;</code>
+     * @return Whether the minorFragmentId field is set.
      */
     boolean hasMinorFragmentId();
     /**
      * <code>optional int32 minor_fragment_id = 3;</code>
+     * @return The minorFragmentId.
      */
     int getMinorFragmentId();
 
     /**
      * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+     * @return Whether the parentQueryId field is set.
      */
     boolean hasParentQueryId();
     /**
      * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+     * @return The parentQueryId.
      */
     org.apache.drill.exec.proto.UserBitShared.QueryId getParentQueryId();
     /**
@@ -92,8 +100,13 @@ public final class ExecProtos {
       super(builder);
     }
     private FragmentHandle() {
-      majorFragmentId_ = 0;
-      minorFragmentId_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new FragmentHandle();
     }
 
     @java.lang.Override
@@ -122,7 +135,7 @@ public final class ExecProtos {
               break;
             case 10: {
               org.apache.drill.exec.proto.UserBitShared.QueryId.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = queryId_.toBuilder();
               }
               queryId_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.QueryId.PARSER, extensionRegistry);
@@ -145,7 +158,7 @@ public final class ExecProtos {
             }
             case 34: {
               org.apache.drill.exec.proto.UserBitShared.QueryId.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000008) != 0)) {
                 subBuilder = parentQueryId_.toBuilder();
               }
               parentQueryId_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.QueryId.PARSER, extensionRegistry);
@@ -193,12 +206,14 @@ public final class ExecProtos {
     private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return Whether the queryId field is set.
      */
     public boolean hasQueryId() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
+     * @return The queryId.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
@@ -214,12 +229,14 @@ public final class ExecProtos {
     private int majorFragmentId_;
     /**
      * <code>optional int32 major_fragment_id = 2;</code>
+     * @return Whether the majorFragmentId field is set.
      */
     public boolean hasMajorFragmentId() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional int32 major_fragment_id = 2;</code>
+     * @return The majorFragmentId.
      */
     public int getMajorFragmentId() {
       return majorFragmentId_;
@@ -229,12 +246,14 @@ public final class ExecProtos {
     private int minorFragmentId_;
     /**
      * <code>optional int32 minor_fragment_id = 3;</code>
+     * @return Whether the minorFragmentId field is set.
      */
     public boolean hasMinorFragmentId() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional int32 minor_fragment_id = 3;</code>
+     * @return The minorFragmentId.
      */
     public int getMinorFragmentId() {
       return minorFragmentId_;
@@ -244,12 +263,14 @@ public final class ExecProtos {
     private org.apache.drill.exec.proto.UserBitShared.QueryId parentQueryId_;
     /**
      * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+     * @return Whether the parentQueryId field is set.
      */
     public boolean hasParentQueryId() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+     * @return The parentQueryId.
      */
     public org.apache.drill.exec.proto.UserBitShared.QueryId getParentQueryId() {
       return parentQueryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : parentQueryId_;
@@ -275,16 +296,16 @@ public final class ExecProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getQueryId());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeInt32(2, majorFragmentId_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt32(3, minorFragmentId_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeMessage(4, getParentQueryId());
       }
       unknownFields.writeTo(output);
@@ -296,19 +317,19 @@ public final class ExecProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getQueryId());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, majorFragmentId_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, minorFragmentId_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getParentQueryId());
       }
@@ -327,29 +348,28 @@ public final class ExecProtos {
       }
       org.apache.drill.exec.proto.ExecProtos.FragmentHandle other = (org.apache.drill.exec.proto.ExecProtos.FragmentHandle) obj;
 
-      boolean result = true;
-      result = result && (hasQueryId() == other.hasQueryId());
+      if (hasQueryId() != other.hasQueryId()) return false;
       if (hasQueryId()) {
-        result = result && getQueryId()
-            .equals(other.getQueryId());
+        if (!getQueryId()
+            .equals(other.getQueryId())) return false;
       }
-      result = result && (hasMajorFragmentId() == other.hasMajorFragmentId());
+      if (hasMajorFragmentId() != other.hasMajorFragmentId()) return false;
       if (hasMajorFragmentId()) {
-        result = result && (getMajorFragmentId()
-            == other.getMajorFragmentId());
+        if (getMajorFragmentId()
+            != other.getMajorFragmentId()) return false;
       }
-      result = result && (hasMinorFragmentId() == other.hasMinorFragmentId());
+      if (hasMinorFragmentId() != other.hasMinorFragmentId()) return false;
       if (hasMinorFragmentId()) {
-        result = result && (getMinorFragmentId()
-            == other.getMinorFragmentId());
+        if (getMinorFragmentId()
+            != other.getMinorFragmentId()) return false;
       }
-      result = result && (hasParentQueryId() == other.hasParentQueryId());
+      if (hasParentQueryId() != other.hasParentQueryId()) return false;
       if (hasParentQueryId()) {
-        result = result && getParentQueryId()
-            .equals(other.getParentQueryId());
+        if (!getParentQueryId()
+            .equals(other.getParentQueryId())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -554,29 +574,29 @@ public final class ExecProtos {
         org.apache.drill.exec.proto.ExecProtos.FragmentHandle result = new org.apache.drill.exec.proto.ExecProtos.FragmentHandle(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (queryIdBuilder_ == null) {
+            result.queryId_ = queryId_;
+          } else {
+            result.queryId_ = queryIdBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (queryIdBuilder_ == null) {
-          result.queryId_ = queryId_;
-        } else {
-          result.queryId_ = queryIdBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.majorFragmentId_ = majorFragmentId_;
           to_bitField0_ |= 0x00000002;
         }
-        result.majorFragmentId_ = majorFragmentId_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.minorFragmentId_ = minorFragmentId_;
           to_bitField0_ |= 0x00000004;
         }
-        result.minorFragmentId_ = minorFragmentId_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (parentQueryIdBuilder_ == null) {
+            result.parentQueryId_ = parentQueryId_;
+          } else {
+            result.parentQueryId_ = parentQueryIdBuilder_.build();
+          }
           to_bitField0_ |= 0x00000008;
-        }
-        if (parentQueryIdBuilder_ == null) {
-          result.parentQueryId_ = parentQueryId_;
-        } else {
-          result.parentQueryId_ = parentQueryIdBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -585,35 +605,35 @@ public final class ExecProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -669,17 +689,19 @@ public final class ExecProtos {
       }
       private int bitField0_;
 
-      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId queryId_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> queryIdBuilder_;
       /**
        * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       * @return Whether the queryId field is set.
        */
       public boolean hasQueryId() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryId query_id = 1;</code>
+       * @return The queryId.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
         if (queryIdBuilder_ == null) {
@@ -723,7 +745,7 @@ public final class ExecProtos {
        */
       public Builder mergeQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
         if (queryIdBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               queryId_ != null &&
               queryId_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
             queryId_ =
@@ -790,18 +812,22 @@ public final class ExecProtos {
       private int majorFragmentId_ ;
       /**
        * <code>optional int32 major_fragment_id = 2;</code>
+       * @return Whether the majorFragmentId field is set.
        */
       public boolean hasMajorFragmentId() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional int32 major_fragment_id = 2;</code>
+       * @return The majorFragmentId.
        */
       public int getMajorFragmentId() {
         return majorFragmentId_;
       }
       /**
        * <code>optional int32 major_fragment_id = 2;</code>
+       * @param value The majorFragmentId to set.
+       * @return This builder for chaining.
        */
       public Builder setMajorFragmentId(int value) {
         bitField0_ |= 0x00000002;
@@ -811,6 +837,7 @@ public final class ExecProtos {
       }
       /**
        * <code>optional int32 major_fragment_id = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMajorFragmentId() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -822,18 +849,22 @@ public final class ExecProtos {
       private int minorFragmentId_ ;
       /**
        * <code>optional int32 minor_fragment_id = 3;</code>
+       * @return Whether the minorFragmentId field is set.
        */
       public boolean hasMinorFragmentId() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional int32 minor_fragment_id = 3;</code>
+       * @return The minorFragmentId.
        */
       public int getMinorFragmentId() {
         return minorFragmentId_;
       }
       /**
        * <code>optional int32 minor_fragment_id = 3;</code>
+       * @param value The minorFragmentId to set.
+       * @return This builder for chaining.
        */
       public Builder setMinorFragmentId(int value) {
         bitField0_ |= 0x00000004;
@@ -843,6 +874,7 @@ public final class ExecProtos {
       }
       /**
        * <code>optional int32 minor_fragment_id = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMinorFragmentId() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -851,17 +883,19 @@ public final class ExecProtos {
         return this;
       }
 
-      private org.apache.drill.exec.proto.UserBitShared.QueryId parentQueryId_ = null;
+      private org.apache.drill.exec.proto.UserBitShared.QueryId parentQueryId_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.UserBitShared.QueryId, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder, org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder> parentQueryIdBuilder_;
       /**
        * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+       * @return Whether the parentQueryId field is set.
        */
       public boolean hasParentQueryId() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
+       * @return The parentQueryId.
        */
       public org.apache.drill.exec.proto.UserBitShared.QueryId getParentQueryId() {
         if (parentQueryIdBuilder_ == null) {
@@ -905,7 +939,7 @@ public final class ExecProtos {
        */
       public Builder mergeParentQueryId(org.apache.drill.exec.proto.UserBitShared.QueryId value) {
         if (parentQueryIdBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000008) != 0) &&
               parentQueryId_ != null &&
               parentQueryId_ != org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance()) {
             parentQueryId_ =
@@ -1027,14 +1061,17 @@ public final class ExecProtos {
 
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return Whether the sqlQuery field is set.
      */
     boolean hasSqlQuery();
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return The sqlQuery.
      */
     java.lang.String getSqlQuery();
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return The bytes for sqlQuery.
      */
     com.google.protobuf.ByteString
         getSqlQueryBytes();
@@ -1059,6 +1096,13 @@ public final class ExecProtos {
     }
     private ServerPreparedStatementState() {
       sqlQuery_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ServerPreparedStatementState();
     }
 
     @java.lang.Override
@@ -1128,12 +1172,14 @@ public final class ExecProtos {
     private volatile java.lang.Object sqlQuery_;
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return Whether the sqlQuery field is set.
      */
     public boolean hasSqlQuery() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return The sqlQuery.
      */
     public java.lang.String getSqlQuery() {
       java.lang.Object ref = sqlQuery_;
@@ -1151,6 +1197,7 @@ public final class ExecProtos {
     }
     /**
      * <code>optional string sql_query = 1;</code>
+     * @return The bytes for sqlQuery.
      */
     public com.google.protobuf.ByteString
         getSqlQueryBytes() {
@@ -1180,7 +1227,7 @@ public final class ExecProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, sqlQuery_);
       }
       unknownFields.writeTo(output);
@@ -1192,7 +1239,7 @@ public final class ExecProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, sqlQuery_);
       }
       size += unknownFields.getSerializedSize();
@@ -1210,14 +1257,13 @@ public final class ExecProtos {
       }
       org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState other = (org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState) obj;
 
-      boolean result = true;
-      result = result && (hasSqlQuery() == other.hasSqlQuery());
+      if (hasSqlQuery() != other.hasSqlQuery()) return false;
       if (hasSqlQuery()) {
-        result = result && getSqlQuery()
-            .equals(other.getSqlQuery());
+        if (!getSqlQuery()
+            .equals(other.getSqlQuery())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1400,7 +1446,7 @@ public final class ExecProtos {
         org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState result = new org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.sqlQuery_ = sqlQuery_;
@@ -1411,35 +1457,35 @@ public final class ExecProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1491,12 +1537,14 @@ public final class ExecProtos {
       private java.lang.Object sqlQuery_ = "";
       /**
        * <code>optional string sql_query = 1;</code>
+       * @return Whether the sqlQuery field is set.
        */
       public boolean hasSqlQuery() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional string sql_query = 1;</code>
+       * @return The sqlQuery.
        */
       public java.lang.String getSqlQuery() {
         java.lang.Object ref = sqlQuery_;
@@ -1514,6 +1562,7 @@ public final class ExecProtos {
       }
       /**
        * <code>optional string sql_query = 1;</code>
+       * @return The bytes for sqlQuery.
        */
       public com.google.protobuf.ByteString
           getSqlQueryBytes() {
@@ -1530,6 +1579,8 @@ public final class ExecProtos {
       }
       /**
        * <code>optional string sql_query = 1;</code>
+       * @param value The sqlQuery to set.
+       * @return This builder for chaining.
        */
       public Builder setSqlQuery(
           java.lang.String value) {
@@ -1543,6 +1594,7 @@ public final class ExecProtos {
       }
       /**
        * <code>optional string sql_query = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearSqlQuery() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -1552,6 +1604,8 @@ public final class ExecProtos {
       }
       /**
        * <code>optional string sql_query = 1;</code>
+       * @param value The bytes for sqlQuery to set.
+       * @return This builder for chaining.
        */
       public Builder setSqlQueryBytes(
           com.google.protobuf.ByteString value) {
@@ -1645,20 +1699,12 @@ public final class ExecProtos {
       "\001 \001(\tB+\n\033org.apache.drill.exec.protoB\nEx" +
       "ecProtosH\001"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.apache.drill.exec.proto.CoordinationProtos.getDescriptor(),
           org.apache.drill.exec.proto.UserBitShared.getDescriptor(),
-        }, assigner);
+        });
     internal_static_exec_bit_FragmentHandle_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_exec_bit_FragmentHandle_fieldAccessorTable = new

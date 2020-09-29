@@ -88,8 +88,8 @@ public class ServerMetaProvider {
     // duplicates, and an iterable is all we need.
     ImmutableList.Builder<ConvertSupport> supportedConvertedOps = ImmutableList.builder();
 
-    for(MinorType from: MinorType.values()) {
-      for(MinorType to: MinorType.values()) {
+    for (MinorType from: MinorType.values()) {
+      for (MinorType to: MinorType.values()) {
         if (TypeCastRules.isCastable(from, to)) {
           supportedConvertedOps.add(ConvertSupport.newBuilder().setFrom(from).setTo(to).build());
         }

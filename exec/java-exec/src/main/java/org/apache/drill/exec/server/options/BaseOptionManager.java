@@ -19,6 +19,8 @@ package org.apache.drill.exec.server.options;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 
@@ -28,7 +30,7 @@ import java.util.Iterator;
  */
 
 public abstract class BaseOptionManager implements OptionManager {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseOptionManager.class);
+  private static final Logger logger = LoggerFactory.getLogger(BaseOptionManager.class);
 
   /**
    * Gets the current option value given a validator.
@@ -66,6 +68,11 @@ public abstract class BaseOptionManager implements OptionManager {
   @Override
   public boolean getBoolean(String name) {
     return getByType(name, Kind.BOOLEAN).bool_val;
+  }
+
+  @Override
+  public int getInt(String name) {
+    return (int) getLong(name);
   }
 
   @Override
@@ -137,33 +144,14 @@ public abstract class BaseOptionManager implements OptionManager {
     final OptionValue.AccessibleScopes type = definition.getMetaData().getAccessibleScopes();
     final OptionValue.OptionScope scope = getScope();
     checkOptionPermissions(name, type, scope);
-    final OptionValue optionValue = OptionValue.create(type, name, value, scope);
+    final OptionValue optionValue = OptionValue.create(type, name, value, scope, validator.getKind());
     validator.validate(optionValue, metaData, this);
     setLocalOptionHelper(optionValue);
   }
 
   @Override
   public void setLocalOption(final OptionValue.Kind kind, final String name, final String valueStr) {
-    Object value;
-
-    switch (kind) {
-      case LONG:
-        value = Long.valueOf(valueStr);
-        break;
-      case DOUBLE:
-        value = Double.valueOf(valueStr);
-        break;
-      case STRING:
-        value = valueStr;
-        break;
-      case BOOLEAN:
-        value = Boolean.valueOf(valueStr);
-        break;
-      default:
-        throw new IllegalArgumentException(String.format("Unsupported kind %s", kind));
-    }
-
-    setLocalOption(name, value);
+    setLocalOption(name, valueStr);
   }
 
   private static void checkOptionPermissions(String name, OptionValue.AccessibleScopes type, OptionValue.OptionScope scope) {

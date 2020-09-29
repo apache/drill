@@ -55,3 +55,8 @@ insert into person (person_id, first_name, last_name, address, city, state, zip,
           '2015-06-01 16:00:01', '2015-06-01', 'xxx');
 
 insert into person (person_id) values (5);
+
+create SCHEMA drill_h2_test_1;
+set schema drill_h2_test_1;
+create table person(person_id INT NOT NULL PRIMARY KEY);
+set schema drill_h2_test;

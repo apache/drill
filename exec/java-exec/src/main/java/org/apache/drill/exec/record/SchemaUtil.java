@@ -212,7 +212,7 @@ public class SchemaUtil {
             ? new ArrayList<>()
             : new ArrayList<>(parentNames);
         currentNames.add(columnMetadata.name());
-        result.addAll(getColumnPaths(columnMetadata.mapSchema(), currentNames));
+        result.addAll(getColumnPaths(columnMetadata.tupleSchema(), currentNames));
       } else {
         result.add(Collections.singletonList(columnMetadata.name()));
       }

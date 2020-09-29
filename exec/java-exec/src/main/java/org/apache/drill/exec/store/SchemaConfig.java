@@ -25,7 +25,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 
 /**
- * Contains information needed by {@link org.apache.drill.exec.store.AbstractSchema} implementations.
+ * Contains information needed by
+ * {@link org.apache.drill.exec.store.AbstractSchema} implementations.
  */
 public class SchemaConfig {
   private final String userName;

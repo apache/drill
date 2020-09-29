@@ -20,15 +20,15 @@ package org.apache.drill.exec.physical.impl.join;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.categories.OperatorTest;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.LateralJoinPOP;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.planner.common.DrillLateralJoinRelBase;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
@@ -55,7 +55,6 @@ import static org.junit.Assert.assertTrue;
 
 @Category(OperatorTest.class)
 public class TestLateralJoinCorrectness extends SubOperatorTest {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestNestedNotYet.class);
 
   // Operator Context for mock batch
   private static OperatorContext operatorContext;
@@ -155,8 +154,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
    * @return
    */
   private boolean isTerminal(RecordBatch.IterOutcome outcome) {
-    return (outcome == RecordBatch.IterOutcome.NONE || outcome == RecordBatch.IterOutcome.STOP)
-      || (outcome == RecordBatch.IterOutcome.OUT_OF_MEMORY);
+    return (outcome == RecordBatch.IterOutcome.NONE);
   }
 
   /**
@@ -1361,98 +1359,6 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     }
   }
 
-  @Test
-  public void testHandlingOOMFromLeft() throws Exception {
-    // Get the left container with dummy data for Lateral Join
-    leftContainer.add(nonEmptyLeftRowSet.container());
-
-    // Get the left IterOutcomes for Lateral Join
-    leftOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
-    leftOutcomes.add(RecordBatch.IterOutcome.OUT_OF_MEMORY);
-
-    // Create Left MockRecordBatch
-    final CloseableRecordBatch leftMockBatch = new MockRecordBatch(fixture.getFragmentContext(), operatorContext,
-      leftContainer, leftOutcomes, leftContainer.get(0).getSchema());
-
-    // Get the right container with dummy data
-    rightContainer.add(emptyRightRowSet.container());
-    rightContainer.add(nonEmptyRightRowSet.container());
-
-    rightOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
-    rightOutcomes.add(RecordBatch.IterOutcome.EMIT);
-
-    final CloseableRecordBatch rightMockBatch = new MockRecordBatch(fixture.getFragmentContext(), operatorContext,
-      rightContainer, rightOutcomes, rightContainer.get(0).getSchema());
-
-    final LateralJoinBatch ljBatch = new LateralJoinBatch(ljPopConfig, fixture.getFragmentContext(),
-      leftMockBatch, rightMockBatch);
-
-    try {
-      int totalRecordCount = 0;
-      assertTrue(RecordBatch.IterOutcome.OK_NEW_SCHEMA == ljBatch.next());
-
-      // 1st output batch
-      assertTrue(RecordBatch.IterOutcome.OK == ljBatch.next());
-      totalRecordCount += ljBatch.getRecordCount();
-
-      // 2nd output batch
-      assertTrue(RecordBatch.IterOutcome.OUT_OF_MEMORY == ljBatch.next());
-
-      // Compare the total records generated in 2 output batches with expected count.
-      assertTrue(totalRecordCount ==
-        (nonEmptyLeftRowSet.rowCount() * nonEmptyRightRowSet.rowCount()));
-    } catch (AssertionError | Exception error) {
-      fail();
-    } finally {
-      // Close all the resources for this test case
-      ljBatch.close();
-      leftMockBatch.close();
-      rightMockBatch.close();
-    }
-  }
-
-  @Test
-  public void testHandlingOOMFromRight() throws Exception {
-    // Get the left container with dummy data for Lateral Join
-    leftContainer.add(nonEmptyLeftRowSet.container());
-
-    // Get the left IterOutcomes for Lateral Join
-    leftOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
-    leftOutcomes.add(RecordBatch.IterOutcome.OK);
-
-    // Create Left MockRecordBatch
-    final CloseableRecordBatch leftMockBatch = new MockRecordBatch(fixture.getFragmentContext(), operatorContext,
-      leftContainer, leftOutcomes, leftContainer.get(0).getSchema());
-
-    // Get the right container with dummy data
-    rightContainer.add(emptyRightRowSet.container());
-    rightContainer.add(nonEmptyRightRowSet.container());
-
-    rightOutcomes.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
-    rightOutcomes.add(RecordBatch.IterOutcome.OUT_OF_MEMORY);
-
-    final CloseableRecordBatch rightMockBatch = new MockRecordBatch(fixture.getFragmentContext(), operatorContext,
-      rightContainer, rightOutcomes, rightContainer.get(0).getSchema());
-
-    final LateralJoinBatch ljBatch = new LateralJoinBatch(ljPopConfig, fixture.getFragmentContext(),
-      leftMockBatch, rightMockBatch);
-
-    try {
-      // int totalRecordCount = 0;
-      assertTrue(RecordBatch.IterOutcome.OK_NEW_SCHEMA == ljBatch.next());
-
-      // 2nd output batch
-      assertTrue(RecordBatch.IterOutcome.OUT_OF_MEMORY == ljBatch.next());
-    } catch (AssertionError | Exception error) {
-      fail();
-    } finally {
-      // Close all the resources for this test case
-      ljBatch.close();
-      leftMockBatch.close();
-      rightMockBatch.close();
-    }
-  }
-
   /**
    * Test to check basic left lateral join is working correctly or not. We create a left batch with one and
    * corresponding right batch with zero rows and check if output still get's populated with left side of data or not.
@@ -2556,9 +2462,10 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     try {
       ljBatch.next();
       fail();
+    } catch (UserException e) {
+      assertEquals(ErrorType.UNSUPPORTED_OPERATION, e.getErrorType());
     } catch (AssertionError | Exception error) {
-      assertTrue(error instanceof DrillRuntimeException);
-      assertTrue(error.getCause() instanceof SchemaChangeException);
+      fail();
     } finally {
       // Close all the resources for this test case
       ljBatch.close();

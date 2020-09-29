@@ -26,7 +26,6 @@ import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -196,7 +195,6 @@ public class TestPushDownAndPruningForVarchar extends ClusterTest {
     }
   }
 
-  @Ignore("Statistics for VARCHAR that has all nulls is not available (PARQUET-1341). Requires upgrade to Parquet 1.11.0.")
   @Test
   public void testNewFilesPruningWithNullPartition() throws Exception {
     String table = "dfs.`tmp`.`varchar_pruning_new_with_null_partition`";

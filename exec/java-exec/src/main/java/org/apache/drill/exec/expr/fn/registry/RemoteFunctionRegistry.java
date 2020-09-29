@@ -43,6 +43,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -84,7 +86,7 @@ import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 public class RemoteFunctionRegistry implements AutoCloseable {
 
   private static final String REGISTRY_PATH = "registry";
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteFunctionRegistry.class);
+  private static final Logger logger = LoggerFactory.getLogger(RemoteFunctionRegistry.class);
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
 
   private final TransientStoreListener unregistrationListener;
@@ -226,7 +228,8 @@ public class RemoteFunctionRegistry implements AutoCloseable {
     try {
       this.fs = FileSystem.get(conf);
     } catch (IOException e) {
-      DrillRuntimeException.format(e, "Error during file system %s setup", conf.get(FileSystem.FS_DEFAULT_NAME_KEY));
+      throw DrillRuntimeException.create(e,
+          "Error during file system %s setup", conf.get(FileSystem.FS_DEFAULT_NAME_KEY));
     }
 
     String root = fs.getHomeDirectory().toUri().getPath();
@@ -259,7 +262,7 @@ public class RemoteFunctionRegistry implements AutoCloseable {
       FileStatus fileStatus = fs.getFileStatus(path);
       Preconditions.checkState(fileStatus.isDirectory(), "Area [%s] must be a directory", fullPath);
       FsPermission permission = fileStatus.getPermission();
-      // It is considered that process user has write rights on directory if:
+      // The process user has write rights on directory if:
       // 1. process user is owner of the directory and has write rights
       // 2. process user is in group that has write rights
       // 3. any user has write rights
@@ -276,8 +279,8 @@ public class RemoteFunctionRegistry implements AutoCloseable {
       if (e instanceof DrillRuntimeException) {
         throw (DrillRuntimeException) e;
       }
-      // throws
-      DrillRuntimeException.format(e, "Error during udf area creation [%s] on file system [%s]", fullPath, fs.getUri());
+      throw DrillRuntimeException.create(e,
+          "Error during udf area creation [%s] on file system [%s]", fullPath, fs.getUri());
     }
     logger.info("Created remote udf area [{}] on file system [{}]", fullPath, fs.getUri());
     return path;
@@ -300,5 +303,4 @@ public class RemoteFunctionRegistry implements AutoCloseable {
     REGISTRATION,
     UNREGISTRATION
   }
-
 }

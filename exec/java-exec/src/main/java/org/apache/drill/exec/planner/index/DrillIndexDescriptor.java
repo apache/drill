@@ -25,11 +25,15 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.IndexGroupScan;
 import org.apache.drill.exec.planner.cost.PluginCost;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
 
 public class DrillIndexDescriptor extends AbstractIndexDescriptor {
+
+  private static final Logger logger = LoggerFactory.getLogger(DrillIndexDescriptor.class);
 
   /**
    * The name of Drill's Storage Plugin on which the Index was stored

@@ -18,7 +18,7 @@
 package org.apache.drill.exec.physical.impl.scan.columns;
 
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn;
-import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
+import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
 
 public class UnresolvedColumnsArrayColumn extends AbstractUnresolvedColumn {
 

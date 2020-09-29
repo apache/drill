@@ -43,7 +43,7 @@ public class FileMetadataColumn extends MetadataColumn {
    */
   public FileMetadataColumn(String name, FileMetadataColumnDefn defn,
       FileMetadata fileInfo, VectorSource source, int sourceIndex) {
-    super(name, defn.dataType(), defn.defn.getValue(fileInfo.filePath()), source, sourceIndex);
+    super(name, defn.dataType(), fileInfo.getImplicitColumnValue(defn.defn), source, sourceIndex);
     this.defn = defn;
   }
 

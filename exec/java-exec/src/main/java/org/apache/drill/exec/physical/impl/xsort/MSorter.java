@@ -24,14 +24,19 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
-// TODO:  Doc.:  What's an MSorter?  A sorter for merge join?  something else?
-// (What's the "M" part?  Actually, rename interface to clearer.
+/**
+ * In-memory sorter. Takes a list of batches as input, produces a selection
+ * vector 4, with sorted results, as output.
+ */
 public interface MSorter {
-  public void setup(FragmentContext context, BufferAllocator allocator, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException;
-  public void sort(VectorContainer container);
-  public SelectionVector4 getSV4();
+  TemplateClassDefinition<MSorter> TEMPLATE_DEFINITION =
+      new TemplateClassDefinition<MSorter>(MSorter.class, MSortTemplate.class);
 
-  public static TemplateClassDefinition<MSorter> TEMPLATE_DEFINITION = new TemplateClassDefinition<MSorter>(MSorter.class, MSortTemplate.class);
-
-  public void clear();
+  void setup(FragmentContext context, BufferAllocator allocator,
+                    SelectionVector4 vector4, VectorContainer hyperBatch,
+                    int outputBatchSize, int desiredBatchSize)
+                        throws SchemaChangeException;
+  void sort();
+  SelectionVector4 getSV4();
+  void clear();
 }

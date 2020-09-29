@@ -24,7 +24,6 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 
 /**
@@ -34,10 +33,10 @@ import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 
 public final class RowSetBuilder {
 
-  private DirectRowSet rowSet;
-  private RowSetWriter writer;
+  private final DirectRowSet rowSet;
+  private final RowSetWriter writer;
   private boolean withSv2;
-  private Set<Integer> skipIndices = new HashSet<>();
+  private final Set<Integer> skipIndices = new HashSet<>();
 
   /**
    * Creates a {@link RowSetBuilder}. Since {@link BatchSchema} does not handle complex types well, this has been deprecated in favor of the other constructors.
@@ -48,26 +47,16 @@ public final class RowSetBuilder {
    */
   @Deprecated
   public RowSetBuilder(BufferAllocator allocator, BatchSchema schema) {
-    this(allocator, MetadataUtils.fromFields(schema), DirectRowSet.INITIAL_ROW_COUNT, null);
+    this(allocator, MetadataUtils.fromFields(schema), DirectRowSet.INITIAL_ROW_COUNT);
   }
 
   public RowSetBuilder(BufferAllocator allocator, TupleMetadata schema) {
-    this(allocator, schema, DirectRowSet.INITIAL_ROW_COUNT, null);
-  }
-
-  public RowSetBuilder(BufferAllocator allocator, TupleMetadata schema,
-      ColumnConversionFactory conversionFactory) {
-    this(allocator, schema, DirectRowSet.INITIAL_ROW_COUNT, conversionFactory);
+    this(allocator, schema, DirectRowSet.INITIAL_ROW_COUNT);
   }
 
   public RowSetBuilder(BufferAllocator allocator, TupleMetadata schema, int capacity) {
-    this(allocator, schema, capacity, null);
-  }
-
-  public RowSetBuilder(BufferAllocator allocator, TupleMetadata schema,
-      int capacity, ColumnConversionFactory conversionFactory) {
     rowSet = DirectRowSet.fromSchema(allocator, schema);
-    writer = rowSet.writer(capacity, conversionFactory);
+    writer = rowSet.writer(capacity);
   }
 
   public static RowSet emptyBatch(BufferAllocator allocator, TupleMetadata schema) {
@@ -89,7 +78,6 @@ public final class RowSetBuilder {
    *                               becomes full. This method is designed to be used in tests where we will
    *                               seldom create a full vector of data.
    */
-
   public RowSetBuilder addRow(Object... values) {
     writer.addRow(values);
     return this;

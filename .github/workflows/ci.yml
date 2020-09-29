@@ -1,0 +1,112 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# This workflow is triggered for each push event to the master branch or pull request.
+# It contains two jobs:
+# - "Main Build" job runs all unit tests jor two LTS java versions and the latest Java version.
+# - "Run checkstyle and generate protobufs" job builds Drill and checks its license,
+# builds Drill native client and regenerates protobufs to ensure that committed files are up-to-date.
+name: Github CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Main Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      matrix:
+        # Java versions to run unit tests
+        java: [ '1.8', '11', '14' ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      # Caches maven cache and uses hashes of pom.xml files to find the required cache
+      - name: Cache Maven Repository
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+              ${{ runner.os }}-maven-
+      # Caches MySQL directory used for JDBC storage plugin tests
+      - name: Cache MySQL
+        uses: actions/cache@v1
+        with:
+          path: ~/.embedmysql
+          key: ${{ runner.os }}-mysql
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Build and test
+        run: mvn install
+
+  checkstyle_protobuf:
+    name: Run checkstyle and generate protobufs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Cache Maven Repository
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      # Caches built protobuf library
+      - name: Cache protobufs
+        uses: actions/cache@v1
+        with:
+          path: ~/protobuf
+          key: ${{ runner.os }}-protobuf
+      # Install libraries required for protobuf generation
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y libboost-all-dev libzookeeper-mt-dev libsasl2-dev cmake libcppunit-dev checkinstall && \
+          pushd .. && \
+          if [ -f $HOME/protobuf/protobuf_3.11.1* ]; then \
+            sudo dpkg -i $HOME/protobuf/protobuf_3.11.1*; \
+          else \
+            wget https://github.com/protocolbuffers/protobuf/releases/download/v3.11.1/protobuf-java-3.11.1.zip && \
+            unzip protobuf-java-3.11.1.zip && pushd protobuf-3.11.1 && \
+            ./configure && sudo make && sudo checkinstall -y && \
+            if [ ! -d $HOME/protobuf ]; then \
+              mkdir -p $HOME/protobuf; \
+            fi && \
+            mv protobuf_3.11.1* $HOME/protobuf/ && popd; \
+          fi && \
+          sudo ldconfig && popd; \
+      # Builds Drill project, performs license checkstyle goal and regenerates java and C++ protobuf files
+      - name: Build
+        run: |
+          MAVEN_OPTS="-Xms1G -Xmx1G" mvn install -Drat.skip=false -Dlicense.skip=false --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true && \
+          pushd protocol && mvn process-sources -P proto-compile && popd && \
+          mkdir contrib/native/client/build && pushd contrib/native/client/build && cmake -G "Unix Makefiles" .. && make cpProtobufs && popd; \
+      # Checks whether project files weren't changed after regenerating protobufs
+      - name: Check protobufs
+        run: |
+          if [ "$(git status -s | grep -c "")" -gt 0 ]; then \
+            echo "The following changes are found in files after regenerating protobufs (output may be used as a patchto apply):" >&2 &&
+            echo "$(git diff --color)" && \
+            exit 1; \
+          else
+            echo "All checks are passed!";
+          fi

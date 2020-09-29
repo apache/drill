@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.scan.file;
 
 import org.apache.drill.exec.store.ColumnExplorer;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 /**
@@ -31,9 +32,15 @@ public class FileMetadata {
 
   private final Path filePath;
   private final String[] dirPath;
+  private final FileSystem fs;
 
   public FileMetadata(Path filePath, Path selectionRoot) {
+    this(filePath, selectionRoot, null);
+  }
+
+  public FileMetadata(Path filePath, Path selectionRoot, FileSystem fs) {
     this.filePath = filePath;
+    this.fs = fs;
 
     // If the data source is not a file, no file metadata is available.
 
@@ -74,4 +81,8 @@ public class FileMetadata {
   }
 
   public boolean isSet() { return filePath != null; }
+
+  public String getImplicitColumnValue(ColumnExplorer.ImplicitFileColumn column) {
+    return ColumnExplorer.getImplicitColumnValue(column, filePath, fs);
+  }
 }

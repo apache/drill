@@ -20,6 +20,7 @@ package org.apache.drill.common.expression;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Objects;
 
 import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
@@ -155,8 +156,7 @@ public class SchemaPath extends LogicalExpressionBase {
    * @return un-indexed schema path
    */
   public SchemaPath getUnIndexed() {
-    NameSegment nameSegment = getUnIndexedNameSegment(rootSegment, null);
-    return new SchemaPath(nameSegment);
+    return new SchemaPath(getUnIndexedNameSegment(rootSegment, null));
   }
 
   /**
@@ -322,6 +322,27 @@ public class SchemaPath extends LogicalExpressionBase {
     return rootSegment;
   }
 
+  public String getAsUnescapedPath() {
+    StringBuilder sb = new StringBuilder();
+    PathSegment seg = getRootSegment();
+    if (seg.isArray()) {
+      throw new IllegalStateException("Drill doesn't currently support top level arrays");
+    }
+    sb.append(seg.getNameSegment().getPath());
+
+    while ( (seg = seg.getChild()) != null) {
+      if (seg.isNamed()) {
+        sb.append('.');
+        sb.append(seg.getNameSegment().getPath());
+      } else {
+        sb.append('[');
+        sb.append(seg.getArraySegment().getIndex());
+        sb.append(']');
+      }
+    }
+    return sb.toString();
+  }
+
   @Override
   public MajorType getMajorType() {
     return Types.LATE_BIND_TYPE;
@@ -334,36 +355,13 @@ public class SchemaPath extends LogicalExpressionBase {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (!(obj instanceof SchemaPath)) {
-      return false;
-    }
-
-    SchemaPath other = (SchemaPath) obj;
-    if (rootSegment == null) {
-      return (other.rootSegment == null);
-    }
-    return rootSegment.equals(other.rootSegment);
+    return this == obj || obj instanceof SchemaPath
+        && Objects.equals(rootSegment, ((SchemaPath) obj).rootSegment);
   }
 
-  public boolean contains(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (!(obj instanceof SchemaPath)) {
-      return false;
-    }
-
-    SchemaPath other = (SchemaPath) obj;
-    return rootSegment == null || rootSegment.contains(other.rootSegment);
+  public boolean contains(SchemaPath path) {
+    return this == path || path != null
+        && (rootSegment == null || rootSegment.contains(path.rootSegment));
   }
 
   @Override

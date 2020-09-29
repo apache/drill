@@ -28,13 +28,14 @@ import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 public interface Prel extends DrillRelNode, Iterable<Prel> {
-  org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Prel.class);
 
   Convention DRILL_PHYSICAL = new Convention.Impl("PHYSICAL", Prel.class) {
+    @Override
     public boolean canConvertConvention(Convention toConvention) {
       return true;
     }
 
+    @Override
     public boolean useAbstractConvertersForConversion(RelTraitSet fromTraits,
         RelTraitSet toTraits) {
       return true;
@@ -50,6 +51,7 @@ public interface Prel extends DrillRelNode, Iterable<Prel> {
    * of its child Prel
    */
   SelectionVectorMode[] getSupportedEncodings();
+
   /**
    * A Prel's own SelectionVector mode - i.e whether it generates an SV2, SV4 or None
    */
@@ -66,5 +68,4 @@ public interface Prel extends DrillRelNode, Iterable<Prel> {
     throw new UnsupportedOperationException("Adding Implicit RowID column is not supported for " +
             this.getClass().getSimpleName() + " operator ");
   }
-
 }

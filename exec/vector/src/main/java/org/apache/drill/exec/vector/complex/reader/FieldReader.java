@@ -26,15 +26,4 @@ import org.apache.drill.exec.vector.complex.reader.BaseReader.DictReader;
 import org.apache.drill.exec.vector.complex.reader.BaseReader.ScalarReader;
 
 public interface FieldReader extends MapReader, DictReader, ListReader, ScalarReader, RepeatedMapReader, RepeatedListReader, UntypedReader {
-
-  /**
-   * Returns {@code String} representation of the reader's type. In case if {@link #getType()} is primitive,
-   * the method is equivalent to {@link #getType().getMinorType().name()}. If the reader has minor type equal to
-   * {@link org.apache.drill.common.types.TypeProtos.MinorType#DICT}, {@code DICT&lt;keyMinorType,valueMinorType&gt;},
-   * with {@code keyMinorType} and {@code valueMinorType} being key's and value's minor types respectively,
-   * will be returned. Used in {@code typeOf} UDF.
-   *
-   * @return {@code String} representation of reader's type.
-   */
-  String getTypeString();
 }

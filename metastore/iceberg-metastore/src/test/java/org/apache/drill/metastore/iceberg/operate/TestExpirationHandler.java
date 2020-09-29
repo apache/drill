@@ -17,127 +17,98 @@
  */
 package org.apache.drill.metastore.iceberg.operate;
 
+import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.metastore.components.tables.TableMetadataUnit;
+import org.apache.drill.metastore.components.tables.Tables;
 import org.apache.drill.metastore.iceberg.IcebergBaseTest;
+import org.apache.drill.metastore.iceberg.IcebergMetastore;
+import org.apache.drill.metastore.iceberg.components.tables.IcebergTables;
 import org.apache.drill.metastore.iceberg.config.IcebergConfigConstants;
-import org.apache.drill.metastore.iceberg.exceptions.IcebergMetastoreException;
-import org.apache.iceberg.Table;
+import org.apache.iceberg.TableProperties;
 import org.junit.Test;
 
-import java.util.concurrent.TimeUnit;
+import java.io.File;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class TestExpirationHandler extends IcebergBaseTest {
 
   @Test
-  public void testConfigEmpty() {
-    ExpirationHandler expirationHandler = new ExpirationHandler(DrillConfig.create(), baseHadoopConfig());
-    assertEquals(0, expirationHandler.expirationPeriod());
+  public void testNoExpiration() {
+    IcebergTables tables = tables("no-expiration", false, 2);
+
+    // check that there is no history
+    assertEquals(0, tables.table().history().size());
+
+    int operationsNumber = 5;
+    execute(tables, operationsNumber);
+
+    // check that the number of executed operations is same as number of history records
+    assertEquals(operationsNumber, tables.table().history().size());
   }
 
   @Test
-  public void testConfigOneUnit() {
-    DrillConfig config = new DrillConfig(DrillConfig.create()
-      .withValue(IcebergConfigConstants.EXPIRATION_PERIOD + ".hours",
-        ConfigValueFactory.fromAnyRef(5)));
-    ExpirationHandler expirationHandler = new ExpirationHandler(config, baseHadoopConfig());
-    assertEquals(TimeUnit.HOURS.toMillis(5), expirationHandler.expirationPeriod());
+  public void testExpiration() {
+    int retainNumber = 3;
+    IcebergTables tables = tables("expiration", true, retainNumber);
+
+    // check that there is no history
+    assertEquals(0, tables.table().history().size());
+
+    execute(tables, 5);
+
+    // check that number of history records corresponds to the expected retain number
+    assertEquals(retainNumber, tables.table().history().size());
   }
 
   @Test
-  public void testConfigSeveralUnits() {
-    DrillConfig config = new DrillConfig(DrillConfig.create()
-      .withValue(IcebergConfigConstants.EXPIRATION_PERIOD + ".hours",
-        ConfigValueFactory.fromAnyRef(5))
-      .withValue(IcebergConfigConstants.EXPIRATION_PERIOD + ".minutes",
-        ConfigValueFactory.fromAnyRef(10)));
-    ExpirationHandler expirationHandler = new ExpirationHandler(config, baseHadoopConfig());
-    assertEquals(TimeUnit.HOURS.toMillis(5) + TimeUnit.MINUTES.toMillis(10),
-      expirationHandler.expirationPeriod());
+  public void testSubsequentExpiration() {
+    String name = "subsequent-expiration";
+    int retainNumber = 2;
+    int operationsNumber = 5;
+
+    IcebergTables initialTables = tables(name, false, retainNumber);
+
+    execute(initialTables, operationsNumber);
+
+    // check that number of executed operations is the same as number of history records
+    assertEquals(operationsNumber, initialTables.table().history().size());
+
+    // update table configuration, allow expiration
+    IcebergTables updatedTables = tables(name, true, retainNumber);
+
+    // check that number of history operation did not change
+    assertEquals(operationsNumber, updatedTables.table().history().size());
+
+    execute(updatedTables, operationsNumber);
+
+    // check that number of history records corresponds to the expected retain number
+    assertEquals(retainNumber, updatedTables.table().history().size());
   }
 
-  @Test
-  public void testConfigNegativeValue() {
-    DrillConfig config = new DrillConfig(DrillConfig.create()
-      .withValue(IcebergConfigConstants.EXPIRATION_PERIOD + ".hours",
-        ConfigValueFactory.fromAnyRef(-5)));
-    ExpirationHandler expirationHandler = new ExpirationHandler(config, baseHadoopConfig());
-    assertEquals(TimeUnit.HOURS.toMillis(-5), expirationHandler.expirationPeriod());
+  private IcebergTables tables(String name, boolean shouldExpire, int retainNumber) {
+    Config config = baseIcebergConfig(new File(defaultFolder.getRoot(), name))
+      .withValue(IcebergConfigConstants.COMPONENTS_COMMON_PROPERTIES + "." + TableProperties.METADATA_PREVIOUS_VERSIONS_MAX,
+        ConfigValueFactory.fromAnyRef(retainNumber))
+      .withValue(IcebergConfigConstants.COMPONENTS_COMMON_PROPERTIES + "." + TableProperties.METADATA_DELETE_AFTER_COMMIT_ENABLED,
+        ConfigValueFactory.fromAnyRef(shouldExpire));
+    DrillConfig drillConfig = new DrillConfig(config);
+    return (IcebergTables) new IcebergMetastore(drillConfig).tables();
   }
 
-  @Test
-  public void testConfigIncorrectUnit() {
-    DrillConfig config = new DrillConfig(DrillConfig.create()
-      .withValue(IcebergConfigConstants.EXPIRATION_PERIOD + ".hour",
-        ConfigValueFactory.fromAnyRef(5)));
-
-    thrown.expect(IcebergMetastoreException.class);
-    new ExpirationHandler(config, baseHadoopConfig());
-  }
-
-  @Test
-  public void testConfigIncorrectValue() {
-    DrillConfig config = new DrillConfig(DrillConfig.create()
-      .withValue(IcebergConfigConstants.EXPIRATION_PERIOD + ".hours",
-        ConfigValueFactory.fromAnyRef("abc")));
-
-    thrown.expect(IcebergMetastoreException.class);
-    new ExpirationHandler(config, baseHadoopConfig());
-  }
-
-  @Test
-  public void testExpireZeroExpirationPeriod() {
-    DrillConfig config = new DrillConfig(DrillConfig.create()
-      .withValue(IcebergConfigConstants.EXPIRATION_PERIOD + ".millis",
-        ConfigValueFactory.fromAnyRef(0)));
-
-    ExpirationHandler expirationHandler = new ExpirationHandler(config, baseHadoopConfig());
-    Table table = mock(Table.class);
-    assertFalse(expirationHandler.expire(table));
-  }
-
-  @Test
-  public void testExpireNegativeExpirationPeriod() {
-    DrillConfig config = new DrillConfig(DrillConfig.create()
-      .withValue(IcebergConfigConstants.EXPIRATION_PERIOD + ".millis",
-        ConfigValueFactory.fromAnyRef(-10)));
-
-    ExpirationHandler expirationHandler = new ExpirationHandler(config, baseHadoopConfig());
-    Table table = mock(Table.class);
-    assertFalse(expirationHandler.expire(table));
-  }
-
-  @Test
-  public void testExpireFirstTime() {
-    DrillConfig config = new DrillConfig(DrillConfig.create()
-      .withValue(IcebergConfigConstants.EXPIRATION_PERIOD + ".millis",
-        ConfigValueFactory.fromAnyRef(1)));
-
-    ExpirationHandler expirationHandler = new ExpirationHandler(config, baseHadoopConfig());
-
-    Table table = mock(Table.class);
-    when(table.location()).thenReturn("/tmp/table");
-
-    assertFalse(expirationHandler.expire(table));
-  }
-
-  @Test
-  public void testExpireBefore() {
-    DrillConfig config = new DrillConfig(DrillConfig.create()
-      .withValue(IcebergConfigConstants.EXPIRATION_PERIOD + ".days",
-        ConfigValueFactory.fromAnyRef(1)));
-
-    ExpirationHandler expirationHandler = new ExpirationHandler(config, baseHadoopConfig());
-
-    Table table = mock(Table.class);
-    when(table.location()).thenReturn("/tmp/table");
-
-    assertFalse(expirationHandler.expire(table));
-    assertFalse(expirationHandler.expire(table));
+  private void execute(Tables tables, int operationsNumber) {
+    IntStream.range(0, operationsNumber)
+      .mapToObj(i -> TableMetadataUnit.builder()
+        .storagePlugin("dfs")
+        .workspace("tmp")
+        .tableName("nation")
+        .metadataKey("dir" + i)
+        .build())
+      .forEach(table -> tables.modify()
+        .overwrite(table)
+        .execute());
   }
 }

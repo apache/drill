@@ -24,11 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import java.util.Properties;
 
-
 public class SSLConfigBuilder {
-
-  private static final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(org.apache.drill.exec.ssl.SSLConfigBuilder.class);
 
   private DrillConfig config = null;
   private Configuration hadoopConfig = null;
@@ -36,10 +32,6 @@ public class SSLConfigBuilder {
   private SSLConfig.Mode mode = SSLConfig.Mode.SERVER;
   private boolean initializeSSLContext = false;
   private boolean validateKeyStore = false;
-
-  public SSLConfigBuilder() {
-
-  }
 
   public SSLConfig build() throws DrillException {
     if (mode == SSLConfig.Mode.SERVER && config == null) {
@@ -50,12 +42,12 @@ public class SSLConfigBuilder {
     if (mode == SSLConfig.Mode.SERVER) {
       sslConfig = new SSLConfigServer(config, hadoopConfig);
     } else {
-      sslConfig = new SSLConfigClient(properties);
+      sslConfig = new SSLConfigClient(properties, hadoopConfig);
     }
-    if(validateKeyStore){
+    if (validateKeyStore) {
       sslConfig.validateKeyStore();
     }
-    if(initializeSSLContext){
+    if (initializeSSLContext) {
       sslConfig.initContext();
     }
     return sslConfig;

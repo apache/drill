@@ -21,23 +21,28 @@ import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.WindowPOP;
+import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.List;
 
 
 /**
- * WindowFramer implementation that supports the FRAME clause.
- * <br>According to the SQL specification, FIRST_VALUE, LAST_VALUE and all aggregate functions support the FRAME clause.
- * This class will handle such functions even if the FRAME clause is not present.
+ * WindowFramer implementation that supports the FRAME clause. <br>
+ * According to the SQL specification, FIRST_VALUE, LAST_VALUE and all aggregate
+ * functions support the FRAME clause. This class will handle such functions
+ * even if the FRAME clause is not present.
  */
 public abstract class FrameSupportTemplate implements WindowFramer {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NoFrameSupportTemplate.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(FrameSupportTemplate.class);
 
   private VectorContainer container;
   private VectorContainer internal;
@@ -87,7 +92,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
    * processes all rows of the first batch.
    */
   @Override
-  public void doWork() throws DrillException {
+  public void doWork() throws SchemaChangeException {
     int currentRow = 0;
 
     this.current = batches.get(0);
@@ -141,7 +146,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
    * @return index of next unprocessed row
    * @throws DrillException if it can't write into the container
    */
-  private int processPartition(final int currentRow) throws DrillException {
+  private int processPartition(final int currentRow) throws SchemaChangeException {
     logger.trace("{} rows remaining to process, currentRow: {}, outputCount: {}", remainingRows, currentRow, outputCount);
 
     setupWriteFirstValue(internal, container);
@@ -153,7 +158,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
     }
   }
 
-  private int processROWS(int row) throws DrillException {
+  private int processROWS(int row) throws SchemaChangeException {
     //TODO (DRILL-4413) we only need to call these once per batch
     setupEvaluatePeer(current, container);
     setupReadLastValue(current, container);
@@ -172,7 +177,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
     return row;
   }
 
-  private int processRANGE(int row) throws DrillException {
+  private int processRANGE(int row) throws SchemaChangeException {
     while (row < outputCount && !isPartitionDone()) {
       if (remainingPeers == 0) {
         // because all peer rows share the same frame, we only need to compute and aggregate the frame once
@@ -196,8 +201,10 @@ public abstract class FrameSupportTemplate implements WindowFramer {
   }
 
   /**
-   * updates partition's length after computing the number of rows for the current the partition starting at the specified
-   * row of the first batch. If !requiresFullPartition, this method will only count the rows in the current batch
+   * Updates partition's length after computing the number of rows for the
+   * current the partition starting at the specified row of the first batch. If
+   * !requiresFullPartition, this method will only count the rows in the current
+   * batch
    */
   private void updatePartitionSize(final int start) {
     logger.trace("compute partition size starting from {} on {} batches", start, batches.size());
@@ -242,12 +249,11 @@ public abstract class FrameSupportTemplate implements WindowFramer {
   }
 
   /**
-   * aggregates all peer rows of current row
+   * Aggregates all peer rows of current row
    * @param start starting row of the current frame
    * @return num peer rows for current row
-   * @throws SchemaChangeException
    */
-  private long aggregatePeers(final int start) throws SchemaChangeException {
+  private long aggregatePeers(final int start) {
     logger.trace("aggregating rows starting from {}", start);
 
     final boolean unboundedFollowing = popConfig.getEnd().isUnbounded();
@@ -257,7 +263,11 @@ public abstract class FrameSupportTemplate implements WindowFramer {
     // a single frame can include rows from multiple batches
     // start processing first batch and, if necessary, move to next batches
     for (WindowDataBatch batch : batches) {
-      setupEvaluatePeer(batch, container);
+      try {
+        setupEvaluatePeer(batch, container);
+      } catch (SchemaChangeException e) {
+        throw AbstractRecordBatch.schemaChangeException(e, "Window", logger);
+      }
       final int recordCount = batch.getRecordCount();
 
       // for every remaining row in the partition, count it if it's a peer row
@@ -278,7 +288,11 @@ public abstract class FrameSupportTemplate implements WindowFramer {
       }
     }
 
-    setupReadLastValue(last, container);
+    try {
+      setupReadLastValue(last, container);
+    } catch (SchemaChangeException e) {
+      throw AbstractRecordBatch.schemaChangeException(e, "Window", logger);
+    }
 
     return length;
   }
@@ -351,6 +365,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
    * @param b2 batch for second row
    * @return true if the rows are in the same partition
    */
+  @Override
   public abstract boolean isSamePartition(@Named("b1Index") int b1Index, @Named("b1") VectorAccessible b1,
                                           @Named("b2Index") int b2Index, @Named("b2") VectorAccessible b2);
 
@@ -363,6 +378,7 @@ public abstract class FrameSupportTemplate implements WindowFramer {
    * @param b2 batch for second row
    * @return true if the rows are in the same partition
    */
+  @Override
   public abstract boolean isPeer(@Named("b1Index") int b1Index, @Named("b1") VectorAccessible b1,
                                  @Named("b2Index") int b2Index, @Named("b2") VectorAccessible b2);
 }

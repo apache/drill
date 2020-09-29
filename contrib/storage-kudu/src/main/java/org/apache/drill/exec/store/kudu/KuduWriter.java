@@ -32,7 +32,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class KuduWriter extends AbstractWriter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduWriter.class);
 
   private final KuduStoragePlugin plugin;
   private final String name;
@@ -44,7 +43,7 @@ public class KuduWriter extends AbstractWriter {
       @JsonProperty("storage") StoragePluginConfig storageConfig,
       @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
     super(child);
-    this.plugin = (KuduStoragePlugin) engineRegistry.getPlugin(storageConfig);
+    this.plugin = engineRegistry.resolve(storageConfig, KuduStoragePlugin.class);
     this.name = name;
   }
 

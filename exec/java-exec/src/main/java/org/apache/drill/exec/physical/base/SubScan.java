@@ -19,8 +19,9 @@ package org.apache.drill.exec.physical.base;
 
 
 /**
- * A SubScan operator represents the data scanned by a particular major/minor fragment.  This is in contrast to
- * a GroupScan operator, which represents all data scanned by a physical plan.
+ * A SubScan operator represents the data scanned by a particular major/minor
+ * fragment. This is in contrast to a GroupScan operator, which represents all
+ * data scanned by a physical plan.
  */
 public interface SubScan extends Scan {
 }

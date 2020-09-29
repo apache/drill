@@ -18,7 +18,7 @@
 package org.apache.drill.metastore.iceberg.components.tables;
 
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
-import org.apache.drill.metastore.iceberg.MetastoreContext;
+import org.apache.drill.metastore.iceberg.IcebergMetastoreContext;
 import org.apache.drill.metastore.iceberg.transform.InputDataTransformer;
 import org.apache.drill.metastore.iceberg.transform.OperationTransformer;
 import org.apache.drill.metastore.iceberg.transform.OutputDataTransformer;
@@ -33,9 +33,9 @@ import org.apache.iceberg.Table;
  */
 public class TablesTransformer implements Transformer<TableMetadataUnit> {
 
-  private final MetastoreContext<TableMetadataUnit> context;
+  private final IcebergMetastoreContext<TableMetadataUnit> context;
 
-  public TablesTransformer(MetastoreContext<TableMetadataUnit> context) {
+  public TablesTransformer(IcebergMetastoreContext<TableMetadataUnit> context) {
     this.context = context;
   }
 

@@ -187,7 +187,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
         if (calciteOperator == SqlStdOperatorTable.UNARY_MINUS || calciteOperator == SqlStdOperatorTable.UNARY_PLUS) {
           drillOpName = calciteOperator.getName();
         } else {
-          drillOpName = FunctionCallFactory.replaceOpWithFuncName(calciteOperator.getName());
+          drillOpName = FunctionCallFactory.convertToDrillFunctionName(calciteOperator.getName());
         }
 
         final List<DrillFuncHolder> drillFuncHolders = getFunctionListWithInference(drillOpName);

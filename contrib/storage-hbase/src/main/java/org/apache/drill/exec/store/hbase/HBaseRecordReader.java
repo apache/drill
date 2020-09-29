@@ -50,13 +50,14 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class HBaseRecordReader extends AbstractRecordReader implements DrillHBaseConstants {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseRecordReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(HBaseRecordReader.class);
 
   // batch should not exceed this value to avoid OOM on a busy system
   private static final int MAX_ALLOCATED_MEMORY_PER_BATCH = 64 * 1024 * 1024; // 64 mb in bytes
@@ -72,10 +73,10 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
   private Table hTable;
   private ResultScanner resultScanner;
 
-  private TableName hbaseTableName;
-  private Scan hbaseScan;
+  private final TableName hbaseTableName;
+  private final Scan hbaseScan;
   // scan instance to capture columns for vector creation
-  private Scan hbaseScanColumnsOnly;
+  private final Scan hbaseScanColumnsOnly;
   private Set<String> completeFamilies;
   private OperatorContext operatorContext;
 

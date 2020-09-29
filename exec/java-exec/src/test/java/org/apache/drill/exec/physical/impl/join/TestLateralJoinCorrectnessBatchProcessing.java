@@ -48,7 +48,6 @@ import java.util.List;
 import static org.junit.Assert.assertTrue;
 
 public class TestLateralJoinCorrectnessBatchProcessing extends SubOperatorTest {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestNewLateralJoinCorrectness.class);
 
   // Operator Context for mock batch
   private static OperatorContext operatorContext;

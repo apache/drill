@@ -50,7 +50,7 @@ public class RestrictedMapRDBSubScan extends MapRDBSubScan {
                                  @JsonProperty("tableType") String tableType,
                                  @JsonProperty("schema") TupleMetadata schema) throws ExecutionSetupException {
     this(userName,
-        (MapRDBFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatPluginConfig),
+        engineRegistry.resolveFormat(storageConfig, formatPluginConfig, MapRDBFormatPlugin.class),
         regionScanSpecList, columns, maxRecordsToRead, tableType, schema);
   }
 

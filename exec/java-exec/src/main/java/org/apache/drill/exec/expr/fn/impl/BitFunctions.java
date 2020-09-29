@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -34,7 +35,7 @@ import org.apache.drill.exec.expr.holders.IntHolder;
  */
 public class BitFunctions {
 
-  @FunctionTemplate(names = {"booleanOr", "or", "||", "orNoShortCircuit"},
+  @FunctionTemplate(names = {FunctionNames.OR, "or", "||", "orNoShortCircuit"},
                     scope = FunctionScope.SIMPLE,
                     nulls = NullHandling.NULL_IF_NULL)
   public static class BitOr implements DrillSimpleFunc {
@@ -43,14 +44,16 @@ public class BitFunctions {
     @Param BitHolder right;
     @Output BitHolder out;
 
+    @Override
     public void setup() {}
 
+    @Override
     public void eval() {
       out.value = left.value | right.value;
     }
   }
 
-  @FunctionTemplate(names = {"booleanAnd", "and", "&&"},
+  @FunctionTemplate(names = {FunctionNames.AND, "and", "&&"},
                     scope = FunctionScope.SIMPLE,
                     nulls = NullHandling.NULL_IF_NULL)
   public static class BitAnd implements DrillSimpleFunc {
@@ -59,15 +62,17 @@ public class BitFunctions {
     @Param BitHolder right;
     @Output BitHolder out;
 
+    @Override
     public void setup() {}
 
+    @Override
     public void eval() {
       out.value = left.value & right.value;
     }
   }
 
 
-  @FunctionTemplate(names = {"xor", "^"},
+  @FunctionTemplate(names = {FunctionNames.XOR, "^"},
                     scope = FunctionScope.SIMPLE,
                     nulls = NullHandling.NULL_IF_NULL)
   public static class IntXor implements DrillSimpleFunc {
@@ -76,11 +81,12 @@ public class BitFunctions {
     @Param IntHolder right;
     @Output IntHolder out;
 
+    @Override
     public void setup() {}
 
+    @Override
     public void eval() {
       out.value = left.value ^ right.value;
     }
   }
-
 }

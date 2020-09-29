@@ -66,7 +66,7 @@ public class TestOpenTSDBPlugin extends ClusterTest {
     OpenTSDBStoragePluginConfig storagePluginConfig =
         new OpenTSDBStoragePluginConfig(String.format("http://localhost:%s", portNumber));
     storagePluginConfig.setEnabled(true);
-    pluginRegistry.createOrUpdate(OpenTSDBStoragePluginConfig.NAME, storagePluginConfig, true);
+    pluginRegistry.put(OpenTSDBStoragePluginConfig.NAME, storagePluginConfig);
   }
 
   @Before
@@ -203,7 +203,7 @@ public class TestOpenTSDBPlugin extends ClusterTest {
     OpenTSDBStoragePluginConfig storagePluginConfig =
         new OpenTSDBStoragePluginConfig(String.format("http://localhost:%s/", portNumber));
     storagePluginConfig.setEnabled(true);
-    pluginRegistry.createOrUpdate(OpenTSDBStoragePluginConfig.NAME, storagePluginConfig, true);
+    pluginRegistry.put(OpenTSDBStoragePluginConfig.NAME, storagePluginConfig);
     String query = "select * from information_schema.`views`";
     cluster.clientFixture()
         .queryBuilder()

@@ -37,7 +37,8 @@ import java.util.Map;
 
 public class HttpdParser {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HttpdParser.class);
+  private static final Logger logger = LoggerFactory.getLogger(HttpdParser.class);
+
   public static final String PARSER_WILDCARD = ".*";
   public static final String SAFE_WILDCARD = "_$";
   public static final String SAFE_SEPARATOR = "_";
@@ -306,10 +307,10 @@ public class HttpdParser {
     setupParser(mapWriter, logFormat, fieldMapping);
 
     if (timestampFormat != null && !timestampFormat.trim().isEmpty()) {
-      LOG.info("Custom timestamp format has been specified. This is an informational note only as custom timestamps is rather unusual.");
+      logger.info("Custom timestamp format has been specified. This is an informational note only as custom timestamps is rather unusual.");
     }
     if (logFormat.contains("\n")) {
-      LOG.info("Specified logformat is a multiline log format: {}", logFormat);
+      logger.info("Specified logformat is a multiline log format: {}", logFormat);
     }
   }
 
@@ -335,7 +336,7 @@ public class HttpdParser {
    * @param fieldType HTTP.URI, etc..
    */
   private void addTypeRemapping(final Parser<HttpdLogRecord> parser, final String fieldName, final String fieldType) {
-    LOG.debug("Adding type remapping - fieldName: {}, fieldType: {}", fieldName, fieldType);
+    logger.debug("Adding type remapping - fieldName: {}, fieldType: {}", fieldName, fieldType);
     parser.addTypeRemapping(fieldName, fieldType);
   }
 
@@ -394,13 +395,13 @@ public class HttpdParser {
     final Map<String, String> requestedPaths;
     final List<String> allParserPaths = parser.getPossiblePaths();
     if (fieldMapping != null && !fieldMapping.isEmpty()) {
-      LOG.debug("Using fields defined by user.");
+      logger.debug("Using fields defined by user.");
       requestedPaths = fieldMapping;
     } else {
       /**
        * Use all possible paths that the parser has determined from the specified log format.
        */
-      LOG.debug("No fields defined by user, defaulting to all possible fields.");
+      logger.debug("No fields defined by user, defaulting to all possible fields.");
       requestedPaths = Maps.newHashMap();
       for (final String parserPath : allParserPaths) {
         requestedPaths.put(drillFormattedFieldName(parserPath), parserPath);
@@ -433,7 +434,7 @@ public class HttpdParser {
         casts = dummy.getCasts(entry.getValue());
       }
 
-      LOG.debug("Setting up drill field: {}, parser field: {}, which casts as: {}", entry.getKey(), entry.getValue(), casts);
+      logger.debug("Setting up drill field: {}, parser field: {}, which casts as: {}", entry.getKey(), entry.getValue(), casts);
       record.addField(parser, mapWriter, casts, entry.getValue(), entry.getKey());
     }
   }

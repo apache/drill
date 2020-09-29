@@ -49,11 +49,13 @@ import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.UserClientConnection;
@@ -74,36 +76,46 @@ import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 import org.apache.drill.metastore.MetastoreRegistry;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * <p>
- *   This is the core Context which implements all the Context interfaces:
+ * This is the core Context which implements all the Context interfaces:
  *
- *   <ul>
- *     <li>{@link FragmentContext}: A context provided to non-exchange operators.</li>
- *     <li>{@link ExchangeFragmentContext}: A context provided to exchange operators.</li>
- *     <li>{@link RootFragmentContext}: A context provided to fragment roots.</li>
- *     <li>{@link ExecutorFragmentContext}: A context used by the Drillbit.</li>
- *   </ul>
+ * <ul>
+ * <li>{@link FragmentContext}: A context provided to non-exchange
+ * operators.</li>
+ * <li>{@link ExchangeFragmentContext}: A context provided to exchange
+ * operators.</li>
+ * <li>{@link RootFragmentContext}: A context provided to fragment roots.</li>
+ * <li>{@link ExecutorFragmentContext}: A context used by the Drillbit.</li>
+ * </ul>
  *
- *   The interfaces above expose resources to varying degrees. They are ordered from most restrictive ({@link FragmentContext})
- *   to least restrictive ({@link ExecutorFragmentContext}).
+ * The interfaces above expose resources to varying degrees. They are ordered
+ * from most restrictive ({@link FragmentContext}) to least restrictive
+ * ({@link ExecutorFragmentContext}).
  * </p>
  * <p>
- *   Since {@link FragmentContextImpl} implements all of the interfaces listed above, the facade pattern is used in order
- *   to cast a {@link FragmentContextImpl} object to the desired interface where-ever it is needed. The facade pattern
- *   is powerful since it allows us to easily create minimal context objects to be used in unit tests. Without
- *   the use of interfaces and the facade pattern we would have to create a complete {@link FragmentContextImpl} object
- *   to unit test any part of the code that depends on a context.
+ * Since {@link FragmentContextImpl} implements all of the interfaces listed
+ * above, the facade pattern is used in order to cast a
+ * {@link FragmentContextImpl} object to the desired interface where-ever it is
+ * needed. The facade pattern is powerful since it allows us to easily create
+ * minimal context objects to be used in unit tests. Without the use of
+ * interfaces and the facade pattern we would have to create a complete
+ * {@link FragmentContextImpl} object to unit test any part of the code that
+ * depends on a context.
  * </p>
  * <p>
- *  <b>General guideline:</b> Use the most narrow interface for the task. For example, "internal" operators don't need visibility to the networking functionality.
- *  Using the narrow interface allows unit testing without using mocking libraries. Often, the surrounding structure already has exposed the most narrow interface. If there are
- *  opportunities to clean up older code, we can do so as needed to make testing easier.
+ * <b>General guideline:</b> Use the most narrow interface for the task. For
+ * example, "internal" operators don't need visibility to the networking
+ * functionality. Using the narrow interface allows unit testing without using
+ * mocking libraries. Often, the surrounding structure already has exposed the
+ * most narrow interface. If there are opportunities to clean up older code, we
+ * can do so as needed to make testing easier.
  * </p>
  */
 public class FragmentContextImpl extends BaseFragmentContext implements ExecutorFragmentContext {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContextImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(FragmentContextImpl.class);
 
   private final Map<DrillbitEndpoint, AccountingDataTunnel> tunnels = new HashMap<>();
   private final List<OperatorContextImpl> contexts = new LinkedList<>();
@@ -120,8 +132,8 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   private final BufferManager bufferManager;
   private ExecutorState executorState;
   private final ExecutionControls executionControls;
-  private boolean enableRuntimeFilter;
-  private boolean enableRFWaiting;
+  private final boolean enableRuntimeFilter;
+  private final boolean enableRFWaiting;
   private Lock lock4RF;
   private Condition condition4RF;
 
@@ -142,11 +154,12 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   };
 
   private final RpcOutcomeListener<Ack> statusHandler = new StatusHandler(exceptionConsumer, sendingAccountor);
+  private final RpcOutcomeListener<BitData.AckWithCredit> dataTunnelStatusHandler = new DataTunnelStatusHandler(exceptionConsumer, sendingAccountor);
   private final AccountingUserConnection accountingUserConnection;
   /** Stores constants and their holders by type */
   private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
-  private Map<Long, RuntimeFilterWritable> rfIdentifier2RFW = new ConcurrentHashMap<>();
-  private Map<Long, Boolean> rfIdentifier2fetched = new ConcurrentHashMap<>();
+  private final Map<Long, RuntimeFilterWritable> rfIdentifier2RFW = new ConcurrentHashMap<>();
+  private final Map<Long, Boolean> rfIdentifier2fetched = new ConcurrentHashMap<>();
 
   /**
    * Create a FragmentContext instance for non-root fragment.
@@ -466,7 +479,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   public AccountingDataTunnel getDataTunnel(final DrillbitEndpoint endpoint) {
     AccountingDataTunnel tunnel = tunnels.get(endpoint);
     if (tunnel == null) {
-      tunnel = new AccountingDataTunnel(context.getDataConnectionsPool().getTunnel(endpoint), sendingAccountor, statusHandler);
+      tunnel = new AccountingDataTunnel(context.getDataConnectionsPool().getTunnel(endpoint), sendingAccountor, dataTunnelStatusHandler);
       tunnels.put(endpoint, tunnel);
     }
     return tunnel;
@@ -624,5 +637,16 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   @Override
   public MetastoreRegistry getMetastoreRegistry() {
     return context.getMetastoreRegistry();
+  }
+
+  @Override
+  public void requestMemory(RecordBatch requestor) {
+    // Does not actually do anything yet. Should ask the fragment
+    // executor to talk the tree, except for the given batch,
+    // and request the operator free up memory. Then, if the
+    // requestor is above its allocator limit, increase that
+    // limit. Since this operation is purely optional, we leave
+    // it as a stub for now. (No operator ever actually used the
+    // old OUT_OF_MEMORY iterator status that this method replaces.)
   }
 }

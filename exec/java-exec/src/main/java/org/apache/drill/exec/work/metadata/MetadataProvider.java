@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.exec.ops.ViewExpansionContext;
@@ -78,17 +79,19 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ComparisonChain;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Ordering;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Contains worker {@link Runnable} classes for providing the metadata and related helper methods.
  */
 public class MetadataProvider {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MetadataProvider.class);
+  private static final Logger logger = LoggerFactory.getLogger(MetadataProvider.class);
 
   private static final String IN_FUNCTION = "in";
-  private static final String LIKE_FUNCTION = "like";
-  private static final String AND_FUNCTION = "booleanand";
-  private static final String OR_FUNCTION = "booleanor";
+  // Is this intended? Function name here is lower case of actual name?
+  private static final String AND_FUNCTION = FunctionNames.AND.toLowerCase();
+  private static final String OR_FUNCTION = FunctionNames.OR.toLowerCase();
 
   /**
    * @return Runnable that fetches the catalog metadata for given {@link GetCatalogsReq} and sends response at the end.
@@ -506,7 +509,7 @@ public class MetadataProvider {
       return null;
     }
 
-    return new FunctionExprNode(LIKE_FUNCTION,
+    return new FunctionExprNode(FunctionNames.LIKE,
         likeFilter.hasEscape() ?
             ImmutableList.of(
                 new FieldExprNode(fieldName),

@@ -32,8 +32,6 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
   <div id="message" class="alert alert-info alert-dismissable" style="font-family: courier,monospace;">
     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
     Sample SQL query: <strong>SELECT * FROM cp.`employee.json` LIMIT 20</strong>
@@ -43,57 +41,115 @@
 
 <#include "*/runningQuery.ftl">
 
-  <#if model.isOnlyImpersonationEnabled()>
-     <div class="form-group">
-       <label for="userName">User Name</label>
-       <input type="text" size="30" name="userName" id="userName" placeholder="User Name">
-     </div>
-  </#if>
-
+  <#-- DRILL-7697: merge with copy in profile.ftl -->
   <form role="form" id="queryForm" action="/query" method="POST">
+    <#if model.isOnlyImpersonationEnabled()>
       <div class="form-group">
-      <label for="queryType">Query Type</label>
-      <div class="radio">
-        <label>
-          <input type="radio" name="queryType" id="sql" value="SQL" checked>
-          SQL
-        </label>
+        <label for="userName">User Name</label>
+        <input type="text" size="30" name="userName" id="userName" placeholder="User Name">
       </div>
-      <div class="radio">
-        <label>
-          <input type="radio" name="queryType" id="physical" value="PHYSICAL">
-          PHYSICAL
-        </label>
-      </div>
-      <div class="radio">
-        <label>
-          <input type="radio" name="queryType" id="logical" value="LOGICAL">
-          LOGICAL
-        </label>
+    </#if>
+    <div class="container-fluid">
+      <div class="form-group row">
+        <label class="font-weight-bold" for="queryType">Query type:&nbsp;&nbsp;</label>
+        <div class="form-check">
+          <label class="font-weight-bold">
+            <input type="radio" name="queryType" id="sql" value="SQL" checked>
+            SQL
+          </label>
+        </div>
+        <div class="form-check">
+          <label class="font-weight-bold">
+            <input type="radio" name="queryType" id="physical" value="PHYSICAL">
+            Physical
+          </label>
+        </div>
+        <div class="form-check">
+          <label class="font-weight-bold">
+            <input type="radio" name="queryType" id="logical" value="LOGICAL">
+            Logical
+          </label>
+        </div>
       </div>
     </div>
+
     <div class="form-group">
-      <div style="display: inline-block"><label for="query">Query</label></div>
-      <div style="display: inline-block; float:right; padding-right:5%"><b>Hint: </b>Use <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
-      <div id="query-editor-format"></div>
+      <div style="display: inline-block"><label class="font-weight-bold" for="query">Query</label></div>
+      <div style="display: inline-block; float:right; padding-right:5%"><b>Hint: </b>Use
+        <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
+      <div id="query-editor-format" class="border"></div>
       <input class="form-control" type="hidden" id="query" name="query" autofocus/>
     </div>
 
-    <button class="btn btn-default" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>">
+    <button class="btn btn-primary" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>">
       Submit
     </button>
-    <input type="checkbox" name="forceLimit" value="limit" <#if model.isAutoLimitEnabled()>checked</#if>> Limit results to <input type="text" id="autoLimit" name="autoLimit" min="0" value="${model.getDefaultRowsAutoLimited()?c}" size="6" pattern="[0-9]*"> rows <span class="glyphicon glyphicon-info-sign" title="Limits the number of records retrieved in the query. Ignored if query has a limit already" style="cursor:pointer"></span>
+    &nbsp;&nbsp;&nbsp;
+    <input type="checkbox" name="forceLimit" value="limit" <#if model.isAutoLimitEnabled()>checked</#if>>
+      Limit results to <input type="text" id="autoLimit" name="autoLimit" min="0" value="${model.getDefaultRowsAutoLimited()?c}" size="6" pattern="[0-9]*">
+      rows <span class="material-icons" title="Limits the number of records retrieved in the query.
+      Ignored if query has a LIMIT clause." style="cursor:pointer">info</span>
+    &nbsp;&nbsp;&nbsp;
+    Default schema:
+    <input type="text" name="defaultSchema" id="defaultSchema" list="enabledPlugins" placeholder="schema">
+    <datalist id="enabledPlugins">
+      <#list model.getEnabledPlugins() as pluginModel>
+        <#if pluginModel.getPlugin()?? && pluginModel.getPlugin().enabled() == true>
+          <option value="${pluginModel.getPlugin().getName()}">
+        </#if>
+      </#list>
+    </datalist>
+     <span class="material-icons" title="Set the default schema used to find table names
+      and for SHOW FILES and SHOW TABLES." style="cursor:pointer">info</span>
     <input type="hidden" name="csrfToken" value="${model.getCsrfToken()}">
   </form>
 
   <script>
+    // Remember form field values over page reloads
+    $("input[type=text],input[type=checkbox],input[type=radio],select").each(function () {
+      var $input = $(this);
+      var savedKey = "saved_query_" + $input.attr("name");
+      var savedValue = sessionStorage.getItem(savedKey);
+      if ($input.attr("type") === "checkbox") {
+        if (savedValue === "true") {
+          $input.prop("checked", true);
+        }
+        if (savedValue === "false") {
+          $input.prop("checked", false);
+        }
+        $input.change(function () {
+          sessionStorage.setItem(savedKey, String($(this).prop("checked")));
+        });
+      } else if ($input.attr("type") === "radio") {
+        var value = $input.val();
+        if (savedValue === value) {
+          $input.prop("checked", true);
+        }
+        $input.change(function () {
+          sessionStorage.setItem(savedKey, $(this).val());
+        });
+      } else {
+        if (typeof savedValue === "string") {
+          $input.val(savedValue);
+        }
+        $input.change(function () {
+          sessionStorage.setItem(savedKey, $(this).val());
+        });
+      }
+    });
+    // Hidden text input for form-submission
+    var queryText = $('input[name="query"]');
     ace.require("ace/ext/language_tools");
     var editor = ace.edit("query-editor-format");
-    var queryText = $('input[name="query"]');
-    //Hidden text input for form-submission
     editor.getSession().on("change", function () {
-      queryText.val(editor.getSession().getValue());
+      var text = editor.getSession().getValue();
+      queryText.val(text);
+      sessionStorage.setItem("saved_query_query", text);
     });
+    var savedQueryText = sessionStorage.getItem('saved_query_query');
+    if (savedQueryText) {
+      editor.getSession().setValue(savedQueryText);
+    }
     editor.setAutoScrollEditorIntoView(true);
     editor.setOption("maxLines", 25);
     editor.setOption("minLines", 12);
@@ -110,7 +166,6 @@
     document.getElementById('query-editor-format').style.fontSize='13px';
     document.getElementById('query-editor-format').style.fontFamily='courier,monospace';
     document.getElementById('query-editor-format').style.lineHeight='1.5';
-    document.getElementById('query-editor-format').style.width='98%';
     document.getElementById('query-editor-format').style.margin='auto';
     editor.setOptions({
       enableSnippets: true,
@@ -130,7 +185,7 @@
     document.getElementById('queryForm')
             .addEventListener('keydown', function(e) {
       if (!(e.keyCode == 13 && (e.metaKey || e.ctrlKey))) return;
-      if (e.target.form) //Submit [Wrapped] Query 
+      if (e.target.form) //Submit [Wrapped] Query
         <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>;
     });
   </script>

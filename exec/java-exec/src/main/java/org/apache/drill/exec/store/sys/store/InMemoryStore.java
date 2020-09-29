@@ -29,7 +29,6 @@ import org.apache.drill.exec.store.sys.PersistentStoreMode;
 import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 
 public class InMemoryStore<V> extends BasePersistentStore<V> {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InMemoryPersistentStore.class);
 
   private final ConcurrentNavigableMap<String, V> store;
   private final int capacity;

@@ -22,9 +22,6 @@
 </#macro>
 
 <#macro page_body>
-<div class="page-header">
-</div>
-
 <#if (model?size > 0)>
 <div class="table-responsive">
     <table class="table table-hover">

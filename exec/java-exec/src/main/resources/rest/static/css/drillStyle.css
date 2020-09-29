@@ -1,0 +1,9 @@
+body {
+    padding-top: 80px;
+}
+.material-icons, .icon-text {
+    vertical-align: middle;
+}
+.close {
+    outline: none;
+}

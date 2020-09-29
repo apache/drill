@@ -30,13 +30,13 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework;
-import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework.ColumnsScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.Propertied;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -139,22 +139,19 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
    * suffix.</li>
    * </ul>
    */
-
   @Override
   protected FileScanBuilder frameworkBuilder(
       OptionManager options, EasySubScan scan) throws ExecutionSetupException {
 
     // Pattern and schema identical across readers; define
     // up front.
-
-    TupleMetadata providedSchema = scan.getSchema();
-    Pattern pattern = setupPattern(providedSchema);
+    final TupleMetadata providedSchema = scan.getSchema();
+    final Pattern pattern = setupPattern(providedSchema);
 
     // Use a dummy matcher to get the group count. Group count not
     // available from the pattern itself, oddly.
-
-    Matcher m = pattern.matcher("dummy");
-    int groupCount = m.groupCount();
+    final Matcher m = pattern.matcher("dummy");
+    final int groupCount = m.groupCount();
     if (groupCount == 0) {
       throw UserException
         .validationError()
@@ -163,63 +160,58 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
         .build(logger);
     }
 
-    boolean hasColumns = (providedSchema != null && providedSchema.size() > 0);
-    boolean hasSchema = hasColumns || formatConfig.hasSchema();
-    SchemaBuilder schemaBuilder = new SchemaBuilder();
-    FileScanBuilder builder;
+    final boolean hasColumns = (providedSchema != null && providedSchema.size() > 0);
+    final boolean hasSchema = hasColumns || formatConfig.hasSchema();
+    final TupleMetadata readerSchema;
+    final TupleMetadata tableSchema;
+
+    // Use the file framework to enable support for implicit and partition
+    // columns.
+    final FileScanBuilder builder = new FileScanBuilder();
+    initScanBuilder(builder, scan);
     if (hasSchema) {
-      TupleMetadata outputSchema;
       if (!hasColumns) {
 
         // No provided schema, build from plugin config
         // (or table function.)
-
-        outputSchema = defineOutputSchemaFromConfig(groupCount);
+        tableSchema = defineOutputSchemaFromConfig(groupCount);
+        readerSchema = defineReaderSchema(tableSchema);
       } else if (groupCount <= providedSchema.size()) {
 
         // Is a provided schema with enough columns. Just
-        // use it.
-
-        outputSchema = providedSchema;
+        // use it. Do not add implicit cols to the table schema,
+        // but do add them to the reader schema.
+        tableSchema = providedSchema;
+        addImplicitCols(tableSchema);
+        readerSchema = defineReaderSchema(tableSchema);
       } else {
 
         // Have a provided schema, but more groups than
         // provided columns. Make up additional columns.
-
-        outputSchema = defineOutputSchemaFromProvided(providedSchema, groupCount);
+        tableSchema = defineTableSchemaFromProvided(providedSchema, groupCount);
+        readerSchema = defineReaderSchema(tableSchema);
       }
-      defineReaderSchema(schemaBuilder, outputSchema);
-
-      // Use the file framework to enable support for implicit and partition
-      // columns.
-
-      builder = new FileScanBuilder();
-      initScanBuilder(builder, scan);
-      builder.typeConverterBuilder().providedSchema(outputSchema);
     } else {
 
       // No schema provided;  use the columns framework to use the columns[] array
       // Also supports implicit and partition metadata.
-
-      schemaBuilder.addArray(ColumnsScanFramework.COLUMNS_COL, MinorType.VARCHAR);
-      ColumnsScanBuilder colScanBuilder = new ColumnsScanBuilder();
-      initScanBuilder(colScanBuilder, scan);
-      colScanBuilder.requireColumnsArray(true);
-      colScanBuilder.allowOtherCols(true);
-      builder = colScanBuilder;
+      readerSchema = buildArraySchema();
+      tableSchema = readerSchema;
     }
+
+    // Projection is based on our table schema which may or may not be
+    // the same as the provided schema.
+    builder.providedSchema(tableSchema);
 
     // Pass along the class that will create a batch reader on demand for
     // each input file.
-
     builder.setReaderFactory(new LogReaderFactory(
-        new LogReaderConfig(this, pattern, buildSchema(schemaBuilder),
-            !hasSchema, groupCount, maxErrors(providedSchema))));
+        new LogReaderConfig(this, pattern, providedSchema, tableSchema,
+            readerSchema, !hasSchema, groupCount, maxErrors(providedSchema))));
 
     // The default type of regex columns is nullable VarChar,
     // so let's use that as the missing column type.
-
-    builder.setNullType(Types.optional(MinorType.VARCHAR));
+    builder.nullType(Types.optional(MinorType.VARCHAR));
     return builder;
   }
 
@@ -234,7 +226,6 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
    * in. This schema drives type conversions if no schema is provided
    * for the table
    */
-
   private TupleMetadata defineOutputSchemaFromConfig(int capturingGroups) {
     List<String> fields = formatConfig.getFieldNames();
     for (int i = fields.size(); i < capturingGroups; i++) {
@@ -247,7 +238,6 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
     TupleMetadata schema = builder.buildSchema();
 
     // Populate the date formats, if provided.
-
     if (formatConfig.getSchema() == null) {
       return schema;
     }
@@ -267,6 +257,7 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
       }
       col.setProperty(ColumnMetadata.FORMAT_PROP, format);
     }
+    addImplicitCols(schema);
     return schema;
   }
 
@@ -281,8 +272,7 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
    * @return an output schema with the provided columns, plus default
    * columns for any missing columns
    */
-
-  private TupleMetadata defineOutputSchemaFromProvided(
+  private TupleMetadata defineTableSchemaFromProvided(
       TupleMetadata providedSchema, int capturingGroups) {
     assert capturingGroups >= providedSchema.size();
     SchemaBuilder builder = new SchemaBuilder();
@@ -292,7 +282,12 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
     for (int i = providedSchema.size(); i < capturingGroups; i++) {
       builder.addNullable("field_" + i, MinorType.VARCHAR);
     }
-    return builder.buildSchema();
+    TupleMetadata schema = builder.buildSchema();
+    if (providedSchema.hasProperties()) {
+      schema.properties().putAll(providedSchema.properties());
+    }
+    addImplicitCols(schema);
+    return schema;
   }
 
   /**
@@ -308,26 +303,37 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
    * to project, then will take the desired output type from the output
    * schema, providing any conversions needed
    */
-
-  private void defineReaderSchema(SchemaBuilder builder, TupleMetadata outputSchema) {
+  private TupleMetadata defineReaderSchema(TupleMetadata outputSchema) {
+    SchemaBuilder schemaBuilder = new SchemaBuilder();
     for (int i = 0; i < outputSchema.size(); i++) {
-      builder.addNullable(outputSchema.metadata(i).name(), MinorType.VARCHAR);
+      schemaBuilder.addNullable(outputSchema.metadata(i).name(), MinorType.VARCHAR);
     }
+    return schemaBuilder.build();
   }
 
-  private TupleMetadata buildSchema(SchemaBuilder builder) {
-    builder.addNullable(LogBatchReader.RAW_LINE_COL_NAME, MinorType.VARCHAR);
-    builder.addNullable(LogBatchReader.UNMATCHED_LINE_COL_NAME, MinorType.VARCHAR);
-    TupleMetadata schema = builder.buildSchema();
+  private TupleMetadata buildArraySchema() {
+    SchemaBuilder schemaBuilder = new SchemaBuilder();
+    schemaBuilder.addArray(ColumnsScanFramework.COLUMNS_COL, MinorType.VARCHAR);
+    TupleMetadata schema = schemaBuilder.build();
+    addImplicitCols(schema);
+    return schema;
+  }
+
+  private void addImplicitCols(TupleMetadata schema) {
+    if (schema.index(LogBatchReader.RAW_LINE_COL_NAME) == -1) {
+      schema.addColumn(MetadataUtils.newScalar(LogBatchReader.RAW_LINE_COL_NAME,
+          Types.optional(MinorType.VARCHAR)));
+    }
+    if (schema.index(LogBatchReader.UNMATCHED_LINE_COL_NAME) == -1) {
+      schema.addColumn(MetadataUtils.newScalar(LogBatchReader.UNMATCHED_LINE_COL_NAME,
+          Types.optional(MinorType.VARCHAR)));
+    }
 
     // Exclude special columns from wildcard expansion
-
     schema.metadata(LogBatchReader.RAW_LINE_COL_NAME).setBooleanProperty(
         ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
     schema.metadata(LogBatchReader.UNMATCHED_LINE_COL_NAME).setBooleanProperty(
         ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
-
-    return schema;
   }
 
   /**
@@ -336,7 +342,6 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
    * the plugin config. Then compile the regex. Issue an error if the
    * pattern is bad.
    */
-
   private Pattern setupPattern(TupleMetadata providedSchema) {
     String regex = formatConfig.getRegex();
     if (providedSchema != null) {

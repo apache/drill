@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AutoCloseables {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(AutoCloseables.class);
+  private static final Logger logger = LoggerFactory.getLogger(AutoCloseables.class);
 
   public interface Closeable extends AutoCloseable {
     @Override
@@ -37,12 +38,7 @@ public class AutoCloseables {
   }
 
   public static AutoCloseable all(final Collection<? extends AutoCloseable> autoCloseables) {
-    return new AutoCloseable() {
-      @Override
-      public void close() throws Exception {
-        AutoCloseables.close(autoCloseables);
-      }
-    };
+    return () -> close(autoCloseables);
   }
 
   /**
@@ -75,13 +71,21 @@ public class AutoCloseables {
     close(Arrays.asList(autoCloseables));
   }
 
+  public static void closeWithUserException(AutoCloseable... autoCloseables) {
+    try {
+      close(Arrays.asList(autoCloseables));
+    } catch (Exception e) {
+      throw UserException.dataReadError(e).build(logger);
+    }
+  }
+
   /**
    * Closes all autoCloseables if not null and suppresses subsequent exceptions if more than one
    * @param autoCloseables the closeables to close
    */
-  public static void close(Iterable<? extends AutoCloseable> ac) throws Exception {
+  public static void close(Iterable<? extends AutoCloseable> autoCloseables) throws Exception {
     Exception topLevelException = null;
-    for (AutoCloseable closeable : ac) {
+    for (AutoCloseable closeable : autoCloseables) {
       try {
         if (closeable != null) {
           closeable.close();
@@ -101,7 +105,7 @@ public class AutoCloseables {
 
   /**
    * Close all without caring about thrown exceptions
-   * @param closeables - array containing auto closeables
+   * @param closeables array containing auto closeables
    */
   public static void closeSilently(AutoCloseable... closeables) {
     Arrays.stream(closeables).filter(Objects::nonNull)
@@ -109,9 +113,8 @@ public class AutoCloseables {
           try {
             target.close();
           } catch (Exception e) {
-            LOGGER.warn(String.format("Exception was thrown while closing auto closeable: %s", target), e);
+            logger.warn("Exception was thrown while closing auto closeable: {}", target, e);
           }
         });
   }
-
 }

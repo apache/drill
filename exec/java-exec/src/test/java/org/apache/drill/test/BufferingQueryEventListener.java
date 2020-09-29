@@ -27,6 +27,8 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Drill query event listener that buffers rows into a producer-consumer
@@ -36,13 +38,10 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
  * Query messages are transformed into events: query ID, batch,
  * EOF or error.
  */
+public class BufferingQueryEventListener implements UserResultsListener {
+  private static final Logger logger = LoggerFactory.getLogger(BufferingQueryEventListener.class);
 
-public class BufferingQueryEventListener implements UserResultsListener
-{
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BufferingQueryEventListener.class);
-
-  public static class QueryEvent
-  {
+  public static class QueryEvent {
     public enum Type { QUERY_ID, BATCH, EOF, ERROR }
 
     public final Type type;
@@ -72,7 +71,7 @@ public class BufferingQueryEventListener implements UserResultsListener
     }
   }
 
-  private BlockingQueue<QueryEvent> queue = Queues.newLinkedBlockingQueue();
+  private final BlockingQueue<QueryEvent> queue = Queues.newLinkedBlockingQueue();
 
   @Override
   public void queryIdArrived(QueryId queryId) {

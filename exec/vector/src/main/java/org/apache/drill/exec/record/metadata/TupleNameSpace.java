@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.map.CaseInsensitiveMap;
-
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 /**
@@ -80,6 +80,12 @@ public class TupleNameSpace<T> implements Iterable<T> {
 
   public List<T> entries() {
     return ImmutableList.copyOf(entries);
+  }
+
+  public void replace(String key, T replaceWith) {
+    int index = indexOf(key);
+    Preconditions.checkArgument(index != -1);
+    entries.set(index, replaceWith);
   }
 
   @Override

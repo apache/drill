@@ -23,7 +23,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.17.0</version>
+    <version>1.19.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-mongo-storage</artifactId>
@@ -31,7 +31,7 @@
   <name>contrib/mongo-storage-plugin</name>
 
   <properties>
-     <mongo.TestSuite>**/MongoTestSuit.class</mongo.TestSuite>
+     <mongo.TestSuite>**/MongoTestSuite.class</mongo.TestSuite>
   </properties>
 
   <dependencies>

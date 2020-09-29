@@ -19,6 +19,9 @@ package org.apache.drill.exec.record.metadata;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.complex.DictVector;
+
+import java.util.stream.Collectors;
 
 public class DictColumnMetadata extends AbstractMapColumnMetadata {
 
@@ -31,23 +34,35 @@ public class DictColumnMetadata extends AbstractMapColumnMetadata {
     this(schema, null);
   }
 
-  /**
-   * Build a dict column metadata by cloning the type information (but not
-   * the children) of the materialized field provided.
-   *
-   * @param schema the schema to use
-   * @param mapSchema parent schema
-   */
-  DictColumnMetadata(MaterializedField schema, TupleSchema mapSchema) {
-    super(schema, mapSchema);
+  public DictColumnMetadata(String name, TypeProtos.DataMode mode) {
+    this(name, mode, null);
   }
 
   public DictColumnMetadata(DictColumnMetadata from) {
     super(from);
   }
 
-  public DictColumnMetadata(String name, TypeProtos.DataMode mode, TupleSchema mapSchema) {
-    super(name, TypeProtos.MinorType.DICT, mode, mapSchema);
+  /**
+   * Build a dict column metadata by cloning the type information (but not
+   * the children) of the materialized field provided.
+   *
+   * @param schema the schema to use
+   * @param tupleSchema parent schema
+   */
+  DictColumnMetadata(MaterializedField schema, TupleSchema tupleSchema) {
+    super(schema, tupleSchema);
+  }
+
+  DictColumnMetadata(String name, TypeProtos.DataMode mode, TupleSchema tupleSchema) {
+    super(name, TypeProtos.MinorType.DICT, mode, tupleSchema);
+  }
+
+  public ColumnMetadata keyColumnMetadata() {
+    return schema.metadata(DictVector.FIELD_KEY_NAME);
+  }
+
+  public ColumnMetadata valueColumnMetadata() {
+    return schema.metadata(DictVector.FIELD_VALUE_NAME);
   }
 
   @Override
@@ -66,7 +81,36 @@ public class DictColumnMetadata extends AbstractMapColumnMetadata {
   }
 
   @Override
-  protected String getStringType() {
-    return "MAP";
+  protected String internalTypeString() {
+    StringBuilder builder = new StringBuilder()
+      .append("MAP<");
+
+    ColumnMetadata key = keyColumnMetadata();
+    ColumnMetadata value = valueColumnMetadata();
+
+    // sometimes dict key and value are added after creating metadata class,
+    // and if `typeString` method was called prematurely, for example, in case of error
+    // add whatever was added in a form of columns with key / value names
+    if (key == null || value == null) {
+      builder.append(tupleSchema().toMetadataList().stream()
+        .map(ColumnMetadata::columnString)
+        .collect(Collectors.joining(", ")));
+    } else {
+      builder.append(key.typeString())
+        .append(", ")
+        .append(value.typeString());
+
+      if (TypeProtos.DataMode.REQUIRED == value.mode()) {
+        builder.append(" NOT NULL");
+      }
+    }
+
+    builder.append(">");
+    return builder.toString();
+  }
+
+  @Override
+  public StructureType structureType() {
+    return StructureType.DICT;
   }
 }

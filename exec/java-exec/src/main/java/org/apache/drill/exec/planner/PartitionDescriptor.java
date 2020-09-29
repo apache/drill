@@ -30,7 +30,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Interface used to describe partitions. Currently used by file system based partitions and hive partitions
+ * Interface used to describe partitions. Currently used by file system based
+ * partitions and hive partitions
  */
 public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
 
@@ -71,7 +72,7 @@ public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
   int getMaxHierarchyLevel();
 
   /**
-   * Method creates an in memory representation of all the partitions. For each level of partitioning we
+   * Creates an in memory representation of all the partitions. For each level of partitioning we
    * will create a value vector which this method will populate for all the partitions with the values of the
    * partitioning key
    * @param vectors - Array of vectors in the container that need to be populated
@@ -90,7 +91,7 @@ public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
   TypeProtos.MajorType getVectorType(SchemaPath column, PlannerSettings plannerSettings);
 
   /**
-   * Methods create a new TableScan rel node, given the lists of new partitions or new files to SCAN.
+   * Create a new TableScan rel node, given the lists of new partitions or new files to SCAN.
    * @param newPartitions
    * @param wasAllPartitionsPruned
    * @throws Exception
@@ -113,5 +114,4 @@ public interface PartitionDescriptor extends Iterable<List<PartitionLocation>> {
   boolean supportsMetadataCachePruning();
 
   Path getBaseTableLocation();
-
 }

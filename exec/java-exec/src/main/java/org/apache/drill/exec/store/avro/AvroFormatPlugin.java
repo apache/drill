@@ -17,117 +17,62 @@
  */
 package org.apache.drill.exec.store.avro;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.regex.Pattern;
-
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
-import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.RecordWriter;
-import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
-import org.apache.drill.exec.store.dfs.FormatMatcher;
-import org.apache.drill.exec.store.dfs.FormatSelection;
-import org.apache.drill.exec.store.dfs.MagicString;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
-import org.apache.drill.exec.store.dfs.easy.EasyWriter;
-import org.apache.drill.exec.store.dfs.easy.FileWork;
+import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.hadoop.conf.Configuration;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 /**
  * Format plugin for Avro data files.
  */
 public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
 
-  private final AvroFormatMatcher matcher;
+  public static final String DEFAULT_NAME = "avro";
 
-  public AvroFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
-                          StoragePluginConfig storagePluginConfig) {
-    this(name, context, fsConf, storagePluginConfig, new AvroFormatConfig());
+  public AvroFormatPlugin(String name,
+                          DrillbitContext context,
+                          Configuration fsConf,
+                          StoragePluginConfig storageConfig,
+                          AvroFormatConfig formatConfig) {
+    super(name, easyConfig(fsConf, formatConfig), context, storageConfig, formatConfig);
   }
 
-  public AvroFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, AvroFormatConfig formatPluginConfig) {
-    super(name, context, fsConf, config, formatPluginConfig, true, false, true, false, Lists.newArrayList("avro"), "avro");
-    this.matcher = new AvroFormatMatcher(this);
-  }
-
-  @Override
-  public boolean supportsPushDown() {
-    return true;
-  }
-
-  @Override
-  public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork, List<SchemaPath> columns, String userName) throws ExecutionSetupException {
-    return new AvroRecordReader(context, fileWork.getPath(), fileWork.getStart(), fileWork.getLength(), dfs, columns,
-      userName);
-  }
-
-  @Override
-  public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
-    throw new UnsupportedOperationException("unimplemented");
+  private static EasyFormatConfig easyConfig(Configuration fsConf, AvroFormatConfig formatConfig) {
+    EasyFormatConfig config = new EasyFormatConfig();
+    config.readable = true;
+    config.writable = false;
+    config.blockSplittable = true;
+    config.compressible = false;
+    config.supportsProjectPushdown = true;
+    config.extensions = formatConfig.getExtensions();
+    config.fsConf = fsConf;
+    config.defaultName = DEFAULT_NAME;
+    config.readerOperatorType = CoreOperatorType.AVRO_SUB_SCAN_VALUE;
+    config.useEnhancedScan = true;
+    return config;
   }
 
   @Override
-  public int getReaderOperatorType() {
-    return CoreOperatorType.AVRO_SUB_SCAN_VALUE;
+  protected FileScanFramework.FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
+    FileScanFramework.FileScanBuilder builder = new FileScanFramework.FileScanBuilder();
+    builder.setReaderFactory(new AvroReaderFactory());
+    initScanBuilder(builder, scan);
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    return builder;
   }
 
-  @Override
-  public int getWriterOperatorType() {
-    throw new UnsupportedOperationException("unimplemented");
-  }
-
-  @Override
-  public FormatMatcher getMatcher() {
-    return this.matcher;
-  }
-
-  @Override
-  public boolean supportsStatistics() {
-    return false;
-  }
-
-  @Override
-  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
-    throw new UnsupportedOperationException("unimplemented");
-  }
-
-  @Override
-  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
-    throw new UnsupportedOperationException("unimplemented");
-  }
-
-  private static class AvroFormatMatcher extends BasicFormatMatcher {
-
-    public AvroFormatMatcher(AvroFormatPlugin plugin) {
-      super(plugin, ImmutableList.of(Pattern.compile(".*\\.avro$")), ImmutableList.<MagicString>of());
-    }
+  private static class AvroReaderFactory extends FileScanFramework.FileReaderFactory {
 
     @Override
-    public DrillTable isReadable(DrillFileSystem fs,
-        FileSelection selection, FileSystemPlugin fsPlugin,
-        String storageEngineName, SchemaConfig schemaConfig) throws IOException {
-      if (isFileReadable(fs, selection.getFirstPath(fs))) {
-        return new AvroDrillTable(storageEngineName, fsPlugin, schemaConfig,
-            new FormatSelection(plugin.getConfig(), selection));
-      }
-      return null;
+    public ManagedReader<? extends FileScanFramework.FileSchemaNegotiator> newReader() {
+      return new AvroBatchReader();
     }
   }
-
 }

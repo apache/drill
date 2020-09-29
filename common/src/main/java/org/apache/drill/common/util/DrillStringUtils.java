@@ -17,13 +17,13 @@
  */
 package org.apache.drill.common.util;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class DrillStringUtils {
 
@@ -51,7 +51,7 @@ public class DrillStringUtils {
    * @param input  the {@code String} to unescape, may be null
    * @return a new unescaped {@code String}, {@code null} if null string input
    */
-  public static final String unescapeJava(String input) {
+  public static String unescapeJava(String input) {
     return StringEscapeUtils.unescapeJava(input);
   }
 
@@ -72,11 +72,11 @@ public class DrillStringUtils {
    * @param input  String to escape values in, may be null
    * @return String with escaped values, {@code null} if null string input
    */
-  public static final String escapeJava(String input) {
+  public static String escapeJava(String input) {
     return StringEscapeUtils.escapeJava(input);
   }
 
-  public static final String escapeNewLines(String input) {
+  public static String escapeNewLines(String input) {
     if (input == null) {
       return null;
     }
@@ -209,21 +209,20 @@ public class DrillStringUtils {
    * @return The sanitized CSV string
    */
   public static String sanitizeCSV(String csv) {
-    // tokenize
     String[] tokens = csv.split(",");
-    ArrayList<String> sanitizedTokens = new ArrayList<String>(tokens.length);
-    // check for empties
-    for (String s : tokens) {
-      String trimmedToken = s.trim();
-      if (trimmedToken.length() != 0) {
-        sanitizedTokens.add(trimmedToken);
-      }
-    }
-    String result = "";
-    if (sanitizedTokens.size() != 0) {
-      result = Joiner.on(",").join(sanitizedTokens);
-    }
-    return result;
+    return Arrays.stream(tokens)
+        .map(String::trim)
+        .filter(StringUtils::isNotEmpty)
+        .collect(Collectors.joining(","));
   }
 
+  /**
+   * Removes all leading slash characters from specified string.
+   *
+   * @param path string to remove all leading slash characters
+   * @return string with removed leading slash characters
+   */
+  public static String removeLeadingSlash(String path) {
+    return StringUtils.stripStart(path, "/");
+  }
 }

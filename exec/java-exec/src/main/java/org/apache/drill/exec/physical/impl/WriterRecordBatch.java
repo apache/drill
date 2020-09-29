@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl;
 
 import java.io.IOException;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -37,25 +38,29 @@ import org.apache.drill.exec.store.RecordWriter;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/* Write the RecordBatch to the given RecordWriter. */
+/** Write the RecordBatch to the given RecordWriter. */
 public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WriterRecordBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(WriterRecordBatch.class);
 
   private EventBasedRecordWriter eventBasedRecordWriter;
   private RecordWriter recordWriter;
-  private long counter = 0;
+  private long counter;
   private final RecordBatch incoming;
-  private boolean processed = false;
+  private boolean processed;
   private final String fragmentUniqueId;
   private BatchSchema schema;
 
-  public WriterRecordBatch(Writer writer, RecordBatch incoming, FragmentContext context, RecordWriter recordWriter) throws OutOfMemoryException {
+  public WriterRecordBatch(Writer writer, RecordBatch incoming, FragmentContext context,
+      RecordWriter recordWriter) throws OutOfMemoryException {
     super(writer, context, false);
     this.incoming = incoming;
 
     final FragmentHandle handle = context.getHandle();
-    fragmentUniqueId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
+    fragmentUniqueId = String.format(
+        "%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
     this.recordWriter = recordWriter;
   }
 
@@ -65,8 +70,8 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
+  protected void cancelIncoming() {
+    incoming.cancel();
   }
 
   @Override
@@ -77,7 +82,6 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   @Override
   public IterOutcome innerNext() {
     if (processed) {
-//      cleanup();
       // if the upstream record batch is already processed and next() is called by
       // downstream then return NONE to indicate completion
       return IterOutcome.NONE;
@@ -85,47 +89,42 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
 
     // process the complete upstream in one next() call
     IterOutcome upstream;
-    try {
-      do {
-        upstream = next(incoming);
+    do {
+      upstream = next(incoming);
 
-        switch(upstream) {
-          case OUT_OF_MEMORY:
-          case STOP:
-            return upstream;
-
-          case NOT_YET:
+      switch(upstream) {
+        case NOT_YET:
+          break;
+        case NONE:
+          if (schema != null) {
+            // Schema is for the output batch schema which is setup in setupNewSchema(). Since the output
+            // schema is fixed ((Fragment(VARCHAR), Number of records written (BIGINT)) we should set it
+            // up even with 0 records for it to be reported back to the client.
             break;
-          case NONE:
-            if (schema != null) {
-              // Schema is for the output batch schema which is setup in setupNewSchema(). Since the output
-              // schema is fixed ((Fragment(VARCHAR), Number of records written (BIGINT)) we should set it
-              // up even with 0 records for it to be reported back to the client.
-              break;
-            }
+          }
 
-          case OK_NEW_SCHEMA:
-            setupNewSchema();
-            // $FALL-THROUGH$
-          case OK:
+        case OK_NEW_SCHEMA:
+          setupNewSchema();
+          // $FALL-THROUGH$
+        case OK:
+          try {
             counter += eventBasedRecordWriter.write(incoming.getRecordCount());
-            logger.debug("Total records written so far: {}", counter);
+          } catch (IOException e) {
+            throw UserException.dataWriteError(e)
+              .addContext("Failure when writing the batch")
+              .build(logger);
+          }
+          logger.debug("Total records written so far: {}", counter);
 
-            for(final VectorWrapper<?> v : incoming) {
-              v.getValueVector().clear();
-            }
-            break;
+          for(final VectorWrapper<?> v : incoming) {
+            v.getValueVector().clear();
+          }
+          break;
 
-          default:
-            throw new UnsupportedOperationException();
-        }
-      } while(upstream != IterOutcome.NONE);
-    } catch(IOException ex) {
-      logger.error("Failure during query", ex);
-      kill(false);
-      context.getExecutorState().fail(ex);
-      return IterOutcome.STOP;
-    }
+        default:
+          throw new UnsupportedOperationException();
+      }
+    } while(upstream != IterOutcome.NONE);
 
     addOutputContainerData();
     processed = true;
@@ -153,11 +152,17 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
     container.setRecordCount(1);
   }
 
-  protected void setupNewSchema() throws IOException {
+  protected void setupNewSchema() {
     try {
       // update the schema in RecordWriter
       stats.startSetup();
-      recordWriter.updateSchema(incoming);
+      try {
+        recordWriter.updateSchema(incoming);
+      } catch (IOException e) {
+        throw UserException.dataWriteError(e)
+          .addContext("Failure updating record writer schema")
+          .build(logger);
+      }
       // Create two vectors for:
       //   1. Fragment unique id.
       //   2. Summary: currently contains number of records written.
@@ -174,7 +179,13 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
       stats.stopSetup();
     }
 
-    eventBasedRecordWriter = new EventBasedRecordWriter(incoming, recordWriter);
+    try {
+      eventBasedRecordWriter = new EventBasedRecordWriter(incoming, recordWriter);
+    } catch (IOException e) {
+      throw UserException.dataWriteError(e)
+          .addContext("Failed to create the event record writer")
+          .build(logger);
+    }
     container.buildSchema(SelectionVectorMode.NONE);
     schema = container.getSchema();
   }

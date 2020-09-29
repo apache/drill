@@ -17,15 +17,18 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -53,7 +56,10 @@ import org.apache.drill.exec.work.foreman.rm.DynamicResourceManager;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue;
 import org.apache.drill.exec.work.foreman.rm.ResourceManager;
 import org.apache.drill.exec.work.foreman.rm.ThrottledResourceManager;
+import org.apache.http.client.methods.HttpPost;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
@@ -62,7 +68,7 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_RO
 @Path("/")
 @PermitAll
 public class DrillRoot {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRoot.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillRoot.class);
 
   @Inject
   UserAuthEnabled authEnabled;
@@ -72,6 +78,8 @@ public class DrillRoot {
   SecurityContext sc;
   @Inject
   Drillbit drillbit;
+  @Inject
+  HttpServletRequest request;
 
   @GET
   @Produces(MediaType.TEXT_HTML)
@@ -130,6 +138,15 @@ public class DrillRoot {
   public Response shutdownDrillbit() throws Exception {
     String resp = "Graceful Shutdown request is triggered";
     return shutdown(resp);
+  }
+
+  @POST
+  @Path("/gracefulShutdown/{hostname}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @RolesAllowed(ADMIN_ROLE)
+  public String shutdownDrillbitByName(@PathParam("hostname") String hostname) throws Exception {
+    URL shutdownURL = WebUtils.getDrillbitURL(work, request, hostname, "/gracefulShutdown");
+    return WebUtils.doHTTPRequest(new HttpPost(shutdownURL.toURI()), work.getContext().getConfig());
   }
 
   @POST
@@ -219,7 +236,7 @@ public class DrillRoot {
         endpoint1.getUserPort() == endpoint2.getUserPort();
   }
 
-  private Response setResponse(Map entity) {
+  private Response setResponse(Map<String, ?> entity) {
     return Response.ok()
             .entity(entity)
             .header("Access-Control-Allow-Origin", "*")

@@ -18,7 +18,9 @@
 package org.apache.drill.exec.store.mapr.db.binary;
 
 import java.util.Arrays;
+import java.util.List;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -39,7 +41,6 @@ import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void, RuntimeException> implements DrillHBaseConstants {
 
@@ -49,7 +50,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
 
   private boolean allExpressionsConverted = true;
 
-  private static Boolean nullComparatorSupported = null;
+  private static Boolean nullComparatorSupported;
 
   public MapRDBFilterBuilder(BinaryTableGroupScan groupScan, LogicalExpression le) {
     this.groupScan = groupScan;
@@ -59,7 +60,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
   public HBaseScanSpec parseTree() {
     HBaseScanSpec parsedSpec = le.accept(this, null);
     if (parsedSpec != null) {
-      parsedSpec = mergeScanSpecs("booleanAnd", this.groupScan.getHBaseScanSpec(), parsedSpec);
+      parsedSpec = mergeScanSpecs(FunctionNames.AND, this.groupScan.getHBaseScanSpec(), parsedSpec);
       /*
        * If RowFilter is THE filter attached to the scan specification,
        * remove it since its effect is also achieved through startRow and stopRow.
@@ -93,7 +94,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
   public HBaseScanSpec visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
     HBaseScanSpec nodeScanSpec = null;
     String functionName = call.getName();
-    ImmutableList<LogicalExpression> args = call.args;
+    List<LogicalExpression> args = call.args();
 
     if (MaprDBCompareFunctionsProcessor.isCompareFunction(functionName)) {
       /*
@@ -111,8 +112,8 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
       }
     } else {
       switch (functionName) {
-      case "booleanAnd":
-      case "booleanOr":
+      case FunctionNames.AND:
+      case FunctionNames.OR:
         HBaseScanSpec firstScanSpec = args.get(0).accept(this, null);
         for (int i = 1; i < args.size(); ++i) {
           HBaseScanSpec nextScanSpec = args.get(i).accept(this, null);
@@ -120,7 +121,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
             nodeScanSpec = mergeScanSpecs(functionName, firstScanSpec, nextScanSpec);
           } else {
             allExpressionsConverted = false;
-            if ("booleanAnd".equals(functionName)) {
+            if (FunctionNames.AND.equals(functionName)) {
               nodeScanSpec = firstScanSpec == null ? nextScanSpec : firstScanSpec;
             }
           }
@@ -143,12 +144,12 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
     byte[] stopRow = HConstants.EMPTY_END_ROW;
 
     switch (functionName) {
-    case "booleanAnd":
+    case FunctionNames.AND:
       newFilter = HBaseUtils.andFilterAtIndex(leftScanSpec.getFilter(), -1, rightScanSpec.getFilter()); //HBaseUtils.LAST_FILTER
       startRow = HBaseUtils.maxOfStartRows(leftScanSpec.getStartRow(), rightScanSpec.getStartRow());
       stopRow = HBaseUtils.minOfStopRows(leftScanSpec.getStopRow(), rightScanSpec.getStopRow());
       break;
-    case "booleanOr":
+    case FunctionNames.OR:
       newFilter = HBaseUtils.orFilterAtIndex(leftScanSpec.getFilter(), -1, rightScanSpec.getFilter()); //HBaseUtils.LAST_FILTER
       startRow = HBaseUtils.minOfStartRows(leftScanSpec.getStartRow(), rightScanSpec.getStartRow());
       stopRow = HBaseUtils.maxOfStopRows(leftScanSpec.getStopRow(), rightScanSpec.getStopRow());
@@ -184,7 +185,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
     byte[] startRow = HConstants.EMPTY_START_ROW;
     byte[] stopRow = HConstants.EMPTY_END_ROW;
     switch (functionName) {
-    case "equal":
+    case FunctionNames.EQ:
       compareOp = CompareOp.EQUAL;
       if (isRowKey) {
         startRow = fieldValue;
@@ -193,10 +194,10 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
         compareOp = CompareOp.EQUAL;
       }
       break;
-    case "not_equal":
+    case FunctionNames.NE:
       compareOp = CompareOp.NOT_EQUAL;
       break;
-    case "greater_than_or_equal_to":
+    case FunctionNames.GE:
       if (sortOrderAscending) {
         compareOp = CompareOp.GREATER_OR_EQUAL;
         if (isRowKey) {
@@ -210,7 +211,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
         }
       }
       break;
-    case "greater_than":
+    case FunctionNames.GT:
       if (sortOrderAscending) {
         compareOp = CompareOp.GREATER;
         if (isRowKey) {
@@ -224,7 +225,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
         }
       }
       break;
-    case "less_than_or_equal_to":
+    case FunctionNames.LE:
       if (sortOrderAscending) {
         compareOp = CompareOp.LESS_OR_EQUAL;
         if (isRowKey) {
@@ -238,7 +239,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
         }
       }
       break;
-    case "less_than":
+    case FunctionNames.LT:
       if (sortOrderAscending) {
         compareOp = CompareOp.LESS;
         if (isRowKey) {
@@ -252,7 +253,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
         }
       }
       break;
-    case "isnull":
+    case FunctionNames.IS_NULL:
     case "isNull":
     case "is null":
       if (isRowKey) {
@@ -262,7 +263,7 @@ public class MapRDBFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void
       compareOp = CompareOp.EQUAL;
       comparator = new NullComparator();
       break;
-    case "isnotnull":
+    case FunctionNames.IS_NOT_NULL:
     case "isNotNull":
     case "is not null":
       if (isRowKey) {

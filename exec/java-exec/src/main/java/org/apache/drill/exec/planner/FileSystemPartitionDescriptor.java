@@ -33,7 +33,6 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.prepare.RelOptTableImpl;
@@ -58,14 +57,16 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.Path;
 
 
-// partition descriptor for file system based tables
+/**
+ * Partition descriptor for file system based tables.
+ */
 public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
 
-  static final int MAX_NESTED_SUBDIRS = 10;          // allow up to 10 nested sub-directories
+  static final int MAX_NESTED_SUBDIRS = 10; // allow up to 10 nested sub-directories
 
   private final String partitionLabel;
   private final int partitionLabelLength;
-  private final Map<String, Integer> partitions = Maps.newHashMap();
+  private final Map<String, Integer> partitions = new HashMap<>();
   private final TableScan scanRel;
   private final DrillTable table;
 
@@ -160,14 +161,15 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
 
     final Path selectionRoot = getBaseTableLocation();
 
-    // map used to map the partition keys (dir0, dir1, ..), to the list of partitions that share the same partition keys.
+    // map used to map the partition keys (dir0, dir1, ..), to the list of partitions
+    // that share the same partition keys.
     // For example,
     //   1990/Q1/1.parquet, 2.parquet
     // would have <1990, Q1> as key, and value as list of partition location for 1.parquet and 2.parquet.
     HashMap<List<String>, List<PartitionLocation>> dirToFileMap = new HashMap<>();
 
-    // Figure out the list of leaf subdirectories. For each leaf subdirectory, find the list of files (DFSFilePartitionLocation)
-    // it contains.
+    // Figure out the list of leaf subdirectories. For each leaf subdirectory, find
+    // the list of files (DFSFilePartitionLocation) it contains.
     for (Path file: fileLocationsAndStatus.getLeft()) {
       DFSFilePartitionLocation dfsFilePartitionLocation = new DFSFilePartitionLocation(MAX_NESTED_SUBDIRS,
           selectionRoot, file, hasDirsOnly);
@@ -267,11 +269,7 @@ public class FileSystemPartitionDescriptor extends AbstractPartitionDescriptor {
   @Override
   public boolean supportsMetadataCachePruning() {
     final Object selection = this.table.getSelection();
-    if (selection instanceof FormatSelection
-        && ((FormatSelection)selection).getSelection().getCacheFileRoot() != null) {
-      return true;
-    }
-    return false;
+    return selection instanceof FormatSelection
+        && ((FormatSelection)selection).getSelection().getCacheFileRoot() != null;
   }
-
 }

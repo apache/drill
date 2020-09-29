@@ -36,8 +36,8 @@ public class TestOperatorMetrics extends BaseTestQuery {
     assertEquals(new String[]{"BYTES_SENT"},
               OperatorMetricRegistry.getMetricNames(UserBitShared.CoreOperatorType.SCREEN_VALUE));
 
-    assertEquals(new String[]{"SPILL_COUNT", "RETIRED1", "PEAK_BATCHES_IN_MEMORY", "MERGE_COUNT", "MIN_BUFFER",
-                      "INPUT_BATCHES"},
+    assertEquals(new String[]{"SPILL_COUNT", "NOT_USED", "PEAK_BATCHES_IN_MEMORY", "MERGE_COUNT", "MIN_BUFFER",
+                      "SPILL_MB"},
               OperatorMetricRegistry.getMetricNames(UserBitShared.CoreOperatorType.EXTERNAL_SORT_VALUE));
   }
 
@@ -47,5 +47,4 @@ public class TestOperatorMetrics extends BaseTestQuery {
 
     assertNull(OperatorMetricRegistry.getMetricNames(202));
   }
-
 }

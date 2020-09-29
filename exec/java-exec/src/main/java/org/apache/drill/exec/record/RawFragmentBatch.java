@@ -70,6 +70,12 @@ public class RawFragmentBatch {
     }
   }
 
+  public synchronized void sendOk(int suggestedCredit) {
+    if (sender != null && ackSent.compareAndSet(false, true)) {
+      sender.sendOk(suggestedCredit);
+    }
+  }
+
   public long getByteCount() {
     return body == null ? 0 : body.readableBytes();
   }

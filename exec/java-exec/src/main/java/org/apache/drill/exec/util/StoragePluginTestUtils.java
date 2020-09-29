@@ -24,20 +24,19 @@ import java.util.Optional;
 
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 
 import org.apache.drill.exec.store.easy.sequencefile.SequenceFileFormatConfig;
-import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 
 /**
- * This class contains utility methods to speed up tests. Some of the production code currently calls this method
- * when the production code is executed as part of the test runs. That's the reason why this code has to be in
- * production module.
+ * Utility methods to speed up tests. Some of the production code currently
+ * calls this method when the production code is executed as part of the test
+ * runs. That's the reason why this code has to be in production module.
  */
 public class StoragePluginTestUtils {
   public static final String CP_PLUGIN_NAME = "cp";
@@ -65,9 +64,8 @@ public class StoragePluginTestUtils {
   public static void updateSchemaLocation(final String pluginName,
                                           final StoragePluginRegistry pluginRegistry,
                                           final File tmpDirPath,
-                                          String... schemas) throws ExecutionSetupException {
-    final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(pluginName);
-    final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
+                                          String... schemas) throws PluginException {
+    final FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getStoredConfig(pluginName);
 
     Map<String, WorkspaceConfig> newWorkspaces = new HashMap<>();
     Optional.ofNullable(pluginConfig.getWorkspaces())
@@ -90,47 +88,35 @@ public class StoragePluginTestUtils {
         newWorkspaces,
         pluginConfig.getFormats());
     newPluginConfig.setEnabled(pluginConfig.isEnabled());
-    pluginRegistry.createOrUpdate(pluginName, newPluginConfig, true);
+    pluginRegistry.put(pluginName, newPluginConfig);
   }
 
-  public static void configureFormatPlugins(StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
+  public static void configureFormatPlugins(StoragePluginRegistry pluginRegistry) throws PluginException {
     configureFormatPlugins(pluginRegistry, CP_PLUGIN_NAME);
     configureFormatPlugins(pluginRegistry, DFS_PLUGIN_NAME);
   }
 
-  public static void configureFormatPlugins(StoragePluginRegistry pluginRegistry, String storagePlugin) throws ExecutionSetupException {
-    FileSystemPlugin fileSystemPlugin = (FileSystemPlugin) pluginRegistry.getPlugin(storagePlugin);
-    FileSystemConfig fileSystemConfig = (FileSystemConfig) fileSystemPlugin.getConfig();
+  public static void configureFormatPlugins(StoragePluginRegistry pluginRegistry, String storagePlugin) throws PluginException {
+    FileSystemConfig fileSystemConfig = (FileSystemConfig) pluginRegistry.getStoredConfig(storagePlugin);
 
     Map<String, FormatPluginConfig> newFormats = new HashMap<>();
     Optional.ofNullable(fileSystemConfig.getFormats())
       .ifPresent(newFormats::putAll);
 
-    TextFormatPlugin.TextFormatConfig textConfig = new TextFormatPlugin.TextFormatConfig();
-    textConfig.extensions = ImmutableList.of("txt");
-    textConfig.fieldDelimiter = '\u0000';
-    newFormats.put("txt", textConfig);
+    newFormats.put("txt", new TextFormatConfig(
+        ImmutableList.of("txt"), null, "\u0000", null, null, null, null, null));
 
-    TextFormatPlugin.TextFormatConfig ssvConfig = new TextFormatPlugin.TextFormatConfig();
-    ssvConfig.extensions = ImmutableList.of("ssv");
-    ssvConfig.fieldDelimiter = ' ';
-    newFormats.put("ssv", ssvConfig);
+    newFormats.put("ssv", new TextFormatConfig(
+        ImmutableList.of("ssv"), null, " ", null, null, null, null, null));
 
-    TextFormatPlugin.TextFormatConfig psvConfig = new TextFormatPlugin.TextFormatConfig();
-    psvConfig.extensions = ImmutableList.of("tbl");
-    psvConfig.fieldDelimiter = '|';
-    newFormats.put("psv", psvConfig);
+    newFormats.put("psv", new TextFormatConfig(
+        ImmutableList.of("tbl"), null, "|", null, null, null, null, null));
 
-    SequenceFileFormatConfig seqConfig = new SequenceFileFormatConfig();
-    seqConfig.extensions = ImmutableList.of("seq");
+    SequenceFileFormatConfig seqConfig = new SequenceFileFormatConfig(ImmutableList.of("seq"));
     newFormats.put("sequencefile", seqConfig);
 
-    TextFormatPlugin.TextFormatConfig csvhtestConfig = new TextFormatPlugin.TextFormatConfig();
-    csvhtestConfig.extensions = ImmutableList.of("csvh-test");
-    csvhtestConfig.fieldDelimiter = ',';
-    csvhtestConfig.extractHeader = true;
-    csvhtestConfig.skipFirstLine = true;
-    newFormats.put("csvh-test", csvhtestConfig);
+    newFormats.put("csvh-test", new TextFormatConfig(
+        ImmutableList.of("csvh-test"), null, ",", null, null, null, true, true));
 
     FileSystemConfig newFileSystemConfig = new FileSystemConfig(
         fileSystemConfig.getConnection(),
@@ -139,6 +125,6 @@ public class StoragePluginTestUtils {
         newFormats);
     newFileSystemConfig.setEnabled(fileSystemConfig.isEnabled());
 
-    pluginRegistry.createOrUpdate(storagePlugin, newFileSystemConfig, true);
+    pluginRegistry.put(storagePlugin, newFileSystemConfig);
   }
 }

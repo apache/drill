@@ -30,6 +30,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.reflections.util.ClasspathHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -43,11 +45,10 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 public class DrillConfig extends NestedConfig {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillConfig.class);
 
   private final ImmutableList<String> startupArguments;
 
-  @SuppressWarnings("restriction")
   private static final long MAX_DIRECT_MEMORY = PlatformDependent.maxDirectMemory();
 
   @VisibleForTesting
@@ -115,7 +116,6 @@ public class DrillConfig extends NestedConfig {
   public static DrillConfig forClient() {
     return create(null, false);
   }
-
 
   /**
    * DrillConfig loads up Drill configuration information. It does this utilizing a combination of classpath scanning

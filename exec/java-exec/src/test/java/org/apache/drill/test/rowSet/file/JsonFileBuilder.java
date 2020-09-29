@@ -19,8 +19,6 @@ package org.apache.drill.test.rowSet.file;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ValueType;
@@ -31,6 +29,8 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -54,8 +54,7 @@ public class JsonFileBuilder
   public static final String DEFAULT_DECIMAL_FORMATTER = "%s";
   public static final String DEFAULT_PERIOD_FORMATTER = "%s";
 
-  @SuppressWarnings("unchecked")
-  public static final Map<String, String> DEFAULT_FORMATTERS = new ImmutableMap.Builder()
+  public static final Map<ValueType, String> DEFAULT_FORMATTERS = new ImmutableMap.Builder<ValueType, String>()
     .put(ValueType.DOUBLE, DEFAULT_DOUBLE_FORMATTER)
     .put(ValueType.INTEGER, DEFAULT_INTEGER_FORMATTER)
     .put(ValueType.LONG, DEFAULT_LONG_FORMATTER)
@@ -65,7 +64,7 @@ public class JsonFileBuilder
     .build();
 
   private final RowSet rowSet;
-  private final Map<String, String> customFormatters = Maps.newHashMap();
+  private final Map<String, String> customFormatters = new HashMap<>();
 
   /**
    * Creates a {@link JsonFileBuilder} that will write the given {@link RowSet} to a file.
@@ -123,8 +122,8 @@ public class JsonFileBuilder
       final Iterator<MaterializedField> fieldIterator = rowSet
         .batchSchema()
         .iterator();
-      final List<String> columnNames = Lists.newArrayList();
-      final List<String> columnFormatters = Lists.newArrayList();
+      final List<String> columnNames = new ArrayList<>();
+      final List<String> columnFormatters = new ArrayList<>();
 
       // Build formatters from first row.
       while (fieldIterator.hasNext()) {

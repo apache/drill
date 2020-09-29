@@ -34,8 +34,10 @@
       <link rel="shortcut icon" href="/static/img/drill.ico">
 
       <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+      <link href="/static/css/drillStyle.css" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-      <script type="text/javascript" language="javascript" src="../static/js/jquery-3.2.1.min.js"></script>
+      <script type="text/javascript" language="javascript" src="/static/js/jquery-3.4.1.min.js"></script>
       <script src="/static/js/bootstrap.min.js"></script>
 
       <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -49,10 +51,10 @@
 
     <body role="document">
 
-      <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="navbar navbar-dark bg-dark fixed-top navbar-expand" role="navigation">
         <div class="container-fluid">
           <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <button type="button" class="navbar-toggler" data-toggle="collapse" data-target=".navbar-collapse">
               <span class="sr-only">Toggle navigation</span>
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
@@ -62,31 +64,31 @@
           </div>
           <div class="navbar-collapse collapse">
             <#if showControls == true>
-            <ul class="nav navbar-nav">
-              <li><a href="/query">Query</a></li>
-              <li><a href="/profiles">Profiles</a></li>
+            <ul class="nav navbar-nav mr-auto">
+              <li class="nav-item"><a class="nav-link" href="/query">Query</a></li>
+              <li class="nav-item"><a class="nav-link" href="/profiles">Profiles</a></li>
               <#if showStorage == true>
-              <li><a href="/storage">Storage</a></li>
+              <li class="nav-item"><a class="nav-link" href="/storage">Storage</a></li>
               </#if>
-              <li><a href="/metrics">Metrics</a></li>
+              <li class="nav-item"><a class="nav-link" href="/metrics">Metrics</a></li>
               <#if showThreads == true>
-              <li><a href="/threads">Threads</a></li>
+              <li class="nav-item"><a class="nav-link" href="/threads">Threads</a></li>
               </#if>
               <#if showLogs == true>
-                  <li><a href="/logs">Logs</a></li>
+                  <li class="nav-item"><a class="nav-link" href="/logs">Logs</a></li>
               </#if>
             </ul>
             </#if>
             <ul class="nav navbar-nav navbar-right">
               <#if showOptions == true>
-              <li><a href="/options">Options</a></li>
+              <li class="nav-item"><a class="nav-link" href="/options">Options</a></li>
               </#if>
-              <li><a href="http://drill.apache.org/docs/">Documentation</a>
+              <li class="nav-item"><a class="nav-link" href="http://drill.apache.org/docs/">Documentation</a>
               <#if showLogin == true >
-              <li><a href="/mainLogin">Log In</a>
+              <li class="nav-item"><a class="nav-link" href="/mainLogin">Log In</a>
               </#if>
               <#if showLogout == true >
-              <li><a href="/logout">Log Out (${loggedInUserName})</a>
+              <li class="nav-item"><a class="nav-link" href="/logout">Log Out (${loggedInUserName})</a>
               </#if>
             </ul>
           </div>

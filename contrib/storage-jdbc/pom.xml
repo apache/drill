@@ -23,7 +23,7 @@
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.17.0</version>
+    <version>1.19.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-jdbc-storage</artifactId>
@@ -31,7 +31,9 @@
   <name>contrib/jdbc-storage-plugin</name>
 
   <properties>
-    <mysql.connector.version>8.0.13</mysql.connector.version>
+    <mysql.connector.version>8.0.19</mysql.connector.version>
+    <wix-embedded-mysql.version>4.6.1</wix-embedded-mysql.version>
+    <h2.version>1.4.200</h2.version>
   </properties>
 
   <dependencies>
@@ -39,6 +41,10 @@
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
     </dependency>
 
     <!-- Test dependencies -->
@@ -65,13 +71,13 @@
     <dependency>
       <groupId>com.wix</groupId>
       <artifactId>wix-embedded-mysql</artifactId>
-      <version>4.2.0</version>
+      <version>${wix-embedded-mysql.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>1.4.197</version>
+      <version>${h2.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -62,7 +62,7 @@ public class HiveDrillNativeParquetRowGroupScan extends AbstractParquetRowGroupS
                                             @JsonProperty("filter") LogicalExpression filter,
                                             @JsonProperty("schema") TupleMetadata schema) throws ExecutionSetupException {
     this(userName,
-      (HiveStoragePlugin) registry.getPlugin(hiveStoragePluginConfig),
+      registry.resolve(hiveStoragePluginConfig, HiveStoragePlugin.class),
       rowGroupReadEntries,
       columns,
       hivePartitionHolder,

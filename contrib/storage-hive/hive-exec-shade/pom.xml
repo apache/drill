@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.drill.contrib.storage-hive</groupId>
     <artifactId>drill-contrib-storage-hive-parent</artifactId>
-    <version>1.17.0</version>
+    <version>1.19.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>drill-hive-exec-shaded</artifactId>
@@ -79,6 +79,46 @@
         <exclusion>
           <groupId>com.github.joshelser</groupId>
           <artifactId>dropwizard-metrics-hadoop-metrics2-reporter</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-1.2-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-slf4j-impl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-web</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>tomcat</groupId>
+          <artifactId>jasper-compiler</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>tomcat</groupId>
+          <artifactId>jasper-runtime</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-httpclient</groupId>
+          <artifactId>commons-httpclient</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-core-asl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-mapper-asl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-jaxrs</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-xc</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -148,6 +188,14 @@
               <pattern>com.google.protobuf.</pattern>
               <shadedPattern>hive.com.google.protobuf.</shadedPattern>
             </relocation>
+            <relocation>
+              <pattern>org.apache.commons.lang.</pattern>
+              <shadedPattern>hive.org.apache.commons.lang.</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>org.apache.commons.lang3.</pattern>
+              <shadedPattern>hive.org.apache.commons.lang3.</shadedPattern>
+            </relocation>
           </relocations>
           <filters>
             <filter>
@@ -158,6 +206,12 @@
                  you can use TestHiveStorage.readFromAlteredPartitionedTableWithEmptyGroupType() test case. -->
                 <exclude>org/apache/parquet/**</exclude>
                 <exclude>shaded/parquet/org/**</exclude>
+              </excludes>
+            </filter>
+            <filter>
+              <artifact>com.fasterxml.jackson.core:*</artifact>
+              <excludes>
+                <exclude>module-info.class</exclude>
               </excludes>
             </filter>
           </filters>

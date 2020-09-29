@@ -21,7 +21,10 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.vector.ValueVector;
+
+import com.typesafe.config.Config;
 
 /**
  * Implementation of the schema negotiation between scan operator and
@@ -48,7 +51,6 @@ import org.apache.drill.exec.vector.ValueVector;
  * filled in by the scan projector (assuming, of course, that "c"
  * is nullable or an array.)
  */
-
 public class SchemaNegotiatorImpl implements SchemaNegotiator {
 
   public interface NegotiatorListener {
@@ -58,12 +60,14 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   protected final ManagedScanFramework framework;
   private NegotiatorListener listener;
   protected CustomErrorContext context;
+  protected TupleMetadata providedSchema;
   protected TupleMetadata tableSchema;
   protected boolean isSchemaComplete;
   protected int batchSize = ValueVector.MAX_ROW_COUNT;
 
   public SchemaNegotiatorImpl(ManagedScanFramework framework) {
     this.framework = framework;
+    this.providedSchema = framework.outputSchema();
   }
 
   public void bind(NegotiatorListener listener) {
@@ -71,8 +75,35 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   }
 
   @Override
+  public boolean isProjectionEmpty() {
+    return framework.scanOrchestrator().isProjectNone();
+  }
+
+  @Override
+  public boolean hasProvidedSchema() {
+    // Does not count as an output schema if no columns
+    // (only properties) are provided.
+    return providedSchema != null && providedSchema.size() > 0;
+  }
+
+  @Override
+  public TupleMetadata providedSchema() {
+    return providedSchema;
+  }
+
+  @Override
   public OperatorContext context() {
     return framework.context();
+  }
+
+  @Override
+  public Config drillConfig() {
+    return context().getFragmentContext().getConfig();
+  }
+
+  @Override
+  public OptionSet queryOptions() {
+    return context().getFragmentContext().getOptions();
   }
 
   @Override
@@ -90,13 +121,15 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   }
 
   @Override
-  public void setTableSchema(TupleMetadata schema, boolean isComplete) {
+  public void tableSchema(TupleMetadata schema, boolean isComplete) {
     tableSchema = schema;
     isSchemaComplete = schema != null && isComplete;
   }
 
+  public boolean isSchemaComplete() { return tableSchema != null && isSchemaComplete; }
+
   @Override
-  public void setBatchSize(int maxRecordsPerBatch) {
+  public void batchSize(int maxRecordsPerBatch) {
     batchSize = maxRecordsPerBatch;
   }
 
@@ -114,19 +147,10 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
    * schema information
    * @return the result set loader to be used by the reader
    */
-
   @Override
   public ResultSetLoader build() {
 
     // Build and return the result set loader to be used by the reader.
-
     return listener.build(this);
   }
-
-  @Override
-  public boolean isProjectionEmpty() {
-    return framework.scanOrchestrator().isProjectNone();
-  }
-
-  public boolean isSchemaComplete() { return isSchemaComplete; }
 }

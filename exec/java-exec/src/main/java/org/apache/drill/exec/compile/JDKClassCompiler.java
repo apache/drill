@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 
@@ -33,14 +34,24 @@ import org.codehaus.commons.compiler.CompileException;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class JDKClassCompiler extends AbstractClassCompiler {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JDKClassCompiler.class);
+  private static final Logger logger = LoggerFactory.getLogger(JDKClassCompiler.class);
 
   private final Collection<String> compilerOptions;
   private final DiagnosticListener<JavaFileObject> listener;
   private final JavaCompiler compiler;
-  private final DrillJavaFileManager fileManager;
+  private final ClassLoader classLoader;
+
+  private JDKClassCompiler(JavaCompiler compiler, ClassLoader classLoader, boolean debug) {
+    super(debug);
+    this.compiler = compiler;
+    this.listener = new DrillDiagnosticListener();
+    this.classLoader = classLoader;
+    this.compilerOptions = Lists.newArrayList(this.debug ? "-g:source,lines,vars" : "-g:none");
+  }
 
   public static JDKClassCompiler newInstance(ClassLoader classLoader, boolean debug) {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -50,36 +61,29 @@ class JDKClassCompiler extends AbstractClassCompiler {
     return new JDKClassCompiler(compiler, classLoader, debug);
   }
 
-  private JDKClassCompiler(JavaCompiler compiler, ClassLoader classLoader, boolean debug) {
-    super(debug);
-    this.compiler = compiler;
-    this.listener = new DrillDiagnosticListener();
-    this.fileManager = new DrillJavaFileManager(compiler.getStandardFileManager(listener, null, Charsets.UTF_8), classLoader);
-    this.compilerOptions = Lists.newArrayList(this.debug ? "-g:source,lines,vars" : "-g:none");
-  }
-
   @Override
   protected byte[][] getByteCode(final ClassNames className, final String sourceCode)
       throws CompileException, IOException, ClassNotFoundException {
     return doCompile(className, sourceCode).getByteCode();
-   }
+  }
 
   @Override
-  public Map<String,byte[]> compile(final ClassNames className, final String sourceCode)
+  public Map<String, byte[]> compile(final ClassNames className, final String sourceCode)
       throws CompileException, IOException, ClassNotFoundException {
     return doCompile(className, sourceCode).getClassByteCodes();
- }
+  }
 
   private DrillJavaFileObject doCompile(final ClassNames className, final String sourceCode)
-        throws CompileException, IOException, ClassNotFoundException {
-    try {
+      throws CompileException, IOException, ClassNotFoundException {
+    // JavaFileManager should be closed after its usage to release all resources opened by this file manager
+    try (JavaFileManager fileManager = new DrillJavaFileManager(compiler.getStandardFileManager(listener, null, Charsets.UTF_8), classLoader)) {
       // Create one Java source file in memory, which will be compiled later.
       DrillJavaFileObject compilationUnit = new DrillJavaFileObject(className.dot, sourceCode);
 
       CompilationTask task = compiler.getTask(null, fileManager, listener, compilerOptions, null, Collections.singleton(compilationUnit));
 
       // Run the compiler.
-      if(!task.call()) {
+      if (!task.call()) {
         throw new CompileException("Compilation failed", null);
       } else if (!compilationUnit.isCompiled()) {
         throw new ClassNotFoundException(className + ": Class file not created by compilation.");
@@ -103,5 +107,7 @@ class JDKClassCompiler extends AbstractClassCompiler {
   }
 
   @Override
-  protected org.slf4j.Logger getLogger() { return logger; }
+  protected Logger getLogger() {
+    return logger;
+  }
 }

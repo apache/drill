@@ -30,6 +30,8 @@ import org.apache.drill.exec.vector.accessor.WriterPosition;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.OffsetVectorWriter;
 import org.apache.drill.exec.vector.accessor.writer.WriterEvents;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for a single vector. Handles the bulk of work for that vector.
@@ -42,6 +44,8 @@ public abstract class SingleVectorState implements VectorState {
 
   public abstract static class SimpleVectorState extends SingleVectorState {
 
+    private static final Logger logger = LoggerFactory.getLogger(SimpleVectorState.class);
+
     public SimpleVectorState(WriterEvents writer,
         ValueVector mainVector) {
       super(writer, mainVector);
@@ -50,11 +54,11 @@ public abstract class SingleVectorState implements VectorState {
     @Override
     protected void copyOverflow(int sourceStartIndex, int sourceEndIndex) {
       int newIndex = 0;
-      ResultSetLoaderImpl.logger.trace("Vector {} of type {}: copy {} values from {} to {}",
-          mainVector.getField().toString(),
-          mainVector.getClass().getSimpleName(),
-          Math.max(0, sourceEndIndex - sourceStartIndex + 1),
-          sourceStartIndex, newIndex);
+      logger.trace("Vector {} of type {}: copy {} values from {} to {}",
+        mainVector.getField().toString(),
+        mainVector.getClass().getSimpleName(),
+        Math.max(0, sourceEndIndex - sourceStartIndex + 1),
+        sourceStartIndex, newIndex);
 
       // Copy overflow values from the full vector to the new
       // look-ahead vector. Uses vector-level operations for convenience.
@@ -139,6 +143,8 @@ public abstract class SingleVectorState implements VectorState {
 
   public static class OffsetVectorState extends SingleVectorState {
 
+    private static final Logger logger = LoggerFactory.getLogger(OffsetVectorState.class);
+
     /**
      * The child writer used to determine positions on overflow.
      * The repeated list vector defers creating the child until the
@@ -203,9 +209,9 @@ public abstract class SingleVectorState implements VectorState {
       UInt4Vector.Mutator destMutator = ((UInt4Vector) mainVector).getMutator();
       int offset = childWriter.rowStartIndex();
       int newIndex = 1;
-      ResultSetLoaderImpl.logger.trace("Offset vector: copy {} values from {} to {} with offset {}",
-          Math.max(0, sourceEndIndex - sourceStartIndex + 1),
-          sourceStartIndex, newIndex, offset);
+      logger.trace("Offset vector: copy {} values from {} to {} with offset {}",
+        Math.max(0, sourceEndIndex - sourceStartIndex + 1),
+        sourceStartIndex, newIndex, offset);
       assert offset == sourceAccessor.get(sourceStartIndex - 1);
 
       // Position zero is special and will be filled in by the writer

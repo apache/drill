@@ -17,13 +17,16 @@
  */
 package org.apache.drill.exec.record.metadata;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.complex.DictVector;
 
 public class MetadataUtils {
 
@@ -38,13 +41,12 @@ public class MetadataUtils {
   /**
    * Create a column metadata object that holds the given
    * {@link MaterializedField}. The type of the object will be either a
-   * primitive or map column, depending on the field's type. The logic
+   * primitive, map or dict column, depending on the field's type. The logic
    * here mimics the code as written, which is very messy in some places.
    *
    * @param field the materialized field to wrap
    * @return the column metadata that wraps the field
    */
-
   public static ColumnMetadata fromField(MaterializedField field) {
     MajorType majorType = field.getType();
     MinorType type = majorType.getMinorType();
@@ -90,6 +92,8 @@ public class MetadataUtils {
   public static ColumnMetadata fromView(MaterializedField field) {
     if (field.getType().getMinorType() == MinorType.MAP) {
       return new MapColumnMetadata(field, null);
+    } else if (field.getType().getMinorType() == MinorType.DICT) {
+      return newDict(field);
     } else {
       return new PrimitiveColumnMetadata(field);
     }
@@ -102,7 +106,6 @@ public class MetadataUtils {
    * @param columns list of columns that make up the tuple
    * @return a tuple metadata object that contains the columns
    */
-
   public static TupleSchema fromColumns(List<ColumnMetadata> columns) {
     TupleSchema tuple = new TupleSchema();
     for (ColumnMetadata column : columns) {
@@ -121,7 +124,6 @@ public class MetadataUtils {
    * the map
    * @return a map column metadata for the map
    */
-
   public static MapColumnMetadata newMap(MaterializedField field, TupleSchema schema) {
     return new MapColumnMetadata(field, schema);
   }
@@ -134,24 +136,45 @@ public class MetadataUtils {
     return new MapColumnMetadata(name, DataMode.REQUIRED, (TupleSchema) schema);
   }
 
+  public static MapColumnMetadata newMap(String name) {
+    return newMap(name, new TupleSchema());
+  }
+
   public static DictColumnMetadata newDict(MaterializedField field) {
     return new DictColumnMetadata(field, fromFields(field.getChildren()));
   }
 
-  public static DictColumnMetadata newDict(String name, TupleMetadata schema) {
-    return new DictColumnMetadata(name, DataMode.OPTIONAL, (TupleSchema) schema);
+  public static DictColumnMetadata newDict(MaterializedField field, TupleSchema schema) {
+    validateDictChildren(schema.toFieldList());
+    return new DictColumnMetadata(field.getName(), field.getDataMode(), schema);
+  }
+
+  private static void validateDictChildren(List<MaterializedField> entryFields) {
+    Collection<String> children = entryFields.stream()
+        .map(MaterializedField::getName)
+        .collect(Collectors.toList());
+    String message = "DICT does not contain %s.";
+    if (!children.contains(DictVector.FIELD_KEY_NAME)) {
+      throw new IllegalStateException(String.format(message, DictVector.FIELD_KEY_NAME));
+    } else if (!children.contains(DictVector.FIELD_VALUE_NAME)) {
+      throw new IllegalStateException(String.format(message, DictVector.FIELD_VALUE_NAME));
+    }
+  }
+
+  public static DictColumnMetadata newDict(String name) {
+    return new DictColumnMetadata(name, DataMode.REQUIRED);
   }
 
   public static VariantColumnMetadata newVariant(MaterializedField field, VariantSchema schema) {
-    return new VariantColumnMetadata(field, schema);
+    return VariantColumnMetadata.unionOf(field, schema);
   }
 
   public static VariantColumnMetadata newVariant(String name, DataMode cardinality) {
     switch (cardinality) {
     case OPTIONAL:
-      return new VariantColumnMetadata(name, MinorType.UNION, new VariantSchema());
+      return VariantColumnMetadata.union(name);
     case REPEATED:
-      return new VariantColumnMetadata(name, MinorType.LIST, new VariantSchema());
+      return VariantColumnMetadata.list(name);
     default:
       throw new IllegalArgumentException();
     }
@@ -165,19 +188,32 @@ public class MetadataUtils {
     return new MapColumnMetadata(name, DataMode.REPEATED, (TupleSchema) schema);
   }
 
+  public static ColumnMetadata newMapArray(String name) {
+    return newMapArray(name, new TupleSchema());
+  }
+
+  public static DictColumnMetadata newDictArray(String name) {
+    return new DictColumnMetadata(name, DataMode.REPEATED);
+  }
+
   public static PrimitiveColumnMetadata newScalar(String name, MinorType type,
       DataMode mode) {
-    assert type != MinorType.MAP && type != MinorType.UNION && type != MinorType.LIST;
+    assert isScalar(type);
     return new PrimitiveColumnMetadata(name, type, mode);
   }
 
   public static PrimitiveColumnMetadata newScalar(String name, MajorType type) {
     MinorType minorType = type.getMinorType();
-    assert minorType != MinorType.MAP && minorType != MinorType.UNION && minorType != MinorType.LIST;
+    assert isScalar(minorType);
     return new PrimitiveColumnMetadata(name, type);
   }
 
-  private static ColumnMetadata newDecimal(String name, MinorType type, DataMode mode,
+  public static ColumnMetadata newDecimal(String name, DataMode mode,
+      int precision, int scale) {
+    return newDecimal(name, MinorType.VARDECIMAL, mode, precision, scale);
+  }
+
+  public static ColumnMetadata newDecimal(String name, MinorType type, DataMode mode,
       int precision, int scale) {
     if (precision < 0 ) {
       throw new IllegalArgumentException("Precision cannot be negative : " +
@@ -205,4 +241,81 @@ public class MetadataUtils {
     return new PrimitiveColumnMetadata(field);
   }
 
+  public static boolean isScalar(ColumnMetadata col) {
+    return isScalar(col.type());
+  }
+
+  public static boolean isScalar(MinorType type) {
+    return !isComplex(type);
+  }
+
+  public static boolean isComplex(MinorType type) {
+    switch (type) {
+      case MAP:
+      case UNION:
+      case LIST:
+      case DICT:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  public static ColumnMetadata newDynamic(String name) {
+    return new DynamicColumn(name);
+  }
+
+  public static ColumnMetadata wildcard() {
+    return DynamicColumn.WILDCARD_COLUMN;
+  }
+
+  public static boolean isWildcard(ColumnMetadata col) {
+    return col.isDynamic() &&
+           col.name().equals(DynamicColumn.WILDCARD);
+  }
+
+  public static ColumnMetadata cloneMapWithSchema(ColumnMetadata source,
+      TupleMetadata members) {
+    return new MapColumnMetadata(source.name(), source.mode(), (TupleSchema) members);
+  }
+
+  public static ColumnMetadata diffMap(ColumnMetadata map, ColumnMetadata other) {
+    TupleMetadata diff = diffTuple(map.tupleSchema(), other.tupleSchema());
+    if (!diff.isEmpty()) {
+      return MetadataUtils.cloneMapWithSchema(map, diff);
+    } else {
+      return null;
+    }
+  }
+
+  public static TupleMetadata diffTuple(TupleMetadata base,
+      TupleMetadata subtend) {
+    TupleMetadata diff = new TupleSchema();
+    for (ColumnMetadata col : base) {
+      ColumnMetadata other = subtend.metadata(col.name());
+      if (other == null) {
+        diff.addColumn(col);
+      } else if (col.isMap()) {
+        ColumnMetadata mapDiff = diffMap(col, other);
+        if (mapDiff != null) {
+          diff.addColumn(mapDiff);
+        }
+      }
+    }
+    return diff;
+  }
+
+  public static boolean hasDynamicColumns(TupleMetadata schema) {
+    for (ColumnMetadata col : schema) {
+      if (col.isDynamic()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static boolean isRepeatedList(ColumnMetadata col) {
+    return col.type() == MinorType.LIST &&
+           col.mode() == DataMode.REPEATED;
+  }
 }

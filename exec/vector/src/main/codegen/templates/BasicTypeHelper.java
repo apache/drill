@@ -132,34 +132,34 @@ public class BasicTypeHelper {
   }
   public static Class<?> getReaderClassName( MinorType type, DataMode mode, boolean isSingularRepeated){
     switch (type) {
-    case MAP:
-      switch (mode) {
-      case REQUIRED:
-        if (!isSingularRepeated)
-          return SingleMapReaderImpl.class;
-        else
-          return SingleLikeRepeatedMapReaderImpl.class;
-      case REPEATED:
-          return RepeatedMapReaderImpl.class;
-      }
-      case DICT:
+      case MAP:
         switch (mode) {
-          case REQUIRED:
-            if (!isSingularRepeated) {
-              return SingleDictReaderImpl.class;
-            } else {
-              throw new UnsupportedOperationException("DictVector required singular repeated reader is not supported yet");
-            }
-          case REPEATED:
-            return RepeatedDictReaderImpl.class;
+        case REQUIRED:
+          if (!isSingularRepeated)
+            return SingleMapReaderImpl.class;
+          else
+            return SingleLikeRepeatedMapReaderImpl.class;
+        case REPEATED:
+            return RepeatedMapReaderImpl.class;
         }
-    case LIST:
-      switch (mode) {
-      case REQUIRED:
-        return SingleListReaderImpl.class;
-      case REPEATED:
-        return RepeatedListReaderImpl.class;
-      }
+        case DICT:
+          switch (mode) {
+            case REQUIRED:
+              if (!isSingularRepeated) {
+                return SingleDictReaderImpl.class;
+              } else {
+                throw new UnsupportedOperationException("DictVector required singular repeated reader is not supported yet");
+              }
+            case REPEATED:
+              return RepeatedDictReaderImpl.class;
+          }
+      case LIST:
+        switch (mode) {
+        case REQUIRED:
+          return SingleListReaderImpl.class;
+        case REPEATED:
+          return RepeatedListReaderImpl.class;
+        }
 
 <#list vv.types as type>
   <#list type.minor as minor>
@@ -175,56 +175,54 @@ public class BasicTypeHelper {
   </#list>
 </#list>
       default:
-        break;
-      }
-      throw new UnsupportedOperationException(buildErrorMessage("get reader class name", type, mode));
+        throw new UnsupportedOperationException(buildErrorMessage("get reader class name", type, mode));
+    }
   }
 
   public static Class<?> getWriterInterface( MinorType type, DataMode mode){
     switch (type) {
-    case UNION: return UnionWriter.class;
-    case MAP: return MapWriter.class;
-    case DICT: return DictWriter.class;
-    case LIST: return ListWriter.class;
+      case UNION: return UnionWriter.class;
+      case MAP: return MapWriter.class;
+      case DICT: return DictWriter.class;
+      case LIST: return ListWriter.class;
 <#list vv.types as type>
   <#list type.minor as minor>
       case ${minor.class?upper_case}: return ${minor.class}Writer.class;
   </#list>
 </#list>
       default:
-        break;
-      }
-      throw new UnsupportedOperationException(buildErrorMessage("get writer interface", type, mode));
+        throw new UnsupportedOperationException(buildErrorMessage("get writer interface", type, mode));
+    }
   }
 
   public static Class<?> getWriterImpl( MinorType type, DataMode mode){
     switch (type) {
-    case UNION:
-      return UnionWriter.class;
-    case MAP:
-      switch (mode) {
-      case REQUIRED:
-      case OPTIONAL:
-        return SingleMapWriter.class;
-      case REPEATED:
-        return RepeatedMapWriter.class;
-      }
-    case DICT:
-      switch (mode) {
+      case UNION:
+        return UnionWriter.class;
+      case MAP:
+        switch (mode) {
         case REQUIRED:
         case OPTIONAL:
-          return SingleDictWriter.class;
+          return SingleMapWriter.class;
         case REPEATED:
-          return RepeatedDictWriter.class;
-      }
-    case LIST:
-      switch (mode) {
-      case REQUIRED:
-      case OPTIONAL:
-        return UnionListWriter.class;
-      case REPEATED:
-        return RepeatedListWriter.class;
-      }
+          return RepeatedMapWriter.class;
+        }
+      case DICT:
+        switch (mode) {
+          case REQUIRED:
+          case OPTIONAL:
+            return SingleDictWriter.class;
+          case REPEATED:
+            return RepeatedDictWriter.class;
+        }
+      case LIST:
+        switch (mode) {
+        case REQUIRED:
+        case OPTIONAL:
+          return UnionListWriter.class;
+        case REPEATED:
+          return RepeatedListWriter.class;
+        }
 
 <#list vv.types as type>
   <#list type.minor as minor>
@@ -240,9 +238,8 @@ public class BasicTypeHelper {
   </#list>
 </#list>
       default:
-        break;
-      }
-      throw new UnsupportedOperationException(buildErrorMessage("get writer implementation", type, mode));
+        throw new UnsupportedOperationException(buildErrorMessage("get writer implementation", type, mode));
+    }
   }
 
   /**
@@ -254,8 +251,8 @@ public class BasicTypeHelper {
    */
   public static FieldReader getHolderReaderImpl(MajorType type, ValueHolder holder) {
     switch (type.getMinorType()) {
-    <#list vv.types as type>
-      <#list type.minor as minor>
+<#list vv.types as type>
+  <#list type.minor as minor>
       case ${minor.class?upper_case}:
         switch (type.getMode()) {
           case REQUIRED:
@@ -265,12 +262,13 @@ public class BasicTypeHelper {
           case REPEATED:
             return new Repeated${minor.class}HolderReaderImpl((Repeated${minor.class}Holder) holder);
       }
-      </#list>
-    </#list>
+  </#list>
+</#list>
       case NULL:
         return new UntypedHolderReaderImpl((UntypedNullHolder) holder);
+      default:
+        throw new UnsupportedOperationException(buildErrorMessage("get holder reader implementation", type.getMinorType(), type.getMode()));
     }
-    throw new UnsupportedOperationException(buildErrorMessage("get holder reader implementation", type.getMinorType(), type.getMode()));
   }
 
   public static Class<?> getHolderReaderImpl(MinorType type, DataMode mode) {
@@ -291,9 +289,8 @@ public class BasicTypeHelper {
       case NULL:
         return UntypedHolderReaderImpl.class;
       default:
-        break;
-      }
-      throw new UnsupportedOperationException(buildErrorMessage("get holder reader implementation", type, mode));
+        throw new UnsupportedOperationException(buildErrorMessage("get holder reader implementation", type, mode));
+    }
   }
 
   public static ValueVector getNewVector(String name, BufferAllocator allocator, MajorType type, CallBack callback) {
@@ -315,56 +312,54 @@ public class BasicTypeHelper {
   public static ValueVector getNewVector(MaterializedField field, MajorType type, BufferAllocator allocator, CallBack callBack) {
 
     switch (type.getMinorType()) {
+      case UNION:
+        return new UnionVector(field, allocator, callBack);
 
-    case UNION:
-      return new UnionVector(field, allocator, callBack);
-
-    case MAP:
-      switch (type.getMode()) {
-      case REQUIRED:
-      case OPTIONAL:
-        return new MapVector(field, allocator, callBack);
-      case REPEATED:
-        return new RepeatedMapVector(field, allocator, callBack);
-      }
-    case DICT:
-      switch (type.getMode()) {
+      case MAP:
+        switch (type.getMode()) {
         case REQUIRED:
         case OPTIONAL:
-          return new DictVector(field, allocator, callBack);
+          return new MapVector(field, allocator, callBack);
         case REPEATED:
-          return new RepeatedDictVector(field, allocator, callBack);
-      }
-    case LIST:
-      switch (type.getMode()) {
-      case REPEATED:
-        return new RepeatedListVector(field, allocator, callBack);
-      case OPTIONAL:
-      case REQUIRED:
-        return new ListVector(field, allocator, callBack);
-      }
+          return new RepeatedMapVector(field, allocator, callBack);
+        }
+      case DICT:
+        switch (type.getMode()) {
+          case REQUIRED:
+          case OPTIONAL:
+            return new DictVector(field, allocator, callBack);
+          case REPEATED:
+            return new RepeatedDictVector(field, allocator, callBack);
+        }
+      case LIST:
+        switch (type.getMode()) {
+        case REPEATED:
+          return new RepeatedListVector(field, allocator, callBack);
+        case OPTIONAL:
+        case REQUIRED:
+          return new ListVector(field, allocator, callBack);
+        }
 <#list vv.  types as type>
   <#list type.minor as minor>
-    case ${minor.class?upper_case}:
-      switch (type.getMode()) {
-        case REQUIRED:
-          return new ${minor.class}Vector(field, allocator);
-        case OPTIONAL:
-          return new Nullable${minor.class}Vector(field, allocator);
-        case REPEATED:
-          return new Repeated${minor.class}Vector(field, allocator);
-      }
+      case ${minor.class?upper_case}:
+        switch (type.getMode()) {
+          case REQUIRED:
+            return new ${minor.class}Vector(field, allocator);
+          case OPTIONAL:
+            return new Nullable${minor.class}Vector(field, allocator);
+          case REPEATED:
+            return new Repeated${minor.class}Vector(field, allocator);
+        }
   </#list>
 </#list>
-    case GENERIC_OBJECT:
-      return new ObjectVector(field, allocator)        ;
-    case NULL:
-      return new UntypedNullVector(field, allocator);
-    default:
-      break;
+      case GENERIC_OBJECT:
+        return new ObjectVector(field, allocator)        ;
+      case NULL:
+        return new UntypedNullVector(field, allocator);
+      default:
+        // All ValueVector types have been handled.
+        throw new UnsupportedOperationException(buildErrorMessage("get new vector", type));
     }
-    // All ValueVector types have been handled.
-    throw new UnsupportedOperationException(buildErrorMessage("get new vector", type));
   }
 
   public static ValueHolder getValue(ValueVector vector, int index) {
@@ -373,45 +368,47 @@ public class BasicTypeHelper {
     switch(type.getMinorType()) {
 <#list vv.types as type>
   <#list type.minor as minor>
-    case ${minor.class?upper_case} :
+      case ${minor.class?upper_case} :
       <#if minor.class?starts_with("Var") || minor.class == "IntervalDay" || minor.class == "Interval" ||
         minor.class?starts_with("Decimal28") ||  minor.class?starts_with("Decimal38")>
+          switch (type.getMode()) {
+            case REQUIRED:
+              holder = new ${minor.class}Holder();
+              ((${minor.class}Vector) vector).getAccessor().get(index, (${minor.class}Holder)holder);
+              return holder;
+            case OPTIONAL:
+              holder = new Nullable${minor.class}Holder();
+              ((Nullable${minor.class}Holder)holder).isSet = ((Nullable${minor.class}Vector) vector).getAccessor().isSet(index);
+              if (((Nullable${minor.class}Holder)holder).isSet == 1) {
+                ((Nullable${minor.class}Vector) vector).getAccessor().get(index, (Nullable${minor.class}Holder)holder);
+              }
+              return holder;
+            default:
+          }
+      <#else>
         switch (type.getMode()) {
           case REQUIRED:
             holder = new ${minor.class}Holder();
-            ((${minor.class}Vector) vector).getAccessor().get(index, (${minor.class}Holder)holder);
+            ((${minor.class}Holder)holder).value = ((${minor.class}Vector) vector).getAccessor().get(index);
             return holder;
           case OPTIONAL:
             holder = new Nullable${minor.class}Holder();
             ((Nullable${minor.class}Holder)holder).isSet = ((Nullable${minor.class}Vector) vector).getAccessor().isSet(index);
             if (((Nullable${minor.class}Holder)holder).isSet == 1) {
-              ((Nullable${minor.class}Vector) vector).getAccessor().get(index, (Nullable${minor.class}Holder)holder);
+              ((Nullable${minor.class}Holder)holder).value = ((Nullable${minor.class}Vector) vector).getAccessor().get(index);
             }
             return holder;
+          default:
         }
-      <#else>
-      switch (type.getMode()) {
-        case REQUIRED:
-          holder = new ${minor.class}Holder();
-          ((${minor.class}Holder)holder).value = ((${minor.class}Vector) vector).getAccessor().get(index);
-          return holder;
-        case OPTIONAL:
-          holder = new Nullable${minor.class}Holder();
-          ((Nullable${minor.class}Holder)holder).isSet = ((Nullable${minor.class}Vector) vector).getAccessor().isSet(index);
-          if (((Nullable${minor.class}Holder)holder).isSet == 1) {
-            ((Nullable${minor.class}Holder)holder).value = ((Nullable${minor.class}Vector) vector).getAccessor().get(index);
-          }
-          return holder;
-      }
       </#if>
   </#list>
 </#list>
-    case GENERIC_OBJECT:
-      holder = new ObjectHolder();
-      ((ObjectHolder)holder).obj = ((ObjectVector) vector).getAccessor().getObject(index)         ;
-      break;
+      case GENERIC_OBJECT:
+        holder = new ObjectHolder();
+        ((ObjectHolder)holder).obj = ((ObjectVector) vector).getAccessor().getObject(index)         ;
+        break;
+      default:
     }
-
     throw new UnsupportedOperationException(buildErrorMessage("get value", type));
   }
 
@@ -421,26 +418,26 @@ public class BasicTypeHelper {
     switch(type.getMinorType()) {
 <#list vv.types as type>
   <#list type.minor as minor>
-    case ${minor.class?upper_case} :
-      switch (type.getMode()) {
-        case REQUIRED:
-          ((${minor.class}Vector) vector).getMutator().setSafe(index, (${minor.class}Holder) holder);
-          return;
-        case OPTIONAL:
-          if (((Nullable${minor.class}Holder) holder).isSet == 1) {
-            ((Nullable${minor.class}Vector) vector).getMutator().setSafe(index, (Nullable${minor.class}Holder) holder);
-          }
-          return;
-      }
+      case ${minor.class?upper_case} :
+        switch (type.getMode()) {
+          case REQUIRED:
+            ((${minor.class}Vector) vector).getMutator().setSafe(index, (${minor.class}Holder) holder);
+            return;
+          case OPTIONAL:
+            if (((Nullable${minor.class}Holder) holder).isSet == 1) {
+              ((Nullable${minor.class}Vector) vector).getMutator().setSafe(index, (Nullable${minor.class}Holder) holder);
+            }
+            return;
+        }
   </#list>
 </#list>
-    case GENERIC_OBJECT:
-      ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
-      return;
-    case NULL:
-      ((UntypedNullVector) vector).getMutator().setSafe(index, (UntypedNullHolder) holder);
-    default:
-      throw new UnsupportedOperationException(buildErrorMessage("set value", type));
+      case GENERIC_OBJECT:
+        ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
+        return;
+      case NULL:
+        ((UntypedNullVector) vector).getMutator().setSafe(index, (UntypedNullHolder) holder);
+      default:
+        throw new UnsupportedOperationException(buildErrorMessage("set value", type));
     }
   }
 
@@ -448,28 +445,28 @@ public class BasicTypeHelper {
     MajorType type = vector.getField().getType();
 
     switch(type.getMinorType()) {
-      <#list vv.types as type>
-      <#list type.minor as minor>
+<#list vv.types as type>
+  <#list type.minor as minor>
       case ${minor.class?upper_case} :
-      switch (type.getMode()) {
-        case REQUIRED:
-          ((${minor.class}Vector) vector).getMutator().setSafe(index, (${minor.class}Holder) holder);
-          return;
-        case OPTIONAL:
-          if (((Nullable${minor.class}Holder) holder).isSet == 1) {
-            ((Nullable${minor.class}Vector) vector).getMutator().setSafe(index, (Nullable${minor.class}Holder) holder);
-          } else {
-            ((Nullable${minor.class}Vector) vector).getMutator().isSafe(index);
-          }
-          return;
-      }
-      </#list>
-      </#list>
+        switch (type.getMode()) {
+          case REQUIRED:
+            ((${minor.class}Vector) vector).getMutator().setSafe(index, (${minor.class}Holder) holder);
+            return;
+          case OPTIONAL:
+            if (((Nullable${minor.class}Holder) holder).isSet == 1) {
+              ((Nullable${minor.class}Vector) vector).getMutator().setSafe(index, (Nullable${minor.class}Holder) holder);
+            } else {
+              ((Nullable${minor.class}Vector) vector).getMutator().isSafe(index);
+            }
+            return;
+        }
+  </#list>
+</#list>
       case GENERIC_OBJECT:
         ((ObjectVector) vector).getMutator().setSafe(index, (ObjectHolder) holder);
-    case NULL:
-      ((UntypedNullVector) vector).getMutator().setSafe(index, (UntypedNullHolder) holder);
-    default:
+      case NULL:
+        ((UntypedNullVector) vector).getMutator().setSafe(index, (UntypedNullHolder) holder);
+      default:
         throw new UnsupportedOperationException(buildErrorMessage("set value safe", type));
     }
   }
@@ -487,28 +484,25 @@ public class BasicTypeHelper {
     switch(type1.getMinorType()) {
 <#list vv.types as type>
   <#list type.minor as minor>
-    case ${minor.class?upper_case} :
-      if ( ((${minor.class}Vector) v1).getAccessor().get(v1index) ==
-           ((${minor.class}Vector) v2).getAccessor().get(v2index) )
-        return true;
-      break;
+      case ${minor.class?upper_case} :
+        return ((${minor.class}Vector) v1).getAccessor().get(v1index) ==
+               ((${minor.class}Vector) v2).getAccessor().get(v2index);
   </#list>
 </#list>
-    default:
-      break;
+      default:
+        return false;
     }
-    return false;
   }
 
   /**
-   *  Create a ValueHolder of MajorType.
+   * Create a ValueHolder of MajorType.
    * @param type
    * @return
    */
   public static ValueHolder createValueHolder(MajorType type) {
     switch(type.getMinorType()) {
-      <#list vv.types as type>
-      <#list type.minor as minor>
+<#list vv.types as type>
+  <#list type.minor as minor>
       case ${minor.class?upper_case} :
 
         switch (type.getMode()) {
@@ -519,11 +513,11 @@ public class BasicTypeHelper {
           case REPEATED:
             return new Repeated${minor.class}Holder();
         }
-      </#list>
-      </#list>
+  </#list>
+</#list>
       case GENERIC_OBJECT:
         return new ObjectHolder();
-    case NULL:
+      case NULL:
         return new UntypedNullHolder();
       default:
         throw new UnsupportedOperationException(buildErrorMessage("create value holder", type));
@@ -534,22 +528,22 @@ public class BasicTypeHelper {
     MajorType type = getValueHolderType(holder);
 
     switch(type.getMinorType()) {
-      <#list vv.types as type>
-      <#list type.minor as minor>
+<#list vv.types as type>
+  <#list type.minor as minor>
       case ${minor.class?upper_case} :
 
-      switch (type.getMode()) {
-        case REQUIRED:
-          return true;
-        case OPTIONAL:
-          return ((Nullable${minor.class}Holder) holder).isSet == 0;
-        case REPEATED:
-          return true;
-      }
-      </#list>
-      </#list>
-    case NULL:
-      return true;
+        switch (type.getMode()) {
+          case REQUIRED:
+            return true;
+          case OPTIONAL:
+            return ((Nullable${minor.class}Holder) holder).isSet == 0;
+          case REPEATED:
+            return true;
+        }
+  </#list>
+</#list>
+      case NULL:
+        return true;
       default:
         throw new UnsupportedOperationException(buildErrorMessage("check is null", type));
     }
@@ -559,8 +553,8 @@ public class BasicTypeHelper {
     MajorType type = getValueHolderType(holder);
 
     switch(type.getMinorType()) {
-      <#list vv.types as type>
-      <#list type.minor as minor>
+<#list vv.types as type>
+  <#list type.minor as minor>
       case ${minor.class?upper_case} :
 
         switch (type.getMode()) {
@@ -582,8 +576,8 @@ public class BasicTypeHelper {
           case REPEATED:
             return holder;
         }
-      </#list>
-      </#list>
+  </#list>
+</#list>
       default:
         throw new UnsupportedOperationException(buildErrorMessage("deNullify", type));
     }
@@ -593,8 +587,8 @@ public class BasicTypeHelper {
     MajorType type = getValueHolderType(holder);
 
     switch(type.getMinorType()) {
-      <#list vv.types as type>
-      <#list type.minor as minor>
+<#list vv.types as type>
+  <#list type.minor as minor>
       case ${minor.class?upper_case} :
         switch (type.getMode()) {
           case REQUIRED:
@@ -610,20 +604,19 @@ public class BasicTypeHelper {
           case REPEATED:
             throw new UnsupportedOperationException("You can not convert repeated type " + type + " to nullable type!");
         }
-      </#list>
-      </#list>
+  </#list>
+</#list>
       default:
         throw new UnsupportedOperationException(buildErrorMessage("nullify", type));
     }
   }
 
   public static MajorType getValueHolderType(ValueHolder holder) {
-
     if (0 == 1) {
       return null;
     }
-    <#list vv.types as type>
-    <#list type.minor as minor>
+<#list vv.types as type>
+  <#list type.minor as minor>
     <#if minor.class.contains("Decimal")>
       else if (holder instanceof ${minor.class}Holder) {
         return  getType((${minor.class}Holder) holder);
@@ -637,19 +630,18 @@ public class BasicTypeHelper {
       return ((Nullable${minor.class}Holder) holder).TYPE;
       }
     </#if>
-    </#list>
-    </#list>
+  </#list>
+</#list>
     else if (holder instanceof UntypedNullHolder) {
       return UntypedNullHolder.TYPE;
     }
     throw new UnsupportedOperationException("ValueHolder is not supported for 'getValueHolderType' method.");
-
   }
 
-  <#list vv.types as type>
+<#list vv.types as type>
   <#list type.minor as minor>
-  <#if minor.class.contains("Decimal")>
-  <#list ["Nullable", "", "Repeated"] as dataMode>
+    <#if minor.class.contains("Decimal")>
+      <#list ["Nullable", "", "Repeated"] as dataMode>
   public static MajorType getType(${dataMode}${minor.class}Holder holder) {
     return MajorType.newBuilder()
         .setMinorType(MinorType.${minor.class?upper_case})
@@ -668,8 +660,8 @@ public class BasicTypeHelper {
       </#if>
         .build();
   }
+      </#list>
+    </#if>
   </#list>
-  </#if>
-  </#list>
-  </#list>
+</#list>
 }

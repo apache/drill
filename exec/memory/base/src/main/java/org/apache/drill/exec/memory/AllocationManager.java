@@ -43,11 +43,11 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * UDLE. Ensures that one allocator owns the memory that multiple allocators may
  * be referencing. Manages a BufferLedger between each of its associated
  * allocators. This class is also responsible for managing when memory is
- * allocated and returned to the Netty-based PooledByteBufAllocatorL.
- *
+ * allocated and returned to the Netty-based {code PooledByteBufAllocatorL}.
+ * <p>
  * The only reason that this isn't package private is we're forced to put
  * DrillBuf in Netty's package which need access to these objects or methods.
- *
+ * <p>
  * Threading: AllocationManager manages thread-safety internally. Operations
  * within the context of a single BufferLedger are lockless in nature and can be
  * leveraged by multiple threads. Operations that cross the context of two
@@ -56,7 +56,6 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * allocation. As such, there will be thousands of these in a typical query. The
  * contention of acquiring a lock on AllocationManager should be very low.
  */
-
 public class AllocationManager {
 
   private static final AtomicLong MANAGER_ID_GENERATOR = new AtomicLong(0);
@@ -151,7 +150,6 @@ public class AllocationManager {
    * AllocationManager that it now longer needs to hold a reference to
    * particular piece of memory.
    */
-
   private class ReleaseListener {
 
     private final BufferAllocator allocator;
@@ -163,7 +161,6 @@ public class AllocationManager {
     /**
      * Can only be called when you already hold the writeLock.
      */
-
     public void release() {
       allocator.assertOpen();
 
@@ -200,7 +197,6 @@ public class AllocationManager {
    * only reason this is public is due to DrillBuf being in io.netty.buffer
    * package.
    */
-
   public class BufferLedger {
 
     private final IdentityHashMap<DrillBuf, Object> buffers =
@@ -223,8 +219,10 @@ public class AllocationManager {
     }
 
     /**
-     * Transfer any balance the current ledger has to the target ledger. In the case that the current ledger holds no
-     * memory, no transfer is made to the new ledger.
+     * Transfer any balance the current ledger has to the target ledger. In the
+     * case that the current ledger holds no memory, no transfer is made to the
+     * new ledger.
+     *
      * @param target
      *          The ledger to transfer ownership account to.
      * @return Whether transfer fit within target ledgers limits.
@@ -241,8 +239,8 @@ public class AllocationManager {
         return true;
       }
 
-      // since two balance transfers out from the allocator manager could cause incorrect accounting, we need to ensure
-      // that this won't happen by synchronizing on the allocator manager instance.
+      // since two balance transfers out from the allocator manager could cause incorrect accounting,
+      // we need to ensure that this won't happen by synchronizing on the allocator manager instance.
       try (@SuppressWarnings("unused") Closeable write = writeLock.open()) {
         if (owningLedger != this) {
           return true;
@@ -316,7 +314,6 @@ public class AllocationManager {
      * zero, this ledger should release its ownership back to the
      * AllocationManager
      */
-
     public int decrement(int decrement) {
       allocator.assertOpen();
 
@@ -346,7 +343,6 @@ public class AllocationManager {
      * @param allocator
      * @return The ledger associated with a particular BufferAllocator.
      */
-
     public BufferLedger getLedgerForAllocator(BufferAllocator allocator) {
       return associate((BaseAllocator) allocator);
     }
@@ -362,7 +358,6 @@ public class AllocationManager {
      * @return A new DrillBuf that shares references with all DrillBufs
      *         associated with this BufferLedger
      */
-
     public DrillBuf newDrillBuf(int offset, int length) {
       allocator.assertOpen();
       return newDrillBuf(offset, length, null);
@@ -411,7 +406,6 @@ public class AllocationManager {
      *
      * @return Size in bytes
      */
-
     public int getSize() {
       return size;
     }

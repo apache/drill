@@ -120,13 +120,13 @@ public class QueryResultHandler {
 
     try {
       if (isFailureResult) {
-        // Failure case--pass on via submissionFailed(...).
 
+        // Failure case--pass on via submissionFailed(...).
         resultsListener.submissionFailed(new UserRemoteException(queryResult.getError(0)));
         // Note: Listener is removed in finally below.
       } else if (isTerminalResult) {
-        // A successful completion/canceled case--pass on via resultArrived
 
+        // A successful completion/canceled case--pass on via resultArrived
         try {
           resultsListener.queryCompleted(queryState);
         } catch (Exception e) {
@@ -189,9 +189,9 @@ public class QueryResultHandler {
     UserResultsListener resultsListener = queryIdToResultsListenersMap.get(queryId);
     logger.trace("For QueryId [{}], retrieved results listener {}", queryId, resultsListener);
     if (null == resultsListener) {
+
       // WHO?? didn't get query ID response and set submission listener yet,
       // so install a buffering listener for now
-
       BufferingResultsListener bl = new BufferingResultsListener();
       resultsListener = queryIdToResultsListenersMap.putIfAbsent(queryId, bl);
       // If we had a successful insertion, use that reference.  Otherwise, just
@@ -272,8 +272,7 @@ public class QueryResultHandler {
     }
 
     @Override
-    public void queryIdArrived(QueryId queryId) {
-    }
+    public void queryIdArrived(QueryId queryId) { }
   }
 
   private class SubmissionListener extends BaseRpcOutcomeListener<QueryId> {

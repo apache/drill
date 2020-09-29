@@ -91,7 +91,6 @@ public abstract class BaseJsonReader extends BaseJsonProcessor {
     }
   }
 
-
   private ReadState writeToVector(ComplexWriter writer, JsonToken t)
     throws IOException {
 

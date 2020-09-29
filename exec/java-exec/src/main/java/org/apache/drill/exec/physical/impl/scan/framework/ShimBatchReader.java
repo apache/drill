@@ -23,6 +23,8 @@ import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiatorImpl.N
 import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.record.VectorContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a layer of row batch reader that works with a
@@ -37,10 +39,8 @@ import org.apache.drill.exec.record.VectorContainer;
  * this class abstracts out the schema logic. This allows a variety
  * of solutions as needed for different readers.
  */
-
 public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ShimBatchReader.class);
+  static final Logger logger = LoggerFactory.getLogger(ShimBatchReader.class);
 
   protected final ManagedScanFramework framework;
   protected final ManagedReader<? extends SchemaNegotiator> reader;
@@ -52,7 +52,6 @@ public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
    * True once the reader reports EOF. This shim may keep going for another
    * batch to handle any look-ahead row on the last batch.
    */
-
   private boolean eof;
 
   public ShimBatchReader(ManagedScanFramework manager, ManagedReader<? extends SchemaNegotiator> reader) {
@@ -137,7 +136,7 @@ public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
     // Having a correct row count, even if 0, is important to
     // the scan operator.
 
-    readerOrchestrator.endBatch();
+    readerOrchestrator.endBatch(eof);
 
     // Return EOF (false) only when the reader reports EOF
     // and the result set loader has drained its rows from either

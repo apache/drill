@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.complex.impl;
 import java.util.Iterator;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.UnionHolder;
 import org.apache.drill.exec.record.MaterializedField;
@@ -29,16 +30,11 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 
-abstract class AbstractBaseReader implements FieldReader{
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBaseReader.class);
+abstract class AbstractBaseReader implements FieldReader {
 
   private int index;
 
-  public AbstractBaseReader() {
-    super();
-  }
-
+  @Override
   public void setPosition(int index) { this.index = index; }
 
   int idx() { return index; }
@@ -51,9 +47,13 @@ abstract class AbstractBaseReader implements FieldReader{
     throw new IllegalStateException("The current reader doesn't support reading as a map.");
   }
 
-  public MajorType getType(){
+  @Override
+  public MajorType getType() {
     throw new IllegalStateException("The current reader doesn't support getting type information.");
   }
+
+  @Override
+  public MinorType getVectorType() { return getType().getMinorType(); }
 
   @Override
   public MaterializedField getField() {

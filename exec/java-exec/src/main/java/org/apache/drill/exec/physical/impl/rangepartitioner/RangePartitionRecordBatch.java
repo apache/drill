@@ -69,11 +69,6 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
-  }
-
-  @Override
   public int getRecordCount() {
     return recordCount;
   }
@@ -107,7 +102,7 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
    * @return True if the new schema differs from old schema, False otherwise
    */
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() {
     container.clear();
 
     for (VectorWrapper<?> vw : incoming) {

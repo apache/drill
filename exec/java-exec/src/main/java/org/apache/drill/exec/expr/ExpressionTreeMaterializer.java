@@ -18,6 +18,7 @@
 package org.apache.drill.exec.expr;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
@@ -68,7 +69,6 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
@@ -92,7 +92,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ExpressionTreeMaterializer {
-
   static final Logger logger = LoggerFactory.getLogger(ExpressionTreeMaterializer.class);
 
   private ExpressionTreeMaterializer() { }
@@ -104,14 +103,10 @@ public class ExpressionTreeMaterializer {
   }
 
   public static LogicalExpression materializeAndCheckErrors(LogicalExpression expr,
-      VectorAccessible batch, FunctionLookupContext functionLookupContext)
-          throws SchemaChangeException {
+      VectorAccessible batch, FunctionLookupContext functionLookupContext) {
     ErrorCollector collector = new ErrorCollectorImpl();
     LogicalExpression e = ExpressionTreeMaterializer.materialize(expr, batch, collector, functionLookupContext, false, false);
-    if (collector.hasErrors()) {
-      throw new SchemaChangeException(String.format(
-          "Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-    }
+    collector.reportErrors(logger);
     return e;
   }
 
@@ -195,7 +190,7 @@ public class ExpressionTreeMaterializer {
   public static LogicalExpression convertToNullableType(LogicalExpression fromExpr,
       MinorType toType, FunctionLookupContext functionLookupContext, ErrorCollector errorCollector) {
     String funcName = "convertToNullable" + toType.toString();
-    List<LogicalExpression> args = Lists.newArrayList();
+    List<LogicalExpression> args = new ArrayList<>();
     args.add(fromExpr);
     FunctionCall funcCall = new FunctionCall(funcName, args, ExpressionPosition.UNKNOWN);
     FunctionResolver resolver = FunctionResolverFactory.getResolver(funcCall);
@@ -217,7 +212,7 @@ public class ExpressionTreeMaterializer {
   public static LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType,
       FunctionLookupContext functionLookupContext, ErrorCollector errorCollector, boolean exactResolver) {
     String castFuncName = FunctionReplacementUtils.getCastFunc(toType.getMinorType());
-    List<LogicalExpression> castArgs = Lists.newArrayList();
+    List<LogicalExpression> castArgs = new ArrayList<>();
     castArgs.add(fromExpr);  //input_expr
 
     if (fromExpr.getMajorType().getMinorType() == MinorType.UNION && toType.getMinorType() == MinorType.UNION) {
@@ -261,7 +256,7 @@ public class ExpressionTreeMaterializer {
     sb.append(call.getName());
     sb.append("(");
     boolean first = true;
-    for(LogicalExpression e : call.args) {
+    for (LogicalExpression e : call.args()) {
       TypeProtos.MajorType mt = e.getMajorType();
       if (first) {
         first = false;
@@ -380,7 +375,7 @@ public class ExpressionTreeMaterializer {
     @Override
     public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression holder,
         FunctionLookupContext functionLookupContext) {
-      // a function holder is already materialized, no need to rematerialize.
+      // A function holder is already materialized, no need to rematerialize.
       // generally this won't be used unless we materialize a partial tree and
       // rematerialize the whole tree.
       return holder;
@@ -388,14 +383,14 @@ public class ExpressionTreeMaterializer {
 
     @Override
     public LogicalExpression visitBooleanOperator(BooleanOperator op, FunctionLookupContext functionLookupContext) {
-      List<LogicalExpression> args = Lists.newArrayList();
-      for (int i = 0; i < op.args.size(); ++i) {
-        LogicalExpression newExpr = op.args.get(i).accept(this, functionLookupContext);
-        assert newExpr != null : String.format("Materialization of %s return a null expression.", op.args.get(i));
+      List<LogicalExpression> args = new ArrayList<>();
+      for (LogicalExpression expr : op.args()) {
+        LogicalExpression newExpr = expr.accept(this, functionLookupContext);
+        assert newExpr != null : String.format("Materialization of %s return a null expression.", expr);
         args.add(newExpr);
       }
 
-      //replace with a new function call, since its argument could be changed.
+      // Replace with a new function call, since its argument could be changed.
       return new BooleanOperator(op.getName(), args, op.getPosition());
     }
 
@@ -406,16 +401,19 @@ public class ExpressionTreeMaterializer {
 
     @Override
     public LogicalExpression visitFunctionCall(FunctionCall call, FunctionLookupContext functionLookupContext) {
-      List<LogicalExpression> args = Lists.newArrayList();
-      for (int i = 0; i < call.args.size(); ++i) {
-        LogicalExpression newExpr = call.args.get(i).accept(this, functionLookupContext);
-        assert newExpr != null : String.format("Materialization of %s returned a null expression.", call.args.get(i));
+
+      // Possibly convert input expressions with a rewritten expression.
+      List<LogicalExpression> args = new ArrayList<>();
+      for (LogicalExpression expr : call.args()) {
+        LogicalExpression newExpr = expr.accept(this, functionLookupContext);
+        assert newExpr != null : String.format("Materialization of %s returned a null expression.", expr);
         args.add(newExpr);
       }
 
-      //replace with a new function call, since its argument could be changed.
+      // Replace with a new function call, since its argument could be changed.
       call = new FunctionCall(call.getName(), args, call.getPosition());
 
+      // Resolve the function
       FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
       DrillFuncHolder matchedFuncHolder = functionLookupContext.findDrillFunction(resolver, call);
 
@@ -425,93 +423,146 @@ public class ExpressionTreeMaterializer {
                 + call.getName() + " in a non-project operation!");
       }
 
-      //new arg lists, possible with implicit cast inserted.
-      List<LogicalExpression> argsWithCast = Lists.newArrayList();
-
       if (matchedFuncHolder != null) {
-        // Compare param type against arg type. Insert cast on top of arg, whenever necessary.
-        for (int i = 0; i < call.args.size(); ++i) {
-
-          LogicalExpression currentArg = call.args.get(i);
-
-          TypeProtos.MajorType parmType = matchedFuncHolder.getParamMajorType(i);
-
-          // Case 1: If  1) the argument is NullExpression
-          //             2) the minor type of parameter of matchedFuncHolder is not LATE (the type of null expression is still unknown)
-          //             3) the parameter of matchedFuncHolder allows null input, or func's null_handling
-          //                is NULL_IF_NULL (means null and non-null are exchangeable).
-          //         then replace NullExpression with a TypedNullConstant
-          if (currentArg.equals(NullExpression.INSTANCE) && !MinorType.LATE.equals(parmType.getMinorType()) &&
-              (TypeProtos.DataMode.OPTIONAL.equals(parmType.getMode()) ||
-              matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL)) {
-            argsWithCast.add(new TypedNullConstant(parmType));
-          } else if (Types.softEquals(parmType, currentArg.getMajorType(),
-              matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) ||
-                     matchedFuncHolder.isFieldReader(i)) {
-            // Case 2: argument and parameter matches, or parameter is FieldReader.  Do nothing.
-            argsWithCast.add(currentArg);
-          } else {
-            // Case 3: insert cast if param type is different from arg type.
-            if (Types.isDecimalType(parmType)) {
-              // We are implicitly promoting a decimal type, set the required scale and precision
-              parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
-                  setScale(currentArg.getMajorType().getScale()).setPrecision(computePrecision(currentArg)).build();
-            }
-            argsWithCast.add(addCastExpression(currentArg, parmType, functionLookupContext, errorCollector));
-          }
-        }
-
-        FunctionHolderExpression funcExpr = matchedFuncHolder.getExpr(call.getName(), argsWithCast, call.getPosition());
-        MajorType funcExprMajorType = funcExpr.getMajorType();
-        if (DecimalUtility.isObsoleteDecimalType(funcExprMajorType.getMinorType())) {
-          MajorType majorType =
-              MajorType.newBuilder()
-                  .setMinorType(MinorType.VARDECIMAL)
-                  .setMode(funcExprMajorType.getMode())
-                  .setScale(funcExprMajorType.getScale())
-                  .setPrecision(funcExprMajorType.getPrecision())
-                  .build();
-          return addCastExpression(funcExpr, majorType, functionLookupContext, errorCollector);
-        }
-        return funcExpr;
+        return bindDrillFunc(call, functionLookupContext, matchedFuncHolder);
       }
 
       // as no drill func is found, search for a non-Drill function.
       AbstractFuncHolder matchedNonDrillFuncHolder = functionLookupContext.findNonDrillFunction(call);
       if (matchedNonDrillFuncHolder != null) {
-        // Insert implicit cast function holder expressions if required
-        List<LogicalExpression> extArgsWithCast = Lists.newArrayList();
-
-        for (int i = 0; i < call.args.size(); ++i) {
-          LogicalExpression currentArg = call.args.get(i);
-          TypeProtos.MajorType paramType = matchedNonDrillFuncHolder.getParamMajorType(i);
-
-          if (Types.softEquals(paramType, currentArg.getMajorType(), true)) {
-            extArgsWithCast.add(currentArg);
-          } else {
-            // Insert cast if param type is different from arg type.
-            if (Types.isDecimalType(paramType)) {
-              // We are implicitly promoting a decimal type, set the required scale and precision
-              paramType = MajorType.newBuilder().setMinorType(paramType.getMinorType()).setMode(paramType.getMode()).
-                  setScale(currentArg.getMajorType().getScale()).setPrecision(computePrecision(currentArg)).build();
-            }
-            extArgsWithCast.add(addCastExpression(call.args.get(i), paramType, functionLookupContext, errorCollector));
-          }
-        }
-
-        return matchedNonDrillFuncHolder.getExpr(call.getName(), extArgsWithCast, call.getPosition());
+        return bindNonDrillFunc(call, functionLookupContext,
+            matchedNonDrillFuncHolder);
       }
 
       if (hasUnionInput(call)) {
         return rewriteUnionFunction(call, functionLookupContext);
       }
 
+      // No match found. Add an error (which will fail the query), but also
+      // return a NULL instance so that analysis can continue.
       logFunctionResolutionError(errorCollector, call);
       return NullExpression.INSTANCE;
     }
 
+    /**
+     * Bind a call to a Drill function, casting input and output arguments
+     * as needed. Casts done here are of SQL types, not internal Drill types
+     * (FieldReader vs. Holder).
+     *
+     * @param call the logical call expression
+     * @param functionLookupContext function registry
+     * @param matchedFuncHolder the matched Drill function declaration
+     * @return a new expression that represents the actual function call
+     */
+    private LogicalExpression bindDrillFunc(FunctionCall call,
+        FunctionLookupContext functionLookupContext,
+        DrillFuncHolder matchedFuncHolder) {
+
+      // New arg lists, possible with implicit cast inserted.
+      List<LogicalExpression> argsWithCast = new ArrayList<>();
+
+      // Compare param type against arg type. Insert cast on top of arg, whenever necessary.
+      for (int i = 0; i < call.argCount(); ++i) {
+        LogicalExpression currentArg = call.arg(i);
+
+        TypeProtos.MajorType paramType = matchedFuncHolder.getParamMajorType(i);
+
+        // Case 1: If  1) the argument is NullExpression
+        //             2) the minor type of parameter of matchedFuncHolder is not LATE
+        //                (the type of null expression is still unknown)
+        //             3) the parameter of matchedFuncHolder allows null input, or func's null_handling
+        //                is NULL_IF_NULL (means null and non-null are exchangeable).
+        //         then replace NullExpression with a TypedNullConstant
+        if (currentArg.equals(NullExpression.INSTANCE) && !MinorType.LATE.equals(paramType.getMinorType()) &&
+            (TypeProtos.DataMode.OPTIONAL.equals(paramType.getMode()) ||
+            matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL)) {
+          // Case 1: argument is a null expression, convert it to a typed null
+          argsWithCast.add(new TypedNullConstant(paramType));
+        } else if (Types.softEquals(paramType, currentArg.getMajorType(),
+            matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) ||
+                   matchedFuncHolder.isFieldReader(i)) {
+          currentArg = addNullableCast(currentArg, paramType, functionLookupContext);
+          // Case 2: argument and parameter matches, or parameter is FieldReader.  Do nothing.
+          argsWithCast.add(currentArg);
+        } else {
+          // Case 3: insert cast if param type is different from arg type.
+          if (Types.isDecimalType(paramType)) {
+            // We are implicitly promoting a decimal type, set the required scale and precision
+            paramType = MajorType.newBuilder().setMinorType(paramType.getMinorType()).setMode(paramType.getMode()).
+                setScale(currentArg.getMajorType().getScale()).setPrecision(computePrecision(currentArg)).build();
+          }
+          LogicalExpression castExpression = addCastExpression(currentArg, paramType, functionLookupContext, errorCollector);
+          castExpression = addNullableCast(castExpression, paramType, functionLookupContext);
+          argsWithCast.add(castExpression);
+        }
+      }
+
+      FunctionHolderExpression funcExpr = matchedFuncHolder.getExpr(call.getName(), argsWithCast, call.getPosition());
+
+      // Convert old-style Decimal return type to VarDecimal
+      MajorType funcExprMajorType = funcExpr.getMajorType();
+      if (DecimalUtility.isObsoleteDecimalType(funcExprMajorType.getMinorType())) {
+        MajorType majorType =
+            MajorType.newBuilder()
+                .setMinorType(MinorType.VARDECIMAL)
+                .setMode(funcExprMajorType.getMode())
+                .setScale(funcExprMajorType.getScale())
+                .setPrecision(funcExprMajorType.getPrecision())
+                .build();
+        return addCastExpression(funcExpr, majorType, functionLookupContext, errorCollector);
+      }
+      return funcExpr;
+    }
+
+    /**
+     * Adds cast to {@code DataMode.OPTIONAL} data mode if specified {@code LogicalExpression argument}
+     * has {@code DataMode.REQUIRED} data mode and specified {@code MajorType targetParamType}
+     * has {@code DataMode.OPTIONAL} one.
+     *
+     * @param argument              argument expression
+     * @param functionParamType     type of function argument
+     * @param functionLookupContext function lookup context
+     * @return expression with the added cast to {@code DataMode.OPTIONAL} data mode if required,
+     * otherwise unchanged {@code LogicalExpression argument}
+     */
+    private LogicalExpression addNullableCast(LogicalExpression argument, MajorType functionParamType,
+        FunctionLookupContext functionLookupContext) {
+      if (functionParamType.getMode() == DataMode.OPTIONAL
+          && argument.getMajorType().getMode() == DataMode.REQUIRED) {
+        // convert argument to nullable type if function require nullable argument
+        argument = convertToNullableType(argument, functionParamType.getMinorType(), functionLookupContext, errorCollector);
+      }
+      return argument;
+    }
+
+    private LogicalExpression bindNonDrillFunc(FunctionCall call,
+        FunctionLookupContext functionLookupContext,
+        AbstractFuncHolder matchedNonDrillFuncHolder) {
+      // Insert implicit cast function holder expressions if required
+      List<LogicalExpression> extArgsWithCast = new ArrayList<>();
+
+      for (int i = 0; i < call.argCount(); ++i) {
+        final LogicalExpression currentArg = call.arg(i);
+        TypeProtos.MajorType paramType = matchedNonDrillFuncHolder.getParamMajorType(i);
+
+        if (Types.softEquals(paramType, currentArg.getMajorType(), true)) {
+          extArgsWithCast.add(currentArg);
+        } else {
+          // Insert cast if param type is different from arg type.
+          if (Types.isDecimalType(paramType)) {
+            // We are implicitly promoting a decimal type, set the required scale and precision
+            paramType = MajorType.newBuilder().setMinorType(paramType.getMinorType()).setMode(paramType.getMode()).
+                setScale(currentArg.getMajorType().getScale()).setPrecision(computePrecision(currentArg)).build();
+          }
+          extArgsWithCast.add(addCastExpression(currentArg, paramType, functionLookupContext, errorCollector));
+        }
+      }
+
+      return matchedNonDrillFuncHolder.getExpr(call.getName(), extArgsWithCast, call.getPosition());
+    }
+
     private boolean hasUnionInput(FunctionCall call) {
-      for (LogicalExpression arg : call.args) {
+      for (LogicalExpression arg : call.args()) {
         if (arg.getMajorType().getMinorType() == MinorType.UNION) {
           return true;
         }
@@ -527,11 +578,11 @@ public class ExpressionTreeMaterializer {
      * branch of the case statement
      */
     private LogicalExpression rewriteUnionFunction(FunctionCall call, FunctionLookupContext functionLookupContext) {
-      LogicalExpression[] args = new LogicalExpression[call.args.size()];
-      call.args.toArray(args);
+      LogicalExpression[] args = new LogicalExpression[call.argCount()];
+      call.args().toArray(args);
 
       for (int i = 0; i < args.length; i++) {
-        LogicalExpression arg = call.args.get(i);
+        LogicalExpression arg = call.arg(i);
         MajorType majorType = arg.getMajorType();
 
         if (majorType.getMinorType() != MinorType.UNION) {
@@ -547,7 +598,7 @@ public class ExpressionTreeMaterializer {
           LogicalExpression ifCondition = getIsTypeExpressionForType(minorType, arg.accept(new CloneVisitor(), null));
           args[i] = getUnionAssertFunctionForType(minorType, arg.accept(new CloneVisitor(), null));
 
-          List<LogicalExpression> newArgs = Lists.newArrayList();
+          List<LogicalExpression> newArgs = new ArrayList<>();
           for (LogicalExpression e : args) {
             newArgs.add(e.accept(new CloneVisitor(), null));
           }
@@ -555,10 +606,9 @@ public class ExpressionTreeMaterializer {
           // When expanding the expression tree to handle the different
           // subtypes, we will not throw an exception if one
           // of the branches fails to find a function match, since it is
-          // possible that code path will never occur in execution
+          // possible that code path will never occur in execution.
           // So instead of failing to materialize, we generate code to throw the
-          // exception during execution if that code
-          // path is hit.
+          // exception during execution if that code path is hit.
 
           errorCollectors.push(errorCollector);
           errorCollector = new ErrorCollectorImpl();
@@ -594,7 +644,7 @@ public class ExpressionTreeMaterializer {
      */
     private LogicalExpression getExceptionFunction(String message) {
       QuotedString msg = new QuotedString(message, message.length(), ExpressionPosition.UNKNOWN);
-      List<LogicalExpression> args = Lists.newArrayList();
+      List<LogicalExpression> args = new ArrayList<>();
       args.add(msg);
       return new FunctionCall(ExceptionFunction.EXCEPTION_FUNCTION_NAME, args, ExpressionPosition.UNKNOWN);
     }
@@ -625,7 +675,7 @@ public class ExpressionTreeMaterializer {
      */
     private LogicalExpression getIsTypeExpressionForType(MinorType type, LogicalExpression arg) {
       String isFuncName = String.format("is_%s", type.toString());
-      List<LogicalExpression> args = Lists.newArrayList();
+      List<LogicalExpression> args = new ArrayList<>();
       args.add(arg);
       return new FunctionCall(isFuncName, args, ExpressionPosition.UNKNOWN);
     }
@@ -690,7 +740,7 @@ public class ExpressionTreeMaterializer {
 
       // Resolve NullExpression into TypedNullConstant by visiting all conditions
       // We need to do this because we want to give the correct MajorType to the Null constant
-      List<LogicalExpression> allExpressions = Lists.newArrayList();
+      List<LogicalExpression> allExpressions = new ArrayList<>();
       allExpressions.add(conditions.expression);
       allExpressions.add(newElseExpr);
 
@@ -860,7 +910,7 @@ public class ExpressionTreeMaterializer {
     public LogicalExpression visitConvertExpression(ConvertExpression e, FunctionLookupContext functionLookupContext) {
       String convertFunctionName = e.getConvertFunction() + e.getEncodingType();
 
-      List<LogicalExpression> newArgs = Lists.newArrayList();
+      List<LogicalExpression> newArgs = new ArrayList<>();
       newArgs.add(e.getInput());  //input_expr
 
       FunctionCall fc = new FunctionCall(convertFunctionName, newArgs, e.getPosition());
@@ -894,7 +944,7 @@ public class ExpressionTreeMaterializer {
         // Get the cast function name from the map
         String castFuncWithType = FunctionReplacementUtils.getCastFunc(type.getMinorType());
 
-        List<LogicalExpression> newArgs = Lists.newArrayList();
+        List<LogicalExpression> newArgs = new ArrayList<>();
         newArgs.add(input);  //input_expr
 
         if (Types.isDecimalType(type)) {

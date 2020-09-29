@@ -87,7 +87,6 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 <#else>
     throw new UnsupportedOperationException("You can't call next on a single value reader.");
 </#if>
-
   }
 
   @Override
@@ -101,9 +100,9 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
     return BasicTypeHelper.getType(holder);
 <#else>
   <#if holderMode == "Repeated">
-    return this.repeatedHolder.TYPE;
+    return repeatedHolder.TYPE;
   <#else>
-    return this.holder.TYPE;
+    return holder.TYPE;
   </#if>
 </#if>
   }
@@ -111,13 +110,12 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
   @Override
   public boolean isSet() {
     <#if holderMode == "Repeated">
-    return this.repeatedHolder.end!=this.repeatedHolder.start;
+    return repeatedHolder.end!=this.repeatedHolder.start;
     <#elseif nullMode == "Nullable">
-    return this.holder.isSet == 1;
+    return holder.isSet == 1;
     <#else>
     return true;
     </#if>
-    
   }
 
 <#if holderMode != "Repeated">
@@ -135,8 +133,8 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
   </#list>
     h.isSet = isSet() ? 1 : 0;
   }
-</#if>
 
+</#if>
 <#if holderMode == "Repeated">
   @Override
   public ${friendlyType} read${safeType}(int index){
@@ -147,20 +145,19 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
     }
     return value;
   }
-</#if>
 
+</#if>
   @Override
   public ${friendlyType} read${safeType}(){
 <#if nullMode == "Nullable">
     if (!isSet()) {
       return null;
     }
+
 </#if>
-
 <#if type.major == "VarLen">
-
       int length = holder.end - holder.start;
-      byte[] value = new byte [length];
+      byte[] value = new byte[length];
       holder.buffer.getBytes(holder.start, value, 0, length);
 
 <#if minor.class == "VarBinary">
@@ -216,7 +213,6 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
       ${friendlyType} value = new ${friendlyType}(this.holder.value);
       return value;
 </#if>
-
   }
 
   @Override
@@ -241,7 +237,7 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#if type.major == "VarLen">
       int length = holder.end - holder.start;
-      byte[] value = new byte [length];
+      byte[] value = new byte[length];
       holder.buffer.getBytes(holder.start, value, 0, length);
 
 <#if minor.class == "VarBinary">
@@ -298,8 +294,8 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
       return value;
 </#if>
   }
-<#if holderMode == "Repeated">
 
+<#if holderMode == "Repeated">
   public void copyAsValue(${minor.class?cap_first}Writer writer) {
     Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl) writer;
     impl.vector.getMutator().setSafe(impl.idx(), repeatedHolder);
@@ -315,7 +311,6 @@ public void copyAsField(String name, MapWriter writer) {
 </#if>
     impl.vector.getMutator().setSafe(impl.idx(), repeatedHolder);
   }
-
 <#else>
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18")>
   public void copyAsValue(${minor.class?cap_first}Writer writer) {
@@ -335,11 +330,9 @@ public void copyAsField(String name, MapWriter writer) {
       impl.write${minor.class}(<#list fields as field>holder.${field.name}<#if field_has_next>,</#if></#list>);
     }
   }
-
   </#if>
 </#if>
 }
-
 </#list>
 </#list>
 </#list>

@@ -18,20 +18,24 @@
 package org.apache.drill.exec.ops;
 
 import io.netty.buffer.DrillBuf;
-import java.io.IOException;
 import java.util.List;
+
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.physical.impl.common.CodeGenMemberInjector;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Common implementation for both the test and production versions
  * of the fragment context.
  */
 public abstract class BaseFragmentContext implements FragmentContext {
+  private static final Logger logger = LoggerFactory.getLogger(BaseFragmentContext.class);
 
   private final FunctionImplementationRegistry funcRegistry;
 
@@ -45,27 +49,39 @@ public abstract class BaseFragmentContext implements FragmentContext {
   }
 
   @Override
-  public <T> T getImplementationClass(final ClassGenerator<T> cg)
-      throws ClassTransformationException, IOException {
+  public <T> T getImplementationClass(final ClassGenerator<T> cg) {
     return getImplementationClass(cg.getCodeGenerator());
   }
 
   @Override
-  public <T> T getImplementationClass(final CodeGenerator<T> cg)
-      throws ClassTransformationException, IOException {
-    T instance = getCompiler().createInstance(cg);
+  public <T> T getImplementationClass(final CodeGenerator<T> cg) {
+    T instance;
+    try {
+      instance = getCompiler().createInstance(cg);
+    } catch (ClassTransformationException e) {
+      throw UserException.internalError(e)
+          .message("Code generation error - likely code error.")
+          .build(logger);
+    }
     CodeGenMemberInjector.injectMembers(cg.getRoot(), instance, this);
     return instance;
   }
 
   @Override
-  public <T> List<T> getImplementationClass(final ClassGenerator<T> cg, final int instanceCount) throws ClassTransformationException, IOException {
+  public <T> List<T> getImplementationClass(final ClassGenerator<T> cg, final int instanceCount) {
     return getImplementationClass(cg.getCodeGenerator(), instanceCount);
   }
 
   @Override
-  public <T> List<T> getImplementationClass(final CodeGenerator<T> cg, final int instanceCount) throws ClassTransformationException, IOException {
-    List<T> instances = getCompiler().createInstances(cg, instanceCount);
+  public <T> List<T> getImplementationClass(final CodeGenerator<T> cg, final int instanceCount) {
+    List<T> instances;
+    try {
+      instances = getCompiler().createInstances(cg, instanceCount);
+    } catch (ClassTransformationException e) {
+      throw UserException.internalError(e)
+          .message("Code generation error - likely code error.")
+          .build(logger);
+    }
     instances.forEach(instance -> CodeGenMemberInjector.injectMembers(cg.getRoot(), instance, this));
     return instances;
   }
@@ -105,5 +121,10 @@ public abstract class BaseFragmentContext implements FragmentContext {
   @Override
   public QueryContext.SqlStatementType getSQLStatementType() {
     return null;
+  }
+
+  @Override
+  public BufferManager getManagedBufferManager() {
+    return getBufferManager();
   }
 }

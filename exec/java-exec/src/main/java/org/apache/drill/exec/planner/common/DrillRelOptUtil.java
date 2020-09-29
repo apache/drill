@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
 import org.apache.drill.metastore.metadata.TableMetadata;
@@ -70,12 +69,17 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Utility class that is a subset of the RelOptUtil class and is a placeholder for Drill specific
- * static methods that are needed during either logical or physical planning.
+ * Utility class that is a subset of the RelOptUtil class and is a placeholder
+ * for Drill specific static methods that are needed during either logical or
+ * physical planning.
  */
 public abstract class DrillRelOptUtil {
+
+  private static final Logger logger = LoggerFactory.getLogger(DrillRelOptUtil.class);
 
   final public static String IMPLICIT_COLUMN = "$drill_implicit_field$";
 
@@ -139,10 +143,12 @@ public abstract class DrillRelOptUtil {
     assert fieldNames.size() == fields.size();
     final List<RexNode> refs =
         new AbstractList<RexNode>() {
+          @Override
           public int size() {
             return fields.size();
           }
 
+          @Override
           public RexNode get(int index) {
             return RexInputRef.of(index, fields);
           }
@@ -218,6 +224,7 @@ public abstract class DrillRelOptUtil {
     try {
       RexVisitor<Void> visitor =
           new RexVisitorImpl<Void>(true) {
+            @Override
             public Void visitCall(RexCall call) {
               if (operators.contains(call.getOperator().getName().toLowerCase())) {
                 throw new Util.FoundOne(call); /* throw exception to interrupt tree walk (this is similar to
@@ -226,6 +233,7 @@ public abstract class DrillRelOptUtil {
               return super.visitCall(call);
             }
 
+            @Override
             public Void visitInputRef(RexInputRef inputRef) {
               if (projExprs.size() == 0 ) {
                 return super.visitInputRef(inputRef);
@@ -261,6 +269,7 @@ public abstract class DrillRelOptUtil {
           if (((long) l.getValue2()) == 0) {
             return true;
           }
+        default:
       }
     }
     return false;
@@ -293,6 +302,7 @@ public abstract class DrillRelOptUtil {
     try {
       RexVisitor<Void> visitor =
           new RexVisitorImpl<Void>(true) {
+            @Override
             public Void visitCall(RexCall call) {
               if ("convert_fromjson".equals(call.getOperator().getName().toLowerCase())) {
                 throw new Util.FoundOne(call); /* throw exception to interrupt tree walk (this is similar to
@@ -324,11 +334,13 @@ public abstract class DrillRelOptUtil {
       inputRefList = new ArrayList<>();
     }
 
+    @Override
     public Void visitInputRef(RexInputRef ref) {
       inputRefList.add(ref);
       return null;
     }
 
+    @Override
     public Void visitCall(RexCall call) {
       for (RexNode operand : call.operands) {
         operand.accept(this);
@@ -418,12 +430,12 @@ public abstract class DrillRelOptUtil {
     }
   }
 
+  @SuppressWarnings("deprecation")
   public static boolean isProjectFlatten(RelNode project) {
 
     assert project instanceof Project : "Rel is NOT an instance of project!";
 
     for (RexNode rex : project.getChildExps()) {
-      RexNode newExpr = rex;
       if (rex instanceof RexCall) {
         RexCall function = (RexCall) rex;
         String functionName = function.getOperator().getName();
@@ -603,7 +615,7 @@ public abstract class DrillRelOptUtil {
             || (tableMetadata = table.getGroupScan().getTableMetadata()) == null
             || !TableStatisticsKind.HAS_DESCRIPTIVE_STATISTICS.getValue(tableMetadata);
       } catch (IOException e) {
-        RelOptPlanner.LOGGER.debug("Unable to obtain table metadata due to exception:", e);
+        logger.debug("Unable to obtain table metadata due to exception: {}", e.getMessage(), e);
         return true;
       }
     } else {
@@ -681,6 +693,7 @@ public abstract class DrillRelOptUtil {
     try {
       RexVisitor<Void> visitor =
           new RexVisitorImpl<Void>(true) {
+            @Override
             public Void visitCall(RexCall call) {
               if (call.getKind() == SqlKind.AND || call.getKind() == SqlKind.OR) {
                 super.visitCall(call);
@@ -735,6 +748,7 @@ public abstract class DrillRelOptUtil {
     List<RexInputRef> rexRefs = new ArrayList<>();
     RexVisitor<Void> visitor =
             new RexVisitorImpl<Void>(true) {
+              @Override
               public Void visitInputRef(RexInputRef inputRef) {
                 rexRefs.add(inputRef);
                 return super.visitInputRef(inputRef);

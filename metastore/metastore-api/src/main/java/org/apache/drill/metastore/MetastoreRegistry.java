@@ -21,6 +21,8 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.metastore.config.MetastoreConfigConstants;
 import org.apache.drill.metastore.config.MetastoreConfigFileInfo;
 import org.apache.drill.metastore.exceptions.MetastoreException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -34,11 +36,17 @@ import java.lang.invoke.MethodType;
  */
 public class MetastoreRegistry implements AutoCloseable {
 
-  private DrillConfig config;
+  private static final Logger logger = LoggerFactory.getLogger(MetastoreRegistry.class);
+
+  private final DrillConfig config;
+  // used only for testing to avoid searching overridden configuration files
+  private final boolean useProvided;
   private volatile Metastore metastore;
 
   public MetastoreRegistry(DrillConfig config) {
     this.config = config;
+    this.useProvided = config.hasPath(MetastoreConfigConstants.USE_PROVIDED_CONFIG)
+      && config.getBoolean(MetastoreConfigConstants.USE_PROVIDED_CONFIG);
   }
 
   public Metastore get() {
@@ -53,7 +61,7 @@ public class MetastoreRegistry implements AutoCloseable {
   }
 
   private Metastore initMetastore() {
-    DrillConfig metastoreConfig = createMetastoreConfig(config);
+    DrillConfig metastoreConfig = useProvided ? config : createMetastoreConfig(config);
     String metastoreClass = metastoreConfig.getString(MetastoreConfigConstants.IMPLEMENTATION_CLASS);
     if (metastoreClass == null) {
       throw new MetastoreException(
@@ -86,6 +94,8 @@ public class MetastoreRegistry implements AutoCloseable {
         String.format("Created instance of [%s] does not implement [%s] interface",
           instance.getClass().getSimpleName(), Metastore.class.getSimpleName()));
     }
+
+    logger.info("Drill Metastore is initiated using {} class", metastoreClass);
     return (Metastore) instance;
   }
 

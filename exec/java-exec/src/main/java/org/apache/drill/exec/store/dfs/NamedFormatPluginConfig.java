@@ -17,21 +17,30 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import java.util.Objects;
+
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 
 @JsonTypeName("named")
 public class NamedFormatPluginConfig implements FormatPluginConfig {
-  public String name;
+  private final String name;
+
+  @JsonCreator
+  public NamedFormatPluginConfig(@JsonProperty("name") String name) {
+    this.name = name;
+  }
+
+  public String getName() { return name; }
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((name == null) ? 0 : name.hashCode());
-    return result;
+    return Objects.hash(name);
   }
 
   @Override
@@ -39,21 +48,17 @@ public class NamedFormatPluginConfig implements FormatPluginConfig {
     if (this == obj) {
       return true;
     }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
     NamedFormatPluginConfig other = (NamedFormatPluginConfig) obj;
-    if (name == null) {
-      if (other.name != null) {
-        return false;
-      }
-    } else if (!name.equals(other.name)) {
-      return false;
-    }
-    return true;
+    return Objects.equals(name, other.name);
   }
 
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("name", name)
+        .toString();
+  }
 }

@@ -81,7 +81,7 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
     FileScanBuilder builder = new FileScanBuilder();
     builder.setReaderFactory(new PcapReaderFactory(new PcapReaderConfig(this)));
     initScanBuilder(builder, scan);
-    builder.setNullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;
   }
 }

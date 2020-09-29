@@ -29,11 +29,11 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.RefreshMetadataHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
@@ -82,7 +82,7 @@ public class SqlRefreshMetadata extends DrillSqlCall {
       writer.keyword("COLUMNS");
       if (fieldList == null) {
         writer.keyword("NONE");
-      } else if (fieldList != null && fieldList.size() > 0) {
+      } else if (fieldList.size() > 0) {
         writer.keyword("(");
         fieldList.get(0).unparse(writer, leftPrec, rightPrec);
         for (int i = 1; i < fieldList.size(); i++) {
@@ -104,11 +104,7 @@ public class SqlRefreshMetadata extends DrillSqlCall {
   }
 
   public List<String> getSchemaPath() {
-    if (tblName.isSimple()) {
-      return ImmutableList.of();
-    }
-
-    return tblName.names.subList(0, tblName.names.size() - 1);
+    return SchemaUtilites.getSchemaPath(tblName);
   }
 
   @Override

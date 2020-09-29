@@ -104,7 +104,6 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.BaseArra
  * vector can never be in the Behind state, when we have an array of
  * maps then each vector can be in any of the scalar writer states.
  */
-
 public class ObjectArrayWriter extends BaseArrayWriter {
 
   protected ObjectArrayWriter(ColumnMetadata schema,
@@ -123,7 +122,6 @@ public class ObjectArrayWriter extends BaseArrayWriter {
   public void setObject(Object array) {
 
     // Null array = 0-length array
-
     if (array == null) {
       return;
     }

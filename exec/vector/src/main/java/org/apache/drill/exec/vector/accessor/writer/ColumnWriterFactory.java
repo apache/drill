@@ -26,7 +26,6 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnAccessorUtils;
-import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriterImpl.ScalarObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.dummy.DummyArrayWriter;
@@ -44,7 +43,6 @@ import org.apache.drill.exec.vector.complex.RepeatedValueVector;
  * it is cleaner to put the factory methods here rather than in the various
  * writers, as is done in the case of the readers.
  */
-
 @SuppressWarnings("unchecked")
 public class ColumnWriterFactory {
 
@@ -56,64 +54,57 @@ public class ColumnWriterFactory {
   }
 
   public static AbstractObjectWriter buildColumnWriter(ColumnMetadata schema,
-      ColumnConversionFactory conversionFactory, ValueVector vector) {
+      ValueVector vector) {
     if (vector == null) {
       return buildDummyColumnWriter(schema);
     }
 
     // Build a writer for a materialized column.
-
     assert schema.type() == vector.getField().getType().getMinorType();
     assert schema.mode() == vector.getField().getType().getMode();
 
     switch (schema.type()) {
-    case GENERIC_OBJECT:
-    case LATE:
-    case NULL:
-    case LIST:
-    case MAP:
-    case DICT:
-    case UNION:
-      throw new UnsupportedOperationException(schema.type().toString());
-    default:
-      switch (schema.mode()) {
-      case OPTIONAL:
-        return nullableScalarWriter(schema, conversionFactory, (NullableVector) vector);
-      case REQUIRED:
-        return requiredScalarWriter(schema, conversionFactory, vector);
-      case REPEATED:
-        return repeatedScalarWriter(schema, conversionFactory, (RepeatedValueVector) vector);
+      case GENERIC_OBJECT:
+      case LATE:
+      case NULL:
+      case LIST:
+      case MAP:
+      case DICT:
+      case UNION:
+        throw new UnsupportedOperationException(schema.type().toString());
       default:
-        throw new UnsupportedOperationException(schema.mode().toString());
+        switch (schema.mode()) {
+        case OPTIONAL:
+          return nullableScalarWriter(schema, (NullableVector) vector);
+        case REQUIRED:
+          return requiredScalarWriter(schema, vector);
+        case REPEATED:
+          return repeatedScalarWriter(schema, (RepeatedValueVector) vector);
+        default:
+          throw new UnsupportedOperationException(schema.mode().toString());
       }
     }
   }
 
   private static ScalarObjectWriter requiredScalarWriter(
-      ColumnMetadata schema,
-      ColumnConversionFactory conversionFactory,
-      ValueVector vector) {
+      ColumnMetadata schema, ValueVector vector) {
     final BaseScalarWriter baseWriter = newWriter(vector);
     baseWriter.bindSchema(schema);
-    return new ScalarObjectWriter(baseWriter, conversionFactory);
+    return new ScalarObjectWriter(baseWriter);
   }
 
   private static ScalarObjectWriter nullableScalarWriter(
-      ColumnMetadata schema,
-      ColumnConversionFactory conversionFactory,
-      NullableVector vector) {
+      ColumnMetadata schema, NullableVector vector) {
     final BaseScalarWriter baseWriter = newWriter(vector.getValuesVector());
     baseWriter.bindSchema(schema);
-    return NullableScalarWriter.build(schema, vector, baseWriter, conversionFactory);
+    return NullableScalarWriter.build(schema, vector, baseWriter);
   }
 
   private static AbstractObjectWriter repeatedScalarWriter(
-      ColumnMetadata schema,
-      ColumnConversionFactory conversionFactory,
-      RepeatedValueVector vector) {
+      ColumnMetadata schema, RepeatedValueVector vector) {
     final BaseScalarWriter baseWriter = newWriter(vector.getDataVector());
     baseWriter.bindSchema(schema);
-    return ScalarArrayWriter.build(schema, vector, baseWriter, conversionFactory);
+    return ScalarArrayWriter.build(schema, vector, baseWriter);
   }
 
   /**
@@ -121,29 +112,28 @@ public class ColumnWriterFactory {
    * @param schema schema of the column
    * @return a "dummy" writer for the column
    */
-
   public static AbstractObjectWriter buildDummyColumnWriter(ColumnMetadata schema) {
     switch (schema.type()) {
-    case GENERIC_OBJECT:
-    case LATE:
-    case LIST:
-    case MAP:
-    case DICT:
-    case UNION:
-      throw new UnsupportedOperationException(schema.type().toString());
-    default:
-      final ScalarObjectWriter scalarWriter = new ScalarObjectWriter(
-          new DummyScalarWriter(schema), null);
-      switch (schema.mode()) {
-      case OPTIONAL:
-      case REQUIRED:
-        return scalarWriter;
-      case REPEATED:
-        return new ArrayObjectWriter(
-            new DummyArrayWriter(schema,
-              scalarWriter));
+      case GENERIC_OBJECT:
+      case LATE:
+      case LIST:
+      case MAP:
+      case DICT:
+      case UNION:
+        throw new UnsupportedOperationException(schema.type().toString());
       default:
-        throw new UnsupportedOperationException(schema.mode().toString());
+        final ScalarObjectWriter scalarWriter = new ScalarObjectWriter(
+            new DummyScalarWriter(schema));
+        switch (schema.mode()) {
+        case OPTIONAL:
+        case REQUIRED:
+          return scalarWriter;
+        case REPEATED:
+          return new ArrayObjectWriter(
+              new DummyArrayWriter(schema,
+                scalarWriter));
+        default:
+          throw new UnsupportedOperationException(schema.mode().toString());
       }
     }
   }

@@ -25,10 +25,10 @@
             child: 1,
             pop:"project",
             exprs: [
-              { ref: "col1", expr:"red + 1" },
-              { ref: "col2", expr:"red + 2" },
-              { ref: "col3", expr:"orange"},
-              { ref: "col4", expr:"orange"}
+              { ref: "col1", expr: "red + 1" },
+              { ref: "col2", expr: "red + 2" },
+              { ref: "col3", expr: "orange"},
+              { ref: "col4", expr: "orange"}
             ]
         },
         {

@@ -143,7 +143,7 @@ public class MapRDBFormatPlugin extends TableFormatPlugin {
   }
 
   @Override
-  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) {
     throw new UnsupportedOperationException("unimplemented");
   }
 

@@ -22,7 +22,9 @@ import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -58,14 +60,24 @@ public abstract class InfoSchemaRecordGenerator<S> {
    * @param  schema  the given schema
    */
   protected void scanSchema(String schemaPath, SchemaPlus schema) {
-    // Recursively scan any sub-schema
+    scanSchemaImpl(schemaPath, schema, new HashSet<>());
+  }
+
+  /**
+   *  Recursively scan given schema and any sub-schema in it. In case when scan schema is root,
+   *  set of visited paths is used to prevent visiting same sub-schema twice.
+   *
+   * @param schemaPath path to scan
+   * @param schema schema associated with path
+   * @param visitedPaths set used to ensure same path won't be visited twice
+   */
+  private void scanSchemaImpl(String schemaPath, SchemaPlus schema, Set<String> visitedPaths) {
     for (String name: schema.getSubSchemaNames()) {
-      scanSchema(schemaPath +
-        ("".equals(schemaPath) ? "" : ".") + // If we have an empty schema path, then don't insert a leading dot.
-        name, schema.getSubSchema(name));
+      String subSchemaPath = schemaPath.isEmpty() ? name : schemaPath + "." + name;
+      scanSchemaImpl(subSchemaPath, schema.getSubSchema(name), visitedPaths);
     }
 
-    if (filterEvaluator.shouldVisitSchema(schemaPath, schema)) {
+    if (filterEvaluator.shouldVisitSchema(schemaPath, schema) && visitedPaths.add(schemaPath)) {
       visit(schemaPath, schema);
     }
   }

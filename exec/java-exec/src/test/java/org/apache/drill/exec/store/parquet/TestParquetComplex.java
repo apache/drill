@@ -197,6 +197,7 @@ public class TestParquetComplex extends BaseTestQuery {
         .run();
   }
 
+  @Test
   public void testReadRepeatedDecimals() throws Exception {
 
     JsonStringArrayList<BigDecimal> ints = new JsonStringArrayList<>();
@@ -642,6 +643,17 @@ public class TestParquetComplex extends BaseTestQuery {
   }
 
   @Test
+  public void testDictArrayTypeOf() throws Exception {
+    String query = "select typeof(map_array) as type from cp.`store/parquet/complex/map/parquet/000000_0.parquet` limit 1";
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("type")
+        .baselineValuesForSingleColumn("ARRAY<DICT<BIGINT,INT>>")
+        .go();
+  }
+
+  @Test
   public void testDictTypeOf() throws Exception {
     String query = "select typeof(map_array[0]) as type from cp.`store/parquet/complex/map/parquet/000000_0.parquet` limit 1";
     testBuilder()
@@ -848,6 +860,31 @@ public class TestParquetComplex extends BaseTestQuery {
             TestBuilder.mapOfObject(),
             TestBuilder.mapOfObject(1, "a", 2, "b")
         )
+        .go();
+  }
+
+  @Test // DRILL-7491
+  public void testCountOnComplexTypes() throws Exception {
+    String query = "SELECT " +
+        "COUNT(c13) cnt13, COUNT(c14) cnt14, " +
+        "COUNT(c15) cnt15, COUNT(c16) cnt16 " +
+        "FROM cp.`parquet/hive_all/hive_alltypes.parquet`";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("cnt13", "cnt14", "cnt15", "cnt16")
+        .baselineValues(3L, 0L, 3L, 3L)
+        .go();
+  }
+
+  @Test // DRILL-7509
+  public void selectRepeatedMapWithFilter() throws Exception {
+    String query = "select id, struct_array[1].b as b from cp.`store/parquet/complex/repeated_struct.parquet` where struct_array[1].b is null";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("id", "b")
+        .baselineValues(2, null)
         .go();
   }
 }

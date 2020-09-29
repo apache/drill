@@ -26,7 +26,8 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.hbase.HBaseStoragePlugin.HBaseConnectionKey;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
 import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
@@ -40,7 +41,7 @@ import org.apache.drill.shaded.guava.com.google.common.util.concurrent.Unchecked
  */
 public final class HBaseConnectionManager
     extends CacheLoader<HBaseConnectionKey, Connection> implements RemovalListener<HBaseConnectionKey, Connection> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseConnectionManager.class);
+  private static final Logger logger = LoggerFactory.getLogger(HBaseConnectionManager.class);
 
   public static final HBaseConnectionManager INSTANCE = new HBaseConnectionManager();
 

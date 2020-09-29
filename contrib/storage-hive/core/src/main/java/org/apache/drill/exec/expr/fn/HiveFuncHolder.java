@@ -49,7 +49,6 @@ import com.sun.codemodel.JVar;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 
 public class HiveFuncHolder extends AbstractFuncHolder {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
 
   private MajorType[] argTypes;
   private ObjectInspector returnOI;

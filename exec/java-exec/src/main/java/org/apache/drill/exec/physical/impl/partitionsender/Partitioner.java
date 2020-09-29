@@ -48,8 +48,9 @@ public interface Partitioner {
   void initialize();
   void clear();
   List<? extends PartitionOutgoingBatch> getOutgoingBatches();
+
   /**
-   * Method to get PartitionOutgoingBatch based on the fact that there can be > 1 Partitioner
+   * Get PartitionOutgoingBatch based on the fact that there can be > 1 Partitioner
    * @param index
    * @return PartitionOutgoingBatch that matches index within Partitioner. This method can
    * return null if index does not fall within boundary of this Partitioner

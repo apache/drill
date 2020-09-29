@@ -35,7 +35,6 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
  * simpler than the entire {@link RecordBatch}. This implementation hosts
  * a container only.
  */
-
 public class VectorContainerAccessor implements BatchAccessor {
 
   protected VectorContainer container;
@@ -47,7 +46,6 @@ public class VectorContainerAccessor implements BatchAccessor {
    * Call this to declare a schema when there are no results to
    * report.
    */
-
   public void setSchema(VectorContainer container) {
     this.container = container;
     if (container != null) {
@@ -66,7 +64,6 @@ public class VectorContainerAccessor implements BatchAccessor {
    * @param container the container that holds vectors to be sent
    * downstream
    */
-
   public void addBatch(VectorContainer container) {
     setSchema(container);
     batchCount++;
@@ -116,7 +113,7 @@ public class VectorContainerAccessor implements BatchAccessor {
   public SelectionVector4 selectionVector4() {
     // Throws an exception by default because containers
     // do not support selection vectors.
-     return container.getSelectionVector4();
+    return container.getSelectionVector4();
   }
 
   @Override

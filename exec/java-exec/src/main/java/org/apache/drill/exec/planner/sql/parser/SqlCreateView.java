@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
@@ -106,11 +106,7 @@ public class SqlCreateView extends DrillSqlCall {
   }
 
   public List<String> getSchemaPath() {
-    if (viewName.isSimple()) {
-      return ImmutableList.of();
-    }
-
-    return viewName.names.subList(0, viewName.names.size()-1);
+    return SchemaUtilites.getSchemaPath(viewName);
   }
 
   public String getName() {

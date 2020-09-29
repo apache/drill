@@ -21,8 +21,9 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Wrapper around {@link PersistentStore} to ensure all passed keys are converted to lower case and stored this way.
- * This will ensure case-insensitivity during insert, update, deletion or search.
+ * Wrapper around {@link PersistentStore} to ensure all passed keys are
+ * converted to lower case and stored this way. This will ensure
+ * case-insensitivity during insert, update, deletion or search.
  */
 public class CaseInsensitivePersistentStore<V> implements PersistentStore<V> {
 

@@ -24,13 +24,12 @@ import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
-import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.file.JsonFileBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -38,16 +37,6 @@ import org.junit.experimental.categories.Category;
 
 @Category({SlowTest.class, OperatorTest.class})
 public class TestExternalSort extends BaseTestQuery {
-
-  @Test
-  public void testNumericTypesManaged() throws Exception {
-    testNumericTypes(false);
-  }
-
-  @Test
-  public void testNumericTypesLegacy() throws Exception {
-    testNumericTypes(true);
-  }
 
   /**
    * Test union type support in sort using numeric types: BIGINT and FLOAT8
@@ -60,8 +49,8 @@ public class TestExternalSort extends BaseTestQuery {
    *          and later) sort
    * @throws Exception
    */
-
-  private void testNumericTypes(boolean testLegacy) throws Exception {
+  @Test
+  public void testNumericTypes() throws Exception {
     final int record_count = 10000;
     final String tableDirName = "numericTypes";
 
@@ -101,7 +90,7 @@ public class TestExternalSort extends BaseTestQuery {
 
     TestBuilder builder = testBuilder()
       .sqlQuery("select * from dfs.`%s` order by a desc", tableDirName)
-      .optionSettingQueriesForTestQuery(getOptions(testLegacy))
+      .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
       .ordered()
       .baselineColumns("a");
     for (int i = record_count; i >= 0; ) {
@@ -113,27 +102,9 @@ public class TestExternalSort extends BaseTestQuery {
     builder.go();
   }
 
-  private String getOptions(boolean testLegacy) {
-    String options = "alter session set `exec.enable_union_type` = true";
-    options += ";alter session set `"
-        + ExecConstants.EXTERNAL_SORT_DISABLE_MANAGED_OPTION.getOptionName()
-        + "` = " + Boolean.toString(testLegacy);
-    return options;
-  }
-
   @Test
   @Ignore("Schema changes are disabled in external sort")
-  public void testNumericAndStringTypesManaged() throws Exception {
-    testNumericAndStringTypes(false);
-  }
-
-  @Test
-  @Ignore("Schema changes are disabled in external sort")
-  public void testNumericAndStringTypesLegacy() throws Exception {
-    testNumericAndStringTypes(true);
-  }
-
-  private void testNumericAndStringTypes(boolean testLegacy) throws Exception {
+  public void testNumericAndStringTypes() throws Exception {
     final int record_count = 10000;
     final String tableDirName = "numericAndStringTypes";
 
@@ -174,7 +145,7 @@ public class TestExternalSort extends BaseTestQuery {
     TestBuilder builder = testBuilder()
         .sqlQuery("select * from dfs.`%s` order by a desc", tableDirName)
         .ordered()
-        .optionSettingQueriesForTestQuery(getOptions(testLegacy))
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
         .baselineColumns("a");
     // Strings come first because order by is desc
     for (int i = record_count; i >= 0;) {
@@ -191,16 +162,7 @@ public class TestExternalSort extends BaseTestQuery {
   }
 
   @Test
-  public void testNewColumnsManaged() throws Exception {
-    testNewColumns(false);
-  }
-
-  @Test
-  public void testNewColumnsLegacy() throws Exception {
-    testNewColumns(true);
-  }
-
-  private void testNewColumns(boolean testLegacy) throws Exception {
+  public void testNewColumns() throws Exception {
     final int record_count = 10000;
     final String tableDirName = "newColumns";
 
@@ -243,7 +205,7 @@ public class TestExternalSort extends BaseTestQuery {
     TestBuilder builder = testBuilder()
         .sqlQuery("select a, b, c from dfs.`%s` order by a desc", tableDirName)
         .ordered()
-        .optionSettingQueriesForTestQuery(getOptions(testLegacy))
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
         .baselineColumns("a", "b", "c");
     for (int i = record_count; i >= 0;) {
       builder.baselineValues((long) i, (long) i--, null);

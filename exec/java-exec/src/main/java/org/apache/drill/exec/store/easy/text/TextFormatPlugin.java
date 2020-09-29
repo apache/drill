@@ -17,11 +17,14 @@
  */
 package org.apache.drill.exec.store.easy.text;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -57,14 +60,15 @@ import org.apache.drill.exec.store.easy.text.reader.CompliantTextBatchReader;
 import org.apache.drill.exec.store.easy.text.reader.TextParsingSettings;
 import org.apache.drill.exec.store.easy.text.writer.TextRecordWriter;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
-import org.apache.drill.exec.vector.accessor.convert.AbstractConvertFromString;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Text format plugin for CSV and other delimited text formats.
@@ -78,7 +82,6 @@ import java.util.Map;
  * to allow tight control of the size of produced batches (as well
  * as to support provided schema.)
  */
-
 public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextFormatConfig> {
   private final static String PLUGIN_NAME = "text";
 
@@ -103,52 +106,65 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   public static final String QUOTE_PROP = TEXT_PREFIX + "quote";
   public static final String QUOTE_ESCAPE_PROP = TEXT_PREFIX + "escape";
   public static final String LINE_DELIM_PROP = TEXT_PREFIX + "lineDelimiter";
+  public static final String TRIM_WHITESPACE_PROP = TEXT_PREFIX + "trim";
+  public static final String PARSE_UNESCAPED_QUOTES_PROP = TEXT_PREFIX + "parseQuotes";
 
   @JsonTypeName(PLUGIN_NAME)
   @JsonInclude(Include.NON_DEFAULT)
   public static class TextFormatConfig implements FormatPluginConfig {
 
-    public List<String> extensions = Collections.emptyList();
-    public String lineDelimiter = "\n";
-    public char fieldDelimiter = '\n';
-    public char quote = '"';
-    public char escape = '"';
-    public char comment = '#';
-    public boolean skipFirstLine = false;
-    public boolean extractHeader = false;
+    public final List<String> extensions;
+    public final String lineDelimiter;
+    public final char fieldDelimiter;
+    public final char quote;
+    public final char escape;
+    public final char comment;
+    public final boolean skipFirstLine;
+    public final boolean extractHeader;
 
-    public TextFormatConfig() { }
+    @JsonCreator
+    public TextFormatConfig(
+        @JsonProperty("extensions") List<String> extensions,
+        @JsonProperty("lineDelimiter") String lineDelimiter,
+        // Drill 1.17 and before used "delimiter" in the
+        // bootstrap storage plugins file, assume many instances
+        // exist in the field.
+        @JsonAlias("delimiter")
+        @JsonProperty("fieldDelimiter") String fieldDelimiter,
+        @JsonProperty("quote") String quote,
+        @JsonProperty("escape") String escape,
+        @JsonProperty("comment") String comment,
+        @JsonProperty("skipFirstLine") Boolean skipFirstLine,
+        @JsonProperty("extractHeader") Boolean extractHeader) {
+      this.extensions = extensions == null ?
+          ImmutableList.of() : ImmutableList.copyOf(extensions);
+      this.lineDelimiter = lineDelimiter == null ? "\n" : lineDelimiter;
+      this.fieldDelimiter = Strings.isNullOrEmpty(fieldDelimiter) ? ',' : fieldDelimiter.charAt(0);
+      this.quote = Strings.isNullOrEmpty(quote) ? '"' : quote.charAt(0);
+      this.escape = Strings.isNullOrEmpty(escape) ? '"' : escape.charAt(0);
+      this.comment = Strings.isNullOrEmpty(comment) ? '#' : comment.charAt(0);
+      this.skipFirstLine = skipFirstLine == null ? false : skipFirstLine;
+      this.extractHeader = extractHeader == null ? false : extractHeader;
+    }
+
+    public TextFormatConfig() {
+      this(null, null, null, null, null, null, null, null);
+    }
 
     public List<String> getExtensions() { return extensions; }
+    public String getLineDelimiter() { return lineDelimiter; }
+    public char getFieldDelimiter() { return fieldDelimiter; }
     public char getQuote() { return quote; }
     public char getEscape() { return escape; }
     public char getComment() { return comment; }
-    public String getLineDelimiter() { return lineDelimiter; }
-    public char getFieldDelimiter() { return fieldDelimiter; }
     public boolean isSkipFirstLine() { return skipFirstLine; }
-
-    @JsonIgnore
+    @JsonProperty("extractHeader")
     public boolean isHeaderExtractionEnabled() { return extractHeader; }
-
-    @Deprecated
-    @JsonProperty("delimiter")
-    public void setFieldDelimiter(char delimiter){
-      this.fieldDelimiter = delimiter;
-    }
 
     @Override
     public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + comment;
-      result = prime * result + escape;
-      result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
-      result = prime * result + fieldDelimiter;
-      result = prime * result + ((lineDelimiter == null) ? 0 : lineDelimiter.hashCode());
-      result = prime * result + quote;
-      result = prime * result + (skipFirstLine ? 1231 : 1237);
-      result = prime * result + (extractHeader ? 1231 : 1237);
-      return result;
+      return Objects.hash(extensions, lineDelimiter, fieldDelimiter,
+          quote, escape, comment, skipFirstLine, extractHeader);
     }
 
     @Override
@@ -156,46 +172,32 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       if (this == obj) {
         return true;
       }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
+      if (obj == null || getClass() != obj.getClass()) {
         return false;
       }
       TextFormatConfig other = (TextFormatConfig) obj;
-      if (comment != other.comment) {
-        return false;
-      }
-      if (escape != other.escape) {
-        return false;
-      }
-      if (extensions == null) {
-        if (other.extensions != null) {
-          return false;
-        }
-      } else if (!extensions.equals(other.extensions)) {
-        return false;
-      }
-      if (fieldDelimiter != other.fieldDelimiter) {
-        return false;
-      }
-      if (lineDelimiter == null) {
-        if (other.lineDelimiter != null) {
-          return false;
-        }
-      } else if (!lineDelimiter.equals(other.lineDelimiter)) {
-        return false;
-      }
-      if (quote != other.quote) {
-        return false;
-      }
-      if (skipFirstLine != other.skipFirstLine) {
-        return false;
-      }
-      if (extractHeader != other.extractHeader) {
-        return false;
-      }
-      return true;
+      return Objects.equals(extensions, other.extensions) &&
+             Objects.equals(lineDelimiter, other.lineDelimiter) &&
+             Objects.equals(fieldDelimiter, other.fieldDelimiter) &&
+             Objects.equals(quote, other.quote) &&
+             Objects.equals(escape, other.escape) &&
+             Objects.equals(comment, other.comment) &&
+             Objects.equals(skipFirstLine, other.skipFirstLine) &&
+             Objects.equals(extractHeader, other.extractHeader);
+    }
+
+    @Override
+    public String toString() {
+      return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .field("skipFirstLine", skipFirstLine)
+        .field("extractHeader", extractHeader)
+        .escapedField("fieldDelimiter", fieldDelimiter)
+        .escapedField("lineDelimiter", lineDelimiter)
+        .escapedField("quote", quote)
+        .escapedField("escape", escape)
+        .escapedField("comment", comment)
+        .toString();
     }
   }
 
@@ -265,37 +267,28 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       OptionManager options, EasySubScan scan) throws ExecutionSetupException {
     ColumnsScanBuilder builder = new ColumnsScanBuilder();
     initScanBuilder(builder, scan);
+
     TextParsingSettings settings =
-        new TextParsingSettings(getConfig(), scan, options);
+        new TextParsingSettings(getConfig(), scan.getSchema());
     builder.setReaderFactory(new ColumnsReaderFactory(settings));
 
     // If this format has no headers, or wants to skip them,
     // then we must use the columns column to hold the data.
-
-    builder.requireColumnsArray(settings.isUseRepeatedVarChar());
+    builder.requireColumnsArray(
+        ! settings.isHeaderExtractionEnabled() && builder.providedSchema() == null);
 
     // Text files handle nulls in an unusual way. Missing columns
     // are set to required Varchar and filled with blanks. Yes, this
     // means that the SQL statement or code cannot differentiate missing
     // columns from empty columns, but that is how CSV and other text
     // files have been defined within Drill.
-
-    builder.setNullType(Types.required(MinorType.VARCHAR));
-
-    // CSV maps blank columns to nulls (for nullable non-string columns),
-    // or to the default value (for non-nullable non-string columns.)
-
-    builder.typeConverterBuilder().setConversionProperty(
-        AbstractConvertFromString.BLANK_ACTION_PROP,
-        AbstractConvertFromString.BLANK_AS_NULL);
+    builder.nullType(Types.required(MinorType.VARCHAR));
 
     // The text readers use required Varchar columns to represent null columns.
-
     builder.allowRequiredNullColumns(true);
 
     // Provide custom error context
-
-    builder.setContext(
+    builder.errorContext(
         new ChildErrorContext(builder.errorContext()) {
           @Override
           public void addContext(UserException.Builder builder) {
