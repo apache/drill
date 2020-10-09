@@ -180,6 +180,7 @@ typedef enum{
 // #define USERPROP_CERTPASSWORD "certPassword" // Password for certificate file. 
 #define USERPROP_DISABLE_HOSTVERIFICATION "disableHostVerification"
 #define USERPROP_DISABLE_CERTVERIFICATION "disableCertVerification"
+#define USERPROP_HOSTNAME_OVERRIDE "hostnameOverride" //The hostname to verify in the SSL Certificate.
 #define USERPROP_USESYSTEMTRUSTSTORE "useSystemTrustStore" //Windows only, use the system trust store
 #define USERPROP_IMPERSONATION_TARGET "impersonation_target"
 #define USERPROP_AUTH_MECHANISM "auth"
