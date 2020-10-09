@@ -23,8 +23,6 @@
 #include <boost/algorithm/string/join.hpp>
 #include "drill/drillc.hpp"
 
-int nOptions=27;
-
 struct Option{
     char name[32];
     char desc[128];
@@ -56,7 +54,8 @@ struct Option{
     {"disableCertVerification", "disable certificate verification", false},
     {"useSystemTrustStore", "[Windows only]. Use the system truststore.", false},
     {"CustomSSLCtxOptions", "The custom SSL CTX Options", false},
-    {"supportComplexTypes", "Toggle for supporting complex types", false}
+    {"supportComplexTypes", "Toggle for supporting complex types", false},
+    {"hostnameOverride", "Override the SSL server hostname", false}
 };
 
 std::map<std::string, std::string> qsOptionValues;
@@ -165,7 +164,7 @@ void print(const Drill::FieldMetadata* pFieldMetadata, void* buf, size_t sz){
 
 void printUsage(){
     std::cerr<<"Usage: querySubmitter ";
-    for(int j=0; j<nOptions ;j++){
+    for(int j=0; j<sizeof(qsOptions)/sizeof(qsOptions[0]) ;j++){
         std::cerr<< " "<< qsOptions[j].name <<"="  << "[" <<qsOptions[j].desc <<"]" ;
     }
     std::cerr<<std::endl;
@@ -179,7 +178,7 @@ int parseArgs(int argc, char* argv[]){
         char*v=strtok(NULL, "");
 
         bool found=false;
-        for(int j=0; j<nOptions ;j++){
+        for(int j=0; j<sizeof(qsOptions)/sizeof(qsOptions[0]) ;j++){
             if(!strcmp(qsOptions[j].name, o)){
                 found=true; break;
             }
@@ -196,7 +195,7 @@ int parseArgs(int argc, char* argv[]){
         qsOptionValues[o]=v;
     }
 
-    for(int j=0; j<nOptions ;j++){
+    for(int j=0; j<sizeof(qsOptions)/sizeof(qsOptions[0]) ;j++){
         if(qsOptions[j].required ){
             if(qsOptionValues.find(qsOptions[j].name) == qsOptionValues.end()){
                 std::cerr<< ""<< qsOptions[j].name << " [" <<qsOptions[j].desc <<"] " << "is required." << std::endl;
@@ -318,6 +317,7 @@ int main(int argc, char* argv[]) {
         std::string useSystemTrustStore = qsOptionValues["useSystemTrustStore"];
         std::string customSSLOptions = qsOptionValues["CustomSSLCtxOptions"];
         std::string supportComplexTypes = qsOptionValues["supportComplexTypes"];
+        std::string hostnameOverride = qsOptionValues["hostnameOverride"];
 
         Drill::QueryType type;
 
@@ -425,6 +425,9 @@ int main(int argc, char* argv[]) {
         }
         if (supportComplexTypes.length() > 0){
             props.setProperty(USERPROP_SUPPORT_COMPLEX_TYPES, supportComplexTypes);
+        }
+        if (hostnameOverride.length() > 0) {
+            props.setProperty(USERPROP_HOSTNAME_OVERRIDE, hostnameOverride);
         }
 
         if(client.connect(connectStr.c_str(), &props)!=Drill::CONN_SUCCESS){

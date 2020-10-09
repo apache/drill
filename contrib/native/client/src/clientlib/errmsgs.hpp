@@ -59,7 +59,10 @@ namespace Drill{
 #define ERR_CONN_SSL_CN         DRILL_ERR_START+27
 #define ERR_CONN_SSL_CERTVERIFY DRILL_ERR_START+28
 #define ERR_CONN_SSL_PROTOVER   DRILL_ERR_START+29
-#define ERR_CONN_MAX            DRILL_ERR_START+29
+#define ERR_CONN_SSL_SNI        DRILL_ERR_START+30
+
+// This should be the same as the largest ERR_CONN_* code.
+#define ERR_CONN_MAX            DRILL_ERR_START+30
 
 #define ERR_QRY_OUTOFMEM    ERR_CONN_MAX+1
 #define ERR_QRY_COMMERR     ERR_CONN_MAX+2
@@ -81,6 +84,8 @@ namespace Drill{
 #define ERR_QRY_18          ERR_CONN_MAX+18
 #define ERR_QRY_19          ERR_CONN_MAX+19
 #define ERR_QRY_20          ERR_CONN_MAX+20
+
+// This should be the same as the largest ERR_QRY_* code.
 #define ERR_QRY_MAX         ERR_QRY_20
 
     // Use only Plain Old Data types in this struc. We will declare

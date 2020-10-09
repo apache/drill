@@ -94,7 +94,7 @@ class UserProperties;
             /// @brief Applies Minimum TLS protocol restrictions. 
             ///         tlsv11+ means restrict to TLS version 1.1 and higher.
             ///         tlsv12+ means restrict to TLS version 1.2 and higher.
-            ///  Please note that SSL_OP_NO_TLSv tags are depreecated in openSSL 1.1.0.
+            ///  Please note that SSL_OP_NO_TLSv tags are deprecated in openSSL 1.1.0.
             /// 
             /// @param in_ver               The protocol version.
             /// 
@@ -113,9 +113,11 @@ class UserProperties;
         SSLChannelContext(DrillUserProperties *props,
                           boost::asio::ssl::context::method tlsVersion,
                           boost::asio::ssl::verify_mode verifyMode,
+                          const std::string& hostnameOverride,
                           const long customSSLCtxOptions = 0) :
                     ChannelContext(props),
                     m_SSLContext(tlsVersion),
+                    m_hostnameOverride(hostnameOverride),
                     m_certHostnameVerificationStatus(true) 
             {
                 m_SSLContext.set_default_verify_paths();
@@ -142,8 +144,16 @@ class UserProperties;
             /// @param in_result                The host name verification status.
             void SetCertHostnameVerificationStatus(bool in_result) { m_certHostnameVerificationStatus = in_result; }
 
+            /// @brief Returns the overridden hostname used for certificate verification
+            ///
+            /// @return the hostname override, or empty if the hostname should not be overridden.
+            const std::string& GetHostnameOverride() { return m_hostnameOverride; }
+
         private:
             boost::asio::ssl::context m_SSLContext;
+
+            // The hostname to verify. Unused if empty.
+            std::string m_hostnameOverride;
 
             // The flag to indicate the host name verification result.
             bool m_certHostnameVerificationStatus;
@@ -208,6 +218,10 @@ class UserProperties;
             /// @return the connectionStatus.
             virtual connectionStatus_t HandleProtocolHandshakeException(const boost::system::system_error& in_err){
                 return handleError(CONN_HANDSHAKE_FAILED, in_err.what());
+            }
+
+            virtual connectionStatus_t setSocketInformation() {
+                return CONN_SUCCESS;
             }
 
             boost::asio::io_service& m_ioService;
@@ -291,6 +305,21 @@ class UserProperties;
                         getMessage(ERR_CONN_SSL_GENERAL, in_err.what()));
                 }
             }
+
+            connectionStatus_t setSocketInformation() {
+                const char* sniProperty;
+                SSLChannelContext_t& context = *((SSLChannelContext_t *)m_pContext);
+                if (!context.GetHostnameOverride().empty()){
+                    sniProperty = context.GetHostnameOverride().c_str();
+                }
+                else{
+                    sniProperty = m_pEndpoint->getHost().c_str();
+                }
+                if (!SSL_set_tlsext_host_name(((SslSocket *)m_pSocket)->getSocketStream().native_handle(), sniProperty)) {
+                    return handleError(CONN_SSLERROR, getMessage(ERR_CONN_SSL_SNI, sniProperty, ERR_func_error_string(ERR_get_error())));
+                }
+                return CONN_SUCCESS;
+            }
 #endif
     };
 
@@ -332,9 +361,16 @@ class UserProperties;
                 // Gets the channel context.
                 SSLChannelContext_t* context = (SSLChannelContext_t*)(m_channel->getChannelContext());
 
-                // Retrieve the host before we perform Host name verification.
-                // This is because host with ZK mode is selected after the connect() function is called.
-                boost::asio::ssl::rfc2818_verification verifier(m_channel->getEndpoint()->getHost().c_str());
+                const char* hostname;
+                if (context->GetHostnameOverride().empty()) {
+                    // Retrieve the host before we perform Host name verification.
+                    // This is because host with ZK mode is selected after the connect() function is called.
+                    hostname = m_channel->getEndpoint()->getHost().c_str();
+                } else {
+                    hostname = context->GetHostnameOverride().c_str();
+                }
+
+                boost::asio::ssl::rfc2818_verification verifier(hostname);
 
                 // Perform verification.
                 bool verified = verifier(in_preverified, in_ctx);

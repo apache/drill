@@ -210,6 +210,9 @@ ChannelContext* ChannelFactory::getChannelContext(channelType_t t, DrillUserProp
                 verifyMode = boost::asio::ssl::context::verify_none;
             }
 
+            std::string hostnameOverride;
+            props->getProp(USERPROP_HOSTNAME_OVERRIDE, hostnameOverride);
+
             long customSSLCtxOptions = SSLChannelContext::ApplyMinTLSRestriction(protocol);
             std::string sslOptions;
             props->getProp(USERPROP_CUSTOM_SSLCTXOPTIONS, sslOptions);
@@ -222,7 +225,7 @@ ChannelContext* ChannelFactory::getChannelContext(channelType_t t, DrillUserProp
                  }
             }
 
-            pChannelContext = new SSLChannelContext(props, tlsVersion, verifyMode, customSSLCtxOptions);
+            pChannelContext = new SSLChannelContext(props, tlsVersion, verifyMode, hostnameOverride, customSSLCtxOptions);
         }
             break;
 #endif
@@ -276,20 +279,23 @@ connectionStatus_t Channel::init(){
 }
 
 connectionStatus_t Channel::connect(){
-    connectionStatus_t ret=CONN_FAILURE;
-    if(this->m_state==CHANNEL_INITIALIZED){
-        ret=m_pEndpoint->getDrillbitEndpoint();
-        if(ret==CONN_SUCCESS){
+    connectionStatus_t ret = CONN_FAILURE;
+    if (this->m_state == CHANNEL_INITIALIZED){
+        ret = m_pEndpoint->getDrillbitEndpoint();
+        if (ret == CONN_SUCCESS){
             DRILL_LOG(LOG_TRACE) << "Connecting to drillbit: " 
                 << m_pEndpoint->getHost() 
                 << ":" << m_pEndpoint->getPort() 
                 << "." << std::endl;
-            ret=this->connectInternal();
-        }else{
+            ret = this->setSocketInformation();
+            if (ret == CONN_SUCCESS) {
+                ret = this->connectInternal();
+            }
+        } else {
             handleError(ret, m_pEndpoint->getError()->msg);
         }
     }
-    this->m_state=(ret==CONN_SUCCESS)?CHANNEL_CONNECTED:this->m_state;
+    this->m_state = (ret == CONN_SUCCESS) ? CHANNEL_CONNECTED : this->m_state;
     return ret;
 }
 
