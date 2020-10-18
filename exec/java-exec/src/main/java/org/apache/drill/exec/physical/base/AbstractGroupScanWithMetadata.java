@@ -17,22 +17,8 @@
  */
 package org.apache.drill.exec.physical.base;
 
-import static org.apache.drill.exec.ExecConstants.SKIP_RUNTIME_ROWGROUP_PRUNING_KEY;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -87,8 +73,21 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static org.apache.drill.exec.ExecConstants.SKIP_RUNTIME_ROWGROUP_PRUNING_KEY;
 
 /**
  * Represents table group scan with metadata usage.
@@ -120,6 +119,8 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
 
   protected boolean usedMetastore; // false by default
 
+  protected int maxRecords;
+
   protected AbstractGroupScanWithMetadata(String userName, List<SchemaPath> columns, LogicalExpression filter) {
     super(userName);
     this.columns = columns;
@@ -141,6 +142,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     this.usedMetastore = that.usedMetastore;
     this.nonInterestingColumnsMetadata = that.nonInterestingColumnsMetadata;
     this.fileSet = that.fileSet == null ? null : new HashSet<>(that.fileSet);
+    this.maxRecords = that.maxRecords;
   }
 
   @JsonProperty("columns")
@@ -158,6 +160,9 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
   public boolean hasFiles() {
     return true;
   }
+
+  @JsonIgnore
+  public int getMaxRecords() { return maxRecords; }
 
   @JsonIgnore
   public boolean isMatchAllMetadata() {
@@ -453,11 +458,17 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
   public GroupScan applyLimit(int maxRecords) {
     maxRecords = Math.max(maxRecords, 1); // Make sure it request at least 1 row -> 1 file.
     GroupScanWithMetadataFilterer<?> prunedMetadata = getFilterer();
+
     if (getTableMetadata() != null) {
       long tableRowCount = TableStatisticsKind.ROW_COUNT.getValue(getTableMetadata());
       if (tableRowCount == Statistic.NO_COLUMN_STATS || tableRowCount <= maxRecords) {
         logger.debug("limit push down does not apply, since total number of rows [{}] is less or equal to the required [{}].",
             tableRowCount, maxRecords);
+        // Return the group scan with the limit pushed down
+        if (this.maxRecords != maxRecords) {
+          prunedMetadata.limit(maxRecords);
+          return prunedMetadata.build();
+        }
         return null;
       }
     }
@@ -468,6 +479,12 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     // some files does not have set row count, do not do files pruning
     if (qualifiedFiles == null || qualifiedFiles.size() == getFilesMetadata().size()) {
       logger.debug("limit push down does not apply, since number of files was not reduced.");
+
+      // Return the group scan with the limit pushed down
+      if (this.maxRecords != maxRecords) {
+        prunedMetadata.limit(maxRecords);
+        return prunedMetadata.build();
+      }
       return null;
     }
 
@@ -479,6 +496,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
         .segments(getSegmentsMetadata())
         .partitions(getPartitionsMetadata())
         .files(filesMap)
+        .limit(maxRecords)
         .nonInterestingColumns(getNonInterestingColumnsMetadata())
         .matching(matchAllMetadata)
         .build();
@@ -715,6 +733,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     protected TupleMetadata tableSchema;
     protected UdfUtilities udfUtilities;
     protected FunctionLookupContext context;
+    protected int maxRecords;
 
     // for the case when filtering is possible for partitions, but files count exceeds
     // PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD, new group scan with at least filtered partitions
@@ -754,6 +773,11 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
 
     public B files(Map<Path, FileMetadata> files) {
       this.files = files;
+      return self();
+    }
+
+    public B limit(int maxRecords) {
+      source.maxRecords = maxRecords;
       return self();
     }
 

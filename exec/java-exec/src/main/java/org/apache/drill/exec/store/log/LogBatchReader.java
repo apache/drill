@@ -18,13 +18,6 @@
 
 package org.apache.drill.exec.store.log;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.impl.scan.convert.StandardConversions;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
@@ -40,6 +33,13 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.hadoop.mapred.FileSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private static final Logger logger = LoggerFactory.getLogger(LogBatchReader.class);
@@ -126,6 +126,7 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private final LogReaderConfig config;
+  private final int maxRecords;
   private FileSplit split;
   private BufferedReader reader;
   private ResultSetLoader loader;
@@ -136,8 +137,9 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private int lineNumber;
   private int errorCount;
 
-  public LogBatchReader(LogReaderConfig config) {
+  public LogBatchReader(LogReaderConfig config, int maxRecords) {
     this.config = config;
+    this.maxRecords = maxRecords;
   }
 
   @Override
@@ -213,6 +215,10 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private boolean nextLine(RowSetLoader rowWriter) {
+    if (rowWriter.limitReached(maxRecords)) {
+      return false;
+    }
+
     String line;
     try {
       line = reader.readLine();

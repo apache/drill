@@ -17,9 +17,8 @@
  */
 package org.apache.drill.exec.store.easy.text.reader;
 
-import java.io.IOException;
-import java.io.InputStream;
-
+import com.univocity.parsers.common.TextParsingException;
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -40,9 +39,8 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.univocity.parsers.common.TextParsingException;
-
-import io.netty.buffer.DrillBuf;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Text reader, Complies with the RFC 4180 standard for text/csv files.
@@ -58,6 +56,8 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
   private final TextParsingSettings settings;
   // Chunk of the file to be read by this reader
   private FileSplit split;
+  // Limit pushed down from the query
+  private final int maxRecords;
   // text reader implementation
   private TextReader reader;
   // input buffer
@@ -68,8 +68,9 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
 
   private RowSetLoader writer;
 
-  public CompliantTextBatchReader(TextParsingSettings settings) {
+  public CompliantTextBatchReader(TextParsingSettings settings, int maxRecords) {
     this.settings = settings;
+    this.maxRecords = maxRecords;
 
     // Validate. Otherwise, these problems show up later as a data
     // read error which is very confusing.
@@ -297,6 +298,11 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
   @Override
   public boolean next() {
     reader.resetForNextBatch();
+
+    // If the limit is defined and the row count is greater than the limit, stop reading the file.
+    if (maxRecords > 0 && writer.rowCount() > maxRecords) {
+      return false;
+    }
 
     try {
       boolean more = false;

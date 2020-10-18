@@ -52,6 +52,11 @@ public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSche
   private List<ColumnConverter> converters;
   // re-use container instance
   private GenericRecord record;
+  private int maxRecords;
+
+  public AvroBatchReader(int maxRecords) {
+    this.maxRecords = maxRecords;
+  }
 
   @Override
   public boolean open(FileScanFramework.FileSchemaNegotiator negotiator) {
@@ -151,6 +156,10 @@ public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSche
   }
 
   private boolean nextLine(RowSetLoader rowWriter) {
+    if (rowWriter.limitReached(maxRecords)) {
+      return false;
+    }
+
     try {
       if (!reader.hasNext() || reader.pastSync(endPosition)) {
         return false;

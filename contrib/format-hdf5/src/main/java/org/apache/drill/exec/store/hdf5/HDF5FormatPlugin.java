@@ -66,6 +66,7 @@ public class HDF5FormatPlugin extends EasyFormatPlugin<HDF5FormatConfig> {
     config.defaultName = DEFAULT_NAME;
     config.readerOperatorType = UserBitShared.CoreOperatorType.HDF5_SUB_SCAN_VALUE;
     config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
     return config;
   }
 
@@ -73,7 +74,7 @@ public class HDF5FormatPlugin extends EasyFormatPlugin<HDF5FormatConfig> {
   protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) throws ExecutionSetupException {
     FileScanBuilder builder = new FileScanBuilder();
 
-    builder.setReaderFactory(new HDF5ReaderFactory(new HDF5BatchReader.HDF5ReaderConfig(this, formatConfig)));
+    builder.setReaderFactory(new HDF5ReaderFactory(new HDF5BatchReader.HDF5ReaderConfig(this, formatConfig), scan.getMaxRecords()));
     initScanBuilder(builder, scan);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;
@@ -81,14 +82,17 @@ public class HDF5FormatPlugin extends EasyFormatPlugin<HDF5FormatConfig> {
 
   public static class HDF5ReaderFactory extends FileScanFramework.FileReaderFactory {
     private final HDF5ReaderConfig readerConfig;
+    private final int maxRecords;
 
-    HDF5ReaderFactory(HDF5ReaderConfig config) {
+
+    HDF5ReaderFactory(HDF5ReaderConfig config, int maxRecords) {
       readerConfig = config;
+      this.maxRecords = maxRecords;
     }
 
     @Override
     public ManagedReader<? extends FileScanFramework.FileSchemaNegotiator> newReader() {
-      return new HDF5BatchReader(readerConfig);
+      return new HDF5BatchReader(readerConfig, maxRecords);
     }
   }
 

@@ -70,6 +70,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * Base class for file readers.
  * <p>
@@ -103,6 +104,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     // use this simpler form. New plugins should use these options
     // instead of overriding methods.
 
+    public boolean supportsLimitPushdown;
     public boolean supportsProjectPushdown;
     public boolean supportsFileImplicitColumns = true;
     public boolean supportsAutoPartitioning;
@@ -212,6 +214,15 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   public String getName() { return name; }
 
   /**
+   * Does this plugin support pushing the limit down to the batch reader?  If so, then
+   * the reader itself should have logic to stop reading the file as soon as the limit has been
+   * reached. It makes the most sense to do this with file formats that have consistent schemata
+   * that are identified at the first row.  CSV for example.  If the user only wants 100 rows, it
+   * does not make sense to read the entire file.
+   */
+  public boolean supportsLimitPushdown() { return easyConfig.supportsLimitPushdown; }
+
+  /**
    * Does this plugin support projection push down? That is, can the reader
    * itself handle the tasks of projecting table columns, creating null
    * columns for missing table columns, and so on?
@@ -303,7 +314,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     if (! columnExplorer.isStarQuery()) {
       scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
           columnExplorer.getTableColumns(), scan.getSelectionRoot(),
-          scan.getPartitionDepth(), scan.getSchema());
+          scan.getPartitionDepth(), scan.getSchema(), scan.getMaxRecords());
       scan.setOperatorId(scan.getOperatorId());
     }
 

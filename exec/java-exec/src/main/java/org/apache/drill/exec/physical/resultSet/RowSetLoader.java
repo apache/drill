@@ -108,6 +108,15 @@ public interface RowSetLoader extends TupleWriter {
   boolean isFull();
 
   /**
+   * Used to push a limit down to the file reader. This method checks to see whether
+   * the maxRecords parameter is not zero (for no limit) and is not greater than the
+   * current record count.
+   * @param maxRecords Maximum rows to be returned. (From the limit clause of the query)
+   * @return True if the row count exceeds the maxRecords, false if not.
+   */
+  boolean limitReached(int maxRecords);
+
+  /**
    * The number of rows in the current row set. Does not count any overflow row
    * saved for the next batch.
    *

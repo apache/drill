@@ -120,6 +120,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private static final int BUFFER_SIZE = 4096;
 
   private final ExcelReaderConfig readerConfig;
+  private final int maxRecords;
   private Sheet sheet;
   private Row currentRow;
   private StreamingWorkbook streamingWorkbook;
@@ -159,8 +160,9 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
-  public ExcelBatchReader(ExcelReaderConfig readerConfig) {
+  public ExcelBatchReader(ExcelReaderConfig readerConfig, int maxRecords) {
     this.readerConfig = readerConfig;
+    this.maxRecords = maxRecords;
     firstLine = true;
   }
 
@@ -372,6 +374,11 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     if (readerConfig.lastColumn != 0) {
       finalColumn = readerConfig.lastColumn - 1;
     }
+
+    if (rowWriter.limitReached(maxRecords)) {
+      return false;
+    }
+
     rowWriter.start();
     for (int colWriterIndex = 0; colPosition < finalColumn; colWriterIndex++) {
       Cell cell = currentRow.getCell(colPosition);

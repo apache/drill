@@ -75,6 +75,7 @@ public class ShpBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private RowSetLoader rowWriter;
   private int srid;
   private SpatialReference spatialReference;
+  private final int maxRecords;
 
   public static class ShpReaderConfig {
     protected final ShpFormatPlugin plugin;
@@ -84,8 +85,9 @@ public class ShpBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
-  public ShpBatchReader(ShpReaderConfig readerConfig) {
+  public ShpBatchReader(ShpReaderConfig readerConfig, int maxRecords) {
     this.readerConfig = readerConfig;
+    this.maxRecords = maxRecords;
   }
 
   @Override
@@ -180,6 +182,10 @@ public class ShpBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void processShapefileSet(RowSetLoader rowWriter, final int gid, final Geometry geom, final Object[] dbfRow) {
+    if (rowWriter.limitReached(maxRecords)) {
+      return;
+    }
+
     rowWriter.start();
 
     gidWriter.setInt(gid);

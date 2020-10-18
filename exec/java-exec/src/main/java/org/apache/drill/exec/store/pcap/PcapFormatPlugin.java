@@ -39,14 +39,16 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
   private static class PcapReaderFactory extends FileReaderFactory {
 
     private final PcapReaderConfig readerConfig;
+    private final int maxRecords;
 
-    public PcapReaderFactory(PcapReaderConfig config) {
+    public PcapReaderFactory(PcapReaderConfig config, int maxRecords) {
       readerConfig = config;
+      this.maxRecords = maxRecords;
     }
 
     @Override
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new PcapBatchReader(readerConfig);
+      return new PcapBatchReader(readerConfig, maxRecords);
     }
   }
 
@@ -68,18 +70,19 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
     config.defaultName = PLUGIN_NAME;
     config.readerOperatorType = UserBitShared.CoreOperatorType.PCAP_SUB_SCAN_VALUE;
     config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
     return config;
   }
 
   @Override
   public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options) {
-    return new PcapBatchReader(new PcapReaderConfig(this));
+    return new PcapBatchReader(new PcapReaderConfig(this), scan.getMaxRecords());
   }
 
   @Override
   protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new PcapReaderFactory(new PcapReaderConfig(this)));
+    builder.setReaderFactory(new PcapReaderFactory(new PcapReaderConfig(this), scan.getMaxRecords()));
     initScanBuilder(builder, scan);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;

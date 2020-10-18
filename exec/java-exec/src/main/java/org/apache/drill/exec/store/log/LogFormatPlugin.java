@@ -18,12 +18,6 @@
 
 package org.apache.drill.exec.store.log;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -50,6 +44,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
   private static final Logger logger = LoggerFactory.getLogger(LogFormatPlugin.class);
 
@@ -60,14 +60,16 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
 
   private static class LogReaderFactory extends FileReaderFactory {
     private final LogReaderConfig readerConfig;
+    private final int maxRecords;
 
-    public LogReaderFactory(LogReaderConfig config) {
+    public LogReaderFactory(LogReaderConfig config, int maxRecords) {
       readerConfig = config;
+      this.maxRecords = maxRecords;
     }
 
     @Override
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-       return new LogBatchReader(readerConfig);
+       return new LogBatchReader(readerConfig, maxRecords);
     }
   }
 
@@ -90,6 +92,7 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
     config.defaultName = PLUGIN_NAME;
     config.readerOperatorType = CoreOperatorType.REGEX_SUB_SCAN_VALUE;
     config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
     return config;
   }
 
@@ -207,7 +210,7 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
     // each input file.
     builder.setReaderFactory(new LogReaderFactory(
         new LogReaderConfig(this, pattern, providedSchema, tableSchema,
-            readerSchema, !hasSchema, groupCount, maxErrors(providedSchema))));
+            readerSchema, !hasSchema, groupCount, maxErrors(providedSchema)), scan.getMaxRecords()));
 
     // The default type of regex columns is nullable VarChar,
     // so let's use that as the missing column type.
