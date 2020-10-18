@@ -47,6 +47,8 @@ public class SpssBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private static final String VALUE_LABEL = "_value";
 
+  private final int maxRecords;
+
   private FileSplit split;
 
   private InputStream fsStream;
@@ -69,6 +71,10 @@ public class SpssBatchReader implements ManagedReader<FileSchemaNegotiator> {
     public SpssReaderConfig(SpssFormatPlugin plugin) {
       this.plugin = plugin;
     }
+  }
+
+  public SpssBatchReader(int maxRecords) {
+    this.maxRecords = maxRecords;
   }
 
   @Override
@@ -117,6 +123,11 @@ public class SpssBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private boolean processNextRow() {
+    // Check to see if the limit has been reached
+    if (rowWriter.limitReached(maxRecords)) {
+      return false;
+    }
+
     try {
       // Stop reading when you run out of data
       if (!spssReader.readNextCase()) {

@@ -46,14 +46,16 @@ public class ExcelFormatPlugin extends EasyFormatPlugin<ExcelFormatConfig> {
 
   private static class ExcelReaderFactory extends FileReaderFactory {
     private final ExcelBatchReader.ExcelReaderConfig readerConfig;
+    private final int maxRecords;
 
-    public ExcelReaderFactory(ExcelReaderConfig config) {
+    public ExcelReaderFactory(ExcelReaderConfig config, int maxRecords) {
       readerConfig = config;
+      this.maxRecords = maxRecords;
     }
 
     @Override
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new ExcelBatchReader(readerConfig);
+      return new ExcelBatchReader(readerConfig, maxRecords);
     }
   }
 
@@ -75,13 +77,14 @@ public class ExcelFormatPlugin extends EasyFormatPlugin<ExcelFormatConfig> {
     config.defaultName = DEFAULT_NAME;
     config.readerOperatorType = UserBitShared.CoreOperatorType.EXCEL_SUB_SCAN_VALUE;
     config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
     return config;
   }
 
   @Override
   public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
     EasySubScan scan, OptionManager options) throws ExecutionSetupException {
-    return new ExcelBatchReader(formatConfig.getReaderConfig(this));
+    return new ExcelBatchReader(formatConfig.getReaderConfig(this), scan.getMaxRecords());
   }
 
   @Override
@@ -90,7 +93,7 @@ public class ExcelFormatPlugin extends EasyFormatPlugin<ExcelFormatConfig> {
     ExcelReaderConfig readerConfig = new ExcelReaderConfig(this);
 
     verifyConfigOptions(readerConfig);
-    builder.setReaderFactory(new ExcelReaderFactory(readerConfig));
+    builder.setReaderFactory(new ExcelReaderFactory(readerConfig, scan.getMaxRecords()));
 
     initScanBuilder(builder, scan);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));

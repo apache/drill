@@ -145,6 +145,7 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private ScalarWriter remoteDataWriter;
 
+  private final int maxRecords;
 
   private Map<Long, TcpSession> sessionQueue;
 
@@ -164,11 +165,12 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
-  public PcapBatchReader(PcapReaderConfig readerConfig) {
+  public PcapBatchReader(PcapReaderConfig readerConfig, int maxRecords) {
     this.readerConfig = readerConfig;
     if (readerConfig.sessionizeTCPStreams) {
       sessionQueue = new HashMap<>();
     }
+    this.maxRecords = maxRecords;
   }
 
   @Override
@@ -296,6 +298,11 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private boolean parseNextPacket(RowSetLoader rowWriter) {
+
+    // Push down limit
+    if (rowWriter.limitReached(maxRecords)) {
+      return false;
+    }
 
     // Decode the packet
     Packet packet = new Packet();

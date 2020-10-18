@@ -26,6 +26,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
 
+
 /**
  * Implementation of the row set loader. Provides row-level operations, leaving the
  * result set loader to provide batch-level operations. However, all control
@@ -95,6 +96,11 @@ public class RowSetLoaderImpl extends AbstractTupleWriter implements RowSetLoade
       state = State.IN_WRITE;
     }
     endWrite();
+  }
+
+  @Override
+  public boolean limitReached(int maxRecords) {
+    return (maxRecords > 0 && this.rowCount() >= maxRecords);
   }
 
   @Override

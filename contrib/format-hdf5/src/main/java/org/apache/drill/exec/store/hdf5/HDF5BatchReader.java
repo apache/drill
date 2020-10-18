@@ -111,6 +111,8 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private final List<HDF5DataWriter> dataWriters;
 
+  private final int maxRecords;
+
   private FileSplit split;
 
   private IHDF5Reader hdf5Reader;
@@ -158,8 +160,9 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
-  public HDF5BatchReader(HDF5ReaderConfig readerConfig) {
+  public HDF5BatchReader(HDF5ReaderConfig readerConfig, int maxRecords) {
     this.readerConfig = readerConfig;
+    this.maxRecords = maxRecords;
     dataWriters = new ArrayList<>();
   }
 
@@ -369,6 +372,12 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   @Override
   public boolean next() {
+
+    // Limit pushdown
+    if (rowWriter.limitReached(maxRecords)) {
+      return false;
+    }
+
     while (!rowWriter.isFull()) {
       if (readerConfig.defaultPath == null || readerConfig.defaultPath.isEmpty()) {
         if (!metadataIterator.hasNext()){

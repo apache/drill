@@ -40,9 +40,15 @@ public class SpssFormatPlugin extends EasyFormatPlugin<SpssFormatConfig> {
 
   private static class SpssReaderFactory extends FileReaderFactory {
 
+    private final int maxRecords;
+
+    public SpssReaderFactory(int maxRecords) {
+      this.maxRecords = maxRecords;
+    }
+
     @Override
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new SpssBatchReader();
+      return new SpssBatchReader(maxRecords);
     }
   }
 
@@ -64,19 +70,20 @@ public class SpssFormatPlugin extends EasyFormatPlugin<SpssFormatConfig> {
     config.defaultName = DEFAULT_NAME;
     config.readerOperatorType = UserBitShared.CoreOperatorType.SPSS_SUB_SCAN_VALUE;
     config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
     return config;
   }
 
   @Override
   public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
     EasySubScan scan, OptionManager options)  {
-    return new SpssBatchReader();
+    return new SpssBatchReader(scan.getMaxRecords());
   }
 
   @Override
   protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new SpssReaderFactory());
+    builder.setReaderFactory(new SpssReaderFactory(scan.getMaxRecords()));
 
     initScanBuilder(builder, scan);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));

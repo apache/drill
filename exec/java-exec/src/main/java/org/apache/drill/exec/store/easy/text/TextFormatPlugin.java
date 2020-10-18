@@ -207,14 +207,16 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   private static class ColumnsReaderFactory extends FileReaderFactory {
 
     private final TextParsingSettings settings;
+    private final int maxRecords;
 
-    public ColumnsReaderFactory(TextParsingSettings settings) {
+    public ColumnsReaderFactory(TextParsingSettings settings, int maxRecords) {
       this.settings = settings;
+      this.maxRecords = maxRecords;
     }
 
     @Override
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-       return new CompliantTextBatchReader(settings);
+       return new CompliantTextBatchReader(settings, maxRecords);
     }
   }
 
@@ -241,6 +243,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     config.readerOperatorType = CoreOperatorType.TEXT_SUB_SCAN_VALUE;
     config.writerOperatorType = CoreOperatorType.TEXT_WRITER_VALUE;
     config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
     return config;
   }
 
@@ -270,7 +273,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
     TextParsingSettings settings =
         new TextParsingSettings(getConfig(), scan.getSchema());
-    builder.setReaderFactory(new ColumnsReaderFactory(settings));
+    builder.setReaderFactory(new ColumnsReaderFactory(settings, scan.getMaxRecords()));
 
     // If this format has no headers, or wants to skip them,
     // then we must use the columns column to hold the data.
@@ -338,8 +341,14 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     for (final CompleteFileWork work : scan.getWorkIterable()) {
       data += work.getTotalBytes();
     }
+
     final double estimatedRowSize = settings.getOptions().getOption(ExecConstants.TEXT_ESTIMATED_ROW_SIZE);
-    final double estRowCount = data / estimatedRowSize;
-    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, (long) estRowCount, 1, data);
+
+    if (scan.supportsLimitPushdown() && scan.getMaxRecords() > 0) {
+      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, (long)scan.getMaxRecords(), 1, data);
+    } else {
+      final double estRowCount = data / estimatedRowSize;
+      return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, (long) estRowCount, 1, data);
+    }
   }
 }

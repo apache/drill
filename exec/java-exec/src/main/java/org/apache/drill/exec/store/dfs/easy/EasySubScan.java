@@ -35,6 +35,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.hadoop.fs.Path;
 
+
 @JsonTypeName("fs-sub-scan")
 public class EasySubScan extends AbstractSubScan {
 
@@ -44,6 +45,7 @@ public class EasySubScan extends AbstractSubScan {
   private final Path selectionRoot;
   private final int partitionDepth;
   private final TupleMetadata schema;
+  private final int maxRecords;
 
   @JsonCreator
   public EasySubScan(
@@ -55,7 +57,8 @@ public class EasySubScan extends AbstractSubScan {
     @JsonProperty("columns") List<SchemaPath> columns,
     @JsonProperty("selectionRoot") Path selectionRoot,
     @JsonProperty("partitionDepth") int partitionDepth,
-    @JsonProperty("schema") TupleMetadata schema
+    @JsonProperty("schema") TupleMetadata schema,
+    @JsonProperty("maxRecords") int maxRecords
     ) throws ExecutionSetupException {
     super(userName);
     this.formatPlugin = engineRegistry.resolveFormat(storageConfig, formatConfig, EasyFormatPlugin.class);
@@ -64,10 +67,11 @@ public class EasySubScan extends AbstractSubScan {
     this.selectionRoot = selectionRoot;
     this.partitionDepth = partitionDepth;
     this.schema = schema;
+    this.maxRecords = maxRecords;
   }
 
   public EasySubScan(String userName, List<FileWorkImpl> files, EasyFormatPlugin<?> plugin,
-      List<SchemaPath> columns, Path selectionRoot, int partitionDepth, TupleMetadata schema) {
+      List<SchemaPath> columns, Path selectionRoot, int partitionDepth, TupleMetadata schema, int maxRecords) {
     super(userName);
     this.formatPlugin = plugin;
     this.files = files;
@@ -75,6 +79,7 @@ public class EasySubScan extends AbstractSubScan {
     this.selectionRoot = selectionRoot;
     this.partitionDepth = partitionDepth;
     this.schema = schema;
+    this.maxRecords = maxRecords;
   }
 
   @JsonProperty
@@ -100,6 +105,9 @@ public class EasySubScan extends AbstractSubScan {
 
   @JsonProperty("schema")
   public TupleMetadata getSchema() { return schema; }
+
+  @JsonProperty("maxRecords")
+  public int getMaxRecords() { return maxRecords; }
 
   @Override
   public int getOperatorType() { return formatPlugin.getReaderOperatorType(); }

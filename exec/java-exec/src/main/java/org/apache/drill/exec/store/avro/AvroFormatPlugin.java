@@ -56,13 +56,14 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
     config.defaultName = DEFAULT_NAME;
     config.readerOperatorType = CoreOperatorType.AVRO_SUB_SCAN_VALUE;
     config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
     return config;
   }
 
   @Override
   protected FileScanFramework.FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanFramework.FileScanBuilder builder = new FileScanFramework.FileScanBuilder();
-    builder.setReaderFactory(new AvroReaderFactory());
+    builder.setReaderFactory(new AvroReaderFactory(scan.getMaxRecords()));
     initScanBuilder(builder, scan);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;
@@ -70,9 +71,14 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
 
   private static class AvroReaderFactory extends FileScanFramework.FileReaderFactory {
 
+    private final int maxRecords;
+    public AvroReaderFactory(int maxRecords) {
+      this.maxRecords = maxRecords;
+    }
+
     @Override
     public ManagedReader<? extends FileScanFramework.FileSchemaNegotiator> newReader() {
-      return new AvroBatchReader();
+      return new AvroBatchReader(maxRecords);
     }
   }
 }

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
@@ -70,6 +71,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 @JsonTypeName("fs-scan")
 public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataProvider> {
   private static final Logger logger = LoggerFactory.getLogger(EasyGroupScan.class);
@@ -84,6 +86,8 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
   private List<CompleteFileWork> chunks;
   private List<EndpointAffinity> endpointAffinities;
   private final Path selectionRoot;
+  private final int maxRecords;
+  private final boolean supportsLimitPushdown;
 
   @JsonCreator
   public EasyGroupScan(
@@ -101,7 +105,8 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
     this.formatPlugin = engineRegistry.resolveFormat(storageConfig, formatConfig, EasyFormatPlugin.class);
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
-
+    this.maxRecords = getMaxRecords();
+    this.supportsLimitPushdown = formatPlugin.easyConfig().supportsLimitPushdown;
     this.metadataProvider = defaultTableMetadataProviderBuilder(new FileSystemMetadataProviderManager())
         .withSelection(selection)
         .withSchema(schema)
@@ -137,6 +142,8 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
     this.usedMetastore = metadataProviderManager.usesMetastore();
     initFromSelection(selection, formatPlugin);
     checkMetadataConsistency(selection, formatPlugin.getFsConf());
+    this.supportsLimitPushdown = formatPlugin.easyConfig().supportsLimitPushdown;
+    this.maxRecords = getMaxRecords();
   }
 
   public EasyGroupScan(
@@ -172,6 +179,8 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
     mappings = that.mappings;
     partitionDepth = that.partitionDepth;
     metadataProvider = that.metadataProvider;
+    maxRecords = getMaxRecords();
+    supportsLimitPushdown = that.formatPlugin.easyConfig().supportsLimitPushdown;
   }
 
   @JsonIgnore
@@ -288,7 +297,7 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
     EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin,
-        columns, selectionRoot, partitionDepth, getSchema());
+        columns, selectionRoot, partitionDepth, getSchema(), maxRecords);
     subScan.setOperatorId(getOperatorId());
     return subScan;
   }
@@ -313,8 +322,15 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
 
   @Override
   public String toString() {
-    String pattern = "EasyGroupScan [selectionRoot=%s, numFiles=%s, columns=%s, files=%s, schema=%s, usedMetastore=%s]";
-    return String.format(pattern, selectionRoot, getFiles().size(), columns, getFiles(), getSchema(), usedMetastore());
+    return new PlanStringBuilder(this)
+      .field("selectionRoot", selectionRoot)
+      .field("numFiles", getFiles().size())
+      .field("columns", columns)
+      .field("files", getFiles())
+      .field("schema", getSchema())
+      .field("usedMetastore", usedMetastore())
+      .field("maxRecords", maxRecords)
+      .toString();
   }
 
   @Override

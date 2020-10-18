@@ -420,4 +420,15 @@ public class TestExcelFormat extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
+
+  @Test
+  public void testLimitPushdown() throws Exception {
+    String sql = "SELECT id, first_name, order_count FROM cp.`excel/test_data.xlsx` LIMIT 5";
+
+    queryBuilder()
+      .sql(sql)
+      .planMatcher()
+      .include("Limit", "maxRecords=5")
+      .match();
+  }
 }

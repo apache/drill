@@ -47,13 +47,16 @@ public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
   public static class ShpReaderFactory extends FileReaderFactory {
     private final ShpReaderConfig readerConfig;
 
-    public ShpReaderFactory(ShpReaderConfig config) {
+    private final int maxRecords;
+
+    public ShpReaderFactory(ShpReaderConfig config, int maxRecords) {
       readerConfig = config;
+      this.maxRecords = maxRecords;
     }
 
     @Override
     public ManagedReader<? extends FileScanFramework.FileSchemaNegotiator> newReader() {
-      return new ShpBatchReader(readerConfig);
+      return new ShpBatchReader(readerConfig, maxRecords);
     }
   }
 
@@ -63,13 +66,13 @@ public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
 
   @Override
   public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options) throws ExecutionSetupException {
-    return new ShpBatchReader(formatConfig.getReaderConfig(this));
+    return new ShpBatchReader(formatConfig.getReaderConfig(this), scan.getMaxRecords());
   }
 
   @Override
   protected FileScanFramework.FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanFramework.FileScanBuilder builder = new FileScanFramework.FileScanBuilder();
-    builder.setReaderFactory(new ShpReaderFactory(new ShpReaderConfig(this)));
+    builder.setReaderFactory(new ShpReaderFactory(new ShpReaderConfig(this), scan.getMaxRecords()));
     initScanBuilder(builder, scan);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;
@@ -87,6 +90,7 @@ public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
     config.defaultName = PLUGIN_NAME;
     config.readerOperatorType = CoreOperatorType.SHP_SUB_SCAN_VALUE;
     config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
     return config;
   }
 }
