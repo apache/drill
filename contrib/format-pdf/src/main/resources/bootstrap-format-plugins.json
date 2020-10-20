@@ -1,0 +1,37 @@
+{
+  "storage":{
+    "dfs": {
+      "type": "file",
+      "formats": {
+        "pdf": {
+          "type": "pdf",
+          "extensions": [
+            "pdf"
+          ]
+        }
+      }
+    },
+    "cp": {
+      "type": "file",
+      "formats": {
+        "pdf": {
+          "type": "pdf",
+          "extensions": [
+            "pdf"
+          ]
+        }
+      }
+    },
+    "s3": {
+      "type": "file",
+      "formats": {
+        "pdf": {
+          "type": "pdf",
+          "extensions": [
+            "pdf"
+          ]
+        }
+      }
+    }
+  }
+}
