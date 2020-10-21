@@ -288,6 +288,8 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
             break;
           case FORMULA:
             case NUMERIC:
+          case _NONE:
+          case BLANK:
             tempColumnName = cell.getStringCellValue();
             makeColumn(builder, tempColumnName, TypeProtos.MinorType.FLOAT8);
             excelFieldNames.add(colPosition, tempColumnName);
@@ -457,7 +459,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     } else if (cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
       // Case if the column is a date or time
       addColumnToArray(rowWriter, excelFieldNames.get(colPosition), MinorType.TIMESTAMP, false);
-    } else if (cellType == CellType.NUMERIC || cellType == CellType.FORMULA) {
+    } else if (cellType == CellType.NUMERIC || cellType == CellType.FORMULA || cellType == CellType.BLANK || cellType == CellType._NONE) {
       // Case if the column is numeric
       addColumnToArray(rowWriter, excelFieldNames.get(colPosition), MinorType.FLOAT8, false);
     } else {
