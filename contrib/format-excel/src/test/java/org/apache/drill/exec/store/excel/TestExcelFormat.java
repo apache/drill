@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.excel;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -430,5 +431,45 @@ public class TestExcelFormat extends ClusterTest {
       .planMatcher()
       .include("Limit", "maxRecords=5")
       .match();
+  }
+
+  @Test
+  public void testBlankColumnFix() throws Exception {
+    String sql = "SELECT * FROM dfs.`excel/zips-small.xlsx`";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("zip", MinorType.FLOAT8)
+      .addNullable("lat", MinorType.FLOAT8)
+      .addNullable("lng", MinorType.FLOAT8)
+      .addNullable("city", MinorType.VARCHAR)
+      .addNullable("state_id", MinorType.VARCHAR)
+      .addNullable("state_name", MinorType.VARCHAR)
+      .addNullable("zcta", MinorType.VARCHAR)
+      .addNullable("parent_zcta", MinorType.FLOAT8)
+      .addNullable("population", MinorType.FLOAT8)
+      .addNullable("density", MinorType.FLOAT8)
+      .addNullable("county_fips", MinorType.FLOAT8)
+      .addNullable("county_name", MinorType.VARCHAR)
+      .addNullable("county_weights", MinorType.VARCHAR)
+      .addNullable("county_names_all", MinorType.VARCHAR)
+      .addNullable("county_fips_all", MinorType.VARCHAR)
+      .addNullable("imprecise", MinorType.VARCHAR)
+      .addNullable("military", MinorType.VARCHAR)
+      .addNullable("timezone", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(601.0, 18.18004, -66.75218, "Adjuntas", "PR", "Puerto Rico", "TRUE", 0.0, 17242.0, 111.4, 72001.0, "Adjuntas", "{'72001':99.43,'72141':0.57}", "Adjuntas|Utuado",
+      "72001|72141", "FALSE", "FALSE", "America/Puerto_Rico")
+      .addRow(602.0, 18.36073, -67.17517, "Aguada", "PR", "Puerto Rico", "TRUE", 0.0, 38442.0, 523.5, 72003.0, "Aguada", "{'72003':100}", "Aguada", "72003", "FALSE", "FALSE", "America" +
+    "/Puerto_Rico")
+      .addRow(603.0, 18.45439, -67.12202, "Aguadilla", "PR", "Puerto Rico", "TRUE", 0.0, 48814.0, 667.9, 72005.0, "Aguadilla", "{'72005':100}", "Aguadilla", "72005", "FALSE", "FALSE",
+    "America/Puerto_Rico")
+      .addRow(606.0, 18.16724, -66.93828, "Maricao", "PR", "Puerto Rico", "TRUE", 0.0, 6437.0, 60.4, 72093.0, "Maricao", "{'72093':94.88,'72121':1.35,'72153':3.78}", "Maricao|Yauco" +
+    "|Sabana Grande", "72093|72153|72121", "FALSE", "FALSE", "America/Puerto_Rico")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 }
