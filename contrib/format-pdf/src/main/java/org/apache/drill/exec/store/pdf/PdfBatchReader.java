@@ -1,5 +1,6 @@
 package org.apache.drill.exec.store.pdf;
 
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -43,6 +44,8 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private PDDocumentInformation info;
   private SchemaBuilder builder;
   private List<String> columnHeaders;
+  private int currentRowIndex;
+  private Table currentTable;
 
 
   // Document Metadata Fields
@@ -98,6 +101,11 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     rowWriter = loader.writer();
     buildWriterList();
     addImplicitColumnsToSchema();
+
+    // Prepare for reading
+    currentRowIndex = 1;  // Skip the first line if there are headers
+    currentTable = tables.get(0);
+
     return true;
   }
 
@@ -107,28 +115,29 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       // Check to see if the limit has been reached
       if (rowWriter.limitReached(maxRecords)) {
         return false;
+      } else if (currentRowIndex >= currentTable.getRows().size()) {
+        return false;
       }
-      rowWriter.start();
-      Table table = tables.get(0);
-      for (List<RectangularTextContainer> row : table.getRows()) {
 
-        // If the dataset unexpectedly adds columns, add to schema
-        if (row.size() > columns) {
-          // Add column to schema
-
-          // Add writer
-
-          // Increment column counter
-          columns++;
-        }
-
-        for (int i = 1; i < row.size(); i++) {
-          writers.get(i).load(row.get(i));
-        }
-        rowWriter.save();
-      }
+      // Process the row
+      processRow(currentTable.getRows().get(currentRowIndex));
+      currentRowIndex++;
     }
     return true;
+  }
+
+  private void processRow(List<RectangularTextContainer> row) {
+    String value;
+    rowWriter.start();
+    for (int i = 0; i < row.size(); i++) {
+      value = row.get(i).getText();
+
+      if (Strings.isNullOrEmpty(value)) {
+        continue;
+      }
+      writers.get(i).load(row.get(i));
+    }
+    rowWriter.save();
   }
 
   @Override
