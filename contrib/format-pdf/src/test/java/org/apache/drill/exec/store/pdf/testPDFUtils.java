@@ -42,6 +42,16 @@ public class testPDFUtils {
     assertEquals(tableList.size(), 4);
   }
 
+  @Test
+  public void testFirstRowExtractor() throws Exception {
+    PDDocument document = getDocument("schools.pdf");
+    List<Table> tableList = Utils.extractTablesFromPDF(document);
+    document.close();
+
+    List<String> values = Utils.extractRowValues(tableList.get(0));
+    assertEquals(values.size(), 11);
+  }
+
 
   private PDDocument getDocument(String fileName) throws Exception {
     return PDDocument.load(new File(DATA_PATH + fileName));

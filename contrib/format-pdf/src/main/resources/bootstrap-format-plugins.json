@@ -7,7 +7,8 @@
           "type": "pdf",
           "extensions": [
             "pdf"
-          ]
+          ],
+          "extractHeaders": true
         }
       }
     },
@@ -18,7 +19,8 @@
           "type": "pdf",
           "extensions": [
             "pdf"
-          ]
+          ],
+          "extractHeaders": true
         }
       }
     },
@@ -29,7 +31,8 @@
           "type": "pdf",
           "extensions": [
             "pdf"
-          ]
+          ],
+          "extractHeaders": true
         }
       }
     }

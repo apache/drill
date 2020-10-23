@@ -42,20 +42,8 @@
       <version>1.0.4</version>
       <exclusions>
         <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-        <exclusion>
+          <artifactId>slf4j-simple</artifactId>
           <groupId>org.slf4j</groupId>
-          <artifactId>slf4k-simple</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

@@ -34,27 +34,44 @@ import java.util.Objects;
 public class PdfFormatConfig implements FormatPluginConfig {
 
   private final List<String> extensions;
+  private final boolean extractHeaders;
+  private final String extractionAlgorithm;
 
   @JsonCreator
-  public PdfFormatConfig(@JsonProperty("extensions") List<String> extensions) {
+  public PdfFormatConfig(@JsonProperty("extensions") List<String> extensions,
+                         @JsonProperty("extractHeaders") boolean extractHeaders,
+                         @JsonProperty("extractionAlgorithm") String extractionAlgorithm) {
     this.extensions = extensions == null
       ? Collections.singletonList("pdf")
       : ImmutableList.copyOf(extensions);
+    this.extractHeaders = extractHeaders;
+    this.extractionAlgorithm = extractionAlgorithm;
   }
 
   public PdfBatchReader.PdfReaderConfig getReaderConfig(PdfFormatPlugin plugin) {
-    PdfBatchReader.PdfReaderConfig readerConfig = new PdfBatchReader.PdfReaderConfig(plugin);
-    return readerConfig;
+    return new PdfBatchReader.PdfReaderConfig(plugin);
   }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+  @JsonProperty("extensions")
   public List<String> getExtensions() {
     return extensions;
   }
 
+  @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+  @JsonProperty("extractHeaders")
+  public boolean getExtractHeaders() {
+    return extractHeaders;
+  }
+
+  @JsonProperty("extractionAlgorithm")
+  public String getExtractionAlgorithm() {
+    return extractionAlgorithm;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(extensions);
+    return Objects.hash(extensions, extractHeaders, extractionAlgorithm);
   }
 
   @Override
@@ -65,13 +82,17 @@ public class PdfFormatConfig implements FormatPluginConfig {
       return false;
     }
     PdfFormatConfig that = (PdfFormatConfig) obj;
-    return Objects.equals(extensions, that.extensions);
+    return Objects.equals(extensions, that.extensions) &&
+      Objects.equals(extractHeaders, that.extractHeaders) &&
+      Objects.equals(extractionAlgorithm, that.extractionAlgorithm);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
       .field("extensions", extensions)
+      .field("extractHeaders", extractHeaders)
+      .field("extractionAlgorithm", extractionAlgorithm)
       .toString();
   }
 }
