@@ -60,6 +60,11 @@ public class Utils {
     return tables;
   }
 
+  /**
+   * Returns the values contained in a PDF Table row
+   * @param table The source table
+   * @return A list of the header rows
+   */
   public static List<String> extractRowValues(Table table) {
     List<RectangularTextContainer> firstRow = table.getRows().get(0);
     List<String> values = new ArrayList<>();
@@ -71,5 +76,4 @@ public class Utils {
     }
     return values;
   }
-
 }

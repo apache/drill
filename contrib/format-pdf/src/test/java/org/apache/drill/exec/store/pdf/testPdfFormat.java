@@ -1,10 +1,16 @@
 package org.apache.drill.exec.store.pdf;
 
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -22,64 +28,70 @@ public class testPdfFormat extends ClusterTest {
 
   @Test
   public void testStarQuery() throws RpcException {
-    String sql = "SELECT * FROM cp.`pdf/argentina_diputados_voting_record.pdf`";
+    String sql = "SELECT * FROM cp.`pdf/argentina_diputados_voting_record.pdf` WHERE `Provincia` = 'Rio Negro'";
 
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
-    results.print();
 
-    /*TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("id", TypeProtos.MinorType.FLOAT8)
-      .addNullable("first_name", TypeProtos.MinorType.VARCHAR)
-      .addNullable("last_name", TypeProtos.MinorType.VARCHAR)
-      .addNullable("email", TypeProtos.MinorType.VARCHAR)
-      .addNullable("gender", TypeProtos.MinorType.VARCHAR)
-      .addNullable("birthdate", TypeProtos.MinorType.VARCHAR)
-      .addNullable("balance", TypeProtos.MinorType.FLOAT8)
-      .addNullable("order_count", TypeProtos.MinorType.FLOAT8)
-      .addNullable("average_order", TypeProtos.MinorType.FLOAT8)
-      .buildSchema();*/
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Apellido y Nombre", MinorType.VARCHAR)
+      .addNullable("Bloque político", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Provincia", TypeProtos.MinorType.VARCHAR)
+      .addNullable("field_0", TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
 
-    /*RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1.0, "Cornelia", "Matej", "cmatej0@mtv.com", "Female", "10/31/1974", 735.29, 22.0, 33.42227273)
-      .addRow(2.0, "Nydia", "Heintsch", "nheintsch1@godaddy.com", "Female", "12/10/1966", 784.14, 22.0, 35.64272727)
-      .addRow(3.0, "Waiter", "Sherel", "wsherel2@utexas.edu", "Male", "3/12/1961", 172.36, 17.0, 10.13882353)
-      .addRow(4.0, "Cicely", "Lyver", "clyver3@mysql.com", "Female", "5/4/2000", 987.39, 6.0, 164.565)
-      .addRow(5.0, "Dorie", "Doe", "ddoe4@spotify.com", "Female", "12/28/1955", 852.48, 17.0, 50.14588235)
-      .build();*/
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("ALBRIEU, Oscar Edmundo Nicolas", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .addRow("AVOSCAN, Herman Horacio", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .addRow("CEJAS, Jorge Alberto", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .build();
 
-    //new RowSetComparison(expected).verifyAndClearAll(results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
-  public void testExplicitMetadataQuery() throws RpcException {
-    String sql = "SELECT _page_count, _author FROM cp.`pdf/campaign_donors.pdf`";
+  public void testMetadataQuery() throws RpcException {
+    String sql = "SELECT _page_count, " +
+      "_title, " +
+      "_author, " +
+      "_subject, " +
+      "_keywords, " +
+      "_creator, " +
+      "_producer," +
+      " _creationDate, " +
+      "_modificationDate, " +
+      "_trapped " +
+      "FROM cp.`pdf/20.pdf` " +
+      "LIMIT 1";
 
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
-    results.print();
 
-    /*TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("id", TypeProtos.MinorType.FLOAT8)
-      .addNullable("first_name", TypeProtos.MinorType.VARCHAR)
-      .addNullable("last_name", TypeProtos.MinorType.VARCHAR)
-      .addNullable("email", TypeProtos.MinorType.VARCHAR)
-      .addNullable("gender", TypeProtos.MinorType.VARCHAR)
-      .addNullable("birthdate", TypeProtos.MinorType.VARCHAR)
-      .addNullable("balance", TypeProtos.MinorType.FLOAT8)
-      .addNullable("order_count", TypeProtos.MinorType.FLOAT8)
-      .addNullable("average_order", TypeProtos.MinorType.FLOAT8)
-      .buildSchema();*/
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("_page_count", TypeProtos.MinorType.INT)
+      .addNullable("_title", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_author", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_subject", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_keywords", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_creator", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_producer", MinorType.VARCHAR)
+      .addNullable("_creationDate", MinorType.TIMESTAMP)
+      .addNullable("_modificationDate", MinorType.TIMESTAMP)
+      .addNullable("_trapped", MinorType.VARCHAR)
+      .buildSchema();
 
-    /*RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1.0, "Cornelia", "Matej", "cmatej0@mtv.com", "Female", "10/31/1974", 735.29, 22.0, 33.42227273)
-      .addRow(2.0, "Nydia", "Heintsch", "nheintsch1@godaddy.com", "Female", "12/10/1966", 784.14, 22.0, 35.64272727)
-      .addRow(3.0, "Waiter", "Sherel", "wsherel2@utexas.edu", "Male", "3/12/1961", 172.36, 17.0, 10.13882353)
-      .addRow(4.0, "Cicely", "Lyver", "clyver3@mysql.com", "Female", "5/4/2000", 987.39, 6.0, 164.565)
-      .addRow(5.0, "Dorie", "Doe", "ddoe4@spotify.com", "Female", "12/28/1955", 852.48, 17.0, 50.14588235)
-      .build();*/
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, "Agricultural Landuse Survey in The Sumas River Watershed Summa",
+        "Vision", "Agricultural Landuse Survey in The Sumas River Watershed Summa",
+        "Agricultural Landuse Survey in The Sumas River Watershed Summa",
+        "PScript5.dll Version 5.2.2",
+        "Acrobat Distiller 7.0.5 (Windows)",
+        857403000000L,
+        1230835135000L,
+    "Acrobat Distiller 7.0.5 (Windows)")
+      .build();
 
-    //new RowSetComparison(expected).verifyAndClearAll(results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
 }

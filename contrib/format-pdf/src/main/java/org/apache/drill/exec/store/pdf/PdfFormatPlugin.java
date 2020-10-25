@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.pdf;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -77,7 +76,7 @@ public class PdfFormatPlugin extends EasyFormatPlugin<PdfFormatConfig> {
 
   @Override
   public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
-    EasySubScan scan, OptionManager options) throws ExecutionSetupException {
+    EasySubScan scan, OptionManager options) {
     return new PdfBatchReader(formatConfig.getReaderConfig(this), scan.getMaxRecords());
   }
 
