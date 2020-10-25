@@ -58,8 +58,8 @@ public class testPdfFormat extends ClusterTest {
       "_keywords, " +
       "_creator, " +
       "_producer," +
-      " _creationDate, " +
-      "_modificationDate, " +
+      " _creation_date, " +
+      "_modification_date, " +
       "_trapped " +
       "FROM cp.`pdf/20.pdf` " +
       "LIMIT 1";
@@ -75,8 +75,8 @@ public class testPdfFormat extends ClusterTest {
       .addNullable("_keywords", TypeProtos.MinorType.VARCHAR)
       .addNullable("_creator", TypeProtos.MinorType.VARCHAR)
       .addNullable("_producer", MinorType.VARCHAR)
-      .addNullable("_creationDate", MinorType.TIMESTAMP)
-      .addNullable("_modificationDate", MinorType.TIMESTAMP)
+      .addNullable("_creation_date", MinorType.TIMESTAMP)
+      .addNullable("_modification_date", MinorType.TIMESTAMP)
       .addNullable("_trapped", MinorType.VARCHAR)
       .buildSchema();
 

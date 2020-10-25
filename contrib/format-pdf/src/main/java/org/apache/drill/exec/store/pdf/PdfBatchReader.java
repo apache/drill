@@ -201,8 +201,8 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     addMetadataColumnToSchema("_keywords", MinorType.VARCHAR);
     addMetadataColumnToSchema("_creator", MinorType.VARCHAR);
     addMetadataColumnToSchema("_producer", MinorType.VARCHAR);
-    addMetadataColumnToSchema("_creationDate", MinorType.TIMESTAMP);
-    addMetadataColumnToSchema("_modificationDate", MinorType.TIMESTAMP);
+    addMetadataColumnToSchema("_creation_date", MinorType.TIMESTAMP);
+    addMetadataColumnToSchema("_modification_date", MinorType.TIMESTAMP);
     addMetadataColumnToSchema("_trapped", MinorType.VARCHAR);
   }
 
@@ -232,7 +232,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     writeStringMetadataField(producer, startingIndex+6);
     writeTimestampMetadataField(creationDate, startingIndex+7);
     writeTimestampMetadataField(modificationDate, startingIndex+8);
-    writeStringMetadataField(producer, startingIndex+9);
+    writeStringMetadataField(trapped, startingIndex+9);
   }
 
   private void writeStringMetadataField(String value, int index) {
@@ -260,7 +260,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     // Create a new column name which will be field_n
     String newColumnName = NEW_FIELD_PREFIX + unregisteredColumnCount;
-    unregisteredColumnCount ++;
+    unregisteredColumnCount++;
 
     // Add a new writer.  Since we want the metadata always to be at the end of the schema, we must track the metadata
     // index and add this before the metadata, so that the column index tracks with the writer index.
@@ -284,7 +284,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       if (Strings.isNullOrEmpty(columnName)) {
         columnName = NEW_FIELD_PREFIX + unregisteredColumnCount;
         columnHeaders.set(index, columnName);
-        unregisteredColumnCount ++;
+        unregisteredColumnCount++;
       }
       builder.addNullable(columnName, MinorType.VARCHAR);
       index++;
