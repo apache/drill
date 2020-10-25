@@ -88,7 +88,7 @@ public class testPdfFormat extends ClusterTest {
         "Acrobat Distiller 7.0.5 (Windows)",
         857403000000L,
         1230835135000L,
-    "Acrobat Distiller 7.0.5 (Windows)")
+    null)
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
