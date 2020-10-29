@@ -1,6 +1,6 @@
 ---
 title: "Aggregate and Aggregate Statistical"
-date: 2020-08-10
+date: 2020-10-29
 parent: "SQL Functions"
 ---
 
@@ -15,8 +15,8 @@ The following table lists the aggregate functions that you can use in Drill quer
 | BOOL_AND(expression), BOOL_OR(expression) | BIT                                                                                                                                     | BIT                                                                                                                                |
 | COUNT(*)                                  | -                                                                                                                                       | BIGINT                                                                                                                             |
 | COUNT([DISTINCT] expression)              | any                                                                                                                                     | BIGINT                                                                                                                             |
-| MAX(expression), MIN(expression)          | BINARY,   DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP                                                                                    | Same   as argument type                                                                                                            |
-| SUM(expression)                           | SMALLINT,   INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL                                                                           | DECIMAL for DECIMAL   argument,     BIGINT for any integer-type argument (including BIGINT), DOUBLE for   floating-point arguments |
+| MAX(expression), MIN(expression)          | BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP                                                                                    | Same   as argument type                                                                                                            |
+| SUM(expression)                           | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL                                                                           | DECIMAL for DECIMAL   argument,     BIGINT for any integer-type argument (including BIGINT), DOUBLE for   floating-point arguments |
 
 
 
@@ -169,6 +169,11 @@ Returns the result of a logical AND (resp. OR) over the specified expression.
     |--------|
     | true   |
     |--------|
+
+### BOOL_AND and BOOL_OR Usage Notes
+
+1. EVERY is nearly an alias for BOOL_AND but returns a TINYINT rather than a BIT.
+
 
 ## COUNT
 Returns the number of rows that match the given criteria.
