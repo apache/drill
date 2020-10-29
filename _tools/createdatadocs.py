@@ -1,13 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import json
-from itertools import tee, islice, chain, izip
+from itertools import tee, islice, chain
 
 def previous_and_next(some_iterable):
     prevs, items, nexts = tee(some_iterable, 3)
     prevs = chain([None], prevs)
     nexts = chain(islice(nexts, 1, None), [None])
-    return izip(prevs, items, nexts)
+    return zip(prevs, items, nexts)
 
 def pretty_print(data, filename=None):
     if filename is None:
