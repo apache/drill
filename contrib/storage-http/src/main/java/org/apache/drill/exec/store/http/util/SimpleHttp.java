@@ -206,14 +206,18 @@ public class SimpleHttp {
   private void setupCache(Builder builder) {
     int cacheSize = 10 * 1024 * 1024;   // TODO Add cache size in MB to config
     File cacheDirectory = new File(tempDir, "http-cache");
-    if (!cacheDirectory.mkdirs()) {
-      throw UserException.dataWriteError()
-        .message("Could not create the HTTP cache directory")
-        .addContext("Path", cacheDirectory.getAbsolutePath())
-        .addContext("Please check the temp directory or disable HTTP caching.")
-        .addContext(errorContext)
-        .build(logger);
+    if (!cacheDirectory.exists()) {
+      if (!cacheDirectory.mkdirs()) {
+        throw UserException
+          .dataWriteError()
+          .message("Could not create the HTTP cache directory")
+          .addContext("Path", cacheDirectory.getAbsolutePath())
+          .addContext("Please check the temp directory or disable HTTP caching.")
+          .addContext(errorContext)
+          .build(logger);
+      }
     }
+
     try {
       Cache cache = new Cache(cacheDirectory, cacheSize);
       logger.debug("Caching HTTP Query Results at: {}", cacheDirectory);

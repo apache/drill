@@ -47,6 +47,7 @@ public class HttpGroupScan extends AbstractGroupScan {
   private final Map<String, String> filters;
   private final ScanStats scanStats;
   private final double filterSelectivity;
+  private final int maxRecords;
 
   // Used only in planner, not serialized
   private int hashCode;
@@ -61,6 +62,7 @@ public class HttpGroupScan extends AbstractGroupScan {
     this.filters = null;
     this.filterSelectivity = 0.0;
     this.scanStats = computeScanStats();
+    this.maxRecords = -1;
   }
 
   /**
@@ -72,6 +74,7 @@ public class HttpGroupScan extends AbstractGroupScan {
     this.columns = that.columns;
     this.filters = that.filters;
     this.filterSelectivity = that.filterSelectivity;
+    this.maxRecords = that.maxRecords;
 
     // Calcite makes many copies in the later stage of planning
     // without changing anything. Retain the previous stats.
@@ -92,6 +95,7 @@ public class HttpGroupScan extends AbstractGroupScan {
     this.filters = that.filters;
     this.filterSelectivity = that.filterSelectivity;
     this.scanStats = computeScanStats();
+    this.maxRecords = that.maxRecords;
   }
 
   /**
@@ -107,7 +111,24 @@ public class HttpGroupScan extends AbstractGroupScan {
     this.filters = filters;
     this.filterSelectivity = filterSelectivity;
     this.scanStats = computeScanStats();
+    this.maxRecords = that.maxRecords;
   }
+
+  /**
+   * Adds a limit to the scan.
+   */
+  public HttpGroupScan(HttpGroupScan that, int maxRecords) {
+    super(that);
+    this.columns = that.columns;
+    this.httpScanSpec = that.httpScanSpec;
+
+    // Applies a filter.
+    this.filters = that.filters;
+    this.filterSelectivity = that.filterSelectivity;
+    this.scanStats = computeScanStats();
+    this.maxRecords = maxRecords;
+  }
+
 
   /**
    * Deserialize a group scan. Not called in normal operation. Probably used
@@ -118,7 +139,8 @@ public class HttpGroupScan extends AbstractGroupScan {
     @JsonProperty("columns") List<SchemaPath> columns,
     @JsonProperty("httpScanSpec") HttpScanSpec httpScanSpec,
     @JsonProperty("filters") Map<String, String> filters,
-    @JsonProperty("filterSelectivity") double selectivity
+    @JsonProperty("filterSelectivity") double selectivity,
+    @JsonProperty("maxRecords") int maxRecords
   ) {
     super("no-user");
     this.columns = columns;
@@ -126,6 +148,7 @@ public class HttpGroupScan extends AbstractGroupScan {
     this.filters = filters;
     this.filterSelectivity = selectivity;
     this.scanStats = computeScanStats();
+    this.maxRecords = maxRecords;
   }
 
   @JsonProperty("columns")
@@ -161,7 +184,7 @@ public class HttpGroupScan extends AbstractGroupScan {
 
   @Override
   public SubScan getSpecificScan(int minorFragmentId) {
-    return new HttpSubScan(httpScanSpec, columns, filters);
+    return new HttpSubScan(httpScanSpec, columns, filters, maxRecords);
   }
 
   @Override
@@ -174,6 +197,10 @@ public class HttpGroupScan extends AbstractGroupScan {
   public String getDigest() {
     return toString();
   }
+
+  @JsonProperty("maxRecords")
+  public int maxRecords() { return maxRecords; }
+
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
@@ -226,11 +253,25 @@ public class HttpGroupScan extends AbstractGroupScan {
   }
 
   @Override
+  public boolean supportsLimitPushdown() {
+    return true;
+  }
+
+  @Override
+  public GroupScan applyLimit(int maxRecords) {
+    if (maxRecords == this.maxRecords) {
+      return null;
+    }
+    return new HttpGroupScan(this, maxRecords);
+  }
+
+  @Override
   public String toString() {
     return new PlanStringBuilder(this)
       .field("scan spec", httpScanSpec)
       .field("columns", columns)
       .field("filters", filters)
+      .field("maxRecords", maxRecords)
       .toString();
   }
 

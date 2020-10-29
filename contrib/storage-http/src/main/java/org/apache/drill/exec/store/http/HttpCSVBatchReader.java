@@ -44,6 +44,7 @@ import java.util.List;
 public class HttpCSVBatchReader extends HttpBatchReader {
   private final HttpSubScan subScan;
   private final CsvParserSettings csvSettings;
+  private final int maxRecords;
   private CsvParser csvReader;
   private List<StringColumnWriter> columnWriters;
   private String[] firstRow;
@@ -55,6 +56,7 @@ public class HttpCSVBatchReader extends HttpBatchReader {
   public HttpCSVBatchReader(HttpSubScan subScan) {
     super(subScan);
     this.subScan = subScan;
+    this.maxRecords = subScan.maxRecords();
 
     this.csvSettings = new CsvParserSettings();
     csvSettings.setLineSeparatorDetectionEnabled(true);
@@ -102,6 +104,10 @@ public class HttpCSVBatchReader extends HttpBatchReader {
   @Override
   public boolean next() {
     while (!rowWriter.isFull()) {
+      if (rowWriter.limitReached(maxRecords)) {
+        return false;
+      }
+
       if (!processRow()) {
         return false;
       }
