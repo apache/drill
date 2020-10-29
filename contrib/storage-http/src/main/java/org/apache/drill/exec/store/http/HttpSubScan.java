@@ -41,16 +41,20 @@ public class HttpSubScan extends AbstractBase implements SubScan {
   private final HttpScanSpec tableSpec;
   private final List<SchemaPath> columns;
   private final Map<String, String> filters;
+  private final int maxRecords;
 
   @JsonCreator
   public HttpSubScan(
     @JsonProperty("tableSpec") HttpScanSpec tableSpec,
     @JsonProperty("columns") List<SchemaPath> columns,
-    @JsonProperty("filters") Map<String, String> filters) {
+    @JsonProperty("filters") Map<String, String> filters,
+    @JsonProperty("maxRecords") int maxRecords
+    ) {
     super("user-if-needed");
     this.tableSpec = tableSpec;
     this.columns = columns;
     this.filters = filters;
+    this.maxRecords = maxRecords;
   }
 
   @JsonProperty("tableSpec")
@@ -68,6 +72,11 @@ public class HttpSubScan extends AbstractBase implements SubScan {
     return filters;
   }
 
+  @JsonProperty("maxRecords")
+  public int maxRecords() {
+    return maxRecords;
+  }
+
  @Override
   public <T, X, E extends Throwable> T accept(
    PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
@@ -76,7 +85,7 @@ public class HttpSubScan extends AbstractBase implements SubScan {
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    return new HttpSubScan(tableSpec, columns, filters);
+    return new HttpSubScan(tableSpec, columns, filters, maxRecords);
   }
 
   @Override
@@ -96,6 +105,7 @@ public class HttpSubScan extends AbstractBase implements SubScan {
       .field("tableSpec", tableSpec)
       .field("columns", columns)
       .field("filters", filters)
+      .field("maxRecords", maxRecords)
       .toString();
   }
 
@@ -115,6 +125,7 @@ public class HttpSubScan extends AbstractBase implements SubScan {
     HttpSubScan other = (HttpSubScan) obj;
     return Objects.equals(tableSpec, other.tableSpec)
       && Objects.equals(columns, other.columns)
-      && Objects.equals(filters, other.filters);
+      && Objects.equals(filters, other.filters)
+      && Objects.equals(maxRecords, other.maxRecords);
   }
 }

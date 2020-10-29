@@ -40,10 +40,13 @@ import java.util.Map;
 
 public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   private final HttpSubScan subScan;
+  private final int maxRecords;
   private JsonLoader jsonLoader;
+  private int recordCount;
 
   public HttpBatchReader(HttpSubScan subScan) {
     this.subScan = subScan;
+    this.maxRecords = subScan.maxRecords();
   }
 
   @Override
@@ -141,6 +144,12 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
   @Override
   public boolean next() {
+    recordCount++;
+
+    // Stop after the limit has been reached
+    if (maxRecords >= 1 && recordCount > maxRecords) {
+      return false;
+    }
     return jsonLoader.readBatch();
   }
 

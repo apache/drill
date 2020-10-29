@@ -452,6 +452,17 @@ public class TestHttpPlugin extends ClusterTest {
   }
 
   @Test
+  public void testLimitPushdown() throws Exception {
+    String sql = "SELECT sunrise, sunset FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02` AS t1 LIMIT 5";
+
+    queryBuilder()
+      .sql(sql)
+      .planMatcher()
+      .include("Limit", "maxRecords=5")
+      .match();
+  }
+
+  @Test
   public void testSlowResponse() throws Exception {
     try (MockWebServer server = startServer()) {
 
