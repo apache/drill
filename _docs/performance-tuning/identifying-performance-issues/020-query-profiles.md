@@ -12,7 +12,7 @@ The Drill Web UI provides aggregate statistics across profile lists. Profile lis
 
 You can view query profiles in the Profiles tab of the Drill Web UI. When you select the Profiles tab, you see a list of queries than ran or are currently running in the cluster.  
 
-![]({{ site.baseurl }}/docs/img/list_queries.png)  
+![]({{ site.baseurl }}/images/docs/list_queries.png)  
 
 Starting in Drill 1.16, you can sort the columns on the Profiles page. For example, if you want to quickly locate queries with the longest running times, you can sort the Duration column in descending order such that the longest running queries appear at the top of the list. You can also use the Search Profiles field to filter the list of query profiles and then use the sort feature.
 
@@ -22,7 +22,7 @@ For example, the following image shows the query profiles filtered by the mapr u
 
 To see the profile for a specific query, click on the query in the profiles list.   
 
-![]({{ site.baseurl }}/docs/img/query_profile.png)    
+![]({{ site.baseurl }}/images/docs/query_profile.png)    
 
 The Query Profile section summarizes a few key details about the query, including: 
  
@@ -38,7 +38,7 @@ When you select a profile, notice that the URL in the address bar contains the Q
  
 Metrics in a query profile are associated with a coordinate system of identifiers. Drill uses a coordinate system comprised of query, fragment, and operator identifiers to track query execution activities and resources. Drill assigns a unique identifier, the QueryID, to each query received and then assigns an identifier to each fragment and operator that executes the query. An example of a QueryID is 2aa98add-15b3-e155-5669-603c03bfde86. The following image shows an example of fragment and operator identifiers:    
 
-![]({{ site.baseurl }}/docs/img/xx-xx-xx.png)  
+![]({{ site.baseurl }}/images/docs/xx-xx-xx.png)  
   
 
 ## Query Profile Warnings  
@@ -91,23 +91,23 @@ The following sections describe the Fragment Profiles and Operator Profiles sect
 
 Fragment profiles provides an overview table and a major fragment block for each major fragment. Each row in the Overview table provides the number of minor fragments that Drill parallelized from each major fragment, as well as aggregate time and memory metrics for the minor fragments.  
 
-![]({{ site.baseurl }}/docs/img/frag_profile.png)  
+![]({{ site.baseurl }}/images/docs/frag_profile.png)  
 
 When you look at the fragment profiles, you may notice that some major fragments were parallelized into substantially fewer minor fragments, but happen to have the highest runtime.  Or, you may notice certain minor fragments have a higher peak memory than others. When you notice these variations in execution, you can delve deeper into the profile by looking at the major fragment blocks.
  
 Major fragment blocks correspond to a row in the Overview table. You can expand the blocks to see metrics for all of the minor fragments that were parallelized from each major fragment, including the host on which each minor fragment ran. Each row in the major fragment table presents the fragment state, time metrics, memory metrics, and aggregate input metrics of each minor fragment.  
 
-![]({{ site.baseurl }}/docs/img/maj_frag_block.png)  
+![]({{ site.baseurl }}/images/docs/maj_frag_block.png)  
 
 When looking at the minor fragment metrics, verify the state of the fragment. A fragment can have a “failed” state which may indicate an issue on the host. If the query itself fails, an operator may have run out of memory. If fragments running on a particular node are under performing, there may be multi-tenancy issues that you can address.
  
 A graph illustrates the activity of major and minor fragments for the duration of the query. The graph correlates with the visualized plan graph in the Visualized Plan tab. Each color in the graph corresponds to the activity of one major fragment. 
 
-![]({{ site.baseurl }}/docs/img/graph_1.png)  
+![]({{ site.baseurl }}/images/docs/graph_1.png)  
 
 Stair steps in the graph indicate that the execution work of the fragments is not distributed evenly. This typically occurs for non-local reads on data. To address this issue, you can increase data replication, rewrite the data, or file a JIRA to get help with the issue.
 
-![]({{ site.baseurl }}/docs/img/vis_graph.png)  
+![]({{ site.baseurl }}/images/docs/vis_graph.png)  
 
 The visualized plan illustrates color-coded major fragments divided and labeled with the names of the operators used to complete each phase of the query. Exchange operators separate each major fragment. These operators represent a point where Drill can execute operations below them in parallel.  
 
@@ -115,13 +115,13 @@ The visualized plan illustrates color-coded major fragments divided and labeled 
 
 Operator profiles describe each operator that performed relational operations during query execution. The Operator Profiles section provides an Overview table of the aggregate time and memory metrics for each operator within a major fragment.  
 
-![]({{ site.baseurl }}/docs/img/operator_table.png)  
+![]({{ site.baseurl }}/images/docs/operator_table.png)  
  
 Identify the operations that consume a majority of time and memory. You can potentially modify options related to the specific operators to improve performance.
  
 Below the Overview table are operator blocks, which you can expand to see metrics for each operator. Each of these blocks corresponds to a row in the Overview table. Each row in the Operator block presents time and memory metrics, as well as aggregate input metrics for each minor fragment.  
 
-![]({{ site.baseurl }}/docs/img/operator_block.png)  
+![]({{ site.baseurl }}/images/docs/operator_block.png)  
  
 Drill uses batches of records as a basic unit of work. The batches are pipe-lined between each operation. Record batches are no larger than 64K records. While the target size of one record batch is generally 256K, they can scale to many megabytes depending on the query plan and the width of the records.
 
@@ -147,7 +147,7 @@ In the result set, notice that the 'null' group has 129752 values while others h
 
 Looking at the operator profile for the hash aggregate in major fragment 00, you can see that out of 8 minor fragments, only minor fragment 1 is processing a substantially larger number of records when compared to the other minor fragments.  
 
-![]({{ site.baseurl }}/docs/img/data_skew.png)  
+![]({{ site.baseurl }}/images/docs/data_skew.png)  
 
 In this example, there is inherent skew present in the data. Other types of skew may not strictly be data dependent, but can be introduced by a sub-optimal hash function or other issues in the product. In either case, examining the query profile helps understand why a query is slow. In the first scenario, it may be possible to run separate queries for the skewed and non-skewed values. In the second scenario, it is better to seek technical support.  
 
@@ -155,7 +155,7 @@ In this example, there is inherent skew present in the data. Other types of skew
 
 The Physical Plan view provides statistics about the actual cost of the query operations in terms of memory, I/O, and CPU processing. You can use this profile to identify which operations consumed the majority of the resources during a query, modify the physical plan to address the cost-intensive operations, and submit the updated plan back to Drill. See [Costing Information]({{ site.baseurl }}/docs/explain/#costing-information).  
 
-![]({{ site.baseurl }}/docs/img/phys_plan_profile.png)  
+![]({{ site.baseurl }}/images/docs/phys_plan_profile.png)  
 
 ### Canceling a Query  
 

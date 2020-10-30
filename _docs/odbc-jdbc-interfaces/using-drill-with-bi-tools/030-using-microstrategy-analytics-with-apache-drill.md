@@ -41,7 +41,7 @@ Complete the following steps to install and configure the driver:
     	 
 	b.	Click Test to verify that the ODBC configuration works before using it with MicroStrategy.
 
-    ![]({{ site.baseurl }}/docs/img/image_2.png)
+    ![]({{ site.baseurl }}/images/docs/image_2.png)
 
 ----------
 
@@ -58,20 +58,20 @@ Complete the following steps to install the Drill Object on MicroStrategy Analyt
 2. Open MicroStrategy Developer. 
 3. Expand Administration, and open Configuration Manager.
 4. Select **Database Instances**.
-   ![]({{ site.baseurl }}/docs/img/image_3.png)
+   ![]({{ site.baseurl }}/images/docs/image_3.png)
 5. Right-click in the area where the current database instances display. 
-   ![]({{ site.baseurl }}/docs/img/image_4.png)
+   ![]({{ site.baseurl }}/images/docs/image_4.png)
 6. Select **New – Database Instance**. 
 7. Once the Database Instances window opens, select **Upgrade**.
-   ![]({{ site.baseurl }}/docs/img/image_5.png)
+   ![]({{ site.baseurl }}/images/docs/image_5.png)
 8. Enter the path and file name for the Drill Object file in the DB types script file field. Alternatively, you can use the browse button next to the field to search for the file. 
-   ![]({{ site.baseurl }}/docs/img/image_6.png)
+   ![]({{ site.baseurl }}/images/docs/image_6.png)
 9.  Click **Load**. 
 10.	Once loaded, select the MapR Drill database type in the left column.
 11.	Click **>** to load MapR Drill into **Existing database types**. 
 12.	Click **OK** to save the database type.
 13.	Restart MicroStrategy Intelligence Server if it is used for the project source.
-   ![]({{ site.baseurl }}/docs/img/image_7.png)
+   ![]({{ site.baseurl }}/images/docs/image_7.png)
 
 MicroStrategy Analytics Enterprise can now access Apache Drill.
 
@@ -82,12 +82,12 @@ MicroStrategy Analytics Enterprise can now access Apache Drill.
 Complete the following steps to use the Database Instance Wizard to create the MicroStrategy database connection for Apache Drill:
 
 1. In MicroStrategy  Developer, select **Administration > Database Instance Wizard**.
-   ![]({{ site.baseurl }}/docs/img/image_8.png)
+   ![]({{ site.baseurl }}/images/docs/image_8.png)
 2. Enter a name for the database, and select **MapR Drill** as the Database type from the drop-down menu.
-   ![]({{ site.baseurl }}/docs/img/image_9.png)
+   ![]({{ site.baseurl }}/images/docs/image_9.png)
 3. Click **Next**. 
 4. Select the ODBC DSN that you configured with the ODBC Administrator.
-   ![]({{ site.baseurl }}/docs/img/image_10.png)
+   ![]({{ site.baseurl }}/images/docs/image_10.png)
 5. Provide the login information for the connection and then click **Finish**.
 
 You can now use MicroStrategy Analytics Enterprise to access Drill as a database instance. 
@@ -105,12 +105,12 @@ The Drill distributed file system plugin is configured to read Twitter data in a
 Complete the following steps to create a project:
 
 1. In MicroStrategy Developer, use the Project Creation Assistant to create a new project.
-   ![]({{ site.baseurl }}/docs/img/image_11.png)
+   ![]({{ site.baseurl }}/images/docs/image_11.png)
 2.  Once the Assistant starts, click **Create Project**, and enter a name for the new project. 
 3.	Click **OK**. 
 4.	Click **Select tables from the Warehouse Catalog**. 
 5.	Select the Drill database instance connection from the drop down list, and click **OK**.	MicroStrategy queries Drill and displays all of the available tables and views.
-   ![]({{ site.baseurl }}/docs/img/image_12.png)
+   ![]({{ site.baseurl }}/images/docs/image_12.png)
 6.	Select the two views created for the Twitter Data.
 7.	Use **>** to move the views to **Tables being used in the project**. 
 8.	Click **Save and Close**.
@@ -122,18 +122,18 @@ Complete the following steps to create a Freeform Report and analyze data:
 1.	In Developer, open the Project and then open Public Objects.
 2.	Click **Reports**.
 3.	Right-click in the pane on the right, and select **New > Report**.
-   ![]({{ site.baseurl }}/docs/img/image_13.png)
+   ![]({{ site.baseurl }}/images/docs/image_13.png)
 4.	Click the **Freeform Soures** tab, and select the Drill data source.
-   ![]({{ site.baseurl }}/docs/img/image_14.png)
+   ![]({{ site.baseurl }}/images/docs/image_14.png)
 5.	Verify that **Create Freeform SQL Report** is selected, and click **OK**. This allows you to enter a quick query to gather data. The Freeform SQL Editor window appears.
-   ![]({{ site.baseurl }}/docs/img/image_15.png)
+   ![]({{ site.baseurl }}/images/docs/image_15.png)
 6.	Enter a SQL query in the field provided. Attributes specified display. 
 In this scenario, a simple query that selects and groups the tweet source and counts the number of times the same source appeared in a day is entered. The tweet source was added as a text metric and the count as a number. 
 7.	Click **Data/Run Report** to run the query. A bar chart displays the output.
-   ![]({{ site.baseurl }}/docs/img/image_16.png)
+   ![]({{ site.baseurl }}/images/docs/image_16.png)
 
 You can see that there are three major sources for the captured tweets. You can change the view to tabular format and apply a filter to see that iPhone, Android, and Web Client are the three major sources of tweets for this specific data set.
-![]({{ site.baseurl }}/docs/img/image_17.png)
+![]({{ site.baseurl }}/images/docs/image_17.png)
 
 In this scenario, you learned how to configure MicroStrategy Analytics Enterprise to work with Apache Drill. 
 

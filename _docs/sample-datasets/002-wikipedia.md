@@ -27,7 +27,7 @@ tool you generate a category specific XML dump and configure various export
 options. There are some limits like a maximum of 1000 revisions per export,
 but otherwise this should work out just fine.
 
-![drill query flow]({{ site.baseurl }}/docs/img/Overview.png)
+![drill query flow]({{ site.baseurl }}/images/docs/Overview.png)
 
 The entities used in the query use cases.
 

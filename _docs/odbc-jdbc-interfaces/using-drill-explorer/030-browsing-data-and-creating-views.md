@@ -22,7 +22,7 @@ The following example shows how to browse data using the sample MapR ODBC Driver
 2. Start Drill Explorer and connect to the sample DSN.  
 3. In the **Schemas** pane of Drill Explorer, on the **Browse** tab, navigate to the `sample-data` directory in the dfs.default schema. Click `nation.parquet`.  
    The data from `nation.parquet` appears in the Preview pane.
-   ![nation parquet]({{ site.baseurl }}/docs/img/explorer-nation-data.png) 
+   ![nation parquet]({{ site.baseurl }}/images/docs/explorer-nation-data.png) 
 
 
 ## Defining a View
@@ -38,10 +38,10 @@ The following example defines and saves a view of a few columns of `nation.parqu
         SELECT N_NAME, N_REGIONKEY FROM `dfs.default`.`./Users/drilluser/drill/sample-data/nation.parquet` WHERE N_REGIONKEY IN (2, 4)
    Do not put a semicolon at the end of the SQL statement.  
 5. Click **Preview**.
-   ![nation parquet]({{ site.baseurl }}/docs/img/odbc-define-view.png) 
+   ![nation parquet]({{ site.baseurl }}/images/docs/odbc-define-view.png) 
 6. Click **Create As**.  
    The _Create As_ dialog is displayed.
-   ![nation parquet]({{ site.baseurl }}/docs/img/odbc-create-as.png) 
+   ![nation parquet]({{ site.baseurl }}/images/docs/odbc-create-as.png) 
 7. From the list of schemas, select the schema that defines the location for saving the view. For example, accept the [dfs.tmp]({{site.baseurl}}/docs/query-directory-functions/#query-directory-function-example) schema because the default `dfs` storage plugin defines the `tmp` directory as writable.
    You can save views only to file-based schemas.  
 8. In **View Name**, enter a name for the view.  

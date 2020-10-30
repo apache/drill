@@ -155,7 +155,7 @@ To enable tracing on Windows:
 1. Go to the **Tracing** tab.
 
 
-![logtrace]({{site.baseurl}}/docs/img/odbctrace.png)
+![logtrace]({{site.baseurl}}/images/docs/odbctrace.png)
 
 
 1. Change the **Log File Path** field to be the location and name of the file to which you’d like to write the trace entries.

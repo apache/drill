@@ -24,7 +24,7 @@ To use Saiku Analytics with Apache Drill you just need to complete the following
 
 You will need to sign into Saiku as an `admin` user and go to the **Admin Console** using the button on the top menu bar:
 
-![]({{ site.baseurl }}/docs/img/docs/img/saiku_admin_screen.png)
+![]({{ site.baseurl }}/images/docs/images/docs/saiku_admin_screen.png)
 
 Then on the side menu under the `Data Source Management` section, click `Add Data Source` and fill in the form with the following information:
 
@@ -36,7 +36,7 @@ Then on the side menu under the `Data Source Management` section, click `Add Dat
 - Username - (If you haven't enabled authentication then leave blank)
 - Password - (If you haven't enabled authentication then leave blank)
 
-![]({{ site.baseurl }}/docs/img/docs/img/saiku_datasource.png)
+![]({{ site.baseurl }}/images/docs/images/docs/saiku_datasource.png)
 
 So it should look something like this.
 
@@ -60,19 +60,19 @@ Once you have set up a connection in Saiku Analytics, next click on the Create S
 
 This should then popup a dialog asking you to select the database and schema you want to use to create your schema. Like this:
 
-![]({{ site.baseurl }}/docs/img/saiku_choose_database.png)
+![]({{ site.baseurl }}/images/docs/saiku_choose_database.png)
 
 Next you'll be displayed a new window that lists all the tables available to you in the left most column. The centre column is where you will define your dimensions and measures and the right hand column currently asks you to select a fact table. See the image below:
 
-![]({{ site.baseurl }}/docs/img/saiku_schema_designer_1.png)
+![]({{ site.baseurl }}/images/docs/saiku_schema_designer_1.png)
 
 The fact table is the table you will select to create your Measures.
 
-![]({{ site.baseurl }}/docs/img/saiku_schema_designer_2.png)
+![]({{ site.baseurl }}/images/docs/saiku_schema_designer_2.png)
 
 Once you select a fact table you should see a green icon  appear in the table list next to that table name. Example:
 
-![]({{ site.baseurl }}/docs/img/saiku_schema_designer_3.png)
+![]({{ site.baseurl }}/images/docs/saiku_schema_designer_3.png)
 
 Saiku Schema Designer incorporates an automatic schema designer which will attempt to build a usable schema automatically for you. Of course this depends on your underlying data and how it is structured in the database but it's a pretty good way of getting started.
 
@@ -84,7 +84,7 @@ If you click the auto generate button it will perform the following scans to try
 - Scan all the created dimensions for matching column names in the fact table and define the join. For example, if you have a dimension table with a column named `customer_id` and a field in your fact table that is also called `customer_id`, Saiku will consider this field to be a match and assign the various keys to make the joins.
 - Lastly Saiku will remove any dimensions it did not find a match for so you aren't left with unusable dimensions.
 
-![]({{ site.baseurl }}/docs/img/saiku_schema_designer_4.png)
+![]({{ site.baseurl }}/images/docs/saiku_schema_designer_4.png)
 
 Once this has run you are free to manipulate the generated schema as you desire to finish off any additional functionality or change names, attribute definitions and so forth.
 
@@ -111,7 +111,7 @@ You can utilise the power of Juju to allow for a straight forward deployment wit
 - Go to the Juju canvas.
 - Use the relationship handle to create the relation between Zookeeper and Apache Drill.
 
-![]({{ site.baseurl }}/docs/img/saiku_relation.png)
+![]({{ site.baseurl }}/images/docs/saiku_relation.png)
 
 - Click `Deploy changes`.
 

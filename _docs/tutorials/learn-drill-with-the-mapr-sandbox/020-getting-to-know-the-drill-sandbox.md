@@ -28,7 +28,7 @@ You use a [storage plugin]({{ site.baseurl }}/docs/connect-a-data-source-introdu
 
 The control panel for managing storage plugins appears.
 
-![sandbox plugin]({{ site.baseurl }}/docs/img/get2kno_plugin.png)
+![sandbox plugin]({{ site.baseurl }}/images/docs/get2kno_plugin.png)
 
 You see the following storage plugin configurations:
 

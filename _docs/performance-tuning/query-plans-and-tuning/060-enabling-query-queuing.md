@@ -19,7 +19,7 @@ For example, you configure the queue reserved for large queries for a 5-query ma
  
 The exec.queue.threshold default is 30 million, which is the estimated rows to be processed by the query. Queries A and B are queued in the large queue. The estimated rows to be processed reaches the 30 million threshold, filling the queue to capacity. The query C request arrives and goes on the wait list, and then query D arrives. Query D is queued immediately in the small queue because of its small size, as shown in the following diagram:
 
-![]({{ site.baseurl }}/docs/img/query_queuing.png)  
+![]({{ site.baseurl }}/images/docs/query_queuing.png)  
 
 The Drill queuing configuration in this example tends to give many users running small queries a rapid response. Users running a large query might experience some delay until an earlier-received large query returns, freeing space in the large queue to process queries that are waiting.
 

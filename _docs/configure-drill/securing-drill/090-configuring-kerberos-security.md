@@ -20,7 +20,7 @@ The required Kerberos (JDBC) plugin is part of the Drill 1.11 package. To use it
 
 This section provides a high-level overview of the Kerberos client authentication process. It is assumed that Kerberos credentials are present in the client.
 
-![kerberos auth process]({{ site.baseurl }}/docs/img/kerberos-auth-process.png)
+![kerberos auth process]({{ site.baseurl }}/images/docs/kerberos-auth-process.png)
 
 1. The client sends a request for a ticket granting ticket that contains the user principal to the Kerberos KDC, a network service that supplies tickets and temporary session keys. 
 
@@ -106,7 +106,7 @@ To configure multiple mechanisms, extend the mechanisms list and provide additio
               }
 &nbsp;  
  
-![kerberosEncrypt]({{ site.baseurl }}/docs/img/kerberos-clnt-svr.png) 
+![kerberosEncrypt]({{ site.baseurl }}/images/docs/kerberos-clnt-svr.png) 
 
 &nbsp;
 3. Restart the drillbit process on each Drill node.  

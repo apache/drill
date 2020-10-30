@@ -66,17 +66,17 @@ An administrator can set the maximum number of hops on views to limit the number
  
 The following example depicts a scenario where the maximum hop number is set to 3, and Drill must impersonate three users to access data when Chad queries a view that Jane created:
 
-![]({{ site.baseurl }}/docs/img/drill_imp_simple.PNG)
+![]({{ site.baseurl }}/images/docs/drill_imp_simple.PNG)
 
 In the previous example, Joe created V2 from the view that user Frank created. In the following example, Joe created V3 by joining a view that Frank created with a view that Bob created. 
  
-![]({{ site.baseurl }}/docs/img/user_hops_joined_view.PNG)  
+![]({{ site.baseurl }}/images/docs/user_hops_joined_view.PNG)  
 
 Although V3 was created by joining two different views, the number of hops remains at 3 because Drill does not read the views at the same time. Drill reads V2 first and then reads V1.  
 
 In the next example, Bob queries V4 which was created by Frank. Frank's view was created from several underlying views. Charlie created V2 by joining Jane's V1 with Kris's V1.2. Kris's V1.2 was created from Amy's V1.1, increasing the complexity of the chaining. Assuming that the hop limit is set at 4, this scenario exceeds the limit.  
 
-![]({{ site.baseurl }}/docs/img/user_hops_four.PNG)  
+![]({{ site.baseurl }}/images/docs/user_hops_four.PNG)  
 
 When Bob queries Franks’s view, Drill returns an error stating that the query cannot complete because the number of hops required to access the data exceeds the maximum hop setting of 4.
 

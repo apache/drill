@@ -11,19 +11,19 @@ description: > # this means to ignore newlines until "baseurl:"
 
 baseurl: "/drill" # Base URL when hosted on GitHub Pages (drill repository under apache account)
 noindex: 1
-#markdown: redcarpet
 
+# Uncomment to use the redcarpet Markdown processor (not supported by GH Pages) instead of Kramdown
+#markdown: redcarpet
 #redcarpet:
 #  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data"]
 
 collections:
   docs:
     output: true
-    permalink: /docs/:title/
+    permalink: "/docs/:title/"
 
 defaults:
-  -
-    scope:
+  - scope:
       type: docs # This defines the default for anything in the docs collection. An alternative would be to use "path: _docs" here.
     values:
       layout: docpage

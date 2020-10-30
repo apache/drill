@@ -95,12 +95,13 @@ To provision the MicroStrategy node in AWS:
    An EC2 instance of r3.large is sufficient for the 25 user version.  
 6. Click **Configure Instance Details**.
 7. Select an appropriate network setting and zones, ideally within the same zone and network as the MapR node that you provisioned.
-   {% include startimportant.html %}Make sure that the MicroStrategy instance has a Public IP; elastic IP is preferred but not essential.{% include endimportant.html %}
 8. Keep the default storage.
 9. Assign a tag to identify the instance.
 10. Select a security group that allows sufficient access to external IPs and open all ports because security is not a concern. 
 11. In the AWS Console, launch an instance, and when the AWS reports that the instance is running, select it, and click **Connect**.
 12. Click **Get Password** to get the OS Administrator password.
+
+{% include startimportant.html %}Make sure that the MicroStrategy instance has a Public IP; elastic IP is preferred but not essential.{% include endimportant.html %}
 
 The instance is now accessible with RDP and is using the relevant AWS credentials and security.
 
@@ -127,12 +128,12 @@ You need to configure MicroStrategy to integrate with Drill using the ODBC drive
    The Project appears in MicroStrategy Developer.  
 4. Open MicroStrategy Object Manager.  
 5. Connect to the Project Source and login as Administrator.  
-   ![project sources]({{ site.baseurl }}/docs/img/socialmed1.png)
+   ![project sources]({{ site.baseurl }}/images/docs/socialmed1.png)
 6. In MicroStrategy Object Manager, MicroStrategy Analytics Modules, select the project for the package. For example, select **Twitter analysis Apache Drill**.  
-   ![project sources]({{ site.baseurl }}/docs/img/socialmed2.png)
+   ![project sources]({{ site.baseurl }}/images/docs/socialmed2.png)
 7. Select **Tools > Import Configuration Package**.  
 8. Open the configuration package file, and click **Proceed**.  
-   ![project sources]({{ site.baseurl }}/docs/img/socialmed3.png)
+   ![project sources]({{ site.baseurl }}/images/docs/socialmed3.png)
    The package with the reports is available in MicroStrategy.  
 
 You can test and modify the reports in MicroStrategy Developer. Configure permissions if necessary.
@@ -143,7 +144,7 @@ You can test and modify the reports in MicroStrategy Developer. Configure permis
 
 1. In MicroStrategy Developer, select **Schema > Update Schema**.  
 2. In Schema Update, select all check boxes, and click **Update**.  
-   ![project sources]({{ site.baseurl }}/docs/img/socialmed4.png)
+   ![project sources]({{ site.baseurl }}/images/docs/socialmed4.png)
 
 ----------
 
@@ -175,30 +176,30 @@ You can access reports through MicroStrategy Developer or the web interface. Mic
          http://<MSTR node name or IP address>/MicroStrategy/asp/Main.aspx
 2. Log in as the User you created or as Administrator, using the credentials created initially with Developer.  
 3. On the Welcome MicroStrategy Web User page, choose the project that was used to load the analysis package: **Drill Twitter Analysis**.  
-   ![choose project]({{ site.baseurl }}/docs/img/socialmed5.png)
+   ![choose project]({{ site.baseurl }}/images/docs/socialmed5.png)
 4. Select **Shared Reports**.  
    The folders with the three main categories of the reports appear.
-   ![project sources]({{ site.baseurl }}/docs/img/socialmed6.png)
+   ![project sources]({{ site.baseurl }}/images/docs/socialmed6.png)
 5. Select a report, and respond to any prompts. For example, to run the Top Tweet Languages by Date Range, enter the required Date_Start and Date_End.  
-   ![project sources]({{ site.baseurl }}/docs/img/socialmed7.png)
+   ![project sources]({{ site.baseurl }}/images/docs/socialmed7.png)
 6. Click **Run Report**.  
    A histogram report appears showing the top tweet languages by date range.
-   ![project sources]({{ site.baseurl }}/docs/img/socialmed8.png)
+   ![project sources]({{ site.baseurl }}/images/docs/socialmed8.png)
 7. To refresh the data or re-enter prompt values, select **Data > Refresh** or **Data > Re-prompt**.
 
 ## Browsing the Apache Drill Twitter Analysis Reports
 
 The MicroStrategy Developer reports are located in the Public Objects folder of the project you chose for installing the package.  
-   ![project sources]({{ site.baseurl }}/docs/img/socialmed9.png)
+   ![project sources]({{ site.baseurl }}/images/docs/socialmed9.png)
 Many of the reports require you to respond to prompts to select the desired data. For example, select the Top Hashtags report in the right-hand column. This report requires you to respond to prompts for a Start Date and End Date to specify the date range for data of interest; by default, data for the last two months, ending with the current date is selected. You can also specify the limit for the number of Top Hashtags to be returned; the default is the top 10 hashtags.  
-   ![project sources]({{ site.baseurl }}/docs/img/socialmed10.png)
+   ![project sources]({{ site.baseurl }}/images/docs/socialmed10.png)
 When you click **Finish** a bar chart report with the hashtag and number of times it appeared in the specified data range appears.  
-   ![project sources]({{ site.baseurl }}/docs/img/socialmed11.png)
+   ![project sources]({{ site.baseurl }}/images/docs/socialmed11.png)
 
 Other reports are available in the bundle. For example, this report shows total tweets by hour:
-   ![tweets by hour]({{ site.baseurl }}/docs/img/socialmed12.png)
+   ![tweets by hour]({{ site.baseurl }}/images/docs/socialmed12.png)
 This report shows top Retweets for a date range with original Tweet date and count in the date range.  
-   ![retweets report]({{ site.baseurl }}/docs/img/socialmed13.png)
+   ![retweets report]({{ site.baseurl }}/images/docs/socialmed13.png)
 
 ----------
 

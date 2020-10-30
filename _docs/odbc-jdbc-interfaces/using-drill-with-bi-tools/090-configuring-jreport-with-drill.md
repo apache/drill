@@ -28,9 +28,9 @@ For general instructions on installing the Drill JDBC driver, see [Using JDBC]({
         C:\JReport\Designer\lib\drill-jdbc-all-1.0.0.jar
     
 3.  Add the location of the JAR file to the JReport CLASSPATH variable. On Windows, edit the `C:\JReport\Designer\bin\setenv.bat` file:
-    ![drill query flow]({{ site.baseurl }}/docs/img/jreport_setenv.png)
+    ![drill query flow]({{ site.baseurl }}/images/docs/jreport_setenv.png)
 
-4. Verify that the JReport system can resolve the hostnames of the ZooKeeper nodes of the Drill cluster. You can do this by configuring DNS for all of the systems. Alternatively, you can edit the hosts file on the JReport system to include the hostnames and IP addresses of all the ZooKeeper nodes used with the Drill cluster.  For Linux systems, the hosts file is located at `/etc/hosts`. For Windows systems, the hosts file is located at `%WINDIR%\system32\drivers\etc\hosts`  Here is an example of a Windows hosts file: ![drill query flow]({{ site.baseurl }}/docs/img/jreport-hostsfile.png)
+4. Verify that the JReport system can resolve the hostnames of the ZooKeeper nodes of the Drill cluster. You can do this by configuring DNS for all of the systems. Alternatively, you can edit the hosts file on the JReport system to include the hostnames and IP addresses of all the ZooKeeper nodes used with the Drill cluster.  For Linux systems, the hosts file is located at `/etc/hosts`. For Windows systems, the hosts file is located at `%WINDIR%\system32\drivers\etc\hosts`  Here is an example of a Windows hosts file: ![drill query flow]({{ site.baseurl }}/images/docs/jreport-hostsfile.png)
 
 
 ## Step 2: Create a New JReport Catalog to Manage the Drill Connection
@@ -39,21 +39,21 @@ For general instructions on installing the Drill JDBC driver, see [Using JDBC]({
 2.  Provide a catalog file name and click **…** to choose the file-saving location.
 3.  Click **View -> Catalog Browser**.
 4.  Right-click **Data Source 1** and select **Add JDBC Connection**.
-5.  Fill in the **Driver**, **URL**, **User**, and **Password** fields. ![drill query flow]({{ site.baseurl }}/docs/img/jreport-catalogbrowser.png)
+5.  Fill in the **Driver**, **URL**, **User**, and **Password** fields. ![drill query flow]({{ site.baseurl }}/images/docs/jreport-catalogbrowser.png)
 6.  Click **Options** and select the **Qualifier** tab. 
-7.  In the **Quote Qualifier** section, choose **User Defined** and change the quote character from “ to ` (backtick). ![drill query flow]({{ site.baseurl }}/docs/img/jreport-quotequalifier.png)
+7.  In the **Quote Qualifier** section, choose **User Defined** and change the quote character from “ to ` (backtick). ![drill query flow]({{ site.baseurl }}/images/docs/jreport-quotequalifier.png)
 8.  Click **OK**. JReport will verify the connection and save all information.
-9.  Add tables and views to the JReport catalog by right-clicking the connection node and choosing **Add Table**. Now you can browse the schemas and add specific tables that you want to make available for building queries. ![drill query flow]({{ site.baseurl }}/docs/img/jreport-addtable.png)
+9.  Add tables and views to the JReport catalog by right-clicking the connection node and choosing **Add Table**. Now you can browse the schemas and add specific tables that you want to make available for building queries. ![drill query flow]({{ site.baseurl }}/images/docs/jreport-addtable.png)
 10. Click **Done** when you have added all the tables you need. 
 
 
 ## Step 3: Use JReport Designer
 
 1.  In the Catalog Browser, right-click **Queries** and select **Add Query…**
-2.  Define a JReport query by using the Query Editor. You can also import your own SQL statements. ![drill query flow]({{ site.baseurl }}/docs/img/jreport-queryeditor.png)
+2.  Define a JReport query by using the Query Editor. You can also import your own SQL statements. ![drill query flow]({{ site.baseurl }}/images/docs/jreport-queryeditor.png)
 3.  Click **OK** to close the Query Editor, and click the **Save Catalog** button to save your progress to the catalog file. 
     **Note**: If the report returns errors, you may need to edit the query and add the schema in front of the table name: `select column from schema.table_name` You can do this by clicking the **SQL** button on the Query Editor.
 
-4.  Use JReport Designer to query the data and create a report. ![drill query flow]({{ site.baseurl }}/docs/img/jreport-crosstab.png)
-    ![drill query flow]({{ site.baseurl }}/docs/img/jreport-crosstab2.png)
-    ![drill query flow]({{ site.baseurl }}/docs/img/jreport-crosstab3.png)
+4.  Use JReport Designer to query the data and create a report. ![drill query flow]({{ site.baseurl }}/images/docs/jreport-crosstab.png)
+    ![drill query flow]({{ site.baseurl }}/images/docs/jreport-crosstab2.png)
+    ![drill query flow]({{ site.baseurl }}/images/docs/jreport-crosstab3.png)

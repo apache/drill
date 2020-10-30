@@ -13,12 +13,14 @@ You can use the JDBC driver to connect to Drill from SQuirrel and run SQL querie
   * Drill installed in distributed mode on one or multiple nodes in a cluster. Refer to the [Install Drill]({{ site.baseurl }}/docs/install-drill/) documentation for more information.
   * The client must be able to resolve the actual hostname of the Drill node(s) with the IP(s). Verify that a DNS entry was created on the client machine for the Drill node(s).
      
-If a DNS entry does not exist, create the entry for the Drill node(s).
+If a DNS entry does not exist, create an entry for the Drill node(s).
 
-    * For Windows, create the entry in the %WINDIR%\system32\drivers\etc\hosts file.
-    * For Linux and Mac, create the entry in /etc/hosts.  
-<drill-machine-IP> <drill-machine-hostname>
-    Example: `127.0.1.1 maprdemo`
+    * For Windows, create an entry in the %WINDIR%\system32\drivers\etc\hosts file.
+    * For Linux and Mac, create an entry in /etc/hosts.  
+
+    <drill-machine-IP> <drill-machine-hostname>
+
+Example: `127.0.1.1 maprdemo`
 
 ----------
 
@@ -63,7 +65,7 @@ To define the Drill JDBC Driver, complete the following steps:
 
 1. In the SQuirreL toolbar, select **Drivers > New Driver**. The Add Driver dialog box appears.
   
-    ![drill query flow]({{ site.baseurl }}/docs/img/40.png)
+    ![drill query flow]({{ site.baseurl }}/images/docs/40.png)
 
 2. Enter the following information:
 
@@ -77,7 +79,7 @@ To define the Drill JDBC Driver, complete the following steps:
   
 3. Click **OK**. The SQuirreL client displays a message stating that the driver registration is successful, and you can see the driver in the Drivers panel.  
 
-   ![drill query flow]({{ site.baseurl }}/docs/img/52.png)
+   ![drill query flow]({{ site.baseurl }}/images/docs/52.png)
 
 ### B. Create an Alias
 
@@ -86,7 +88,7 @@ To create an alias, complete the following steps:
 1. Select the **Aliases** tab.
 2. In the SQuirreL toolbar, select **Aliases >****New Alias**. The Add Alias dialog box appears.
     
-    ![drill query flow]({{ site.baseurl }}/docs/img/19.png)
+    ![drill query flow]({{ site.baseurl }}/images/docs/19.png)
     
 3. Enter the following information:  
 
@@ -98,11 +100,11 @@ To create an alias, complete the following steps:
 
 4. Click **Ok**. The Connect to: dialog box appears.  
 
-    ![drill query flow]({{ site.baseurl }}/docs/img/30.png)
+    ![drill query flow]({{ site.baseurl }}/images/docs/30.png)
    
 5. Click **Connect**. SQuirreL displays a message stating that the connection is successful.
   
-    ![drill query flow]({{ site.baseurl }}/docs/img/53.png)
+    ![drill query flow]({{ site.baseurl }}/images/docs/53.png)
      
 6. Click **OK**. SQuirreL displays a series of tabs.
 
@@ -142,11 +144,11 @@ To query sample data with Squirrel, complete the following steps:
         SELECT * FROM cp.`employee.json`;
           
      Example:  
-     ![drill query flow]({{ site.baseurl }}/docs/img/11.png)
+     ![drill query flow]({{ site.baseurl }}/images/docs/11.png)
 
 3. Press **Ctrl+Enter** to run the query. The following query results display: 
   
-     ![drill query flow]({{ site.baseurl }}/docs/img/42.png) 
+     ![drill query flow]({{ site.baseurl }}/images/docs/42.png) 
 
 You have successfully run a Drill query from the SQuirreL client.
 

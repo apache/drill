@@ -69,7 +69,7 @@ To modify and re-submit a physical plan to Drill, complete the following steps:
 2. Copy the JSON output of the physical plan, and modify as needed.  
 3. Navigate to the Drill Web UI at `<drill_node_ip_address>:8047`.  
 4. Select **Query** in the menu bar.  
-![]({{ site.baseurl }}/docs/img/submit_plan.png)  
+![]({{ site.baseurl }}/images/docs/submit_plan.png)  
 
 5. Select the **Physical Plan** radio button under Query Type.  
 6. Paste the physical plan into the Query field, and click **Submit**. Drill runs the plan and executes the query.

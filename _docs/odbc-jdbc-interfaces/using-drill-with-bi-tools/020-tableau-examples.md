@@ -39,7 +39,7 @@ In this step, we will create a DSN that accesses a Hive table.
 In this example, we are connecting to a Zookeeper Quorum. Verify that the Cluster ID that you use matches the Cluster ID in `<DRILL_HOME>/conf/drill-override.conf`.
   6. In the **Schema** field, select the Hive schema.
      In this example, the Hive schema is named hive.default.
-     ![]({{ site.baseurl }}/docs/img/Hive_DSN.png)
+     ![]({{ site.baseurl }}/images/docs/Hive_DSN.png)
   7. Click **OK** to create the DSN and return to the ODBC Data Source Administrator window.
   8. Click **OK** to close the ODBC Data Source Administrator.
 
@@ -64,7 +64,7 @@ configure the connection to the Hive table and click **OK**.
   6. Select the table from the list and click **Select**.   
      In this example, the table name is student_hive.
   7. Click **OK** to complete the connection.  
-     ![]({{ site.baseurl }}/docs/img/ODBC_HiveConnection.png)
+     ![]({{ site.baseurl }}/images/docs/ODBC_HiveConnection.png)
   8. In the *Data Connection* dialog, click **Connect Live**.
 
 ----------
@@ -76,7 +76,7 @@ visualize the data, drag fields from the Data window to the workspace view.
 
 For example, you can visualize the data in this way:
 
-![]({{ site.baseurl }}/docs/img/student_hive.png)
+![]({{ site.baseurl }}/images/docs/student_hive.png)
 
 ## Example: Connect to Self-Describing Data in Tableau
 
@@ -113,14 +113,14 @@ explore the metadata and data available from Drill data sources. Advanced
 users can use SQL tab to type in SQL manually to explore the data and save the
 SQL query as a view.
   6. Select the schema that you want to create a view for.
-      ![]({{ site.baseurl }}/docs/img/Hbase_Browse.png)        
+      ![]({{ site.baseurl }}/images/docs/Hbase_Browse.png)        
      Drill Explorer displays the metadata and column families for the selected
 HBase table.
   7. To create a view of the HBase table, click the **SQL** tab.  
      By default, the View Definition SQL field contains: `SELECT * FROM
 <schema>.<table>`
   8. To create the view, enter SQL in the _View Definition SQL_ section and then click **Preview** to verify that the results are as expected.   
-      ![]({{ site.baseurl }}/docs/img/ODBC_HbasePreview2.png)
+      ![]({{ site.baseurl }}/images/docs/ODBC_HbasePreview2.png)
      In this example, the following SQL was entered:
        
         SELECT cast(row_key as integer) voter_id, convert_from(voter.onecf.name,
@@ -136,14 +136,14 @@ Explorer. For information about SQL query support, see the [SQL Reference]({{ si
   9. To save the view, click **Create As**.
   10. Specify the schema where you want to save the view, enter a name for the view, and click **Save**.  
 
-       ![]({{ site.baseurl }}/docs/img/HbaseViewCreation0.png)
+       ![]({{ site.baseurl }}/images/docs/HbaseViewCreation0.png)
 
   11. Close the Drill Explorer to return to the _MapR Drill ODBC Driver DSN Setup _window.  
       Now that we have created the view, we can create a DSN that can access the
 view.
   12. Enter a data source name and select the schema where you saved the view.  
       In this example, we saved the view to dfs.default.        
-       ![]({{ site.baseurl }}/docs/img/HbaseViewDSN.png)
+       ![]({{ site.baseurl }}/images/docs/HbaseViewDSN.png)
   13. Click **OK** to create the DSN and return to the _ODBC Data Source Administrator_ window.
   14. Click **OK** to close the ODBC Data Source Administrator.
 
@@ -163,9 +163,9 @@ Now, we can connect to the view in Tableau.
      A list of views appears.
   6. Select the view from the list and click **Select**.   
      In this example, we need to select hbase_s_voter.  
-      ![]({{ site.baseurl }}/docs/img/SelectHbaseView.png)
+      ![]({{ site.baseurl }}/images/docs/SelectHbaseView.png)
   7. Click **OK** to complete the connection.   
-      ![]({{ site.baseurl }}/docs/img/ODBC_HbaseView.png)
+      ![]({{ site.baseurl }}/images/docs/ODBC_HbaseView.png)
   8. In the _Data Connection dialog_, click **Connect Live**.
 
 #### Step 3. Visualize the Data in Tableau
@@ -176,7 +176,7 @@ workspace view.
 
 For example, you can visualize the data in this way:
 
-![]({{ site.baseurl }}/docs/img/VoterContributions_hbaseview.png)
+![]({{ site.baseurl }}/images/docs/VoterContributions_hbaseview.png)
 
 ### Option 2. Using Custom SQL to Access Self-Describing Data
 
@@ -203,7 +203,7 @@ the data in Tableau.
      In this example, we will connect to a Zookeeper Quorum.
   6. In the *Schema* section, select the schema associated with the data source that contains the Parquet file that you want to access. Then, click **OK**.  
      In this example, the Parquet file is available in the dfs.default schema.  
-      ![]({{ site.baseurl }}/docs/img/Parquet_DSN.png)  
+      ![]({{ site.baseurl }}/images/docs/Parquet_DSN.png)  
      You can use this DSN to access multiple files from the same schema.  
      In this example, we plan to use the Custom SQL option to connect to data in Tableau. You can use Drill Explorer to preview the results of custom SQL before you enter the SQL in Tableau.
   7. If you want to preview the results of a query, click **Drill Explorer**.
@@ -211,7 +211,7 @@ the data in Tableau.
     2. Click the **SQL** tab.  
        The SQL tab will include a default query to the file you selected on the Browse tab. You can use the SQL tab to preview the results of various queries until you achieve the expected result.
     3. Enter the query that you want to preview and then click **Preview**.  
-       ![]({{ site.baseurl }}/docs/img/Parquet_Preview.png)  
+       ![]({{ site.baseurl }}/images/docs/Parquet_Preview.png)  
        You can copy this query to file so that you can use it in Tableau.
     4. Close the Drill Explorer window. 
   8. Click **OK** to create the DSN and return to the _ODBC Data Source Administrato_r window.
@@ -240,7 +240,7 @@ Now, we can create a connection to the Parquet file using the custom SQL.
      {% include startnote.html %}The path to the file depends on its location in your file system.{% include endnote.html %} 
 
   7. Click **OK** to complete the connection.  
-     ![]({{ site.baseurl }}/docs/img/ODBC_CustomSQL.png)  
+     ![]({{ site.baseurl }}/images/docs/ODBC_CustomSQL.png)  
   8. In the *Data Connection dialog*, click **Connect Live**.
 
 #### Step 3. Visualize the Data in Tableau
@@ -249,5 +249,5 @@ Once you connect to the data, the fields appear in the Data window. To
 visualize the data, drag fields from the Data window to the workspace view.
 
 For example, you can visualize the data in this way:
-![]({{ site.baseurl }}/docs/img/RegionParquet_table.png)
+![]({{ site.baseurl }}/images/docs/RegionParquet_table.png)
 

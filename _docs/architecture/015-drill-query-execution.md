@@ -8,17 +8,17 @@ When you submit a Drill query, a client or an application sends the query in the
 
 The following image represents the communication between clients, applications, and Drillbits:
 
-![]({{ site.baseurl }}/docs/img/query-flow-client.png)
+![]({{ site.baseurl }}/images/docs/query-flow-client.png)
 
 The Drillbit that receives the query from a client or application becomes the Foreman for the query and drives the entire query. A parser in the Foreman parses the SQL, applying custom rules to convert specific SQL operators into a specific logical operator syntax that Drill understands. This collection of logical operators forms a logical plan. The logical plan describes the work required to generate the query results and defines which data sources and operations to apply.
 
 The Foreman sends the logical plan into a cost-based optimizer to optimize the order of SQL operators in a statement and read the logical plan. The optimizer applies various types of rules to rearrange operators and functions into an optimal plan. The optimizer converts the logical plan into a physical plan that describes how to execute the query.
 
-![]({{ site.baseurl }}/docs/img/client-phys-plan.png)
+![]({{ site.baseurl }}/images/docs/client-phys-plan.png)
 
 A parallelizer in the Foreman transforms the physical plan into multiple phases, called major and minor fragments. These fragments create a multi-level execution tree that rewrites the query and executes it in parallel against the configured data sources, sending the results back to the client or application.
 
-![]({{ site.baseurl }}/docs/img/execution-tree.PNG)  
+![]({{ site.baseurl }}/images/docs/execution-tree.PNG)  
 
 
 ## Major Fragments
@@ -26,7 +26,7 @@ A major fragment is a concept that represents a phase of the query execution. A 
 
 For example, to perform a hash aggregation of two files, Drill may create a plan with two major phases (major fragments) where the first phase is dedicated to scanning the two files and the second phase is dedicated to the aggregation of the data.  
 
-![]({{ site.baseurl }}/docs/img/ex-operator.png)
+![]({{ site.baseurl }}/images/docs/ex-operator.png)
 
 Drill uses an exchange operator to separate major fragments. An exchange is a change in data location and/or parallelization of the physical plan. An exchange is composed of a sender and a receiver to allow data to move between nodes. 
 
@@ -37,7 +37,7 @@ You can work with major fragments within the physical plan by capturing a JSON r
 ## Minor Fragments
 Each major fragment is parallelized into minor fragments. A minor fragment is a logical unit of work that runs inside a thread. A logical unit of work in Drill is also referred to as a slice. The execution plan that Drill creates is composed of minor fragments. Drill assigns each minor fragment a MinorFragmentID.  
 
-![]({{ site.baseurl }}/docs/img/min-frag.png)
+![]({{ site.baseurl }}/images/docs/min-frag.png)
 
 The parallelizer in the Foreman creates one or more minor fragments from a major fragment at execution time, by breaking a major fragment into as many minor fragments as it can usefully run at the same time on the cluster.
 
@@ -45,7 +45,7 @@ Drill executes each minor fragment in its own thread as quickly as possible base
 
 Minor fragments contain one or more relational operators. An operator performs a relational operation, such as scan, filter, join, or group by. Each operator has a particular operator type and an OperatorID. Each OperatorID defines its relationship within the minor fragment to which it belongs. See [Physical Operators]({{ site.baseurl }}/docs/physical-operators/).
 
-![]({{ site.baseurl }}/docs/img/operators.png)
+![]({{ site.baseurl }}/images/docs/operators.png)
 
 For example, when performing a hash aggregation of two files, Drill breaks the first phase dedicated to scanning into two minor fragments. Each minor fragment contains scan operators that scan the files. Drill breaks the second phase dedicated to aggregation into four minor fragments. Each of the four minor fragments contain hash aggregate operators that perform the hash  aggregation operations on the data. 
 
@@ -60,7 +60,7 @@ Intermediate fragments start work when data is available or fed to them from oth
 
 The leaf fragments scan tables in parallel and communicate with the storage layer or access data on local disk. The leaf fragments pass partial results to the intermediate fragments, which perform parallel operations on intermediate results.  
 
-![]({{ site.baseurl }}/docs/img/leaf-frag.png)    
+![]({{ site.baseurl }}/images/docs/leaf-frag.png)    
 
 Drill only plans queries that have concurrent running fragments. For example, if 20 available slices exist in the cluster, Drill plans a query that runs no more than 20 minor fragments in a particular major fragment. Drill is optimistic and assumes that it can complete all of the work in parallel. All minor fragments for a particular major fragment start at the same time based on their upstream data dependency.
 

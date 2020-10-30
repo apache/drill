@@ -531,7 +531,7 @@ Workaround: Separate lengthy objects into objects delimited by curly braces usin
 ### Schema changes
 Drill cannot read JSON files containing changes in the schema. For example, attempting to query an object having array elements of different data types cause an error:
 
-![drill query flow]({{ site.baseurl }}/docs/img/data-sources-schemachg.png)
+![drill query flow]({{ site.baseurl }}/images/docs/data-sources-schemachg.png)
 
 Drill interprets numbers that do not have a decimal point as BigInt values. In this example, Drill recognizes the first two coordinates as doubles and the third coordinate as a BigInt, which causes an error.
 

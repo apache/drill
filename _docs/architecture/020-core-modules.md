@@ -5,7 +5,7 @@ parent: "Architecture"
 ---
 The following image represents components within each Drillbit:
 
-![drill query flow]({{ site.baseurl }}/docs/img/DrillbitModules.png)
+![drill query flow]({{ site.baseurl }}/images/docs/DrillbitModules.png)
 
 The following list describes the key components of a Drillbit:
 

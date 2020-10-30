@@ -59,7 +59,7 @@ The default cluster ID is drillbits1. Check the `drill-override.conf` in the Dri
 
 When you choose to connect to a ZooKeeper Quorum, the ODBC driver connects to the ZooKeeper Quorum to get a list of available Drillbits in the specified cluster. Then, the ODBC driver submits a query after selecting a Drillbit. All Drillbits in the cluster process the query and the Drillbit that received the query returns the query results.
 
-![ODBC to Quorum]({{ site.baseurl }}/docs/img/ODBC_to_Quorum.png)
+![ODBC to Quorum]({{ site.baseurl }}/images/docs/ODBC_to_Quorum.png)
 
 In a production environment, you should connect to a ZooKeeper Quorum for a more reliable connection. If one Drillbit is not available, another Drillbit that is registered with the ZooKeeper quorum can accept the query.
 
@@ -67,7 +67,7 @@ In a production environment, you should connect to a ZooKeeper Quorum for a more
 
 When you choose to connect directly to a Drillbit, the ODBC driver connects to the Drillbit and submits a query. If you connect directly to Drillbit that is not part of a cluster, the Drillbit that you connect to processes the query. If you connect directly to a Drillbit that is part of a cluster, all Drillbits in the cluster process the query. In either case, the Drillbit that the ODBC driver connected to returns the query results.
 
-![]({{ site.baseurl }}/docs/img/ODBC_to_Drillbit.png)
+![]({{ site.baseurl }}/images/docs/ODBC_to_Drillbit.png)
 
 ### Schema
 

@@ -34,7 +34,7 @@ By default, the highest security level is negotiated during the SASL handshake f
 
 The following table shows Drill client version compatibility with secure Drill clusters enabled with encryption. Drill 1.10 clients and lower do not support encryption and will not be allowed to connect to a drillbit with encryption enabled. 
 
-![compatEncrypt]({{site.baseurl}}/docs/img/client-encrypt-compatibility.png)
+![compatEncrypt]({{site.baseurl}}/images/docs/client-encrypt-compatibility.png)
 
 See *Client Encryption* in [Configuring Kerberos Security]({{site.baseurl}}/docs/configuring-kerberos-authentication/#client-encryption) for the client connection string parameter, `sasl_encrypt` usage information.
 

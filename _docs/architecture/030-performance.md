@@ -42,7 +42,7 @@ generates highly efficient custom code for every single query.
 The following image shows the Drill compilation/code generation
 process:
 
-![drill compiler]({{ site.baseurl }}/docs/img/58.png)
+![drill compiler]({{ site.baseurl }}/images/docs/58.png)
 
 **_Optimistic and pipelined query execution_**
 

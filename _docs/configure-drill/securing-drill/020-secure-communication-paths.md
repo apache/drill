@@ -11,7 +11,7 @@ As illustrated in the following figure, Drill features five secure communication
 1. [Java Client and Drillbit to ZooKeeper]({{site.baseurl}}/docs/secure-communication-paths/#drill-client-and-drillbit-to-zookeeper)
 1. [Drillbit to Hive Storage Plugin]({{site.baseurl}}/docs/secure-communication-paths/#drillbit-to-hive-storage-plugin)
 
-![secure comm paths]({{ site.baseurl }}/docs/img/secure-communication-paths.png)
+![secure comm paths]({{ site.baseurl }}/images/docs/secure-communication-paths.png)
 
 ---
 **Note**

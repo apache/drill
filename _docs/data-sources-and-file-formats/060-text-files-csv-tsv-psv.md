@@ -92,7 +92,7 @@ The examples in this section show the results of querying CSV files that use and
       "delimiter": ","
     },
     
-![CSV with header]({{ site.baseurl }}/docs/img/csv_with_header.png)
+![CSV with header]({{ site.baseurl }}/images/docs/csv_with_header.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_with_header.csv2`;
     |------------------------|
@@ -120,7 +120,7 @@ The examples in this section show the results of querying CSV files that use and
       "delimiter": ","
     },
     
-![CSV with header]({{ site.baseurl }}/docs/img/csv_with_header.png)
+![CSV with header]({{ site.baseurl }}/images/docs/csv_with_header.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_with_header.csv2`;
     |-------|------|------|------|
@@ -148,7 +148,7 @@ The examples in this section show the results of querying CSV files that use and
       "delimiter": ","
     },
     
-![CSV no header]({{ site.baseurl }}/docs/img/csv_no_header.png)
+![CSV no header]({{ site.baseurl }}/images/docs/csv_no_header.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_no_header.csv`;
     |------------------------|
@@ -166,7 +166,7 @@ The examples in this section show the results of querying CSV files that use and
 
 **Escaping a Character in a File**
 
-![CSV with escape]({{ site.baseurl }}/docs/img/csv_with_escape.png)
+![CSV with escape]({{ site.baseurl }}/images/docs/csv_with_escape.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_with_escape.csv`;
     |------------------------------------------------------------------------|
@@ -184,7 +184,7 @@ The examples in this section show the results of querying CSV files that use and
 
 **Adding Comments to a File**
 
-![CSV with comments]({{ site.baseurl }}/docs/img/csv_with_comments.png)
+![CSV with comments]({{ site.baseurl }}/images/docs/csv_with_comments.png)
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/tmp/csv_with_comments.csv2`;
     |------------------------|

@@ -58,12 +58,12 @@ To connect Tableau to Drill, complete the following steps:
 **Note:** The [Tableau documentation](http://onlinehelp.tableau.com/current/pro/desktop/en-us/help.htm#examples_apachedrill.html) provides additional details, if needed.  
 
 1.	In a Tableau Workbook, click on **Data > New Data Source**.
-2.	Select **Apache Drill**. ![tab workbook]({{ site.baseurl }}/docs/img/T10.2_IMG_1.png)  
+2.	Select **Apache Drill**. ![tab workbook]({{ site.baseurl }}/images/docs/T10.2_IMG_1.png)  
 3.	Choose whether to connect directly or using ZooKeeper. For production environments, connecting to ZooKeeper is recommended for resiliency and distribution of connection management on the Drill cluster.  
 4.	Enter the ZooKeeper Quorum/Drill Cluster ID or Drill Direct Server and Port information. 
 5.	Enter the authentication information.
-6.	Click **Sign In**. Tableau connects to Drill and allows you to select various Tables and Views. ![drill connect]({{ site.baseurl }}/docs/img/T10.2_IMG_2.png)  
-7.	Click on the **Schema** drop-down list to display all available Drill schemas. When you select a schema, Tableau displays available tables or views.  You can select the tables and views to build a Tableau Visualization. Additionally, you can use custom SQL by clicking on the **New Custom SQL** option. ![dfs views]({{ site.baseurl }}/docs/img/T10.2_IMG_3.png)  
+6.	Click **Sign In**. Tableau connects to Drill and allows you to select various Tables and Views. ![drill connect]({{ site.baseurl }}/images/docs/T10.2_IMG_2.png)  
+7.	Click on the **Schema** drop-down list to display all available Drill schemas. When you select a schema, Tableau displays available tables or views.  You can select the tables and views to build a Tableau Visualization. Additionally, you can use custom SQL by clicking on the **New Custom SQL** option. ![dfs views]({{ site.baseurl }}/images/docs/T10.2_IMG_3.png)  
 
 **Note:** Tableau can natively work with Hive tables and Drill views. You can use custom SQL or create a view in Drill to represent the complex data in Drill data sources, such as data in files or HBase/MapR-DB tables, to Tableau. For more information, see [Tableau Examples](http://drill.apache.org/docs/tableau-examples/).  
  
@@ -79,12 +79,12 @@ A retailer has order data in CSV files on the distributed file system, product d
 
 To find this information, the retail business analyst completes the following steps:  
 
-1. Creates a LoD calculation for ordertotal by customer id. ![lod calc]({{ site.baseurl }}/docs/img/T10.2_IMG_4.png)  
-2. Displays the states and the average revenue by customer for each state. ![cust rev state]({{ site.baseurl }}/docs/img/T10.2_IMG_5.png)  
+1. Creates a LoD calculation for ordertotal by customer id. ![lod calc]({{ site.baseurl }}/images/docs/T10.2_IMG_4.png)  
+2. Displays the states and the average revenue by customer for each state. ![cust rev state]({{ site.baseurl }}/images/docs/T10.2_IMG_5.png)  
 3. Creates a graph with the total revenue by state, ordered by highest revenue. 
 4. Drags and selects the top 5 states, right-clicks, and selects Create Set.  
-5. Enters a name for the set. ![set name]({{ site.baseurl }}/docs/img/T10.2_IMG_6.png)
-6. Creates a table showing the total number of orders and average revenue by customer for the top 5 states by revenue and also shows the number for the states not in the top 5. ![avg rev]({{ site.baseurl }}/docs/img/T10.2_IMG_7.png)  
+5. Enters a name for the set. ![set name]({{ site.baseurl }}/images/docs/T10.2_IMG_6.png)
+6. Creates a table showing the total number of orders and average revenue by customer for the top 5 states by revenue and also shows the number for the states not in the top 5. ![avg rev]({{ site.baseurl }}/images/docs/T10.2_IMG_7.png)  
 
 You have completed the tutorial for configuring Tableau 10.2 to work with Apache Drill. For additional support, see [https://www.tableau.com/support/drivers](https://www.tableau.com/support/drivers).
 

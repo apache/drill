@@ -10,7 +10,7 @@ As of Drill 1.6, an administrator can define inbound impersonation policies to i
 
 Drill trusts proxy users to provide the correct end user identity information. Drill does not authenticate the end user. The proxy user (application) is responsible for end user authentication, which is usually enabled.
 
-![]({{ site.baseurl }}/docs/img/inboundImpersonation.PNG)  
+![]({{ site.baseurl }}/images/docs/inboundImpersonation.PNG)  
 
 This image shows how identity is propagated through various layers (with authentication enabled). The flow on the left is Drill with user impersonation enabled, and the flow on the right is Drill with user impersonation and inbound impersonation enabled. `t:euser` is a property on the connection (`u` is `username`, `p`is `password`, `t` is `impersonation_target`).  
 

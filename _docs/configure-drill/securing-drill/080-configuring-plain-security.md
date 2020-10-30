@@ -20,7 +20,7 @@ This section includes the following topics:
 
 The following image illustrates the PAM user authentication process in Drill.  The client passes a username and password to the Drillbit as part of the connection request, which then passes the credentials to PAM.  If PAM authenticates the user, the connection request passes the authentication phase and the connection is established. The user will be authorized to access Drill and issue queries against the file system or other storage plugins, such as Hive or HBase.  
 
-![plain auth process]({{ site.baseurl }}/docs/img/plain-auth-process.png)
+![plain auth process]({{ site.baseurl }}/images/docs/plain-auth-process.png)
 
 If PAM cannot authenticate the user, the connection request will not pass the authentication phase, and the user will not be authorized to access Drill. The connection is terminated as `AUTH_FAILED`.
 

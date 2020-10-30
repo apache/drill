@@ -86,7 +86,7 @@ access is supported by accessing element n at ByteBuf[0] + Index * Stride,
 where Index is 0-based. The following illustrates the underlying buffer of
 INT4 values [1 .. 6]:
 
-![drill query flow]({{ site.baseurl }}/docs/img/value1.png)
+![drill query flow]({{ site.baseurl }}/images/docs/value1.png)
 
 Nullable Values
 
@@ -96,7 +96,7 @@ the value is NULL. Otherwise the value is retrieved from the underlying
 buffer. The following illustrates a NullableValueVector of INT4 values 2, 3
 and 6:
 
-![drill query flow]({{ site.baseurl }}/docs/img/value2.png)
+![drill query flow]({{ site.baseurl }}/images/docs/value2.png)
   
 ### Repeated Values
 
@@ -107,7 +107,7 @@ has no values (note the offset field is unused in this case). The following
 illustrates three fields; one with two values, one with no values, and one
 with a single value:
 
-![drill query flow]({{ site.baseurl }}/docs/img/value3.png)
+![drill query flow]({{ site.baseurl }}/images/docs/value3.png)
 
 ValueVector Representation of the equivalent JSON:
 
@@ -125,7 +125,7 @@ an entry is deduced by subtracting the offset of the following field. Because
 of this, the offset table will always contain one more entry than total
 elements, with the last entry pointing to the end of the buffer.
 
-![drill query flow]({{ site.baseurl }}/docs/img/value4.png)  
+![drill query flow]({{ site.baseurl }}/images/docs/value4.png)  
 
 Repeated Map Vectors
 
@@ -137,7 +137,7 @@ while the count indicates the maximum number of elements for the column. The
 following example illustrates a RepeatedMap with two records; one with two
 objects, and one with a single object:
 
-![drill query flow]({{ site.baseurl }}/docs/img/value5.png)
+![drill query flow]({{ site.baseurl }}/images/docs/value5.png)
 
 ValueVector representation of the equivalent JSON:
 
@@ -155,10 +155,10 @@ or variable width ValueVector, the offset references the corresponding lookup
 table. The following illustrates a SelectionVector of INT4 (fixed width)
 values 2, 3 and 5 from the original vector of [1 .. 6]:
 
-![drill query flow]({{ site.baseurl }}/docs/img/value6.png)
+![drill query flow]({{ site.baseurl }}/images/docs/value6.png)
 
 The following illustrates the same ValueVector with nullable fields:
 
-![drill query flow]({{ site.baseurl }}/docs/img/value7.png)
+![drill query flow]({{ site.baseurl }}/images/docs/value7.png)
 
 

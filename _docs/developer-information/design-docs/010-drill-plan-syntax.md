@@ -13,7 +13,7 @@ Plan to optimize it for best performance and crafts out a _Physical Plan_. The
 Physical Plan is the actual plan the Drill then executes for the final data
 processing. Below is a diagram to illustrate the flow:
 
-![drill query flow]({{ site.baseurl }}/docs/img/slide-15-638.png)
+![drill query flow]({{ site.baseurl }}/images/docs/slide-15-638.png)
 
 **The Logical Plan** describes the abstract data flow of a language independent query i.e. it would be a representation of the input query which would not be dependent on the actual input query language. It generally tries to work with primitive operations without focus on optimization. This makes it more verbose than traditional query languages. This is to allow a substantial level of flexibility in defining higher-level query language features. It would be forwarded to the optimizer to get a physical plan.
 

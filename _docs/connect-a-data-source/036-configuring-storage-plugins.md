@@ -23,7 +23,7 @@ To create a name and new configuration:
 3. On the Storage tab, enter a name in **New Storage Plugin**.
    Each configuration registered with Drill must have a distinct
 name. Names are case-sensitive.  
-     ![sandbox plugin]({{ site.baseurl }}/docs/img/storage_plugin_config.png)
+     ![sandbox plugin]({{ site.baseurl }}/images/docs/storage_plugin_config.png)
 
     {% include startnote.html %}The URL differs depending on your installation and configuration.{% include endnote.html %}  
 4. Click **Create**.  

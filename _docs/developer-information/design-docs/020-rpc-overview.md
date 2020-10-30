@@ -32,7 +32,7 @@ The ChunkCreation handler helps divide the Outgoing RPC message into smaller chu
 
 The following diagram shows the existing handlers as well as the new handlers added in the Drill Channel Pipeline for client-to-drillbit encryption support in Drill 1.11. 
 
-![drillpipeline]({{site.baseurl}}/docs/img/drill-channel-pipeline-with-handlers.png)  
+![drillpipeline]({{site.baseurl}}/images/docs/drill-channel-pipeline-with-handlers.png)  
 
 
 

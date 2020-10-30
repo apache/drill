@@ -44,7 +44,7 @@ VMware Player or VMware Fusion:
 
     If you are running VMware Fusion, select **Import**.  
 
-    ![drill query flow]({{ site.baseurl }}/docs/img/vmWelcome.png)
+    ![drill query flow]({{ site.baseurl }}/images/docs/vmWelcome.png)
 3. Navigate to the directory where you downloaded the MapR Sandbox with Apache Drill file, and select `MapR-Sandbox-For-Apache-Drill-<version>-vmware.ova`.  
     The Import Virtual Machine dialog appears.
 4. Click **Import**. The virtual machine player imports the sandbox.  
@@ -87,19 +87,19 @@ VirtualBox:
 2. Open the virtual machine player.
 3. Select **File > Import Appliance**. The Import Virtual Appliance dialog appears.
 
-     ![drill query flow]({{ site.baseurl }}/docs/img/1_vbImport.png)
+     ![drill query flow]({{ site.baseurl }}/images/docs/1_vbImport.png)
 4. Navigate to the directory where you downloaded the MapR Sandbox with Apache Drill, select `MapR-Sandbox-For-Apache-Drill-<version>.ova`, and click **Next**. The Appliance Settings window appears.
 
-     ![drill query flow]({{ site.baseurl }}/docs/img/vbApplSettings.png)
+     ![drill query flow]({{ site.baseurl }}/images/docs/vbApplSettings.png)
 5. Select the check box at the bottom of the screen: **Reinitialize the MAC address of all network cards**, then click **Import**. The Import Appliance imports the sandbox.
 6. When the import completes, select **Settings**. The VirtualBox - Settings dialog appears.
 
-     ![drill query flow]({{ site.baseurl }}/docs/img/3_vbNetwork.png)
+     ![drill query flow]({{ site.baseurl }}/images/docs/3_vbNetwork.png)
 7. Select **Network**.  
 
     Verify that Adapter 1 is attached to **NAT**. This option should work for most scenarios. However, if you are going to use a wired Ethernet connection, you can select **NAT Network**. If you use ODBC or JDBC on a remote host, select **Bridged Adapter**. 
 
-     ![drill query flow]({{ site.baseurl }}/docs/img/4_vbMaprSetting.png)
+     ![drill query flow]({{ site.baseurl }}/images/docs/4_vbMaprSetting.png)
 8. Click **OK** to continue.
 
 9. Click **Start**. It takes a few minutes for the MapR services to start. After the MapR services start and installation completes, a screen that displays the following message appears:  

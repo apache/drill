@@ -73,7 +73,7 @@ that exist.
 The following image represents a partitioned directory and shows a query
 on the directory using variables:
 
-![drill query flow]({{ site.baseurl }}/docs/img/example_query.png)  
+![drill query flow]({{ site.baseurl }}/images/docs/example_query.png)  
 
 When you use directory variables in a query, note that the variables are relative to the root directory used in the FROM clause. For example, let's say you create a workspace within the dfs storage plugin named logs (dfs.logs) that points
 to the /tmp directory in the file system. The /tmp directory contains a /logs directory (/tmp/logs)

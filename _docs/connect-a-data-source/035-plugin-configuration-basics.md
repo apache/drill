@@ -12,7 +12,7 @@ The following sections describe the attributes that you can use in your storage 
 
 ## Storage Plugin Attributes
 The following graphic shows key attributes of a typical `dfs`-based storage plugin configuration:  
-![dfs plugin]({{ site.baseurl }}/docs/img/connect-plugin.png)  
+![dfs plugin]({{ site.baseurl }}/images/docs/connect-plugin.png)  
 
 ## List of Attributes and Definitions
 The following table describes the attributes you configure for storage plugins installed with Drill. 
