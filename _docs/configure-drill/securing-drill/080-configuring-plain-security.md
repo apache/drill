@@ -60,7 +60,7 @@ When you connect to Drill from a BI tool, such as Tableau, the ODBC driver promp
 
 ![User Auth BI Tools](http://i.imgur.com/J5X1Tds.png)
 
-##Configuring Plain Security
+## Configuring Plain Security
 
 As of Drill 1.12, the libpam4j module is packaged with Drill. There is no download or external dependency required to use libpam4j. You can either use jpam or libpam4j as the PAM authenticator with Drill. Optionally, you can build and implement a custom authenticator.  
 

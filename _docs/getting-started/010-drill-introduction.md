@@ -310,7 +310,7 @@ Key features of Apache Drill are:
   * Integration with Apache Hive (queries on Hive tables and views, support for all Hive file formats and Hive UDFs)
   * BI/SQL tool integration using standard JDBC/ODBC drivers
 
-##Quick Links
+## Quick Links
 If you've never used Drill, visit these links to get a jump start:
 
 * [Drill in 10 Minutes]({{ site.baseurl }}/docs/drill-in-10-minutes/)

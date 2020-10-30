@@ -34,7 +34,7 @@ When you select a profile, notice that the URL in the address bar contains the Q
 
        http://<drill_node>:8047/profiles/2aa98add-15b3-e155-5669-603c03bfde86  
 
-##Query, Fragment, and Operator Identifiers  
+## Query, Fragment, and Operator Identifiers  
  
 Metrics in a query profile are associated with a coordinate system of identifiers. Drill uses a coordinate system comprised of query, fragment, and operator identifiers to track query execution activities and resources. Drill assigns a unique identifier, the QueryID, to each query received and then assigns an identifier to each fragment and operator that executes the query. An example of a QueryID is 2aa98add-15b3-e155-5669-603c03bfde86. The following image shows an example of fragment and operator identifiers:    
 

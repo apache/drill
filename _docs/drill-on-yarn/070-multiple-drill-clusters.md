@@ -10,7 +10,7 @@ Drill clusters coordinate using ZooKeeper, so you must assign each cluster a dis
 entry. YARN may launch Drillbits from different clusters on the same physical node, so each
 Drill cluster must use a distinct set of ports. Since each cluster requires its own setup, you must create a separate site directory for each. The instructions below explain the required setup.  
 
-##Create a New Site Directory
+## Create a New Site Directory
 Create a new site directory for your new cluster. Let’s say that your new cluster has the name
 “second”. Using the same structure as before, create a new site directory under your master
 directory:  
@@ -46,7 +46,7 @@ share settings such as storage plugins. If the clusters share the same root, the
 In addition, the three ports must have values distinct from all other clusters. In the example
 above, we’ve added a 1 to the first digit of the default port numbers; you can choose any available ports.  
 
-##Drill-on-YARN Configuration
+## Drill-on-YARN Configuration
 Create the drill-on-yarn.conf file as described before. The following must be distinct
 for your cluster:  
 
@@ -62,7 +62,7 @@ for your cluster:
 
 That is, give your cluster a distinct name, a distinct upload directory in DFS, and a distinct port number.  
 
-##Start the Cluster
+## Start the Cluster
 Use the site directory for the second cluster to start the cluster:  
 
        $DRILL_HOME/bin/drill-on-yarn.sh site

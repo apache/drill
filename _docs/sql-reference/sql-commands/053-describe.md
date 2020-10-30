@@ -15,7 +15,7 @@ The DESCRIBE command supports the following syntax:
 
 
 
-##Parameters  
+## Parameters  
 *workspace*  
 The location, within a schema, where a table or view exists.  
  
@@ -43,12 +43,12 @@ An expression formed from one or more columns that exist in the tables or views 
 
 Drill only supports SQL data types. Verify that all data types in an external data source, such as Hive or HBase, map to supported data types in Drill. See [Data Types]({{site.baseurl}}/docs/data-types/) for more information.  
 
-###DESCRIBE
+### DESCRIBE
 - You can issue the DESCRIBE command against views created in a workspace, tables created in Hive and HBase, or schemas.  
 - You can issue the DESCRIBE command on a table or view from any schema. For example, if you are working in the dfs.myworkspace schema, you can issue the DESCRIBE command on a view or table in another schema, such hive or dfs.devworkspace.  
 - Currently, DESCRIBE does not support tables created in a file system.
 
-###DESCRIBE SCHEMA  
+### DESCRIBE SCHEMA  
 - You can issue the DESCRIBE SCHEMA command on any schema. However, you can only include workspaces for file schemas, such as `dfs.myworkspace`.  
 - When you issue the DESCRIBE SCHEMA command on a particular schema, Drill returns all of the schema properties. The schema properties correlate with the configuration information in the Storage tab of the Drill Web UI for that schema.  
 - When you issue DESCRIBE SCHEMA against a schema and workspace, such as `dfs.myworkspace`, Drill returns the workspace properties in addition to all of the schema properties.  
@@ -57,7 +57,7 @@ Drill only supports SQL data types. Verify that all data types in an external da
 
 ## Examples
 
-###DESCRIBE  
+### DESCRIBE  
 
 The following example demonstrates the steps that you can follow when you want
 to use the DESCRIBE command to see column information for a view and for Hive

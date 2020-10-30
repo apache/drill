@@ -15,7 +15,7 @@ To use Qlik Sense with Apache Drill, complete the following steps:
 4.	Select tables and load the data model.
 5.	Analyze data with Qlik Sense and Drill.  
 
-##Prerequisites  
+## Prerequisites  
  
 *  Apache Drill installed. See [Install Drill]({{site.baseurl}}/docs/install-drill/).  
 *  Qlik Sense installed. See [Qlik Sense](http://www.qlik.com/us/explore/products/sense).

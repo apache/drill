@@ -6,7 +6,7 @@ parent: "Installing Drill in Embedded Mode"
 
 Currently, Drill supports 64-bit Windows only.  
 
-##Tools Required  
+## Tools Required  
 
 •	Download and install [JDK](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html). Select the download for Windows x64.  
 •	Download and install a utility for unzipping a tar.gz file, such as [7-zip](https://www.7-zip.org/download.html).  

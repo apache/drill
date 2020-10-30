@@ -32,7 +32,7 @@ The placeholders in the examples are defined as follows, in alphabetical order:
 * [*YourUserName*] is the user name that you use to access the Drill server.
 
 
-###Drillbit Connections
+### Drillbit Connections
 The following is the format of a DSN-less connection string for a Drillbit that does not require authentication:
 
 	Driver=MapR Drill ODBC Driver;ConnectionType=Direct; Host=[*Server*];Port=[*PortNumber*]
@@ -41,7 +41,7 @@ Example:
 
     Driver=MapR Drill ODBC Driver;ConnectionType=Direct; Host=192.168.222.160;Port=31010
 
-###ZooKeeper Connections
+### ZooKeeper Connections
 The following is the format of a DSN-less connection string for a ZooKeeper cluster that does not require authentication:
 
 	Driver=MapR Drill ODBC Driver;
@@ -57,7 +57,7 @@ Example:
 	ZKClusterID=drill;
 
 
-###Kerberos Authentication Connections
+### Kerberos Authentication Connections
 The following is the format of a DSN-less connection string for a Drillbit that requires Kerberos authentication:
 
 	Driver=MapR Drill ODBC Driver;
@@ -74,7 +74,7 @@ Example:
 	AuthenticationType=Kerberos; 
 	KrbServiceHost=maprdriverdemo.example.com;	KrbServiceName=drill
 
-###Plain Authentication Connections
+### Plain Authentication Connections
 
 The following is the format of a DSN-less connection string for a Drillbit that requires Plain authentication:
 
@@ -91,7 +91,7 @@ Example:
 	UID=username;PWD=mapr999
 
 
-##Testing the ODBC Connection
+## Testing the ODBC Connection
 
 The procedure for testing the ODBC connection differs depending on your platform, as described in the following sections:
 

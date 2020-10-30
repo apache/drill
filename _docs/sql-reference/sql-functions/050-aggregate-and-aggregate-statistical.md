@@ -25,13 +25,13 @@ The following table lists the aggregate functions that you can use in Drill quer
 - AVG, COUNT, MIN, MAX, and SUM accept ALL and DISTINCT keywords. The default is ALL.  
 - The aggregate function examples use the `cp` storage plugin to access the [`employee.json`]({{site.baseurl}}/docs/querying-json-files/) file installed with Drill. By default, JSON reads numbers as double-precision floating point numbers. These examples assume that you are using the default option [all_text_mode]({{site.baseurl}}/docs/json-data-model/#handling-type-differences) set to false.  
 
-##ANY_VALUE
+## ANY_VALUE
 Supported in Drill 1.14 and later. Returns one of the values of value across all input values. This function is NOT specified in the SQL standard.  
 
-###ANY_VALUE Syntax  
+### ANY_VALUE Syntax  
     ANY_VALUE([ ALL | DISTINCT ] value)  
 
-###ANY_VALUE Examples  
+### ANY_VALUE Examples  
 
     SELECT ANY_VALUE(employee_id) AS anyemp FROM cp.`employee.json`;
     |--------|

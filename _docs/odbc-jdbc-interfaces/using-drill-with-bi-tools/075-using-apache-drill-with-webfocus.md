@@ -12,7 +12,7 @@ Complete the following steps to configure WebFOCUS with Apache Drill:
 2. Configure the WebFOCUS adapter and connections to Drill.  
 3. (Optional) Create additional Drill connections.  
 
-##Prerequisite  
+## Prerequisite  
 
 Drill 1.2 or later
 

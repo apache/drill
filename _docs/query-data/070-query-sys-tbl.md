@@ -69,7 +69,7 @@ When you run the `SHOW TABLES` command against the sys database, Drill returns t
 
 The following sections show examples of queries against the system tables available in the sys database.
 
-###Querying the drillbits Table
+### Querying the drillbits Table
 
     SELECT * FROM drillbits;
     |-------------------|------------|--------------|------------|---------|

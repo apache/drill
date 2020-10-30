@@ -6,12 +6,12 @@ parent: Install Drill
 
 You can abruptly stop the Drill process on a node, or you can gracefully shut down the Drill process on a node. When you stop the Drill process on a node, active queries cannot complete if they need additional time beyond the default five second wait period. In Drill 1.12 and later, you can use the `graceful_stop` command to transition a Drillbit into a quiescent state in which the Drillbit can complete in-progress queries before shutting down.  
 
-###Stopping the Drill Process
+### Stopping the Drill Process
 To stop the Drill process on the node, issue the `drillbit.sh stop` command, as shown:  
 
        bin/drillbit.sh stop   
 
-###Gracefully Shutting Down the Drill Process
+### Gracefully Shutting Down the Drill Process
 
 Graceful Shutdown is enabled by default. You can gracefully shut down a Drillbit from the command line or the Drill Web UI. 
 

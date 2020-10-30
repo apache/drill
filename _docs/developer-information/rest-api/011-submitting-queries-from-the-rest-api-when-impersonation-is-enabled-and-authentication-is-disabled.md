@@ -13,13 +13,13 @@ This feature only works when impersonation is enabled and authentication is disa
 
 A user can issue queries through the Drill Web UI, SQLLine, using curl commands, or Java code, as follows:  
 
-##Drill Web UI  
+## Drill Web UI  
 You can submit a query through the Query page in the Drill Web UI after entering a valid username in the Username field. The Drill Web UI is accessible through the URL `http(s)://<drill-hostname>:8047`.
 
 To re-run a query from the Profiles page in the Drill Web UI, you must submit a username prior to re-running the query.
   
 
-##SQLLine  
+## SQLLine  
 
 You can submit a query through SQLLine if you include a username when starting SQLLine, as follows:  
 
@@ -27,7 +27,7 @@ You can submit a query through SQLLine if you include a username when starting S
 
 **Note:** The startup scripts are located in the `../bin` directory of the Drill installation. 
 
-##Curl  
+## Curl  
 
 When making curl requests, you must include the User-Name header with the username in the command, as follows:  
 
@@ -36,7 +36,7 @@ When making curl requests, you must include the User-Name header with the userna
 **Note:** The User-Name header is required for POST requests to /query or /query.json. Failure to include the User-Name header results in an error. For other types of requests, the User-Name header is not required. If you do not include the User-Name header (or it is null or empty), the default principal “anonymous” is used.  
 
 
-##Java 
+## Java 
  
 When using an application to submit a query, you must include the User-Name header with the username in the connection request, as follows:  
 

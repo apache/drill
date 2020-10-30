@@ -48,7 +48,7 @@ For more information about Tableau TDC configuration, see [Customizing and Tunin
 
 For collaboration purposes, you can now use Tableau Desktop to publish data sources and visualizations on Tableau Server.
 
-###Publishing Visualizations
+### Publishing Visualizations
 
 To publish a visualization from Tableau Desktop to Tableau Server:
 
@@ -68,7 +68,7 @@ To publish a visualization from Tableau Desktop to Tableau Server:
 
 8. In the Authentication window, select **Embedded Password**, then click **OK**. Then click **Publish** in the Publish Workbook window to publish the visualization to Tableau Server. ![drill query flow]({{ site.baseurl }}/images/docs/tableau-server-authentication.png)
 
-###Publishing Data Sources
+### Publishing Data Sources
 
 If all you want to do is publish data sources to Tableau Server, follow these steps:
 1.	Open data source(s) in Tableau Desktop.

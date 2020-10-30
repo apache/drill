@@ -26,7 +26,7 @@ CREATE TABLE AS (CTAS) can use any data source provided by the storage plugin. T
 
 Although the data resides in a single table, Parquet output generally consists of multiple files that resemble MapReduce output having numbered file names,  such as 0_0_0.parquet in a directory.  
 
-###Date Value Auto-Correction
+### Date Value Auto-Correction
 As of Drill 1.10, Drill writes standard Parquet date values. Drill also has an automatic correction feature that automatically detects and corrects corrupted date values that Drill wrote into Parquet files prior to Drill 1.10. 
 
 By default, the automatic correction feature is turned on and works for dates up to 5,000 years into the future. In the unlikely event that Drill needs to write dates thousands of years into the future, turn the auto-correction feature off.  
@@ -64,7 +64,7 @@ To maximize performance, set the target size of a Parquet row group to the numbe
 
 The default block size is 536870912 bytes.  
 
-###Configuring the HDFS Block Size for Parquet Files  
+### Configuring the HDFS Block Size for Parquet Files  
 Drill 1.11 introduces the `store.parquet.writer.use_single_fs_block` option, which enables Drill to write a Parquet file as a single file system block without changing the default file system block size. Query performance improves when Drill reads Parquet files as a single block on the file system. When the `store.parquet.writer.use_single_fs_block` option is enabled, the `store.parquet.block-size` setting determines the block size of the Parquet files created. The default setting for the `store.parquet.writer.use_single_fs_block` option is 'false'. Use the SET command to enable or disable the option, as shown:  
 
     ALTER SYSTEM|SESSION SET store.parquet.writer.use_single_fs_block = 'true|false';  
@@ -158,7 +158,7 @@ As of Drill 1.10, Drill can implicitly interpret the INT96 timestamp data type i
 
 The `store.parquet.reader.int96_as_timestamp` option is disabled by default. Use the [ALTER SYSTEM|SESSION SET]({{site.baseurl}}/docs/alter-system/) command to enable the option. Unnecessarily enabling this option can cause queries to fail because the CONVERT_FROM(col, 'TIMESTAMP_IMPALA') function does not work when `store.parquet.reader.int96_as_timestamp` is enabled.  
 
-###Using CONVERT_FROM to Interpret INT96
+### Using CONVERT_FROM to Interpret INT96
 In earlier versions of Drill (1.2 through 1.9), you must use the CONVERT_FROM function for Drill to interpret the Parquet INT96 type. For example, to decode a timestamp from Hive or Impala, which is of type INT96, use the CONVERT_FROM function and the [TIMESTAMP_IMPALA]({{site.baseurl}}/docs/supported-data-types/#data-types-for-convert_to-and-convert_from-functions) type argument:  
 
 ``SELECT CONVERT_FROM(timestamp_field, 'TIMESTAMP_IMPALA') as timestamp_field FROM `dfs.file_with_timestamp.parquet`;``  
@@ -172,7 +172,7 @@ For example, create a Drill table after reading INT96 and converting some data t
 
 t1.created_ts is an INT96 (or Hive/Impala timestamp) , t2.created_ts is a SQL timestamp. These types are not comparable. You cannot use a condition like t1.created_ts = t2.created_ts.
 
-###Configuring the Timezone
+### Configuring the Timezone
 By default, INT96 timestamp values represent the local date and time, which is similar to Hive. To get INT96 timestamp values in UTC, configure Drill for [UTC time]({{site.baseurl}}/docs/data-type-conversion/#time-zone-limitation).  
 
 

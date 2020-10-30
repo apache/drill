@@ -15,7 +15,7 @@ Drill trusts proxy users to provide the correct end user identity information. D
 This image shows how identity is propagated through various layers (with authentication enabled). The flow on the left is Drill with user impersonation enabled, and the flow on the right is Drill with user impersonation and inbound impersonation enabled. `t:euser` is a property on the connection (`u` is `username`, `p`is `password`, `t` is `impersonation_target`).  
 
 
-##Configuring Inbound Impersonation
+## Configuring Inbound Impersonation
 You must be an administrator to configure inbound impersonation. You can define administrative users through the `security.admin.user_groups` and `security.admin.users` options. See [Configuration Options]({{site.baseurl}}/docs/configuration-options-introduction/#system-options). 
 
 [User impersonation]({{site.baseurl}}/docs/configuring-user-impersonation/) must be enabled before you can configure inbound impersonation.

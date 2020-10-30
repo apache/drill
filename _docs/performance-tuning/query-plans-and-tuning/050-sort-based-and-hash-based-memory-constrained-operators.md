@@ -15,7 +15,7 @@ Drill uses the Hash-Join operator to join data. Drill 1.15 introduces semi-join 
 
 The memory configuration in Drill is specified as the memory limit per-query, per-node. The allocated memory is equally divided among all instances of the spillable operators (per query on each node). The number of instances is the number of spillable operators in the query plan multiplied by the maximal degree of parallelism. The maximal degree of parallelism is the number of minor fragments required to perform the work for each instance of a spillable operator. When an instance of a spillable operator must process more data than it can hold, the operator temporarily spills some of the data to a directory on disk to complete its work.  
 
-##Spill to Disk  
+## Spill to Disk  
 
 Spilling to disk prevents queries that use memory intensive operations from failing with out-of-memory errors. The Spill to Disk feature enables the spillable operators to automatically spill (write) excess data (as files) to a temporary directory on disk when the memory requirements for the operators exceed the set memory limit. Queries run uninterrupted while the operators perform the spill operations in the background.
 
@@ -54,7 +54,7 @@ Introduced in Drill 1.11. The list of directories into which the spillable opera
 - Drill.exec.hashagg.spill.fs (Replaced by drill.exec.spill.fs)  
 
 
-##Memory Allocation  
+## Memory Allocation  
 
 Drill evenly splits the available memory among all instances of the spillable operators. When a query is parallelized, the number of operators is multiplied, which reduces the amount of memory given to each instance of the operators during a query. To see the difference in memory consumption between the operators, you can run a query and then view the query profile in the Drill Web UI. Optionally, you can disable the Hash operators, which forces Drill to use the Merge-Join and Streaming-Aggregate operators.  
 
@@ -89,7 +89,7 @@ You can increase the amount of available memory to Drill using the ALTER SYSTEM|
        ALTER SYSTEM|SESSION SET `planner.memory.percent_per_query` = <new_value>
        //The default value is 0.05.  
 
-##Disabling the Hash Operators  
+## Disabling the Hash Operators  
 
 You can disable the Hash Aggregate and Hash Join operators. When you disable these operators, Drill creates alternative query plans that use the Sort operator and the Streaming Aggregate or the Merge Join operator. 
 
@@ -107,7 +107,7 @@ Enables or disables hash joins. This option is enabled by default. Drill assumes
 Enables or disables semi-join functionality inside the Hash Join. This option is enabled by default. When enabled, a semi-join flag inside the HashJoin flag is set to true, and Drill uses a semi-join to remove the distinct processing below the Hash Join. When disabled, Drill can still perform semi-joins, but the semi-joins are performed outside of the Hash Join, as shown in the following example:   
 
 
-###Example: Query Plan with and without Semi-Join
+### Example: Query Plan with and without Semi-Join
 
 **Semi-Join Disabled**   
 In the following query plan, you can see the HashAgg before the HashJoin. In the HashJoin flag, you can see that semi-join flag is set to false, indicating that a semi-join was not used.  

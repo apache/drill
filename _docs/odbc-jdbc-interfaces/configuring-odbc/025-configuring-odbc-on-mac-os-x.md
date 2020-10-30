@@ -103,7 +103,7 @@ To use Drill in local mode, do not define the ZKQuorum and ZKClusterID propertie
 [Driver Configuration Options]({{ site.baseurl }}/docs/odbc-configuration-reference/#configuration-options) describes configuration options available for controlling the
 behavior of DSNs using the Drill ODBC Driver.
 
-###Sample Configuration File
+### Sample Configuration File
 The following sample shows a possible configuration for using Drill in embedded mode. 
 
 {% include startnote.html %}The password should be provided in the connection string or ODBC application at connection time, not in the INI file.{% include endnote.html %}

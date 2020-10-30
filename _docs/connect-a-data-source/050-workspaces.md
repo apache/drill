@@ -52,7 +52,7 @@ location of the data:
 
 ``<plugin>.<workspace name>.`<location>```  
 
-##Overriding `dfs.default`
+## Overriding `dfs.default`
 
 You may want to override the hidden default workspace in scenarios where users do not have permissions to access the root directory. 
 Add the following workspace entry to the `dfs` storage plugin configuration to override the default workspace:

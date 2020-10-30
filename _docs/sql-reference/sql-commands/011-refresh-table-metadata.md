@@ -265,7 +265,7 @@ Looking at the `.drill.parquet_summary_metadata.v4` file in the `parquet1` direc
 	  "allColumnsInteresting" : true,
 	  "metadata_version" : "4"  
 
-###Verifying that the Planner is Using the Metadata Cache or Summary Files
+### Verifying that the Planner is Using the Metadata Cache or Summary Files
 
 When the planner uses metadata cache files, the query plan includes the `usedMetadataFile` flag. You can access the query plan in the Drill Web UI, by clicking on the query in the Profiles page, or by running the EXPLAIN PLAN FOR command, as shown:
 

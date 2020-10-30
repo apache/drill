@@ -18,7 +18,7 @@ Drill 1.10 fully supports Tableau Level of Detail (LoD) calculations and Tableau
 This document describes how to connect Tableau 10.2 to Apache Drill and instantly explore multiple data formats from various data sources.  
 
 
-##Prerequisites  
+## Prerequisites  
 
 Your system must meet the following prerequisites before you can complete the steps required to connect Tableau 10.2 to Apache Drill:  
 
@@ -27,7 +27,7 @@ Your system must meet the following prerequisites before you can complete the st
 - MapR Drill ODBC Driver v1.3.0 or later  
  
 
-##Required Steps  
+## Required Steps  
  
 Complete the following steps to use Apache Drill with Tableau 10.2:  
 1.	[Install and Configure the MapR Drill ODBC Driver.]({{site.baseurl}}/docs/using-apache-drill-with-tableau-10-2/#step-1:-install-and-configure-the-mapr-drill-odbc-driver)  
@@ -69,7 +69,7 @@ To connect Tableau to Drill, complete the following steps:
  
 
 
-##Step 3: Query and Analyze the Data  
+## Step 3: Query and Analyze the Data  
 
 Tableau can now use Drill to query various data sources and visualize the information, as shown in the following example.  
 

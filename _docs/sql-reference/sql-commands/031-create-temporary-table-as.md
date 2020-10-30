@@ -22,7 +22,7 @@ As of Drill 1.10, you can use the CREATE TEMPORARY TABLE AS (CTTAS) command to s
   
 ## Usage Notes
 
-###Workspace for Temporary Tables
+### Workspace for Temporary Tables
 
 By default, Drill creates temporary tables within the default temporary workspace, `dfs.tmp`. The default temporary workspace must be writable, file-based, and point to a location that already exists, otherwise temporary table creation fails. You cannot create a temporary table outside of the default temporary workspace.
 
@@ -49,7 +49,7 @@ To override the default temporary workspace, define `drill.exec.default_temporar
 To change the default temporary workspace connection or directory path, update the dfs storage plugin on the Storage page in the Drill Web UI. For example, dfs connection attribute can be `file:///` or `maprfs:///` and the `dfs.tmp` location attribute can be `/tmp` or `/tmp2`. For more information, see [Plugin Configuration Basics]({{site.baseurl}}/docs/plugin-configuration-basics).
 
 Note: When you run Drill in distributed mode, verify that the default temporary workspace connection points to a distributed filesystem. If temporary tables are created on the local filesystem, they can only be accessed by the local Drillbit that created the temporary table.
-###Setting the Storage Format
+### Setting the Storage Format
 The default storage format for temporary tables is parquet. However, you can create temporary tables in one of the following formats:
 
 * csv, tsv, psv
@@ -60,7 +60,7 @@ To change the storage format, set the `store.format` option before you create th
 
 		ALTER SESSION SET `store.format`='json';
 
-###Creation of Temporary Tables and User Access
+### Creation of Temporary Tables and User Access
 
 In general, the user that creates a temporary table can run queries against the table, as long as the session in which the table was created is active. Although temporary tables are actually directories, you query the temporary table directory as you would query a table.
 
@@ -71,15 +71,15 @@ Drill creates the session and temporary table directories and files with the fol
 * Only the owner can perform read, write, and execute operations on the folder directories.
 * Only the owner can create and read the files within the folders.
 
-###Authorization
+### Authorization
 
 When authorization is enabled, the user that started the Drillbit will own the temporary tables created within that session. However, the user that created the table will have the ability to query the data. For example, the *mapr* user starts the Drillbit and *Sally* starts the Drill shell. When authorization is enabled, *Sally* can submit a query to create a temporary table and she can query the temporary table data. However, the *mapr* user is the owner of the temporary table directory and files. In this case, *Tom* can access the temporary table if he knows the full path to the temporary table directory and the session is still active.
 
-###Impersonation
+### Impersonation
 
 When impersonation is enabled, only the user that created the temporary table can query the temporary table. For example, if the Drillbit was started by the *mapr* user and user *Tom* starts the Drill shell and creates a temporary table, *Tom* will have permission to query the temporary table. *Tom* can also access temporary tables that he created in a different session as long as he has the full path to the temporary table directory and the session is still active. However, *Sally* cannot query the temporary table even if she has the full path to the temporary table directory and the session is active.
 
-###Selection of Tables
+### Selection of Tables
 
 When you mention a table name in a SELECT statement, any temporary table with that name takes priority over a table with the same name in the current workspace.
 
@@ -91,7 +91,7 @@ For example, when you issue a SELECT statement on a table name that is common am
          
        SELECT* FROM dfs.json.donuts; //returns table from dfs.json
 
-###Drop a Temporary Table
+### Drop a Temporary Table
 
 Once a session ends or the drillbit process fails, Drill will drop the session’s temporary location which includes any associated temporary table directories and files. However, you can also drop a temporary table using the DROP TABLE command. When you drop a temporary table within a session, Drill deletes the temporary table directory and its files.
 
@@ -109,7 +109,7 @@ In the following example, cust_promotions is the name of a persistent table unde
 
 Even though the workspace was set to dfs.json, the temporary table from dfs.tmp was dropped.
 
-##CTTAS Example
+## CTTAS Example
 
 In the following example, the user has .csv file with the following data:
 

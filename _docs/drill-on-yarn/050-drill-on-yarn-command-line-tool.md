@@ -10,7 +10,7 @@ Drill provides the drill-on-yarn command-line tool to start, stop, resize and ch
 
 Where command is one of those described below.  
 
-##Start the Drill Cluster  
+## Start the Drill Cluster  
 
 Start your drill cluster with the start command:  
 
@@ -39,7 +39,7 @@ Drill-on-YARN’s web UI url. Use this URL to visit the web UI described below. 
 
 The file name is the same as your Drill cluster ID. The file contains the id if the Drill-on-YARN application for use by the other commands described below. You can run only one Drill AM at a time. If you attempt to start as second one from the same client machine on which you started the first, the client command will complain that the appid file already exists. If you attempt to start the cluster from a different node, then the second AM will detect the conflict and will shut down again.  
 
-##Drill Cluster Status 
+## Drill Cluster Status 
 
 You can retrieve basic information about the Drill cluster as follows:
 
@@ -67,7 +67,7 @@ The first two several lines give you information about YARN’s state: the appli
 application state and YARN’s tracking URL for the application. Next is the host on which the Drill AM is running, the queue on which the application was placed and the user who submitted the application. The start time tells you when YARN started the application.
 The next few lines are specific to Drill: the name of the application (which you configured in the Drill-on-YARN configuration file), the Drill application master URL, the number of Drillbits you requested to run and the number actually running. Finally, the last line gives you the URL to use to access the Drill-on-YARN web UI described below.  
 
-##Stop the Drill Cluster
+## Stop the Drill Cluster
 You can stop the Drill cluster from the command line:  
 
        $DRILL_HOME/bin/drill-on-yarn.sh stop  
@@ -79,7 +79,7 @@ Note that this command is “forceful”, it kills any in-flight queries. The ou
        Stopped.
        Final status: SUCCEEDED  
 
-##Resize the Drill Cluster
+## Resize the Drill Cluster
 You can add or remove nodes to your Drill cluster while the cluster runs using the re-size
 command. You can specify the change either by giving the number of nodes you want to run:  
 
@@ -95,7 +95,7 @@ To remove three nodes:
 
 Drill will add nodes only if additional nodes are available from YARN. If you request to stop more nodes than are running, Drill stops all the running nodes. Note that in the current version of Drill, stopping nodes is a forceful operation: any in-flight queries will fail.  
 
-##Clean the DFS Files  
+## Clean the DFS Files  
 
 If you run Drill-on-YARN for a temporary cluster, Drill will leave the Drill software archive in your designated DFS directory. You can remove those files with the following:  
 

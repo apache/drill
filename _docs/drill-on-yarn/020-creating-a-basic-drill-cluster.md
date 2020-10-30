@@ -6,7 +6,7 @@ parent: "Drill-on-YARN"
 
 This topic walks you through the steps needed to create a basic Drill cluster.  
 
-##The Client Machine  
+## The Client Machine  
 
 YARN works by launching an application using a “client” application. For Drill, this is the
 Drill-on-YARN client. The client can run on any machine that has both the Drill and Hadoop
@@ -21,7 +21,7 @@ custom code resides in the site directory; do not change anything in the Drill 
 
 Complete the following steps on the client machine:  
 
-###Create a Master Directory  
+### Create a Master Directory  
 
 To localize Drill files, the client tool requires a copy of the original Drill distribution archive and the location of your site directory. Assume all these components reside in a single “master directory” described as $MASTER_DIR . On the client machine, create the master directory, as shown:  
 
@@ -36,7 +36,7 @@ To build the master directory, you will:
 
 The following steps provide the instructions for building the master directory:  
 
-###Install Drill
+### Install Drill
 These instructions assume you are installing Drill as part of the Drill-on-YARN
 setup. You can use your existing Drill 1.8 or later install as long as it meets the required criteria. 
 
@@ -64,7 +64,7 @@ Again, replace x.y.z with the selected version.
 Your master directory should now contain the original Drill archive along with an expanded copy
 of that archive.  
 
-###Create the Site Directory  
+### Create the Site Directory  
 
 The site directory contains your site-specific files for Drill. If you are converting an existing Drill install, see the “Site Directory” section.  
 
@@ -98,7 +98,7 @@ Your master directory should now contain the Drill software and your site direct
 Once you have created your site directory, upgrades are trivial. Simply delete the old Drill
 distribution and install the new one. Your files remain unchanged in the site directory.  
 
-###Configure Drill-on-YARN using Existing Settings
+### Configure Drill-on-YARN using Existing Settings
 
 The next step is to configure Drill. If you have used Drill, start with Drill
 in distributed mode to learn which configuration options you need. YARN is an awkward
@@ -110,7 +110,7 @@ From $PROD_DRILL_HOME, copy the following to corresponding locations in $DRILL_S
               cp $PROD_DRILL_HOME/conf/drillenv.sh $DRILL_SITE
               cp $PROD_DRILL_HOME/jars/3rdparty/ yourJarName .jar $DRILL_SITE/jars
 
-###Create Your Cluster Configuration File
+### Create Your Cluster Configuration File
 The next step is to specify additional configuration which Drill-on-YARN requires to launch your Drill cluster. 
 
 Start by editing $DRILL_SITE/drill-on-yarn.conf using your favorite editor. This file is
@@ -122,7 +122,7 @@ default values.
 
 The following sections discuss each configuration option that you must set.  
 
-###Drill Resource Configuration
+### Drill Resource Configuration
 The two key Drill memory parameters are Java heap size and direct memory. In a non-YARN
 cluster, you set these in $DRILL_HOME/conf/drillenv.sh as follows (shown with the
 default values):
@@ -170,7 +170,7 @@ however, they appear within a single group as follows:
                    }  
 
 
-###Drillbit Cluster Configuration
+### Drillbit Cluster Configuration
 Drill-on-YARN uses the concept of a “cluster group” of Drillbits to describe the set of Drillbits to launch. A group can be one of three kinds:  
 
 
@@ -194,13 +194,13 @@ For a basic group, you need only specify the group type and the number of Drillb
 The above syntax says that pools is a list that contains a series of pool objects contained in
 braces. In this release, however, Drill supports just one pool.  
 
-###ZooKeeper Configuration
+### ZooKeeper Configuration
 Drill uses ZooKeeper to coordinate between Drillbits. When run under YARN, the Drill
 Application Master uses ZooKeeper to monitor Drillbit health. Drill-on-YARN reads your
 $DRILL_SITE/drilloverride.conf file for ZooKeeper settings.  
 
 
-###Configure the Drill Distribution Archive
+### Configure the Drill Distribution Archive
 Next configure the name of the Drill distribution archive that you downloaded earlier.  
 
               drill-install:  {
@@ -209,7 +209,7 @@ Next configure the name of the Drill distribution archive that you downloaded ea
 
 Where archive-path is the location of your archive. In our example, this is $MASTER_DIR/apache-drill.x.y.z.tar.gz. Use the full name of the master directory, not the environment variable. (Substitute your actual version number for x.y.z.)  
 
-###Select the Distributed File System Location
+### Select the Distributed File System Location
 Drill copies your archive onto your distributed file system (such as HDFS) in a location you
 provide. Set the DFS options as follows:  
 
@@ -220,7 +220,7 @@ provide. Set the DFS options as follows:
 
 Drill can read the connection information from your Hadoop configuration files ($HADOOP_HOME/etc/hadoop/coresite.xml ). Or, you can specify a connection directly in the Drill cluster configuration file using the connection attribute. Then, choose a DFS file system location. Drill uses “ /user/drill ” by default.  
 
-###Hadoop Location
+### Hadoop Location
 Apache Drill users must tell Drill-on-YARN the location of your Hadoop install. Set the
 HADOOP_HOME environment variable in $DRILL_SITE/drillenv.sh to point to your Hadoop installation:  
 

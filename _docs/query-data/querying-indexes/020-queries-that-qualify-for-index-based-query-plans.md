@@ -21,7 +21,7 @@ If a query contains conditions on multiple columns (multi-index query), Drill ca
 
 {% include startnote.html %}Each column added to an index increases the storage requirement for the index. As the storage size increases, the cost of reading the index also increases. Likewise, for the cost of adding and updating data. Consider the impact on storage and updates when including columns in an index.{% include endnote.html %}  
 
-##Queries Without Filters  
+## Queries Without Filters  
 
 Drill can create index-based query plans for the following types of queries without filters (queries that do not have a WHERE clause):  
    

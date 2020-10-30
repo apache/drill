@@ -5,7 +5,7 @@ parent: "Configuring a Multitenant Cluster"
 ---
 To manage a cluster in which multiple users share a Drillbit, you configure Drill queuing and parallelization in addition to memory, as described in the previous section, ["Configuring Drill Memory"]({{site.baseurl}}/docs/configuring-drill-memory/).
 
-##Configuring Query Queuing
+## Configuring Query Queuing
 
 Set [options in sys.options]({{site.baseurl}}/docs/configuration-options-introduction/) to enable and manage query queuing, which is turned off by default. There are two types of queues: large and small. You configure a maximum number of queries that each queue allows by configuring the following options in the `sys.options` table:
 

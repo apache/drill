@@ -110,7 +110,7 @@ The following configuration is an example Kafka storage plugin configuration:
          "enabled": true
        }  
 
-##System|Session Options  
+## System|Session Options  
 
 You can modify the following options in Drill at the system or session level using the [ALTER SYSTEM]({{site.baseurl}}/docs/alter-system/)|[SESSION SET]({{site.baseurl}}/docs/set/) commands:  
 
@@ -124,7 +124,7 @@ You can modify the following options in Drill at the system or session level usi
 
 See [Drill JSON Model](https://drill.apache.org/docs/json-data-model/) and [Drill system options configuration](https://drill.apache.org/docs/configuration-options-introduction/)s for more information.  
 
-##Examples of Drill Queries on Kafka  
+## Examples of Drill Queries on Kafka  
 
 The following examples show queries on Kafka and the use of the ALTER SESSION SET command to change Kafka related options at the session level:
 

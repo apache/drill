@@ -8,7 +8,7 @@ Evaluate query plans to analyze query performance and determine if Drill used qu
 
 The following examples demonstrate how to view the query profile in the Drill Web UI and the output of the EXPLAIN PLAN FOR command to determine if the query planner in Drill selected an index-based query plan. There is also an example that shows you how to disable index planning to compare a full table scan plan with an index-based query plan.  
 
-##Examples  
+## Examples  
 The subsequent sections assume that an index exists on a table named "lineitem." The index, l_single_c_5, is a single column index created on the L_QUANTITY column. The index also covers the L_SUPPKEY, L_DISCOUNT, L_SHIPDate, and L_SHIPMODE columns. If a query contains columns covered by the index, the query is a covering query. If a query contains columns not covered by the index, the query is non-covering and requires a lookup back into the primary table to retrieve data.  
 
 The following list summarizes the assumptions:  
@@ -18,7 +18,7 @@ The following list summarizes the assumptions:
 - **Indexed column**: `L_QUANTITY`
 - **Included columns**: `L_SUPPKEY`, `L_DISCOUNT`, `L_SHIPDate`, `L_SHIPMODE`  
 
-###Query Profile
+### Query Profile
 You can view the query plan on the Profiles page of the Drill Web UI, by selecting the query you want to evaluate and then selecting the Physical Plan page. The page displays the physical plan that Drill used to execute the query.  
  
 The following image shows the physical plan that Drill used to execute this simple equality query:  
@@ -29,7 +29,7 @@ The following image shows the physical plan that Drill used to execute this simp
 
 In the plan, you can see that Drill scanned the index, `l_single_c_5`, instead of the primary table. The query was completely covered by the index because the index contains all the columns referenced in the query and the query filtered on the indexed column.  
 
-###EXPLAIN Command  
+### EXPLAIN Command  
 Alternatively, you can issue the [EXPLAIN command]({{site.baseurl}}/docs/explain/) to see how Drill executes a query. You can see the chosen physical execution plan for a query without running the query, by issuing the [EXPLAIN PLAN FOR command]({{site.baseurl}}/docs/explain/#explain-for-physical-plans). The output of the command shows you if Drill plans to use the index when executing the query, as shown:    
 
 	EXPLAIN PLAN FOR SELECT L_SHIPDate FROM lineitem WHERE L_QUANTITY = 5 LIMIT 10;
@@ -46,7 +46,7 @@ Alternatively, you can issue the [EXPLAIN command]({{site.baseurl}}/docs/explain
 
 In the plan, you can see that Drill plans to use the index, `l_single_c_5`, instead of performing a full table scan. The query is completely covered by the index because the index contains all columns referenced in the query and the query filters on the indexed column.  
 
-###Comparing an Index-Based Plan to a Full Table Scan Plan 
+### Comparing an Index-Based Plan to a Full Table Scan Plan 
 If you want to compare an index-based plan against a plan with a full table scan, disable the `planner.enable_index_planning` option in Drill, and run the EXPLAIN PLAN FOR command with the query. Running this command with the `planner.enable_index_planning` option disabled forces Drill to generate a plan that includes a full table scan. 
 
 You can compare the full table scan plan against the index-based plan to compare the costs and resource consumption of each plan.

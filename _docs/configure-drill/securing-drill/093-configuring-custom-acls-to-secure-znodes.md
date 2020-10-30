@@ -13,7 +13,7 @@ Prior to Drill 1.15, ZooKeeper ACLs in secure and unsecure clusters were set to 
 - View the [drill-override-example.conf](https://github.com/apache/drill/blob/master/distribution/src/resources/drill-override-example.conf) file to see example ACL configurations.
 
   
-##Securing znodes
+## Securing znodes
 Complete the following steps to create a custom ACL and secure znodes:  
 
 1. Write a class that implements the `ZKACLProvider` interface. This class will contain the ACLs that need to be set on the znodes. You can use  the [`ZKSecureACLProvider` class as a sample reference](https://github.com/apache/drill/blob/master/exec/java-exec/src/main/java/org/apache/drill/exec/coord/zk/ZKSecureACLProvider.java).  

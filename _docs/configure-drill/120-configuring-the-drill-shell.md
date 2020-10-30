@@ -209,7 +209,7 @@ The following table lists some of the set command variables that you can use wit
 | verbose         | true/false             | Show unabbreviated error messages and debug info.                                                                                                                      |
 
 
-###Examples of the set Command with Variables  
+### Examples of the set Command with Variables  
 Set the maximum width of the Drill shell to 10000.
 
      0: jdbc:drill:zk=local> !set maxwidth 10000

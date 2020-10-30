@@ -21,7 +21,7 @@ the Drill AM uses.
 4. Management page with a number of simple operations to resize or stop the cluster.  
 5. A history of stopped, killed or failed Drillbits. Use this to diagnose problems.  
 
-##Main Page
+## Main Page
 The main page shows the state of the Drill cluster. 
 
 Drill Cluster Status : the state of the Drill cluster, one of the following:  
@@ -42,7 +42,7 @@ allocated to running Drillbits.
 itself including the number of nodes, the total cluster memory and total number of virtual cores.  
 - **Groups:** Lists the cluster groups defined in the configuration file (of which only one is currently supported), along with the target and actual number of Drillbits in that group.
 
-##Configuration Page
+## Configuration Page
 The configuration page shows the complete set of configuration values used for the current run.
 The values come from your own configuration along with Drill-provided defaults. Use this page
 to diagnose configuration-related issues. Names are shown in fully-expanded form. That is the
@@ -54,7 +54,7 @@ name “drill.yarn.http.port” refers to the parameter defined as follows in yo
               }
        }  
 
-##Drillbits Page
+## Drillbits Page
 The Drillbits page lists all drillbits in all states.
 
 
@@ -71,7 +71,7 @@ Drillbit has registered with ZooKeeper. This state is useful when diagnosing pro
 - **Start Time:** The date and time (in your local timezone, displayed in ISO format) when the
 Drillbit launch started. This page will also display un-managed Drillbits, if present. An un-manage Drillbit is one that is running, has registered with ZooKeeper, but was not started by the Drill Application Master. Likely the Drillbit was launched using the drillbit.sh script directly. Use the host name to locate the machine running the Drillbit if you want to convert that Drillbit to run under YARN.  
 
-##Manage Page
+## Manage Page
 The Manage page allows you to re-size or stop the cluster. You can re-size the cluster by adding Drillbits, removing Drillbits or setting the cluster to a desired size. 
 
 Drill is a long-running application. In normal practice, you leave Drill running indefinitely. You would shut down your Drill cluster only to, say, perform an upgrade of the Drill software or to change configuration options. When you terminate your Drill cluster, any in-progress queries will fail. Therefore, a good practice is to perform the shut down with users so that Drill is not processing any queries at the time of the shutdown.
@@ -79,5 +79,5 @@ Drill is a long-running application. In normal practice, you leave Drill running
 When removing or shutting-down the cluster, you will receive a confirmation page asking if you
 really do want to stop Drillbit processes. Click Confirm to continue.  
 
-##History Page
+## History Page
 The History page lists all Drillbits which have failed, been killed, or been restarted. The History page allows you to detect failures and diagnose problems. Use the YARN container ID listed on this page to locate the log files for the Drillbit.

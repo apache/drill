@@ -70,7 +70,7 @@ Remember the following tips when querying data with Drill:
     Example: ``SELECT * FROM dfs.`default`.`/Users/drilluser/apache-drill-1.1.0/sample-data/nation.parquet`;``
   * When selecting all (SELECT *) schema-less data, the order of returned columns might differ from the stored order and might vary from query to query.  
 
-###Syntax Highlighting and SQL Templates  
+### Syntax Highlighting and SQL Templates  
 Drill 1.13 extends the syntax highlighting feature for storage plugin configurations to queries. 
 
 You can see queries with highlighted syntax in the query profile on the Query tab, as shown in the following image:  

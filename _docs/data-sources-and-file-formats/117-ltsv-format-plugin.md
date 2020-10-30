@@ -10,7 +10,7 @@ Starting in Drill 1.16, Drill provides a LTSV (Labeled Tab-separated Values) for
 
 For more information about the LTSV file format, see [LTSV (Labeled Tab-separated Values)](http://ltsv.org/).  
 
-##Configuring the LTSV Format Plugin  
+## Configuring the LTSV Format Plugin  
 
 Add the LTSV format to the dfs storage plugin configuration, as shown:  
 

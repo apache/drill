@@ -18,7 +18,7 @@ The following browsers were tested with Drill configured to use SPNEGO authentic
 
 An IT administrator configures the web server (Drillbit) to use SPNEGO for authentication. Depending on the system, either the administrator or the user configures the client (web browser or web client tool) to use SPNEGO for authentication. Configuration instructions are presented later in this document.   
 
-##Prerequisites  
+## Prerequisites  
 
 SPNEGO authentication for Drill requires the following:  
 
@@ -30,11 +30,11 @@ SPNEGO authentication for Drill requires the following:
 - Kerberos Ticket Granting Ticket on the client machine for the user accessing the Drillbit (web server).  
 - Drill web server configured for SPNEGO.  
 
-##Configure SPNEGO on the Web Server and Web Client  
+## Configure SPNEGO on the Web Server and Web Client  
 
 The following sections provide the steps that an administrator can follow to configure SPNEGO on the web server (Drillbit). An administrator or a user can follow the steps for configuring the web browser or client tool, such as curl.  
 
-###Configuring SPNEGO on the Drillbit (Web Server)  
+### Configuring SPNEGO on the Drillbit (Web Server)  
 To configure SPNEGO on the web server, complete the following steps:  
 1-Generate a Kerberos principal on each web server that will receive inbound SPNEGO traffic. Each principal must have a corresponding keytab. The principal must have the following form:  
 
@@ -81,7 +81,7 @@ To configure SPNEGO on the web server, complete the following steps:
 **Note:** Drill uses a Hadoop Kerberos name and rules to transform the client Kerberos principal to the principal Drill uses internally as the client’s identity. By default, this mapping rule extracts the first portion from the provided principal. For example, if the principal format is <Name1>/<Name2>@realm, the default rule extracts only Name1 from the principal and stores Name1 as the client’s identity on server side. Drill uses the short name, for example Name1, as the user account known to Drill. This user account name is used to determine if the authenticated user has administrative privileges.
    
 
-##Configuring SPNEGO on the Client  
+## Configuring SPNEGO on the Client  
 
 An administrator or user can configure SPNEGO on the client (web browser or client tools, such as curl). To configure SPNEGO on the client, a Kerberos Ticket Granting Ticket must exist for the user accessing the web server. The Kerberos Ticket Granting Ticket generated on the client side is used by the web client to get a service ticket from the KDC. This service ticket is used to generate a SPNEGO token, which is presented to the web server for authentication.
 
@@ -89,7 +89,7 @@ The client should use the same web server hostname (as configured in the server-
 
 The following sections provide instructions for configuring the supported client-side browsers:   
 
-###Firefox
+### Firefox
 To configure Firefox to use a negotiation dialog, such as SPNEGO to authenticate, complete the following steps:  
 
 1-Go to About > Config, and accept the warnings.  
@@ -97,7 +97,7 @@ To configure Firefox to use a negotiation dialog, such as SPNEGO to authenticate
 3-Set network.negotiate-auth.delegation-uris to “http://,https://”.  
 4-Set network.negotiate-auth.trusted-uris to “http://,https://”.  
 
-###Chrome
+### Chrome
 For Linux, add the `--auth-server-whitelist` parameter to the `google-chrome` command. For example, to run Chrome from a Linux prompt, run the `google-chrome` command, as follows:       
 
 	google-chrome --auth-server-whitelist="domain"  
@@ -112,10 +112,10 @@ For MacOS, use the following directories:
 
 **Note:** The URL given to Chrome to access the Web UI should match the domain specified in `auth-server-whitelist`. If the domain is used in `auth-server-whitelist`, use the domain with Chrome. If the IP address is used in `auth-server-whitelist`, use the IP address with Chrome.  
 
-###Safari
+### Safari
 No configuration is required for Safari. Safari automatically authenticates using SPNEGO when requested by the server.  
 
-###Internet Explorer  
+### Internet Explorer  
 
 To configure Internet Explorer to use a negotiation dialog, such as SPNEGO to authenticate, complete the following steps:  
 
@@ -136,7 +136,7 @@ To configure Internet Explorer to use a negotiation dialog, such as SPNEGO to au
 
 6-Close and reopen IE. You can browse to your SPNEGO protected resource.  
 
-###REST API
+### REST API
 You can use CURL commands to authenticate using SPNEGO and access secure web resources over REST.
  
 Issue the following `curl` command to log in using SPNEGO, and save the authenticated session cookie to a file, such as `cookie.txt`, as shown:
@@ -148,7 +148,7 @@ Use the authenticated session cookie stored in the file, for example `cookie.txt
        curl -v --negotiate -b cookie.txt -u : http://<hostname>:8047/query       
        Example: curl -v --negotiate -b cookie.txt -u : http://example.QA.LAB:8047/query  
 
-##Logging in to the Drill Web UI
+## Logging in to the Drill Web UI
 With the addition of SPNEGO authentication in Drill 1.13, an administrator can configure FORM and/or SPNEGO authentication mechanisms. The Drill Web UI provides two possible log in options for a user depending on the configuration. 
 
 If a user selects FORM, he/she must enter their username and password to access restricted pages in the Drill Web UI. The user is authenticated through PAM. 

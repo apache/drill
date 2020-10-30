@@ -8,7 +8,7 @@ Drill-on-YARN starts a complex chain of events: the client starts the AM and the
 Drillbits, both using YARN. Many opportunities exist for configuration issues to derail the
 process. Below are a number of items to check if things go wrong.  
 
-##Client Start
+## Client Start
 The Drill-on-YARN client prints all messages to the console. Some common errors are:  
 
 **Missing HADOOP_HOME**    

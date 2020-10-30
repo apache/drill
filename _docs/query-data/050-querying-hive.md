@@ -19,7 +19,7 @@ Starting in Drill 1.16, you can query Hive views from Drill like you would query
 For storage-based authorization, access to Hive views depends on the user’s permissions on the underlying tables in the view definition. When a user selects from a Hive view, the view is expanded (converted into a query), and the underlying tables referenced in the query are validated for permissions.    
   
 
-##Creating and Querying a Hive Table
+## Creating and Querying a Hive Table
 
 To create a Hive table and query it with Drill, complete the following steps:
 

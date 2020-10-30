@@ -200,7 +200,7 @@ The following query shows the columns and types of data in the “customer” ta
 	|-----------|--------------------|--------------------------------|-------------|-----------------|-----------|--------------|-----------------------------------------------------------------|
 
  
-###Enabling Statistics for Query Planning
+### Enabling Statistics for Query Planning
 You can run the ANALYZE TABLE COMPUTE STATISTICS statement at any time to compute statistics; however, you must enable the following option if you want Drill to use statistics during query planning:
  
 	set `planner.statistics.use`=true;
@@ -210,7 +210,7 @@ You can run the ANALYZE TABLE COMPUTE STATISTICS statement at any time to comput
 	| true | planner.statistics.use updated. |
 	|------|---------------------------------|
  
-###Computing Statistics
+### Computing Statistics
 You can compute statistics on directories with Parquet data or on Parquet tables.
  
 You can run the ANALYZE TABLE COMPUTE STATISTICS statement on a subset of columns to generate statistics for those columns only, as shown:
@@ -233,7 +233,7 @@ Or, you can run the ANALYZE TABLE COMPUTE STATISTICS statement on the entire tab
 
 
  
-###Computing Statistics on a SAMPLE
+### Computing Statistics on a SAMPLE
 You can also run ANALYZE TABLE COMPUTE STATISTICS on a percentage of the data using the SAMPLE command, as shown:
  
 	ANALYZE TABLE `table_stats/Tpch0.01/parquet/customer` COMPUTE STATISTICS SAMPLE 50 PERCENT;
@@ -244,7 +244,7 @@ You can also run ANALYZE TABLE COMPUTE STATISTICS on a percentage of the data us
 	|----------|---------------------------|
 
  
-###Storing Statistics
+### Storing Statistics
 When you generate statistics, a statistics directory (`.stats.drill`) is created with a JSON file that contains the statistical data.
  
 For tables, the `.stats.drill` directory is nested within the table directory. For example, if you ran ANALYZE TABLE COMPUTE STATISTICS against a table named “customer,” you could access the statistic file in `/customer/.stats.drill`. The JSON file is stored in the `.stats.drill` directory.
@@ -271,7 +271,7 @@ You can query the statistics file to see the statistics generated for each colum
 
 
 
-###Dropping Statistics
+### Dropping Statistics
 If you want to compute statistics on a table or directory that you have already run the ANALYZE TABLE COMPUTE STATISTICS statement against, you must first drop the statistics before you can run ANALYZE TABLE statement on the table again.
  
 The following example demonstrates how to drop statistics on a table:

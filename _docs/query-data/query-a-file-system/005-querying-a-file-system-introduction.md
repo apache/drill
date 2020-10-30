@@ -35,7 +35,7 @@ The extensions for these file types must match the configuration settings for
 your registered storage plugins. For example, PSV files may be defined with a
 `.tbl` extension, while CSV files are defined with a `.csv` extension.  
 
-##Implicit Columns  
+## Implicit Columns  
 Drill 1.8 introduces implicit columns. Implicit columns provide file information, such as the directory path to a file and the file extension. You can query implicit columns in files, directories, nested directories, and files. 
 
 The following table lists the implicit columns available and their descriptions:  

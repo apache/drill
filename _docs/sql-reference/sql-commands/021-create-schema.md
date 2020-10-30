@@ -25,7 +25,7 @@ As described in [Specifying the Schema as Table Function Parameter]({{site.baseu
 Please post your experience and suggestions to the "[user](user@drill.apache.org)" mailing list.
 
 
-##Syntax
+## Syntax
 
 The CREATE OR REPLACE SCHEMA command supports the following syntax:
 
@@ -35,7 +35,7 @@ The CREATE OR REPLACE SCHEMA command supports the following syntax:
 	[FOR TABLE `table_name` | PATH 'file:///schema_file_path/schema_file_name'] 
 	[PROPERTIES ('key1'='value1', 'key2'='value2', ...)]   
 
-##Parameters
+## Parameters
 
 *OR REPLACE*  
 Existing schema is dropped and replaced with the new schema. Prevents malicious deletion of any file. Only supported when using FOR TABLE. Not supported when using PATH. Instead, you must manually delete any schema file created in a custom PATH location.  
@@ -151,7 +151,7 @@ Setting the default for the non-nullable column “id” to -1 using the keyword
 
 When you query the text_table, all blank values in the “id” column return a value of -1.  
 
-###Storing Properties 
+### Storing Properties 
 The defined schema and configured properties are stored and reflected in the schema file, `.drill.schema`, which you can see when you run DESCRIBE SCHEMA FOR TABLE. 
 
 	describe schema for table dfs.tmp.`text_table`;
@@ -475,7 +475,7 @@ To use schema provisioning, you must first enable it with the `store.table.use_s
 ## Examples
 Examples throughout this topic use the files and directories described in the following section, Directory and File Setup.   
 
-###Directory and File Setup
+### Directory and File Setup
 
 	[root@doc23 text_table]# pwd
 	/tmp/text_table
@@ -673,7 +673,7 @@ You can easily drop the schema for a table using the ``DROP SCHEMA [IF EXISTS] F
 	|------|---------------------------------------|
 	
 
-##Troubleshooting 
+## Troubleshooting 
 
 **Schema defined as incorrect data type produces DATA_READ_ERROR**  
   

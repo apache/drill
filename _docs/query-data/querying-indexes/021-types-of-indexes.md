@@ -10,7 +10,7 @@ The following sections describe these indexes in more detail and show examples o
 
 {% include startnote.html %}Currently, Drill works with the types of indexes supported by MapR Database. The following sections demonstrate how Drill works with indexes in the MapR Database.{% include endnote.html %}  
 
-##Covering Index  
+## Covering Index  
 A covering index is an index that “covers” all the columns referenced in a query. Only the index is needed to process the query. Covering indexes avoid the overhead of fetching data from the primary table. A covering index can include indexed and non-indexed (included) columns. 
 
 For example, suppose an index is created and queried, as follows:  
@@ -19,7 +19,7 @@ For example, suppose an index is created and queried, as follows:
 
 Since columns a, b are present in the index, this is a covering index. The Drill planner generates a covering index plan (index-only plan) where all the columns are retrieved from the index after pushing down relevant filter conditions to the index scan.  
 
-###Covering Index Example  
+### Covering Index Example  
 
 This example uses an index, l_comp_1, created on a table named lineitem with indexed columns L_LINENUMBER and L_ORDERKEY and also includes columns L_LINESTATUS and L_QUANTITY.  
 
@@ -39,7 +39,7 @@ Running the EXPLAIN PLAN FOR command with the query shows that Drill created a q
 
 Reading the query plan, you can see that the plan includes an index scan, as indicated by `groupscan=[JsonTableGroupScan` and `indexName=l_comp_1`. Drill and the data source can process this query using only the index.  
 
-##Non-Covering Index
+## Non-Covering Index
 A non-covering index is an index that does not “cover” all the columns referenced in a query.  A non-covering index has indexed and/or non-indexed (included) columns that only partially cover the columns referenced in a query. A non-covering query plan includes an index scan and a join back to the primary table. In some scenarios, a full table scan is more cost efficient than an index scan and Drill will not create an index-based query plan.
 
 For example, suppose an index is created and queried, as follows:  
@@ -48,7 +48,7 @@ For example, suppose an index is created and queried, as follows:
 
 Since columns d, e are not present in the index, this is a non-covering index. For such indexes, the Drill planner generates a non-covering index plan where only the row ids are fetched from the index by pushing down the WHERE clause filters and the rest of the columns are fetched after a join-back to the primary table. The join-back is performed using the row ids.  
 
-###Non-Covering Index Example  
+### Non-Covering Index Example  
 This example uses an index, l_comp_1, created on a table named lineitem with indexed columns L_LINENUMBER and L_ORDERKEY and also included columns L_LINESTATUS and L_QUANTITY.  
 
 The following query references the L_RETURNFLAG, L_LINESTATUS, L_QUANTITY L_LINENUMBER, and L_ORDERKEY columns in the lineitem table:  
@@ -74,10 +74,10 @@ Reading the non-covering index plan, you can see that the plan includes an index
 
 If this query ran on a regular basis, you could remove the l_comp_1 index and create a new index that includes all columns referenced in the query, including the L_RETURNFLAG column, to improve query performance. However, running a query only once or a few times may not justify the overhead of removing the old index and creating a new index.  
 
-##Non-Hashed Indexes 
+## Non-Hashed Indexes 
 Non-hashed indexes support conditional queries with an ORDER BY clause. When processing ORDER BY queries, Drill does not have to perform sort operations on the data.  
 
-###Non-Hashed Index Plan Example  
+### Non-Hashed Index Plan Example  
 
 A non-hashed index, l_comp_1, was created on a table, lineitem with indexed columns L_LINENUMBER and L_ORDERKEY and included columns L_LINESTATUSand L_QUANTITY.  
 
@@ -92,12 +92,12 @@ Running the example query with the EXPLAIN PLAN FOR command shows that Drill pro
 
 Reading the query plan, you can see that Drill uses the non-hashed index plan, as indicated by `indexName=l_comp_1`. To process the query, the data source uses the index and Drill does not have to perform sort and merge operations on the data, as indicated by the absence of the Sort and SingleMergeExchange operations in the query plan. The data source sorted the data in the index when the index was created.  
 
-##Hashed Indexes
+## Hashed Indexes
 Hashed indexes support the same conditional queries as non-hashed indexes, but they do not have a guaranteed sort order. Hashed indexes enable the data source to evenly distribute new writes on an index across logical partitions to avoid hot spotting. Drill must perform a sort for ORDER BY queries that use hashed indexes. Sorting the data can increase the CPU costs and negatively impact performance.  
 
 If you notice performance issues with ORDER BY queries that use hashed indexes, review the query plans to see if the plans include sort and merge operations. If this is the case, create non-hashed indexes to support the queries and achieve the best performance.  
 
-###Hashed Index Plan Example
+### Hashed Index Plan Example
 A hashed index, l_hash_comp_1, was created with indexed columns L_LINENUMBER and L_ORDERKEY and included columns L_LINESTATUS and L_QUANTITY.  
 
 Running the example query with the EXPLAIN PLAN FOR command shows that Drill produces an index plan with sort and merge operations to process the query when using the hashed index, as follows:  
@@ -115,7 +115,7 @@ Running the example query with the EXPLAIN PLAN FOR command shows that Drill pro
 Reading the query plan, you can see that Drill uses the hashed index in the plan, as indicated by `indexName=l_hash_comp_1`. To process the query, the data source can use the index, but Drill must sort and merge the data, as indicated by the `Sort` and `SingleMergeExchange` operations in the query plan.
 Using the hashed index plan for this ORDER BY query requires additional processing and negatively impacts performance.  
 
-##Functional Index  
+## Functional Index  
 A functional index is an index created on functions or expressions instead of columns in a table. CAST functions are most commonly used in Drill views. For example, if the filter condition is 'WHERE CAST(zip_code as BIGINT) = 95120' and a functional index exists on CAST(zip_code as BIGINT), the query planner will leverage the index.  
 
 When issuing Drill queries through BI tools, you can include CAST functions in your queries to create [Drill views]({{site.baseurl}}/docs/create-view/). Including CAST functions provides the metadata needed to optimally process the queries. For more information about using the CAST function with Drill, see [Data Type Conversion]({{site.baseurl}}/docs/data-type-conversion/).  

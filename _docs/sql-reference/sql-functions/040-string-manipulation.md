@@ -312,11 +312,11 @@ Returns the location of the first occurrence of a substring of the input string,
     1 row selected (0.12 seconds)
 
 
-##REGEXP_MATCHES  
+## REGEXP_MATCHES  
 
 Matches a regexp pattern to a target string. Returns a boolean value: true if the value matches the regexp, false if the value does not match the regexp.  
 
-###REGEXP_MATCHES Syntax 
+### REGEXP_MATCHES Syntax 
 
 REGEXP_MATCHES(string_expression, pattern)
 
@@ -354,7 +354,7 @@ Shows case-sensitivity:
 
 
 
-##REGEXP_REPLACE
+## REGEXP_REPLACE
 
 Substitutes new text for substrings that match [Java regular expression patterns](http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html).
 

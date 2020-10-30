@@ -8,7 +8,7 @@ Drill-on-YARN provides a web UI as described earlier. By default, the UI is open
 You can secure the UI using either a simple predefined user name and password, or using
 Drill’s user authentication.  
 
-##Simple Security
+## Simple Security
 Simple security is enabled using three configuration settings:  
 
        drill.yarn.http: {
@@ -20,7 +20,7 @@ Simple security is enabled using three configuration settings:
 Restart the Drill-on-YARN Application Master. When you visit the web UI, a login page should
 appear, prompting you to log in. Only the above user and password are valid. Simple security is not highly secure; but it is useful for testing, prototypes and the like.  
 
-##Using Drill’s User Authentication
+## Using Drill’s User Authentication
 Drill-on-YARN can use Drill’s authentication system. In this mode, the user name and password
 must match that of the user that started the Drill-on-YARN application. To enable Drill security:  
 

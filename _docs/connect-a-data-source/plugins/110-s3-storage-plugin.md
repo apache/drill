@@ -60,7 +60,7 @@ If you use IAM roles/instance profiles, to access data in s3, use the following 
 		</property>
        </configuration>    
 
-##Configuring the S3 Storage Plugin
+## Configuring the S3 Storage Plugin
 
 The **Storage** page in the Drill Web UI provides an S3 storage plugin that you configure to connect Drill to the S3 distributed file system registered in `core-site.xml`. If you did not define your AWS credentials in the `core-site.xml` file, you can define them in the storage plugin configuration. You can define the credentials directly in the S3 storage plugin configuration, or you can configure the S3 storage plugin to use an external provider.
 
@@ -97,7 +97,7 @@ The following example shows an S3 storage plugin configuration with the S3 bucke
 	    ...
 	  }  
 
-###Adding Credentials Directly to the S3 Plugin  
+### Adding Credentials Directly to the S3 Plugin  
 You can add your AWS credentials directly to the S3 configuration, though this method is the least secure, but sufficient for use on a single machine, such as a laptop. Include the S3 bucket name, the AWS access keys, and the S3 endpoint in the configuration. 
 
 Optionally, for subsequent connections, if you want Drill to connect using different credentials, you can include the `fs.s3a.impl.disable.cache` property in the  configuration. See [Reconnecting to an S3 Bucket Using Different Credentials]({{site.baseurl}}/docs/s3-storage-plugin/#reconnecting-to-an-s3-bucket-using-different-credentials) for more information.
@@ -117,7 +117,7 @@ The following example shows an S3 storage plugin configuration with the S3 bucke
 	"workspaces": {...
 		},  
 
-###Reconnecting to an S3 Bucket Using Different Credentials 
+### Reconnecting to an S3 Bucket Using Different Credentials 
 Whether you store credentials in the S3 storage plugin configuration directly or in an external provider, you can reconnect to an existing S3 bucket using different credentials when you include the `fs.s3a.impl.disable.cache` property in the S3 storage plugin configuration. The `fs.s3a.impl.disable.cache` property disables the S3 file system cache when set to 'true'. If `fs.s3a.impl.disable.cache` is set to 'false' when Drill reconnects, Drill uses the previous credentials to connect. You must restart Drill after you enable the `fs.s3a.impl.disable.cache` property for the property to take effect.
 
 The following example S3 storage plugin configuration includes the fs.s3a.impl.disable.cache property:

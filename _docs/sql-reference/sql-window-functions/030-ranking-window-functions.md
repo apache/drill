@@ -84,7 +84,7 @@ The following query uses the DENSE_RANK() window function to rank the employee s
        |------------|-----------------|--------|------------|
        10 rows selected (0.198 seconds)  
 
-###NTILE()  
+### NTILE()  
 
 The following example uses the NTILE window function to divide the Q1 sales into five groups and list the sales in ascending order.
 

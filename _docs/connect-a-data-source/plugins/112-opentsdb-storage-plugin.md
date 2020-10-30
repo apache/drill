@@ -10,7 +10,7 @@ When you install Drill, a preconfigured OpenTSDB storage plugin is available on 
 
 The following sections describe how to enable the OpenTSDB storage plugin in Drill and the types of queries Drill currently supports on OpenTSDB. You can refer to the [README](https://github.com/apache/drill/blob/master/contrib/storage-opentsdb/README.md) and [OpenTSDB](http://opentsdb.net/) for additional information.  
 
-##Enabling the OpenTSDB Storage Plugin  
+## Enabling the OpenTSDB Storage Plugin  
 
 To enable the OpenTSDB storage plugin, enter the following URL in the address bar of your browser to access the Storage page in the Drill Web UI:  
 
@@ -27,7 +27,7 @@ In the Disabled Storage Plugins section, click **Enable** next to OpenTSDB. Open
 The URL, http://localhost:4242, works for TSD running locally. If you have TSD running on another machine, change the URL to reflect that. Verify that “enabled” is set to true.
 Click **Update** if you edit the configuration and then click **Back** to return to the Storage page.  
 
-##Querying OpenTSDB  
+## Querying OpenTSDB  
 When querying OpenTSDB, you must include the required request parameters in the FROM clause of queries, using commas to separate the parameters, as shown in the following example: 
 
        SELECT * FROM openTSDB.`(metric=warp.speed.test, start=47y-ago, aggregator=sum)`;  
@@ -36,7 +36,7 @@ When querying OpenTSDB, you must include the required request parameters in the 
 In addition to the required request parameters, you can also include some optional request parameters in queries.  
 
 
-###Required Request Parameters  
+### Required Request Parameters  
 
 The following table lists the required request parameters:  
 
@@ -46,7 +46,7 @@ The following table lists the required request parameters:
 | start      | string, integer | The start time for the query; a relative or   absolute timestamp.  |
 | aggregator | string          | The name of an aggregation function to use.                        |  
 
-###Optional Request Parameters  
+### Optional Request Parameters  
 
 The following table lists optional request parameters:  
   
@@ -55,15 +55,15 @@ The following table lists optional request parameters:
 | downsample | string          | An optional downsampling function to reduce the   amount of data returned.                                                                                                                                                                                           |
 | end        | string, integer | An end time for the query. If not supplied, the   TSD assumes the local system time on the server. If this parameter is not   specified, null is sent to the database in this field, but in this case the   database assumes the local system time on the server.    |  
 
-###Supported Aggregators  
+### Supported Aggregators  
 
 For a list of supported aggegrators, see [Aggregators](http://opentsdb.net/docs/build/html/user_guide/query/aggregators.html).    
 
-###Supported Dates and Times  
+### Supported Dates and Times  
 
 For a list of supported dates and times, see [Dates](http://opentsdb.net/docs/build/html/user_guide/query/dates.html).  
 
-##Examples of Queries that Drill Supports on OpenTSDB 
+## Examples of Queries that Drill Supports on OpenTSDB 
 
 Drill currently supports the following types of queries on the OpenTSDB:
 

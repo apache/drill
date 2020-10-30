@@ -90,7 +90,7 @@ Additionally, if the available free memory is less than the allocation, the foll
        [WARN] Drillbit will start up, but can potentially crash due to oversubscribing of system memory.  
   
 
-##Modifying Memory Allocated to Queries  
+## Modifying Memory Allocated to Queries  
 
 You can configure the amount of memory that Drill allocates to each query as a hard limit or a percentage of the total direct memory. The `planner.memory.max_query_memory_per_node` and `planner.memory.percent_per_query` options set the amount of memory that Drill can allocate to a query on a node. Both options are enabled by default. Of these two options, Drill picks the setting that provides the most memory. For more information about these options, see [Sort-Based and Hash-Based Memory Constrained Operators](https://drill.apache.org/docs/sort-based-and-hash-based-memory-constrained-operators/).  
 
@@ -109,7 +109,7 @@ Use the ALTER SYSTEM SET command to change the settings, as shown:
 
        ALTER SYSTEM SET `drill.exec.memory.operator.output_batch_size` = <value>;  
 
-##Bounds Checking 
+## Bounds Checking 
 
 If performance is an issue, add -Dbounds=false, as shown in the following example:
 
