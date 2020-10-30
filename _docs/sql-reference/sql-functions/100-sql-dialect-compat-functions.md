@@ -1,6 +1,6 @@
 ---
 title: "SQL dialect compatibility functions"
-date: 2020-08-10
+date: 2020-10-30
 parent: "SQL Functions"
 ---
 
@@ -9,25 +9,24 @@ Drill supports the following functions which are not part of standard SQL but ar
 
 ## Table of SQL dialect compatibility functions
 
-| Function                                | Argument type     | Return Type                      | Description                                                        |
-|-----------------------------------------|-------------------|----------------------------------|--------------------------------------------------------------------|
-| CHR( index )                            | INT               | CHAR                             | Returns the ASCII character at a given index                       |
-| IF( condition, then_value, else_value ) | BOOLEAN, any, any | Least restrictive of input types | Returns then_value when condition is true otherwise else_value     |
-| LEAST and GREATEST                      | any               | Least restrictive of input types | Returns the least (resp. greatest) value from amongst the inputs   |
-| LEFT and RIGHT                          | VARCHAR, INT      | VARCHAR                          | Returns the leading (resp. trailing) substring of the given length |
-| NVL( expr1, expr2 )                     | any               | Least restrictive of input types | Returns the first non-null value from amongst the inputs           |
-| SPACE( length )                         | INT               | VARCHAR                          | Returns a string of spaces of the given length                     |
-
-| TRANSLATE( string, search_chars, replacement_chars ) | VARCHAR           | VARCHAR                          | Replaces a set of characters in a string with the corresponding members of another set |
+| Function           | Argument types    | Return Type                      | Description                                                                            |
+|--------------------|-------------------|----------------------------------|----------------------------------------------------------------------------------------|
+| CHR                | INT               | CHAR                             | Returns the ASCII character at the given code point.                                   |
+| IF                 | BOOLEAN, any, any | Least restrictive of input types | Returns one of two given expressions based on a boolean expresssion.
+| LEAST and GREATEST | any               | Least restrictive of input types | Returns the least (resp. greatest) value from amongst the inputs                       |
+| LEFT and RIGHT     | VARCHAR, INT      | VARCHAR                          | Returns the leading (resp. trailing) substring of the given length                     |
+| NVL                | any               | Least restrictive of input types | Returns the first non-null value from amongst the inputs                               |
+| SPACE              | INT               | VARCHAR                          | Returns a string of spaces of the given length                                         |
+| TRANSLATE          | VARCHAR           | VARCHAR                          | Replaces a set of characters in a string with the corresponding members of another set |
 
 
 ## CHR
 
-Returns the ASCII character at _index_.
+Returns the ASCII character at the code point `code`.
 
 ### CHR Syntax
 
-    CHR( index )
+    CHR( code )
 
 ### CHR Examples
 
@@ -49,7 +48,7 @@ Returns `then_value` if `condition` is true otherwise `else_value` thereby offer
 
 ### IF Usage Notes
 
-1. The word "IF" is amongst those reserved by Drill meaning that it is necessary to enclose invocations of this function in backticks: ```IF`( ... )``.
+1. The word "IF" is amongst those reserved by Drill meaning that it is necessary to enclose invocations of this function in backticks: `` `IF`( ... ) ``.
 
 ### IF Examples
 
@@ -107,9 +106,9 @@ Returns the substring of the input string which starts (resp. ends) at the begin
 
 ### LEFT and RIGHT Usage Notes
 
-1. If _expr_ is null then null is returned.
-2. If _length_ = 0 then the empty string is returned.
-3. If _length_ is greater than the length of _expr_ then _expr_ is returned.  
+1. If `expr` is null then null is returned.
+2. If `length` = 0 then the empty string is returned.
+3. If `length` is greater than the length of `expr` then `expr` is returned.  
 
 ### LEFT and RIGHT Examples
 
@@ -165,7 +164,7 @@ Returns a string of spaces of the given length.
 
 ### SPACE Usage Notes
 
-1. Returns the empty string when _length_ <= 0.
+1. Returns the empty string when `length` <= 0.
 
 ### SPACE Examples
 
@@ -187,7 +186,7 @@ Returns the input string with all occurrences of a specified set of characters r
 
 ### TRANSLATE Usage Notes
 
-The characters in _search_chars_ and _replacement_chars_ are not delimited and are mapped to one another by their position.  When _replacement_chars_ contains more characters than _search_chars_ then the extra characters are ignored.  When _replacement_chars_ contains fewer characters then the extra characters in _search_chars_ are replaced with the empty string.
+The characters in `search_chars` and `replacement_chars` are not delimited and are mapped to one another by their position.  When `replacement_chars` contains more characters than `search_chars` then the extra characters are ignored.  When `replacement_chars` contains fewer characters then the extra characters in `search_chars` are replaced with the empty string.
 
 ### TRANSLATE Examples
 

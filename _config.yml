@@ -11,10 +11,10 @@ description: > # this means to ignore newlines until "baseurl:"
 
 baseurl: "/drill" # Base URL when hosted on GitHub Pages (drill repository under apache account)
 noindex: 1
-markdown: redcarpet
+#markdown: redcarpet
 
-redcarpet:
-  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data"]
+#redcarpet:
+#  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data"]
 
 collections:
   docs:
@@ -31,5 +31,5 @@ defaults:
 sass:
   style: :compressed
 
-gems:
+plugins:
   - jekyll-redirect-from
