@@ -1,6 +1,6 @@
 ---
 title: "Planning and Execution Options"
-date: 2020-08-08
+date: 2020-10-30
 parent: "Configuration Options"
 ---
 You can set Drill query planning and execution options per cluster, at the
@@ -91,7 +91,7 @@ Issuing the query after setting the `web.display_format.timestamp` option to the
  
 	2008-02-23 12:23:34.00  
 
-##Setting an Auto Limit on the Number of Rows Returned for Result Sets  
+## Setting an Auto Limit on the Number of Rows Returned for Result Sets  
 The `exec.query.max_rows` option, introduced in Drill 1.16, automatically limits the number of rows that Drill returns from a result set. When you configure a limit, the limit is automatically applied by Drill when you run a query. You do not need to include the LIMIT clause. Configuring a limit on results reduces the amount of processing and streaming work for the web server when using the Drill WEb UI. 
 
 The default setting for `exec.query.max_rows` is 0, which indicates no limit; queries will return all results. An administrator can modify the exec.query.max_rows setting at the system level (setting persists across restarts) from the Options page in the Drill Web UI or using the ALTER SYSTEM command. Alternatively, the option can be set at the session level (valid for a user session only) using the SET command or from SQLLine.  
@@ -112,7 +112,8 @@ To set the `exec.query.max_rows` option such that it persists across users, chan
 The `exec.query.max_rows` option overrides row limit settings configured in the Drill Web UI and `drill-override.conf` file, which are described below.   
 ***   
 
-### Drill Web UI Row Limit Settings  
+### Drill Web UI row limit settings  
+
 In addition to the `exec.query.max_rows` option, the Query page in the Drill Web UI provides a field where you can enter a limit on the number of rows returned from a result set when you run a query.  
   
 **Note:** You can also configure the row limit for a REST client through the [autoLimit parameter in the REST API]({{site.baseurl}}/docs/rest-api-introduction/#post-query-json) or a JDBC client through the `setMaxRows` method in the [Java API]({{site.baseurl}}/docs/using-the-jdbc-driver/#using-the-drill-driver-class-name).   
@@ -124,7 +125,8 @@ Clicking the Query Profile tab at the top of the results page displays the query
 ![](https://i.imgur.com/L4Yx666.png)  
 Note that the `exec.query.max_rows` setting overrides the setting in the Web UI. For example, if the `exec.query.max_rows` option is set to 10 and you limit results to 20 on the Query page in the Web UI, Drill only returns 10 rows from the result set.  
 
-###Drill-override.conf Row Limit Settings  
+### Drill-override.conf row limit settings  
+
 The `drill-override.conf` file contains the same row limit setting as the Drill Web UI; however, the setting in the `drill-override.conf` file overrides the limit set in the Drill Web UI. Note that the `exec.query.max_rows` option overrides the setting in `drill-override.conf` and the Drill Web UI. You must restart the Drillbit after you modify `drill-override.conf`. 
 
 Add the following configuration to `drill-override.conf`, changing the row limit setting and rows per page setting, as needed:  

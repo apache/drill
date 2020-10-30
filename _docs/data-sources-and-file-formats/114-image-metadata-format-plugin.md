@@ -1,7 +1,7 @@
 ---
 title: "Image Metadata Format Plugin"
 date: 2020-08-08
-parent: "Connect a Data Source"
+parent: "Data Sources and File Formats"
 ---
 
 **Note:** You can see the source of this content at [image-metadata-format-plugin](https://gist.github.com/nagix/6cac019b7bec698a1b8a234a5268d09d#file-image-metadata-format-plugin-md). 

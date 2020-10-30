@@ -1,7 +1,7 @@
 ---
 title: "LTSV Format Plugin"
 date: 2020-08-08
-parent: "Connect a Data Source"
+parent: "Data Sources and File Formats"
 ---
 
 Starting in Drill 1.16, Drill provides a LTSV (Labeled Tab-separated Values) format plugin, which enables Drill to query files with the .LTSV file extension. LTSV is a text file format. Each line in a LTSV file has the following structure:  

@@ -1,7 +1,7 @@
 ---
 title: "Syslog Format Plugin"
 date: 2019-04-10
-parent: "Connect a Data Source"
+parent: "Data Sources and File Formats"
 ---
 
 Starting in Drill 1.16, Drill provides a syslog format plugin, which enables Drill to query syslog formatted data as specified in RFC-5424, as shown:

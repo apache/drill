@@ -1,7 +1,7 @@
 ---
 title: "Logfile Plugin"
 date: 2018-11-14
-parent: "Connect a Data Source"
+parent: "Data Sources and File Formats"
 ---
 
 # Drill Regex/Logfile Plugin

@@ -1,7 +1,7 @@
 ---
 title: "HTTPD Format Plugin"
 date: 2017-03-31 21:49:40 UTC
-parent: "Connect a Data Source"
+parent: "Data Sources and File Formats"
 ---
 
 As of version 1.9, Drill can natively ingest and query web server logs. To configure Drill to read server logs, add the httpd format configuration to the formats section of a dfs storage plugin configuration, as shown below:   
