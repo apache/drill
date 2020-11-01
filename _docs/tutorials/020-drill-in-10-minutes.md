@@ -98,13 +98,13 @@ to Drill, using the [cp (classpath) storage plugin]({{site.baseurl}}/docs/storag
     
 	SELECT * FROM cp.`employee.json` LIMIT 3;
 	
-	    +--------------+------------------+-------------+------------+--------------+---------------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+	    |--------------|------------------|-------------|------------|--------------|---------------------|-----------|----------------|-------------|------------------------|----------|----------------|------------------|-----------------|---------|--------------------|
 	    | employee_id  |    full_name     | first_name  | last_name  | position_id  |   position_title    | store_id  | department_id  | birth_date  |       hire_date        |  salary  | supervisor_id  | education_level  | marital_status  | gender  |  management_role   |
-	    +--------------+------------------+-------------+------------+--------------+---------------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+	    |--------------|------------------|-------------|------------|--------------|---------------------|-----------|----------------|-------------|------------------------|----------|----------------|------------------|-----------------|---------|--------------------|
 	    | 1            | Sheri Nowmer     | Sheri       | Nowmer     | 1            | President           | 0         | 1              | 1961-08-26  | 1994-12-01 00:00:00.0  | 80000.0  | 0              | Graduate Degree  | S               | F       | Senior Management  |
 	    | 2            | Derrick Whelply  | Derrick     | Whelply    | 2            | VP Country Manager  | 0         | 1              | 1915-07-03  | 1994-12-01 00:00:00.0  | 40000.0  | 1              | Graduate Degree  | M               | M       | Senior Management  |
 	    | 4            | Michael Spence   | Michael     | Spence     | 2            | VP Country Manager  | 0         | 1              | 1969-06-20  | 1998-01-01 00:00:00.0  | 40000.0  | 1              | Graduate Degree  | S               | M       | Senior Management  |
-	    +--------------+------------------+-------------+------------+--------------+---------------------+-----------+----------------+-------------+------------------------+----------+----------------+------------------+-----------------+---------+--------------------+
+	    |--------------|------------------|-------------|------------|--------------|---------------------|-----------|----------------|-------------|------------------------|----------|----------------|------------------|-----------------|---------|--------------------|
 	   
 
 ### Querying Parquet Files
@@ -124,15 +124,15 @@ To view the data in the `region.parquet` file, use the actual path to your Drill
 
 	SELECT * FROM dfs.`Users/drilluser/apache-drill/sample-data/region.parquet`;
 
-    +--------------+--------------+-----------------------+
+    |--------------|--------------|-----------------------|
     | R_REGIONKEY  |    R_NAME    |       R_COMMENT       |
-    +--------------+--------------+-----------------------+
+    |--------------|--------------|-----------------------|
     | 0            | AFRICA       | lar deposits. blithe  |
     | 1            | AMERICA      | hs use ironic, even   |
     | 2            | ASIA         | ges. thinly even pin  |
     | 3            | EUROPE       | ly final courts cajo  |
     | 4            | MIDDLE EAST  | uickly special accou  |
-    +--------------+--------------+-----------------------+
+    |--------------|--------------|-----------------------|
     
 #### Nation File
 
@@ -142,35 +142,35 @@ systems. Use the actual path to your Drill installation to construct this query:
 	//SELECT * FROM dfs.`<path-to-installation>/apache-drill-<version>/sample-data/nation.parquet`;``
 
     SELECT * FROM dfs.`Users/drilluser/apache-drill/sample-data/nation.parquet`;
-    +--------------+-----------------+--------------+-----------------------+
-    | N_NATIONKEY  |     N_NAME      | N_REGIONKEY  |       N_COMMENT       |
-    +--------------+-----------------+--------------+-----------------------+
-    | 0            | ALGERIA         | 0            |  haggle. carefully f  |
-    | 1            | ARGENTINA       | 1            | al foxes promise sly  |
-    | 2            | BRAZIL          | 1            | y alongside of the p  |
-    | 3            | CANADA          | 1            | eas hang ironic, sil  |
-    | 4            | EGYPT           | 4            | y above the carefull  |
-    | 5            | ETHIOPIA        | 0            | ven packages wake qu  |
-    | 6            | FRANCE          | 3            | refully final reques  |
-    | 7            | GERMANY         | 3            | l platelets. regular  |
-    | 8            | INDIA           | 2            | ss excuses cajole sl  |
-    | 9            | INDONESIA       | 2            |  slyly express asymp  |
-    | 10           | IRAN            | 4            | efully alongside of   |
-    | 11           | IRAQ            | 4            | nic deposits boost a  |
-    | 12           | JAPAN           | 2            | ously. final, expres  |
-    | 13           | JORDAN          | 4            | ic deposits are blit  |
-    | 14           | KENYA           | 0            |  pending excuses hag  |
-    | 15           | MOROCCO         | 0            | rns. blithely bold c  |
-    | 16           | MOZAMBIQUE      | 0            | s. ironic, unusual a  |
-    | 17           | PERU            | 1            | platelets. blithely   |
-    | 18           | CHINA           | 2            | c dependencies. furi  |
-    | 19           | ROMANIA         | 3            | ular asymptotes are   |
-    | 20           | SAUDI ARABIA    | 4            | ts. silent requests   |
-    | 21           | VIETNAM         | 2            | hely enticingly expr  |
-    | 22           | RUSSIA          | 3            |  requests against th  |
-    | 23           | UNITED KINGDOM  | 3            | eans boost carefully  |
-    | 24           | UNITED STATES   | 1            | y final packages. sl  |
-    +--------------+-----------------+--------------+-----------------------+
+    |-------------|----------------|-------------|----------------------|
+    | N_NATIONKEY | N_NAME         | N_REGIONKEY | N_COMMENT            |
+    |-------------|----------------|-------------|----------------------|
+    | 0           | ALGERIA        | 0           | haggle. carefully f  |
+    | 1           | ARGENTINA      | 1           | al foxes promise sly |
+    | 2           | BRAZIL         | 1           | y alongside of the p |
+    | 3           | CANADA         | 1           | eas hang ironic, sil |
+    | 4           | EGYPT          | 4           | y above the carefull |
+    | 5           | ETHIOPIA       | 0           | ven packages wake qu |
+    | 6           | FRANCE         | 3           | refully final reques |
+    | 7           | GERMANY        | 3           | l platelets. regular |
+    | 8           | INDIA          | 2           | ss excuses cajole sl |
+    | 9           | INDONESIA      | 2           | slyly express asymp  |
+    | 10          | IRAN           | 4           | efully alongside of  |
+    | 11          | IRAQ           | 4           | nic deposits boost a |
+    | 12          | JAPAN          | 2           | ously. final, expres |
+    | 13          | JORDAN         | 4           | ic deposits are blit |
+    | 14          | KENYA          | 0           | pending excuses hag  |
+    | 15          | MOROCCO        | 0           | rns. blithely bold c |
+    | 16          | MOZAMBIQUE     | 0           | s. ironic, unusual a |
+    | 17          | PERU           | 1           | platelets. blithely  |
+    | 18          | CHINA          | 2           | c dependencies. furi |
+    | 19          | ROMANIA        | 3           | ular asymptotes are  |
+    | 20          | SAUDI ARABIA   | 4           | ts. silent requests  |
+    | 21          | VIETNAM        | 2           | hely enticingly expr |
+    | 22          | RUSSIA         | 3           | requests against th  |
+    | 23          | UNITED KINGDOM | 3           | eans boost carefully |
+    | 24          | UNITED STATES  | 1           | y final packages. sl |
+    |-------------|----------------|-------------|----------------------|
    
 
 ## Summary

@@ -1,4 +1,4 @@
----
+--
 title: "Running Drill on Docker"
 date: 2020-09-05
 parent: "Installing Drill in Embedded Mode"
@@ -20,15 +20,16 @@ You can start and run a Docker container in detached mode or foreground mode. [D
 Whether you run the Docker container in detached or foreground mode, you start Drill in a container by issuing the docker `run` command with some options, as described in the following table: 
 
  
-
-| Option                         | Description                                                                                                                                                                                                                                                                                                              |
-|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `-i`                           | Keeps STDIN open. STDIN is standard input, an   input stream where data is sent to and read by a program.                                                                                                                                                                                                                |
-| `-t`                           | Allocates a pseudo-tty (a shell).                                                                                                                                                                                                                                                                                        |
-| `--name`                       | Identifies the container. If you do not use this   option to identify a name for the container, the daemon generates a container ID for you. When you use this option to identify a container name,   you can use the name to reference the container within a Docker network in   foreground or detached mode.          |
-| `-p`                           | The TCP port for the Drill Web UI. If needed, you can   change this port using the `drill.exec.http.port` [start-up option]({{site.baseurl}}/docs/start-up-options/).                                                                                                                                                    |
-| `apache/drill:<version>`       | The Docker Hub repository and tag. In the following   example, `apache/drill` is   the repository and `1.17.0`   is the tag:     `apache/drill:1.17.0`.     The tag correlates with the version of Drill. When a new version of Drill   is available, you can use the new version as the tag.                            |
-| `bin/bash`                     | Connects to the Drill container using a bash shell.                                                                                                                                                                                                                                                                      |  
+|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Option                   | Description                                                                                                                                                                                                                                                                                                     |
+|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `-i`                     | Keeps STDIN open. STDIN is standard input, an input stream where data is sent to and read by a program.                                                                                                                                                                                                         |
+| `-t`                     | Allocates a pseudo-tty (a shell).                                                                                                                                                                                                                                                                               |
+| `--name`                 | Identifies the container. If you do not use this   option to identify a name for the container, the daemon generates a container ID for you. When you use this option to identify a container name,   you can use the name to reference the container within a Docker network in   foreground or detached mode. |
+| `-p`                     | The TCP port for the Drill Web UI. If needed, you can   change this port using the `drill.exec.http.port` [start-up option]({{site.baseurl}}/docs/start-up-options/).                                                                                                                                           |
+| `apache/drill:<version>` | The Docker Hub repository and tag. In the following   example, `apache/drill` is   the repository and `1.17.0`   is the tag:     `apache/drill:1.17.0`.     The tag correlates with the version of Drill. When a new version of Drill   is available, you can use the new version as the tag.                   |
+| `bin/bash`               | Connects to the Drill container using a bash shell.                                                                                                                                                                                                                                                             |
+|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 ### Running the Drill Docker Container in Foreground Mode  
 
@@ -75,11 +76,11 @@ At the prompt, you can enter the following simple query to verify that Drill is 
 By default, you can only query files that are accessible within the container. For example, you can query the sample data packaged with Drill, as shown:  
 
        SELECT first_name, last_name FROM cp.`employee.json` LIMIT 1;
-       +-------------+------------+
-       | first_name  | last_name  |
-       +-------------+------------+
-       | Sheri       | Nowmer     |
-       +-------------+------------+
+       |------------|-----------|
+       | first_name | last_name |
+       |------------|-----------|
+       | Sheri      | Nowmer    |
+       |------------|-----------|
        1 row selected (0.256 seconds)  
 
 To query files outside of the container, you can configure [Docker volumes](https://docs.docker.com/storage/volumes/#start-a-service-with-volumes).  
