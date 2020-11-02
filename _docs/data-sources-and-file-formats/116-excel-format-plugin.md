@@ -10,6 +10,8 @@ This plugin enables Drill to read Microsoft Excel files.  This format is best us
 
 The plugin will automatically evaluate cells which contain formulae. 
 
+<!-- TODO: are all versions of Excel files supported? -->
+
 ## Configuring the Excel Format Plugin
 
 This plugin has several configuration variables which must be set in order to read Excel files effectively. Since Excel files often contain other elements besides data, you can use the configuration variables to define a region within your spreadsheet in which Drill should extract data. This is potentially useful if your spreadsheet contains a lot of formatting or other complications. 
@@ -82,10 +84,8 @@ The fields are:
 
 ### Known Limitations
 
-At present, Drill requires that all columns be of the same data type. If they are not, Drill will throw an exception upon trying to read a column of mixed data type. If you are
- trying to query data with heterogenoeus columns, it will be necessary to set `allTextMode` to `true`. 
+At present, Drill requires that all columns be of the same data type. If they are not, Drill will throw an exception upon trying to read a column of mixed data type. If you are trying to query data with heterogenoeus columns, it will be necessary to set `allTextMode` to true. 
 
-An additional limitation is that Drill infers the column data type from the first row of data. If a column is `null` in the first row, Drill will default to a datatype of
- `VARCHAR`. However if in fact the column is `NUMERIC` this will cause errors. 
+An additional limitation is that Drill infers the column data type from the first row of data. If a column is null in the first row, Drill will default to a datatype of VARCHAR. However if in fact the column is NUMERIC this will cause errors. 
  
  Drill ignores blank rows.
