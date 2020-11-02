@@ -6,7 +6,7 @@ parent: "Data Sources and File Formats"
 
 **Introduced in release:** 1.17.
 
-The ESRI Shapefile format plugin enables Drill to query ESRI's shapefiles.  You can read about the shapefile format [here](https://en.wikipedia.org/wiki/Shapefile).  
+The ESRI Shapefile format plugin enables Drill to query geospatial data contained in ESRI shapefiles.  You can read about the shapefile format [here](https://en.wikipedia.org/wiki/Shapefile).  
 
 ## Configuring the ESRI Shapefile Format Plugin
 
