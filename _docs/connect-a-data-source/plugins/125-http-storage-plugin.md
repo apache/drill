@@ -14,18 +14,20 @@ The HTTP plugin is new in Drill 1.18 and is an Alpha feature. It works well, and
 
 To configure the plugin, create a new storage plugin and add the following configuration options which apply to _all_ of the connections defined in this plugin:
 
-    {
-      "type": "http",
-      "cacheResults": true,
-      "connections": {},
-      "timeout": 0,
-      "proxyHost": null,
-      "proxyPort": 0,
-      "proxyType": null,
-      "proxyUsername": null,
-      "proxyPassword": null,
-      "enabled": true
-    }
+```json
+{
+  "type": "http",
+  "cacheResults": true,
+  "connections": {},
+  "timeout": 0,
+  "proxyHost": null,
+  "proxyPort": 0,
+  "proxyType": null,
+  "proxyUsername": null,
+  "proxyPassword": null,
+  "enabled": true
+}
+```
 
 ### Configuration Options
 

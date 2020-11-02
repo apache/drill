@@ -262,7 +262,7 @@
             ],
             "children": [],
             "next_title": "SQL dialect compatibility functions",
-            "next_url": "/docs/100-sql-dialect-compat-functions/",
+            "next_url": "/docs/070-sql-dialect-compat-functions/",
             "parent": "SQL Functions",
             "previous_title": "About SQL Function Examples",
             "previous_url": "/docs/005-about-sql-function-examples/",
@@ -996,11 +996,11 @@
                 }
             ],
             "children": [],
-            "next_title": "Parquet Filter Pushdown",
-            "next_url": "/docs/026-parquet-filter-pushdown/",
+            "next_title": "Optimizing Parquet Metadata Reading",
+            "next_url": "/docs/025-optimizing-parquet-reading/",
             "parent": "Performance Tuning",
-            "previous_title": "Choosing a Storage Format",
-            "previous_url": "/docs/030-choosing-a-storage-format/",
+            "previous_title": "Monitoring Metrics",
+            "previous_url": "/docs/070-monitoring-metrics/",
             "relative_path": "_docs/performance-tuning/024-aynchronous-parquet-reader.md",
             "title": "Asynchronous Parquet Reader",
             "url": "/docs/024-aynchronous-parquet-reader/"
@@ -1177,11 +1177,11 @@
                 }
             ],
             "children": [],
-            "next_title": "Asynchronous Parquet Reader",
-            "next_url": "/docs/024-aynchronous-parquet-reader/",
+            "next_title": "Hive Metadata Caching",
+            "next_url": "/docs/027-hive-metadata-caching/",
             "parent": "Performance Tuning",
-            "previous_title": "Performance Tuning Introduction",
-            "previous_url": "/docs/010-performance-tuning-introduction/",
+            "previous_title": "How to Partition Data",
+            "previous_url": "/docs/030-using-partition-pruning/",
             "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md",
             "title": "Choosing a Storage Format",
             "url": "/docs/030-choosing-a-storage-format/"
@@ -5379,6 +5379,27 @@
             "title": "Functions for Handling Nulls",
             "url": "/docs/060-functions-for-handling-nulls/"
         },
+        "GIS functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Functions",
+                    "url": "/docs/050-sql-functions/"
+                },
+                {
+                    "title": "SQL Reference",
+                    "url": "/docs/080-sql-reference/"
+                }
+            ],
+            "children": [],
+            "next_title": "Time Series Analysis Functions",
+            "next_url": "/docs/090-time-series-analysis-functions/",
+            "parent": "SQL Functions",
+            "previous_title": "SQL dialect compatibility functions",
+            "previous_url": "/docs/070-sql-dialect-compat-functions/",
+            "relative_path": "_docs/sql-reference/sql-functions/080-gis-functions.md",
+            "title": "GIS functions",
+            "url": "/docs/080-gis-functions/"
+        },
         "GROUP BY Clause": {
             "breadcrumbs": [
                 {
@@ -5631,8 +5652,8 @@
             "next_title": "Query Plans and Tuning",
             "next_url": "/docs/040-query-plans-and-tuning/",
             "parent": "Performance Tuning",
-            "previous_title": "How to Partition Data",
-            "previous_url": "/docs/030-using-partition-pruning/",
+            "previous_title": "Choosing a Storage Format",
+            "previous_url": "/docs/030-choosing-a-storage-format/",
             "relative_path": "_docs/performance-tuning/027-hive-metadata-caching.md",
             "title": "Hive Metadata Caching",
             "url": "/docs/027-hive-metadata-caching/"
@@ -5683,8 +5704,8 @@
                 }
             ],
             "children": [],
-            "next_title": "Hive Metadata Caching",
-            "next_url": "/docs/027-hive-metadata-caching/",
+            "next_title": "Choosing a Storage Format",
+            "next_url": "/docs/030-choosing-a-storage-format/",
             "parent": "Partition Pruning",
             "previous_title": "Partition Pruning Introduction",
             "previous_url": "/docs/010-partition-pruning-introduction/",
@@ -7264,8 +7285,8 @@
                 }
             ],
             "children": [],
-            "next_title": "Optimizing Parquet Metadata Reading",
-            "next_url": "/docs/025-optimizing-parquet-reading/",
+            "next_title": "Asynchronous Parquet Reader",
+            "next_url": "/docs/024-aynchronous-parquet-reader/",
             "parent": "Performance Tuning",
             "previous_title": "Query Profile Column Descriptions",
             "previous_url": "/docs/010-query-profile-tables/",
@@ -7281,11 +7302,11 @@
                 }
             ],
             "children": [],
-            "next_title": "Query Data Introduction",
-            "next_url": "/docs/010-query-data-introduction/",
+            "next_title": "Querying HBase",
+            "next_url": "/docs/030-querying-hbase/",
             "parent": "Query Data",
-            "previous_title": "Querying Sequence Files",
-            "previous_url": "/docs/050-querying-sequence-files/",
+            "previous_title": "Verifying Index Use",
+            "previous_url": "/docs/060-verifying-index-use/",
             "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md",
             "title": "Monitoring and Canceling Queries in the Drill Web UI",
             "url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/"
@@ -8178,8 +8199,8 @@
             "next_title": "Log and Debug",
             "next_url": "/docs/073-log-and-debug/",
             "parent": "Performance Tuning",
-            "previous_title": "Monitoring Metrics",
-            "previous_url": "/docs/070-monitoring-metrics/",
+            "previous_title": "Asynchronous Parquet Reader",
+            "previous_url": "/docs/024-aynchronous-parquet-reader/",
             "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md",
             "title": "Optimizing Parquet Metadata Reading",
             "url": "/docs/025-optimizing-parquet-reading/"
@@ -8216,8 +8237,8 @@
             "next_title": "Drill Metastore",
             "next_url": "/docs/005-drill-metastore/",
             "parent": "Performance Tuning",
-            "previous_title": "Asynchronous Parquet Reader",
-            "previous_url": "/docs/024-aynchronous-parquet-reader/",
+            "previous_title": "Performance Tuning Introduction",
+            "previous_url": "/docs/010-performance-tuning-introduction/",
             "relative_path": "_docs/performance-tuning/026-parquet-filter-pushdown.md",
             "title": "Parquet Filter Pushdown",
             "url": "/docs/026-parquet-filter-pushdown/"
@@ -8280,8 +8301,8 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Hive Metadata Caching",
-                    "next_url": "/docs/027-hive-metadata-caching/",
+                    "next_title": "Choosing a Storage Format",
+                    "next_url": "/docs/030-choosing-a-storage-format/",
                     "parent": "Partition Pruning",
                     "previous_title": "Partition Pruning Introduction",
                     "previous_url": "/docs/010-partition-pruning-introduction/",
@@ -8348,8 +8369,8 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Choosing a Storage Format",
-                    "next_url": "/docs/030-choosing-a-storage-format/",
+                    "next_title": "Parquet Filter Pushdown",
+                    "next_url": "/docs/026-parquet-filter-pushdown/",
                     "parent": "Performance Tuning",
                     "previous_title": "Performance Tuning",
                     "previous_url": "/docs/072-performance-tuning/",
@@ -8365,45 +8386,11 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Asynchronous Parquet Reader",
-                    "next_url": "/docs/024-aynchronous-parquet-reader/",
-                    "parent": "Performance Tuning",
-                    "previous_title": "Performance Tuning Introduction",
-                    "previous_url": "/docs/010-performance-tuning-introduction/",
-                    "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md",
-                    "title": "Choosing a Storage Format",
-                    "url": "/docs/030-choosing-a-storage-format/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Performance Tuning",
-                            "url": "/docs/072-performance-tuning/"
-                        }
-                    ],
-                    "children": [],
-                    "next_title": "Parquet Filter Pushdown",
-                    "next_url": "/docs/026-parquet-filter-pushdown/",
-                    "parent": "Performance Tuning",
-                    "previous_title": "Choosing a Storage Format",
-                    "previous_url": "/docs/030-choosing-a-storage-format/",
-                    "relative_path": "_docs/performance-tuning/024-aynchronous-parquet-reader.md",
-                    "title": "Asynchronous Parquet Reader",
-                    "url": "/docs/024-aynchronous-parquet-reader/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Performance Tuning",
-                            "url": "/docs/072-performance-tuning/"
-                        }
-                    ],
-                    "children": [],
                     "next_title": "Drill Metastore",
                     "next_url": "/docs/005-drill-metastore/",
                     "parent": "Performance Tuning",
-                    "previous_title": "Asynchronous Parquet Reader",
-                    "previous_url": "/docs/024-aynchronous-parquet-reader/",
+                    "previous_title": "Performance Tuning Introduction",
+                    "previous_url": "/docs/010-performance-tuning-introduction/",
                     "relative_path": "_docs/performance-tuning/026-parquet-filter-pushdown.md",
                     "title": "Parquet Filter Pushdown",
                     "url": "/docs/026-parquet-filter-pushdown/"
@@ -8509,8 +8496,8 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Hive Metadata Caching",
-                            "next_url": "/docs/027-hive-metadata-caching/",
+                            "next_title": "Choosing a Storage Format",
+                            "next_url": "/docs/030-choosing-a-storage-format/",
                             "parent": "Partition Pruning",
                             "previous_title": "Partition Pruning Introduction",
                             "previous_url": "/docs/010-partition-pruning-introduction/",
@@ -8536,11 +8523,28 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Query Plans and Tuning",
-                    "next_url": "/docs/040-query-plans-and-tuning/",
+                    "next_title": "Hive Metadata Caching",
+                    "next_url": "/docs/027-hive-metadata-caching/",
                     "parent": "Performance Tuning",
                     "previous_title": "How to Partition Data",
                     "previous_url": "/docs/030-using-partition-pruning/",
+                    "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md",
+                    "title": "Choosing a Storage Format",
+                    "url": "/docs/030-choosing-a-storage-format/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning",
+                            "url": "/docs/072-performance-tuning/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Query Plans and Tuning",
+                    "next_url": "/docs/040-query-plans-and-tuning/",
+                    "parent": "Performance Tuning",
+                    "previous_title": "Choosing a Storage Format",
+                    "previous_url": "/docs/030-choosing-a-storage-format/",
                     "relative_path": "_docs/performance-tuning/027-hive-metadata-caching.md",
                     "title": "Hive Metadata Caching",
                     "url": "/docs/027-hive-metadata-caching/"
@@ -8859,8 +8863,8 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Optimizing Parquet Metadata Reading",
-                    "next_url": "/docs/025-optimizing-parquet-reading/",
+                    "next_title": "Asynchronous Parquet Reader",
+                    "next_url": "/docs/024-aynchronous-parquet-reader/",
                     "parent": "Performance Tuning",
                     "previous_title": "Query Profile Column Descriptions",
                     "previous_url": "/docs/010-query-profile-tables/",
@@ -8876,11 +8880,28 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Log and Debug",
-                    "next_url": "/docs/073-log-and-debug/",
+                    "next_title": "Optimizing Parquet Metadata Reading",
+                    "next_url": "/docs/025-optimizing-parquet-reading/",
                     "parent": "Performance Tuning",
                     "previous_title": "Monitoring Metrics",
                     "previous_url": "/docs/070-monitoring-metrics/",
+                    "relative_path": "_docs/performance-tuning/024-aynchronous-parquet-reader.md",
+                    "title": "Asynchronous Parquet Reader",
+                    "url": "/docs/024-aynchronous-parquet-reader/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning",
+                            "url": "/docs/072-performance-tuning/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Log and Debug",
+                    "next_url": "/docs/073-log-and-debug/",
+                    "parent": "Performance Tuning",
+                    "previous_title": "Asynchronous Parquet Reader",
+                    "previous_url": "/docs/024-aynchronous-parquet-reader/",
                     "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md",
                     "title": "Optimizing Parquet Metadata Reading",
                     "url": "/docs/025-optimizing-parquet-reading/"
@@ -8903,8 +8924,8 @@
                 }
             ],
             "children": [],
-            "next_title": "Choosing a Storage Format",
-            "next_url": "/docs/030-choosing-a-storage-format/",
+            "next_title": "Parquet Filter Pushdown",
+            "next_url": "/docs/026-parquet-filter-pushdown/",
             "parent": "Performance Tuning",
             "previous_title": "Performance Tuning",
             "previous_url": "/docs/072-performance-tuning/",
@@ -9154,6 +9175,23 @@
                             "url": "/docs/070-query-data/"
                         }
                     ],
+                    "children": [],
+                    "next_title": "Querying a File System",
+                    "next_url": "/docs/020-querying-a-file-system/",
+                    "parent": "Query Data",
+                    "previous_title": "Query Data",
+                    "previous_url": "/docs/070-query-data/",
+                    "relative_path": "_docs/query-data/010-query-data-introduction.md",
+                    "title": "Query Data Introduction",
+                    "url": "/docs/010-query-data-introduction/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data",
+                            "url": "/docs/070-query-data/"
+                        }
+                    ],
                     "children": [
                         {
                             "breadcrumbs": [
@@ -9293,8 +9331,8 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Monitoring and Canceling Queries in the Drill Web UI",
-                            "next_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
+                            "next_title": "Querying Complex Data",
+                            "next_url": "/docs/040-querying-complex-data/",
                             "parent": "Querying a File System",
                             "previous_title": "Querying Directories",
                             "previous_url": "/docs/040-querying-directories/",
@@ -9306,62 +9344,11 @@
                     "next_title": "Querying a File System Introduction",
                     "next_url": "/docs/005-querying-a-file-system-introduction/",
                     "parent": "Query Data",
-                    "previous_title": "Query Data",
-                    "previous_url": "/docs/070-query-data/",
+                    "previous_title": "Query Data Introduction",
+                    "previous_url": "/docs/010-query-data-introduction/",
                     "relative_path": "_docs/query-data/020-querying-a-file-system.md",
                     "title": "Querying a File System",
                     "url": "/docs/020-querying-a-file-system/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Data",
-                            "url": "/docs/070-query-data/"
-                        }
-                    ],
-                    "children": [],
-                    "next_title": "Query Data Introduction",
-                    "next_url": "/docs/010-query-data-introduction/",
-                    "parent": "Query Data",
-                    "previous_title": "Querying Sequence Files",
-                    "previous_url": "/docs/050-querying-sequence-files/",
-                    "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md",
-                    "title": "Monitoring and Canceling Queries in the Drill Web UI",
-                    "url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Data",
-                            "url": "/docs/070-query-data/"
-                        }
-                    ],
-                    "children": [],
-                    "next_title": "Querying HBase",
-                    "next_url": "/docs/030-querying-hbase/",
-                    "parent": "Query Data",
-                    "previous_title": "Monitoring and Canceling Queries in the Drill Web UI",
-                    "previous_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
-                    "relative_path": "_docs/query-data/010-query-data-introduction.md",
-                    "title": "Query Data Introduction",
-                    "url": "/docs/010-query-data-introduction/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Data",
-                            "url": "/docs/070-query-data/"
-                        }
-                    ],
-                    "children": [],
-                    "next_title": "Querying Complex Data",
-                    "next_url": "/docs/040-querying-complex-data/",
-                    "parent": "Query Data",
-                    "previous_title": "Query Data Introduction",
-                    "previous_url": "/docs/010-query-data-introduction/",
-                    "relative_path": "_docs/query-data/030-querying-hbase.md",
-                    "title": "Querying HBase",
-                    "url": "/docs/030-querying-hbase/"
                 },
                 {
                     "breadcrumbs": [
@@ -9501,8 +9488,8 @@
                     "next_title": "Sample Data: Donuts",
                     "next_url": "/docs/010-sample-data-donuts/",
                     "parent": "Query Data",
-                    "previous_title": "Querying HBase",
-                    "previous_url": "/docs/030-querying-hbase/",
+                    "previous_title": "Querying Sequence Files",
+                    "previous_url": "/docs/050-querying-sequence-files/",
                     "relative_path": "_docs/query-data/040-querying-complex-data.md",
                     "title": "Querying Complex Data",
                     "url": "/docs/040-querying-complex-data/"
@@ -9515,31 +9502,14 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Querying the INFORMATION SCHEMA",
-                    "next_url": "/docs/060-querying-the-information-schema/",
+                    "next_title": "Querying Indexes",
+                    "next_url": "/docs/061-querying-indexes/",
                     "parent": "Query Data",
                     "previous_title": "Selecting Multiple Columns Within Nested Data",
                     "previous_url": "/docs/050-selecting-multiple-columns-within-nested-data/",
                     "relative_path": "_docs/query-data/050-querying-hive.md",
                     "title": "Querying Hive",
                     "url": "/docs/050-querying-hive/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Data",
-                            "url": "/docs/070-query-data/"
-                        }
-                    ],
-                    "children": [],
-                    "next_title": "Querying Indexes",
-                    "next_url": "/docs/061-querying-indexes/",
-                    "parent": "Query Data",
-                    "previous_title": "Querying Hive",
-                    "previous_url": "/docs/050-querying-hive/",
-                    "relative_path": "_docs/query-data/060-querying-the-information-schema.md",
-                    "title": "Querying the INFORMATION SCHEMA",
-                    "url": "/docs/060-querying-the-information-schema/"
                 },
                 {
                     "breadcrumbs": [
@@ -9687,8 +9657,8 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Querying System Tables",
-                            "next_url": "/docs/070-query-sys-tbl/",
+                            "next_title": "Monitoring and Canceling Queries in the Drill Web UI",
+                            "next_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
                             "parent": "Querying Indexes",
                             "previous_title": "Configuring Index Planning",
                             "previous_url": "/docs/050-configuring-index-planning/",
@@ -9700,8 +9670,8 @@
                     "next_title": "Querying Indexes Introduction",
                     "next_url": "/docs/010-querying-indexes-introduction/",
                     "parent": "Query Data",
-                    "previous_title": "Querying the INFORMATION SCHEMA",
-                    "previous_url": "/docs/060-querying-the-information-schema/",
+                    "previous_title": "Querying Hive",
+                    "previous_url": "/docs/050-querying-hive/",
                     "relative_path": "_docs/query-data/061-querying-indexes.md",
                     "title": "Querying Indexes",
                     "url": "/docs/061-querying-indexes/"
@@ -9714,18 +9684,69 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Performance Tuning",
-                    "next_url": "/docs/072-performance-tuning/",
+                    "next_title": "Querying HBase",
+                    "next_url": "/docs/030-querying-hbase/",
                     "parent": "Query Data",
                     "previous_title": "Verifying Index Use",
                     "previous_url": "/docs/060-verifying-index-use/",
+                    "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md",
+                    "title": "Monitoring and Canceling Queries in the Drill Web UI",
+                    "url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data",
+                            "url": "/docs/070-query-data/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Querying the INFORMATION SCHEMA",
+                    "next_url": "/docs/060-querying-the-information-schema/",
+                    "parent": "Query Data",
+                    "previous_title": "Monitoring and Canceling Queries in the Drill Web UI",
+                    "previous_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
+                    "relative_path": "_docs/query-data/030-querying-hbase.md",
+                    "title": "Querying HBase",
+                    "url": "/docs/030-querying-hbase/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data",
+                            "url": "/docs/070-query-data/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Querying System Tables",
+                    "next_url": "/docs/070-query-sys-tbl/",
+                    "parent": "Query Data",
+                    "previous_title": "Querying HBase",
+                    "previous_url": "/docs/030-querying-hbase/",
+                    "relative_path": "_docs/query-data/060-querying-the-information-schema.md",
+                    "title": "Querying the INFORMATION SCHEMA",
+                    "url": "/docs/060-querying-the-information-schema/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data",
+                            "url": "/docs/070-query-data/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Performance Tuning",
+                    "next_url": "/docs/072-performance-tuning/",
+                    "parent": "Query Data",
+                    "previous_title": "Querying the INFORMATION SCHEMA",
+                    "previous_url": "/docs/060-querying-the-information-schema/",
                     "relative_path": "_docs/query-data/070-query-sys-tbl.md",
                     "title": "Querying System Tables",
                     "url": "/docs/070-query-sys-tbl/"
                 }
             ],
-            "next_title": "Querying a File System",
-            "next_url": "/docs/020-querying-a-file-system/",
+            "next_title": "Query Data Introduction",
+            "next_url": "/docs/010-query-data-introduction/",
             "parent": "",
             "previous_title": "Tableau Examples",
             "previous_url": "/docs/020-tableau-examples/",
@@ -9741,11 +9762,11 @@
                 }
             ],
             "children": [],
-            "next_title": "Querying HBase",
-            "next_url": "/docs/030-querying-hbase/",
+            "next_title": "Querying a File System",
+            "next_url": "/docs/020-querying-a-file-system/",
             "parent": "Query Data",
-            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI",
-            "previous_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
+            "previous_title": "Query Data",
+            "previous_url": "/docs/070-query-data/",
             "relative_path": "_docs/query-data/010-query-data-introduction.md",
             "title": "Query Data Introduction",
             "url": "/docs/010-query-data-introduction/"
@@ -10217,8 +10238,8 @@
             "next_title": "Sample Data: Donuts",
             "next_url": "/docs/010-sample-data-donuts/",
             "parent": "Query Data",
-            "previous_title": "Querying HBase",
-            "previous_url": "/docs/030-querying-hbase/",
+            "previous_title": "Querying Sequence Files",
+            "previous_url": "/docs/050-querying-sequence-files/",
             "relative_path": "_docs/query-data/040-querying-complex-data.md",
             "title": "Querying Complex Data",
             "url": "/docs/040-querying-complex-data/"
@@ -10273,11 +10294,11 @@
                 }
             ],
             "children": [],
-            "next_title": "Querying Complex Data",
-            "next_url": "/docs/040-querying-complex-data/",
+            "next_title": "Querying the INFORMATION SCHEMA",
+            "next_url": "/docs/060-querying-the-information-schema/",
             "parent": "Query Data",
-            "previous_title": "Query Data Introduction",
-            "previous_url": "/docs/010-query-data-introduction/",
+            "previous_title": "Monitoring and Canceling Queries in the Drill Web UI",
+            "previous_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
             "relative_path": "_docs/query-data/030-querying-hbase.md",
             "title": "Querying HBase",
             "url": "/docs/030-querying-hbase/"
@@ -10290,8 +10311,8 @@
                 }
             ],
             "children": [],
-            "next_title": "Querying the INFORMATION SCHEMA",
-            "next_url": "/docs/060-querying-the-information-schema/",
+            "next_title": "Querying Indexes",
+            "next_url": "/docs/061-querying-indexes/",
             "parent": "Query Data",
             "previous_title": "Selecting Multiple Columns Within Nested Data",
             "previous_url": "/docs/050-selecting-multiple-columns-within-nested-data/",
@@ -10445,8 +10466,8 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Querying System Tables",
-                    "next_url": "/docs/070-query-sys-tbl/",
+                    "next_title": "Monitoring and Canceling Queries in the Drill Web UI",
+                    "next_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
                     "parent": "Querying Indexes",
                     "previous_title": "Configuring Index Planning",
                     "previous_url": "/docs/050-configuring-index-planning/",
@@ -10458,8 +10479,8 @@
             "next_title": "Querying Indexes Introduction",
             "next_url": "/docs/010-querying-indexes-introduction/",
             "parent": "Query Data",
-            "previous_title": "Querying the INFORMATION SCHEMA",
-            "previous_url": "/docs/060-querying-the-information-schema/",
+            "previous_title": "Querying Hive",
+            "previous_url": "/docs/050-querying-hive/",
             "relative_path": "_docs/query-data/061-querying-indexes.md",
             "title": "Querying Indexes",
             "url": "/docs/061-querying-indexes/"
@@ -10560,8 +10581,8 @@
                 }
             ],
             "children": [],
-            "next_title": "Monitoring and Canceling Queries in the Drill Web UI",
-            "next_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
+            "next_title": "Querying Complex Data",
+            "next_url": "/docs/040-querying-complex-data/",
             "parent": "Querying a File System",
             "previous_title": "Querying Directories",
             "previous_url": "/docs/040-querying-directories/",
@@ -10580,8 +10601,8 @@
             "next_title": "Performance Tuning",
             "next_url": "/docs/072-performance-tuning/",
             "parent": "Query Data",
-            "previous_title": "Verifying Index Use",
-            "previous_url": "/docs/060-verifying-index-use/",
+            "previous_title": "Querying the INFORMATION SCHEMA",
+            "previous_url": "/docs/060-querying-the-information-schema/",
             "relative_path": "_docs/query-data/070-query-sys-tbl.md",
             "title": "Querying System Tables",
             "url": "/docs/070-query-sys-tbl/"
@@ -10732,8 +10753,8 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Monitoring and Canceling Queries in the Drill Web UI",
-                    "next_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
+                    "next_title": "Querying Complex Data",
+                    "next_url": "/docs/040-querying-complex-data/",
                     "parent": "Querying a File System",
                     "previous_title": "Querying Directories",
                     "previous_url": "/docs/040-querying-directories/",
@@ -10745,8 +10766,8 @@
             "next_title": "Querying a File System Introduction",
             "next_url": "/docs/005-querying-a-file-system-introduction/",
             "parent": "Query Data",
-            "previous_title": "Query Data",
-            "previous_url": "/docs/070-query-data/",
+            "previous_title": "Query Data Introduction",
+            "previous_url": "/docs/010-query-data-introduction/",
             "relative_path": "_docs/query-data/020-querying-a-file-system.md",
             "title": "Querying a File System",
             "url": "/docs/020-querying-a-file-system/"
@@ -10780,11 +10801,11 @@
                 }
             ],
             "children": [],
-            "next_title": "Querying Indexes",
-            "next_url": "/docs/061-querying-indexes/",
+            "next_title": "Querying System Tables",
+            "next_url": "/docs/070-query-sys-tbl/",
             "parent": "Query Data",
-            "previous_title": "Querying Hive",
-            "previous_url": "/docs/050-querying-hive/",
+            "previous_title": "Querying HBase",
+            "previous_url": "/docs/030-querying-hbase/",
             "relative_path": "_docs/query-data/060-querying-the-information-schema.md",
             "title": "Querying the INFORMATION SCHEMA",
             "url": "/docs/060-querying-the-information-schema/"
@@ -12740,7 +12761,7 @@
                     ],
                     "children": [],
                     "next_title": "SQL dialect compatibility functions",
-                    "next_url": "/docs/100-sql-dialect-compat-functions/",
+                    "next_url": "/docs/070-sql-dialect-compat-functions/",
                     "parent": "SQL Functions",
                     "previous_title": "About SQL Function Examples",
                     "previous_url": "/docs/005-about-sql-function-examples/",
@@ -12760,14 +12781,56 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "SQL Window Functions",
-                    "next_url": "/docs/055-sql-window-functions/",
+                    "next_title": "GIS functions",
+                    "next_url": "/docs/080-gis-functions/",
                     "parent": "SQL Functions",
                     "previous_title": "Aggregate and Aggregate Statistical",
                     "previous_url": "/docs/050-aggregate-and-aggregate-statistical/",
-                    "relative_path": "_docs/sql-reference/sql-functions/100-sql-dialect-compat-functions.md",
+                    "relative_path": "_docs/sql-reference/sql-functions/070-sql-dialect-compat-functions.md",
                     "title": "SQL dialect compatibility functions",
-                    "url": "/docs/100-sql-dialect-compat-functions/"
+                    "url": "/docs/070-sql-dialect-compat-functions/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Functions",
+                            "url": "/docs/050-sql-functions/"
+                        },
+                        {
+                            "title": "SQL Reference",
+                            "url": "/docs/080-sql-reference/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Time Series Analysis Functions",
+                    "next_url": "/docs/090-time-series-analysis-functions/",
+                    "parent": "SQL Functions",
+                    "previous_title": "SQL dialect compatibility functions",
+                    "previous_url": "/docs/070-sql-dialect-compat-functions/",
+                    "relative_path": "_docs/sql-reference/sql-functions/080-gis-functions.md",
+                    "title": "GIS functions",
+                    "url": "/docs/080-gis-functions/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Functions",
+                            "url": "/docs/050-sql-functions/"
+                        },
+                        {
+                            "title": "SQL Reference",
+                            "url": "/docs/080-sql-reference/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "SQL Window Functions",
+                    "next_url": "/docs/055-sql-window-functions/",
+                    "parent": "SQL Functions",
+                    "previous_title": "GIS functions",
+                    "previous_url": "/docs/080-gis-functions/",
+                    "relative_path": "_docs/sql-reference/sql-functions/090-time-series-analysis-functions.md",
+                    "title": "Time Series Analysis Functions",
+                    "url": "/docs/090-time-series-analysis-functions/"
                 }
             ],
             "next_title": "Phonetic Functions",
@@ -13145,7 +13208,7 @@
                             ],
                             "children": [],
                             "next_title": "SQL dialect compatibility functions",
-                            "next_url": "/docs/100-sql-dialect-compat-functions/",
+                            "next_url": "/docs/070-sql-dialect-compat-functions/",
                             "parent": "SQL Functions",
                             "previous_title": "About SQL Function Examples",
                             "previous_url": "/docs/005-about-sql-function-examples/",
@@ -13165,14 +13228,56 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "SQL Window Functions",
-                            "next_url": "/docs/055-sql-window-functions/",
+                            "next_title": "GIS functions",
+                            "next_url": "/docs/080-gis-functions/",
                             "parent": "SQL Functions",
                             "previous_title": "Aggregate and Aggregate Statistical",
                             "previous_url": "/docs/050-aggregate-and-aggregate-statistical/",
-                            "relative_path": "_docs/sql-reference/sql-functions/100-sql-dialect-compat-functions.md",
+                            "relative_path": "_docs/sql-reference/sql-functions/070-sql-dialect-compat-functions.md",
                             "title": "SQL dialect compatibility functions",
-                            "url": "/docs/100-sql-dialect-compat-functions/"
+                            "url": "/docs/070-sql-dialect-compat-functions/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions",
+                                    "url": "/docs/050-sql-functions/"
+                                },
+                                {
+                                    "title": "SQL Reference",
+                                    "url": "/docs/080-sql-reference/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "Time Series Analysis Functions",
+                            "next_url": "/docs/090-time-series-analysis-functions/",
+                            "parent": "SQL Functions",
+                            "previous_title": "SQL dialect compatibility functions",
+                            "previous_url": "/docs/070-sql-dialect-compat-functions/",
+                            "relative_path": "_docs/sql-reference/sql-functions/080-gis-functions.md",
+                            "title": "GIS functions",
+                            "url": "/docs/080-gis-functions/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions",
+                                    "url": "/docs/050-sql-functions/"
+                                },
+                                {
+                                    "title": "SQL Reference",
+                                    "url": "/docs/080-sql-reference/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "SQL Window Functions",
+                            "next_url": "/docs/055-sql-window-functions/",
+                            "parent": "SQL Functions",
+                            "previous_title": "GIS functions",
+                            "previous_url": "/docs/080-gis-functions/",
+                            "relative_path": "_docs/sql-reference/sql-functions/090-time-series-analysis-functions.md",
+                            "title": "Time Series Analysis Functions",
+                            "url": "/docs/090-time-series-analysis-functions/"
                         }
                     ],
                     "next_title": "Phonetic Functions",
@@ -13301,8 +13406,8 @@
                     "next_title": "SQL Window Functions Introduction",
                     "next_url": "/docs/010-sql-window-functions-introduction/",
                     "parent": "SQL Reference",
-                    "previous_title": "SQL dialect compatibility functions",
-                    "previous_url": "/docs/100-sql-dialect-compat-functions/",
+                    "previous_title": "Time Series Analysis Functions",
+                    "previous_url": "/docs/090-time-series-analysis-functions/",
                     "relative_path": "_docs/sql-reference/055-sql-window-functions.md",
                     "title": "SQL Window Functions",
                     "url": "/docs/055-sql-window-functions/"
@@ -14396,8 +14501,8 @@
             "next_title": "SQL Window Functions Introduction",
             "next_url": "/docs/010-sql-window-functions-introduction/",
             "parent": "SQL Reference",
-            "previous_title": "SQL dialect compatibility functions",
-            "previous_url": "/docs/100-sql-dialect-compat-functions/",
+            "previous_title": "Time Series Analysis Functions",
+            "previous_url": "/docs/090-time-series-analysis-functions/",
             "relative_path": "_docs/sql-reference/055-sql-window-functions.md",
             "title": "SQL Window Functions",
             "url": "/docs/055-sql-window-functions/"
@@ -14456,14 +14561,14 @@
                 }
             ],
             "children": [],
-            "next_title": "SQL Window Functions",
-            "next_url": "/docs/055-sql-window-functions/",
+            "next_title": "GIS functions",
+            "next_url": "/docs/080-gis-functions/",
             "parent": "SQL Functions",
             "previous_title": "Aggregate and Aggregate Statistical",
             "previous_url": "/docs/050-aggregate-and-aggregate-statistical/",
-            "relative_path": "_docs/sql-reference/sql-functions/100-sql-dialect-compat-functions.md",
+            "relative_path": "_docs/sql-reference/sql-functions/070-sql-dialect-compat-functions.md",
             "title": "SQL dialect compatibility functions",
-            "url": "/docs/100-sql-dialect-compat-functions/"
+            "url": "/docs/070-sql-dialect-compat-functions/"
         },
         "Sample Data: Donuts": {
             "breadcrumbs": [
@@ -15447,6 +15552,27 @@
             "relative_path": "_docs/performance-tuning/query-plans-and-tuning/065-throttling.md",
             "title": "Throttling",
             "url": "/docs/065-throttling/"
+        },
+        "Time Series Analysis Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Functions",
+                    "url": "/docs/050-sql-functions/"
+                },
+                {
+                    "title": "SQL Reference",
+                    "url": "/docs/080-sql-reference/"
+                }
+            ],
+            "children": [],
+            "next_title": "SQL Window Functions",
+            "next_url": "/docs/055-sql-window-functions/",
+            "parent": "SQL Functions",
+            "previous_title": "GIS functions",
+            "previous_url": "/docs/080-gis-functions/",
+            "relative_path": "_docs/sql-reference/sql-functions/090-time-series-analysis-functions.md",
+            "title": "Time Series Analysis Functions",
+            "url": "/docs/090-time-series-analysis-functions/"
         },
         "Troubleshooting": {
             "breadcrumbs": [],
@@ -16621,8 +16747,8 @@
                 }
             ],
             "children": [],
-            "next_title": "Querying System Tables",
-            "next_url": "/docs/070-query-sys-tbl/",
+            "next_title": "Monitoring and Canceling Queries in the Drill Web UI",
+            "next_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
             "parent": "Querying Indexes",
             "previous_title": "Configuring Index Planning",
             "previous_url": "/docs/050-configuring-index-planning/",
@@ -19252,6 +19378,23 @@
                             "url": "/docs/070-query-data/"
                         }
                     ],
+                    "children": [],
+                    "next_title": "Querying a File System",
+                    "next_url": "/docs/020-querying-a-file-system/",
+                    "parent": "Query Data",
+                    "previous_title": "Query Data",
+                    "previous_url": "/docs/070-query-data/",
+                    "relative_path": "_docs/query-data/010-query-data-introduction.md",
+                    "title": "Query Data Introduction",
+                    "url": "/docs/010-query-data-introduction/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data",
+                            "url": "/docs/070-query-data/"
+                        }
+                    ],
                     "children": [
                         {
                             "breadcrumbs": [
@@ -19391,8 +19534,8 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Monitoring and Canceling Queries in the Drill Web UI",
-                            "next_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
+                            "next_title": "Querying Complex Data",
+                            "next_url": "/docs/040-querying-complex-data/",
                             "parent": "Querying a File System",
                             "previous_title": "Querying Directories",
                             "previous_url": "/docs/040-querying-directories/",
@@ -19404,62 +19547,11 @@
                     "next_title": "Querying a File System Introduction",
                     "next_url": "/docs/005-querying-a-file-system-introduction/",
                     "parent": "Query Data",
-                    "previous_title": "Query Data",
-                    "previous_url": "/docs/070-query-data/",
+                    "previous_title": "Query Data Introduction",
+                    "previous_url": "/docs/010-query-data-introduction/",
                     "relative_path": "_docs/query-data/020-querying-a-file-system.md",
                     "title": "Querying a File System",
                     "url": "/docs/020-querying-a-file-system/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Data",
-                            "url": "/docs/070-query-data/"
-                        }
-                    ],
-                    "children": [],
-                    "next_title": "Query Data Introduction",
-                    "next_url": "/docs/010-query-data-introduction/",
-                    "parent": "Query Data",
-                    "previous_title": "Querying Sequence Files",
-                    "previous_url": "/docs/050-querying-sequence-files/",
-                    "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md",
-                    "title": "Monitoring and Canceling Queries in the Drill Web UI",
-                    "url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Data",
-                            "url": "/docs/070-query-data/"
-                        }
-                    ],
-                    "children": [],
-                    "next_title": "Querying HBase",
-                    "next_url": "/docs/030-querying-hbase/",
-                    "parent": "Query Data",
-                    "previous_title": "Monitoring and Canceling Queries in the Drill Web UI",
-                    "previous_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
-                    "relative_path": "_docs/query-data/010-query-data-introduction.md",
-                    "title": "Query Data Introduction",
-                    "url": "/docs/010-query-data-introduction/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Data",
-                            "url": "/docs/070-query-data/"
-                        }
-                    ],
-                    "children": [],
-                    "next_title": "Querying Complex Data",
-                    "next_url": "/docs/040-querying-complex-data/",
-                    "parent": "Query Data",
-                    "previous_title": "Query Data Introduction",
-                    "previous_url": "/docs/010-query-data-introduction/",
-                    "relative_path": "_docs/query-data/030-querying-hbase.md",
-                    "title": "Querying HBase",
-                    "url": "/docs/030-querying-hbase/"
                 },
                 {
                     "breadcrumbs": [
@@ -19599,8 +19691,8 @@
                     "next_title": "Sample Data: Donuts",
                     "next_url": "/docs/010-sample-data-donuts/",
                     "parent": "Query Data",
-                    "previous_title": "Querying HBase",
-                    "previous_url": "/docs/030-querying-hbase/",
+                    "previous_title": "Querying Sequence Files",
+                    "previous_url": "/docs/050-querying-sequence-files/",
                     "relative_path": "_docs/query-data/040-querying-complex-data.md",
                     "title": "Querying Complex Data",
                     "url": "/docs/040-querying-complex-data/"
@@ -19613,31 +19705,14 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Querying the INFORMATION SCHEMA",
-                    "next_url": "/docs/060-querying-the-information-schema/",
+                    "next_title": "Querying Indexes",
+                    "next_url": "/docs/061-querying-indexes/",
                     "parent": "Query Data",
                     "previous_title": "Selecting Multiple Columns Within Nested Data",
                     "previous_url": "/docs/050-selecting-multiple-columns-within-nested-data/",
                     "relative_path": "_docs/query-data/050-querying-hive.md",
                     "title": "Querying Hive",
                     "url": "/docs/050-querying-hive/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Query Data",
-                            "url": "/docs/070-query-data/"
-                        }
-                    ],
-                    "children": [],
-                    "next_title": "Querying Indexes",
-                    "next_url": "/docs/061-querying-indexes/",
-                    "parent": "Query Data",
-                    "previous_title": "Querying Hive",
-                    "previous_url": "/docs/050-querying-hive/",
-                    "relative_path": "_docs/query-data/060-querying-the-information-schema.md",
-                    "title": "Querying the INFORMATION SCHEMA",
-                    "url": "/docs/060-querying-the-information-schema/"
                 },
                 {
                     "breadcrumbs": [
@@ -19785,8 +19860,8 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Querying System Tables",
-                            "next_url": "/docs/070-query-sys-tbl/",
+                            "next_title": "Monitoring and Canceling Queries in the Drill Web UI",
+                            "next_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
                             "parent": "Querying Indexes",
                             "previous_title": "Configuring Index Planning",
                             "previous_url": "/docs/050-configuring-index-planning/",
@@ -19798,8 +19873,8 @@
                     "next_title": "Querying Indexes Introduction",
                     "next_url": "/docs/010-querying-indexes-introduction/",
                     "parent": "Query Data",
-                    "previous_title": "Querying the INFORMATION SCHEMA",
-                    "previous_url": "/docs/060-querying-the-information-schema/",
+                    "previous_title": "Querying Hive",
+                    "previous_url": "/docs/050-querying-hive/",
                     "relative_path": "_docs/query-data/061-querying-indexes.md",
                     "title": "Querying Indexes",
                     "url": "/docs/061-querying-indexes/"
@@ -19812,18 +19887,69 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Performance Tuning",
-                    "next_url": "/docs/072-performance-tuning/",
+                    "next_title": "Querying HBase",
+                    "next_url": "/docs/030-querying-hbase/",
                     "parent": "Query Data",
                     "previous_title": "Verifying Index Use",
                     "previous_url": "/docs/060-verifying-index-use/",
+                    "relative_path": "_docs/query-data/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI.md",
+                    "title": "Monitoring and Canceling Queries in the Drill Web UI",
+                    "url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data",
+                            "url": "/docs/070-query-data/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Querying the INFORMATION SCHEMA",
+                    "next_url": "/docs/060-querying-the-information-schema/",
+                    "parent": "Query Data",
+                    "previous_title": "Monitoring and Canceling Queries in the Drill Web UI",
+                    "previous_url": "/docs/080-monitoring-and-canceling-queries-in-the-Drill-Web-UI/",
+                    "relative_path": "_docs/query-data/030-querying-hbase.md",
+                    "title": "Querying HBase",
+                    "url": "/docs/030-querying-hbase/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data",
+                            "url": "/docs/070-query-data/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Querying System Tables",
+                    "next_url": "/docs/070-query-sys-tbl/",
+                    "parent": "Query Data",
+                    "previous_title": "Querying HBase",
+                    "previous_url": "/docs/030-querying-hbase/",
+                    "relative_path": "_docs/query-data/060-querying-the-information-schema.md",
+                    "title": "Querying the INFORMATION SCHEMA",
+                    "url": "/docs/060-querying-the-information-schema/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Query Data",
+                            "url": "/docs/070-query-data/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Performance Tuning",
+                    "next_url": "/docs/072-performance-tuning/",
+                    "parent": "Query Data",
+                    "previous_title": "Querying the INFORMATION SCHEMA",
+                    "previous_url": "/docs/060-querying-the-information-schema/",
                     "relative_path": "_docs/query-data/070-query-sys-tbl.md",
                     "title": "Querying System Tables",
                     "url": "/docs/070-query-sys-tbl/"
                 }
             ],
-            "next_title": "Querying a File System",
-            "next_url": "/docs/020-querying-a-file-system/",
+            "next_title": "Query Data Introduction",
+            "next_url": "/docs/010-query-data-introduction/",
             "parent": "",
             "previous_title": "Tableau Examples",
             "previous_url": "/docs/020-tableau-examples/",
@@ -19842,8 +19968,8 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Choosing a Storage Format",
-                    "next_url": "/docs/030-choosing-a-storage-format/",
+                    "next_title": "Parquet Filter Pushdown",
+                    "next_url": "/docs/026-parquet-filter-pushdown/",
                     "parent": "Performance Tuning",
                     "previous_title": "Performance Tuning",
                     "previous_url": "/docs/072-performance-tuning/",
@@ -19859,45 +19985,11 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Asynchronous Parquet Reader",
-                    "next_url": "/docs/024-aynchronous-parquet-reader/",
-                    "parent": "Performance Tuning",
-                    "previous_title": "Performance Tuning Introduction",
-                    "previous_url": "/docs/010-performance-tuning-introduction/",
-                    "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md",
-                    "title": "Choosing a Storage Format",
-                    "url": "/docs/030-choosing-a-storage-format/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Performance Tuning",
-                            "url": "/docs/072-performance-tuning/"
-                        }
-                    ],
-                    "children": [],
-                    "next_title": "Parquet Filter Pushdown",
-                    "next_url": "/docs/026-parquet-filter-pushdown/",
-                    "parent": "Performance Tuning",
-                    "previous_title": "Choosing a Storage Format",
-                    "previous_url": "/docs/030-choosing-a-storage-format/",
-                    "relative_path": "_docs/performance-tuning/024-aynchronous-parquet-reader.md",
-                    "title": "Asynchronous Parquet Reader",
-                    "url": "/docs/024-aynchronous-parquet-reader/"
-                },
-                {
-                    "breadcrumbs": [
-                        {
-                            "title": "Performance Tuning",
-                            "url": "/docs/072-performance-tuning/"
-                        }
-                    ],
-                    "children": [],
                     "next_title": "Drill Metastore",
                     "next_url": "/docs/005-drill-metastore/",
                     "parent": "Performance Tuning",
-                    "previous_title": "Asynchronous Parquet Reader",
-                    "previous_url": "/docs/024-aynchronous-parquet-reader/",
+                    "previous_title": "Performance Tuning Introduction",
+                    "previous_url": "/docs/010-performance-tuning-introduction/",
                     "relative_path": "_docs/performance-tuning/026-parquet-filter-pushdown.md",
                     "title": "Parquet Filter Pushdown",
                     "url": "/docs/026-parquet-filter-pushdown/"
@@ -20003,8 +20095,8 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Hive Metadata Caching",
-                            "next_url": "/docs/027-hive-metadata-caching/",
+                            "next_title": "Choosing a Storage Format",
+                            "next_url": "/docs/030-choosing-a-storage-format/",
                             "parent": "Partition Pruning",
                             "previous_title": "Partition Pruning Introduction",
                             "previous_url": "/docs/010-partition-pruning-introduction/",
@@ -20030,11 +20122,28 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Query Plans and Tuning",
-                    "next_url": "/docs/040-query-plans-and-tuning/",
+                    "next_title": "Hive Metadata Caching",
+                    "next_url": "/docs/027-hive-metadata-caching/",
                     "parent": "Performance Tuning",
                     "previous_title": "How to Partition Data",
                     "previous_url": "/docs/030-using-partition-pruning/",
+                    "relative_path": "_docs/performance-tuning/030-choosing-a-storage-format.md",
+                    "title": "Choosing a Storage Format",
+                    "url": "/docs/030-choosing-a-storage-format/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning",
+                            "url": "/docs/072-performance-tuning/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Query Plans and Tuning",
+                    "next_url": "/docs/040-query-plans-and-tuning/",
+                    "parent": "Performance Tuning",
+                    "previous_title": "Choosing a Storage Format",
+                    "previous_url": "/docs/030-choosing-a-storage-format/",
                     "relative_path": "_docs/performance-tuning/027-hive-metadata-caching.md",
                     "title": "Hive Metadata Caching",
                     "url": "/docs/027-hive-metadata-caching/"
@@ -20353,8 +20462,8 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Optimizing Parquet Metadata Reading",
-                    "next_url": "/docs/025-optimizing-parquet-reading/",
+                    "next_title": "Asynchronous Parquet Reader",
+                    "next_url": "/docs/024-aynchronous-parquet-reader/",
                     "parent": "Performance Tuning",
                     "previous_title": "Query Profile Column Descriptions",
                     "previous_url": "/docs/010-query-profile-tables/",
@@ -20370,11 +20479,28 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Log and Debug",
-                    "next_url": "/docs/073-log-and-debug/",
+                    "next_title": "Optimizing Parquet Metadata Reading",
+                    "next_url": "/docs/025-optimizing-parquet-reading/",
                     "parent": "Performance Tuning",
                     "previous_title": "Monitoring Metrics",
                     "previous_url": "/docs/070-monitoring-metrics/",
+                    "relative_path": "_docs/performance-tuning/024-aynchronous-parquet-reader.md",
+                    "title": "Asynchronous Parquet Reader",
+                    "url": "/docs/024-aynchronous-parquet-reader/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning",
+                            "url": "/docs/072-performance-tuning/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Log and Debug",
+                    "next_url": "/docs/073-log-and-debug/",
+                    "parent": "Performance Tuning",
+                    "previous_title": "Asynchronous Parquet Reader",
+                    "previous_url": "/docs/024-aynchronous-parquet-reader/",
                     "relative_path": "_docs/performance-tuning/025-optimizing-parquet-reading.md",
                     "title": "Optimizing Parquet Metadata Reading",
                     "url": "/docs/025-optimizing-parquet-reading/"
@@ -20853,7 +20979,7 @@
                             ],
                             "children": [],
                             "next_title": "SQL dialect compatibility functions",
-                            "next_url": "/docs/100-sql-dialect-compat-functions/",
+                            "next_url": "/docs/070-sql-dialect-compat-functions/",
                             "parent": "SQL Functions",
                             "previous_title": "About SQL Function Examples",
                             "previous_url": "/docs/005-about-sql-function-examples/",
@@ -20873,14 +20999,56 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "SQL Window Functions",
-                            "next_url": "/docs/055-sql-window-functions/",
+                            "next_title": "GIS functions",
+                            "next_url": "/docs/080-gis-functions/",
                             "parent": "SQL Functions",
                             "previous_title": "Aggregate and Aggregate Statistical",
                             "previous_url": "/docs/050-aggregate-and-aggregate-statistical/",
-                            "relative_path": "_docs/sql-reference/sql-functions/100-sql-dialect-compat-functions.md",
+                            "relative_path": "_docs/sql-reference/sql-functions/070-sql-dialect-compat-functions.md",
                             "title": "SQL dialect compatibility functions",
-                            "url": "/docs/100-sql-dialect-compat-functions/"
+                            "url": "/docs/070-sql-dialect-compat-functions/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions",
+                                    "url": "/docs/050-sql-functions/"
+                                },
+                                {
+                                    "title": "SQL Reference",
+                                    "url": "/docs/080-sql-reference/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "Time Series Analysis Functions",
+                            "next_url": "/docs/090-time-series-analysis-functions/",
+                            "parent": "SQL Functions",
+                            "previous_title": "SQL dialect compatibility functions",
+                            "previous_url": "/docs/070-sql-dialect-compat-functions/",
+                            "relative_path": "_docs/sql-reference/sql-functions/080-gis-functions.md",
+                            "title": "GIS functions",
+                            "url": "/docs/080-gis-functions/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions",
+                                    "url": "/docs/050-sql-functions/"
+                                },
+                                {
+                                    "title": "SQL Reference",
+                                    "url": "/docs/080-sql-reference/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "SQL Window Functions",
+                            "next_url": "/docs/055-sql-window-functions/",
+                            "parent": "SQL Functions",
+                            "previous_title": "GIS functions",
+                            "previous_url": "/docs/080-gis-functions/",
+                            "relative_path": "_docs/sql-reference/sql-functions/090-time-series-analysis-functions.md",
+                            "title": "Time Series Analysis Functions",
+                            "url": "/docs/090-time-series-analysis-functions/"
                         }
                     ],
                     "next_title": "Phonetic Functions",
@@ -21009,8 +21177,8 @@
                     "next_title": "SQL Window Functions Introduction",
                     "next_url": "/docs/010-sql-window-functions-introduction/",
                     "parent": "SQL Reference",
-                    "previous_title": "SQL dialect compatibility functions",
-                    "previous_url": "/docs/100-sql-dialect-compat-functions/",
+                    "previous_title": "Time Series Analysis Functions",
+                    "previous_url": "/docs/090-time-series-analysis-functions/",
                     "relative_path": "_docs/sql-reference/055-sql-window-functions.md",
                     "title": "SQL Window Functions",
                     "url": "/docs/055-sql-window-functions/"
