@@ -48,29 +48,3 @@ Druid supports multiple native queries to address sundry use-cases.  To fetch ra
 
 Filters are pushed down to native Druid filter structure, converting SQL where clauses to the respective Druid [Filters](https://Druid.apache.org/docs/latest/querying/filters.html).
 
-## Developer Notes
-
-* Building the plugin 
-
-    mvn install -pl contrib/storage-Druid
-
-* Building DRILL
-
-    mvn clean install -DskipTests
-    
-* Start Drill In Embedded Mode (mac)
-
-
-    distribution/target/apache-drill-1.18.0-SNAPSHOT/apache-drill-1.18.0-SNAPSHOT/bin/drill-embedded
-
-  
-* Starting Druid (Docker and Docker Compose required)
-
-    cd contrib/storage-Druid/src/test/resources/Druid
-    docker-compose up -d
-
-  
-  * There is an `Indexing Task Json` in the same folder as the docker compose file. It can be used to ingest the wikipedia datasource.
-  
-  * Make sure the Druid storage plugin is enabled in Drill.
-
