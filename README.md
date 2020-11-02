@@ -16,7 +16,7 @@ Please make sure that specific versions of libraries are installed since buildin
 
 # Documentation Guidelines
 
-The documentation pages are placed under `_docs`. You can modify existing .md files, or you can create new .md files to add to the Apache Drill documentation site. Create pull requests to submit your documentation updates. 
+The documentation pages are placed under `_docs`. You can modify existing .md files, or you can create new .md files to add to the Apache Drill documentation site. Create pull requests to submit your documentation updates. The Kramdown MarkDown processor employed by Jekyll supports [a dialect of MarkDown](https://kramdown.gettalong.org/quickref.html) which is a superset of standard MarkDown.
 
 ## Creating New MarkDown Files
 
