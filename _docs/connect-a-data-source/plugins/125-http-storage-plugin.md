@@ -507,7 +507,7 @@ GROUP BY priority
 ORDER BY issue_count DESC
 ```
 
-<img src="images/issue_count.png"  alt="Issue Count by Priority"/>
+<img src="images/docs/issue_count.png"  alt="Issue Count by Priority"/>
 
 
 ## Limitations
