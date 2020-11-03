@@ -1,6 +1,6 @@
 ---
 title: "Multiple Drill Clusters"
-date: 2018-11-02
+slug: "Multiple Drill Clusters"
 parent: "Drill-on-YARN"
 ---  
 

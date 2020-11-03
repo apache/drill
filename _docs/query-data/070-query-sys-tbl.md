@@ -1,6 +1,6 @@
 ---
 title: "Querying System Tables"
-date: 2020-08-08
+slug: "Querying System Tables"
 parent: "Query Data"
 ---  
 

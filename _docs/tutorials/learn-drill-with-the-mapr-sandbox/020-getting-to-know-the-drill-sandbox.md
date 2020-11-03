@@ -1,6 +1,6 @@
 ---
 title: "Getting to Know the Drill Sandbox"
-date: 2018-12-08
+slug: "Getting to Know the Drill Sandbox"
 parent: "Learn Drill with the MapR Sandbox"
 ---
 This section covers key information about the Apache Drill tutorial. After [installing the Drill sandbox]({{ site.baseurl }}/docs/installing-the-apache-drill-sandbox) and starting the sandbox, you can open another terminal window (Linux) or Command Prompt (Windows) and use the secure shell (ssh) to connect to the VM, assuming ssh is installed. Use the following login name and password: mapr/mapr.   

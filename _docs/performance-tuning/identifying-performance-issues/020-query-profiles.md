@@ -1,6 +1,6 @@
 ---
 title: "Query Profiles"
-date: 2020-08-08
+slug: "Query Profiles"
 parent: "Identifying Performance Issues"
 ---
 

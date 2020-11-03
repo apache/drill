@@ -1,6 +1,6 @@
 ---
 title: "Dynamic UDFs"
-date: 2020-08-08
+slug: "Dynamic UDFs"
 parent: "Adding Custom Functions to Drill"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Kafka Storage Plugin"
-date: 2020-08-08
+slug: "Kafka Storage Plugin"
 parent: "Connect a Data Source"
 ---
 

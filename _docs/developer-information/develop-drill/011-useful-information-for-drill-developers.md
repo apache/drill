@@ -1,6 +1,6 @@
 ---
 title: "Useful Information for Drill Developers"
-date: 2018-06-19 02:01:23 UTC
+slug: "Useful Information for Drill Developers"
 parent: "Develop Drill"
 ---
 

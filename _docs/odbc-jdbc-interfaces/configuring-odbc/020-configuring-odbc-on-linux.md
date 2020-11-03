@@ -1,6 +1,6 @@
 ---
 title: "Configuring ODBC on Linux"
-date: 2017-08-18 17:47:57 UTC
+slug: "Configuring ODBC on Linux"
 parent: "Configuring ODBC"
 ---
 

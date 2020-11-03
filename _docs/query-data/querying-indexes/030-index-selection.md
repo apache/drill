@@ -1,6 +1,6 @@
 ---
 title: "Index Selection"
-date: 2018-12-18
+slug: "Index Selection"
 parent: "Querying Indexes"
 ---  
 

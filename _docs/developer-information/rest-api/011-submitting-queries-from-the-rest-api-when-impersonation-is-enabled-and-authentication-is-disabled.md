@@ -1,6 +1,6 @@
 ---
 title: "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled"
-date: 2019-04-18
+slug: "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled"
 parent: "REST API"
 ---  
 

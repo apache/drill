@@ -1,6 +1,6 @@
 ---
 title: "Physical Operators"
-date: 2016-11-01 20:49:10 UTC
+slug: "Physical Operators"
 parent: "Performance Tuning Reference"
 --- 
 

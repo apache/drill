@@ -1,6 +1,6 @@
 ---
 title: "Syslog Format Plugin"
-date: 2019-04-10
+slug: "Syslog Format Plugin"
 parent: "Data Sources and File Formats"
 ---
 

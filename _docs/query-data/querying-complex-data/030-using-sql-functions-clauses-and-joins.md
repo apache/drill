@@ -1,6 +1,6 @@
 ---
 title: "Using SQL Functions, Clauses, and Joins"
-date: 2020-08-08
+slug: "Using SQL Functions, Clauses, and Joins"
 parent: "Querying Complex Data"
 ---
 You can use standard SQL clauses, such as WHERE and ORDER BY, to elaborate on

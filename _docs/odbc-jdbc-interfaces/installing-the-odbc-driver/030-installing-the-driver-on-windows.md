@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Windows"
-date: 2017-08-18 17:48:08 UTC
+slug: "Installing the Driver on Windows"
 parent: "Installing the ODBC Driver"
 ---
 The Drill ODBC Driver installer is available for 32- and 64-bit

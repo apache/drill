@@ -1,6 +1,6 @@
 ---
 title: "Starting the Web UI"
-date: 2019-04-18
+slug: "Starting the Web UI"
 parent: Install Drill
 ---
 

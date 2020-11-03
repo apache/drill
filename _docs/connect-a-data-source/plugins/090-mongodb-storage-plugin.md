@@ -1,6 +1,6 @@
 ---
 title: "MongoDB Storage Plugin"
-date: 2020-08-08
+slug: "MongoDB Storage Plugin"
 parent: "Connect a Data Source"
 ---
 ## Overview

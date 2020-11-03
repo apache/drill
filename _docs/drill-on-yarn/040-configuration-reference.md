@@ -1,6 +1,6 @@
 ---
 title: "Configuration Reference"
-date: 2018-11-02
+slug: "Configuration Reference"
 parent: "Drill-on-YARN"
 ---  
 

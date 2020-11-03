@@ -1,6 +1,6 @@
 ---
 title: "Designing Indexes for Your Queries"
-date: 2018-12-18
+slug: "Designing Indexes for Your Queries"
 parent: "Querying Indexes"
 ---   
 

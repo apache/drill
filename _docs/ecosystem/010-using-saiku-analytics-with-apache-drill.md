@@ -1,6 +1,6 @@
 ---
 title: "Using Saiku Analytics with Apache Drill"
-date: 2018-08-21
+slug: "Using Saiku Analytics with Apache Drill"
 parent: "Ecosystem"
 ---
 

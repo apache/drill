@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill Memory"
-date: 2018-03-26 17:37:50 UTC
+slug: "Configuring Drill Memory"
 parent: "Configure Drill"
 ---
 

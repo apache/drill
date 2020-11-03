@@ -1,6 +1,6 @@
 ---
 title: "LTSV Format Plugin"
-date: 2020-08-08
+slug: "LTSV Format Plugin"
 parent: "Data Sources and File Formats"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Configuring the Drill Shell"
-date: 2020-08-08
+slug: "Configuring the Drill Shell"
 parent: "Configure Drill"
 ---  
 Drill uses SQLLine as the Drill shell. SQLLine is a pure-Java console-based utility for connecting to relational databases and running SQL commands.  

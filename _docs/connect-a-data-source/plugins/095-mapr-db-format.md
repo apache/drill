@@ -1,6 +1,6 @@
 ---
 title: "MapR-DB Format"
-date: 2019-05-24
+slug: "MapR-DB Format"
 parent: "Connect a Data Source"
 ---
 

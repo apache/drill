@@ -1,6 +1,6 @@
 ---
 title: "Querying the INFORMATION SCHEMA"
-date: 2020-08-08
+slug: "Querying the INFORMATION SCHEMA"
 parent: "Query Data"
 ---  
 

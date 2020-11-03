@@ -1,7 +1,7 @@
 ---
 title: "Using Drill Metastore"
+slug: "Using Drill Metastore"
 parent: "Drill Metastore"
-date: 2020-08-08
 ---
 
 Drill 1.17 introduces the Drill Metastore which stores the table schema and table statistics. Statistics allow Drill to better create optimal query plans.

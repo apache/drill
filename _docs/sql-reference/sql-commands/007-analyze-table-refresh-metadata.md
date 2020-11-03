@@ -1,7 +1,7 @@
 ---
 title: "ANALYZE TABLE REFRESH METADATA"
+slug: "ANALYZE TABLE REFRESH METADATA"
 parent: "SQL Commands"
-date: 2020-03-17
 ---
 
 Starting from Drill 1.17, you can store table metadata (including schema and computed statistics) into Drill Metastore.

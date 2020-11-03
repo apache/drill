@@ -1,6 +1,6 @@
 ---
 title: "CREATE OR REPLACE SCHEMA"
-date: 2020-08-08
+slug: "CREATE OR REPLACE SCHEMA"
 parent: "SQL Commands"
 ---
 

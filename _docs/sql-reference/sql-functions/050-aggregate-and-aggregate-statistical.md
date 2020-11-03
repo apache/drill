@@ -1,6 +1,6 @@
 ---
 title: "Aggregate and Aggregate Statistical"
-date: 2020-10-29
+slug: "Aggregate and Aggregate Statistical"
 parent: "SQL Functions"
 ---
 

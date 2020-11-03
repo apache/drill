@@ -1,6 +1,6 @@
 ---
 title: "Project Bylaws"
-date: 2018-11-02
+slug: "Project Bylaws"
 ---
 ## Introduction
 

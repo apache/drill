@@ -1,6 +1,6 @@
 ---
 title: "Installing the Apache Drill Sandbox"
-date: 2018-12-08
+slug: "Installing the Apache Drill Sandbox"
 parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Prerequisites

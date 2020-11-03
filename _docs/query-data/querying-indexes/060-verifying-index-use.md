@@ -1,6 +1,6 @@
 ---
 title: "Verifying Index Use"
-date: 2020-08-08
+slug: "Verifying Index Use"
 parent: "Querying Indexes"
 ---  
 

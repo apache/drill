@@ -1,6 +1,6 @@
 ---
 title: "ESRI Shapefile Format Plugin"
-date: 2020-11-02
+slug: "ESRI Shapefile Format Plugin"
 parent: "Data Sources and File Formats"
 ---
 

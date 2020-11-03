@@ -1,6 +1,6 @@
 ---
 title: "Enabling Query Queuing"
-date: 2017-11-14 21:25:01 UTC
+slug: "Enabling Query Queuing"
 parent: "Query Plans and Tuning"
 --- 
 

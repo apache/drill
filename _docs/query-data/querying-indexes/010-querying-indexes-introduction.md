@@ -1,6 +1,6 @@
 ---
 title: "Querying Indexes Introduction"
-date: 2018-12-18
+slug: "Querying Indexes Introduction"
 parent: "Querying Indexes"
 ---  
 

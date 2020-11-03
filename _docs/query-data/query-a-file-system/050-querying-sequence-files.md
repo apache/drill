@@ -1,6 +1,6 @@
 ---
 title: "Querying Sequence Files"
-date: 2020-08-08
+slug: "Querying Sequence Files"
 parent: "Querying a File System"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Storage Plugin Registration"
-date: 2018-07-18 22:29:14 UTC
+slug: "Storage Plugin Registration"
 parent: "Connect a Data Source"
 ---
 You connect Drill to data sources, such as a file system, Hive, or HBase through storage plugins. You can see the default enabled and disabled storage plugins on the Storage page in the Drill Web UI. You can easily enable and disable storage plugins, reconfigure storage plugins, and create new storage plugin configurations, as described in [Configuring Storage Plugins](https://drill.apache.org/docs/configuring-storage-plugins/).

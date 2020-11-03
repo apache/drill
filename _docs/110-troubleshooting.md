@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-date: 2017-02-24 22:12:36 UTC
+slug: "Troubleshooting"
 ---
 
 You may experience certain known issues when using Drill. This document lists some known issues and resolutions for each.

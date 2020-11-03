@@ -1,6 +1,6 @@
 ---
 title: "Querying HBase"
-date: 2020-08-08
+slug: "Querying HBase"
 parent: "Query Data"
 ---
 

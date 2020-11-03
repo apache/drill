@@ -1,6 +1,6 @@
 ---
 title: "Using Apache Drill with Tableau 10.2"
-date: 2018-02-09 00:16:02 UTC
+slug: "Using Apache Drill with Tableau 10.2"
 parent: "Using Drill with BI Tools"
 ---  
 

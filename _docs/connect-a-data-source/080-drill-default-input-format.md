@@ -1,6 +1,6 @@
 ---
 title: "Drill Default Input Format"
-date: 2018-12-08
+slug: "Drill Default Input Format"
 parent: "Storage Plugin Configuration"
 ---
 You can define a default input format to tell Drill what file type exists in a

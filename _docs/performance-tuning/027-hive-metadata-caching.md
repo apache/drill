@@ -1,6 +1,6 @@
 ---
 title: "Hive Metadata Caching"
-date: 2018-12-08
+slug: "Hive Metadata Caching"
 parent: "Performance Tuning"
 ---
 

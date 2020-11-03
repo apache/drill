@@ -1,6 +1,6 @@
 ---
 title: "Queries that Qualify for Index-Based Query Plans"
-date: 2018-12-18
+slug: "Queries that Qualify for Index-Based Query Plans"
 parent: "Querying Indexes"
 ---  
 

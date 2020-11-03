@@ -1,6 +1,6 @@
 ---
 title: "HDF5 Format Plugin"
-date: 2020-11-02
+slug: "HDF5 Format Plugin"
 parent: "Data Sources and File Formats"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Time Series Analysis Functions"
-date: 2020-11-02
+slug: "Time Series Analysis Functions"
 parent: "SQL Functions"
 ---
 <!-- TODO: when were these introduced?

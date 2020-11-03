@@ -1,6 +1,6 @@
 ---
 title: "S3 Storage Plugin"
-date: 2019-01-30
+slug: "S3 Storage Plugin"
 parent: "Connect a Data Source"
 ---
 Drill works with data stored in the cloud. With a few simple steps, you can configure the S3 storage plugin for Drill and be off to the races running queries. 

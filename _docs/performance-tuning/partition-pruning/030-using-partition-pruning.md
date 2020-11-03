@@ -1,6 +1,6 @@
 ---
 title: "How to Partition Data"
-date: 2020-08-08
+slug: "How to Partition Data"
 parent: "Partition Pruning"
 --- 
 

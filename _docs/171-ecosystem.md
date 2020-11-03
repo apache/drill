@@ -1,5 +1,6 @@
 ---
 title: "Ecosystem"
+slug: "Ecosystem"
 ---
 
 

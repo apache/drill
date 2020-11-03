@@ -1,6 +1,6 @@
 ---
 title: "Installing Drill on Windows"
-date: 2020-09-05
+slug: "Installing Drill on Windows"
 parent: "Installing Drill in Embedded Mode"
 ---
 

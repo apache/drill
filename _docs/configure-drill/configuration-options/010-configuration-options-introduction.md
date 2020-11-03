@@ -1,6 +1,6 @@
 ---
 title: "Configuration Options Introduction"
-date: 2018-12-08
+slug: "Configuration Options Introduction"
 parent: "Configuration Options"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Hive Storage Plugin"
-date: 2019-04-16
+slug: "Hive Storage Plugin"
 parent: "Connect a Data Source"
 ---
 Prior to Drill 1.13, Drill supported Hive 1.0. Drill 1.13 and later includes version 2.3.2 of the Hive client, which adds support for queries on transactional (ACID) and non-transactional Hive bucketed ORC tables. The updated Hive libraries are backward compatible with earlier versions of the Hive server and metastore.   

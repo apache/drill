@@ -1,6 +1,6 @@
 ---
 title: "Configure Drill Introduction"
-date: 2018-12-08
+slug: "Configure Drill Introduction"
 parent: "Configure Drill"
 ---
 

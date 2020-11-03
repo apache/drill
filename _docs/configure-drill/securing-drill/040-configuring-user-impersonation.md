@@ -1,6 +1,6 @@
 ---
 title: "Configuring User Impersonation"
-date: 2018-04-19 01:45:22 UTC
+slug: "Configuring User Impersonation"
 parent: "Securing Drill"
 ---
 Impersonation allows a service to act on behalf of a client while performing the action requested by the client. By default, user impersonation is disabled in Drill. You can configure user impersonation in the <DRILLINSTALL_HOME>/conf/drill-override.conf file.

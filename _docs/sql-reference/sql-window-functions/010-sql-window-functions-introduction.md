@@ -1,6 +1,6 @@
 ---
 title: "SQL Window Functions Introduction"
-date: 2020-08-08
+slug: "SQL Window Functions Introduction"
 parent: "SQL Window Functions"
 ---
 

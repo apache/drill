@@ -1,6 +1,6 @@
 ---
 title: "SELECT"
-date: 2019-01-18
+slug: "SELECT"
 parent: "SQL Commands"
 ---
 Drill supports the following ANSI standard clauses in the SELECT statement:

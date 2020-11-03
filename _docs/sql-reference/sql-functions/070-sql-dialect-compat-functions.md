@@ -1,6 +1,6 @@
 ---
 title: "SQL dialect compatibility functions"
-date: 2020-10-30
+slug: "SQL dialect compatibility functions"
 parent: "SQL Functions"
 ---
 

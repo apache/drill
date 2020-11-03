@@ -1,6 +1,6 @@
 ---
 title: "Querying a File System Introduction"
-date: 2020-08-08
+slug: "Querying a File System Introduction"
 parent: "Querying a File System"
 ---
 Files and directories are like standard SQL tables to Drill. You can specify a

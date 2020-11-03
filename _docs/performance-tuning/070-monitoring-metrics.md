@@ -1,6 +1,6 @@
 ---
 title: "Monitoring Metrics"
-date: 2018-11-14
+slug: "Monitoring Metrics"
 parent: "Performance Tuning"
 --- 
 

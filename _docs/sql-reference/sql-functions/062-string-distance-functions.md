@@ -1,6 +1,6 @@
 ---
 title: "String Distance Functions"
-date: 2018-07-20 01:25:29 UTC
+slug: "String Distance Functions"
 parent: "SQL Functions"
 ---
 

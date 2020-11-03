@@ -1,6 +1,6 @@
 ---
 title: "Log and Debug Introduction"
-date: 2018-12-08
+slug: "Log and Debug Introduction"
 parent: "Log and Debug"
 ---
 

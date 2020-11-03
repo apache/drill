@@ -1,6 +1,6 @@
 ---
 title: "Embedded Mode Prerequisites"
-date: 2018-04-16 23:12:45 UTC
+slug: "Embedded Mode Prerequisites"
 parent: "Installing Drill in Embedded Mode"
 ---
 To use Drill on a single node, install Drill in embedded mode. Installing Drill in embedded mode installs Drill locally on your machine. Embedded mode is a quick way to install and try Drill without having to perform any configuration tasks. A ZooKeeper installation is not required. Installing Drill in embedded mode configures the local Drillbit service to start automatically when you launch the Drill shell. You can install Drill in embedded mode on a machine running Linux, Mac OS X, or Windows.

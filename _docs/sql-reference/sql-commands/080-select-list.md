@@ -1,6 +1,6 @@
 ---
 title: "SELECT List"
-date: 2020-08-08
+slug: "SELECT List"
 parent: "SQL Commands"
 ---
 

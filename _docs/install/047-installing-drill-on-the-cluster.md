@@ -1,6 +1,6 @@
 ---
 title: "Installing Drill on the Cluster"
-date: 2020-09-05
+slug: "Installing Drill on the Cluster"
 parent: "Installing Drill in Distributed Mode"
 ---
 You install Drill on nodes in the cluster, configure a cluster ID, and add Zookeeper information, as described in the following steps:

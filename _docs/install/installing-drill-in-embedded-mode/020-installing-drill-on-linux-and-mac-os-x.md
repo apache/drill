@@ -1,6 +1,6 @@
 ---
 title: "Installing Drill on Linux and Mac OS X"
-date: 2020-09-05
+slug: "Installing Drill on Linux and Mac OS X"
 parent: "Installing Drill in Embedded Mode"
 ---
 First, check that you [meet the prerequisites]({{site.baseurl}}/docs/embedded-mode-prerequisites), and then install Apache Drill on Linux or Mac OS X:

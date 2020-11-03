@@ -1,6 +1,6 @@
 ---
 title: "Useful Research"
-date: 2018-11-02
+slug: "Useful Research"
 parent: "Design Docs"
 ---
 ## Drill itself

@@ -1,6 +1,6 @@
 ---
 title: "Logfile Plugin"
-date: 2018-11-14
+slug: "Logfile Plugin"
 parent: "Data Sources and File Formats"
 ---
 

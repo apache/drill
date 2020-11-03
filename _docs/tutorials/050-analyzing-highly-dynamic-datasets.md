@@ -1,6 +1,6 @@
 ---
 title: "Analyzing Highly Dynamic Datasets"
-date: 2020-09-05
+slug: "Analyzing Highly Dynamic Datasets"
 parent: "Tutorials"
 ---
 

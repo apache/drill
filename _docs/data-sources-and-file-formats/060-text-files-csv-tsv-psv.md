@@ -1,6 +1,6 @@
 ---
 title: "Text Files: CSV, TSV, PSV"
-date: 2020-08-08
+slug: "Text Files: CSV, TSV, PSV"
 parent: "Data Sources and File Formats"
 ---
 

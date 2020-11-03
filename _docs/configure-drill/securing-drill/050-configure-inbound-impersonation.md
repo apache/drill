@@ -1,6 +1,6 @@
 ---
 title: "Configuring Inbound Impersonation"
-date: 2017-08-07 19:02:34 UTC
+slug: "Configuring Inbound Impersonation"
 parent: "Securing Drill"
 ---  
 

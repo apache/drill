@@ -1,6 +1,6 @@
 ---
 title: "REFRESH TABLE METADATA"
-date: 2020-08-08
+slug: "REFRESH TABLE METADATA"
 parent: "SQL Commands"
 ---
 Run the REFRESH TABLE METADATA command on Parquet tables and directories to generate a metadata cache file. REFRESH TABLE METADATA collects metadata from the footers of Parquet files and writes the metadata to a metadata file (`.drill.parquet_file_metadata.v4`) and a summary file (`.drill.parquet_summary_metadata.v4`). The planner uses the metadata cache file to prune extraneous data during the query planning phase. Run the REFRESH TABLE METADATA command if planning time is a significant percentage of the total elapsed time of the query.   

@@ -1,6 +1,6 @@
 ---
 title: "Ports Used by Drill"
-date: 2018-12-08
+slug: "Ports Used by Drill"
 parent: "Configure Drill"
 ---
 

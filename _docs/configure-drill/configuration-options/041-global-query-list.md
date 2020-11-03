@@ -1,6 +1,6 @@
 ---
 title: "Global Query List"
-date: 2018-07-02 01:09:32 UTC
+slug: "Global Query List"
 parent: "Configuration Options"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Aggregate Window Functions"
-date: 2020-08-08
+slug: "Aggregate Window Functions"
 parent: "SQL Window Functions"
 ---
 

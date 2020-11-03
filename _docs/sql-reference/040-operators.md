@@ -1,6 +1,6 @@
 ---
 title: "Operators"
-date: 2017-03-14 05:06:04 UTC
+slug: "Operators"
 parent: "SQL Reference"
 ---
 You can use various types of operators in your Drill queries to perform

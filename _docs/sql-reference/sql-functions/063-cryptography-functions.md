@@ -1,6 +1,6 @@
 ---
 title: "Cryptography Functions"
-date: 2020-08-08
+slug: "Cryptography Functions"
 parent: "SQL Functions"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Error Messages"
-date: 2018-12-08
+slug: "Error Messages"
 parent: "Log and Debug"
 ---
 

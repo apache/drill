@@ -1,6 +1,6 @@
 ---
 title: "Partition Pruning Introduction"
-date: 2018-03-26 17:37:51 UTC
+slug: "Partition Pruning Introduction"
 parent: "Partition Pruning"
 --- 
 

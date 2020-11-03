@@ -1,6 +1,6 @@
 ---
 title: "Appendix D: Recreate the Drill Archive"
-date: 2018-11-02
+slug: "Appendix D: Recreate the Drill Archive"
 parent: "Drill-on-YARN"
 ---   
 

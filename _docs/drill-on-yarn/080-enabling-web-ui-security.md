@@ -1,6 +1,6 @@
 ---
 title: "Enabling Web UI Security"
-date: 2018-11-02
+slug: "Enabling Web UI Security"
 parent: "Drill-on-YARN"
 ---  
 

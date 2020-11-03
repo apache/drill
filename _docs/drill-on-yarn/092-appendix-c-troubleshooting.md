@@ -1,6 +1,6 @@
 ---
 title: "Appendix C: Troubleshooting"
-date: 2018-11-02
+slug: "Appendix C: Troubleshooting"
 parent: "Drill-on-YARN"
 ---  
 

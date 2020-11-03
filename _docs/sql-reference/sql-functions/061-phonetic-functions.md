@@ -1,10 +1,12 @@
 ---
 title: "Phonetic Functions"
-date: 2018-07-20 01:25:28 UTC
+slug: "Phonetic Functions"
 parent: "SQL Functions"
 ---
 
-Starting in version 1.14, Drill supports phonetic functions. Typically, you use phonetic functions in the WHERE clause of a query to find words that sound similar. For example, to find all the people named Jaime in a data source, you could issue the following query on the data source: 
+**Introduced in release:** 1.14
+
+Drill supports phonetic functions. Typically, you use phonetic functions in the WHERE clause of a query to find words that sound similar. For example, to find all the people named Jaime in a data source, you could issue the following query on the data source: 
 
        SELECT first_name
        FROM name_data

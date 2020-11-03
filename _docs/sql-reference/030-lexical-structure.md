@@ -1,6 +1,6 @@
 ---
 title: "Lexical Structure"
-date: 2020-08-08
+slug: "Lexical Structure"
 parent: "SQL Reference"
 ---
 

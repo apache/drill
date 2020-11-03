@@ -1,6 +1,6 @@
 ---
 title: "Configuring Web UI and REST API Security"
-date: 2018-12-08
+slug: "Configuring Web UI and REST API Security"
 parent: "Securing Drill"
 ---
 Drill 1.5 extends [Drill user security]({{site.baseurl}}/docs/configuring-user-security/) to the Web UI and underlying REST API. As administrator, you can control the extent of access to the Web UI and REST API client applications. For example,

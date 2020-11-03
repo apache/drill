@@ -1,6 +1,6 @@
 ---
 title: "Adding Custom Functions to Drill"
-date: 2018-11-02
+slug: "Adding Custom Functions to Drill"
 parent: "Develop Custom Functions"
 ---  
 

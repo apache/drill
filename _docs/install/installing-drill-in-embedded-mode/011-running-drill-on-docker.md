@@ -1,6 +1,6 @@
 --
 title: "Running Drill on Docker"
-date: 2020-09-05
+slug: "Running Drill on Docker"
 parent: "Installing Drill in Embedded Mode"
 ---  
 

@@ -1,6 +1,6 @@
 ---
 title: "Securing Drill Introduction"
-date: 2017-08-07 19:02:23 UTC
+slug: "Securing Drill Introduction"
 parent: "Securing Drill"
 ---
 

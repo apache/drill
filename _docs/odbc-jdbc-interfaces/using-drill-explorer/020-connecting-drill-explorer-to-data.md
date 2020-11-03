@@ -1,6 +1,6 @@
 ---
 title: "Connecting Drill Explorer to Data"
-date: 2017-06-06 23:26:14 UTC
+slug: "Connecting Drill Explorer to Data"
 parent: "Using Drill Explorer"
 ---
 The way you start Drill Explorer differs depending on your platform, but regardless of the platform, Drill must be running. 

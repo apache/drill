@@ -1,6 +1,6 @@
 ---
 title: "Ranking Window Functions"
-date: 2020-08-08
+slug: "Ranking Window Functions"
 parent: "SQL Window Functions"
 ---
 

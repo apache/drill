@@ -1,6 +1,6 @@
 ---
 title: "SPSS Format Plugin"
-date: 2020-11-02
+slug: "SPSS Format Plugin"
 parent: "Data Sources and File Formats"
 ---
 

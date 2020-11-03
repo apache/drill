@@ -1,6 +1,6 @@
 ---
 title: "SHOW DATABASES and SHOW SCHEMAS"
-date: 2020-08-08
+slug: "SHOW DATABASES and SHOW SCHEMAS"
 parent: "SQL Commands"
 ---
 The SHOW DATABASES and SHOW SCHEMAS commands generate a list of available Drill schemas that you can query.

@@ -1,6 +1,6 @@
 ---
 title: "Appendix B: drill-env.sh Settings"
-date: 2018-11-02
+slug: "Appendix B: drill-env.sh Settings"
 parent: "Drill-on-YARN"
 ---  
 

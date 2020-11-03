@@ -1,6 +1,6 @@
 ---
 title: "Migrating Parquet Data"
-date: 2018-11-02
+slug: "Migrating Parquet Data"
 parent: "Install Drill"
 --- 
 

@@ -1,6 +1,6 @@
 ---
 title: "Optimizing Parquet Metadata Reading"
-date: 2020-08-08
+slug: "Optimizing Parquet Metadata Reading"
 parent: "Performance Tuning"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "ORDER BY Clause"
-date: 2020-08-08
+slug: "ORDER BY Clause"
 parent: "SQL Commands"
 ---
 The ORDER BY clause sorts the result set of a query.

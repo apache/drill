@@ -1,6 +1,6 @@
 ---
 title: "Wikipedia Edit History"
-date: 2018-11-02
+slug: "Wikipedia Edit History"
 parent: "Sample Datasets"
 ---
 ## Quick Stats

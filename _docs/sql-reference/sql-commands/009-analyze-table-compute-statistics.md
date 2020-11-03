@@ -1,6 +1,6 @@
 ---
 title: "ANALYZE TABLE COMPUTE STATISTICS"
-date: 2020-08-08
+slug: "ANALYZE TABLE COMPUTE STATISTICS"
 parent: "SQL Commands"
 ---  
 

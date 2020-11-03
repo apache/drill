@@ -1,5 +1,6 @@
 ---
 title: "Apache Drill M1 Release Notes (Apache Drill Alpha)"
+slug: "Apache Drill M1 Release Notes (Apache Drill Alpha)"
 parent: "Release Notes"
 ---
 ## Milestone 1 Goals

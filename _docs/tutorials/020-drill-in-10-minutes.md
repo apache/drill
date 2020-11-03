@@ -1,6 +1,6 @@
 ---
 title: "Drill in 10 Minutes"
-date: 2020-09-05
+slug: "Drill in 10 Minutes"
 parent: "Tutorials"
 description: Get started with Drill in 10 minutes or less.
 ---

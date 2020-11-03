@@ -1,6 +1,6 @@
 ---
 title: "Tutorial: Develop a Simple Function"
-date: 2020-08-08
+slug: "Tutorial: Develop a Simple Function"
 parent: "Develop Custom Functions"
 ---
 

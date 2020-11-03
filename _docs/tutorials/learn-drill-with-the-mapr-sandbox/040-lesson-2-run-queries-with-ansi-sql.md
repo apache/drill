@@ -1,6 +1,6 @@
 ---
 title: "Lesson 2: Run Queries with ANSI SQL"
-date: 2020-08-08
+slug: "Lesson 2: Run Queries with ANSI SQL"
 parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal

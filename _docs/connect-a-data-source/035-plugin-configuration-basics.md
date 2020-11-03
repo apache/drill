@@ -1,6 +1,6 @@
 ---
 title: "Plugin Configuration Basics"
-date: 2019-04-10
+slug: "Plugin Configuration Basics"
 parent: "Storage Plugin Configuration"
 ---
 There are several ways you can configure storage plugins. For example, you can configure storage plugins in the Drill Web UI,  using REST API, or through configuration files. See [Configuring Storage Plugins]({{site.baseurl}}/docs/configuring-storage-plugins/) for more information.

@@ -1,6 +1,6 @@
 ---
 title: "Drill-on-YARN Introduction"
-date: 2018-03-19 23:54:28 UTC
+slug: "Drill-on-YARN Introduction"
 parent: "Drill-on-YARN"
 ---  
 

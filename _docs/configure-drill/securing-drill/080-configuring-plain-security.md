@@ -1,6 +1,6 @@
 ---
 title: "Configuring Plain Security"
-date: 2017-12-19 00:54:51 UTC
+slug: "Configuring Plain Security"
 parent: "Securing Drill"
 ---
 Linux PAM provides a Plain (username and password) authentication module that interfaces with any installed PAM authentication entity, such as the local operating system password file (`/etc/passwd`) or LDAP. 

@@ -1,6 +1,6 @@
 ---
 title: "DESCRIBE"
-date: 2020-08-08
+slug: "DESCRIBE"
 parent: "SQL Commands"
 ---
 The DESCRIBE command returns information about columns in a table, view, or schema.

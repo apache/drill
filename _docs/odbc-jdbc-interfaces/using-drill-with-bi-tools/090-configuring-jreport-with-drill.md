@@ -1,6 +1,6 @@
 ---
 title: "Configuring JReport with Drill"
-date: 2018-02-09 00:16:03 UTC
+slug: "Configuring JReport with Drill"
 parent: "Using Drill with BI Tools"
 ---
 

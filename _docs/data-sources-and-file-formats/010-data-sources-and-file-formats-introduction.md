@@ -1,6 +1,6 @@
 ---
 title: "Data Sources and File Formats Introduction"
-date: 2020-10-30
+slug: "Data Sources and File Formats Introduction"
 parent: "Data Sources and File Formats"
 ---
 Drill supports the following key data sources:

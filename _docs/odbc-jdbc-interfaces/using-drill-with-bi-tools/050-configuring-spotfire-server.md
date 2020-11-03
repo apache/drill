@@ -1,6 +1,6 @@
 ---
 title: "Configuring Tibco Spotfire Server with Drill"
-date: 2018-02-09 00:16:01 UTC
+slug: "Configuring Tibco Spotfire Server with Drill"
 parent: "Using Drill with BI Tools"
 ---
 

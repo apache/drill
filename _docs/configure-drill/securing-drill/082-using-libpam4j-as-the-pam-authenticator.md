@@ -1,6 +1,6 @@
 ---
 title: "Using libpam4j as the PAM Authenticator"
-date: 2017-12-18 01:38:50 UTC
+slug: "Using libpam4j as the PAM Authenticator"
 parent: "Securing Drill"
 ---
 

@@ -1,6 +1,6 @@
 c---
 title: "Configuring User Security"
-date: 2018-04-04 00:23:28 UTC
+slug: "Configuring User Security"
 parent: "Securing Drill"
 ---
 ## Authentication

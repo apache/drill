@@ -1,6 +1,6 @@
 ---
 title: "Analyzing Data Using Window Functions"
-date: 2020-08-08
+slug: "Analyzing Data Using Window Functions"
 parent: "Tutorials"
 ---
 

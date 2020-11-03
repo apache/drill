@@ -1,6 +1,6 @@
 ---
 title: "Roles and Privileges"
-date: 2018-12-08
+slug: "Roles and Privileges"
 parent: "Securing Drill"
 ---
 Drill has two roles that perform different functions: 

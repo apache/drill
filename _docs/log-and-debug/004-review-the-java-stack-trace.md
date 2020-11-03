@@ -1,6 +1,6 @@
 ---
 title: "Review the Java Stack Trace"
-date: 2018-11-02
+slug: "Review the Java Stack Trace"
 parent: "Log and Debug"
 ---
 

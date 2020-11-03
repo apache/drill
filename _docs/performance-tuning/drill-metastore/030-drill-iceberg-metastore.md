@@ -1,7 +1,7 @@
 ---
 title: "Drill Iceberg Metastore"
+slug: "Drill Iceberg Metastore"
 parent: "Drill Metastore"
-date: 2020-03-03
 ---
 
 Drill's Metastore allows a variety of storage engines. Drill ships with a storage engine based on

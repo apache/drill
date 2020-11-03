@@ -1,6 +1,6 @@
 ---
 title: "Enron Emails"
-date: 2018-11-02
+slug: "Enron Emails"
 parent: "Sample Datasets"
 ---
 ## Quick Stats

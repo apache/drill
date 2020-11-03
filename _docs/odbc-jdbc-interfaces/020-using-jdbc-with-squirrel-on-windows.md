@@ -1,6 +1,6 @@
 ---
 title: "Using JDBC with SQuirreL on Windows"
-date: 2018-01-19 01:49:57 UTC
+slug: "Using JDBC with SQuirreL on Windows"
 parent: "ODBC/JDBC Interfaces"
 ---
 You can use the JDBC driver to connect to Drill from SQuirrel and run SQL queries. Verify that your system meets the prerequisites and then follow the steps listed.  

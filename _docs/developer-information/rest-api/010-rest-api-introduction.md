@@ -1,6 +1,6 @@
 ---
 title: "REST API Introduction"
-date: 2019-04-19
+slug: "REST API Introduction"
 parent: "REST API"
 ---
 

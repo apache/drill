@@ -1,6 +1,6 @@
 ---
 title: "Configuring a Multitenant Cluster Introduction"
-date: 2016-11-21 21:27:46 UTC
+slug: "Configuring a Multitenant Cluster Introduction"
 parent: "Configuring a Multitenant Cluster"
 ---
 

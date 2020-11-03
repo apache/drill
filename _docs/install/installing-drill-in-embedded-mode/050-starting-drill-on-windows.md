@@ -1,6 +1,6 @@
 ---
 title: "Starting Drill on Windows"
-date: 2020-09-05
+slug: "Starting Drill on Windows"
 parent: "Installing Drill in Embedded Mode"
 ---
 Complete the following steps to launch the Drill:

@@ -1,6 +1,6 @@
 ---
 title: "Data Type Functions"
-date: 2020-08-08
+slug: "Data Type Functions"
 parent: "SQL Functions"
 ---
 

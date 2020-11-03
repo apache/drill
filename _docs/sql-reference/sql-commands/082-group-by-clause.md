@@ -1,6 +1,6 @@
 ---
 title: "GROUP BY Clause"
-date: 2020-08-08
+slug: "GROUP BY Clause"
 parent: "SQL Commands"
 ---
 The GROUP BY clause identifies the grouping columns for the query. You typically use a GROUP BY clause in conjunction with an aggregate expression. Grouping columns must be declared when the query computes aggregates with standard functions such as SUM, AVG, and COUNT. Starting in 1.15, Drill supports aliases in the GROUP BY clause.

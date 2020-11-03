@@ -1,6 +1,6 @@
 ---
 title: "Use Postman to Run SQL Queries on Drill Data Sources"
-date: 2018-05-31 01:30:24 UTC
+slug: "Use Postman to Run SQL Queries on Drill Data Sources"
 parent: "REST API"
 ---
 

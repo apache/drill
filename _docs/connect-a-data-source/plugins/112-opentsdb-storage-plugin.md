@@ -1,6 +1,6 @@
 ---
 title: "OpenTSDB Storage Plugin"
-date: 2018-12-08
+slug: "OpenTSDB Storage Plugin"
 parent: "Connect a Data Source"
 ---
 

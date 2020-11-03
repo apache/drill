@@ -1,6 +1,6 @@
 ---
 title: "Configuring Storage Plugins"
-date: 2019-04-18
+slug: "Configuring Storage Plugins"
 parent: "Storage Plugin Configuration"
 ---  
 

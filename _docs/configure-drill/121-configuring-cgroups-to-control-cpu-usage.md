@@ -1,6 +1,6 @@
 ---
 title: "Configuring cgroups to Control CPU Usage"
-date: 2019-02-06
+slug: "Configuring cgroups to Control CPU Usage"
 parent: "Configure Drill"
 ---   
 

@@ -1,6 +1,6 @@
 ---
 title: "Druid Storage Plugin"
-date: 2020-11-02
+slug: "Druid Storage Plugin"
 parent: "Connect a Data Source"
 ---
 

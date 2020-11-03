@@ -1,6 +1,6 @@
 ---
 title: "Parquet Filter Pushdown"
-date: 2019-01-10
+slug: "Parquet Filter Pushdown"
 parent: "Performance Tuning"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Query Data Introduction"
-date: 2020-08-08
+slug: "Query Data Introduction"
 parent: "Query Data"
 ---
 You can submit SQL queries against various data sources from the [Drill shell (SQLLine)]({{site.baseurl}}/docs/configuring-the-drill-shell/), [Drill Web UI]({{site.baseurl}}/docs/starting-the-web-ui/), [REST API]({{site.baseurl}}/docs/rest-api/), and tools that connect to Drill via [ODBC or JDBC]({{site.baseurl}}/docs/odbc-jdbc-interfaces/). Drill has [several storage and format plugins]({{site.baseurl}}/docs/connect-a-data-source-introduction/) that enable queries against multiple data sources and data formats, including [complex data]({{site.baseurl}}/docs/querying-complex-data). 

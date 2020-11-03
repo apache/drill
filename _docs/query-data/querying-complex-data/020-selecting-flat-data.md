@@ -1,6 +1,6 @@
 ---
 title: "Selecting Flat Data"
-date: 2020-08-08
+slug: "Selecting Flat Data"
 parent: "Querying Complex Data"
 ---
 A very simple query against the `donuts.json` file returns the values for the

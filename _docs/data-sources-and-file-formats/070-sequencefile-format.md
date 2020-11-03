@@ -1,6 +1,6 @@
 ---
 title: "Sequence Files"
-date: 2020-08-08
+slug: "Sequence Files"
 parent: "Data Sources and File Formats"
 ---
 

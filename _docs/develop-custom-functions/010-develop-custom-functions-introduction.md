@@ -1,6 +1,6 @@
 ---
 title: "Develop Custom Functions Introduction"
-date: 2018-06-27 20:52:59 UTC
+slug: "Develop Custom Functions Introduction"
 parent: "Develop Custom Functions"
 ---
 Drill provides a high performance Java API with interfaces that you can use to develop simple and aggregate custom functions. Custom functions are reusable SQL functions that you develop in Java to encapsulate code that processes column values during a query. 

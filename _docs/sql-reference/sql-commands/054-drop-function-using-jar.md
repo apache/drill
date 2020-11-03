@@ -1,6 +1,6 @@
 ---
 title: "DROP FUNCTION USING JAR"
-date: 2020-08-08
+slug: "DROP FUNCTION USING JAR"
 parent: "SQL Commands"
 ---
 

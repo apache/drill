@@ -1,6 +1,6 @@
 ---
 title: "Install Drill Introduction"
-date: 2016-01-04 16:12:23 UTC
+slug: "Install Drill Introduction"
 parent: "Install Drill"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "LATERAL Join"
-date: 2018-12-11
+slug: "LATERAL Join"
 parent: "SQL Commands"
 ---
 

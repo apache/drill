@@ -1,6 +1,6 @@
 ---
 title: "Supported SQL Commands"
-date: 2020-08-08
+slug: "Supported SQL Commands"
 parent: "SQL Commands"
 ---
 The following table provides a list of the SQL commands that Drill supports,

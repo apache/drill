@@ -1,6 +1,6 @@
 ---
 title: "Sort-Based and Hash-Based Memory-Constrained Operators"
-date: 2020-08-08
+slug: "Sort-Based and Hash-Based Memory-Constrained Operators"
 parent: "Query Plans and Tuning"
 ---  
 

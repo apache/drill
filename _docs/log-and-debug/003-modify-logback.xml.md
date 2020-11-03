@@ -1,6 +1,6 @@
 ---
 title: "Modify logback.xml"
-date: 2016-02-09 21:33:59 UTC
+slug: "Modify logback.xml"
 parent: "Log and Debug"
 ---
 

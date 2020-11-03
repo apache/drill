@@ -1,6 +1,6 @@
 ---
 title: "Creating Custom Authenticators"
-date: 2017-06-22 20:42:14 UTC
+slug: "Creating Custom Authenticators"
 parent: "Adding Custom Functions to Drill"
 ---
 

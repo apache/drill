@@ -1,6 +1,6 @@
 ---
 title: "Date, Time, and Timestamp"
-date: 2020-08-08
+slug: "Date, Time, and Timestamp"
 parent: "Data Types"
 ---
 Using familiar date and time formats, listed in the [SQL data types table]({{ site.baseurl }}/docs/supported-data-types), you can construct query date and time data. You need to cast textual data to date and time data types. The format of date, time, and timestamp text in a textual data source needs to match the SQL query format for successful casting. Drill supports date, time, timestamp, and interval literals shown in the following example:

@@ -1,6 +1,6 @@
 ---
 title: "Configuring Custom ACLs to Secure znodes"
-date: 2018-12-30
+slug: "Configuring Custom ACLs to Secure znodes"
 parent: "Securing Drill"
 ---  
 

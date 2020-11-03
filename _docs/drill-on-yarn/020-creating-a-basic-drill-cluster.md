@@ -1,6 +1,6 @@
 ---
 title: "Creating a Basic Drill Cluster"
-date: 2018-11-02
+slug: "Creating a Basic Drill Cluster"
 parent: "Drill-on-YARN"
 ---  
 

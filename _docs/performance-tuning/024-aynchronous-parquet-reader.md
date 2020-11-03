@@ -1,6 +1,6 @@
 ---
 title: "Asynchronous Parquet Reader"
-date: 2018-12-08
+slug: "Asynchronous Parquet Reader"
 parent: "Performance Tuning"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Configuring SSL/TLS for Encryption"
-date: 2018-07-07 01:29:20 UTC
+slug: "Configuring SSL/TLS for Encryption"
 parent: "Securing Drill"
 ---  
 

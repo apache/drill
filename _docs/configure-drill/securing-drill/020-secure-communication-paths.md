@@ -1,6 +1,6 @@
 ---
 title: "Secure Communication Paths"
-date: 2020-08-08
+slug: "Secure Communication Paths"
 parent: "Securing Drill"
 ---
 As illustrated in the following figure, Drill features five secure communication paths. Drill 1.11 introduces encryption between a Drill client and Drillbit. 

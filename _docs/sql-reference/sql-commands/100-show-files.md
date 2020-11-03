@@ -1,6 +1,6 @@
 ---
 title: "SHOW FILES"
-date: 2020-08-08
+slug: "SHOW FILES"
 parent: "SQL Commands"
 ---
 The SHOW FILES command provides a quick report of the file systems that are

@@ -1,6 +1,6 @@
 ---
 title: "Hive-to-Drill Data Type Mapping"
-date: 2020-08-08
+slug: "Hive-to-Drill Data Type Mapping"
 parent: "Data Sources and File Formats"
 ---
 Using Drill you can read tables created in Hive that use data types compatible with Drill. Drill currently does not support writing Hive tables. The map of SQL types and Hive types shows that several Hive types need to be cast to the supported SQL type in a Drill query:

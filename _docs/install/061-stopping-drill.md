@@ -1,6 +1,6 @@
 ---
 title: "Stopping Drill"
-date: 2018-12-08
+slug: "Stopping Drill"
 parent: Install Drill
 ---
 

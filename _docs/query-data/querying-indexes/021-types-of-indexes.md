@@ -1,6 +1,6 @@
 ---
 title: "Types of Indexes"
-date: 2018-12-18
+slug: "Types of Indexes"
 parent: "Querying Indexes"
 ---  
   

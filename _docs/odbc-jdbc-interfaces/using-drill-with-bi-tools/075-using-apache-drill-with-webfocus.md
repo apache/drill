@@ -1,6 +1,6 @@
 ---
 title: "Using Information Builders’ WebFOCUS with Apache Drill"
-date: 2018-02-09 00:16:03 UTC
+slug: "Using Information Builders’ WebFOCUS with Apache Drill"
 parent: "Using Drill with BI Tools"
 ---
 

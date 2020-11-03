@@ -1,6 +1,6 @@
 ---
 title: "Querying Avro Files"
-date: 2020-08-08
+slug: "Querying Avro Files"
 parent: "Querying a File System"
 ---
 

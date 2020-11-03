@@ -1,6 +1,6 @@
 ---
 title: "HTTPD Format Plugin"
-date: 2017-03-31 21:49:40 UTC
+slug: "HTTPD Format Plugin"
 parent: "Data Sources and File Formats"
 ---
 

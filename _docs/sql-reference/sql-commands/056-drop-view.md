@@ -1,6 +1,6 @@
 ---
 title: "DROP VIEW"
-date: 2020-08-08
+slug: "DROP VIEW"
 parent: "SQL Commands"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Apache Drill Contribution Guidelines"
-date: 2017-09-06 21:18:53 UTC
+slug: "Apache Drill Contribution Guidelines"
 parent: "Contribute to Drill"
 ---
 Disclaimer: These contribution guidelines are largely based on Apache Hive

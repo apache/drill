@@ -1,6 +1,6 @@
 ---
 title: "Querying Hive"
-date: 2020-08-08
+slug: "Querying Hive"
 parent: "Query Data"
 ---
 This is a simple exercise that provides steps for creating a Hive table and

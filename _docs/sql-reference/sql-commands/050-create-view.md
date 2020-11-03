@@ -1,6 +1,6 @@
 ---
 title: "CREATE VIEW"
-date: 2020-08-08
+slug: "CREATE VIEW"
 parent: "SQL Commands"
 ---
 The CREATE VIEW command creates a virtual structure for the result set of a

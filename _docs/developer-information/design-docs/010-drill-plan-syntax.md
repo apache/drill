@@ -1,6 +1,6 @@
 ---
 title: "Drill Plan Syntax"
-date: 2018-02-09 00:15:59 UTC
+slug: "Drill Plan Syntax"
 parent: "Design Docs"
 ---
 ## Whats the plan?

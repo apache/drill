@@ -1,6 +1,6 @@
 ---
 title: "Querying Parquet Files"
-date: 2020-08-08
+slug: "Querying Parquet Files"
 parent: "Querying a File System"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "String Manipulation"
-date: 2020-08-09
+slug: "String Manipulation"
 parent: "SQL Functions"
 ---
 

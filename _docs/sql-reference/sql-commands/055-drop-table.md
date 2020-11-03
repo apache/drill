@@ -1,6 +1,6 @@
 ---
 title: "DROP TABLE"
-date: 2020-08-08
+slug: "DROP TABLE"
 parent: "SQL Commands"
 ---
 

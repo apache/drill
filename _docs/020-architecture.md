@@ -1,3 +1,4 @@
 ---
 title: "Architecture"
+slug: "Architecture"
 ---

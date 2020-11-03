@@ -1,6 +1,6 @@
 ---
 title: "Lesson 3: Run Queries on Complex Data Types"
-date: 2020-08-08
+slug: "Lesson 3: Run Queries on Complex Data Types"
 parent: "Learn Drill with the MapR Sandbox"
 ---
 ## Goal

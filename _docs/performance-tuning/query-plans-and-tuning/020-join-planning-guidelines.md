@@ -1,6 +1,6 @@
 ---
 title: "Join Planning Guidelines"
-date: 2016-11-21 22:28:42 UTC
+slug: "Join Planning Guidelines"
 parent: "Query Plans and Tuning"
 --- 
 

@@ -1,6 +1,6 @@
 ---
 title: "Throttling"
-date: 2018-12-08
+slug: "Throttling"
 parent: "Query Plans and Tuning"
 --- 
 

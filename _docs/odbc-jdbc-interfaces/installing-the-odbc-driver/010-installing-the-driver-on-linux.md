@@ -1,6 +1,6 @@
 ---
 title: "Installing the Driver on Linux"
-date: 2018-12-21
+slug: "Installing the Driver on Linux"
 parent: "Installing the ODBC Driver"
 ---
 Install the Drill ODBC Driver on the machine from which you connect to

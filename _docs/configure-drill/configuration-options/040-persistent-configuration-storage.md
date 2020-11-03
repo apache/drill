@@ -1,6 +1,6 @@
 ---
 title: "Persistent Configuration Storage"
-date: 2018-12-08
+slug: "Persistent Configuration Storage"
 parent: "Configuration Options"
 ---
 Drill stores persistent configuration data in a persistent configuration store

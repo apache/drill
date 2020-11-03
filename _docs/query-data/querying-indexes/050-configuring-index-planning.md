@@ -1,6 +1,6 @@
 ---
 title: "Configuring Index Planning"
-date: 2018-12-18
+slug: "Configuring Index Planning"
 parent: "Querying Indexes"
 ---   
 

@@ -1,6 +1,6 @@
 ---
 title: "Using jpam as the PAM Authenticator"
-date: 2017-05-17 01:38:50 UTC
+slug: "Using jpam as the PAM Authenticator"
 parent: "Securing Drill"
 ---
 

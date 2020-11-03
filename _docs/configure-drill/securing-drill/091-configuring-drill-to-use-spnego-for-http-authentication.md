@@ -1,6 +1,6 @@
 ---
 title: "Configuring Drill to use SPNEGO for HTTP Authentication"
-date: 2018-12-11
+slug: "Configuring Drill to use SPNEGO for HTTP Authentication"
 parent: "Securing Drill"
 ---  
 

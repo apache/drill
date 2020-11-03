@@ -1,6 +1,6 @@
 ---
 title: "HTTP Storage Plugin"
-date: 2020-11-02
+slug: "HTTP Storage Plugin"
 parent: "Connect a Data Source"
 ---
 
