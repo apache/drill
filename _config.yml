@@ -20,7 +20,7 @@ noindex: 1
 collections:
   docs:
     output: true
-    permalink: "/docs/:title/"
+    permalink: /docs/:slug/
 
 defaults:
   - scope:
