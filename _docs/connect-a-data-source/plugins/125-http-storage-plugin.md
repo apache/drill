@@ -6,7 +6,7 @@ parent: "Connect a Data Source"
 
 **Introduced in release:** 1.18
 
-The HTTP storage plugin lets you query APIs over HTTP/REST.  The plugin expects JSON responses.
+The HTTP storage plugin lets you query APIs over HTTP/REST.  The plugin expects JSON or CSV responses.
 
 The HTTP plugin is new in Drill 1.18 and is an Alpha feature. It works well, and we enourage you to use it and provide feedback. However, we reserve the right to change the plugin based on that feedback.
 
