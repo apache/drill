@@ -6,6 +6,14 @@ Currently, the Apache Drill build process is known to work on Linux, Windows and
   * Java 8
   * Maven 3.6.3 or greater
 
+## Docker based build environment
+
+The `start-build-env.sh` script in the root of the project source builds and starts a preconfigured environment
+that contains all the tools needed to build Apache Drill from source.
+
+This is known to work on Ubuntu 20.04 with Docker installed.
+On other systems your success may vary. On Redhat/CentOS based systems no longer have Docker.
+
 ## Confirm settings
     # java -version
     java version "1.8.0_161"
