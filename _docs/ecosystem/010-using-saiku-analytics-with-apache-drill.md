@@ -121,7 +121,7 @@ Once all of the charms have deployed (this will be highlighted when the rings ar
 
 To access the Apache Drill user interface run the following command from your terminal:
 
-```
+```sh
 juju expose apache-drill
 ```
 
@@ -131,13 +131,13 @@ Then navigate to the machine IP address on port 8047 on your browser.
 
 Apache Drill is supplied with a sample dataset that allows you to test its functionality quickly and easily. To use this dataset you can run a query similar to the following within the Apache Drill UI:
 
-```
+```sql
 SELECT * FROM cp.`employee.json` LIMIT 20
 ```
 
 or:
 
-```
+```sql
 SELECT full_name, salary, gender FROM cp.`employee.json` where gender = 'F'
 ```
 
@@ -149,13 +149,13 @@ Now is a good time to start importing your data. For this guide we will supply s
 
 To upload it to the server you can run the following command from your terminal:
 
-```
+```sh
 juju scp sales.tar.bz2 apache-drill/0:~
 ```
 
 This has uploaded the test CSV file to the server. Next we unzip it and place iy within the data storage pool.
 
-```
+```sh
 juju ssh apache-drill/0
 sudo mv sales.tar.bz2 /var/snap/apache-drill-spicule/common
 cd /var/snap/apache-drill-spicule/common
@@ -173,8 +173,8 @@ Firstly in Drill click on the storage tab and update the DFS plugin.
 
 Below the tmp block add the following:
 
-```
-,"test": {
+```json
+    "test": {
       "location": "/var/snap/apache-drill-spicule/common",
       "writable": true,
       "defaultInputFormat": null,
@@ -184,22 +184,24 @@ Below the tmp block add the following:
 
 And below it set:
 
-```
-"skipFirstLine": false,
-"extractHeader": true,
+```json
+{
+  "skipFirstLine": false,
+  "extractHeader": true,
+}
 ```
 
 within the CSV block. Then click the update button.
 
 Let's start with a query like:
 
-```
+```sql
 SELECT * FROM dfs.test.`/sales` limit 10
 ```
 
 This should return the first 10 rows of sales data. The files are chunked by year so lets try another query:
 
-```
+```sql
 SELECT distinct `Year` FROM dfs.test.`/sales`
 ```
 
