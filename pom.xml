@@ -88,7 +88,7 @@
     <hbase.version>2.4.8</hbase.version>
     <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.28</freemarker.version>
-    <javassist.version>3.27.0-GA</javassist.version>
+    <javassist.version>3.28.0-GA</javassist.version>
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.10</reflections.version>
     <avro.version>1.9.1</avro.version>
@@ -96,7 +96,7 @@
     <jetty.version>9.4.41.v20210516</jetty.version>
     <jersey.version>2.34</jersey.version>
     <javax.validation.api>2.0.1.Final</javax.validation.api>
-    <asm.version>7.3.1</asm.version>
+    <asm.version>9.2</asm.version>
     <excludedGroups />
     <memoryMb>1800</memoryMb>
     <directMemoryMb>3000</directMemoryMb>
@@ -138,6 +138,7 @@
     <brotli-codec.version>0.1.1</brotli-codec.version>
     <aircompressor.version>0.20</aircompressor.version>
     <iceberg.version>0.12.1</iceberg.version>
+    <junit.args/>
   </properties>
 
   <scm>
@@ -628,7 +629,7 @@
                   <version>[${maven.version},4)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
-                  <version>[1.8,15)</version>
+                  <version>[1.8,18)</version>
                 </requireJavaVersion>
               </rules>
             </configuration>
@@ -879,7 +880,8 @@
               -XX:MaxDirectMemorySize=${directMemoryMb}M
               -Djava.net.preferIPv4Stack=true
               -Djava.awt.headless=true
-              -XX:+CMSClassUnloadingEnabled -ea
+              -ea
+              ${junit.args}
               -Djdk.attach.allowAttachSelf=true
               -javaagent:${settings.localRepository}/org/jmockit/jmockit/${jmockit.version}/jmockit-${jmockit.version}.jar
             </argLine>
@@ -999,7 +1001,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.2.1</version>
+          <version>3.2.4</version>
           <executions>
             <execution>
               <phase>package</phase>
@@ -1013,6 +1015,11 @@
             <dependency>
               <groupId>org.ow2.asm</groupId>
               <artifactId>asm</artifactId>
+              <version>${asm.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.ow2.asm</groupId>
+              <artifactId>asm-commons</artifactId>
               <version>${asm.version}</version>
             </dependency>
           </dependencies>
@@ -3964,6 +3971,22 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>jdk15</id>
+      <activation>
+        <jdk>[9,18)</jdk>
+      </activation>
+      <properties>
+        <junit.args>
+          --add-opens=java.base/java.lang=ALL-UNNAMED
+          --add-opens java.base/java.net=ALL-UNNAMED
+          --add-opens java.base/java.nio=ALL-UNNAMED
+          --add-opens=java.base/java.util=ALL-UNNAMED
+          --add-opens java.base/sun.nio.ch=ALL-UNNAMED
+          --add-opens java.security.jgss/sun.security.krb5=ALL-UNNAMED
+        </junit.args>
+      </properties>
     </profile>
   </profiles>
   <modules>

@@ -33,7 +33,7 @@ jobs:
     strategy:
       matrix:
         # Java versions to run unit tests
-        java: [ '8', '11', '14' ]
+        java: [ '8', '11', '17' ]
       fail-fast: false
     steps:
       - name: Checkout

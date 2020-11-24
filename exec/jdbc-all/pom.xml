@@ -284,7 +284,7 @@
             -Ddrill.exec.sys.store.provider.local.write=false
             -Dorg.apache.drill.exec.server.Drillbit.system_options="org.apache.drill.exec.compile.ClassTransformer.scalar_replacement=on"
             -XX:MaxDirectMemorySize=3072M
-            -XX:+CMSClassUnloadingEnabled -ea</argLine>
+            ${junit.args} -ea</argLine>
           <additionalClasspathElements>
             <additionalClasspathElements>${settings.localRepository}/org/junit/vintage/junit-vintage-engine/${junit.version}/junit-vintage-engine-${junit.version}.jar</additionalClasspathElements>
             <additionalClasspathElements>${settings.localRepository}/org/hamcrest/hamcrest/${hamcrest.version}/hamcrest-${hamcrest.version}.jar</additionalClasspathElements>
