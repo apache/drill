@@ -423,6 +423,47 @@ public class TestExcelFormat extends ClusterTest {
   }
 
   @Test
+  public void testTextFormula() throws Exception {
+    String sql = "SELECT * FROM cp.`excel/text-formula.xlsx`";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Grade", MinorType.VARCHAR)
+      .addNullable("Gender", MinorType.VARCHAR)
+      .addNullable("Combined", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("Seventh Grade", "Girls", "Seventh Grade Girls")
+      .addRow("Sixth Grade", "Girls", "Sixth Grade Girls")
+      .addRow("Fourth Grade", "Girls", "Fourth Grade Girls")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testNumericFormula() throws Exception {
+    String sql = "SELECT * FROM cp.`excel/numeric-formula.xlsx`";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("col1", MinorType.FLOAT8)
+      .addNullable("col2", MinorType.FLOAT8)
+      .addNullable("calc", MinorType.FLOAT8)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(2.0, 8.0, 256.0)
+      .addRow(4.0, 6.0, 4096.0)
+      .addRow(6.0, 4.0, 1296.0)
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testLimitPushdown() throws Exception {
     String sql = "SELECT id, first_name, order_count FROM cp.`excel/test_data.xlsx` LIMIT 5";
 
