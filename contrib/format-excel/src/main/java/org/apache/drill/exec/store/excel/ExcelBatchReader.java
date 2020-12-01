@@ -459,7 +459,15 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     } else if (cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
       // Case if the column is a date or time
       addColumnToArray(rowWriter, excelFieldNames.get(colPosition), MinorType.TIMESTAMP, false);
-    } else if (cellType == CellType.NUMERIC || cellType == CellType.FORMULA || cellType == CellType.BLANK || cellType == CellType._NONE) {
+    } else if (cellType == CellType.FORMULA) {
+      // Cells with formulae can return either strings or numbers.
+      CellType formulaCellType = cell.getCachedFormulaResultType();
+      if (formulaCellType == CellType.STRING) {
+        addColumnToArray(rowWriter, excelFieldNames.get(colPosition), MinorType.VARCHAR, false);
+      } else {
+        addColumnToArray(rowWriter, excelFieldNames.get(colPosition), MinorType.FLOAT8, false);
+      }
+    } else if (cellType == CellType.NUMERIC || cellType == CellType.BLANK || cellType == CellType._NONE) {
       // Case if the column is numeric
       addColumnToArray(rowWriter, excelFieldNames.get(colPosition), MinorType.FLOAT8, false);
     } else {
