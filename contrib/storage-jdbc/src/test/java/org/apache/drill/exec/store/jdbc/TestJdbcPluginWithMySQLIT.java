@@ -324,11 +324,44 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
 
   @Test
   public void testLimitPushDown() throws Exception {
-    String query = "select person_id from mysql.`drill_mysql_test`.person limit 10";
+    String query = "select person_id, first_name, last_name from mysql.`drill_mysql_test`.person limit 100";
     queryBuilder()
         .sql(query)
         .planMatcher()
-        .include("Jdbc\\(.*LIMIT 10")
+        .include("Jdbc\\(.*LIMIT 100")
+        .exclude("Limit\\(")
+        .match();
+  }
+
+  @Test
+  public void testLimitPushDownWithOrderBy() throws Exception {
+    String query = "select person_id from mysql.`drill_mysql_test`.person order by first_name limit 100";
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("Jdbc\\(.*ORDER BY `first_name`.*LIMIT 100")
+        .exclude("Limit\\(")
+        .match();
+  }
+
+  @Test
+  public void testLimitPushDownWithOffset() throws Exception {
+    String query = "select person_id, first_name from mysql.`drill_mysql_test`.person limit 100 offset 10";
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("Jdbc\\(.*LIMIT 100 OFFSET 10")
+        .exclude("Limit\\(")
+        .match();
+  }
+
+  @Test
+  public void testLimitPushDownWithConvertFromJson() throws Exception {
+    String query = "select convert_fromJSON(first_name)['ppid'] from mysql.`drill_mysql_test`.person LIMIT 100";
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("Jdbc\\(.*LIMIT 100")
         .exclude("Limit\\(")
         .match();
   }

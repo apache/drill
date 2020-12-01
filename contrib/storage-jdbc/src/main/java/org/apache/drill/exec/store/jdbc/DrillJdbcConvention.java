@@ -25,12 +25,15 @@ import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcRules;
 import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcFilterRule;
 import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcProjectRule;
+import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcSortRule;
 import org.apache.calcite.adapter.jdbc.JdbcToEnumerableConverterRule;
 import org.apache.calcite.linq4j.tree.ConstantUntypedNull;
+import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.planner.RuleInstance;
+import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
@@ -43,7 +46,7 @@ class DrillJdbcConvention extends JdbcConvention {
    * Unwanted Calcite's JdbcRules are filtered out using this set
    */
   private static final Set<Class<? extends RelOptRule>> EXCLUDED_CALCITE_RULES = ImmutableSet.of(
-      JdbcToEnumerableConverterRule.class, JdbcFilterRule.class, JdbcProjectRule.class);
+      JdbcToEnumerableConverterRule.class, JdbcFilterRule.class, JdbcProjectRule.class, JdbcSortRule.class);
 
   private final ImmutableSet<RelOptRule> rules;
   private final JdbcStoragePlugin plugin;
@@ -58,8 +61,14 @@ class DrillJdbcConvention extends JdbcConvention {
         .addAll(calciteJdbcRules)
         .add(JdbcIntermediatePrelConverterRule.INSTANCE)
         .add(new JdbcDrelConverterRule(this))
-        .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(this))
-        .add(new DrillJdbcRuleBase.DrillJdbcFilterRule(this))
+        .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(Convention.NONE, this))
+        .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(DrillRel.DRILL_LOGICAL, this))
+        .add(new DrillJdbcRuleBase.DrillJdbcFilterRule(Convention.NONE, this))
+        .add(new DrillJdbcRuleBase.DrillJdbcFilterRule(DrillRel.DRILL_LOGICAL, this))
+        .add(new DrillJdbcRuleBase.DrillJdbcSortRule(Convention.NONE, this))
+        .add(new DrillJdbcRuleBase.DrillJdbcSortRule(DrillRel.DRILL_LOGICAL, this))
+        .add(new DrillJdbcRuleBase.DrillJdbcLimitRule(Convention.NONE, this))
+        .add(new DrillJdbcRuleBase.DrillJdbcLimitRule(DrillRel.DRILL_LOGICAL, this))
         .add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE)
         .add(RuleInstance.PROJECT_REMOVE_RULE)
         .build();

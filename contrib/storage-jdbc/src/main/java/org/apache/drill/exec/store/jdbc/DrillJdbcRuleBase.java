@@ -23,15 +23,17 @@ import java.util.function.Predicate;
 
 import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcRules;
-import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rex.RexNode;
 
+import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
 import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
@@ -58,8 +60,8 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
 
   static class DrillJdbcProjectRule extends DrillJdbcRuleBase {
 
-    DrillJdbcProjectRule(JdbcConvention out) {
-      super(LogicalProject.class, Convention.NONE, out, "DrillJdbcProjectRule");
+    DrillJdbcProjectRule(RelTrait in, JdbcConvention out) {
+      super(LogicalProject.class, in, out, "DrillJdbcProjectRule");
     }
 
     public RelNode convert(RelNode rel) {
@@ -89,8 +91,8 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
 
   static class DrillJdbcFilterRule extends DrillJdbcRuleBase {
 
-    DrillJdbcFilterRule(JdbcConvention out) {
-      super(LogicalFilter.class, Convention.NONE, out, "DrillJdbcFilterRule");
+    DrillJdbcFilterRule(RelTrait in, JdbcConvention out) {
+      super(LogicalFilter.class, in, out, "DrillJdbcFilterRule");
     }
 
     public RelNode convert(RelNode rel) {
@@ -115,6 +117,38 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
       } catch (ExecutionException e) {
         throw new IllegalStateException("Failure while trying to evaluate push down.", e);
       }
+    }
+  }
+
+  static class DrillJdbcSortRule extends DrillJdbcRuleBase {
+
+    DrillJdbcSortRule(RelTrait in, JdbcConvention out) {
+      super(Sort.class, in, out, "DrillJdbcSortRule");
+    }
+
+    @Override
+    public RelNode convert(RelNode rel) {
+      Sort sort = (Sort) rel;
+
+      return new DrillJdbcSort(sort.getCluster(), sort.getTraitSet().replace(this.out),
+          convert(sort.getInput(), sort.getInput().getTraitSet().replace(this.out).simplify()),
+          sort.collation, sort.offset, sort.fetch);
+    }
+  }
+
+  static class DrillJdbcLimitRule extends DrillJdbcRuleBase {
+
+    DrillJdbcLimitRule(RelTrait in, JdbcConvention out) {
+      super(DrillLimitRelBase.class, in, out, "DrillJdbcLimitRule");
+    }
+
+    @Override
+    public RelNode convert(RelNode rel) {
+      DrillLimitRelBase limit = (DrillLimitRelBase) rel;
+
+      return new DrillJdbcSort(limit.getCluster(), limit.getTraitSet().plus(RelCollations.EMPTY).replace(this.out).simplify(),
+          convert(limit.getInput(), limit.getInput().getTraitSet().replace(this.out).simplify()),
+          RelCollations.EMPTY, limit.getOffset(), limit.getFetch());
     }
   }
 }
