@@ -75,6 +75,7 @@ public class MongoRecordReader extends AbstractRecordReader {
   private final boolean readNumbersAsDouble;
   private boolean unionEnabled;
   private final boolean isBsonRecordReader;
+  private final int maxRecords;
 
   public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns,
       FragmentContext context, MongoStoragePlugin plugin) {
@@ -94,6 +95,7 @@ public class MongoRecordReader extends AbstractRecordReader {
     enableNanInf = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS).bool_val;
     readNumbersAsDouble = fragmentContext.getOptions().getOption(ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE).bool_val;
     isBsonRecordReader = fragmentContext.getOptions().getOption(ExecConstants.MONGO_BSON_RECORD_READER).bool_val;
+    maxRecords = subScanSpec.getMaxRecords();
     logger.debug("BsonRecordReader is enabled? " + isBsonRecordReader);
     init(subScanSpec);
   }
@@ -173,7 +175,13 @@ public class MongoRecordReader extends AbstractRecordReader {
     if (cursor == null) {
       logger.info("Filters Applied : " + filters);
       logger.info("Fields Selected :" + fields);
-      cursor = collection.find(filters).projection(fields).batchSize(100).iterator();
+
+      // Add limit to Mongo query
+      if (maxRecords > 0) {
+        cursor = collection.find(filters).projection(fields).limit(maxRecords).batchSize(100).iterator();
+      } else {
+        cursor = collection.find(filters).projection(fields).batchSize(100).iterator();
+      }
     }
 
     writer.allocate();

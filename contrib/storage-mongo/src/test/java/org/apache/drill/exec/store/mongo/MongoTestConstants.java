@@ -60,7 +60,10 @@ public interface MongoTestConstants {
 
   // test queries
   String TEST_QUERY_1 = "SELECT * FROM mongo.employee.`empinfo` limit 5";
-  String TEST_QUERY_LIMIT = "SELECT first_name, last_name FROM mongo.employee.`empinfo` limit 2;";
+  String TEST_QUERY_LIMIT = "SELECT first_name, last_name FROM mongo.%s.`%s` limit 2";
+  String TEST_LIMIT_QUERY = "select `employee_id` from mongo.%s.`%s` limit %d";
+
+
 
   // test query template1
   String TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s`";
