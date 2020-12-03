@@ -173,11 +173,12 @@ public class MongoRecordReader extends AbstractRecordReader {
   @Override
   public int next() {
     if (cursor == null) {
-      logger.info("Filters Applied : " + filters);
-      logger.info("Fields Selected :" + fields);
+      logger.debug("Filters Applied : " + filters);
+      logger.debug("Fields Selected :" + fields);
 
       // Add limit to Mongo query
       if (maxRecords > 0) {
+        logger.debug("Limit applied: {}", maxRecords);
         cursor = collection.find(filters).projection(fields).limit(maxRecords).batchSize(100).iterator();
       } else {
         cursor = collection.find(filters).projection(fields).batchSize(100).iterator();

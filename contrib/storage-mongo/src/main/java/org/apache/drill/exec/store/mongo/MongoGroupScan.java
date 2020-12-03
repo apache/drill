@@ -103,6 +103,8 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   private List<SchemaPath> columns;
 
+  private int maxRecords;
+
   private Map<Integer, List<MongoSubScanSpec>> endpointFragmentMapping;
 
   // Sharding with replica sets contains all the replica server addresses for
@@ -114,8 +116,6 @@ public class MongoGroupScan extends AbstractGroupScan implements
   private final Stopwatch watch = Stopwatch.createUnstarted();
 
   private boolean filterPushedDown = false;
-
-  private int maxRecords;
 
   @JsonCreator
   public MongoGroupScan(
@@ -143,10 +143,6 @@ public class MongoGroupScan extends AbstractGroupScan implements
     init();
   }
 
-  public MongoGroupScan (MongoGroupScan that, int maxRecords) {
-    super (that);
-    this.maxRecords = maxRecords;
-  }
 
   /**
    * Private constructor, used for cloning.
@@ -382,6 +378,12 @@ public class MongoGroupScan extends AbstractGroupScan implements
     return clone;
   }
 
+  public GroupScan clone(int maxRecords) {
+    MongoGroupScan clone = new MongoGroupScan(this);
+    clone.maxRecords = maxRecords;
+    return clone;
+  }
+
   @Override
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;
@@ -511,11 +513,21 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   @Override
   public ScanStats getScanStats() {
+    long recordCount;
     try{
       MongoClient client = storagePlugin.getClient();
       MongoDatabase db = client.getDatabase(scanSpec.getDbName());
       MongoCollection<Document> collection = db.getCollection(scanSpec.getCollectionName());
-      long numDocs = collection.count();
+      long numDocs = collection.countDocuments();
+
+      if (maxRecords > 0 && numDocs > 0) {
+        recordCount = Math.min(maxRecords, numDocs);
+      } else if (maxRecords == -1) {
+        recordCount = numDocs;
+      } else {
+        recordCount = maxRecords;
+      }
+
       float approxDiskCost = 0;
       if (numDocs != 0) {
         //toJson should use client's codec, otherwise toJson could fail on
@@ -523,9 +535,9 @@ public class MongoGroupScan extends AbstractGroupScan implements
         final DocumentCodec codec =
             new DocumentCodec(client.getMongoClientOptions().getCodecRegistry(), new BsonTypeClassMap());
         String json = collection.find().first().toJson(codec);
-        approxDiskCost = json.getBytes().length * numDocs;
+        approxDiskCost = json.getBytes().length * recordCount;
       }
-      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, numDocs, 1, approxDiskCost);
+      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, recordCount, 1, approxDiskCost);
     } catch (Exception e) {
       throw new DrillRuntimeException(e.getMessage(), e);
     }
@@ -584,7 +596,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
     if (maxRecords == this.maxRecords) {
       return null;
     }
-    return new MongoGroupScan(this, maxRecords);
+    return clone(maxRecords);
   }
 
   @Override
@@ -616,6 +628,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
     return new PlanStringBuilder(this)
       .field("MongoScanSpec", scanSpec)
       .field("columns", columns)
+      .field("maxRecords", maxRecords)
       .toString();
   }
 
