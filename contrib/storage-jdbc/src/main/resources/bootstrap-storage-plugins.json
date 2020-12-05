@@ -8,7 +8,7 @@
       "password": "xxx",
       "caseInsensitiveTableNames": false,
       "sourceParameters" : {
-        "maxIdle" : 8
+        "maximumPoolSize": 10
       },
       "enabled": false
     }
