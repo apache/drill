@@ -17,33 +17,46 @@
  */
 package org.apache.drill.exec.store.httpd;
 
-import java.util.Objects;
-
-import org.apache.drill.common.PlanStringBuilder;
-import org.apache.drill.common.logical.FormatPluginConfig;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
-@JsonTypeName("httpd")
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+@JsonTypeName(HttpdLogFormatPlugin.DEFAULT_NAME)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class HttpdLogFormatConfig implements FormatPluginConfig {
 
   public static final String DEFAULT_TS_FORMAT = "dd/MMM/yyyy:HH:mm:ss ZZ";
+  public final String logFormat;
+  public final String timestampFormat;
+  public final List<String> extensions;
+  public final boolean flattenWildcards;
+  public final int maxErrors;
 
-  // No extensions?
-  private final String logFormat;
-  private final String timestampFormat;
 
   @JsonCreator
   public HttpdLogFormatConfig(
+      @JsonProperty("extensions") List<String> extensions,
       @JsonProperty("logFormat") String logFormat,
-      @JsonProperty("timestampFormat") String timestampFormat) {
+      @JsonProperty("timestampFormat") String timestampFormat,
+      @JsonProperty("maxErrors") int maxErrors,
+      @JsonProperty("flattenWildcards") boolean flattenWildcards
+  ) {
+
+    this.extensions = extensions == null
+      ? Collections.singletonList("httpd")
+      : ImmutableList.copyOf(extensions);
     this.logFormat = logFormat;
-    this.timestampFormat = timestampFormat == null
-        ? DEFAULT_TS_FORMAT : timestampFormat;
+    this.timestampFormat = timestampFormat;
+    this.maxErrors = maxErrors;
+    this.flattenWildcards = flattenWildcards;
   }
 
   /**
@@ -61,23 +74,32 @@ public class HttpdLogFormatConfig implements FormatPluginConfig {
     return timestampFormat;
   }
 
+  public List<String> getExtensions() {
+    return extensions;
+  }
+
+  public int getMaxErrors() { return maxErrors;}
+
+  public boolean getFlattenWildcards () { return flattenWildcards; }
+
   @Override
   public int hashCode() {
-    return Objects.hash(logFormat, timestampFormat);
+    return Objects.hash(logFormat, timestampFormat, maxErrors, flattenWildcards);
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
+  public boolean equals(Object obj) {
+    if (this == obj) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-
-    HttpdLogFormatConfig that = (HttpdLogFormatConfig) o;
-    return Objects.equals(logFormat, that.logFormat) &&
-           Objects.equals(timestampFormat, that.timestampFormat);
+    HttpdLogFormatConfig other = (HttpdLogFormatConfig) obj;
+    return Objects.equals(logFormat, other.logFormat)
+      && Objects.equals(timestampFormat, other.timestampFormat)
+      && Objects.equals(maxErrors, other.maxErrors)
+      && Objects.equals(flattenWildcards, other.flattenWildcards);
   }
 
   @Override
@@ -85,6 +107,8 @@ public class HttpdLogFormatConfig implements FormatPluginConfig {
     return new PlanStringBuilder(this)
         .field("log format", logFormat)
         .field("timestamp format", timestampFormat)
+        .field("max errors", maxErrors)
+        .field("flattenWildcards", flattenWildcards)
         .toString();
   }
 }

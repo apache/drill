@@ -26,11 +26,6 @@
           "extensions" : [ "tsv" ],
           "delimiter" : "\t"
         },
-        "httpd" : {
-          "type" : "httpd",
-          "logFormat" : "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"",
-          "timestampFormat" : "dd/MMM/yyyy:HH:mm:ss ZZ"
-        },
         "parquet" : {
           "type" : "parquet"
         },
@@ -151,11 +146,6 @@
           "type" : "text",
           "extensions" : [ "tsv" ],
           "delimiter" : "\t"
-        },
-        "httpd" : {
-          "type" : "httpd",
-          "logFormat" : "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"",
-          "timestampFormat" : "dd/MMM/yyyy:HH:mm:ss ZZ"
         },
         "parquet" : {
           "type" : "parquet"
