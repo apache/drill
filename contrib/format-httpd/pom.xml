@@ -20,15 +20,13 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
     <version>1.19.0-SNAPSHOT</version>
   </parent>
-
-  <artifactId>drill-udfs</artifactId>
-  <name>contrib/drill-udfs</name>
+  <artifactId>drill-format-httpd</artifactId>
+  <name>contrib/httpd-format-plugin</name>
 
   <dependencies>
     <dependency>
@@ -38,37 +36,25 @@
     </dependency>
 
     <dependency>
-      <groupId>commons-net</groupId>
-      <artifactId>commons-net</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-validator</groupId>
-      <artifactId>commons-validator</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-text</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.esri.geometry</groupId>
-      <artifactId>esri-geometry-api</artifactId>
-      <version>2.2.2</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.osgeo</groupId>
-      <artifactId>proj4j</artifactId>
-      <version>0.1.0</version>
+      <groupId>nl.basjes.parse.httpdlog</groupId>
+      <artifactId>httpdlog-parser</artifactId>
+      <version>5.6</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-codec</groupId>
+          <artifactId>commons-codec</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>nl.basjes.parse.useragent</groupId>
-      <artifactId>yauaa</artifactId>
+      <artifactId>yauaa-logparser</artifactId>
       <version>5.19</version>
     </dependency>
-
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -77,7 +63,6 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-common</artifactId>
@@ -86,7 +71,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
   <build>
     <plugins>
       <plugin>
@@ -99,27 +83,12 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${basedir}/target/classes/org/apache/drill/exec/udfs</outputDirectory>
+              <outputDirectory>${basedir}/target/classes/org/apache/drill/exec/store/httpd
+              </outputDirectory>
               <resources>
                 <resource>
-                  <directory>src/main/java/org/apache/drill/exec/udfs</directory>
+                  <directory>src/main/java/org/apache/drill/exec/store/httpd</directory>
                   <filtering>true</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-          <execution>
-            <id>copy-udf-sample-data</id>
-            <phase>process-sources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/classes/sample-data</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>sample-data</directory>
-                  <filtering>false</filtering>
                 </resource>
               </resources>
             </configuration>
@@ -128,5 +97,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>

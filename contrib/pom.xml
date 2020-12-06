@@ -46,6 +46,7 @@
     <module>format-syslog</module>
     <module>format-ltsv</module>
     <module>format-excel</module>
+    <module>format-httpd</module>
     <module>format-esri</module>
     <module>format-hdf5</module>
     <module>format-spss</module>
