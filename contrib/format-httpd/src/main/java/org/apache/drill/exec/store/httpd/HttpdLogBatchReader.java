@@ -72,7 +72,13 @@ public class HttpdLogBatchReader implements ManagedReader<FileSchemaNegotiator> 
     openFile(negotiator);
     errorContext = negotiator.parentErrorContext();
     try {
-      parser = new HttpdParser(formatConfig.getLogFormat(), formatConfig.getTimestampFormat(), formatConfig.getFlattenWildcards(), scan);
+      parser = new HttpdParser(
+              formatConfig.getLogFormat(),
+              formatConfig.getTimestampFormat(),
+              formatConfig.getFlattenWildcards(),
+              formatConfig.getParseUserAgent(),
+              formatConfig.getLogParserRemapping(),
+              scan);
       negotiator.tableSchema(parser.setupParser(), false);
     } catch (Exception e) {
       throw UserException.dataReadError(e)

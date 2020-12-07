@@ -61,5 +61,8 @@
     <level value="debug" />
     <appender-ref ref="STDOUT" />
   </logger>
-
+  <logger name="nl.basjes.parse" additivity="false">
+    <level value="info" />
+    <appender-ref ref="STDOUT" />
+  </logger>
 </configuration>

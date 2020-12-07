@@ -18,8 +18,6 @@
 
 package org.apache.drill.exec.store.httpd;
 
-import nl.basjes.parse.core.Parser;
-
 public class HttpdUtils {
 
   public static final String PARSER_WILDCARD = ".*";
@@ -41,18 +39,6 @@ public class HttpdUtils {
     } else {
       return parserFieldName.replaceAll("_", "__").replace(PARSER_WILDCARD, SAFE_WILDCARD).replaceAll("\\.", SAFE_SEPARATOR);
     }
-  }
-
-  /**
-   * In order to define a type remapping the format of the field configuration will look like: <br/>
-   * HTTP.URI:request.firstline.uri.query.[parameter name] <br/>
-   *
-   * @param parser    Add type remapping to this parser instance.
-   * @param fieldName request.firstline.uri.query.[parameter_name]
-   * @param fieldType HTTP.URI, etc..
-   */
-  public static void addTypeRemapping(final Parser<HttpdLogRecord> parser, final String fieldName, final String fieldType) {
-    parser.addTypeRemapping(fieldName, fieldType);
   }
 
   /**

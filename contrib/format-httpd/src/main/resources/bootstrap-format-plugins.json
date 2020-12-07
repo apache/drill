@@ -5,7 +5,7 @@
       "formats": {
         "httpd" : {
           "type" : "httpd",
-          "logFormat" : "%h %l %u %t \"%r\" %s %b \"%{Referer}i\" \"%{User-agent}i\"",
+          "logFormat" : "common\ncombined",
           "maxErrors": 0,
           "flattenWildcards": false
         }
@@ -16,7 +16,7 @@
       "formats": {
         "httpd" : {
           "type" : "httpd",
-          "logFormat" : "%h %l %u %t \"%r\" %s %b \"%{Referer}i\" \"%{User-agent}i\"",
+          "logFormat" : "common\ncombined",
           "maxErrors": 0,
           "flattenWildcards": false
         }
@@ -27,7 +27,7 @@
       "formats": {
         "httpd" : {
           "type" : "httpd",
-          "logFormat" : "%h %l %u %t \"%r\" %s %b \"%{Referer}i\" \"%{User-agent}i\"",
+          "logFormat" : "common\ncombined",
           "maxErrors": 0,
           "flattenWildcards": false
         }
