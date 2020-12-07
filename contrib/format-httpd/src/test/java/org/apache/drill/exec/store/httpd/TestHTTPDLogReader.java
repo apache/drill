@@ -23,6 +23,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
@@ -36,6 +37,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import java.nio.file.Paths;
+import java.util.stream.Collectors;
+
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 import static org.junit.Assert.assertEquals;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
@@ -271,303 +274,181 @@ public class TestHTTPDLogReader extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
+  private TupleMetadata expectedAllFieldsSchema() {
+    return new SchemaBuilder()
+            .addNullable("connection_client_host", MinorType.VARCHAR)
+            .addNullable("connection_client_host_last", MinorType.VARCHAR)
+            .addNullable("connection_client_logname", MinorType.BIGINT)
+            .addNullable("connection_client_logname_last", MinorType.BIGINT)
+            .addNullable("connection_client_user", MinorType.VARCHAR)
+            .addNullable("connection_client_user_last", MinorType.VARCHAR)
+            .addNullable("request_firstline", MinorType.VARCHAR)
+            .addNullable("request_firstline_method", MinorType.VARCHAR)
+            .addNullable("request_firstline_original", MinorType.VARCHAR)
+            .addNullable("request_firstline_original_method", MinorType.VARCHAR)
+            .addNullable("request_firstline_original_protocol", MinorType.VARCHAR)
+            .addNullable("request_firstline_original_protocol_version", MinorType.VARCHAR)
+            .addNullable("request_firstline_original_uri", MinorType.VARCHAR)
+            .addNullable("request_firstline_original_uri_host", MinorType.VARCHAR)
+            .addNullable("request_firstline_original_uri_path", MinorType.VARCHAR)
+            .addNullable("request_firstline_original_uri_port", MinorType.BIGINT)
+            .addNullable("request_firstline_original_uri_protocol", MinorType.VARCHAR)
+            .addNullable("request_firstline_original_uri_query", MinorType.VARCHAR)
+            .addNullable("request_firstline_original_uri_ref", MinorType.VARCHAR)
+            .addNullable("request_firstline_original_uri_userinfo", MinorType.VARCHAR)
+            .addNullable("request_firstline_protocol", MinorType.VARCHAR)
+            .addNullable("request_firstline_protocol_version", MinorType.VARCHAR)
+            .addNullable("request_firstline_uri", MinorType.VARCHAR)
+            .addNullable("request_firstline_uri_host", MinorType.VARCHAR)
+            .addNullable("request_firstline_uri_path", MinorType.VARCHAR)
+            .addNullable("request_firstline_uri_port", MinorType.BIGINT)
+            .addNullable("request_firstline_uri_protocol", MinorType.VARCHAR)
+            .addNullable("request_firstline_uri_query", MinorType.VARCHAR)
+            .addNullable("request_firstline_uri_ref", MinorType.VARCHAR)
+            .addNullable("request_firstline_uri_userinfo", MinorType.VARCHAR)
+            .addNullable("request_receive_time", MinorType.TIMESTAMP)
+            .addNullable("request_receive_time_date", MinorType.DATE)
+            .addNullable("request_receive_time_date__utc", MinorType.DATE)
+            .addNullable("request_receive_time_day", MinorType.BIGINT)
+            .addNullable("request_receive_time_day__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_epoch", MinorType.TIMESTAMP)
+            .addNullable("request_receive_time_hour", MinorType.BIGINT)
+            .addNullable("request_receive_time_hour__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_last", MinorType.TIMESTAMP)
+            .addNullable("request_receive_time_last_date", MinorType.DATE)
+            .addNullable("request_receive_time_last_date__utc", MinorType.DATE)
+            .addNullable("request_receive_time_last_day", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_day__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_epoch", MinorType.TIMESTAMP)
+            .addNullable("request_receive_time_last_hour", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_hour__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_microsecond", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_microsecond__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_millisecond", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_millisecond__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_minute", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_minute__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_month", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_month__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_monthname", MinorType.VARCHAR)
+            .addNullable("request_receive_time_last_monthname__utc", MinorType.VARCHAR)
+            .addNullable("request_receive_time_last_nanosecond", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_nanosecond__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_second", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_second__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_time", MinorType.TIME)
+            .addNullable("request_receive_time_last_time__utc", MinorType.TIME)
+            .addNullable("request_receive_time_last_timezone", MinorType.VARCHAR)
+            .addNullable("request_receive_time_last_weekofweekyear", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_weekofweekyear__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_weekyear", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_weekyear__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_year", MinorType.BIGINT)
+            .addNullable("request_receive_time_last_year__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_microsecond", MinorType.BIGINT)
+            .addNullable("request_receive_time_microsecond__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_millisecond", MinorType.BIGINT)
+            .addNullable("request_receive_time_millisecond__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_minute", MinorType.BIGINT)
+            .addNullable("request_receive_time_minute__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_month", MinorType.BIGINT)
+            .addNullable("request_receive_time_month__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_monthname", MinorType.VARCHAR)
+            .addNullable("request_receive_time_monthname__utc", MinorType.VARCHAR)
+            .addNullable("request_receive_time_nanosecond", MinorType.BIGINT)
+            .addNullable("request_receive_time_nanosecond__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_second", MinorType.BIGINT)
+            .addNullable("request_receive_time_second__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_time", MinorType.TIME)
+            .addNullable("request_receive_time_time__utc", MinorType.TIME)
+            .addNullable("request_receive_time_timezone", MinorType.VARCHAR)
+            .addNullable("request_receive_time_weekofweekyear", MinorType.BIGINT)
+            .addNullable("request_receive_time_weekofweekyear__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_weekyear", MinorType.BIGINT)
+            .addNullable("request_receive_time_weekyear__utc", MinorType.BIGINT)
+            .addNullable("request_receive_time_year", MinorType.BIGINT)
+            .addNullable("request_receive_time_year__utc", MinorType.BIGINT)
+            .addNullable("request_referer", MinorType.VARCHAR)
+            .addNullable("request_referer_host", MinorType.VARCHAR)
+            .addNullable("request_referer_last", MinorType.VARCHAR)
+            .addNullable("request_referer_last_host", MinorType.VARCHAR)
+            .addNullable("request_referer_last_path", MinorType.VARCHAR)
+            .addNullable("request_referer_last_port", MinorType.BIGINT)
+            .addNullable("request_referer_last_protocol", MinorType.VARCHAR)
+            .addNullable("request_referer_last_query", MinorType.VARCHAR)
+            .addNullable("request_referer_last_ref", MinorType.VARCHAR)
+            .addNullable("request_referer_last_userinfo", MinorType.VARCHAR)
+            .addNullable("request_referer_path", MinorType.VARCHAR)
+            .addNullable("request_referer_port", MinorType.BIGINT)
+            .addNullable("request_referer_protocol", MinorType.VARCHAR)
+            .addNullable("request_referer_query", MinorType.VARCHAR)
+            .addNullable("request_referer_ref", MinorType.VARCHAR)
+            .addNullable("request_referer_userinfo", MinorType.VARCHAR)
+            .addNullable("request_status_last", MinorType.VARCHAR)
+            .addNullable("request_user-agent", MinorType.VARCHAR)
+            .addNullable("request_user-agent_last", MinorType.VARCHAR)
+            .addNullable("response_body_bytes", MinorType.BIGINT)
+            .addNullable("response_body_bytes_last", MinorType.BIGINT)
+            .addNullable("response_body_bytesclf", MinorType.BIGINT)
+            .add("request_firstline_original_uri_query_$", MinorType.MAP)
+            .add("request_firstline_uri_query_$", MinorType.MAP)
+            .add("request_referer_last_query_$", MinorType.MAP)
+            .add("request_referer_query_$", MinorType.MAP)
+            .build();
+  }
+
+  private RowSet expectedAllFieldsRowSet(TupleMetadata expectedSchema) {
+    return client
+            .rowSetBuilder(expectedSchema)
+            .addRow("195.154.46.135", "195.154.46.135", null, null, null, null,
+                    "GET /linux/doing-pxe-without-dhcp-control HTTP/1.1", "GET",
+                    "GET /linux/doing-pxe-without-dhcp-control HTTP/1.1", "GET",
+                    "HTTP/1.1", "1.1", "/linux/doing-pxe-without-dhcp-control", null, "/linux/doing-pxe-without-dhcp-control", null, null, null, null, null,
+                    "HTTP/1.1", "1.1", "/linux/doing-pxe-without-dhcp-control", null, "/linux/doing-pxe-without-dhcp-control", null, null, null, null, null,
+                    1445742685000L, new LocalDate("2015-10-25"), new LocalDate("2015-10-25"), 25, 25, 1445742685000L, 4, 3,
+                    1445742685000L, new LocalDate("2015-10-25"), new LocalDate("2015-10-25"), 25, 25, 1445742685000L, 4, 3,
+                    0, 0, 0, 0, 11, 11, 10, 10, "October", "October", 0, 0, 25, 25, new LocalTime("04:11:25"), new LocalTime("03:11:25"), "+01:00", 43, 43, 2015, 2015, 2015, 2015,
+                    0, 0, 0, 0, 11, 11, 10, 10, "October", "October", 0, 0, 25, 25, new LocalTime("04:11:25"), new LocalTime("03:11:25"), "+01:00", 43, 43, 2015, 2015, 2015, 2015,
+                    "http://howto.basjes.nl/", "howto.basjes.nl",
+                    "http://howto.basjes.nl/", "howto.basjes.nl",
+                    "/", null, "http", null, null, null,
+                    "/", null, "http", null, null, null,
+                    "200",
+                    "Mozilla/5.0 (Windows NT 5.1; rv:35.0) Gecko/20100101 Firefox/35.0",
+                    "Mozilla/5.0 (Windows NT 5.1; rv:35.0) Gecko/20100101 Firefox/35.0",
+                    24323, 24323, 24323, mapArray(), mapArray(), mapArray(), mapArray())
+            .build();
+  }
+
   @Test
   public void testStarRowSet() throws Exception {
     String sql = "SELECT * FROM cp.`httpd/hackers-access-really-small.httpd`";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("request_referer_ref", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_time", MinorType.TIME)
-      .addNullable("request_firstline_uri_protocol", MinorType.VARCHAR)
-      .addNullable("request_receive_time_microsecond", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_microsecond__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_original_protocol", MinorType.VARCHAR)
-      .addNullable("request_firstline_original_uri_host", MinorType.VARCHAR)
-      .addNullable("request_referer_host", MinorType.VARCHAR)
-      .addNullable("request_receive_time_month__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_minute", MinorType.BIGINT)
-      .addNullable("request_firstline_protocol_version", MinorType.VARCHAR)
-      .addNullable("request_receive_time_time__utc", MinorType.TIME)
-      .addNullable("request_referer_last_ref", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_timezone", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_weekofweekyear", MinorType.BIGINT)
-      .addNullable("request_referer_last", MinorType.VARCHAR)
-      .addNullable("request_receive_time_minute", MinorType.BIGINT)
-      .addNullable("connection_client_host_last", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_millisecond__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_original_uri", MinorType.VARCHAR)
-      .addNullable("request_firstline", MinorType.VARCHAR)
-      .addNullable("request_receive_time_nanosecond", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_millisecond", MinorType.BIGINT)
-      .addNullable("request_receive_time_day", MinorType.BIGINT)
-      .addNullable("request_referer_port", MinorType.BIGINT)
-      .addNullable("request_firstline_original_uri_port", MinorType.BIGINT)
-      .addNullable("request_receive_time_year", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_date", MinorType.DATE)
-      .addNullable("request_receive_time_last_time__utc", MinorType.TIME)
-      .addNullable("request_receive_time_last_hour__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_original_protocol_version", MinorType.VARCHAR)
-      .addNullable("request_firstline_original_method", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_year__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_uri", MinorType.VARCHAR)
-      .addNullable("request_referer_last_host", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_minute__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_weekofweekyear", MinorType.BIGINT)
-      .addNullable("request_firstline_uri_userinfo", MinorType.VARCHAR)
-      .addNullable("request_receive_time_epoch", MinorType.TIMESTAMP)
-      .addNullable("connection_client_logname", MinorType.BIGINT)
-      .addNullable("response_body_bytes", MinorType.BIGINT)
-      .addNullable("request_receive_time_nanosecond__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_protocol", MinorType.VARCHAR)
-      .addNullable("request_receive_time_microsecond__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_hour", MinorType.BIGINT)
-      .addNullable("request_firstline_uri_host", MinorType.VARCHAR)
-      .addNullable("request_referer_last_port", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_epoch", MinorType.TIMESTAMP)
-      .addNullable("request_receive_time_last_weekyear__utc", MinorType.BIGINT)
-      .addNullable("request_user-agent", MinorType.VARCHAR)
-      .addNullable("request_receive_time_weekyear", MinorType.BIGINT)
-      .addNullable("request_receive_time_timezone", MinorType.VARCHAR)
-      .addNullable("response_body_bytesclf", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_date__utc", MinorType.DATE)
-      .addNullable("request_receive_time_millisecond__utc", MinorType.BIGINT)
-      .addNullable("request_referer_last_protocol", MinorType.VARCHAR)
-      .addNullable("request_firstline_uri_query", MinorType.VARCHAR)
-      .addNullable("request_receive_time_minute__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_original_uri_protocol", MinorType.VARCHAR)
-      .addNullable("request_referer_query", MinorType.VARCHAR)
-      .addNullable("request_receive_time_date", MinorType.DATE)
-      .addNullable("request_firstline_uri_port", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_second__utc", MinorType.BIGINT)
-      .addNullable("request_referer_last_userinfo", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_second", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_monthname__utc", MinorType.VARCHAR)
-      .addNullable("request_firstline_method", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_month__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_millisecond", MinorType.BIGINT)
-      .addNullable("request_receive_time_day__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_year__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_weekofweekyear__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_second", MinorType.BIGINT)
-      .addNullable("request_firstline_original_uri_ref", MinorType.VARCHAR)
-      .addNullable("connection_client_logname_last", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_year", MinorType.BIGINT)
-      .addNullable("request_firstline_original_uri_path", MinorType.VARCHAR)
-      .addNullable("connection_client_host", MinorType.VARCHAR)
-      .addNullable("request_firstline_original_uri_query", MinorType.VARCHAR)
-      .addNullable("request_referer_userinfo", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_monthname", MinorType.VARCHAR)
-      .addNullable("request_referer_path", MinorType.VARCHAR)
-      .addNullable("request_receive_time_monthname", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_month", MinorType.BIGINT)
-      .addNullable("request_referer_last_query", MinorType.VARCHAR)
-      .addNullable("request_firstline_uri_ref", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_day", MinorType.BIGINT)
-      .addNullable("request_receive_time_time", MinorType.TIME)
-      .addNullable("request_status_original", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_weekofweekyear__utc", MinorType.BIGINT)
-      .addNullable("request_user-agent_last", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_weekyear", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_microsecond", MinorType.BIGINT)
-      .addNullable("request_firstline_original", MinorType.VARCHAR)
-      .addNullable("request_status", MinorType.VARCHAR)
-      .addNullable("request_referer_last_path", MinorType.VARCHAR)
-      .addNullable("request_receive_time_month", MinorType.BIGINT)
-      .addNullable("request_referer", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_day__utc", MinorType.BIGINT)
-      .addNullable("request_referer_protocol", MinorType.VARCHAR)
-      .addNullable("request_receive_time_monthname__utc", MinorType.VARCHAR)
-      .addNullable("response_body_bytes_last", MinorType.BIGINT)
-      .addNullable("request_receive_time", MinorType.TIMESTAMP)
-      .addNullable("request_receive_time_last_nanosecond", MinorType.BIGINT)
-      .addNullable("request_firstline_uri_path", MinorType.VARCHAR)
-      .addNullable("request_firstline_original_uri_userinfo", MinorType.VARCHAR)
-      .addNullable("request_receive_time_date__utc", MinorType.DATE)
-      .addNullable("request_receive_time_last", MinorType.TIMESTAMP)
-      .addNullable("request_receive_time_last_nanosecond__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_hour", MinorType.BIGINT)
-      .addNullable("request_receive_time_hour__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_second__utc", MinorType.BIGINT)
-      .addNullable("connection_client_user_last", MinorType.VARCHAR)
-      .addNullable("request_receive_time_weekyear__utc", MinorType.BIGINT)
-      .addNullable("connection_client_user", MinorType.VARCHAR)
-      .add("request_firstline_original_uri_query_$", MinorType.MAP)
-      .add("request_referer_query_$", MinorType.MAP)
-      .add("request_referer_last_query_$", MinorType.MAP)
-      .add("request_firstline_uri_query_$", MinorType.MAP)
-      .build();
+    TupleMetadata expectedSchema = expectedAllFieldsSchema();
 
-    RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow(null,  new LocalTime("04:11:25"), null, 0, 0, "HTTP", null, "howto.basjes.nl", 10, 11, "1.1", new LocalTime("03:11:25"), null, "+01:00", 43, "http://howto.basjes" +
-          ".nl/",
-        11, "195.154.46.135", 0,
-        "/linux/doing-pxe-without-dhcp-control", "GET /linux/doing-pxe-without-dhcp-control HTTP/1.1", 0, 0, 25, null, null, 2015, new LocalDate("2015-10-25"), new LocalTime("03" +
-          ":11:25"),
-        3, "1" +
-          ".1", "GET",
-        2015, "/linux/doing-pxe-without-dhcp-control", "howto.basjes.nl", 11, 43, null, 1445742685000L, null, 24323, 0, "HTTP", 0, 4, null, null, 1445742685000L, 2015, "Mozilla" +
-          "/5" +
-          ".0 (Windows NT 5.1; rv:35.0) Gecko/20100101 Firefox/35.0", 2015, "+01:00", 24323, new LocalDate("2015-10-25"), 0, "http", null, 11, null, null, new LocalDate("2015-10" +
-          "-25"), null, 25,
-        null, 25,
-        "October", "GET", 10, 0, 25, 2015, 43, 25, null, null, 2015, "/linux/doing-pxe-without-dhcp-control", "195.154.46.135", null, null, "October", "/", "October", 10, null,
-        null, 25, new LocalTime("04:11:25"), "200", 43, "Mozilla/5.0 (Windows NT 5.1; rv:35.0) Gecko/20100101 Firefox/35.0", 2015, 0, "GET /linux/doing-pxe-without-dhcp-control " +
-          "HTTP/1.1", "200", "/",
-        10, "http://howto.basjes.nl/", 25, "http", "October", 24323, 1445742685000L, 0, "/linux/doing-pxe-without-dhcp-control", null, new LocalDate("2015-10-25"), 1445742685000L,
-        0, 4, 3, 25, null, 2015, null, mapArray(), mapArray(), mapArray(), mapArray())
-      .build();
-
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSet expectedRowSet = expectedAllFieldsRowSet(expectedSchema);
+    new RowSetComparison(expectedRowSet).verifyAndClearAll(results);
   }
 
   @Test
   public void testExplicitAllFields() throws Exception {
-    String sql = "SELECT `request_referer_ref`, `request_receive_time_last_time`, `request_firstline_uri_protocol`, `request_receive_time_microsecond`, `request_receive_time_last_microsecond__utc`, `request_firstline_original_protocol`, `request_firstline_original_uri_host`, `request_referer_host`, `request_receive_time_month__utc`, `request_receive_time_last_minute`, `request_firstline_protocol_version`, `request_receive_time_time__utc`, `request_referer_last_ref`, `request_receive_time_last_timezone`, `request_receive_time_last_weekofweekyear`, `request_referer_last`, `request_receive_time_minute`, `connection_client_host_last`, `request_receive_time_last_millisecond__utc`, `request_firstline_original_uri`, `request_firstline`, `request_receive_time_nanosecond`, `request_receive_time_last_millisecond`, `request_receive_time_day`, `request_referer_port`, `request_firstline_original_uri_port`, `request_receive_time_year`, `request_receive_time_last_date`, `request_receive_time_last_time__utc`, `request_receive_time_last_hour__utc`, `request_firstline_original_protocol_version`, `request_firstline_original_method`, `request_receive_time_last_year__utc`, `request_firstline_uri`, `request_referer_last_host`, `request_receive_time_last_minute__utc`, `request_receive_time_weekofweekyear`, `request_firstline_uri_userinfo`, `request_receive_time_epoch`, `connection_client_logname`, `response_body_bytes`, `request_receive_time_nanosecond__utc`, `request_firstline_protocol`, `request_receive_time_microsecond__utc`, `request_receive_time_hour`, `request_firstline_uri_host`, `request_referer_last_port`, `request_receive_time_last_epoch`, `request_receive_time_last_weekyear__utc`, `request_user-agent`, `request_receive_time_weekyear`, `request_receive_time_timezone`, `response_body_bytesclf`, `request_receive_time_last_date__utc`, `request_receive_time_millisecond__utc`, `request_referer_last_protocol`, `request_firstline_uri_query`, `request_receive_time_minute__utc`, `request_firstline_original_uri_protocol`, `request_referer_query`, `request_receive_time_date`, `request_firstline_uri_port`, `request_receive_time_last_second__utc`, `request_referer_last_userinfo`, `request_receive_time_last_second`, `request_receive_time_last_monthname__utc`, `request_firstline_method`, `request_receive_time_last_month__utc`, `request_receive_time_millisecond`, `request_receive_time_day__utc`, `request_receive_time_year__utc`, `request_receive_time_weekofweekyear__utc`, `request_receive_time_second`, `request_firstline_original_uri_ref`, `connection_client_logname_last`, `request_receive_time_last_year`, `request_firstline_original_uri_path`, `connection_client_host`, `request_firstline_original_uri_query`, `request_referer_userinfo`, `request_receive_time_last_monthname`, `request_referer_path`, `request_receive_time_monthname`, `request_receive_time_last_month`, `request_referer_last_query`, `request_firstline_uri_ref`, `request_receive_time_last_day`, `request_receive_time_time`, `request_status_original`, `request_receive_time_last_weekofweekyear__utc`, `request_user-agent_last`, `request_receive_time_last_weekyear`, `request_receive_time_last_microsecond`, `request_firstline_original`, `request_status`, `request_referer_last_path`, `request_receive_time_month`, `request_receive_time_last_day__utc`, `request_referer`, `request_referer_protocol`, `request_receive_time_monthname__utc`, `response_body_bytes_last`, `request_receive_time`, `request_receive_time_last_nanosecond`, `request_firstline_uri_path`, `request_firstline_original_uri_userinfo`, `request_receive_time_date__utc`, `request_receive_time_last`, `request_receive_time_last_nanosecond__utc`, `request_receive_time_last_hour`, `request_receive_time_hour__utc`, `request_receive_time_second__utc`, `connection_client_user_last`, `request_receive_time_weekyear__utc`, `connection_client_user`, `request_firstline_original_uri_query_$`, `request_referer_query_$`, `request_referer_last_query_$`, `request_firstline_uri_query_$` FROM cp.`httpd/hackers-access-really-small.httpd`";
+    TupleMetadata expectedSchema = expectedAllFieldsSchema();
+
+    // To avoid typos we generate the SQL from the schema.
+    String sql = "SELECT `" +
+            expectedSchema
+                    .toFieldList()
+                    .stream()
+                    .map(MaterializedField::getName)
+                    .collect(Collectors.joining("`, `")) +
+            "` FROM cp.`httpd/hackers-access-really-small.httpd`";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("request_referer_ref", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_time", MinorType.TIME)
-      .addNullable("request_firstline_uri_protocol", MinorType.VARCHAR)
-      .addNullable("request_receive_time_microsecond", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_microsecond__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_original_protocol", MinorType.VARCHAR)
-      .addNullable("request_firstline_original_uri_host", MinorType.VARCHAR)
-      .addNullable("request_referer_host", MinorType.VARCHAR)
-      .addNullable("request_receive_time_month__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_minute", MinorType.BIGINT)
-      .addNullable("request_firstline_protocol_version", MinorType.VARCHAR)
-      .addNullable("request_receive_time_time__utc", MinorType.TIME)
-      .addNullable("request_referer_last_ref", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_timezone", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_weekofweekyear", MinorType.BIGINT)
-      .addNullable("request_referer_last", MinorType.VARCHAR)
-      .addNullable("request_receive_time_minute", MinorType.BIGINT)
-      .addNullable("connection_client_host_last", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_millisecond__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_original_uri", MinorType.VARCHAR)
-      .addNullable("request_firstline", MinorType.VARCHAR)
-      .addNullable("request_receive_time_nanosecond", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_millisecond", MinorType.BIGINT)
-      .addNullable("request_receive_time_day", MinorType.BIGINT)
-      .addNullable("request_referer_port", MinorType.BIGINT)
-      .addNullable("request_firstline_original_uri_port", MinorType.BIGINT)
-      .addNullable("request_receive_time_year", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_date", MinorType.DATE)
-      .addNullable("request_receive_time_last_time__utc", MinorType.TIME)
-      .addNullable("request_receive_time_last_hour__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_original_protocol_version", MinorType.VARCHAR)
-      .addNullable("request_firstline_original_method", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_year__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_uri", MinorType.VARCHAR)
-      .addNullable("request_referer_last_host", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_minute__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_weekofweekyear", MinorType.BIGINT)
-      .addNullable("request_firstline_uri_userinfo", MinorType.VARCHAR)
-      .addNullable("request_receive_time_epoch", MinorType.TIMESTAMP)
-      .addNullable("connection_client_logname", MinorType.BIGINT)
-      .addNullable("response_body_bytes", MinorType.BIGINT)
-      .addNullable("request_receive_time_nanosecond__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_protocol", MinorType.VARCHAR)
-      .addNullable("request_receive_time_microsecond__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_hour", MinorType.BIGINT)
-      .addNullable("request_firstline_uri_host", MinorType.VARCHAR)
-      .addNullable("request_referer_last_port", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_epoch", MinorType.TIMESTAMP)
-      .addNullable("request_receive_time_last_weekyear__utc", MinorType.BIGINT)
-      .addNullable("request_user-agent", MinorType.VARCHAR)
-      .addNullable("request_receive_time_weekyear", MinorType.BIGINT)
-      .addNullable("request_receive_time_timezone", MinorType.VARCHAR)
-      .addNullable("response_body_bytesclf", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_date__utc", MinorType.DATE)
-      .addNullable("request_receive_time_millisecond__utc", MinorType.BIGINT)
-      .addNullable("request_referer_last_protocol", MinorType.VARCHAR)
-      .addNullable("request_firstline_uri_query", MinorType.VARCHAR)
-      .addNullable("request_receive_time_minute__utc", MinorType.BIGINT)
-      .addNullable("request_firstline_original_uri_protocol", MinorType.VARCHAR)
-      .addNullable("request_referer_query", MinorType.VARCHAR)
-      .addNullable("request_receive_time_date", MinorType.DATE)
-      .addNullable("request_firstline_uri_port", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_second__utc", MinorType.BIGINT)
-      .addNullable("request_referer_last_userinfo", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_second", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_monthname__utc", MinorType.VARCHAR)
-      .addNullable("request_firstline_method", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_month__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_millisecond", MinorType.BIGINT)
-      .addNullable("request_receive_time_day__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_year__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_weekofweekyear__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_second", MinorType.BIGINT)
-      .addNullable("request_firstline_original_uri_ref", MinorType.VARCHAR)
-      .addNullable("connection_client_logname_last", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_year", MinorType.BIGINT)
-      .addNullable("request_firstline_original_uri_path", MinorType.VARCHAR)
-      .addNullable("connection_client_host", MinorType.VARCHAR)
-      .addNullable("request_firstline_original_uri_query", MinorType.VARCHAR)
-      .addNullable("request_referer_userinfo", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_monthname", MinorType.VARCHAR)
-      .addNullable("request_referer_path", MinorType.VARCHAR)
-      .addNullable("request_receive_time_monthname", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_month", MinorType.BIGINT)
-      .addNullable("request_referer_last_query", MinorType.VARCHAR)
-      .addNullable("request_firstline_uri_ref", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_day", MinorType.BIGINT)
-      .addNullable("request_receive_time_time", MinorType.TIME)
-      .addNullable("request_status_original", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_weekofweekyear__utc", MinorType.BIGINT)
-      .addNullable("request_user-agent_last", MinorType.VARCHAR)
-      .addNullable("request_receive_time_last_weekyear", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_microsecond", MinorType.BIGINT)
-      .addNullable("request_firstline_original", MinorType.VARCHAR)
-      .addNullable("request_status", MinorType.VARCHAR)
-      .addNullable("request_referer_last_path", MinorType.VARCHAR)
-      .addNullable("request_receive_time_month", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_day__utc", MinorType.BIGINT)
-      .addNullable("request_referer", MinorType.VARCHAR)
-      .addNullable("request_referer_protocol", MinorType.VARCHAR)
-      .addNullable("request_receive_time_monthname__utc", MinorType.VARCHAR)
-      .addNullable("response_body_bytes_last", MinorType.BIGINT)
-      .addNullable("request_receive_time", MinorType.TIMESTAMP)
-      .addNullable("request_receive_time_last_nanosecond", MinorType.BIGINT)
-      .addNullable("request_firstline_uri_path", MinorType.VARCHAR)
-      .addNullable("request_firstline_original_uri_userinfo", MinorType.VARCHAR)
-      .addNullable("request_receive_time_date__utc", MinorType.DATE)
-      .addNullable("request_receive_time_last", MinorType.TIMESTAMP)
-      .addNullable("request_receive_time_last_nanosecond__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_last_hour", MinorType.BIGINT)
-      .addNullable("request_receive_time_hour__utc", MinorType.BIGINT)
-      .addNullable("request_receive_time_second__utc", MinorType.BIGINT)
-      .addNullable("connection_client_user_last", MinorType.VARCHAR)
-      .addNullable("request_receive_time_weekyear__utc", MinorType.BIGINT)
-      .addNullable("connection_client_user", MinorType.VARCHAR)
-      .add("request_firstline_original_uri_query_$", MinorType.MAP)
-      .add("request_referer_query_$", MinorType.MAP)
-      .add("request_referer_last_query_$", MinorType.MAP)
-      .add("request_firstline_uri_query_$", MinorType.MAP)
-      .build();
-
-    RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow(null, new LocalTime("04:11:25"), null, 0, 0, "HTTP", null, "howto.basjes.nl", 10, 11, "1.1", new LocalTime("03:11:25"), null, "+01:00", 43, "http://howto.basjes.nl/",
-        11, "195.154.46.135", 0,
-        "/linux/doing-pxe-without-dhcp-control", "GET /linux/doing-pxe-without-dhcp-control HTTP/1.1", 0, 0, 25, null, null, 2015, new LocalDate("2015-10-25"), new LocalTime("03" +
-          ":11:25"), 3, "1" +
-          ".1", "GET",
-        2015, "/linux/doing-pxe-without-dhcp-control", "howto.basjes.nl", 11, 43, null, 1445742685000L, null, 24323, 0, "HTTP", 0, 4, null, null, 1445742685000L, 2015, "Mozilla" +
-          "/5" +
-          ".0 (Windows NT 5.1; rv:35.0) Gecko/20100101 Firefox/35.0", 2015, "+01:00", 24323, new LocalDate("2015-10-25"), 0, "http", null, 11, null, null, new LocalDate("2015-10" +
-          "-25"), null, 25, null, 25,
-        "October", "GET", 10, 0, 25, 2015, 43, 25, null, null, 2015, "/linux/doing-pxe-without-dhcp-control", "195.154.46.135", null, null, "October", "/", "October", 10, null,
-        null, 25, new LocalTime("04:11:25"), "200", 43, "Mozilla/5.0 (Windows NT 5.1; rv:35.0) Gecko/20100101 Firefox/35.0", 2015, 0, "GET /linux/doing-pxe-without-dhcp-control " +
-          "HTTP/1.1", "200", "/",
-        10, 25, "http://howto.basjes.nl/", "http", "October", 24323, 1445742685000L, 0, "/linux/doing-pxe-without-dhcp-control", null, new LocalDate("2015-10-25"), 1445742685000L,
-        0, 4, 3, 25, null, 2015, null, mapArray(), mapArray(), mapArray(), mapArray())
-      .build();
-
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSet expectedRowSet = expectedAllFieldsRowSet(expectedSchema);
+    new RowSetComparison(expectedRowSet).verifyAndClearAll(results);
   }
 
   @Test

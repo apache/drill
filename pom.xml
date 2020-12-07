@@ -127,6 +127,8 @@
     <xerces.version>2.12.0</xerces.version>
     <commons.configuration.version>1.10</commons.configuration.version>
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
+    <httpdlog-parser.version>5.7</httpdlog-parser.version>
+    <yauaa.version>5.20</yauaa.version>
   </properties>
 
   <scm>
@@ -408,6 +410,7 @@
             <exclude>**/ssl/*.p12</exclude>
             <exclude>**/*.tbl</exclude>
             <exclude>**/*.httpd</exclude>
+            <exclude>**/*.access_log</exclude>
             <exclude>**/*.autotools</exclude>
             <exclude>**/*.cproject</exclude>
             <exclude>**/*.drill</exclude>

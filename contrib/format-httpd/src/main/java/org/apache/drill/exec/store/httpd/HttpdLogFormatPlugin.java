@@ -36,13 +36,13 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
 
   protected static final String DEFAULT_NAME = "httpd";
 
-  private static class HtttpLogReaderFactory extends FileReaderFactory {
+  private static class HttpLogReaderFactory extends FileReaderFactory {
 
     private final HttpdLogFormatConfig config;
     private final int maxRecords;
     private final EasySubScan scan;
 
-    private HtttpLogReaderFactory(HttpdLogFormatConfig config, int maxRecords, EasySubScan scan) {
+    private HttpLogReaderFactory(HttpdLogFormatConfig config, int maxRecords, EasySubScan scan) {
       this.config = config;
       this.maxRecords = maxRecords;
       this.scan = scan;
@@ -88,7 +88,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
   @Override
   protected FileScanFramework.FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanFramework.FileScanBuilder builder = new FileScanFramework.FileScanBuilder();
-    builder.setReaderFactory(new HtttpLogReaderFactory(formatConfig, scan.getMaxRecords(), scan));
+    builder.setReaderFactory(new HttpLogReaderFactory(formatConfig, scan.getMaxRecords(), scan));
 
     initScanBuilder(builder, scan);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));

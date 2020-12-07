@@ -38,7 +38,7 @@
     <dependency>
       <groupId>nl.basjes.parse.httpdlog</groupId>
       <artifactId>httpdlog-parser</artifactId>
-      <version>5.6</version>
+      <version>${httpdlog-parser.version}</version>
       <exclusions>
         <exclusion>
           <groupId>commons-codec</groupId>
@@ -50,11 +50,19 @@
         </exclusion>
       </exclusions>
     </dependency>
+
     <dependency>
       <groupId>nl.basjes.parse.useragent</groupId>
       <artifactId>yauaa-logparser</artifactId>
-      <version>5.19</version>
+      <version>${yauaa.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>nl.basjes.parse.httpdlog</groupId>
+          <artifactId>httpdlog-parser</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
+
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>

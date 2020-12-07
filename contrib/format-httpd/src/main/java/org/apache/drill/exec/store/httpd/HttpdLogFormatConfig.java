@@ -37,9 +37,10 @@ public class HttpdLogFormatConfig implements FormatPluginConfig {
   public final String logFormat;
   public final String timestampFormat;
   public final List<String> extensions;
-  public final boolean flattenWildcards;
   public final int maxErrors;
-
+  public final boolean flattenWildcards;
+  public final boolean parseUserAgent;
+  public final String logParserRemapping;
 
   @JsonCreator
   public HttpdLogFormatConfig(
@@ -47,7 +48,9 @@ public class HttpdLogFormatConfig implements FormatPluginConfig {
       @JsonProperty("logFormat") String logFormat,
       @JsonProperty("timestampFormat") String timestampFormat,
       @JsonProperty("maxErrors") int maxErrors,
-      @JsonProperty("flattenWildcards") boolean flattenWildcards
+      @JsonProperty("flattenWildcards") boolean flattenWildcards,
+      @JsonProperty("parseUserAgent") boolean parseUserAgent,
+      @JsonProperty("logParserRemapping") String logParserRemapping
   ) {
 
     this.extensions = extensions == null
@@ -57,6 +60,8 @@ public class HttpdLogFormatConfig implements FormatPluginConfig {
     this.timestampFormat = timestampFormat;
     this.maxErrors = maxErrors;
     this.flattenWildcards = flattenWildcards;
+    this.parseUserAgent = parseUserAgent;
+    this.logParserRemapping = logParserRemapping;
   }
 
   /**
@@ -78,13 +83,31 @@ public class HttpdLogFormatConfig implements FormatPluginConfig {
     return extensions;
   }
 
-  public int getMaxErrors() { return maxErrors;}
+  public int getMaxErrors() {
+    return maxErrors;
+  }
 
-  public boolean getFlattenWildcards () { return flattenWildcards; }
+  public boolean getFlattenWildcards () {
+    return flattenWildcards;
+  }
+
+  public boolean getParseUserAgent() {
+    return parseUserAgent;
+  }
+
+  public String getLogParserRemapping() {
+    return logParserRemapping;
+  }
 
   @Override
   public int hashCode() {
-    return Objects.hash(logFormat, timestampFormat, maxErrors, flattenWildcards);
+    return Objects.hash(
+            logFormat,
+            timestampFormat,
+            maxErrors,
+            flattenWildcards,
+            parseUserAgent,
+            logParserRemapping);
   }
 
   @Override
@@ -99,7 +122,9 @@ public class HttpdLogFormatConfig implements FormatPluginConfig {
     return Objects.equals(logFormat, other.logFormat)
       && Objects.equals(timestampFormat, other.timestampFormat)
       && Objects.equals(maxErrors, other.maxErrors)
-      && Objects.equals(flattenWildcards, other.flattenWildcards);
+      && Objects.equals(flattenWildcards, other.flattenWildcards)
+      && Objects.equals(parseUserAgent, other.parseUserAgent)
+      && Objects.equals(logParserRemapping, other.logParserRemapping);
   }
 
   @Override
@@ -109,6 +134,8 @@ public class HttpdLogFormatConfig implements FormatPluginConfig {
         .field("timestamp format", timestampFormat)
         .field("max errors", maxErrors)
         .field("flattenWildcards", flattenWildcards)
+        .field("parseUserAgent", parseUserAgent)
+        .field("logParserRemapping", logParserRemapping)
         .toString();
   }
 }

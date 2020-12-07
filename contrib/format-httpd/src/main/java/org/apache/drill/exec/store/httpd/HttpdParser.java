@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.httpd;
 
+import nl.basjes.parse.useragent.analyze.InvalidParserConfigurationException;
+import nl.basjes.parse.useragent.dissector.UserAgentDissector;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -25,7 +27,6 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import nl.basjes.parse.core.Casts;
 import nl.basjes.parse.core.Parser;
 import nl.basjes.parse.core.exceptions.DissectionFailure;
@@ -35,45 +36,61 @@ import nl.basjes.parse.httpdlog.HttpdLoglineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+
+import static nl.basjes.parse.core.Casts.DOUBLE;
+import static nl.basjes.parse.core.Casts.DOUBLE_ONLY;
+import static nl.basjes.parse.core.Casts.LONG;
+import static nl.basjes.parse.core.Casts.LONG_ONLY;
+import static nl.basjes.parse.core.Casts.STRING;
+import static nl.basjes.parse.core.Casts.STRING_ONLY;
 
 public class HttpdParser {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpdParser.class);
 
   public static final String PARSER_WILDCARD = ".*";
-  public static final String REMAPPING_FLAG = "#";
   private final Parser<HttpdLogRecord> parser;
   private final List<SchemaPath> requestedColumns;
   private final Map<String, MinorType> mappedColumns;
+  private final Map<String, Casts> columnCasts;
   private final HttpdLogRecord record;
   private final String logFormat;
+  private final boolean parseUserAgent;
+  private final String logParserRemapping;
   private Map<String, String> requestedPaths;
-  private EnumSet<Casts> casts;
 
-
-  public HttpdParser(final String logFormat, final String timestampFormat, final boolean flattenWildcards, final EasySubScan scan) {
+  public HttpdParser(
+          final String logFormat,
+          final String timestampFormat,
+          final boolean flattenWildcards,
+          final boolean parseUserAgent,
+          final String logParserRemapping,
+          final EasySubScan scan) {
 
     Preconditions.checkArgument(logFormat != null && !logFormat.trim().isEmpty(), "logFormat cannot be null or empty");
 
     this.logFormat = logFormat;
+    this.parseUserAgent = parseUserAgent;
     this.record = new HttpdLogRecord(timestampFormat, flattenWildcards);
 
-    if (timestampFormat == null) {
-      this.parser = new HttpdLoglineParser<>(HttpdLogRecord.class, logFormat);
-    } else {
-      this.parser = new HttpdLoglineParser<>(HttpdLogRecord.class, logFormat, timestampFormat);
+    this.logParserRemapping = logParserRemapping;
+
+    this.parser = new HttpdLoglineParser<>(HttpdLogRecord.class, this.logFormat, timestampFormat);
+    applyRemapping(parser);
+    /*
+     * The log parser has the possibility of parsing the user agent and extracting additional fields
+     * Unfortunately, doing so negatively affects the startup speed of the parser, even if it is not used.
+     * So is is only enabled if there is a need for it in the requested columns.
+     */
+    if (parseUserAgent) {
+      parser.addDissector(new UserAgentDissector());
     }
 
-    /*
-    * The log parser has the possibility of parsing the user agent and extracting additional fields
-    * Unfortunately, doing so negatively affects the speed of the parser.  Uncommenting this line and another in
-    * the HttpLogRecord will enable these fields.  We will add this functionality in a future PR.
-    * this.parser.addDissector(new UserAgentDissector());
-    */
 
     this.requestedColumns = scan.getColumns();
 
@@ -84,7 +101,40 @@ public class HttpdParser {
       logger.info("Specified logformat is a multiline log format: {}", logFormat);
     }
 
-    mappedColumns = new HashMap<>();
+    mappedColumns = new TreeMap<>();
+    columnCasts = new TreeMap<>();
+  }
+
+  private void applyRemapping(Parser<?> parser) {
+    if (logParserRemapping == null || logParserRemapping.isEmpty()) {
+      return;
+    }
+
+    for (String rawEntry: logParserRemapping.split(";")) {
+      String entry = rawEntry.replaceAll("\n","").replaceAll(" ","").trim();
+      if (entry.isEmpty()) {
+        continue;
+      }
+
+      String[] parts = entry.split(":");
+      String field = parts[0];
+      String newType = parts[1];
+      String castString = parts.length == 3 ? parts[2] : "STRING";
+
+      switch (castString) {
+        case "STRING":
+          parser.addTypeRemapping(field, newType, STRING_ONLY);
+          break;
+        case "LONG":
+          parser.addTypeRemapping(field, newType, LONG_ONLY);
+          break;
+        case "DOUBLE":
+          parser.addTypeRemapping(field, newType, DOUBLE_ONLY);
+          break;
+        default:
+          throw new InvalidParserConfigurationException("Invalid type remapping cast was specified");
+      }
+    }
   }
 
   /**
@@ -110,13 +160,14 @@ public class HttpdParser {
      * efficient way to parse the log.
      */
     List<String> allParserPaths = parser.getPossiblePaths();
+    allParserPaths.sort(String::compareTo);
 
     /*
      * Use all possible paths that the parser has determined from the specified log format.
      */
 
-    requestedPaths = Maps.newConcurrentMap();
-
+    // Create a mapping table to each allParserPaths field from their corresponding Drill column name.
+    requestedPaths = new TreeMap<>(); // Treemap to have a stable ordering!
     for (final String parserPath : allParserPaths) {
       requestedPaths.put(HttpdUtils.drillFormattedFieldName(parserPath), parserPath);
     }
@@ -127,42 +178,42 @@ public class HttpdParser {
      * because this will be the slowest parsing path possible for the specified format.
      */
     Parser<Object> dummy = new HttpdLoglineParser<>(Object.class, logFormat);
+    applyRemapping(dummy);
 
-    /* This is the second line to uncomment to add the user agent parsing.
-    * dummy.addDissector(new UserAgentDissector());
-    */
+    if (parseUserAgent) {
+      dummy.addDissector(new UserAgentDissector());
+    }
+
     dummy.addParseTarget(String.class.getMethod("indexOf", String.class), allParserPaths);
 
-    for (final Map.Entry<String, String> entry : requestedPaths.entrySet()) {
-
-      /*
-      If the column is not requested explicitly, remove it from the requested path list.
-       */
-      if (! isRequested(entry.getKey()) &&
-        !(isStarQuery()) &&
+    /*
+    If the column is not requested explicitly, remove it from the requested path list.
+     */
+    if (!isStarQuery() &&
         !isMetadataQuery() &&
-        !isOnlyImplicitColumns() ) {
-        requestedPaths.remove(entry.getKey());
-        continue;
+        !isOnlyImplicitColumns()) {
+      List<String> keysToRemove = new ArrayList<>();
+      for (final String key : requestedPaths.keySet()) {
+        if (!isRequested(key)) {
+          keysToRemove.add(key);
+        }
+      }
+      keysToRemove.forEach( key -> requestedPaths.remove(key));
+    }
+
+    EnumSet<Casts> allCasts;
+    for (final Map.Entry<String, String> entry : requestedPaths.entrySet()) {
+      allCasts = dummy.getCasts(entry.getValue());
+
+      // Select the cast we want to receive from the parser
+      Casts dataType = STRING;
+      if (allCasts.contains(DOUBLE)) {
+        dataType = DOUBLE;
+      } else if (allCasts.contains(LONG)) {
+        dataType = LONG;
       }
 
-      /*
-       * Check the field specified by the user to see if it is supposed to be remapped.
-       */
-      if (entry.getValue().startsWith(REMAPPING_FLAG)) {
-        /*
-         * Because this field is being remapped we need to replace the field name that the parser uses.
-         */
-        entry.setValue(entry.getValue().substring(REMAPPING_FLAG.length()));
-
-        final String[] pieces = entry.getValue().split(":");
-        HttpdUtils.addTypeRemapping(parser, pieces[1], pieces[0]);
-        casts = Casts.STRING_ONLY;
-      } else {
-        casts = dummy.getCasts(entry.getValue());
-      }
-
-      Casts dataType = (Casts) casts.toArray()[casts.size() - 1];
+      columnCasts.put(entry.getKey(), dataType);
 
       switch (dataType) {
         case STRING:
@@ -208,7 +259,7 @@ public class HttpdParser {
   public void addFieldsToParser(RowSetLoader rowWriter) {
     for (final Map.Entry<String, String> entry : requestedPaths.entrySet()) {
       try {
-        record.addField(parser, rowWriter, casts, entry.getValue(), entry.getKey(), mappedColumns);
+        record.addField(parser, rowWriter, columnCasts, entry.getValue(), entry.getKey(), mappedColumns);
       } catch (NoSuchMethodException e) {
         logger.error("Error adding fields to parser.");
       }

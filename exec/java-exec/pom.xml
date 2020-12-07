@@ -529,7 +529,7 @@
     <dependency>
       <groupId>nl.basjes.parse.httpdlog</groupId>
       <artifactId>httpdlog-parser</artifactId>
-      <version>5.3</version>
+      <version>${httpdlog-parser.version}</version>
       <exclusions>
         <exclusion>
           <groupId>commons-codec</groupId>
