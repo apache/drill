@@ -2690,7 +2690,7 @@
                     "parent": "Connect a Data Source",
                     "previous_title": "Connect a Data Source",
                     "previous_url": "/docs/connect-a-data-source/",
-                    "relative_path": "_docs/connect-a-data-source/000-connect-a-data-source-introduction.md",
+                    "relative_path": "_docs/connect-a-data-source/010-connect-a-data-source-introduction.md",
                     "title": "Connect a Data Source Introduction",
                     "url": "/docs/connect-a-data-source-introduction/"
                 },
@@ -3040,7 +3040,7 @@
             "parent": "Connect a Data Source",
             "previous_title": "Connect a Data Source",
             "previous_url": "/docs/connect-a-data-source/",
-            "relative_path": "_docs/connect-a-data-source/000-connect-a-data-source-introduction.md",
+            "relative_path": "_docs/connect-a-data-source/010-connect-a-data-source-introduction.md",
             "title": "Connect a Data Source Introduction",
             "url": "/docs/connect-a-data-source-introduction/"
         },
@@ -18412,7 +18412,7 @@
                     "parent": "Connect a Data Source",
                     "previous_title": "Connect a Data Source",
                     "previous_url": "/docs/connect-a-data-source/",
-                    "relative_path": "_docs/connect-a-data-source/000-connect-a-data-source-introduction.md",
+                    "relative_path": "_docs/connect-a-data-source/010-connect-a-data-source-introduction.md",
                     "title": "Connect a Data Source Introduction",
                     "url": "/docs/connect-a-data-source-introduction/"
                 },
