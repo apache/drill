@@ -182,8 +182,10 @@ Turn on ODBC driver debug logging to better understand failure.
 ### JDBC/ODBC Connection Issues with ZooKeeper
 
 Symptom: Client cannot resolve ZooKeeper host names for JDBC/ODBC.
+Symptom: "IllegalStateException: No active Drillbit endpoint found from ZooKeeper. Check connection parameters?" 
 
-Solution: Ensure that Zookeeper is up and running. Verify that Drill has the correct `drill-override.conf` settings for the Zookeeper quorum.
+Solution: Ensure that Zookeeper is up and running. Verify that Drill has the correct `drill-override.conf` settings for the Zookeeper quorum.  If `cluster-id` in file drill-override.conf is not the default value, it must be specified in the JDBC connection string.  See [Using the JDBC Driver]({{ site.baseurl }}/docs/using-the-jdbc-driver/).
+
 
 ### Metadata Queries Take a Long Time to Return
 
