@@ -36,24 +36,23 @@ Drill communicates with MySQL through the JDBC driver using the configuration th
 To configure the JDBC storage plugin:
 
 1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).  
-1. [Start the Web UI]({{site.baseurl}}/docs/starting-the-web-console/).  
-1. On the Storage tab, enter a name in **New Storage Plugin**. For example, enter `myplugin`.
+2. [Start the Web UI]({{site.baseurl}}/docs/starting-the-web-console/).  
+3. On the Storage tab, enter a name in **New Storage Plugin**. For example, enter `myplugin`.
    Each configuration registered with Drill must have a distinct name. Names are case-sensitive.  
+4. Click **Create**.  
+5. In Configuration, set the required properties using JSON formatting as shown in the following example. Change the properties to match your environment.  
+```json
+{
+  "type": "jdbc",
+  "driver": "com.mysql.jdbc.Driver",
+  "url": "jdbc:mysql://localhost:3306",
+  "username": "root",
+  "password": "mypassword",
+  "enabled": true
+}  
+```
 
-    {% include startnote.html %}The URL differs depending on your installation and configuration. See the example configurations below for examples.{% include endnote.html %}  
-1. Click **Create**.  
-1. In Configuration, set the required properties using JSON formatting as shown in the following example. Change the properties to match your environment.  
-
-        {
-          "type": "jdbc",
-          "driver": "com.mysql.jdbc.Driver",
-          "url": "jdbc:mysql://localhost:3306",
-          "username": "root",
-          "password": "mypassword",
-          "enabled": true
-        }  
-
-7. Click **Create**.  
+{% include startnote.html %}The JDBC URL may differ depending on your installation and configuration. See the example configurations below for examples.{% include endnote.html %}  
 
 You can use the performance_schema database, which is installed with MySQL to query your MySQL performance_schema database. Include the names of the storage plugin configuration, the database, and table in dot notation the FROM clause as follows:
 
@@ -77,40 +76,44 @@ You can use the performance_schema database, which is installed with MySQL to qu
 
 Download and install Oracle's Thin [ojdbc7.12.1.0.2.jar](http://www.oracle.com/technetwork/database/features/jdbc/default-2280470.html) driver and copy it to all nodes in your cluster.
 
-    {
-      type: "jdbc",
-      enabled: true,
-      driver: "oracle.jdbc.OracleDriver",
-      url: "jdbc:oracle:thin:user/password@1.2.3.4:1521/ORCL"
-    }
+```json
+{
+  "type": "jdbc",
+  "enabled": true,
+  "driver:" "oracle.jdbc.OracleDriver",
+  "url:" "jdbc:oracle:thin:user/password@1.2.3.4:1521/ORCL"
+}
+```
 
 ### Example SQL Server Configuration
 
 For SQL Server, Drill has been tested with Microsoft's  [sqljdbc41.4.2.6420.100.jar](https://www.microsoft.com/en-US/download/details.aspx?id=11774) driver. Copy this jar file to all Drillbits. 
 
 {% include startnote.html %}You'll need to provide a database name as part of your JDBC connection string for Drill to correctly expose MSSQL schemas.{% include endnote.html %}
-
-    {
-      type: "jdbc",
-      enabled: true,
-      driver: "com.microsoft.sqlserver.jdbc.SQLServerDriver",
-      url: "jdbc:sqlserver://1.2.3.4:1433;databaseName=mydatabase",
-      username: "user",
-      password: "password"
-    }
+```json
+{
+  "type": "jdbc",
+  "enabled": true,
+  "driver": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+  "url": "jdbc:sqlserver://1.2.3.4:1433;databaseName=mydatabase",
+  "username": "user",
+  "password": "password"
+}
+```
 
 ### Example MySQL Configuration
 
 For MySQL, Drill has been tested with MySQL's [mysql-connector-java-5.1.37-bin.jar](http://dev.mysql.com/downloads/connector/j/) driver. Copy this to all nodes.
-
-    {
-      type: "jdbc",
-      enabled: true,
-      driver: "com.mysql.jdbc.Driver",
-      url: "jdbc:mysql://1.2.3.4",
-      username: "user",
-      password: "password"
-    }  
+```json
+{
+  "type": "jdbc",
+  "enabled": true,
+  "driver": "com.mysql.jdbc.Driver",
+  "url": "jdbc:mysql://1.2.3.4",
+  "username": "user",
+  "password": "password"
+}  
+```
 
 ### Example Postgres Configuration
 
@@ -119,55 +122,58 @@ Drill is tested with the Postgres driver version [42.2.11](https://mvnrepository
 
 {% include startnote.html %}You'll need to provide a database name as part of your JDBC connection string for Drill to correctly expose Postgres tables.{% include endnote.html %}
 
-    {
-      type: "jdbc",
-      enabled: true,
-      driver: "org.postgresql.Driver",
-      url: "jdbc:postgresql://1.2.3.4/mydatabase",
-      username: "user",
-      password: "password"
-    }  
+```json
+{
+  "type": "jdbc",
+  "enabled": true,
+  "driver": "org.postgresql.Driver",
+  "url": "jdbc:postgresql://1.2.3.4/mydatabase",
+  "username": "user",
+  "password": "password"
+}  
+```
 
 You may need to qualify a table name with a schema name for Drill to return data. For example, when querying a table named ips, you must issue the query against public.ips, as shown in the following example:  
 
        0: jdbc:drill:zk=local> use pgdb;          
-       |-------|-----------------------------------|
-       |  ok   |          	summary          	|
-       |-------|-----------------------------------|
-       | true  | Default schema changed to [pgdb]  |
-       |-------|-----------------------------------|
+       |------|----------------------------------|
+       | ok   | summary                          |
+       |------|----------------------------------|
+       | true | Default schema changed to [pgdb] |
+       |------|----------------------------------|
         
        0: jdbc:drill:zk=local> show tables;          
-       |---------------|--------------------------|
-       | TABLE_SCHEMA  |        TABLE_NAME    	|
-       |---------------|--------------------------|
-       | pgdb.test 	| ips                  	|
-       | pgdb.test 	| pg_aggregate         	|
-       | pgdb.test 	| pg_am                	| 
-       …  
+       |--------------|--------------|
+       | TABLE_SCHEMA | TABLE_NAME   |
+       |--------------|--------------|
+       | pgdb.test    | ips          |
+       | pgdb.test    | pg_aggregate |
+       | pgdb.test    | pg_am        |
+       |--------------|--------------|
 
        0: jdbc:drill:zk=local> select * from public.ips;          
-       |-------|----------|
-       | ipid  | ipv4dot  |
-       |-------|----------|
-       | 1 	| 1.2.3.4  |
-       | 2 	| 1.2.3.5  |
-       |-------|----------|
+       |------|---------|
+       | ipid | ipv4dot |
+       |------|---------|
+       | 1    | 1.2.3.4 |
+       | 2    | 1.2.3.5 |
+       |------|---------|
 
 ### Example of Postgres Configuration with `sourceParameters` configuration property
-
-    {
-      type: "jdbc",
-      enabled: true,
-      driver: "org.postgresql.Driver",
-      url: "jdbc:postgresql://1.2.3.4/mydatabase?defaultRowFetchSize=2",
-      username: "user",
-      password: "password",
-      sourceParameters: {
-        "minimumIdle": 5,
-        "autoCommit": false,
-        "connectionTestQuery": "select version() as postgresql_version",
-        "dataSource.cachePrepStmts": true,
-        "dataSource.prepStmtCacheSize": 250
-      }
-    }  
+```json
+{
+  "type": "jdbc",
+  "enabled": true,
+  "driver": "org.postgresql.Driver",
+  "url": "jdbc:postgresql://1.2.3.4/mydatabase?defaultRowFetchSize=2",
+  "username": "user",
+  "password": "password",
+  "sourceParameters": {
+    "minimumIdle": 5,
+    "autoCommit": false,
+    "connectionTestQuery": "select version() as postgresql_version",
+    "dataSource.cachePrepStmts": true,
+    "dataSource.prepStmtCacheSize": 250
+  }
+}  
+```
