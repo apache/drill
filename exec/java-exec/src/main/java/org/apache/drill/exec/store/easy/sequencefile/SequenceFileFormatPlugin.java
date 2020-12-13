@@ -17,92 +17,77 @@
  */
 package org.apache.drill.exec.store.easy.sequencefile;
 
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.RecordWriter;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
-import org.apache.drill.exec.store.dfs.easy.EasyGroupScan;
-import org.apache.drill.exec.store.dfs.easy.EasyWriter;
-import org.apache.drill.exec.store.dfs.easy.FileWork;
+import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileSplit;
 
 public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileFormatConfig> {
-  public SequenceFileFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
-                                  StoragePluginConfig storageConfig) {
-    this(name, context, fsConf, storageConfig, new SequenceFileFormatConfig(null));
+
+  public SequenceFileFormatPlugin(String name,
+                                  DrillbitContext context,
+                                  Configuration fsConf,
+                                  StoragePluginConfig storageConfig,
+                                  SequenceFileFormatConfig formatConfig) {
+    super(name, easyConfig(fsConf, formatConfig), context, storageConfig, formatConfig);
   }
 
-  public SequenceFileFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
-                                  StoragePluginConfig storageConfig, SequenceFileFormatConfig formatConfig) {
-    super(name, context, fsConf, storageConfig, formatConfig,
-      true, false, /* splittable = */ true, /* compressible = */ true,
-      formatConfig.getExtensions(), "sequencefile");
+  private static EasyFormatConfig easyConfig(Configuration fsConf, SequenceFileFormatConfig pluginConfig) {
+    EasyFormatConfig config = new EasyFormatConfig();
+    config.readable = true;
+    config.writable = false;
+    config.blockSplittable = true;
+    config.compressible = true;
+    config.extensions = pluginConfig.getExtensions();
+    config.fsConf = fsConf;
+    config.readerOperatorType = CoreOperatorType.SEQUENCE_SUB_SCAN_VALUE;
+    config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
+    config.supportsProjectPushdown = true;
+    config.defaultName = SequenceFileFormatConfig.NAME;
+    return config;
   }
 
-  @Override
-  public boolean supportsPushDown() {
-    return true;
-  }
+  private static class SequenceFileReaderFactory extends FileReaderFactory {
 
-  @Override
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
-    throws IOException {
-    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot, null);
-  }
+    private final SequenceFileFormatConfig config;
+    private final EasySubScan scan;
 
-  @Override
-  public boolean supportsStatistics() {
-    return false;
-  }
+    public SequenceFileReaderFactory(SequenceFileFormatConfig config, EasySubScan scan) {
+      this.config = config;
+      this.scan = scan;
+    }
 
-  @Override
-  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
-    throw new UnsupportedOperationException("unimplemented");
-  }
+    @Override
+    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
+      return new SequenceFileBatchReader(config, scan);
+    }
 
-  @Override
-  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
-    throw new UnsupportedOperationException("unimplemented");
-  }
-
-  @Override
-  public RecordReader getRecordReader(FragmentContext context,
-                                      DrillFileSystem dfs,
-                                      FileWork fileWork,
-                                      List<SchemaPath> columns,
-                                      String userName) throws ExecutionSetupException {
-    final Path path = dfs.makeQualified(fileWork.getPath());
-    final FileSplit split = new FileSplit(path, fileWork.getStart(), fileWork.getLength(), new String[]{""});
-    return new SequenceFileRecordReader(split, dfs, context.getQueryUserName(), userName);
   }
 
   @Override
-  public int getReaderOperatorType() {
-    return CoreOperatorType.SEQUENCE_SUB_SCAN_VALUE;
+  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options)
+      throws ExecutionSetupException {
+    return new SequenceFileBatchReader(formatConfig, scan);
   }
 
   @Override
-  public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
-    throw new UnsupportedOperationException();
-  }
+  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) throws ExecutionSetupException {
+    FileScanBuilder builder = new FileScanBuilder();
+    builder.setReaderFactory(new SequenceFileReaderFactory(formatConfig, scan));
 
-  @Override
-  public int getWriterOperatorType() {
-    throw new UnsupportedOperationException();
+    initScanBuilder(builder, scan);
+    builder.nullType(Types.optional(MinorType.VARCHAR));
+    return builder;
   }
 }
