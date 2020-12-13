@@ -17,32 +17,102 @@
  */
 package org.apache.drill.exec.store.sequencefile;
 
-import java.io.DataOutputStream;
+import static org.junit.Assert.assertEquals;
+
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.nio.file.Paths;
 
-import org.junit.Test;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.easy.sequencefile.SequenceFileBatchReader;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryBuilder;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.hadoop.io.BytesWritable;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-public class TestSequenceFileReader extends BaseTestQuery {
+@Category(RowSetTests.class)
+public class TestSequenceFileReader extends ClusterTest {
 
-  public static String byteWritableString(String input) throws Exception {
+  @BeforeClass
+  public static void setup() throws Exception {
+    ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
+    dirTestWatcher.copyResourceToRoot(Paths.get("sequencefiles/"));
+  }
+
+  @Test
+  public void testStarQuery() throws Exception {
+    String sql = "select * from cp.`sequencefiles/simple.seq`";
+    QueryBuilder builder = client.queryBuilder().sql(sql);
+    RowSet sets = builder.rowSet();
+
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable(SequenceFileBatchReader.KEY_SCHEMA, MinorType.VARBINARY)
+        .addNullable(SequenceFileBatchReader.VALUE_SCHEMA, MinorType.VARBINARY)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow("key1".getBytes(), "value1".getBytes())
+        .addRow("key2".getBytes(), "value2".getBytes())
+        .build();
+
+    assertEquals(2, sets.rowCount());
+
+    new RowSetComparison(expected).verifyAndClearAll(sets);
+  }
+
+  @Test
+  public void testExplicitQuery() throws Exception {
+    String sql = "select convert_from(binary_key, 'UTF8') as binary_key from cp.`sequencefiles/simple.seq`";
+    QueryBuilder builder = client.queryBuilder().sql(sql);
+    RowSet sets = builder.rowSet();
+
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable(SequenceFileBatchReader.KEY_SCHEMA, MinorType.VARCHAR)
+        .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow(byteWritableString("key0"))
+        .addRow(byteWritableString("key1"))
+        .build();
+
+    assertEquals(2, sets.rowCount());
+
+    new RowSetComparison(expected).verifyAndClearAll(sets);
+  }
+
+  @Test
+  public void testLimitPushdown() throws Exception {
+    String sql = "select * from cp.`sequencefiles/simple.seq` limit 1 offset 1";
+    QueryBuilder builder = client.queryBuilder().sql(sql);
+    RowSet sets = builder.rowSet();
+
+    assertEquals(1, sets.rowCount());
+    sets.clear();
+  }
+
+  @Test
+  public void testSerDe() throws Exception {
+    String sql = "select count(*) from cp.`sequencefiles/simple.seq`";
+    String plan = queryBuilder().sql(sql).explainJson();
+    long cnt = queryBuilder().physical(plan).singletonLong();
+
+    assertEquals("Counts should match", 2, cnt);
+  }
+
+  private static String byteWritableString(String input) throws Exception {
     final ByteArrayOutputStream bout = new ByteArrayOutputStream();
     DataOutputStream out = new DataOutputStream(bout);
     final BytesWritable writable = new BytesWritable(input.getBytes("UTF-8"));
     writable.write(out);
     return new String(bout.toByteArray());
-  }
-
-  @Test
-  public void testSequenceFileReader() throws Exception {
-    testBuilder()
-      .sqlQuery("select convert_from(t.binary_key, 'UTF8') as k, convert_from(t.binary_value, 'UTF8') as v " +
-        "from cp.`sequencefiles/simple.seq` t")
-      .ordered()
-      .baselineColumns("k", "v")
-      .baselineValues(byteWritableString("key0"), byteWritableString("value0"))
-      .baselineValues(byteWritableString("key1"), byteWritableString("value1"))
-      .build().run();
   }
 }
