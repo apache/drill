@@ -30,10 +30,10 @@ public class ThreatHuntingFunctions {
 
 
   /**
-   * Implements the Double Metaphone phonetic algorithm (https://en.wikipedia.org/wiki/Metaphone),
-   * and calculates a given string's Double Metaphone value.
+   * Punctuation pattern is useful for comparing log entries.  It extracts the all the punctuation and returns
+   * that pattern.  Spaces are replaced with an underscore.
    * <p>
-   * Usage: SELECT double_metaphone( string ) FROM...
+   * Usage: SELECT punctuation_pattern( string ) FROM...
    */
   @FunctionTemplate(name = "punctuation_pattern", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class PunctuationPatternFunction implements DrillSimpleFunc {
