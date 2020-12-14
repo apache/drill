@@ -55,17 +55,19 @@ public class TestStringFunctions extends BaseTestQuery {
   @Test
   public void testSplitPart() throws Exception {
     testBuilder()
-        .sqlQuery("select split_part('abc~@~def~@~ghi', '~@~', 1) res1 from (values(1))")
+        .sqlQuery("select split_part(a, '~@~', 1) res1 from (values('abc~@~def~@~ghi'), ('qwe~@~rty~@~uio')) as t(a)")
         .ordered()
         .baselineColumns("res1")
         .baselineValues("abc")
+        .baselineValues("qwe")
         .go();
 
     testBuilder()
-        .sqlQuery("select split_part('abc~@~def~@~ghi', '~@~', 2) res1 from (values(1))")
+        .sqlQuery("select split_part(a, '~@~', 2) res1 from (values('abc~@~def~@~ghi'), ('qwe~@~rty~@~uio')) as t(a)")
         .ordered()
         .baselineColumns("res1")
         .baselineValues("def")
+        .baselineValues("rty")
         .go();
 
     // invalid index
