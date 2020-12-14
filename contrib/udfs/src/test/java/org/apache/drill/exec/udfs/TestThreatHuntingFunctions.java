@@ -66,7 +66,7 @@ public class TestThreatHuntingFunctions extends ClusterTest {
       .sqlQuery(query)
       .ordered()
       .baselineColumns("pp")
-      .baselineValues(3.06)
+      .baselineValues(3.057476076289932)
       .go();
   }
 }

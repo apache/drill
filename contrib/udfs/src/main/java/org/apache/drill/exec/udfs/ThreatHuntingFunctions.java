@@ -78,11 +78,8 @@ public class ThreatHuntingFunctions {
     @Output
     Float8Holder out;
 
-
     @Override
-    public void setup() {
-
-    }
+    public void setup() {}
 
     @Override
     public void eval() {
@@ -97,7 +94,6 @@ public class ThreatHuntingFunctions {
       java.util.Map<Character, Double> probabilities = new java.util.HashMap();
       int length = input.length();
 
-
       // Get the probabilities
       for (Character character : chars) {
         double charCount = org.apache.commons.lang3.StringUtils.countMatches(input, character);
@@ -110,9 +106,8 @@ public class ThreatHuntingFunctions {
       for (double probability : probabilities.values()) {
         entropy += (probability * Math.log(probability) / Math.log(2.0));
       }
-
-      entropy = - entropy;
-      out.value = entropy;
+      System.out.println(entropy);
+      out.value = Math.abs(entropy);
     }
   }
 
