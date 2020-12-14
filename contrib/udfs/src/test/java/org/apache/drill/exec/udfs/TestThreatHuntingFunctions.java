@@ -58,4 +58,16 @@ public class TestThreatHuntingFunctions extends ClusterTest {
       .baselineValues("")
       .go();
   }
+
+  @Test
+  public void testEntropyFunction() throws Exception {
+    String query = "SELECT entropy('asdkjflkdsjlefjdc') AS pp FROM (VALUES(1))";
+    testBuilder()
+      .sqlQuery(query)
+      .ordered()
+      .baselineColumns("pp")
+      .baselineValues(3.06)
+      .go();
+  }
 }
+

@@ -22,9 +22,12 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class ThreatHuntingFunctions {
 
@@ -65,4 +68,52 @@ public class ThreatHuntingFunctions {
       buffer.setBytes(0, punctuationPattern.getBytes());
     }
   }
+
+  @FunctionTemplate(name = "entropy", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  public static class StringEntropyFunction implements DrillSimpleFunc {
+
+    @Param
+    VarCharHolder rawInput1;
+
+    @Output
+    Float8Holder out;
+
+
+    @Override
+    public void setup() {
+
+    }
+
+    @Override
+    public void eval() {
+
+      String input = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput1.start, rawInput1.end, rawInput1.buffer);
+      java.util.Set<Character> chars = new java.util.HashSet();
+
+      for (char ch : input.toCharArray()) {
+        chars.add(ch);
+      }
+
+      java.util.Map<Character, Double> probabilities = new java.util.HashMap();
+      int length = input.length();
+
+
+      // Get the probabilities
+      for (Character character : chars) {
+        double charCount = org.apache.commons.lang3.StringUtils.countMatches(input, character);
+        double probability = charCount / length;
+        probabilities.put(character, probability);
+      }
+
+      // Now get the entropy
+      double entropy = 0.0;
+      for (double probability : probabilities.values()) {
+        entropy += (probability * Math.log(probability) / Math.log(2.0));
+      }
+
+      entropy = - entropy;
+      out.value = entropy;
+    }
+  }
+
 }
