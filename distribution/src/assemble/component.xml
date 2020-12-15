@@ -54,6 +54,7 @@
         <include>org.apache.drill.contrib:drill-storage-kafka:jar</include>
         <include>org.apache.drill.contrib:drill-storage-http:jar</include>
         <include>org.apache.drill.contrib:drill-opentsdb-storage:jar</include>
+        <include>org.apache.drill.contrib:drill-ipfs-storage:jar</include>
         <include>org.apache.drill.contrib:drill-udfs:jar</include>
         <include>org.apache.drill.contrib:drill-druid-storage:jar</include>
       </includes>

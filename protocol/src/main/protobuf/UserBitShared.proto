@@ -382,6 +382,7 @@ enum CoreOperatorType {
   DRUID_SUB_SCAN = 68;
   SPSS_SUB_SCAN = 69;
   HTTP_SUB_SCAN = 70;
+  IPFS_SUB_SCAN = 71;
 }
 
 /* Registry that contains list of jars, each jar contains its name and list of function signatures.

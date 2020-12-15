@@ -1,0 +1,12 @@
+{
+    "name": "Alice",
+    "job": "artist",
+    "age": 30,
+    "sex": "female"
+}
+{
+    "name": "Bob",
+    "job": "butcher",
+    "age": 45,
+    "sex": "male"
+}

@@ -392,11 +392,12 @@ enum CoreOperatorType : int {
   METADATA_CONTROLLER = 67,
   DRUID_SUB_SCAN = 68,
   SPSS_SUB_SCAN = 69,
-  HTTP_SUB_SCAN = 70
+  HTTP_SUB_SCAN = 70,
+  IPFS_SUB_SCAN = 71
 };
 bool CoreOperatorType_IsValid(int value);
 constexpr CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-constexpr CoreOperatorType CoreOperatorType_MAX = HTTP_SUB_SCAN;
+constexpr CoreOperatorType CoreOperatorType_MAX = IPFS_SUB_SCAN;
 constexpr int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* CoreOperatorType_descriptor();
