@@ -420,9 +420,13 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
       PluginHandle entry = restoreFromEphemeral(name, config);
       try {
         entry.plugin();
+      } catch (UserException e) {
+        // Provide helpful error messages.
+        throw new PluginException(e.getOriginalMessage(), e);
       } catch (Exception e) {
         throw new PluginException(String.format(
-            "Invalid plugin config for '%s'", name), e);
+            "Invalid plugin config for '%s', "
+          + "Please switch to Logs panel from the UI then check the log.", name), e);
       }
       oldEntry = pluginCache.put(entry);
     } else {
