@@ -27,6 +27,7 @@ You can use the following string functions in Drill queries:
 | [RPAD]({{ site.baseurl }}/docs/string-manipulation/#rpad)                     | VARCHAR           |
 | [RTRIM]({{ site.baseurl }}/docs/string-manipulation/#rtrim)                   | VARCHAR           |
 | [SPLIT]({{ site.baseurl }}/docs/string-manipulation/#split)                   | INTEGER           |
+| [SPLIT_PART]({{ site.baseurl }}/docs/string-manipulation/#split_part)         | VARCHAR           |
 | [STRPOS]({{ site.baseurl }}/docs/string-manipulation/#strpos)                 | INTEGER           |
 | [SUBSTR]({{ site.baseurl }}/docs/string-manipulation/#substr)                 | VARCHAR           |
 | [TOASCII]({{ site.baseurl }}/docs/string-manipulation/#toascii)               | VARCHAR           |
@@ -34,7 +35,7 @@ You can use the following string functions in Drill queries:
 | [UPPER]({{ site.baseurl }}/docs/string-manipulation/#upper)                   | VARCHAR           |
 
 {% include startnote.html %}
-As with indexes througout SQL, indexes into character strings are 1-based.
+As is the case for indexes througout SQL, indexes into character strings are 1-based.
 {% include endnote.html %}
 
 ## BYTE_SUBSTR
@@ -518,8 +519,28 @@ The _delimiter_ must not be null and must contain a single character.
     | [The, quick, brown, fox, jumps...] |
     |------------------------------------|
 
+## SPLIT_PART
+Return the string part at _index_ after splitting the input string using the specified delimiter.
+
+### SPLIT_PART Syntax
+    SPLIT_PART(string, delimiter, index)
+
+### SPLIT_PART Usage Notes
+The _delimiter_ string may be multiple characters long.  The _index_ must be a positive integer.
+
+### SPLIT_PART Examples
+
+    SELECT split_part('The | quick | brown | fox | jumps', ' | ', 4);
+
+    |--------|
+    | EXPR$0 |
+    |--------|
+    | fox    |
+    |--------|
+
 ## STRPOS
-Returns the location of the first occurrence of a substring of the input string, or 0 if the substring does not occur.
+Returns the location of the first occurrence of a substring of the input
+string, or 0 if the substring does not occur.
 
 ### STRPOS Syntax
 
@@ -529,11 +550,11 @@ STRPOS(string, substring)
 
     SELECT STRPOS('Apache Drill', 'Drill') FROM (VALUES(1));
 
-    |------------|
-    |   EXPR$0   |
-    |------------|
-    | 8          |
-    |------------|
+    |--------|
+    | EXPR$0 |
+    |--------|
+    | 8      |
+    |--------|
     1 row selected (0.22 seconds)
 
 ## SUBSTR
