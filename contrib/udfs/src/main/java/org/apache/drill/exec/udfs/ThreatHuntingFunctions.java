@@ -103,10 +103,9 @@ public class ThreatHuntingFunctions {
 
       // Now get the entropy
       double entropy = 0.0;
-      for (double probability : probabilities.values()) {
-        entropy += (probability * Math.log(probability) / Math.log(2.0));
+      for (Double probability : probabilities.values()) {
+        entropy += (probability * java.lang.Math.log(probability) / java.lang.Math.log(2.0));
       }
-      System.out.println(entropy);
       out.value = Math.abs(entropy);
     }
   }
