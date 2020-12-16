@@ -45,6 +45,7 @@ import org.apache.drill.exec.metastore.analyze.MetadataInfoCollector;
 import org.apache.drill.exec.metastore.analyze.MetastoreAnalyzeConstants;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillAnalyzeRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
@@ -237,7 +238,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
     if (metastoreTableInfo.isExists()) {
       RelNode finalRelNode = relNode;
       CheckedSupplier<TableScan, SqlUnsupportedException> tableScanSupplier =
-          () -> AnalyzeTableHandler.findScan(convertToDrel(finalRelNode.getInput(0)));
+          () -> DrillRelOptUtil.findScan(convertToDrel(finalRelNode.getInput(0)));
 
       MetadataInfoCollector metadataInfoCollector = analyzeInfoProvider.getMetadataInfoCollector(basicRequests,
           tableInfo, (FormatSelection) table.getSelection(), context.getPlannerSettings(),

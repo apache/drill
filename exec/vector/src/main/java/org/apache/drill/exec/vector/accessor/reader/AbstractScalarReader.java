@@ -143,6 +143,11 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
   }
 
   @Override
+  public float getFloat() {
+    throw conversionError("double");
+  }
+
+  @Override
   public double getDouble() {
     throw conversionError("double");
   }
@@ -194,6 +199,8 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
       return getBytes();
     case DECIMAL:
       return getDecimal();
+    case FLOAT:
+      return getFloat();
     case DOUBLE:
       return getDouble();
     case INTEGER:
@@ -240,6 +247,8 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
     switch (extendedType()) {
     case BYTES:
       return AccessorUtilities.bytesToString(getBytes());
+    case FLOAT:
+      return Double.toString(getFloat());
     case DOUBLE:
       return Double.toString(getDouble());
     case INTEGER:

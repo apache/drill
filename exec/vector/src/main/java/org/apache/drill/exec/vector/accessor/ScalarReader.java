@@ -80,6 +80,7 @@ public interface ScalarReader extends ColumnReader {
   int getInt();
   boolean getBoolean();
   long getLong();
+  float getFloat();
   double getDouble();
   String getString();
   byte[] getBytes();

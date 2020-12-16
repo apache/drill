@@ -50,7 +50,7 @@ public abstract class AbstractScalarWriter implements ScalarWriter {
     } else if (value instanceof Double) {
       setDouble((Double) value);
     } else if (value instanceof Float) {
-      setDouble((Float) value);
+      setFloat((Float) value);
     } else if (value instanceof BigDecimal) {
       setDecimal((BigDecimal) value);
     } else if (value instanceof Period) {

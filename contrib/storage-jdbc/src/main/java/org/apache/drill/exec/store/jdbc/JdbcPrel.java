@@ -27,10 +27,8 @@ import org.apache.calcite.adapter.jdbc.JdbcImplementor;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.sql.SqlDialect;
@@ -40,6 +38,7 @@ import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.store.SubsetRemover;
 
 /**
  * Represents a JDBC Plan once the children nodes have been rewritten into SQL.
@@ -61,7 +60,7 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
         dialect,
         (JavaTypeFactory) getCluster().getTypeFactory());
     final JdbcImplementor.Result result =
-        jdbcImplementor.visitChild(0, input.accept(new SubsetRemover()));
+        jdbcImplementor.visitChild(0, input.accept(SubsetRemover.INSTANCE));
     sql = result.asStatement().toSqlString(dialect).getSql();
     rowType = input.getRowType();
   }
@@ -76,19 +75,6 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
       }
     }
     return strippedSqlTextBldr.toString();
-  }
-
-  private static class SubsetRemover extends RelShuttleImpl {
-
-    @Override
-    public RelNode visit(RelNode other) {
-      if (other instanceof RelSubset) {
-        return ((RelSubset) other).getBest().accept(this);
-      } else {
-        return super.visit(other);
-      }
-    }
-
   }
 
   @Override

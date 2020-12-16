@@ -15,25 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.jdbc;
+package org.apache.drill.exec.planner.physical;
 
-import java.util.function.Predicate;
+import java.util.Collections;
+import java.util.Iterator;
 
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.convert.ConverterRule;
-import org.apache.drill.exec.planner.logical.DrillRel;
-import org.apache.drill.exec.planner.logical.DrillRelFactories;
+public interface LeafPrel extends Prel {
 
-class JdbcDrelConverterRule extends ConverterRule {
-
-  JdbcDrelConverterRule(DrillJdbcConvention in) {
-    super(RelNode.class, (Predicate<RelNode>) input -> true, in, DrillRel.DRILL_LOGICAL,
-        DrillRelFactories.LOGICAL_BUILDER, "JDBC_DREL_Converter" + in.getName());
+  @Override
+  default boolean needsFinalColumnReordering() {
+    return true;
   }
 
   @Override
-  public RelNode convert(RelNode in) {
-    return new JdbcDrel(in.getCluster(), in.getTraitSet().replace(DrillRel.DRILL_LOGICAL),
-        convert(in, in.getTraitSet().replace(this.getInTrait()).simplify()));
+  default Iterator<Prel> iterator() {
+    return Collections.emptyIterator();
   }
 }

@@ -44,7 +44,7 @@ public interface ProjectionFilter {
   ProjResult NOT_PROJECTED = new ProjResult(false, null, PROJECT_NONE);
   ProjResult PROJECTED = new ProjResult(true, null, PROJECT_ALL);
 
-  public static class ProjResult {
+  class ProjResult {
     public final boolean isProjected;
     public final ColumnMetadata projection;
     public final ProjectionFilter mapFilter;
@@ -70,7 +70,7 @@ public interface ProjectionFilter {
 
   boolean isEmpty();
 
-  public static ProjectionFilter projectionFilter(RequestedTuple tupleProj,
+  static ProjectionFilter projectionFilter(RequestedTuple tupleProj,
       CustomErrorContext errorContext) {
     switch (tupleProj.type()) {
       case ALL:
@@ -82,7 +82,7 @@ public interface ProjectionFilter {
     }
   }
 
-  public static ProjectionFilter providedSchemaFilter(RequestedTuple tupleProj,
+  static ProjectionFilter providedSchemaFilter(RequestedTuple tupleProj,
       TupleMetadata providedSchema, CustomErrorContext errorContext) {
     if (tupleProj.type() == TupleProjectionType.NONE) {
       return PROJECT_NONE;
@@ -106,7 +106,7 @@ public interface ProjectionFilter {
         schemaFilter);
   }
 
-  public static ProjectionFilter definedSchemaFilter(
+  static ProjectionFilter definedSchemaFilter(
       TupleMetadata definedSchema, CustomErrorContext errorContext) {
     if (definedSchema.isEmpty()) {
       return PROJECT_NONE;
@@ -120,7 +120,7 @@ public interface ProjectionFilter {
    * projects special columns (those marked as not being expanded in
    * SELECT *).
    */
-  public static class ImplicitProjectionFilter implements ProjectionFilter {
+  class ImplicitProjectionFilter implements ProjectionFilter {
     private final boolean projectAll;
 
     public ImplicitProjectionFilter(boolean projectAll) {
@@ -152,7 +152,7 @@ public interface ProjectionFilter {
    * the reader column is consistent with the form of projection (map,
    * array, or plain) in the projection list.
    */
-  public static class DirectProjectionFilter implements ProjectionFilter {
+  class DirectProjectionFilter implements ProjectionFilter {
     private final RequestedTuple projectionSet;
     private final CustomErrorContext errorContext;
 
@@ -185,7 +185,7 @@ public interface ProjectionFilter {
   /**
    * Schema-based projection.
    */
-  public abstract static class BaseSchemaProjectionFilter implements ProjectionFilter {
+  abstract class BaseSchemaProjectionFilter implements ProjectionFilter {
     protected final TupleMetadata schema;
     protected final CustomErrorContext errorContext;
 
@@ -233,7 +233,7 @@ public interface ProjectionFilter {
    * If the column is found, enforces that the reader schema has the same type and
    * mode as the provided column.
    */
-  public static class TypeProjectionFilter extends BaseSchemaProjectionFilter {
+  class TypeProjectionFilter extends BaseSchemaProjectionFilter {
 
     public TypeProjectionFilter(TupleMetadata providedSchema, CustomErrorContext errorContext) {
       super(providedSchema, errorContext);
@@ -265,7 +265,7 @@ public interface ProjectionFilter {
    * Projection filter in which a schema exactly defines the set of allowed
    * columns, and their types.
    */
-  public static class SchemaProjectionFilter extends BaseSchemaProjectionFilter {
+  class SchemaProjectionFilter extends BaseSchemaProjectionFilter {
 
     public SchemaProjectionFilter(TupleMetadata definedSchema, CustomErrorContext errorContext) {
       super(definedSchema, errorContext);
@@ -296,7 +296,7 @@ public interface ProjectionFilter {
   /**
    * Compound filter for combining direct and provided schema projections.
    */
-  public static class CompoundProjectionFilter implements ProjectionFilter {
+  class CompoundProjectionFilter implements ProjectionFilter {
     private final ProjectionFilter filter1;
     private final ProjectionFilter filter2;
 

@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.record.ColumnConverter;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.FileSystem;
@@ -39,8 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
-import java.util.List;
-import java.util.stream.IntStream;
 
 public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSchemaNegotiator> {
   private static final Logger logger = LoggerFactory.getLogger(AvroBatchReader.class);
@@ -49,10 +48,10 @@ public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSche
   private long endPosition;
   private DataFileReader<GenericRecord> reader;
   private ResultSetLoader loader;
-  private List<ColumnConverter> converters;
+  private ColumnConverter converter;
   // re-use container instance
   private GenericRecord record;
-  private int maxRecords;
+  private final int maxRecords;
 
   public AvroBatchReader(int maxRecords) {
     this.maxRecords = maxRecords;
@@ -81,8 +80,8 @@ public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSche
     logger.debug("Avro file table schema: {}", tableSchema);
     negotiator.tableSchema(tableSchema, true);
     loader = negotiator.build();
-    ColumnConverterFactory factory = new ColumnConverterFactory(providedSchema);
-    converters = factory.initConverters(providedSchema, readerSchema, loader.writer());
+    AvroColumnConverterFactory factory = new AvroColumnConverterFactory(providedSchema);
+    converter = factory.getRootConverter(providedSchema, readerSchema, loader.writer());
 
     return true;
   }
@@ -181,8 +180,7 @@ public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSche
     }
 
     rowWriter.start();
-    IntStream.range(0, rowWriter.size())
-      .forEach(i -> converters.get(i).convert(record.get(i)));
+    converter.convert(record);
     rowWriter.save();
 
     return true;

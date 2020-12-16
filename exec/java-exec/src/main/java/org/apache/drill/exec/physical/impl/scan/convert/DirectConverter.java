@@ -64,6 +64,11 @@ public class DirectConverter extends ColumnConverter implements ValueWriter {
   }
 
   @Override
+  public void setFloat(float value) {
+    baseWriter.setDouble(value);
+  }
+
+  @Override
   public void setDouble(double value) {
     baseWriter.setDouble(value);
   }

@@ -54,7 +54,9 @@ public class WithOptionsTableMacro implements TableMacro {
         .message("Unable to find table [%s]", sig.getName())
         .build(logger);
     }
-    return new DrillTranslatableTable(drillTable);
+    return drillTable instanceof TranslatableTable
+        ? (TranslatableTable) drillTable :
+        new DrillTranslatableTable(drillTable);
   }
 
   @Override
