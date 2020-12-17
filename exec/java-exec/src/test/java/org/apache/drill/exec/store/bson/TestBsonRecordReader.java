@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 
@@ -37,6 +38,7 @@ import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonBoolean;
 import org.bson.BsonDateTime;
+import org.bson.BsonDecimal128;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentReader;
 import org.bson.BsonDocumentWriter;
@@ -48,6 +50,7 @@ import org.bson.BsonString;
 import org.bson.BsonSymbol;
 import org.bson.BsonTimestamp;
 import org.bson.BsonWriter;
+import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -273,6 +276,16 @@ public class TestBsonRecordReader extends BaseTest {
     FieldReader reader = mapReader.reader("arrayKey");
     assertEquals(3, reader.size());
   }
+
+    @Test
+    public void testDecimal128Type() throws IOException {
+        BsonDocument bsonDoc = new BsonDocument();
+        bsonDoc.append("decimal128Key", new BsonDecimal128(Decimal128.parse("12.12345624")));
+        writer.reset();
+        bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
+        SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+        assertEquals(new BigDecimal("12.12345624"), mapReader.reader("decimal128Key").readBigDecimal());
+    }
 
   @After
   public void cleanUp() {

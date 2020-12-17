@@ -17,11 +17,7 @@
  */
 package org.apache.drill.exec.store.bson;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.util.List;
-
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
@@ -36,14 +32,17 @@ import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.TimeStampWriter;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.bson.BsonBinary;
 import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.joda.time.DateTime;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-
-import io.netty.buffer.DrillBuf;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.util.List;
 
 public class BsonRecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BsonRecordReader.class);
@@ -178,6 +177,11 @@ public class BsonRecordReader {
         writeTimeStamp(time, writer, fieldName, isList);
         atLeastOneWrite = true;
         break;
+      case DECIMAL128:
+         BigDecimal readBigDecimalAsDecimal128 = reader.readDecimal128().bigDecimalValue();
+         writeDecimal128(readBigDecimalAsDecimal128, writer, fieldName, isList);
+         atLeastOneWrite = true;
+         break;
       default:
         // Didn't handled REGULAR_EXPRESSION and DB_POINTER types
         throw new DrillRuntimeException("UnSupported Bson type: " + currentBsonType);
@@ -351,7 +355,16 @@ public class BsonRecordReader {
     }
   }
 
-  public void ensureAtLeastOneField(ComplexWriter writer) {
+    private void writeDecimal128(BigDecimal readBigDecimal, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+        if (isList) {
+            writer.list.varDecimal().writeVarDecimal(readBigDecimal);
+        } else {
+            writer.varDecimal(fieldName, readBigDecimal.precision(), readBigDecimal.scale()).writeVarDecimal(readBigDecimal);
+        }
+    }
+
+
+    public void ensureAtLeastOneField(ComplexWriter writer) {
     if (!atLeastOneWrite) {
       // if we had no columns, create one empty one so we can return some data
       // for count purposes.
