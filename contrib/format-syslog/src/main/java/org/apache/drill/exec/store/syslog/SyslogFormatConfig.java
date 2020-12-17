@@ -49,14 +49,17 @@ public class SyslogFormatConfig implements FormatPluginConfig {
     this.flattenStructuredData = flattenStructuredData == null ? false : flattenStructuredData;
   }
 
-  public boolean getFlattenStructuredData() {
+  @JsonProperty("flattenStructuredData")
+  public boolean flattenStructuredData() {
     return flattenStructuredData;
   }
 
+  @JsonProperty("maxErrors")
   public int getMaxErrors() {
     return maxErrors;
   }
 
+  @JsonProperty("extensions")
   public List<String> getExtensions() {
     return extensions;
   }

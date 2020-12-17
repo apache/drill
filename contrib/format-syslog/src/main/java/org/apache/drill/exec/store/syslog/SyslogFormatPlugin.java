@@ -18,82 +18,77 @@
 
 package org.apache.drill.exec.store.syslog;
 
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.RecordWriter;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
-import org.apache.drill.exec.store.dfs.easy.EasyWriter;
-import org.apache.drill.exec.store.dfs.easy.FileWork;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
-import java.util.List;
 
 public class SyslogFormatPlugin extends EasyFormatPlugin<SyslogFormatConfig> {
 
   public static final String DEFAULT_NAME = "syslog";
-  private final SyslogFormatConfig formatConfig;
+
+  private static class SyslogReaderFactory extends FileReaderFactory {
+
+    private final int maxRecords;
+    private final SyslogFormatConfig formatConfig;
+    private final EasySubScan scan;
+
+    public SyslogReaderFactory(int maxRecords, SyslogFormatConfig formatConfig, EasySubScan scan) {
+      this.maxRecords = maxRecords;
+      this.formatConfig = formatConfig;
+      this.scan = scan;
+    }
+
+    @Override
+    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
+      return new SyslogBatchReader(maxRecords, formatConfig, scan);
+    }
+  }
 
   public SyslogFormatPlugin(String name, DrillbitContext context,
-                            Configuration fsConf, StoragePluginConfig storageConfig,
-                            SyslogFormatConfig formatConfig) {
-    super(name, context, fsConf, storageConfig, formatConfig,
-            true,  // readable
-            false, // writable
-            true, // blockSplittable
-            true,  // compressible
-            Lists.newArrayList(formatConfig.getExtensions()),
-            DEFAULT_NAME);
-    this.formatConfig = formatConfig;
+                          Configuration fsConf, StoragePluginConfig storageConfig,
+                          SyslogFormatConfig formatConfig) {
+    super(name, easyConfig(fsConf, formatConfig), context, storageConfig, formatConfig);
+  }
+
+  private static EasyFormatConfig easyConfig(Configuration fsConf, SyslogFormatConfig pluginConfig) {
+    EasyFormatConfig config = new EasyFormatConfig();
+    config.readable = true;
+    config.writable = false;
+    config.blockSplittable = false;
+    config.compressible = true;
+    config.supportsProjectPushdown = true;
+    config.extensions = pluginConfig.getExtensions();
+    config.fsConf = fsConf;
+    config.defaultName = DEFAULT_NAME;
+    config.readerOperatorType = CoreOperatorType.SYSLOG_SUB_SCAN_VALUE;
+    config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
+    return config;
   }
 
   @Override
-  public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
-                                      List<SchemaPath> columns, String userName) {
-    return new SyslogRecordReader(context, dfs, fileWork, columns, userName, formatConfig);
+  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
+    EasySubScan scan, OptionManager options)  {
+    return new SyslogBatchReader(scan.getMaxRecords(), formatConfig, scan);
   }
 
   @Override
-  public boolean supportsPushDown() {
-    return true;
-  }
+  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
+    FileScanBuilder builder = new FileScanBuilder();
+    builder.setReaderFactory(new SyslogReaderFactory(scan.getMaxRecords(), formatConfig, scan));
 
-  @Override
-  public RecordWriter getRecordWriter(FragmentContext context,
-                                      EasyWriter writer) throws UnsupportedOperationException {
-    throw new UnsupportedOperationException("Drill does not support writing records to Syslog format.");
-  }
-
-  @Override
-  public int getReaderOperatorType() {
-    return CoreOperatorType.SYSLOG_SUB_SCAN_VALUE;
-  }
-
-  @Override
-  public int getWriterOperatorType() {
-    throw new UnsupportedOperationException("Drill does not support writing records to Syslog format.");
-  }
-
-  @Override
-  public boolean supportsStatistics() {
-    return false;
-  }
-
-  @Override
-  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) {
-    throw new UnsupportedOperationException("unimplemented");
-  }
-
-  @Override
-  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) {
-    throw new UnsupportedOperationException("unimplemented");
+    initScanBuilder(builder, scan);
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    return builder;
   }
 }
