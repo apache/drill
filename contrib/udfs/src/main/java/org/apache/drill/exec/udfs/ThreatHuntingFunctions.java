@@ -26,12 +26,8 @@ import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.HashSet;
 
 public class ThreatHuntingFunctions {
-
-
   /**
    * Punctuation pattern is useful for comparing log entries.  It extracts the all the punctuation and returns
    * that pattern.  Spaces are replaced with an underscore.
@@ -69,6 +65,15 @@ public class ThreatHuntingFunctions {
     }
   }
 
+  /**
+   * This function calculates the Shannon Entropy of a given string of text.
+   * See: https://en.wikipedia.org/wiki/Entropy_(information_theory) for full definition.
+   * <p>
+   * Usage:
+   * SELECT entropy(<varchar>) AS entropy FROM...
+   *
+   * Returns a double
+   */
   @FunctionTemplate(name = "entropy", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class StringEntropyFunction implements DrillSimpleFunc {
 
@@ -109,5 +114,4 @@ public class ThreatHuntingFunctions {
       out.value = Math.abs(entropy);
     }
   }
-
 }

@@ -415,3 +415,13 @@ apache drill> SELECT getMapSchema(record) AS schema FROM dfs.test.`schema_test.j
 ```
 
 The function returns an empty map if the row is `null`.
+
+# Threat Hunting Functions
+These functions are useful for doing threat hunting with Apache Drill.  These were inspired by huntlib.
+
+The functions are: 
+* `punctuation_pattern(<string>)`:
+* `entropy(<string>)`: 
+
+
+
