@@ -23,14 +23,13 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 import javax.inject.Inject;
 
 public class DNSFunctions {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DNSFunctions.class);
 
   private DNSFunctions() {
   }
@@ -201,7 +200,7 @@ public class DNSFunctions {
           listWriter.varChar().write(rowHolder);
         }
       } catch (Exception e) {
-        logger.warn("Could not find MX records for " + domainName);
+        System.out.println("Can't find records for " + domainName + "\n" + e.getMessage());
       }
     }
   }
@@ -233,9 +232,72 @@ public class DNSFunctions {
       try {
         look = new org.xbill.DNS.Lookup(domainName, org.xbill.DNS.Type.ANY);
         records = look.run();
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter rowMapWriter = listWriter.map();
         for (int i = 0; i < records.length; i++) {
-          org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
-          org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter rowMapWriter = listWriter.map();
+          org.apache.drill.exec.expr.holders.VarCharHolder fieldHolder = new org.apache.drill.exec.expr.holders.VarCharHolder();
+
+          // TODO, get all fields from MX record and put in a map
+          byte[] dnsType = records[i].getName().toString().getBytes();
+          buffer.reallocIfNeeded(dnsType.length);
+          buffer.setBytes(0, dnsType);
+
+          fieldHolder.start = 0;
+          fieldHolder.end = dnsType.length;
+          fieldHolder.buffer = buffer;
+
+          rowMapWriter.start();
+          rowMapWriter.varChar("field1").write(fieldHolder);
+          rowMapWriter.bigInt("ttl").writeBigInt(records[i].getTTL());
+          rowMapWriter.end();
+          System.out.println(records[i]);
+        }
+      } catch (Exception e) {
+        e.printStackTrace(); // TODO
+      }
+    }
+  }
+
+  /* This function performs a complete DNS lookup */
+  @FunctionTemplate(name = "dns_lookup", scope = FunctionTemplate.FunctionScope.SIMPLE)
+  public static class DNSLookupFunctionWithNull implements DrillSimpleFunc {
+
+    @Param
+    NullableVarCharHolder rawDomainName;
+
+    @Output
+    BaseWriter.ComplexWriter out;
+
+    @Inject
+    DrillBuf buffer;
+
+    @Override
+    public void setup() {
+
+    }
+
+    @Override
+    public void eval() {
+      org.xbill.DNS.Record[] records = null;
+      org.xbill.DNS.Lookup look;
+
+      String domainName = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawDomainName.start, rawDomainName.end, rawDomainName.buffer);
+
+      // Null handling
+      if (domainName == null || domainName.isEmpty()) {
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
+        listWriter.startList();
+        listWriter.endList();
+        return;
+      }
+
+      try {
+        look = new org.xbill.DNS.Lookup(domainName, org.xbill.DNS.Type.ANY);
+        records = look.run();
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter listWriter = out.rootAsList();
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter rowMapWriter = listWriter.map();
+
+        for (int i = 0; i < records.length; i++) {
           org.apache.drill.exec.expr.holders.VarCharHolder fieldHolder = new org.apache.drill.exec.expr.holders.VarCharHolder();
 
           byte[] dnsType = records[i].getName().toString().getBytes();
@@ -257,4 +319,5 @@ public class DNSFunctions {
       }
     }
   }
+
 }

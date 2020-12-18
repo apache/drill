@@ -25,7 +25,6 @@ import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import java.util.ArrayList;
 
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestDNSFunctions extends ClusterTest {
@@ -39,7 +38,7 @@ public class TestDNSFunctions extends ClusterTest {
   @Test
   public void testGetHostAddress() throws Exception {
     String query = "select get_host_address('gtkcyber.com') as hostname from (values(1))";
-    testBuilder().sqlQuery(query).ordered().baselineColumns("hostname").baselineValues("216.239.36.21").go();
+    testBuilder().sqlQuery(query).ordered().baselineColumns("hostname").baselineValues("35.224.172.16").go();
 
     query = "select get_host_address('google') as hostname from (values(1))";
     testBuilder().sqlQuery(query).ordered().baselineColumns("hostname").baselineValues("Unknown").go();
