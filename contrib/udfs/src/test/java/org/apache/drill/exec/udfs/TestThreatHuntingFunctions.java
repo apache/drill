@@ -81,5 +81,27 @@ public class TestThreatHuntingFunctions extends ClusterTest {
       .go();
   }
 
+  @Test
+  public void testNormedEntropyFunction() throws Exception {
+    String query = "SELECT entropy_per_byte('asdkjflkdsjlefjdc') AS entropy FROM (VALUES(1))";
+    testBuilder()
+      .sqlQuery(query)
+      .ordered()
+      .baselineColumns("entropy")
+      .baselineValues(0.17985153389940778)
+      .go();
+  }
+
+  @Test
+  public void testNormedEntropyFunctionWithEmptyString() throws Exception {
+    String query = "SELECT entropy_per_byte('') AS entropy FROM (VALUES(1))";
+    testBuilder()
+      .sqlQuery(query)
+      .ordered()
+      .baselineColumns("entropy")
+      .baselineValues(0.0)
+      .go();
+  }
+
 }
 
