@@ -50,6 +50,7 @@
     <module>format-esri</module>
     <module>format-hdf5</module>
     <module>format-spss</module>
+    <module>format-xml</module>
     <module>storage-hive</module>
     <module>storage-mongo</module>
     <module>storage-jdbc</module>
