@@ -44,6 +44,7 @@
         <include>org.apache.drill.contrib:drill-format-mapr:jar</include>
         <include>org.apache.drill.contrib:drill-format-syslog:jar</include>
         <include>org.apache.drill.contrib:drill-format-esri:jar</include>
+        <include>org.apache.drill.contrib:drill-format-xml:jar</include>
         <include>org.apache.drill.contrib:drill-format-hdf5:jar</include>
         <include>org.apache.drill.contrib:drill-format-ltsv:jar</include>
         <include>org.apache.drill.contrib:drill-format-httpd:jar</include>
