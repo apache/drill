@@ -78,7 +78,6 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
   }
 
   private static class HttpReaderFactory implements ReaderFactory {
-
     private final HttpSubScan subScan;
     private int count;
 
@@ -97,8 +96,10 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
       // Only a single scan (in a single thread)
       if (count++ == 0) {
-        if (inputType.equalsIgnoreCase("csv")) {
+        if (inputType.equalsIgnoreCase(HttpApiConfig.CSV_INPUT_FORMAT)) {
           return new HttpCSVBatchReader(subScan);
+        } else if (inputType.equalsIgnoreCase(HttpApiConfig.XML_INPUT_FORMAT)) {
+          return new HttpXMLBatchReader(subScan);
         } else {
           return new HttpBatchReader(subScan);
         }

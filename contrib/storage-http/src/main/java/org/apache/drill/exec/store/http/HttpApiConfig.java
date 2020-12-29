@@ -34,6 +34,10 @@ import java.util.Objects;
 public class HttpApiConfig {
   private static final Logger logger = LoggerFactory.getLogger(HttpApiConfig.class);
 
+  protected static final String DEFAULT_INPUT_FORMAT = "json";
+  protected static final String CSV_INPUT_FORMAT = "csv";
+  protected static final String XML_INPUT_FORMAT = "xml";
+
   private final String url;
 
   /**
@@ -68,6 +72,7 @@ public class HttpApiConfig {
   private final String userName;
   private final String password;
   private final String inputType;
+  private final int xmlDataLevel;
 
 
   public enum HttpMethod {
@@ -91,7 +96,8 @@ public class HttpApiConfig {
                        @JsonProperty("params") List<String> params,
                        @JsonProperty("dataPath") String dataPath,
                        @JsonProperty("requireTail") Boolean requireTail,
-                       @JsonProperty("inputType") String inputType) {
+                       @JsonProperty("inputType") String inputType,
+                       @JsonProperty("xmlDataLevel") int xmlDataLevel) {
 
     this.headers = headers;
     this.method = Strings.isNullOrEmpty(method)
@@ -130,7 +136,9 @@ public class HttpApiConfig {
     this.requireTail = requireTail == null ? true : requireTail;
 
     this.inputType = inputType == null
-      ? "json" : inputType.trim().toLowerCase();
+      ? DEFAULT_INPUT_FORMAT : inputType.trim().toLowerCase();
+
+    this.xmlDataLevel = Math.max(1, xmlDataLevel);
   }
 
   @JsonProperty("url")
@@ -160,6 +168,9 @@ public class HttpApiConfig {
   @JsonProperty("dataPath")
   public String dataPath() { return dataPath; }
 
+  @JsonProperty("xmlDataLevel")
+  public int xmlDataLevel() { return xmlDataLevel; }
+
   @JsonProperty("requireTail")
   public boolean requireTail() { return requireTail; }
 
@@ -174,7 +185,7 @@ public class HttpApiConfig {
   @Override
   public int hashCode() {
     return Objects.hash(url, method, requireTail, params, headers,
-        authType, userName, password, postBody, inputType);
+        authType, userName, password, postBody, inputType, xmlDataLevel);
   }
 
   @Override
@@ -191,6 +202,7 @@ public class HttpApiConfig {
       .field("postBody", postBody)
       .field("filterFields", params)
       .field("inputType", inputType)
+      .field("xmlDataLevel", xmlDataLevel)
       .toString();
   }
 
@@ -213,6 +225,7 @@ public class HttpApiConfig {
       && Objects.equals(params, other.params)
       && Objects.equals(dataPath, other.dataPath)
       && Objects.equals(requireTail, other.requireTail)
-      && Objects.equals(inputType, other.inputType);
+      && Objects.equals(inputType, other.inputType)
+      && Objects.equals(xmlDataLevel, other.xmlDataLevel);
   }
 }
