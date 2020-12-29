@@ -72,11 +72,15 @@ public class XMLUtils {
   }
 
   /**
-   * Returns the field name from nested field names
+   * Returns the field name from nested field names.
    * @param fieldName The nested field name
    * @return The field name
    */
   public static String removeField(String fieldName) {
+    if (Strings.isNullOrEmpty(fieldName)) {
+      return fieldName;
+    }
+
     String[] components = fieldName.split("_");
     StringBuilder newField = new StringBuilder();
     for (int i = 0; i < components.length - 1; i++) {

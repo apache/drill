@@ -22,6 +22,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -43,6 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -64,6 +66,7 @@ public class TestHttpPlugin extends ClusterTest {
   private static final int MOCK_SERVER_PORT = 8091;
   private static String TEST_JSON_RESPONSE;
   private static String TEST_CSV_RESPONSE;
+  private static String TEST_XML_RESPONSE;
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -71,6 +74,7 @@ public class TestHttpPlugin extends ClusterTest {
 
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.json"), Charsets.UTF_8).read();
     TEST_CSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.csv"), Charsets.UTF_8).read();
+    TEST_XML_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.xml"), Charsets.UTF_8).read();
 
     dirTestWatcher.copyResourceToRoot(Paths.get("data/"));
     makeLiveConfig();
@@ -84,12 +88,12 @@ public class TestHttpPlugin extends ClusterTest {
    */
   private static void makeLiveConfig() {
 
-    HttpApiConfig sunriseConfig = new HttpApiConfig("https://api.sunrise-sunset.org/json", "GET", null, null, null, null, null, null, null, null, null);
+    HttpApiConfig sunriseConfig = new HttpApiConfig("https://api.sunrise-sunset.org/json", "GET", null, null, null, null, null, null, null, null, null, 0);
     HttpApiConfig sunriseWithParamsConfig = new HttpApiConfig("https://api.sunrise-sunset.org/json", "GET", null, null, null, null, null,
-        Arrays.asList("lat", "lng", "date"), "results", false, null);
+        Arrays.asList("lat", "lng", "date"), "results", false, null, 0);
 
     HttpApiConfig stockConfig = new HttpApiConfig("https://api.worldtradingdata.com/api/v1/stock?symbol=SNAP,TWTR,VOD" +
-      ".L&api_token=zuHlu2vZaehdZN6GmJdTiVlp7xgZn6gl6sfgmI4G6TY4ej0NLOzvy0TUl4D4", "get", null, null, null, null, null, null, null, null, null);
+      ".L&api_token=zuHlu2vZaehdZN6GmJdTiVlp7xgZn6gl6sfgmI4G6TY4ej0NLOzvy0TUl4D4", "get", null, null, null, null, null, null, null, null, null, 0);
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("stock", stockConfig);
@@ -116,7 +120,7 @@ public class TestHttpPlugin extends ClusterTest {
     // The connection acts like a schema.
     // Ignores the message body except for data.
     HttpApiConfig mockSchema = new HttpApiConfig("http://localhost:8091/json", "GET", headers,
-        "basic", "user", "pass", null, null, "results", null, null);
+        "basic", "user", "pass", null, null, "results", null, null, 0);
 
     // Use the mock server with the HTTP parameters passed as WHERE
     // clause filters. The connection acts like a table.
@@ -124,18 +128,22 @@ public class TestHttpPlugin extends ClusterTest {
     // This is the preferred approach, the base URL contains as much info as possible;
     // all other parameters are specified in SQL. See README for an example.
     HttpApiConfig mockTable = new HttpApiConfig("http://localhost:8091/json", "GET", headers,
-        "basic", "user", "pass", null, Arrays.asList("lat", "lng", "date"), "results", false, null);
+        "basic", "user", "pass", null, Arrays.asList("lat", "lng", "date"), "results", false, null, 0);
 
-    HttpApiConfig mockPostConfig = new HttpApiConfig("http://localhost:8091/", "POST", headers, null, null, null, "key1=value1\nkey2=value2", null, null, null, null);
+    HttpApiConfig mockPostConfig = new HttpApiConfig("http://localhost:8091/", "POST", headers, null, null, null, "key1=value1\nkey2=value2", null, null, null, null, 0);
 
     HttpApiConfig mockCsvConfig = new HttpApiConfig("http://localhost:8091/csv", "GET", headers,
-      "basic", "user", "pass", null, null, "results", null, "csv");
+      "basic", "user", "pass", null, null, "results", null, "csv", 0);
+
+    HttpApiConfig mockXmlConfig = new HttpApiConfig("http://localhost:8091/xml", "GET", headers,
+      "basic", "user", "pass", null, null, "results", null, "xml", 2);
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("sunrise", mockSchema);
     configs.put("mocktable", mockTable);
     configs.put("mockpost", mockPostConfig);
     configs.put("mockcsv", mockCsvConfig);
+    configs.put("mockxml", mockXmlConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace = new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "");
     mockStorageConfigWithWorkspace.setEnabled(true);
@@ -162,6 +170,7 @@ public class TestHttpPlugin extends ClusterTest {
         .addRow("local", "http")
         .addRow("local.mockcsv", "http")
         .addRow("local.mockpost", "http")
+        .addRow("local.mockxml", "http")
         .addRow("local.sunrise", "http")
         .build();
 
@@ -351,6 +360,36 @@ public class TestHttpPlugin extends ClusterTest {
     }
   }
 
+  @Test
+  public void testXmlResponse() throws Exception {
+    String sql = "SELECT * FROM local.mockxml.`?arg1=4` LIMIT 5";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_XML_RESPONSE));
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("attributes", MinorType.MAP)
+        .addNullable("COMMON", MinorType.VARCHAR)
+        .addNullable("BOTANICAL", MinorType.VARCHAR)
+        .addNullable("ZONE", MinorType.VARCHAR)
+        .addNullable("LIGHT", MinorType.VARCHAR)
+        .addNullable("PRICE", MinorType.VARCHAR)
+        .addNullable("AVAILABILITY", MinorType.VARCHAR)
+        .buildSchema();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(mapArray(), "Bloodroot", "Sanguinaria canadensis", "4", "Mostly Shady", "$2.44", "031599")
+        .addRow(mapArray(),"Columbine", "Aquilegia canadensis", "3", "Mostly Shady", "$9.37", "030699")
+        .addRow(mapArray(),"Marsh Marigold", "Caltha palustris", "4", "Mostly Sunny", "$6.81", "051799")
+        .addRow(mapArray(), "Cowslip", "Caltha palustris", "4", "Mostly Shady", "$9.90", "030699")
+        .addRow(mapArray(), "Dutchman's-Breeches", "Dicentra cucullaria", "3", "Mostly Shady", "$6.44", "012099")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
 
   private void doSimpleTestWithMockServer(String sql) throws Exception {
     try (MockWebServer server = startServer()) {
