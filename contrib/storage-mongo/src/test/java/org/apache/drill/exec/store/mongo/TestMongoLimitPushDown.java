@@ -57,4 +57,14 @@ public class TestMongoLimitPushDown extends MongoTestBase {
       .include("Limit", "maxRecords=9")
       .match();
   }
+
+  @Test
+  public void testLimitWithFilter() throws Exception {
+    String sql = "SELECT `employee_id` FROM mongo.employee.`empinfo` WHERE rating = 52.17 LIMIT 4";
+    queryBuilder()
+      .sql(sql)
+      .planMatcher()
+      .include("Limit", "maxRecords=4")
+      .match();
+  }
 }

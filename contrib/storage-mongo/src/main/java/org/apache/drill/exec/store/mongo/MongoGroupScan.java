@@ -80,7 +80,7 @@ import com.mongodb.client.MongoDatabase;
 public class MongoGroupScan extends AbstractGroupScan implements
     DrillMongoConstants {
 
-  private static final Integer select = Integer.valueOf(1);
+  private static final Integer select = 1;
 
   private static final Logger logger = LoggerFactory.getLogger(MongoGroupScan.class);
 
@@ -654,5 +654,4 @@ public class MongoGroupScan extends AbstractGroupScan implements
   void setInverseChunsMapping(Map<String, List<ChunkInfo>> chunksInverseMapping) {
     this.chunksInverseMapping = chunksInverseMapping;
   }
-
 }
