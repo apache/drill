@@ -416,6 +416,79 @@ public class TestXMLReader extends ClusterTest {
   }
 
   @Test
+  public void testNestedAttributes() throws Exception {
+    String sql = "SELECT * FROM cp.`xml/nested-with-attributes.xml`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addMap("attributes")
+        .addNullable("field1_f1", MinorType.VARCHAR)
+        .addNullable("field2_f2", MinorType.VARCHAR)
+        .addNullable("field2_key3_f3", MinorType.VARCHAR)
+        .addNullable("field2_nestedField1_f4", MinorType.VARCHAR)
+        .addNullable("field2_nestedField1_f5", MinorType.VARCHAR)
+        .addNullable("field2_nestedField1_nk1_f6", MinorType.VARCHAR)
+        .addNullable("field2_nestedField1_nk1_f7", MinorType.VARCHAR)
+        .addNullable("field2_nestedField1_nk3_f8", MinorType.VARCHAR)
+      .resumeSchema()
+      .addMap("field1")
+      .addNullable("key1", MinorType.VARCHAR)
+      .addNullable("key2", MinorType.VARCHAR)
+      .resumeSchema()
+      .addMap("field2")
+      .addNullable("key3", MinorType.VARCHAR)
+      .addMap("nestedField1")
+      .addNullable("nk1", MinorType.VARCHAR)
+      .addNullable("nk2", MinorType.VARCHAR)
+      .addNullable("nk3", MinorType.VARCHAR)
+      .resumeMap()
+      .resumeSchema()
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow(strArray("k1", "k2", "k3", "k4", "k5", "k6", "k7", null), strArray("value1", "value2"), objArray("k1", strArray("nk_value1", "nk_value2", "nk_value3")))
+      .addRow(strArray(null, null, null, null, null, null, null, null), strArray("value3", "value4"), objArray("k2", strArray("nk_value4", "nk_value5", "nk_value6")))
+      .addRow(strArray(null, null, null, null, null, null, null, "k8"), strArray("value5", "value6"), objArray("k3", strArray("nk_value7", "nk_value8", "nk_value9")))
+      .build();
+
+    assertEquals(3, results.rowCount());
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testExplicitNestedAttributes() throws Exception {
+    String sql = "SELECT data.attributes.field1_f1 AS field1_f1," +
+      "data.attributes.field2_f2 AS field2_f2, " +
+      "data.attributes.field2_key3_f3 AS field2_key3_f3," +
+      "data.attributes.field2_nestedField1_f4 AS field2_nestedField1_f4," +
+      "data.attributes.field2_nestedField1_f5 AS field2_nestedField1_f5, " +
+      "data.attributes.field2_nestedField1_nk1_f6 AS field2_nestedField1_nk1_f6, " +
+      "data.attributes.field2_nestedField1_nk1_f7 AS field2_nestedField1_nk1_f7," +
+      "data.attributes.field2_nestedField1_nk3_f8 AS field2_nestedField1_nk3_f8 " +
+      "FROM cp.`xml/nested-with-attributes.xml` AS data";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("field1_f1", MinorType.VARCHAR)
+      .addNullable("field2_f2", MinorType.VARCHAR)
+      .addNullable("field2_key3_f3", MinorType.VARCHAR)
+      .addNullable("field2_nestedField1_f4", MinorType.VARCHAR)
+      .addNullable("field2_nestedField1_f5", MinorType.VARCHAR)
+      .addNullable("field2_nestedField1_nk1_f6", MinorType.VARCHAR)
+      .addNullable("field2_nestedField1_nk1_f7", MinorType.VARCHAR)
+      .addNullable("field2_nestedField1_nk3_f8", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow("k1", "k2", "k3", "k4", "k5", "k6", "k7", null)
+      .addRow(null, null, null, null, null, null, null, null)
+      .addRow(null, null, null, null, null, null, null, "k8")
+      .build();
+    assertEquals(3, results.rowCount());
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testLimitPushdown() throws Exception {
     String sql = "SELECT * FROM cp.`xml/simple.xml` LIMIT 2";
 
