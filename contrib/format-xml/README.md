@@ -1,5 +1,5 @@
 # XML Format Reader
-This plugin enables Drill to read XML files without defining any kind of schema.
+This plugin enables Drill to read XML files without defining any kind of schema. 
 
 ## Configuration
 Aside from the file extension, there is one configuration option:
@@ -80,7 +80,9 @@ apache drill> select * from dfs.test.`attributes.xml`;
 +-----------------------------------------------------------------+------------+---------------------------------+-------------+------+-----------------------------------------+
 ```
 
-
+## Limitations:  Malformed XML
+Drill can read properly formatted XML.  If the XML is not properly formatted, Drill will throw errors. Some issues include illegal characters in field names, or attribute names.
+Future functionality will include some degree of data cleaning and fault tolerance. 
 
 ## Limitations: Schema Ambiguity
 XML is a challenging format to process as the structure does not give any hints about the schema.  For example, a JSON file might have the following record:
