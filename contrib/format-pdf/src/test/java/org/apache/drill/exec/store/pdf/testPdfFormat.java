@@ -58,7 +58,7 @@ public class testPdfFormat extends ClusterTest {
       "_keywords, " +
       "_creator, " +
       "_producer," +
-      " _creation_date, " +
+      "_creation_date, " +
       "_modification_date, " +
       "_trapped " +
       "FROM cp.`pdf/20.pdf` " +

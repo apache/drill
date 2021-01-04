@@ -1,6 +1,9 @@
 package org.apache.drill.exec.store.pdf;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
 import technology.tabula.PageIterator;
@@ -18,6 +21,7 @@ import java.util.List;
 public class Utils {
 
   public static final ExtractionAlgorithm DEFAULT_ALGORITHM = new BasicExtractionAlgorithm();
+  private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 
   /**
    * Returns a list of tables found in a given PDF document.  There are several extraction algorithms
@@ -34,7 +38,7 @@ public class Utils {
 
     ExtractionAlgorithm algExtractor;
 
-    SpreadsheetExtractionAlgorithm extractor=new SpreadsheetExtractionAlgorithm();
+    SpreadsheetExtractionAlgorithm extractor = new SpreadsheetExtractionAlgorithm();
 
     ObjectExtractor objectExtractor = new ObjectExtractor(document);
     PageIterator pages = objectExtractor.extract();
@@ -57,6 +61,13 @@ public class Utils {
         tables.addAll(algExtractor.extract(guess));
       }
     }
+
+    try {
+      objectExtractor.close();
+    } catch (Exception e) {
+      logger.debug("Error closing Object extractor.");
+    }
+
     return tables;
   }
 
