@@ -150,6 +150,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     }
 
     if (document != null) {
+      AutoCloseables.closeSilently(document.getDocument());
       AutoCloseables.closeSilently(document);
       document = null;
     }
