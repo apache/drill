@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
@@ -818,6 +819,7 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
     } else {
       InputStream compressedStream = codec.createInputStream(open(path));
       byte[] bytes = IOUtils.toByteArray(compressedStream);
+      AutoCloseables.closeSilently(compressedStream);
       return new ByteArrayInputStream(bytes);
     }
   }
