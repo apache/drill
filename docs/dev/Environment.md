@@ -23,6 +23,11 @@ On other systems your success may vary. On Redhat/CentOS based systems no longer
     # mvn --version
     Apache Maven 3.6.3
 
+## Formatter Configuration
+
+Setting up IDE formatters is recommended and can be done by importing the following settings into your browser.
+[Formatter File](../../dev-support/formatter)
+
 ## Checkout
 
     git clone https://github.com/apache/drill.git
