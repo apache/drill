@@ -54,7 +54,7 @@ Setting up IDE formatters is recommended and can be done by importing the
 following settings into your browser:
 
 
-* IntelliJ IDEA formatter: [settings jar]({{site.baseurl}}/docs/attachments/intellij-idea-settings.jar)
+* IntelliJ IDEA formatter: [settings jar]({{site.baseurl}}/attachments/intellij-idea-settings.jar)
 * Eclipse: [formatter xml](https://issues.apache.org/jira/secure/attachment/12474245/eclipse_formatter_apache.xml)
 
 ### Understanding Maven

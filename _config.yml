@@ -1,13 +1,11 @@
 title: Apache Drill - Schema-free SQL for Hadoop, NoSQL and Cloud Storage
 title_suffix: Apache Drill # This is appended to every page title on the site
 
-email: tshiran@apache.org
+email: dzamo@apache.org
 permalink: pretty
 
 description: > # this means to ignore newlines until "baseurl:"
-  Write an awesome description for your new site here. You can edit this
-  line in _config.yml. It will appear in your document head meta (for
-  Google search results) and in your feed.xml site description.
+  The official user documentation for Apache Drill.
 
 baseurl: "/drill" # Base URL when hosted on GitHub Pages (drill repository under apache account)
 noindex: 1
