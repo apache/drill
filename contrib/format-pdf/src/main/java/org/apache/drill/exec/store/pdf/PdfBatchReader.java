@@ -86,13 +86,14 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
   @Override
   public boolean open(FileScanFramework.FileSchemaNegotiator negotiator) {
+    System.setProperty("java.awt.headless", "true");
+
     split = negotiator.split();
     errorContext = negotiator.parentErrorContext();
     builder = new SchemaBuilder();
 
     openFile(negotiator);
     populateMetadata();
-
     // Get the tables
     tables = Utils.extractTablesFromPDF(document);
     logger.debug("Found {} tables", tables.size());
@@ -112,6 +113,8 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
   @Override
   public boolean next() {
+    System.setProperty("java.awt.headless", "true");
+
     while(!rowWriter.isFull()) {
       // Check to see if the limit has been reached
       if (rowWriter.limitReached(maxRecords)) {

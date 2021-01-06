@@ -34,6 +34,8 @@ public class Utils {
   }
 
   public static List<Table> extractTablesFromPDF(PDDocument document, ExtractionAlgorithm algorithm) {
+    System.setProperty("java.awt.headless", "true");
+
     NurminenDetectionAlgorithm detectionAlgorithm = new NurminenDetectionAlgorithm();
 
     ExtractionAlgorithm algExtractor;
