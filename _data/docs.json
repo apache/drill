@@ -3589,14 +3589,31 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Develop Custom Functions",
-                    "next_url": "/docs/develop-custom-functions/",
+                    "next_title": "XML Format Plugin",
+                    "next_url": "/docs/xml-format-plugin/",
                     "parent": "Data Sources and File Formats",
                     "previous_title": "Excel Format Plugin",
                     "previous_url": "/docs/excel-format-plugin/",
                     "relative_path": "_docs/data-sources-and-file-formats/117-hdf5-format-plugin.md",
                     "title": "HDF5 Format Plugin",
                     "url": "/docs/hdf5-format-plugin/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Data Sources and File Formats",
+                            "url": "/docs/data-sources-and-file-formats/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Develop Custom Functions",
+                    "next_url": "/docs/develop-custom-functions/",
+                    "parent": "Data Sources and File Formats",
+                    "previous_title": "HDF5 Format Plugin",
+                    "previous_url": "/docs/hdf5-format-plugin/",
+                    "relative_path": "_docs/data-sources-and-file-formats/120-xml-format-plugin.md",
+                    "title": "XML Format Plugin",
+                    "url": "/docs/xml-format-plugin/"
                 }
             ],
             "next_title": "Data Sources and File Formats Introduction",
@@ -4162,8 +4179,8 @@
             "next_title": "Develop Custom Functions Introduction",
             "next_url": "/docs/develop-custom-functions-introduction/",
             "parent": "",
-            "previous_title": "HDF5 Format Plugin",
-            "previous_url": "/docs/hdf5-format-plugin/",
+            "previous_title": "XML Format Plugin",
+            "previous_url": "/docs/xml-format-plugin/",
             "relative_path": "_docs/100-develop-custom-functions.md",
             "title": "Develop Custom Functions",
             "url": "/docs/develop-custom-functions/"
@@ -5577,8 +5594,8 @@
                 }
             ],
             "children": [],
-            "next_title": "Develop Custom Functions",
-            "next_url": "/docs/develop-custom-functions/",
+            "next_title": "XML Format Plugin",
+            "next_url": "/docs/xml-format-plugin/",
             "parent": "Data Sources and File Formats",
             "previous_title": "Excel Format Plugin",
             "previous_url": "/docs/excel-format-plugin/",
@@ -16852,6 +16869,23 @@
             "relative_path": "_docs/connect-a-data-source/050-workspaces.md",
             "title": "Workspaces",
             "url": "/docs/workspaces/"
+        },
+        "XML Format Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Data Sources and File Formats",
+                    "url": "/docs/data-sources-and-file-formats/"
+                }
+            ],
+            "children": [],
+            "next_title": "Develop Custom Functions",
+            "next_url": "/docs/develop-custom-functions/",
+            "parent": "Data Sources and File Formats",
+            "previous_title": "HDF5 Format Plugin",
+            "previous_url": "/docs/hdf5-format-plugin/",
+            "relative_path": "_docs/data-sources-and-file-formats/120-xml-format-plugin.md",
+            "title": "XML Format Plugin",
+            "url": "/docs/xml-format-plugin/"
         }
     },
     "hierarchy": [
@@ -22404,14 +22438,31 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Develop Custom Functions",
-                    "next_url": "/docs/develop-custom-functions/",
+                    "next_title": "XML Format Plugin",
+                    "next_url": "/docs/xml-format-plugin/",
                     "parent": "Data Sources and File Formats",
                     "previous_title": "Excel Format Plugin",
                     "previous_url": "/docs/excel-format-plugin/",
                     "relative_path": "_docs/data-sources-and-file-formats/117-hdf5-format-plugin.md",
                     "title": "HDF5 Format Plugin",
                     "url": "/docs/hdf5-format-plugin/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Data Sources and File Formats",
+                            "url": "/docs/data-sources-and-file-formats/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Develop Custom Functions",
+                    "next_url": "/docs/develop-custom-functions/",
+                    "parent": "Data Sources and File Formats",
+                    "previous_title": "HDF5 Format Plugin",
+                    "previous_url": "/docs/hdf5-format-plugin/",
+                    "relative_path": "_docs/data-sources-and-file-formats/120-xml-format-plugin.md",
+                    "title": "XML Format Plugin",
+                    "url": "/docs/xml-format-plugin/"
                 }
             ],
             "next_title": "Data Sources and File Formats Introduction",
@@ -22634,8 +22685,8 @@
             "next_title": "Develop Custom Functions Introduction",
             "next_url": "/docs/develop-custom-functions-introduction/",
             "parent": "",
-            "previous_title": "HDF5 Format Plugin",
-            "previous_url": "/docs/hdf5-format-plugin/",
+            "previous_title": "XML Format Plugin",
+            "previous_url": "/docs/xml-format-plugin/",
             "relative_path": "_docs/100-develop-custom-functions.md",
             "title": "Develop Custom Functions",
             "url": "/docs/develop-custom-functions/"
