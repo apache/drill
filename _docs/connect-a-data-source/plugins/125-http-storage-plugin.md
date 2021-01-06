@@ -236,6 +236,13 @@ At present, there is no provision to check the `status` code in a response such
 as that shown above. Drill assumes that the server will uses HTTP status codes to
 indicate a bad request or other error.
 
+### Input Type
+
+The REST plugin accepts three different types of input: `json`, `csv` and `xml`.  The default is
+`json`.  If you are using `XML` as a data type, there is an additional configuration option called
+`xmlDataLevel` which reduces the level of unneeded nesting found in XML files.  You can find more
+information in the documentation for Drill's XML format plugin. 
+
 #### Authorization
 
 `authType`: If your API requires authentication, specify the authentication
@@ -386,7 +393,8 @@ To query this API, set the configuration as follows:
       "authType": "none",
       "userName": null,
       "password": null,
-      "postBody": null
+      "postBody": null,
+      "inputType": "json"
     }
   }
 
@@ -522,7 +530,7 @@ ORDER BY issue_count DESC
    supported). Join pushdown has the potential to improve performance if you use the HTTP service
    joined to another table.
 
-4. This plugin only reads JSON and CSV responses.
+4. This plugin only reads JSON, CSV and XML response data.
 
 5. `POST` bodies can only be in the format of key/value pairs. Some APIs accept
     JSON based `POST` bodies but this is not currently supported.
