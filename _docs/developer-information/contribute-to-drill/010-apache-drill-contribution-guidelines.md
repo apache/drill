@@ -136,9 +136,18 @@ JIRA's automatically sent messages. If you change your mind, note this in a
 new comment, rather than editing an older comment. The issue should preserve
 this history of the discussion.
 
-### Welcome to update the docs together!
+### Contributing documentation
 
-We shared the opinion that these do not need the full `JIRA -> PR -> Review -> Merge` cycle. Welcome to join our `Slack` discussion and update the document, we can quickly push these changes. (Mistakes in `gh-pages` branch can't hurt users' deployments.)
+Documentation contributions are most welcome and there are many opportunities for them including
+
+1. features which have been implemented but not completely documented and
+2. HOWTOs for using Drill with other popular software.
+
+Documentation committed into the `gh-pages` branch does not have any effect on the Drill code base and so does not require a JIRA ticket or a corresponding PR from a repo fork.  It does still require a Drill committer to check it and push it into the Drill code repo.  This means 
+
+1. Drill committers can add documentation with little bureaocratic overhead.
+2. Anyone can send documentation to a Drill committer (find us on Slack or the mailing lists) as
+   markdown or plain text and the committer can incorporate it with little bureaocratic overhead.
 
 ### See Also
 
