@@ -16,9 +16,9 @@ The following steps outline the process for contributing code to the Apache Dril
 
 * [Step 1: Get the source code.]({{site.baseurl}}/docs/apache-drill-contribution-guidelines/#step-1:-get-the-source-code.)
 * [Step 2: Get approval and modify the source code.]({{site.baseurl}}/docs/apache-drill-contribution-guidelines/#step-2:-get-approval-and-modify-the-source-code.)
-* [Step 3: Get your code reviewed and committed to the project. ]({{site.baseurl}}/docs/apache-drill-contribution-guidelines/#step-3:-get-your-code-reviewed-and-committed-to-the-project.) 
+* [Step 3: Get your code reviewed and committed to the project. ]({{site.baseurl}}/docs/apache-drill-contribution-guidelines/#step-3:-get-your-code-reviewed-and-committed-to-the-project.)
 
-You may also be interested in the [additional information]({{site.baseurl}}/docs/apache-drill-contribution-guidelines/#additional-information) at the end of this document. 
+You may also be interested in the [additional information]({{site.baseurl}}/docs/apache-drill-contribution-guidelines/#additional-information) at the end of this document.
 
 ## Step 1: Get the source code.
 
@@ -54,17 +54,16 @@ Setting up IDE formatters is recommended and can be done by importing the
 following settings into your browser:
 
 
-* IntelliJ IDEA formatter: [settings jar]({{site.baseurl}}/attachments/intellij-idea-settings.jar)
-* Eclipse: [formatter xml](https://issues.apache.org/jira/secure/attachment/12474245/eclipse_formatter_apache.xml)
+* [Eclipse and IntelliJ IDEA](https://github.com/apache/drill/blob/master/dev-support/formatter)
 
 ### Understanding Maven
 
 You can use the Maven Java build tool to build Drill. To get started with Maven, see the [Maven tutorial](http://maven.apache.org/guides/getting-started/maven-in-five-minutes.html).
 
 To build Drill with Maven, run the following command:
-     
-    mvn clean install 
-    
+
+    mvn clean install
+
 
 ## Step 3: Get your code reviewed and committed to the project.  
 
@@ -95,12 +94,12 @@ This information can be found in the [component owners](https://issues.apache.or
 7. The contributor addresses review comments. This can be done with new commits on the branch or with work made on the branch locally, squashed into the commit(s) posted in the original pull request and force pushed to the branch the pull request is based on.
 8. Return to step 5.
 9. A Drill committer completes the following steps to commit the patch:
-       * If the master branch has moved forward since the review, rebase the branch from the pull request on the latest master and re-run tests. 
+       * If the master branch has moved forward since the review, rebase the branch from the pull request on the latest master and re-run tests.
        * If all tests pass, the committer amends the last commit message in the series to include "this closes #1234", where 1234 is the pull request number, not the JIRA number. This can be done with interactive rebase. When on the branch issue:  
-       
+
               git rebase -i HEAD^  
        * Change where it says “pick” on the line with the last commit, replacing it with “r” or “reword”. It replays the commit giving you the opportunity the change the commit message.  
-       * The committer pushes the commit(s) to the Apache repo (the GitHub repo is just a read-only mirror). 
+       * The committer pushes the commit(s) to the Apache repo (the GitHub repo is just a read-only mirror).
        * The committer resolves the JIRA with a message like `"Fixed in <Git commit SHA>"`.
 
 
@@ -118,12 +117,12 @@ See this example DrillFunc:
 
 [ComparisonFunctions.java](https://github.com/apache/drill/blob/3f93454f014196a4da198ce012b605b70081fde0/exec/java-exec/src/main/codegen/templates/ComparisonFunctions.java)
 
-Also, you can visit the JIRA issues and implement one of those too. 
+Also, you can visit the JIRA issues and implement one of those too.
 
 More contribution ideas are located on the [Contribution Ideas]({{ site.baseurl }}/docs/apache-drill-contribution-ideas) page.
 
 
-### What are the JIRA guidelines? 
+### What are the JIRA guidelines?
 
 Please comment on issues in JIRA, making their concerns known. Please also
 vote for issues that are a high priority for you.
@@ -137,8 +136,11 @@ JIRA's automatically sent messages. If you change your mind, note this in a
 new comment, rather than editing an older comment. The issue should preserve
 this history of the discussion.
 
+### Welcome to update the docs together!
+
+We shared the opinion that these do not need the full `JIRA -> PR -> Review -> Merge` cycle. Welcome to join our `Slack` discussion and update the document, we can quickly push these changes. (Mistakes in `gh-pages` branch can't hurt users' deployments.)
+
 ### See Also
 
   * [Apache contributor documentation](http://www.apache.org/dev/contributors.html)
   * [Apache voting documentation](http://www.apache.org/foundation/voting.html)
-
