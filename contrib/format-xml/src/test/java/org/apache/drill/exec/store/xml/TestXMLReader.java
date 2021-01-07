@@ -83,6 +83,51 @@ public class TestXMLReader extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
+  @Test
+  public void testSelfClosingTags() throws Exception {
+    String sql = "SELECT * FROM cp.`xml/weather.xml`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(1, results.rowCount());
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addMap("attributes")
+          .addNullable("forecast_information_city_data", MinorType.VARCHAR)
+          .addNullable("forecast_information_postal_code_data", MinorType.VARCHAR)
+          .addNullable("forecast_information_latitude_e6_data", MinorType.VARCHAR)
+          .addNullable("forecast_information_longitude_e6_data", MinorType.VARCHAR)
+          .addNullable("forecast_information_forecast_date_data", MinorType.VARCHAR)
+          .addNullable("forecast_information_current_date_time_data", MinorType.VARCHAR)
+          .addNullable("forecast_information_unit_system_data", MinorType.VARCHAR)
+          .addNullable("current_conditions_condition_data", MinorType.VARCHAR)
+          .addNullable("current_conditions_temp_f_data", MinorType.VARCHAR)
+          .addNullable("current_conditions_temp_c_data", MinorType.VARCHAR)
+          .addNullable("current_conditions_humidity_data", MinorType.VARCHAR)
+          .addNullable("current_conditions_icon_data", MinorType.VARCHAR)
+          .addNullable("current_conditions_wind_condition_data", MinorType.VARCHAR)
+        .resumeSchema()
+        .addNullable("city", MinorType.VARCHAR)
+        .addNullable("postal_code", MinorType.VARCHAR)
+        .addNullable("latitude_e6", MinorType.VARCHAR)
+        .addNullable("longitude_e6", MinorType.VARCHAR)
+        .addNullable("forecast_date", MinorType.VARCHAR)
+        .addNullable("current_date_time", MinorType.VARCHAR)
+        .addNullable("unit_system", MinorType.VARCHAR)
+        .addNullable("condition", MinorType.VARCHAR)
+        .addNullable("temp_f", MinorType.VARCHAR)
+        .addNullable("temp_c", MinorType.VARCHAR)
+        .addNullable("humidity", MinorType.VARCHAR)
+        .addNullable("icon", MinorType.VARCHAR)
+        .addNullable("wind_condition", MinorType.VARCHAR)
+        .build();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow((Object)strArray("Seattle, WA", "Seattle WA", "", "", "2011-09-29", "2011-09-29 17:53:00 +0000", "US", "Clear", "62", "17", "Humidity: 62%", "/ig/images/weather" +
+        "/sunny.gif", "Wind: N at 4 mph"), null, null, null, null, null, null, null, null, null, null, null, null, null)
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
   /**
    * This unit test tests a simple XML file with no nesting or attributes, but with explicitly selected fields.
    * @throws Exception Throw exception if anything goes wrong
