@@ -409,732 +409,6 @@ public final class UserBitShared {
   }
 
   /**
-   * Protobuf enum {@code exec.shared.CoreOperatorType}
-   */
-  public enum CoreOperatorType
-      implements com.google.protobuf.ProtocolMessageEnum {
-    /**
-     * <code>SINGLE_SENDER = 0;</code>
-     */
-    SINGLE_SENDER(0),
-    /**
-     * <code>BROADCAST_SENDER = 1;</code>
-     */
-    BROADCAST_SENDER(1),
-    /**
-     * <code>FILTER = 2;</code>
-     */
-    FILTER(2),
-    /**
-     * <code>HASH_AGGREGATE = 3;</code>
-     */
-    HASH_AGGREGATE(3),
-    /**
-     * <code>HASH_JOIN = 4;</code>
-     */
-    HASH_JOIN(4),
-    /**
-     * <code>MERGE_JOIN = 5;</code>
-     */
-    MERGE_JOIN(5),
-    /**
-     * <code>HASH_PARTITION_SENDER = 6;</code>
-     */
-    HASH_PARTITION_SENDER(6),
-    /**
-     * <code>LIMIT = 7;</code>
-     */
-    LIMIT(7),
-    /**
-     * <code>MERGING_RECEIVER = 8;</code>
-     */
-    MERGING_RECEIVER(8),
-    /**
-     * <code>ORDERED_PARTITION_SENDER = 9;</code>
-     */
-    ORDERED_PARTITION_SENDER(9),
-    /**
-     * <code>PROJECT = 10;</code>
-     */
-    PROJECT(10),
-    /**
-     * <code>UNORDERED_RECEIVER = 11;</code>
-     */
-    UNORDERED_RECEIVER(11),
-    /**
-     * <code>RANGE_PARTITION_SENDER = 12;</code>
-     */
-    RANGE_PARTITION_SENDER(12),
-    /**
-     * <code>SCREEN = 13;</code>
-     */
-    SCREEN(13),
-    /**
-     * <code>SELECTION_VECTOR_REMOVER = 14;</code>
-     */
-    SELECTION_VECTOR_REMOVER(14),
-    /**
-     * <code>STREAMING_AGGREGATE = 15;</code>
-     */
-    STREAMING_AGGREGATE(15),
-    /**
-     * <code>TOP_N_SORT = 16;</code>
-     */
-    TOP_N_SORT(16),
-    /**
-     * <code>EXTERNAL_SORT = 17;</code>
-     */
-    EXTERNAL_SORT(17),
-    /**
-     * <code>TRACE = 18;</code>
-     */
-    TRACE(18),
-    /**
-     * <code>UNION = 19;</code>
-     */
-    UNION(19),
-    /**
-     * <code>OLD_SORT = 20;</code>
-     */
-    OLD_SORT(20),
-    /**
-     * <code>PARQUET_ROW_GROUP_SCAN = 21;</code>
-     */
-    PARQUET_ROW_GROUP_SCAN(21),
-    /**
-     * <code>HIVE_SUB_SCAN = 22;</code>
-     */
-    HIVE_SUB_SCAN(22),
-    /**
-     * <code>SYSTEM_TABLE_SCAN = 23;</code>
-     */
-    SYSTEM_TABLE_SCAN(23),
-    /**
-     * <code>MOCK_SUB_SCAN = 24;</code>
-     */
-    MOCK_SUB_SCAN(24),
-    /**
-     * <code>PARQUET_WRITER = 25;</code>
-     */
-    PARQUET_WRITER(25),
-    /**
-     * <code>DIRECT_SUB_SCAN = 26;</code>
-     */
-    DIRECT_SUB_SCAN(26),
-    /**
-     * <code>TEXT_WRITER = 27;</code>
-     */
-    TEXT_WRITER(27),
-    /**
-     * <code>TEXT_SUB_SCAN = 28;</code>
-     */
-    TEXT_SUB_SCAN(28),
-    /**
-     * <code>JSON_SUB_SCAN = 29;</code>
-     */
-    JSON_SUB_SCAN(29),
-    /**
-     * <code>INFO_SCHEMA_SUB_SCAN = 30;</code>
-     */
-    INFO_SCHEMA_SUB_SCAN(30),
-    /**
-     * <code>COMPLEX_TO_JSON = 31;</code>
-     */
-    COMPLEX_TO_JSON(31),
-    /**
-     * <code>PRODUCER_CONSUMER = 32;</code>
-     */
-    PRODUCER_CONSUMER(32),
-    /**
-     * <code>HBASE_SUB_SCAN = 33;</code>
-     */
-    HBASE_SUB_SCAN(33),
-    /**
-     * <code>WINDOW = 34;</code>
-     */
-    WINDOW(34),
-    /**
-     * <code>NESTED_LOOP_JOIN = 35;</code>
-     */
-    NESTED_LOOP_JOIN(35),
-    /**
-     * <code>AVRO_SUB_SCAN = 36;</code>
-     */
-    AVRO_SUB_SCAN(36),
-    /**
-     * <code>PCAP_SUB_SCAN = 37;</code>
-     */
-    PCAP_SUB_SCAN(37),
-    /**
-     * <code>KAFKA_SUB_SCAN = 38;</code>
-     */
-    KAFKA_SUB_SCAN(38),
-    /**
-     * <code>KUDU_SUB_SCAN = 39;</code>
-     */
-    KUDU_SUB_SCAN(39),
-    /**
-     * <code>FLATTEN = 40;</code>
-     */
-    FLATTEN(40),
-    /**
-     * <code>LATERAL_JOIN = 41;</code>
-     */
-    LATERAL_JOIN(41),
-    /**
-     * <code>UNNEST = 42;</code>
-     */
-    UNNEST(42),
-    /**
-     * <code>HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43;</code>
-     */
-    HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN(43),
-    /**
-     * <code>JDBC_SCAN = 44;</code>
-     */
-    JDBC_SCAN(44),
-    /**
-     * <code>REGEX_SUB_SCAN = 45;</code>
-     */
-    REGEX_SUB_SCAN(45),
-    /**
-     * <code>MAPRDB_SUB_SCAN = 46;</code>
-     */
-    MAPRDB_SUB_SCAN(46),
-    /**
-     * <code>MONGO_SUB_SCAN = 47;</code>
-     */
-    MONGO_SUB_SCAN(47),
-    /**
-     * <code>KUDU_WRITER = 48;</code>
-     */
-    KUDU_WRITER(48),
-    /**
-     * <code>OPEN_TSDB_SUB_SCAN = 49;</code>
-     */
-    OPEN_TSDB_SUB_SCAN(49),
-    /**
-     * <code>JSON_WRITER = 50;</code>
-     */
-    JSON_WRITER(50),
-    /**
-     * <code>HTPPD_LOG_SUB_SCAN = 51;</code>
-     */
-    HTPPD_LOG_SUB_SCAN(51),
-    /**
-     * <code>IMAGE_SUB_SCAN = 52;</code>
-     */
-    IMAGE_SUB_SCAN(52),
-    /**
-     * <code>SEQUENCE_SUB_SCAN = 53;</code>
-     */
-    SEQUENCE_SUB_SCAN(53),
-    /**
-     * <code>PARTITION_LIMIT = 54;</code>
-     */
-    PARTITION_LIMIT(54),
-    /**
-     * <code>PCAPNG_SUB_SCAN = 55;</code>
-     */
-    PCAPNG_SUB_SCAN(55),
-    /**
-     * <code>RUNTIME_FILTER = 56;</code>
-     */
-    RUNTIME_FILTER(56),
-    /**
-     * <code>ROWKEY_JOIN = 57;</code>
-     */
-    ROWKEY_JOIN(57),
-    /**
-     * <code>SYSLOG_SUB_SCAN = 58;</code>
-     */
-    SYSLOG_SUB_SCAN(58),
-    /**
-     * <code>STATISTICS_AGGREGATE = 59;</code>
-     */
-    STATISTICS_AGGREGATE(59),
-    /**
-     * <code>UNPIVOT_MAPS = 60;</code>
-     */
-    UNPIVOT_MAPS(60),
-    /**
-     * <code>STATISTICS_MERGE = 61;</code>
-     */
-    STATISTICS_MERGE(61),
-    /**
-     * <code>LTSV_SUB_SCAN = 62;</code>
-     */
-    LTSV_SUB_SCAN(62),
-    /**
-     * <code>HDF5_SUB_SCAN = 63;</code>
-     */
-    HDF5_SUB_SCAN(63),
-    /**
-     * <code>EXCEL_SUB_SCAN = 64;</code>
-     */
-    EXCEL_SUB_SCAN(64),
-    /**
-     * <code>SHP_SUB_SCAN = 65;</code>
-     */
-    SHP_SUB_SCAN(65),
-    /**
-     * <code>METADATA_HANDLER = 66;</code>
-     */
-    METADATA_HANDLER(66),
-    /**
-     * <code>METADATA_CONTROLLER = 67;</code>
-     */
-    METADATA_CONTROLLER(67),
-    /**
-     * <code>DRUID_SUB_SCAN = 68;</code>
-     */
-    DRUID_SUB_SCAN(68),
-    /**
-     * <code>SPSS_SUB_SCAN = 69;</code>
-     */
-    SPSS_SUB_SCAN(69),
-    /**
-     * <code>HTTP_SUB_SCAN = 70;</code>
-     */
-    HTTP_SUB_SCAN(70),
-    /**
-     * <code>XML_SUB_SCAN = 71;</code>
-     */
-    XML_SUB_SCAN(71),
-    ;
-
-    /**
-     * <code>SINGLE_SENDER = 0;</code>
-     */
-    public static final int SINGLE_SENDER_VALUE = 0;
-    /**
-     * <code>BROADCAST_SENDER = 1;</code>
-     */
-    public static final int BROADCAST_SENDER_VALUE = 1;
-    /**
-     * <code>FILTER = 2;</code>
-     */
-    public static final int FILTER_VALUE = 2;
-    /**
-     * <code>HASH_AGGREGATE = 3;</code>
-     */
-    public static final int HASH_AGGREGATE_VALUE = 3;
-    /**
-     * <code>HASH_JOIN = 4;</code>
-     */
-    public static final int HASH_JOIN_VALUE = 4;
-    /**
-     * <code>MERGE_JOIN = 5;</code>
-     */
-    public static final int MERGE_JOIN_VALUE = 5;
-    /**
-     * <code>HASH_PARTITION_SENDER = 6;</code>
-     */
-    public static final int HASH_PARTITION_SENDER_VALUE = 6;
-    /**
-     * <code>LIMIT = 7;</code>
-     */
-    public static final int LIMIT_VALUE = 7;
-    /**
-     * <code>MERGING_RECEIVER = 8;</code>
-     */
-    public static final int MERGING_RECEIVER_VALUE = 8;
-    /**
-     * <code>ORDERED_PARTITION_SENDER = 9;</code>
-     */
-    public static final int ORDERED_PARTITION_SENDER_VALUE = 9;
-    /**
-     * <code>PROJECT = 10;</code>
-     */
-    public static final int PROJECT_VALUE = 10;
-    /**
-     * <code>UNORDERED_RECEIVER = 11;</code>
-     */
-    public static final int UNORDERED_RECEIVER_VALUE = 11;
-    /**
-     * <code>RANGE_PARTITION_SENDER = 12;</code>
-     */
-    public static final int RANGE_PARTITION_SENDER_VALUE = 12;
-    /**
-     * <code>SCREEN = 13;</code>
-     */
-    public static final int SCREEN_VALUE = 13;
-    /**
-     * <code>SELECTION_VECTOR_REMOVER = 14;</code>
-     */
-    public static final int SELECTION_VECTOR_REMOVER_VALUE = 14;
-    /**
-     * <code>STREAMING_AGGREGATE = 15;</code>
-     */
-    public static final int STREAMING_AGGREGATE_VALUE = 15;
-    /**
-     * <code>TOP_N_SORT = 16;</code>
-     */
-    public static final int TOP_N_SORT_VALUE = 16;
-    /**
-     * <code>EXTERNAL_SORT = 17;</code>
-     */
-    public static final int EXTERNAL_SORT_VALUE = 17;
-    /**
-     * <code>TRACE = 18;</code>
-     */
-    public static final int TRACE_VALUE = 18;
-    /**
-     * <code>UNION = 19;</code>
-     */
-    public static final int UNION_VALUE = 19;
-    /**
-     * <code>OLD_SORT = 20;</code>
-     */
-    public static final int OLD_SORT_VALUE = 20;
-    /**
-     * <code>PARQUET_ROW_GROUP_SCAN = 21;</code>
-     */
-    public static final int PARQUET_ROW_GROUP_SCAN_VALUE = 21;
-    /**
-     * <code>HIVE_SUB_SCAN = 22;</code>
-     */
-    public static final int HIVE_SUB_SCAN_VALUE = 22;
-    /**
-     * <code>SYSTEM_TABLE_SCAN = 23;</code>
-     */
-    public static final int SYSTEM_TABLE_SCAN_VALUE = 23;
-    /**
-     * <code>MOCK_SUB_SCAN = 24;</code>
-     */
-    public static final int MOCK_SUB_SCAN_VALUE = 24;
-    /**
-     * <code>PARQUET_WRITER = 25;</code>
-     */
-    public static final int PARQUET_WRITER_VALUE = 25;
-    /**
-     * <code>DIRECT_SUB_SCAN = 26;</code>
-     */
-    public static final int DIRECT_SUB_SCAN_VALUE = 26;
-    /**
-     * <code>TEXT_WRITER = 27;</code>
-     */
-    public static final int TEXT_WRITER_VALUE = 27;
-    /**
-     * <code>TEXT_SUB_SCAN = 28;</code>
-     */
-    public static final int TEXT_SUB_SCAN_VALUE = 28;
-    /**
-     * <code>JSON_SUB_SCAN = 29;</code>
-     */
-    public static final int JSON_SUB_SCAN_VALUE = 29;
-    /**
-     * <code>INFO_SCHEMA_SUB_SCAN = 30;</code>
-     */
-    public static final int INFO_SCHEMA_SUB_SCAN_VALUE = 30;
-    /**
-     * <code>COMPLEX_TO_JSON = 31;</code>
-     */
-    public static final int COMPLEX_TO_JSON_VALUE = 31;
-    /**
-     * <code>PRODUCER_CONSUMER = 32;</code>
-     */
-    public static final int PRODUCER_CONSUMER_VALUE = 32;
-    /**
-     * <code>HBASE_SUB_SCAN = 33;</code>
-     */
-    public static final int HBASE_SUB_SCAN_VALUE = 33;
-    /**
-     * <code>WINDOW = 34;</code>
-     */
-    public static final int WINDOW_VALUE = 34;
-    /**
-     * <code>NESTED_LOOP_JOIN = 35;</code>
-     */
-    public static final int NESTED_LOOP_JOIN_VALUE = 35;
-    /**
-     * <code>AVRO_SUB_SCAN = 36;</code>
-     */
-    public static final int AVRO_SUB_SCAN_VALUE = 36;
-    /**
-     * <code>PCAP_SUB_SCAN = 37;</code>
-     */
-    public static final int PCAP_SUB_SCAN_VALUE = 37;
-    /**
-     * <code>KAFKA_SUB_SCAN = 38;</code>
-     */
-    public static final int KAFKA_SUB_SCAN_VALUE = 38;
-    /**
-     * <code>KUDU_SUB_SCAN = 39;</code>
-     */
-    public static final int KUDU_SUB_SCAN_VALUE = 39;
-    /**
-     * <code>FLATTEN = 40;</code>
-     */
-    public static final int FLATTEN_VALUE = 40;
-    /**
-     * <code>LATERAL_JOIN = 41;</code>
-     */
-    public static final int LATERAL_JOIN_VALUE = 41;
-    /**
-     * <code>UNNEST = 42;</code>
-     */
-    public static final int UNNEST_VALUE = 42;
-    /**
-     * <code>HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43;</code>
-     */
-    public static final int HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN_VALUE = 43;
-    /**
-     * <code>JDBC_SCAN = 44;</code>
-     */
-    public static final int JDBC_SCAN_VALUE = 44;
-    /**
-     * <code>REGEX_SUB_SCAN = 45;</code>
-     */
-    public static final int REGEX_SUB_SCAN_VALUE = 45;
-    /**
-     * <code>MAPRDB_SUB_SCAN = 46;</code>
-     */
-    public static final int MAPRDB_SUB_SCAN_VALUE = 46;
-    /**
-     * <code>MONGO_SUB_SCAN = 47;</code>
-     */
-    public static final int MONGO_SUB_SCAN_VALUE = 47;
-    /**
-     * <code>KUDU_WRITER = 48;</code>
-     */
-    public static final int KUDU_WRITER_VALUE = 48;
-    /**
-     * <code>OPEN_TSDB_SUB_SCAN = 49;</code>
-     */
-    public static final int OPEN_TSDB_SUB_SCAN_VALUE = 49;
-    /**
-     * <code>JSON_WRITER = 50;</code>
-     */
-    public static final int JSON_WRITER_VALUE = 50;
-    /**
-     * <code>HTPPD_LOG_SUB_SCAN = 51;</code>
-     */
-    public static final int HTPPD_LOG_SUB_SCAN_VALUE = 51;
-    /**
-     * <code>IMAGE_SUB_SCAN = 52;</code>
-     */
-    public static final int IMAGE_SUB_SCAN_VALUE = 52;
-    /**
-     * <code>SEQUENCE_SUB_SCAN = 53;</code>
-     */
-    public static final int SEQUENCE_SUB_SCAN_VALUE = 53;
-    /**
-     * <code>PARTITION_LIMIT = 54;</code>
-     */
-    public static final int PARTITION_LIMIT_VALUE = 54;
-    /**
-     * <code>PCAPNG_SUB_SCAN = 55;</code>
-     */
-    public static final int PCAPNG_SUB_SCAN_VALUE = 55;
-    /**
-     * <code>RUNTIME_FILTER = 56;</code>
-     */
-    public static final int RUNTIME_FILTER_VALUE = 56;
-    /**
-     * <code>ROWKEY_JOIN = 57;</code>
-     */
-    public static final int ROWKEY_JOIN_VALUE = 57;
-    /**
-     * <code>SYSLOG_SUB_SCAN = 58;</code>
-     */
-    public static final int SYSLOG_SUB_SCAN_VALUE = 58;
-    /**
-     * <code>STATISTICS_AGGREGATE = 59;</code>
-     */
-    public static final int STATISTICS_AGGREGATE_VALUE = 59;
-    /**
-     * <code>UNPIVOT_MAPS = 60;</code>
-     */
-    public static final int UNPIVOT_MAPS_VALUE = 60;
-    /**
-     * <code>STATISTICS_MERGE = 61;</code>
-     */
-    public static final int STATISTICS_MERGE_VALUE = 61;
-    /**
-     * <code>LTSV_SUB_SCAN = 62;</code>
-     */
-    public static final int LTSV_SUB_SCAN_VALUE = 62;
-    /**
-     * <code>HDF5_SUB_SCAN = 63;</code>
-     */
-    public static final int HDF5_SUB_SCAN_VALUE = 63;
-    /**
-     * <code>EXCEL_SUB_SCAN = 64;</code>
-     */
-    public static final int EXCEL_SUB_SCAN_VALUE = 64;
-    /**
-     * <code>SHP_SUB_SCAN = 65;</code>
-     */
-    public static final int SHP_SUB_SCAN_VALUE = 65;
-    /**
-     * <code>METADATA_HANDLER = 66;</code>
-     */
-    public static final int METADATA_HANDLER_VALUE = 66;
-    /**
-     * <code>METADATA_CONTROLLER = 67;</code>
-     */
-    public static final int METADATA_CONTROLLER_VALUE = 67;
-    /**
-     * <code>DRUID_SUB_SCAN = 68;</code>
-     */
-    public static final int DRUID_SUB_SCAN_VALUE = 68;
-    /**
-     * <code>SPSS_SUB_SCAN = 69;</code>
-     */
-    public static final int SPSS_SUB_SCAN_VALUE = 69;
-    /**
-     * <code>HTTP_SUB_SCAN = 70;</code>
-     */
-    public static final int HTTP_SUB_SCAN_VALUE = 70;
-    /**
-     * <code>XML_SUB_SCAN = 71;</code>
-     */
-    public static final int XML_SUB_SCAN_VALUE = 71;
-
-
-    public final int getNumber() {
-      return value;
-    }
-
-    /**
-     * @param value The numeric wire value of the corresponding enum entry.
-     * @return The enum associated with the given numeric wire value.
-     * @deprecated Use {@link #forNumber(int)} instead.
-     */
-    @java.lang.Deprecated
-    public static CoreOperatorType valueOf(int value) {
-      return forNumber(value);
-    }
-
-    /**
-     * @param value The numeric wire value of the corresponding enum entry.
-     * @return The enum associated with the given numeric wire value.
-     */
-    public static CoreOperatorType forNumber(int value) {
-      switch (value) {
-        case 0: return SINGLE_SENDER;
-        case 1: return BROADCAST_SENDER;
-        case 2: return FILTER;
-        case 3: return HASH_AGGREGATE;
-        case 4: return HASH_JOIN;
-        case 5: return MERGE_JOIN;
-        case 6: return HASH_PARTITION_SENDER;
-        case 7: return LIMIT;
-        case 8: return MERGING_RECEIVER;
-        case 9: return ORDERED_PARTITION_SENDER;
-        case 10: return PROJECT;
-        case 11: return UNORDERED_RECEIVER;
-        case 12: return RANGE_PARTITION_SENDER;
-        case 13: return SCREEN;
-        case 14: return SELECTION_VECTOR_REMOVER;
-        case 15: return STREAMING_AGGREGATE;
-        case 16: return TOP_N_SORT;
-        case 17: return EXTERNAL_SORT;
-        case 18: return TRACE;
-        case 19: return UNION;
-        case 20: return OLD_SORT;
-        case 21: return PARQUET_ROW_GROUP_SCAN;
-        case 22: return HIVE_SUB_SCAN;
-        case 23: return SYSTEM_TABLE_SCAN;
-        case 24: return MOCK_SUB_SCAN;
-        case 25: return PARQUET_WRITER;
-        case 26: return DIRECT_SUB_SCAN;
-        case 27: return TEXT_WRITER;
-        case 28: return TEXT_SUB_SCAN;
-        case 29: return JSON_SUB_SCAN;
-        case 30: return INFO_SCHEMA_SUB_SCAN;
-        case 31: return COMPLEX_TO_JSON;
-        case 32: return PRODUCER_CONSUMER;
-        case 33: return HBASE_SUB_SCAN;
-        case 34: return WINDOW;
-        case 35: return NESTED_LOOP_JOIN;
-        case 36: return AVRO_SUB_SCAN;
-        case 37: return PCAP_SUB_SCAN;
-        case 38: return KAFKA_SUB_SCAN;
-        case 39: return KUDU_SUB_SCAN;
-        case 40: return FLATTEN;
-        case 41: return LATERAL_JOIN;
-        case 42: return UNNEST;
-        case 43: return HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN;
-        case 44: return JDBC_SCAN;
-        case 45: return REGEX_SUB_SCAN;
-        case 46: return MAPRDB_SUB_SCAN;
-        case 47: return MONGO_SUB_SCAN;
-        case 48: return KUDU_WRITER;
-        case 49: return OPEN_TSDB_SUB_SCAN;
-        case 50: return JSON_WRITER;
-        case 51: return HTPPD_LOG_SUB_SCAN;
-        case 52: return IMAGE_SUB_SCAN;
-        case 53: return SEQUENCE_SUB_SCAN;
-        case 54: return PARTITION_LIMIT;
-        case 55: return PCAPNG_SUB_SCAN;
-        case 56: return RUNTIME_FILTER;
-        case 57: return ROWKEY_JOIN;
-        case 58: return SYSLOG_SUB_SCAN;
-        case 59: return STATISTICS_AGGREGATE;
-        case 60: return UNPIVOT_MAPS;
-        case 61: return STATISTICS_MERGE;
-        case 62: return LTSV_SUB_SCAN;
-        case 63: return HDF5_SUB_SCAN;
-        case 64: return EXCEL_SUB_SCAN;
-        case 65: return SHP_SUB_SCAN;
-        case 66: return METADATA_HANDLER;
-        case 67: return METADATA_CONTROLLER;
-        case 68: return DRUID_SUB_SCAN;
-        case 69: return SPSS_SUB_SCAN;
-        case 70: return HTTP_SUB_SCAN;
-        case 71: return XML_SUB_SCAN;
-        default: return null;
-      }
-    }
-
-    public static com.google.protobuf.Internal.EnumLiteMap<CoreOperatorType>
-        internalGetValueMap() {
-      return internalValueMap;
-    }
-    private static final com.google.protobuf.Internal.EnumLiteMap<
-        CoreOperatorType> internalValueMap =
-          new com.google.protobuf.Internal.EnumLiteMap<CoreOperatorType>() {
-            public CoreOperatorType findValueByNumber(int number) {
-              return CoreOperatorType.forNumber(number);
-            }
-          };
-
-    public final com.google.protobuf.Descriptors.EnumValueDescriptor
-        getValueDescriptor() {
-      return getDescriptor().getValues().get(ordinal());
-    }
-    public final com.google.protobuf.Descriptors.EnumDescriptor
-        getDescriptorForType() {
-      return getDescriptor();
-    }
-    public static final com.google.protobuf.Descriptors.EnumDescriptor
-        getDescriptor() {
-      return org.apache.drill.exec.proto.UserBitShared.getDescriptor().getEnumTypes().get(3);
-    }
-
-    private static final CoreOperatorType[] VALUES = values();
-
-    public static CoreOperatorType valueOf(
-        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
-      if (desc.getType() != getDescriptor()) {
-        throw new java.lang.IllegalArgumentException(
-          "EnumValueDescriptor is not for this type.");
-      }
-      return VALUES[desc.getIndex()];
-    }
-
-    private final int value;
-
-    private CoreOperatorType(int value) {
-      this.value = value;
-    }
-
-    // @@protoc_insertion_point(enum_scope:exec.shared.CoreOperatorType)
-  }
-
-  /**
    * Protobuf enum {@code exec.shared.SaslStatus}
    */
   public enum SaslStatus
@@ -1234,7 +508,7 @@ public final class UserBitShared {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserBitShared.getDescriptor().getEnumTypes().get(4);
+      return org.apache.drill.exec.proto.UserBitShared.getDescriptor().getEnumTypes().get(3);
     }
 
     private static final SaslStatus[] VALUES = values();
@@ -23278,15 +22552,15 @@ public final class UserBitShared {
     int getOperatorId();
 
     /**
-     * <code>optional int32 operator_type = 4;</code>
+     * <code>optional int32 operator_type = 4 [deprecated = true];</code>
      * @return Whether the operatorType field is set.
      */
-    boolean hasOperatorType();
+    @java.lang.Deprecated boolean hasOperatorType();
     /**
-     * <code>optional int32 operator_type = 4;</code>
+     * <code>optional int32 operator_type = 4 [deprecated = true];</code>
      * @return The operatorType.
      */
-    int getOperatorType();
+    @java.lang.Deprecated int getOperatorType();
 
     /**
      * <code>optional int64 setup_nanos = 5;</code>
@@ -23355,6 +22629,23 @@ public final class UserBitShared {
      * @return The waitNanos.
      */
     long getWaitNanos();
+
+    /**
+     * <code>optional string operator_type_name = 10;</code>
+     * @return Whether the operatorTypeName field is set.
+     */
+    boolean hasOperatorTypeName();
+    /**
+     * <code>optional string operator_type_name = 10;</code>
+     * @return The operatorTypeName.
+     */
+    java.lang.String getOperatorTypeName();
+    /**
+     * <code>optional string operator_type_name = 10;</code>
+     * @return The bytes for operatorTypeName.
+     */
+    com.google.protobuf.ByteString
+        getOperatorTypeNameBytes();
   }
   /**
    * Protobuf type {@code exec.shared.OperatorProfile}
@@ -23371,6 +22662,7 @@ public final class UserBitShared {
     private OperatorProfile() {
       inputProfile_ = java.util.Collections.emptyList();
       metric_ = java.util.Collections.emptyList();
+      operatorTypeName_ = "";
     }
 
     @java.lang.Override
@@ -23450,6 +22742,12 @@ public final class UserBitShared {
             case 72: {
               bitField0_ |= 0x00000020;
               waitNanos_ = input.readInt64();
+              break;
+            }
+            case 82: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000040;
+              operatorTypeName_ = bs;
               break;
             }
             default: {
@@ -23546,17 +22844,17 @@ public final class UserBitShared {
     public static final int OPERATOR_TYPE_FIELD_NUMBER = 4;
     private int operatorType_;
     /**
-     * <code>optional int32 operator_type = 4;</code>
+     * <code>optional int32 operator_type = 4 [deprecated = true];</code>
      * @return Whether the operatorType field is set.
      */
-    public boolean hasOperatorType() {
+    @java.lang.Deprecated public boolean hasOperatorType() {
       return ((bitField0_ & 0x00000002) != 0);
     }
     /**
-     * <code>optional int32 operator_type = 4;</code>
+     * <code>optional int32 operator_type = 4 [deprecated = true];</code>
      * @return The operatorType.
      */
-    public int getOperatorType() {
+    @java.lang.Deprecated public int getOperatorType() {
       return operatorType_;
     }
 
@@ -23663,6 +22961,51 @@ public final class UserBitShared {
       return waitNanos_;
     }
 
+    public static final int OPERATOR_TYPE_NAME_FIELD_NUMBER = 10;
+    private volatile java.lang.Object operatorTypeName_;
+    /**
+     * <code>optional string operator_type_name = 10;</code>
+     * @return Whether the operatorTypeName field is set.
+     */
+    public boolean hasOperatorTypeName() {
+      return ((bitField0_ & 0x00000040) != 0);
+    }
+    /**
+     * <code>optional string operator_type_name = 10;</code>
+     * @return The operatorTypeName.
+     */
+    public java.lang.String getOperatorTypeName() {
+      java.lang.Object ref = operatorTypeName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          operatorTypeName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string operator_type_name = 10;</code>
+     * @return The bytes for operatorTypeName.
+     */
+    public com.google.protobuf.ByteString
+        getOperatorTypeNameBytes() {
+      java.lang.Object ref = operatorTypeName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        operatorTypeName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -23700,6 +23043,9 @@ public final class UserBitShared {
       }
       if (((bitField0_ & 0x00000020) != 0)) {
         output.writeInt64(9, waitNanos_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 10, operatorTypeName_);
       }
       unknownFields.writeTo(output);
     }
@@ -23741,6 +23087,9 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(9, waitNanos_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, operatorTypeName_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -23791,6 +23140,11 @@ public final class UserBitShared {
         if (getWaitNanos()
             != other.getWaitNanos()) return false;
       }
+      if (hasOperatorTypeName() != other.hasOperatorTypeName()) return false;
+      if (hasOperatorTypeName()) {
+        if (!getOperatorTypeName()
+            .equals(other.getOperatorTypeName())) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -23837,6 +23191,10 @@ public final class UserBitShared {
         hash = (37 * hash) + WAIT_NANOS_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
             getWaitNanos());
+      }
+      if (hasOperatorTypeName()) {
+        hash = (37 * hash) + OPERATOR_TYPE_NAME_FIELD_NUMBER;
+        hash = (53 * hash) + getOperatorTypeName().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -23997,6 +23355,8 @@ public final class UserBitShared {
         }
         waitNanos_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000080);
+        operatorTypeName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -24067,6 +23427,10 @@ public final class UserBitShared {
           result.waitNanos_ = waitNanos_;
           to_bitField0_ |= 0x00000020;
         }
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.operatorTypeName_ = operatorTypeName_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -24185,6 +23549,11 @@ public final class UserBitShared {
         }
         if (other.hasWaitNanos()) {
           setWaitNanos(other.getWaitNanos());
+        }
+        if (other.hasOperatorTypeName()) {
+          bitField0_ |= 0x00000100;
+          operatorTypeName_ = other.operatorTypeName_;
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -24495,35 +23864,35 @@ public final class UserBitShared {
 
       private int operatorType_ ;
       /**
-       * <code>optional int32 operator_type = 4;</code>
+       * <code>optional int32 operator_type = 4 [deprecated = true];</code>
        * @return Whether the operatorType field is set.
        */
-      public boolean hasOperatorType() {
+      @java.lang.Deprecated public boolean hasOperatorType() {
         return ((bitField0_ & 0x00000004) != 0);
       }
       /**
-       * <code>optional int32 operator_type = 4;</code>
+       * <code>optional int32 operator_type = 4 [deprecated = true];</code>
        * @return The operatorType.
        */
-      public int getOperatorType() {
+      @java.lang.Deprecated public int getOperatorType() {
         return operatorType_;
       }
       /**
-       * <code>optional int32 operator_type = 4;</code>
+       * <code>optional int32 operator_type = 4 [deprecated = true];</code>
        * @param value The operatorType to set.
        * @return This builder for chaining.
        */
-      public Builder setOperatorType(int value) {
+      @java.lang.Deprecated public Builder setOperatorType(int value) {
         bitField0_ |= 0x00000004;
         operatorType_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 operator_type = 4;</code>
+       * <code>optional int32 operator_type = 4 [deprecated = true];</code>
        * @return This builder for chaining.
        */
-      public Builder clearOperatorType() {
+      @java.lang.Deprecated public Builder clearOperatorType() {
         bitField0_ = (bitField0_ & ~0x00000004);
         operatorType_ = 0;
         onChanged();
@@ -24914,6 +24283,90 @@ public final class UserBitShared {
       public Builder clearWaitNanos() {
         bitField0_ = (bitField0_ & ~0x00000080);
         waitNanos_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object operatorTypeName_ = "";
+      /**
+       * <code>optional string operator_type_name = 10;</code>
+       * @return Whether the operatorTypeName field is set.
+       */
+      public boolean hasOperatorTypeName() {
+        return ((bitField0_ & 0x00000100) != 0);
+      }
+      /**
+       * <code>optional string operator_type_name = 10;</code>
+       * @return The operatorTypeName.
+       */
+      public java.lang.String getOperatorTypeName() {
+        java.lang.Object ref = operatorTypeName_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            operatorTypeName_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string operator_type_name = 10;</code>
+       * @return The bytes for operatorTypeName.
+       */
+      public com.google.protobuf.ByteString
+          getOperatorTypeNameBytes() {
+        java.lang.Object ref = operatorTypeName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          operatorTypeName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string operator_type_name = 10;</code>
+       * @param value The operatorTypeName to set.
+       * @return This builder for chaining.
+       */
+      public Builder setOperatorTypeName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+        operatorTypeName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string operator_type_name = 10;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearOperatorTypeName() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        operatorTypeName_ = getDefaultInstance().getOperatorTypeName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string operator_type_name = 10;</code>
+       * @param value The bytes for operatorTypeName to set.
+       * @return This builder for chaining.
+       */
+      public Builder setOperatorTypeNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+        operatorTypeName_ = value;
         onChanged();
         return this;
       }
@@ -29043,68 +28496,33 @@ public final class UserBitShared {
       "y_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022(\n" +
       "\010endpoint\030\t \001(\0132\026.exec.DrillbitEndpoint\022" +
       "\023\n\013last_update\030\n \001(\003\022\025\n\rlast_progress\030\013 " +
-      "\001(\003\"\377\001\n\017OperatorProfile\0221\n\rinput_profile" +
+      "\001(\003\"\237\002\n\017OperatorProfile\0221\n\rinput_profile" +
       "\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023\n\013op" +
-      "erator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 \001(\005\022\023" +
-      "\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001" +
-      "(\003\022#\n\033peak_local_memory_allocated\030\007 \001(\003\022" +
-      "(\n\006metric\030\010 \003(\0132\030.exec.shared.MetricValu" +
-      "e\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamProfile\022\017" +
-      "\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007sche" +
-      "mas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 " +
-      "\001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_value\030" +
-      "\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.sh" +
-      "ared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022functio" +
-      "n_signature\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmech" +
-      "anism\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001(" +
-      "\0162\027.exec.shared.SaslStatus*5\n\nRpcChannel" +
-      "\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020" +
-      "\002*V\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010" +
-      "PHYSICAL\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_ST" +
-      "ATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000" +
-      "\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014" +
-      "\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022" +
-      "\032\n\026CANCELLATION_REQUESTED\020\006*\260\013\n\020CoreOper" +
-      "atorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST" +
-      "_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020" +
-      "\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH" +
-      "_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGIN" +
-      "G_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_SENDER" +
-      "\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022" +
-      "\032\n\026RANGE_PARTITION_SENDER\020\014\022\n\n\006SCREEN\020\r\022" +
-      "\034\n\030SELECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMI" +
-      "NG_AGGREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERN" +
-      "AL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_S" +
-      "ORT\020\024\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIV" +
-      "E_SUB_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rM" +
-      "OCK_SUB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DI" +
-      "RECT_SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT" +
-      "_SUB_SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_S" +
-      "CHEMA_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n" +
-      "\021PRODUCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!" +
-      "\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAV" +
-      "RO_SUB_SCAN\020$\022\021\n\rPCAP_SUB_SCAN\020%\022\022\n\016KAFK" +
-      "A_SUB_SCAN\020&\022\021\n\rKUDU_SUB_SCAN\020\'\022\013\n\007FLATT" +
-      "EN\020(\022\020\n\014LATERAL_JOIN\020)\022\n\n\006UNNEST\020*\022,\n(HI" +
-      "VE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN\020+" +
-      "\022\r\n\tJDBC_SCAN\020,\022\022\n\016REGEX_SUB_SCAN\020-\022\023\n\017M" +
-      "APRDB_SUB_SCAN\020.\022\022\n\016MONGO_SUB_SCAN\020/\022\017\n\013" +
-      "KUDU_WRITER\0200\022\026\n\022OPEN_TSDB_SUB_SCAN\0201\022\017\n" +
-      "\013JSON_WRITER\0202\022\026\n\022HTPPD_LOG_SUB_SCAN\0203\022\022" +
-      "\n\016IMAGE_SUB_SCAN\0204\022\025\n\021SEQUENCE_SUB_SCAN\020" +
-      "5\022\023\n\017PARTITION_LIMIT\0206\022\023\n\017PCAPNG_SUB_SCA" +
-      "N\0207\022\022\n\016RUNTIME_FILTER\0208\022\017\n\013ROWKEY_JOIN\0209" +
-      "\022\023\n\017SYSLOG_SUB_SCAN\020:\022\030\n\024STATISTICS_AGGR" +
-      "EGATE\020;\022\020\n\014UNPIVOT_MAPS\020<\022\024\n\020STATISTICS_" +
-      "MERGE\020=\022\021\n\rLTSV_SUB_SCAN\020>\022\021\n\rHDF5_SUB_S" +
-      "CAN\020?\022\022\n\016EXCEL_SUB_SCAN\020@\022\020\n\014SHP_SUB_SCA" +
-      "N\020A\022\024\n\020METADATA_HANDLER\020B\022\027\n\023METADATA_CO" +
-      "NTROLLER\020C\022\022\n\016DRUID_SUB_SCAN\020D\022\021\n\rSPSS_S" +
-      "UB_SCAN\020E\022\021\n\rHTTP_SUB_SCAN\020F\022\020\n\014XML_SUB_" +
-      "SCAN\020G*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016" +
-      "\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014" +
-      "SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.a" +
-      "pache.drill.exec.protoB\rUserBitSharedH\001"
+      "erator_id\030\003 \001(\005\022\031\n\roperator_type\030\004 \001(\005B\002" +
+      "\030\001\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos" +
+      "\030\006 \001(\003\022#\n\033peak_local_memory_allocated\030\007 " +
+      "\001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared.Metric" +
+      "Value\022\022\n\nwait_nanos\030\t \001(\003\022\032\n\022operator_ty" +
+      "pe_name\030\n \001(\t\"B\n\rStreamProfile\022\017\n\007record" +
+      "s\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(" +
+      "\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nl" +
+      "ong_value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001\")\n" +
+      "\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.shared.Jar" +
+      "\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022function_signat" +
+      "ure\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmechanism\030\001 " +
+      "\001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162\027.exec" +
+      ".shared.SaslStatus*5\n\nRpcChannel\022\017\n\013BIT_" +
+      "CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQue" +
+      "ryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL" +
+      "\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020" +
+      "\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAI" +
+      "TING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISH" +
+      "ED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCE" +
+      "LLATION_REQUESTED\020\006*g\n\nSaslStatus\022\020\n\014SAS" +
+      "L_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_P" +
+      "ROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAIL" +
+      "ED\020\004B.\n\033org.apache.drill.exec.protoB\rUse" +
+      "rBitSharedH\001"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -29214,7 +28632,7 @@ public final class UserBitShared {
     internal_static_exec_shared_OperatorProfile_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_exec_shared_OperatorProfile_descriptor,
-        new java.lang.String[] { "InputProfile", "OperatorId", "OperatorType", "SetupNanos", "ProcessNanos", "PeakLocalMemoryAllocated", "Metric", "WaitNanos", });
+        new java.lang.String[] { "InputProfile", "OperatorId", "OperatorType", "SetupNanos", "ProcessNanos", "PeakLocalMemoryAllocated", "Metric", "WaitNanos", "OperatorTypeName", });
     internal_static_exec_shared_StreamProfile_descriptor =
       getDescriptor().getMessageTypes().get(17);
     internal_static_exec_shared_StreamProfile_fieldAccessorTable = new

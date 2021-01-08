@@ -25,7 +25,6 @@ import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,15 +33,16 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @JsonTypeName("OrderedPartitionSender")
 public class OrderedPartitionSender extends AbstractSender {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionSender.class);
+
+  public static final String OPERATOR_TYPE = "ORDERED_PARTITION_SENDER";
 
   private final List<Ordering> orderings;
   private final FieldReference ref;
   private final int sendingWidth;
 
-  private int recordsToSample;
-  private int samplingFactor;
-  private float completionFactor;
+  private final int recordsToSample;
+  private final int samplingFactor;
+  private final float completionFactor;
 
   @JsonCreator
   public OrderedPartitionSender(@JsonProperty("orderings") List<Ordering> orderings,
@@ -103,8 +103,8 @@ public class OrderedPartitionSender extends AbstractSender {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.ORDERED_PARTITION_SENDER_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

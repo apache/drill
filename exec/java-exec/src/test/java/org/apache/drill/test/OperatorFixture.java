@@ -452,7 +452,7 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
                                BufferAllocator allocator,
                                PhysicalOperator config) {
       super(fragContext, allocator, config);
-      this.operatorStats = new OperatorStats(new OpProfileDef(0, 0, 100), allocator);
+      this.operatorStats = new OperatorStats(new OpProfileDef(0, "", 100), allocator);
     }
 
     @Override

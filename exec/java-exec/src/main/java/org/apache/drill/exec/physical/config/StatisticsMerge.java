@@ -24,11 +24,12 @@ import java.util.Map;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 
 @JsonTypeName("statistics-merge")
 public class StatisticsMerge extends AbstractSingle {
+
+  public static final String OPERATOR_TYPE = "STATISTICS_MERGE";
 
   private final Map<String, String> functions;
   private final double samplePercent;
@@ -63,7 +64,7 @@ public class StatisticsMerge extends AbstractSingle {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.STATISTICS_MERGE_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

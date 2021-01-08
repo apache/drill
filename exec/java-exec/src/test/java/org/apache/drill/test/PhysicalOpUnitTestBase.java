@@ -330,8 +330,8 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     }
 
     @Override
-    public int getOperatorType() {
-      return 0;
+    public String getOperatorType() {
+      return "";
     }
 
     @Override

@@ -22,7 +22,9 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 
 public class IteratorValidator extends AbstractSingle{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidator.class);
+
+  public static final String OPERATOR_TYPE = "ITERATOR_VALIDATOR";
+
   /* isRepeatable flag will be set to true if this validator is created by a Repeatable pipeline.
    * In a repeatable pipeline some state transitions are valid i.e downstream operator
    * can call the upstream operator even after receiving NONE.
@@ -50,8 +52,7 @@ public class IteratorValidator extends AbstractSingle{
   }
 
   @Override
-  public int getOperatorType() {
-    // TODO: DRILL-6643: this implementation should be revisited
-    return -1;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

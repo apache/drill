@@ -28,7 +28,6 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -45,6 +44,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  */
 @JsonTypeName("hbase-region-scan")
 public class HBaseSubScan extends AbstractBase implements SubScan {
+
+  public static final String OPERATOR_TYPE = "HBASE_SUB_SCAN";
 
   private final HBaseStoragePlugin hbaseStoragePlugin;
   private final List<HBaseSubScanSpec> regionScanSpecList;
@@ -212,7 +213,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.HBASE_SUB_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

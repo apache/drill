@@ -23,7 +23,6 @@ import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -32,7 +31,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("project")
 public class Project extends AbstractSingle{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Project.class);
+
+  public static final String OPERATOR_TYPE = "PROJECT";
 
   private final List<NamedExpression> exprs;
 
@@ -58,7 +58,7 @@ public class Project extends AbstractSingle{
   }
 
   /**
-   * @Return true if Project is for the query's final output. Such Project is added by TopProjectVisitor,
+   * @return true if Project is for the query's final output. Such Project is added by TopProjectVisitor,
    * to handle fast NONE when all the inputs to the query are empty and are skipped.
    */
   public boolean isOutputProj() {
@@ -81,7 +81,7 @@ public class Project extends AbstractSingle{
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.PROJECT_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

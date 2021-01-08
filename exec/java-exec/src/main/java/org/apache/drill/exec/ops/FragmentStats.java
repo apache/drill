@@ -32,7 +32,7 @@ import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 public class FragmentStats {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentStats.class);
 
-  private Map<ImmutablePair<Integer, Integer>, OperatorStats> operators = new LinkedHashMap<>();
+  private final Map<ImmutablePair<Integer, String>, OperatorStats> operators = new LinkedHashMap<>();
   private final long startTime;
   private final DrillbitEndpoint endpoint;
   private final BufferAllocator allocator;
@@ -48,7 +48,7 @@ public class FragmentStats {
     prfB.setMaxMemoryUsed(allocator.getPeakMemoryAllocation());
     prfB.setEndTime(System.currentTimeMillis());
     prfB.setEndpoint(endpoint);
-    for(Entry<ImmutablePair<Integer, Integer>, OperatorStats> o : operators.entrySet()){
+    for(Entry<ImmutablePair<Integer, String>, OperatorStats> o : operators.entrySet()){
       prfB.addOperatorProfile(o.getValue().getProfile());
     }
   }
@@ -62,15 +62,14 @@ public class FragmentStats {
    */
   public OperatorStats newOperatorStats(final OpProfileDef profileDef, final BufferAllocator allocator) {
     final OperatorStats stats = new OperatorStats(profileDef, allocator);
-    if(profileDef.operatorType != -1) {
-      @SuppressWarnings("unused")
-      OperatorStats existingStatsHolder = addOperatorStats(stats);
+    if (profileDef.operatorType != null) {
+      addOperatorStats(stats);
     }
     return stats;
   }
 
-  public OperatorStats addOperatorStats(OperatorStats stats) {
-    return operators.put(new ImmutablePair<>(stats.operatorId, stats.operatorType), stats);
+  public void addOperatorStats(OperatorStats stats) {
+    operators.put(new ImmutablePair<>(stats.operatorId, stats.operatorType), stats);
   }
 
 }

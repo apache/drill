@@ -20,10 +20,10 @@ package org.apache.drill.exec.ops;
 public class OpProfileDef {
 
   public int operatorId;
-  public int operatorType;
+  public String operatorType;
   public int incomingCount;
 
-  public OpProfileDef(int operatorId, int operatorType, int incomingCount) {
+  public OpProfileDef(int operatorId, String operatorType, int incomingCount) {
     this.operatorId = operatorId;
     this.operatorType = operatorType;
     this.incomingCount = incomingCount;
@@ -32,7 +32,7 @@ public class OpProfileDef {
     return operatorId;
   }
 
-  public int getOperatorType(){
+  public String getOperatorType(){
     return operatorType;
   }
   public int getIncomingCount(){

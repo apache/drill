@@ -37,8 +37,7 @@
 
 <script>
     var globalconfig = {
-        "queryid" : "${model.getQueryId()}",
-        "operators" : ${model.getOperatorsJSON()?no_esc}
+        "queryid" : "${model.getQueryId()}"
     };
 
     $(document).ready(function() {

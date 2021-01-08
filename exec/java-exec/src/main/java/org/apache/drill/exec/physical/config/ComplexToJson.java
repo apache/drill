@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.config;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -29,7 +28,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("complex-to-json")
 public class ComplexToJson extends AbstractSingle {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComplexToJson.class);
+
+  public static final String OPERATOR_TYPE = "COMPLEX_TO_JSON";
 
   @JsonCreator
   public ComplexToJson(@JsonProperty("child") PhysicalOperator child) {
@@ -52,8 +52,8 @@ public class ComplexToJson extends AbstractSingle {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.COMPLEX_TO_JSON_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
 }

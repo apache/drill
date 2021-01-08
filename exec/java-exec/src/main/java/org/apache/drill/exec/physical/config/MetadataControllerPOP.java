@@ -24,7 +24,6 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.metastore.analyze.MetadataControllerContext;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.Arrays;
@@ -33,6 +32,9 @@ import java.util.List;
 
 @JsonTypeName("metadataController")
 public class MetadataControllerPOP extends AbstractBase {
+
+  public static final String OPERATOR_TYPE = "METADATA_CONTROLLER";
+
   private final MetadataControllerContext context;
   private final PhysicalOperator left;
   private final PhysicalOperator right;
@@ -57,8 +59,8 @@ public class MetadataControllerPOP extends AbstractBase {
   }
 
   @Override
-  public int getOperatorType() {
-    return UserBitShared.CoreOperatorType.METADATA_CONTROLLER_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

@@ -21,7 +21,6 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -34,6 +33,8 @@ import java.util.List;
 
 @JsonTypeName("jdbc-sub-scan")
 public class JdbcSubScan extends AbstractSubScan {
+
+  public static final String OPERATOR_TYPE = "JDBC_SCAN";
 
   private final String sql;
   private final JdbcStoragePlugin plugin;
@@ -59,8 +60,8 @@ public class JdbcSubScan extends AbstractSubScan {
   }
 
   @Override
-  public int getOperatorType() {
-    return UserBitShared.CoreOperatorType.JDBC_SCAN.getNumber();
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   public String getSql() {

@@ -469,7 +469,7 @@ static void InitDefaultsscc_info_UserCredentials_UserBitShared_2eproto() {
     {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_UserCredentials_UserBitShared_2eproto}, {}};
 
 static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_UserBitShared_2eproto[22];
-static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_UserBitShared_2eproto[8];
+static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_UserBitShared_2eproto[7];
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_UserBitShared_2eproto = nullptr;
 
 const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_UserBitShared_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
@@ -742,14 +742,16 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_UserBitShared_2eproto::offsets
   PROTOBUF_FIELD_OFFSET(::exec::shared::OperatorProfile, peak_local_memory_allocated_),
   PROTOBUF_FIELD_OFFSET(::exec::shared::OperatorProfile, metric_),
   PROTOBUF_FIELD_OFFSET(::exec::shared::OperatorProfile, wait_nanos_),
+  PROTOBUF_FIELD_OFFSET(::exec::shared::OperatorProfile, operator_type_name_),
   ~0u,
-  0,
   1,
   2,
   3,
   4,
-  ~0u,
   5,
+  ~0u,
+  6,
+  0,
   PROTOBUF_FIELD_OFFSET(::exec::shared::StreamProfile, _has_bits_),
   PROTOBUF_FIELD_OFFSET(::exec::shared::StreamProfile, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -817,12 +819,12 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOB
   { 169, 197, sizeof(::exec::shared::QueryProfile)},
   { 220, 227, sizeof(::exec::shared::MajorFragmentProfile)},
   { 229, 245, sizeof(::exec::shared::MinorFragmentProfile)},
-  { 256, 269, sizeof(::exec::shared::OperatorProfile)},
-  { 277, 285, sizeof(::exec::shared::StreamProfile)},
-  { 288, 296, sizeof(::exec::shared::MetricValue)},
-  { 299, 305, sizeof(::exec::shared::Registry)},
-  { 306, 313, sizeof(::exec::shared::Jar)},
-  { 315, 323, sizeof(::exec::shared::SaslMessage)},
+  { 256, 270, sizeof(::exec::shared::OperatorProfile)},
+  { 279, 287, sizeof(::exec::shared::StreamProfile)},
+  { 290, 298, sizeof(::exec::shared::MetricValue)},
+  { 301, 307, sizeof(::exec::shared::Registry)},
+  { 308, 315, sizeof(::exec::shared::Jar)},
+  { 317, 325, sizeof(::exec::shared::SaslMessage)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -935,68 +937,33 @@ const char descriptor_table_protodef_UserBitShared_2eproto[] PROTOBUF_SECTION_VA
   "y_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022(\n"
   "\010endpoint\030\t \001(\0132\026.exec.DrillbitEndpoint\022"
   "\023\n\013last_update\030\n \001(\003\022\025\n\rlast_progress\030\013 "
-  "\001(\003\"\377\001\n\017OperatorProfile\0221\n\rinput_profile"
+  "\001(\003\"\237\002\n\017OperatorProfile\0221\n\rinput_profile"
   "\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023\n\013op"
-  "erator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 \001(\005\022\023"
-  "\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001"
-  "(\003\022#\n\033peak_local_memory_allocated\030\007 \001(\003\022"
-  "(\n\006metric\030\010 \003(\0132\030.exec.shared.MetricValu"
-  "e\022\022\n\nwait_nanos\030\t \001(\003\"B\n\rStreamProfile\022\017"
-  "\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007sche"
-  "mas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 "
-  "\001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_value\030"
-  "\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.sh"
-  "ared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022functio"
-  "n_signature\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmech"
-  "anism\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001("
-  "\0162\027.exec.shared.SaslStatus*5\n\nRpcChannel"
-  "\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020"
-  "\002*V\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010"
-  "PHYSICAL\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_ST"
-  "ATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000"
-  "\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014"
-  "\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022"
-  "\032\n\026CANCELLATION_REQUESTED\020\006*\260\013\n\020CoreOper"
-  "atorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST"
-  "_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020"
-  "\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH"
-  "_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGIN"
-  "G_RECEIVER\020\010\022\034\n\030ORDERED_PARTITION_SENDER"
-  "\020\t\022\013\n\007PROJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022"
-  "\032\n\026RANGE_PARTITION_SENDER\020\014\022\n\n\006SCREEN\020\r\022"
-  "\034\n\030SELECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMI"
-  "NG_AGGREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERN"
-  "AL_SORT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_S"
-  "ORT\020\024\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIV"
-  "E_SUB_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rM"
-  "OCK_SUB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DI"
-  "RECT_SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT"
-  "_SUB_SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_S"
-  "CHEMA_SUB_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n"
-  "\021PRODUCER_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!"
-  "\022\n\n\006WINDOW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAV"
-  "RO_SUB_SCAN\020$\022\021\n\rPCAP_SUB_SCAN\020%\022\022\n\016KAFK"
-  "A_SUB_SCAN\020&\022\021\n\rKUDU_SUB_SCAN\020\'\022\013\n\007FLATT"
-  "EN\020(\022\020\n\014LATERAL_JOIN\020)\022\n\n\006UNNEST\020*\022,\n(HI"
-  "VE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN\020+"
-  "\022\r\n\tJDBC_SCAN\020,\022\022\n\016REGEX_SUB_SCAN\020-\022\023\n\017M"
-  "APRDB_SUB_SCAN\020.\022\022\n\016MONGO_SUB_SCAN\020/\022\017\n\013"
-  "KUDU_WRITER\0200\022\026\n\022OPEN_TSDB_SUB_SCAN\0201\022\017\n"
-  "\013JSON_WRITER\0202\022\026\n\022HTPPD_LOG_SUB_SCAN\0203\022\022"
-  "\n\016IMAGE_SUB_SCAN\0204\022\025\n\021SEQUENCE_SUB_SCAN\020"
-  "5\022\023\n\017PARTITION_LIMIT\0206\022\023\n\017PCAPNG_SUB_SCA"
-  "N\0207\022\022\n\016RUNTIME_FILTER\0208\022\017\n\013ROWKEY_JOIN\0209"
-  "\022\023\n\017SYSLOG_SUB_SCAN\020:\022\030\n\024STATISTICS_AGGR"
-  "EGATE\020;\022\020\n\014UNPIVOT_MAPS\020<\022\024\n\020STATISTICS_"
-  "MERGE\020=\022\021\n\rLTSV_SUB_SCAN\020>\022\021\n\rHDF5_SUB_S"
-  "CAN\020\?\022\022\n\016EXCEL_SUB_SCAN\020@\022\020\n\014SHP_SUB_SCA"
-  "N\020A\022\024\n\020METADATA_HANDLER\020B\022\027\n\023METADATA_CO"
-  "NTROLLER\020C\022\022\n\016DRUID_SUB_SCAN\020D\022\021\n\rSPSS_S"
-  "UB_SCAN\020E\022\021\n\rHTTP_SUB_SCAN\020F\022\020\n\014XML_SUB_"
-  "SCAN\020G*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016"
-  "\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014"
-  "SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.a"
-  "pache.drill.exec.protoB\rUserBitSharedH\001"
+  "erator_id\030\003 \001(\005\022\031\n\roperator_type\030\004 \001(\005B\002"
+  "\030\001\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos"
+  "\030\006 \001(\003\022#\n\033peak_local_memory_allocated\030\007 "
+  "\001(\003\022(\n\006metric\030\010 \003(\0132\030.exec.shared.Metric"
+  "Value\022\022\n\nwait_nanos\030\t \001(\003\022\032\n\022operator_ty"
+  "pe_name\030\n \001(\t\"B\n\rStreamProfile\022\017\n\007record"
+  "s\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001("
+  "\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nl"
+  "ong_value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001\")\n"
+  "\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.shared.Jar"
+  "\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022function_signat"
+  "ure\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmechanism\030\001 "
+  "\001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162\027.exec"
+  ".shared.SaslStatus*5\n\nRpcChannel\022\017\n\013BIT_"
+  "CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQue"
+  "ryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL"
+  "\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020"
+  "\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAI"
+  "TING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISH"
+  "ED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCE"
+  "LLATION_REQUESTED\020\006*g\n\nSaslStatus\022\020\n\014SAS"
+  "L_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_P"
+  "ROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAIL"
+  "ED\020\004B.\n\033org.apache.drill.exec.protoB\rUse"
+  "rBitSharedH\001"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_UserBitShared_2eproto_deps[3] = {
   &::descriptor_table_Coordination_2eproto,
@@ -1030,7 +997,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_Use
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_UserBitShared_2eproto_once;
 static bool descriptor_table_UserBitShared_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_UserBitShared_2eproto = {
-  &descriptor_table_UserBitShared_2eproto_initialized, descriptor_table_protodef_UserBitShared_2eproto, "UserBitShared.proto", 5839,
+  &descriptor_table_UserBitShared_2eproto_initialized, descriptor_table_protodef_UserBitShared_2eproto, "UserBitShared.proto", 4412,
   &descriptor_table_UserBitShared_2eproto_once, descriptor_table_UserBitShared_2eproto_sccs, descriptor_table_UserBitShared_2eproto_deps, 22, 3,
   schemas, file_default_instances, TableStruct_UserBitShared_2eproto::offsets,
   file_level_metadata_UserBitShared_2eproto, 22, file_level_enum_descriptors_UserBitShared_2eproto, file_level_service_descriptors_UserBitShared_2eproto,
@@ -1192,93 +1159,9 @@ bool FragmentState_IsValid(int value) {
   }
 }
 
-const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* CoreOperatorType_descriptor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_UserBitShared_2eproto);
-  return file_level_enum_descriptors_UserBitShared_2eproto[6];
-}
-bool CoreOperatorType_IsValid(int value) {
-  switch (value) {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
-    case 10:
-    case 11:
-    case 12:
-    case 13:
-    case 14:
-    case 15:
-    case 16:
-    case 17:
-    case 18:
-    case 19:
-    case 20:
-    case 21:
-    case 22:
-    case 23:
-    case 24:
-    case 25:
-    case 26:
-    case 27:
-    case 28:
-    case 29:
-    case 30:
-    case 31:
-    case 32:
-    case 33:
-    case 34:
-    case 35:
-    case 36:
-    case 37:
-    case 38:
-    case 39:
-    case 40:
-    case 41:
-    case 42:
-    case 43:
-    case 44:
-    case 45:
-    case 46:
-    case 47:
-    case 48:
-    case 49:
-    case 50:
-    case 51:
-    case 52:
-    case 53:
-    case 54:
-    case 55:
-    case 56:
-    case 57:
-    case 58:
-    case 59:
-    case 60:
-    case 61:
-    case 62:
-    case 63:
-    case 64:
-    case 65:
-    case 66:
-    case 67:
-    case 68:
-    case 69:
-    case 70:
-    case 71:
-      return true;
-    default:
-      return false;
-  }
-}
-
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* SaslStatus_descriptor() {
   ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_UserBitShared_2eproto);
-  return file_level_enum_descriptors_UserBitShared_2eproto[7];
+  return file_level_enum_descriptors_UserBitShared_2eproto[6];
 }
 bool SaslStatus_IsValid(int value) {
   switch (value) {
@@ -7454,22 +7337,25 @@ class OperatorProfile::_Internal {
  public:
   using HasBits = decltype(std::declval<OperatorProfile>()._has_bits_);
   static void set_has_operator_id(HasBits* has_bits) {
-    (*has_bits)[0] |= 1u;
-  }
-  static void set_has_operator_type(HasBits* has_bits) {
     (*has_bits)[0] |= 2u;
   }
-  static void set_has_setup_nanos(HasBits* has_bits) {
+  static void set_has_operator_type(HasBits* has_bits) {
     (*has_bits)[0] |= 4u;
   }
-  static void set_has_process_nanos(HasBits* has_bits) {
+  static void set_has_setup_nanos(HasBits* has_bits) {
     (*has_bits)[0] |= 8u;
   }
-  static void set_has_peak_local_memory_allocated(HasBits* has_bits) {
+  static void set_has_process_nanos(HasBits* has_bits) {
     (*has_bits)[0] |= 16u;
   }
-  static void set_has_wait_nanos(HasBits* has_bits) {
+  static void set_has_peak_local_memory_allocated(HasBits* has_bits) {
     (*has_bits)[0] |= 32u;
+  }
+  static void set_has_wait_nanos(HasBits* has_bits) {
+    (*has_bits)[0] |= 64u;
+  }
+  static void set_has_operator_type_name(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
   }
 };
 
@@ -7485,6 +7371,10 @@ OperatorProfile::OperatorProfile(const OperatorProfile& from)
       input_profile_(from.input_profile_),
       metric_(from.metric_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
+  operator_type_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (from._internal_has_operator_type_name()) {
+    operator_type_name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.operator_type_name_);
+  }
   ::memcpy(&operator_id_, &from.operator_id_,
     static_cast<size_t>(reinterpret_cast<char*>(&wait_nanos_) -
     reinterpret_cast<char*>(&operator_id_)) + sizeof(wait_nanos_));
@@ -7493,6 +7383,7 @@ OperatorProfile::OperatorProfile(const OperatorProfile& from)
 
 void OperatorProfile::SharedCtor() {
   ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_OperatorProfile_UserBitShared_2eproto.base);
+  operator_type_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&operator_id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&wait_nanos_) -
       reinterpret_cast<char*>(&operator_id_)) + sizeof(wait_nanos_));
@@ -7504,6 +7395,7 @@ OperatorProfile::~OperatorProfile() {
 }
 
 void OperatorProfile::SharedDtor() {
+  operator_type_name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void OperatorProfile::SetCachedSize(int size) const {
@@ -7524,7 +7416,10 @@ void OperatorProfile::Clear() {
   input_profile_.Clear();
   metric_.Clear();
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 0x0000003fu) {
+  if (cached_has_bits & 0x00000001u) {
+    operator_type_name_.ClearNonDefaultToEmptyNoArena();
+  }
+  if (cached_has_bits & 0x0000007eu) {
     ::memset(&operator_id_, 0, static_cast<size_t>(
         reinterpret_cast<char*>(&wait_nanos_) -
         reinterpret_cast<char*>(&operator_id_)) + sizeof(wait_nanos_));
@@ -7561,7 +7456,7 @@ const char* OperatorProfile::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // optional int32 operator_type = 4;
+      // optional int32 operator_type = 4 [deprecated = true];
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_operator_type(&has_bits);
@@ -7613,6 +7508,17 @@ const char* OperatorProfile::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
+      // optional string operator_type_name = 10;
+      case 10:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 82)) {
+          auto str = _internal_mutable_operator_type_name();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          #ifndef NDEBUG
+          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "exec.shared.OperatorProfile.operator_type_name");
+          #endif  // !NDEBUG
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
         if ((tag & 7) == 4 || tag == 0) {
@@ -7650,31 +7556,31 @@ failure:
 
   cached_has_bits = _has_bits_[0];
   // optional int32 operator_id = 3;
-  if (cached_has_bits & 0x00000001u) {
+  if (cached_has_bits & 0x00000002u) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_operator_id(), target);
   }
 
-  // optional int32 operator_type = 4;
-  if (cached_has_bits & 0x00000002u) {
+  // optional int32 operator_type = 4 [deprecated = true];
+  if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(4, this->_internal_operator_type(), target);
   }
 
   // optional int64 setup_nanos = 5;
-  if (cached_has_bits & 0x00000004u) {
+  if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(5, this->_internal_setup_nanos(), target);
   }
 
   // optional int64 process_nanos = 6;
-  if (cached_has_bits & 0x00000008u) {
+  if (cached_has_bits & 0x00000010u) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(6, this->_internal_process_nanos(), target);
   }
 
   // optional int64 peak_local_memory_allocated = 7;
-  if (cached_has_bits & 0x00000010u) {
+  if (cached_has_bits & 0x00000020u) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(7, this->_internal_peak_local_memory_allocated(), target);
   }
@@ -7688,9 +7594,19 @@ failure:
   }
 
   // optional int64 wait_nanos = 9;
-  if (cached_has_bits & 0x00000020u) {
+  if (cached_has_bits & 0x00000040u) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(9, this->_internal_wait_nanos(), target);
+  }
+
+  // optional string operator_type_name = 10;
+  if (cached_has_bits & 0x00000001u) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
+      this->_internal_operator_type_name().data(), static_cast<int>(this->_internal_operator_type_name().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
+      "exec.shared.OperatorProfile.operator_type_name");
+    target = stream->WriteStringMaybeAliased(
+        10, this->_internal_operator_type_name(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -7724,44 +7640,51 @@ size_t OperatorProfile::ByteSizeLong() const {
   }
 
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 0x0000003fu) {
-    // optional int32 operator_id = 3;
+  if (cached_has_bits & 0x0000007fu) {
+    // optional string operator_type_name = 10;
     if (cached_has_bits & 0x00000001u) {
+      total_size += 1 +
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+          this->_internal_operator_type_name());
+    }
+
+    // optional int32 operator_id = 3;
+    if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
           this->_internal_operator_id());
     }
 
-    // optional int32 operator_type = 4;
-    if (cached_has_bits & 0x00000002u) {
+    // optional int32 operator_type = 4 [deprecated = true];
+    if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
           this->_internal_operator_type());
     }
 
     // optional int64 setup_nanos = 5;
-    if (cached_has_bits & 0x00000004u) {
+    if (cached_has_bits & 0x00000008u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
           this->_internal_setup_nanos());
     }
 
     // optional int64 process_nanos = 6;
-    if (cached_has_bits & 0x00000008u) {
+    if (cached_has_bits & 0x00000010u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
           this->_internal_process_nanos());
     }
 
     // optional int64 peak_local_memory_allocated = 7;
-    if (cached_has_bits & 0x00000010u) {
+    if (cached_has_bits & 0x00000020u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
           this->_internal_peak_local_memory_allocated());
     }
 
     // optional int64 wait_nanos = 9;
-    if (cached_has_bits & 0x00000020u) {
+    if (cached_has_bits & 0x00000040u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
           this->_internal_wait_nanos());
@@ -7802,23 +7725,27 @@ void OperatorProfile::MergeFrom(const OperatorProfile& from) {
   input_profile_.MergeFrom(from.input_profile_);
   metric_.MergeFrom(from.metric_);
   cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 0x0000003fu) {
+  if (cached_has_bits & 0x0000007fu) {
     if (cached_has_bits & 0x00000001u) {
-      operator_id_ = from.operator_id_;
+      _has_bits_[0] |= 0x00000001u;
+      operator_type_name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.operator_type_name_);
     }
     if (cached_has_bits & 0x00000002u) {
-      operator_type_ = from.operator_type_;
+      operator_id_ = from.operator_id_;
     }
     if (cached_has_bits & 0x00000004u) {
-      setup_nanos_ = from.setup_nanos_;
+      operator_type_ = from.operator_type_;
     }
     if (cached_has_bits & 0x00000008u) {
-      process_nanos_ = from.process_nanos_;
+      setup_nanos_ = from.setup_nanos_;
     }
     if (cached_has_bits & 0x00000010u) {
-      peak_local_memory_allocated_ = from.peak_local_memory_allocated_;
+      process_nanos_ = from.process_nanos_;
     }
     if (cached_has_bits & 0x00000020u) {
+      peak_local_memory_allocated_ = from.peak_local_memory_allocated_;
+    }
+    if (cached_has_bits & 0x00000040u) {
       wait_nanos_ = from.wait_nanos_;
     }
     _has_bits_[0] |= cached_has_bits;
@@ -7849,6 +7776,8 @@ void OperatorProfile::InternalSwap(OperatorProfile* other) {
   swap(_has_bits_[0], other->_has_bits_[0]);
   input_profile_.InternalSwap(&other->input_profile_);
   metric_.InternalSwap(&other->metric_);
+  operator_type_name_.Swap(&other->operator_type_name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
   swap(operator_id_, other->operator_id_);
   swap(operator_type_, other->operator_type_);
   swap(setup_nanos_, other->setup_nanos_);

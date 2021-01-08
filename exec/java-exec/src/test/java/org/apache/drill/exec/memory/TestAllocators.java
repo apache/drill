@@ -39,16 +39,18 @@ import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.ops.OperatorUtilities;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.BitControl;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistryImpl;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
+import org.apache.drill.exec.store.mock.MockSubScanPOP;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.test.DrillTest;
@@ -219,7 +221,7 @@ public class TestAllocators extends DrillTest {
       OperatorStats stats;
 
       // Use some bogus operator type to create a new operator context.
-      def = new OpProfileDef(physicalOperator1.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
+      def = new OpProfileDef(physicalOperator1.getOperatorId(), MockSubScanPOP.OPERATOR_TYPE,
           OperatorUtilities.getChildCount(physicalOperator1));
       stats = fragmentContext1.getStats().newOperatorStats(def, fragmentContext1.getAllocator());
 
@@ -233,7 +235,7 @@ public class TestAllocators extends DrillTest {
 
       OperatorContext oContext21 = fragmentContext1.newOperatorContext(physicalOperator3);
 
-      def = new OpProfileDef(physicalOperator4.getOperatorId(), UserBitShared.CoreOperatorType.TEXT_WRITER_VALUE,
+      def = new OpProfileDef(physicalOperator4.getOperatorId(), TextFormatPlugin.WRITER_OPERATOR_TYPE,
           OperatorUtilities.getChildCount(physicalOperator4));
       stats = fragmentContext2.getStats().newOperatorStats(def, fragmentContext2.getAllocator());
       OperatorContext oContext22 = fragmentContext2.newOperatorContext(physicalOperator4, stats);
@@ -247,7 +249,7 @@ public class TestAllocators extends DrillTest {
       FragmentContextImpl fragmentContext3 = new FragmentContextImpl(bitContext, pf3, null, functionRegistry);
 
       // New fragment starts an operator that allocates an amount within the limit
-      def = new OpProfileDef(physicalOperator5.getOperatorId(), UserBitShared.CoreOperatorType.UNION_VALUE,
+      def = new OpProfileDef(physicalOperator5.getOperatorId(), UnionAll.OPERATOR_TYPE,
           OperatorUtilities.getChildCount(physicalOperator5));
       stats = fragmentContext3.getStats().newOperatorStats(def, fragmentContext3.getAllocator());
       OperatorContext oContext31 = fragmentContext3.newOperatorContext(physicalOperator5, stats);

@@ -145,8 +145,8 @@ public class OperatorTestBuilderTest extends PhysicalOpUnitTestBase {
     }
 
     @Override
-    public int getOperatorType() {
-      return 0;
+    public String getOperatorType() {
+      return "";
     }
 
     @Override

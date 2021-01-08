@@ -33,7 +33,6 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.mapred.InputSplit;
@@ -47,6 +46,8 @@ import org.apache.drill.shaded.guava.com.google.common.io.ByteStreams;
 
 @JsonTypeName("hive-sub-scan")
 public class HiveSubScan extends AbstractBase implements SubScan {
+
+  public static final String OPERATOR_TYPE = "HIVE_SUB_SCAN";
 
   private final HiveReadEntry hiveReadEntry;
   private final List<List<InputSplit>> inputSplits = new ArrayList<>();
@@ -175,8 +176,8 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.HIVE_SUB_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   private static List<InputSplit> deserializeInputSplit(List<String> base64, String className)

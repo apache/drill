@@ -138,7 +138,7 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   }
 
   @Override
-  public int getOperatorType() {
+  public String getOperatorType() {
     throw new UnsupportedOperationException();
   }
 

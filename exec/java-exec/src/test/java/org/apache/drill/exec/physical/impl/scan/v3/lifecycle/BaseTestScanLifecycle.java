@@ -52,7 +52,7 @@ public class BaseTestScanLifecycle extends SubOperatorTest {
     }
 
     @Override
-    public int getOperatorType() { return 0; }
+    public String getOperatorType() { return "DUMMY_SUB_SCAN"; }
   }
 
   protected static abstract class SingleReaderFactory implements ReaderFactory<SchemaNegotiator> {

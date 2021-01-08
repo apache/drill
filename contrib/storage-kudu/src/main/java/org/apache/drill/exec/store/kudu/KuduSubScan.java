@@ -28,7 +28,6 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -43,6 +42,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  */
 @JsonTypeName("kudu-sub-scan")
 public class KuduSubScan extends AbstractBase implements SubScan {
+
+  public static final String OPERATOR_TYPE = "KUDU_SUB_SCAN";
 
   private final KuduStoragePlugin kuduStoragePlugin;
   private final List<KuduSubScanSpec> tabletScanSpecList;
@@ -127,7 +128,7 @@ public class KuduSubScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.KUDU_SUB_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

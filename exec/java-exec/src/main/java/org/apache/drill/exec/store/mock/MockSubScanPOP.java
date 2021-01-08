@@ -25,7 +25,6 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.mock.MockTableDef.MockScanEntry;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -42,6 +41,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 @JsonTypeName("mock-sub-scan")
 public class MockSubScanPOP extends AbstractBase implements SubScan {
+
+  public static final String OPERATOR_TYPE = "MOCK_SUB_SCAN";
 
   private final String url;
   protected final List<MockScanEntry> readEntries;
@@ -116,7 +117,7 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.MOCK_SUB_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }
