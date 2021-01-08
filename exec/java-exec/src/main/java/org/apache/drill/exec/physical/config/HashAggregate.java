@@ -24,7 +24,6 @@ import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.planner.physical.AggPrelBase;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,7 +34,7 @@ import java.util.List;
 @JsonTypeName("hash-aggregate")
 public class HashAggregate extends AbstractSingle {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregate.class);
+  public static final String OPERATOR_TYPE = "HASH_AGGREGATE";
 
   private final AggPrelBase.OperatorPhase aggPhase;
   private final List<NamedExpression> groupByExprs;
@@ -83,8 +82,8 @@ public class HashAggregate extends AbstractSingle {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.HASH_AGGREGATE_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   /**

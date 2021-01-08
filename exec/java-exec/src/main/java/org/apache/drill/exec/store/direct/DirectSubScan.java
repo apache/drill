@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.RecordReader;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -32,7 +31,8 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.WRAPPER_OBJECT;
 @JsonTypeName("direct-sub-scan")
 public class DirectSubScan extends AbstractSubScan {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectSubScan.class);
+  public static final String OPERATOR_TYPE = "DIRECT_SUB_SCAN";
+
   @JsonTypeInfo(use=NAME, include=WRAPPER_OBJECT)
   private final RecordReader reader;
 
@@ -43,14 +43,13 @@ public class DirectSubScan extends AbstractSubScan {
   }
 
   @JsonProperty
-  //@JsonGetter("reader")
   public RecordReader getReader() {
     return reader;
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.DIRECT_SUB_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
 

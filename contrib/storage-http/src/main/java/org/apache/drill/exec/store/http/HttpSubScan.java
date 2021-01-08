@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.http;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,11 +33,11 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 @JsonTypeName("http-sub-scan")
 public class HttpSubScan extends AbstractBase implements SubScan {
+
+  public static final String OPERATOR_TYPE = "HTTP_SUB_SCAN";
 
   private final HttpScanSpec tableSpec;
   private final List<SchemaPath> columns;
@@ -90,13 +91,13 @@ public class HttpSubScan extends AbstractBase implements SubScan {
 
   @Override
   @JsonIgnore
-  public int getOperatorType() {
-    return CoreOperatorType.HTTP_SUB_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return ImmutableSet.<PhysicalOperator>of().iterator();
+    return Collections.emptyIterator();
   }
 
   @Override

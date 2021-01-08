@@ -26,12 +26,13 @@ import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared;
 
 import java.util.List;
 
 @JsonTypeName("window")
 public class WindowPOP extends AbstractSingle {
+
+  public static final String OPERATOR_TYPE = "WINDOW";
 
   private final List<NamedExpression> withins;
   private final List<NamedExpression> aggregations;
@@ -67,8 +68,8 @@ public class WindowPOP extends AbstractSingle {
   }
 
   @Override
-  public int getOperatorType() {
-    return UserBitShared.CoreOperatorType.WINDOW_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   public Bound getStart() {

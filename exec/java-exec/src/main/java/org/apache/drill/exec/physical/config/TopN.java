@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,7 +29,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("top-n")
 public class TopN extends Sort {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopN.class);
+
+  public static final String OPERATOR_TYPE = "TOP_N_SORT";
 
   private final int limit;
 
@@ -65,8 +65,8 @@ public class TopN extends Sort {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.TOP_N_SORT_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

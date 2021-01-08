@@ -20,7 +20,6 @@ package org.apache.drill.exec.ops;
 import java.util.Iterator;
 
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.MetricValue;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder;
@@ -32,19 +31,20 @@ import com.carrotsearch.hppc.cursors.IntDoubleCursor;
 import com.carrotsearch.hppc.cursors.IntLongCursor;
 import com.carrotsearch.hppc.procedures.IntDoubleProcedure;
 import com.carrotsearch.hppc.procedures.IntLongProcedure;
+import org.apache.drill.exec.server.rest.profile.CoreOperatorType;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 public class OperatorStats {
   protected final int operatorId;
-  protected final int operatorType;
+  protected final String operatorType;
   private final BufferAllocator allocator;
 
-  private IntLongHashMap longMetrics = new IntLongHashMap();
-  private IntDoubleHashMap doubleMetrics = new IntDoubleHashMap();
+  private final IntLongHashMap longMetrics = new IntLongHashMap();
+  private final IntDoubleHashMap doubleMetrics = new IntDoubleHashMap();
 
   public long[] recordsReceivedByInput;
   public long[] batchesReceivedByInput;
-  private long[] schemaCountByInput;
+  private final long[] schemaCountByInput;
 
 
   private boolean inProcessing = false;
@@ -59,7 +59,7 @@ public class OperatorStats {
   private long setupMark;
   private long waitMark;
 
-  private int inputCount;
+  private final int inputCount;
 
   public OperatorStats(OpProfileDef def, BufferAllocator allocator){
     this(def.getOperatorId(), def.getOperatorType(), def.getIncomingCount(), allocator);
@@ -88,7 +88,7 @@ public class OperatorStats {
   }
 
   @VisibleForTesting
-  public OperatorStats(int operatorId, int operatorType, int inputCount, BufferAllocator allocator) {
+  public OperatorStats(int operatorId, String operatorType, int inputCount, BufferAllocator allocator) {
     super();
     this.allocator = allocator;
     this.operatorId = operatorId;
@@ -191,23 +191,30 @@ public class OperatorStats {
   }
 
   public String getId() {
-    StringBuilder s = new StringBuilder();
-    return s.append(this.operatorId)
+    return new StringBuilder()
+        .append(this.operatorId)
         .append(":")
         .append("[")
-        .append(UserBitShared.CoreOperatorType.valueOf(operatorType))
+        .append(operatorType)
         .append("]")
         .toString();
   }
 
+  @SuppressWarnings("deprecation")
   public OperatorProfile getProfile() {
-    final OperatorProfile.Builder b = OperatorProfile //
-        .newBuilder() //
-        .setOperatorType(operatorType) //
-        .setOperatorId(operatorId) //
-        .setSetupNanos(setupNanos) //
+    final OperatorProfile.Builder b = OperatorProfile
+        .newBuilder()
+        .setOperatorTypeName(operatorType)
+        .setOperatorId(operatorId)
+        .setSetupNanos(setupNanos)
         .setProcessNanos(processingNanos)
         .setWaitNanos(waitNanos);
+
+    CoreOperatorType coreOperatorType = CoreOperatorType.forName(operatorType);
+
+    if (coreOperatorType != null) {
+      b.setOperatorType(coreOperatorType.getId());
+    }
 
     if (allocator != null) {
       b.setPeakLocalMemoryAllocated(allocator.getPeakMemoryAllocation());
@@ -229,7 +236,7 @@ public class OperatorStats {
     }
   }
 
-  private class LongProc implements IntLongProcedure {
+  private static class LongProc implements IntLongProcedure {
 
     private final OperatorProfile.Builder builder;
 
@@ -250,7 +257,7 @@ public class OperatorStats {
     }
   }
 
-  private class DoubleProc implements IntDoubleProcedure {
+  private static class DoubleProc implements IntDoubleProcedure {
     private final OperatorProfile.Builder builder;
 
     public DoubleProc(Builder builder) {

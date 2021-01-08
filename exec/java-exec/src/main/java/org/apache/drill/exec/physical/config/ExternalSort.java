@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,9 +29,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("external-sort")
 public class ExternalSort extends Sort {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSort.class);
 
   public static final long DEFAULT_SORT_ALLOCATION = 20_000_000;
+
+  public static final String OPERATOR_TYPE = "EXTERNAL_SORT";
 
   @JsonCreator
   public ExternalSort(@JsonProperty("child") PhysicalOperator child, @JsonProperty("orderings") List<Ordering> orderings, @JsonProperty("reverse") boolean reverse) {
@@ -48,8 +48,8 @@ public class ExternalSort extends Sort {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.EXTERNAL_SORT_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   /**

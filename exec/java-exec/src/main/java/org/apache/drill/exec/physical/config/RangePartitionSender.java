@@ -24,7 +24,6 @@ import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.planner.physical.PartitionFunction;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,13 +32,13 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("range-partition-sender")
 public class RangePartitionSender extends AbstractSender{
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RangePartitionSender.class);
-
   // The number of records in the outgoing batch. This is overriding the default value in Partitioner
   public static final int RANGE_PARTITION_OUTGOING_BATCH_SIZE = (1 << 12) - 1;
 
+  public static final String OPERATOR_TYPE = "RANGE_PARTITION_SENDER";
+
   @JsonProperty("partitionFunction")
-  private PartitionFunction partitionFunction;
+  private final PartitionFunction partitionFunction;
 
   @JsonCreator
   public RangePartitionSender(@JsonProperty("receiver-major-fragment") int oppositeMajorFragmentId,
@@ -66,8 +65,8 @@ public class RangePartitionSender extends AbstractSender{
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.RANGE_PARTITION_SENDER_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
 }

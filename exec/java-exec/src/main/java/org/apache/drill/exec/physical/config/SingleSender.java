@@ -25,7 +25,6 @@ import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -37,7 +36,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  */
 @JsonTypeName("single-sender")
 public class SingleSender extends AbstractSender {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleSender.class);
+
+  public static final String OPERATOR_TYPE = "SINGLE_SENDER";
 
   /**
    * Create a SingleSender which sends data to fragment identified by given MajorFragmentId and MinorFragmentId,
@@ -96,8 +96,8 @@ public class SingleSender extends AbstractSender {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.SINGLE_SENDER_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
 }

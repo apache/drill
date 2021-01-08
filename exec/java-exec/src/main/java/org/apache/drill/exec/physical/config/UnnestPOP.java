@@ -33,16 +33,15 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.apache.drill.exec.proto.UserBitShared.CoreOperatorType.UNNEST_VALUE;
-
 @JsonTypeName("unnest")
 public class UnnestPOP extends AbstractBase implements Leaf {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnnestPOP.class);
+
+  public static final String OPERATOR_TYPE = "UNNEST";
 
   @JsonProperty("implicitColumn")
-  private String implicitColumn;
+  private final String implicitColumn;
 
-  private SchemaPath column;
+  private final SchemaPath column;
 
   @JsonIgnore
   private UnnestRecordBatch unnestBatch;
@@ -91,7 +90,7 @@ public class UnnestPOP extends AbstractBase implements Leaf {
   public String getImplicitColumn() { return this.implicitColumn; }
 
   @Override
-  public int getOperatorType() {
-    return UNNEST_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

@@ -102,8 +102,8 @@ public class ScanTestUtils {
       Scan scanConfig = new AbstractSubScan("bob") {
 
         @Override
-        public int getOperatorType() {
-          return 0;
+        public String getOperatorType() {
+          return "";
         }
       };
       OperatorContext opContext = opFixture.newOperatorContext(scanConfig);

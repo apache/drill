@@ -17,6 +17,21 @@
  */
 package org.apache.drill.exec.ops;
 
+import org.apache.drill.exec.physical.config.BroadcastSender;
+import org.apache.drill.exec.physical.config.ExternalSort;
+import org.apache.drill.exec.physical.config.FlattenPOP;
+import org.apache.drill.exec.physical.config.HashAggregate;
+import org.apache.drill.exec.physical.config.HashJoinPOP;
+import org.apache.drill.exec.physical.config.HashPartitionSender;
+import org.apache.drill.exec.physical.config.LateralJoinPOP;
+import org.apache.drill.exec.physical.config.MergeJoinPOP;
+import org.apache.drill.exec.physical.config.MergingReceiverPOP;
+import org.apache.drill.exec.physical.config.RuntimeFilterPOP;
+import org.apache.drill.exec.physical.config.Screen;
+import org.apache.drill.exec.physical.config.SingleSender;
+import org.apache.drill.exec.physical.config.UnionAll;
+import org.apache.drill.exec.physical.config.UnnestPOP;
+import org.apache.drill.exec.physical.config.UnorderedReceiver;
 import org.apache.drill.exec.physical.impl.ScreenCreator;
 import org.apache.drill.exec.physical.impl.SingleSenderCreator;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggTemplate;
@@ -29,8 +44,8 @@ import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootEx
 import org.apache.drill.exec.physical.impl.unnest.UnnestRecordBatch;
 import org.apache.drill.exec.physical.impl.unorderedreceiver.UnorderedReceiverBatch;
 import org.apache.drill.exec.physical.impl.xsort.ExternalSortBatch;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.AbstractBinaryRecordBatch;
+import org.apache.drill.exec.store.parquet.ParquetRowGroupScan;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 
 import java.util.Arrays;
@@ -44,28 +59,28 @@ public class OperatorMetricRegistry {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorMetricRegistry.class);
 
   // Mapping: key : operator type, value : metric id --> metric name
-  private static final Map<Integer, String[]> OPERATOR_METRICS = new HashMap<>();
+  private static final Map<String, String[]> OPERATOR_METRICS = new HashMap<>();
 
   static {
-    register(CoreOperatorType.SCREEN_VALUE, ScreenCreator.ScreenRoot.Metric.class);
-    register(CoreOperatorType.SINGLE_SENDER_VALUE, SingleSenderCreator.SingleSenderRootExec.Metric.class);
-    register(CoreOperatorType.BROADCAST_SENDER_VALUE, BroadcastSenderRootExec.Metric.class);
-    register(CoreOperatorType.HASH_PARTITION_SENDER_VALUE, PartitionSenderRootExec.Metric.class);
-    register(CoreOperatorType.MERGING_RECEIVER_VALUE, MergingRecordBatch.Metric.class);
-    register(CoreOperatorType.UNORDERED_RECEIVER_VALUE, UnorderedReceiverBatch.Metric.class);
-    register(CoreOperatorType.HASH_AGGREGATE_VALUE, HashAggTemplate.Metric.class);
-    register(CoreOperatorType.HASH_JOIN_VALUE, HashJoinBatch.Metric.class);
-    register(CoreOperatorType.EXTERNAL_SORT_VALUE, ExternalSortBatch.Metric.class);
-    register(CoreOperatorType.PARQUET_ROW_GROUP_SCAN_VALUE, ParquetRecordReader.Metric.class);
-    register(CoreOperatorType.FLATTEN_VALUE, FlattenRecordBatch.Metric.class);
-    register(CoreOperatorType.MERGE_JOIN_VALUE, AbstractBinaryRecordBatch.Metric.class);
-    register(CoreOperatorType.LATERAL_JOIN_VALUE, AbstractBinaryRecordBatch.Metric.class);
-    register(CoreOperatorType.UNNEST_VALUE, UnnestRecordBatch.Metric.class);
-    register(CoreOperatorType.UNION_VALUE, AbstractBinaryRecordBatch.Metric.class);
-    register(CoreOperatorType.RUNTIME_FILTER_VALUE, RuntimeFilterRecordBatch.Metric.class);
+    register(Screen.OPERATOR_TYPE, ScreenCreator.ScreenRoot.Metric.class);
+    register(SingleSender.OPERATOR_TYPE, SingleSenderCreator.SingleSenderRootExec.Metric.class);
+    register(BroadcastSender.OPERATOR_TYPE, BroadcastSenderRootExec.Metric.class);
+    register(HashPartitionSender.OPERATOR_TYPE, PartitionSenderRootExec.Metric.class);
+    register(MergingReceiverPOP.OPERATOR_TYPE, MergingRecordBatch.Metric.class);
+    register(UnorderedReceiver.OPERATOR_TYPE, UnorderedReceiverBatch.Metric.class);
+    register(HashAggregate.OPERATOR_TYPE, HashAggTemplate.Metric.class);
+    register(HashJoinPOP.OPERATOR_TYPE, HashJoinBatch.Metric.class);
+    register(ExternalSort.OPERATOR_TYPE, ExternalSortBatch.Metric.class);
+    register(ParquetRowGroupScan.OPERATOR_TYPE, ParquetRecordReader.Metric.class);
+    register(FlattenPOP.OPERATOR_TYPE, FlattenRecordBatch.Metric.class);
+    register(MergeJoinPOP.OPERATOR_TYPE, AbstractBinaryRecordBatch.Metric.class);
+    register(LateralJoinPOP.OPERATOR_TYPE, AbstractBinaryRecordBatch.Metric.class);
+    register(UnnestPOP.OPERATOR_TYPE, UnnestRecordBatch.Metric.class);
+    register(UnionAll.OPERATOR_TYPE, AbstractBinaryRecordBatch.Metric.class);
+    register(RuntimeFilterPOP.OPERATOR_TYPE, RuntimeFilterRecordBatch.Metric.class);
   }
 
-  private static void register(final int operatorType, final Class<? extends MetricDef> metricDef) {
+  private static void register(String operatorType, Class<? extends MetricDef> metricDef) {
     // Currently registers a metric def that has enum constants
     MetricDef[] enumConstants = metricDef.getEnumConstants();
     if (enumConstants != null) {
@@ -82,7 +97,7 @@ public class OperatorMetricRegistry {
    * @param operatorType the operator type
    * @return metric names if operator was registered, null otherwise
    */
-  public static String[] getMetricNames(int operatorType) {
+  public static String[] getMetricNames(String operatorType) {
     return OPERATOR_METRICS.get(operatorType);
   }
 

@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,6 +29,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("unpivot-maps")
 public class UnpivotMaps extends AbstractSingle {
+
+  public static final String OPERATOR_TYPE = "UNPIVOT_MAPS";
+
   private final List<String> mapFieldNames;
 
   @JsonCreator
@@ -54,7 +56,7 @@ public class UnpivotMaps extends AbstractSingle {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.UNPIVOT_MAPS_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

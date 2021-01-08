@@ -110,5 +110,5 @@ public class EasySubScan extends AbstractSubScan {
   public int getMaxRecords() { return maxRecords; }
 
   @Override
-  public int getOperatorType() { return formatPlugin.getReaderOperatorType(); }
+  public String getOperatorType() { return formatPlugin.getReaderOperatorType(); }
 }

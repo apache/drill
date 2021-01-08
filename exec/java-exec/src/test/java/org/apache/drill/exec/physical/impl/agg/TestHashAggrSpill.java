@@ -28,6 +28,7 @@ import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggTemplate;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.UserBitShared;
@@ -107,7 +108,7 @@ public class TestHashAggrSpill extends DrillTest {
     }
 
     ProfileParser profile = client.parseProfile(summary.queryIdString());
-    List<ProfileParser.OperatorProfile> ops = profile.getOpsOfType(UserBitShared.CoreOperatorType.HASH_AGGREGATE_VALUE);
+    List<ProfileParser.OperatorProfile> ops = profile.getOpsOfType(HashAggregate.OPERATOR_TYPE);
 
     assertFalse(ops.isEmpty());
     // check for the first op only

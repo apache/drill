@@ -116,5 +116,5 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
   String getUserName();
 
   @JsonIgnore
-  int getOperatorType();
+  String getOperatorType();
 }

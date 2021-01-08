@@ -25,7 +25,6 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReade
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
@@ -61,19 +60,18 @@ public class SyslogFormatPlugin extends EasyFormatPlugin<SyslogFormatConfig> {
   }
 
   private static EasyFormatConfig easyConfig(Configuration fsConf, SyslogFormatConfig pluginConfig) {
-    EasyFormatConfig config = new EasyFormatConfig();
-    config.readable = true;
-    config.writable = false;
-    config.blockSplittable = false;
-    config.compressible = true;
-    config.supportsProjectPushdown = true;
-    config.extensions = pluginConfig.getExtensions();
-    config.fsConf = fsConf;
-    config.defaultName = DEFAULT_NAME;
-    config.readerOperatorType = CoreOperatorType.SYSLOG_SUB_SCAN_VALUE;
-    config.useEnhancedScan = true;
-    config.supportsLimitPushdown = true;
-    return config;
+    return EasyFormatConfig.builder()
+        .readable(true)
+        .writable(false)
+        .blockSplittable(false)
+        .compressible(true)
+        .supportsProjectPushdown(true)
+        .extensions(pluginConfig.getExtensions())
+        .fsConf(fsConf)
+        .defaultName(DEFAULT_NAME)
+        .useEnhancedScan(true)
+        .supportsLimitPushdown(true)
+        .build();
   }
 
   @Override

@@ -22,11 +22,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 @JsonTypeName("partition-limit")
 public class PartitionLimit extends Limit {
+
+  public static final String OPERATOR_TYPE = "PARTITION_LIMIT";
+
   private final String partitionColumn;
 
   @JsonCreator
@@ -56,8 +58,8 @@ public class PartitionLimit extends Limit {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.PARTITION_LIMIT_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

@@ -28,7 +28,6 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractDbSubScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
@@ -42,6 +41,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 @JsonTypeName("maprdb-sub-scan")
 
 public class MapRDBSubScan extends AbstractDbSubScan {
+
+  public static final String OPERATOR_TYPE = "MAPRDB_SUB_SCAN";
 
   private final MapRDBFormatPlugin formatPlugin;
   private final List<MapRDBSubScanSpec> regionScanSpecList;
@@ -143,8 +144,8 @@ public class MapRDBSubScan extends AbstractDbSubScan {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.MAPRDB_SUB_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @JsonIgnore

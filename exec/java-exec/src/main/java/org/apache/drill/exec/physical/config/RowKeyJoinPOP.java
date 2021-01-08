@@ -25,7 +25,6 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,7 +34,8 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 
 @JsonTypeName("rowkey-join")
 public class RowKeyJoinPOP extends AbstractBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RowKeyJoinPOP.class);
+
+  public static final String OPERATOR_TYPE = "ROWKEY_JOIN";
 
 
   private final PhysicalOperator left;
@@ -90,7 +90,7 @@ public class RowKeyJoinPOP extends AbstractBase {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.ROWKEY_JOIN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

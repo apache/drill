@@ -21,7 +21,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
@@ -54,14 +53,8 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
     return new LTSVRecordReader(context, fileWork.getPath(), dfs, columns);
   }
 
-
   @Override
-  public int getReaderOperatorType() {
-    return UserBitShared.CoreOperatorType.LTSV_SUB_SCAN_VALUE;
-  }
-
-  @Override
-  public int getWriterOperatorType() {
+  public String getWriterOperatorType() {
     throw new UnsupportedOperationException("Drill doesn't currently support writing to LTSV files.");
   }
 

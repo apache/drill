@@ -26,13 +26,13 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.physical.base.AbstractJoinPop;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import java.util.List;
 
 @JsonTypeName("merge-join")
-public class MergeJoinPOP extends AbstractJoinPop{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeJoinPOP.class);
+public class MergeJoinPOP extends AbstractJoinPop {
+
+  public static final String OPERATOR_TYPE = "MERGE_JOIN";
 
   @JsonCreator
   public MergeJoinPOP(
@@ -66,7 +66,7 @@ public class MergeJoinPOP extends AbstractJoinPop{
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.MERGE_JOIN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

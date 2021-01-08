@@ -18,9 +18,12 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -90,34 +93,253 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * vary across uses of the plugin.
    */
   public static class EasyFormatConfig {
-    public BasicFormatMatcher matcher;
-    public boolean readable = true;
-    public boolean writable;
-    public boolean blockSplittable;
-    public boolean compressible;
-    public Configuration fsConf;
-    public List<String> extensions;
-    public String defaultName;
+    private BasicFormatMatcher matcher;
+    private final boolean readable;
+    private final boolean writable;
+    private final boolean blockSplittable;
+    private final boolean compressible;
+    private final Configuration fsConf;
+    private final List<String> extensions;
+    private final String defaultName;
 
     // Config options that, prior to Drill 1.15, required the plugin to
     // override methods. Moving forward, plugins should be migrated to
     // use this simpler form. New plugins should use these options
     // instead of overriding methods.
 
-    public boolean supportsLimitPushdown;
-    public boolean supportsProjectPushdown;
-    public boolean supportsFileImplicitColumns = true;
-    public boolean supportsAutoPartitioning;
-    public boolean supportsStatistics;
-    public int readerOperatorType = -1;
-    public int writerOperatorType = -1;
+    private final boolean supportsLimitPushdown;
+    private final boolean supportsProjectPushdown;
+    private final boolean supportsFileImplicitColumns;
+    private final boolean supportsAutoPartitioning;
+    private final boolean supportsStatistics;
+    private final String readerOperatorType;
+    private final String writerOperatorType;
 
     /**
      *  Choose whether to use the "traditional" or "enhanced" reader
      *  structure. Can also be selected at runtime by overriding
-     *  {@link #useEnhancedScan(OptionManager)}.
+     *  {@link #useEnhancedScan()}.
      */
-    public boolean useEnhancedScan;
+    private final boolean useEnhancedScan;
+
+    public EasyFormatConfig(EasyFormatConfigBuilder builder) {
+      this.matcher = builder.matcher;
+      this.readable = builder.readable;
+      this.writable = builder.writable;
+      this.blockSplittable = builder.blockSplittable;
+      this.compressible = builder.compressible;
+      this.fsConf = builder.fsConf;
+      this.extensions = builder.extensions;
+      this.defaultName = builder.defaultName;
+      this.supportsLimitPushdown = builder.supportsLimitPushdown;
+      this.supportsProjectPushdown = builder.supportsProjectPushdown;
+      this.supportsFileImplicitColumns = builder.supportsFileImplicitColumns;
+      this.supportsAutoPartitioning = builder.supportsAutoPartitioning;
+      this.supportsStatistics = builder.supportsStatistics;
+      this.readerOperatorType = builder.readerOperatorType;
+      this.writerOperatorType = builder.writerOperatorType;
+      this.useEnhancedScan = builder.useEnhancedScan;
+    }
+
+    public BasicFormatMatcher getMatcher() {
+      return matcher;
+    }
+
+    public boolean isReadable() {
+      return readable;
+    }
+
+    public boolean isWritable() {
+      return writable;
+    }
+
+    public boolean isBlockSplittable() {
+      return blockSplittable;
+    }
+
+    public boolean isCompressible() {
+      return compressible;
+    }
+
+    public Configuration getFsConf() {
+      return fsConf;
+    }
+
+    public List<String> getExtensions() {
+      return extensions;
+    }
+
+    public String getDefaultName() {
+      return defaultName;
+    }
+
+    public boolean supportsLimitPushdown() {
+      return supportsLimitPushdown;
+    }
+
+    public boolean supportsProjectPushdown() {
+      return supportsProjectPushdown;
+    }
+
+    public boolean supportsFileImplicitColumns() {
+      return supportsFileImplicitColumns;
+    }
+
+    public boolean supportsAutoPartitioning() {
+      return supportsAutoPartitioning;
+    }
+
+    public boolean supportsStatistics() {
+      return supportsStatistics;
+    }
+
+    public String getReaderOperatorType() {
+      return readerOperatorType;
+    }
+
+    public String getWriterOperatorType() {
+      return writerOperatorType;
+    }
+
+    public boolean useEnhancedScan() {
+      return useEnhancedScan;
+    }
+
+    public static EasyFormatConfigBuilder builder() {
+      return new EasyFormatConfigBuilder();
+    }
+
+    public EasyFormatConfigBuilder toBuilder() {
+      return builder()
+          .matcher(matcher)
+          .readable(readable)
+          .writable(writable)
+          .blockSplittable(blockSplittable)
+          .compressible(compressible)
+          .fsConf(fsConf)
+          .extensions(extensions)
+          .defaultName(defaultName)
+          .supportsLimitPushdown(supportsLimitPushdown)
+          .supportsProjectPushdown(supportsProjectPushdown)
+          .supportsFileImplicitColumns(supportsFileImplicitColumns)
+          .supportsAutoPartitioning(supportsAutoPartitioning)
+          .supportsStatistics(supportsStatistics)
+          .readerOperatorType(readerOperatorType)
+          .writerOperatorType(writerOperatorType)
+          .useEnhancedScan(useEnhancedScan);
+    }
+  }
+
+  public static class EasyFormatConfigBuilder {
+    private BasicFormatMatcher matcher;
+    private boolean readable = true;
+    private boolean writable;
+    private boolean blockSplittable;
+    private boolean compressible;
+    private Configuration fsConf;
+    private List<String> extensions;
+    private String defaultName;
+    private boolean supportsLimitPushdown;
+    private boolean supportsProjectPushdown;
+    private boolean supportsFileImplicitColumns = true;
+    private boolean supportsAutoPartitioning;
+    private boolean supportsStatistics;
+    private String readerOperatorType;
+    private String writerOperatorType = "";
+    private boolean useEnhancedScan;
+
+    public EasyFormatConfigBuilder matcher(BasicFormatMatcher matcher) {
+      this.matcher = matcher;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder readable(boolean readable) {
+      this.readable = readable;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder writable(boolean writable) {
+      this.writable = writable;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder blockSplittable(boolean blockSplittable) {
+      this.blockSplittable = blockSplittable;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder compressible(boolean compressible) {
+      this.compressible = compressible;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder fsConf(Configuration fsConf) {
+      this.fsConf = fsConf;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder extensions(List<String> extensions) {
+      this.extensions = extensions;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder extensions(String... extensions) {
+      this.extensions = Arrays.asList(extensions);
+      return this;
+    }
+
+    public EasyFormatConfigBuilder defaultName(String defaultName) {
+      this.defaultName = defaultName;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder supportsLimitPushdown(boolean supportsLimitPushdown) {
+      this.supportsLimitPushdown = supportsLimitPushdown;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder supportsProjectPushdown(boolean supportsProjectPushdown) {
+      this.supportsProjectPushdown = supportsProjectPushdown;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder supportsFileImplicitColumns(boolean supportsFileImplicitColumns) {
+      this.supportsFileImplicitColumns = supportsFileImplicitColumns;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder supportsAutoPartitioning(boolean supportsAutoPartitioning) {
+      this.supportsAutoPartitioning = supportsAutoPartitioning;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder supportsStatistics(boolean supportsStatistics) {
+      this.supportsStatistics = supportsStatistics;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder readerOperatorType(String readerOperatorType) {
+      this.readerOperatorType = readerOperatorType;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder writerOperatorType(String writerOperatorType) {
+      this.writerOperatorType = writerOperatorType;
+      return this;
+    }
+
+    public EasyFormatConfigBuilder useEnhancedScan(boolean useEnhancedScan) {
+      this.useEnhancedScan = useEnhancedScan;
+      return this;
+    }
+
+    public EasyFormatConfig build() {
+      Objects.requireNonNull(defaultName, "defaultName is not set");
+      readerOperatorType = readerOperatorType == null
+          ? defaultName.toUpperCase(Locale.ROOT) + "_SUB_SCAN"
+          : readerOperatorType;
+      return new EasyFormatConfig(this);
+    }
   }
 
   /**
@@ -163,14 +385,16 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       boolean blockSplittable,
       boolean compressible, List<String> extensions, String defaultName) {
     this.name = name == null ? defaultName : name;
-    easyConfig = new EasyFormatConfig();
-    easyConfig.matcher = new BasicFormatMatcher(this, fsConf, extensions, compressible);
-    easyConfig.readable = readable;
-    easyConfig.writable = writable;
+    easyConfig = EasyFormatConfig.builder()
+        .matcher(new BasicFormatMatcher(this, fsConf, extensions, compressible))
+        .readable(readable)
+        .writable(writable)
+        .blockSplittable(blockSplittable)
+        .compressible(compressible)
+        .fsConf(fsConf)
+        .defaultName(defaultName)
+        .build();
     this.context = context;
-    easyConfig.blockSplittable = blockSplittable;
-    easyConfig.compressible = compressible;
-    easyConfig.fsConf = fsConf;
     this.storageConfig = storageConfig;
     this.formatConfig = formatConfig;
   }
@@ -203,7 +427,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   @Override
-  public Configuration getFsConf() { return easyConfig.fsConf; }
+  public Configuration getFsConf() { return easyConfig.getFsConf(); }
 
   @Override
   public DrillbitContext getContext() { return context; }
@@ -220,7 +444,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * that are identified at the first row.  CSV for example.  If the user only wants 100 rows, it
    * does not make sense to read the entire file.
    */
-  public boolean supportsLimitPushdown() { return easyConfig.supportsLimitPushdown; }
+  public boolean supportsLimitPushdown() { return easyConfig.supportsLimitPushdown(); }
 
   /**
    * Does this plugin support projection push down? That is, can the reader
@@ -230,7 +454,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * @return {@code true} if the plugin supports projection push-down,
    * {@code false} if Drill should do the task by adding a project operator
    */
-  public boolean supportsPushDown() { return easyConfig.supportsProjectPushdown; }
+  public boolean supportsPushDown() { return easyConfig.supportsProjectPushdown(); }
 
   /**
    * Whether this format plugin supports implicit file columns.
@@ -239,7 +463,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * {@code false} otherwise
    */
   public boolean supportsFileImplicitColumns() {
-    return easyConfig.supportsFileImplicitColumns;
+    return easyConfig.supportsFileImplicitColumns();
   }
 
   /**
@@ -249,7 +473,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    *
    * @return {@code true} if splitable.
    */
-  public boolean isBlockSplittable() { return easyConfig.blockSplittable; }
+  public boolean isBlockSplittable() { return easyConfig.isBlockSplittable(); }
 
   /**
    * Indicates whether or not this format could also be in a compression
@@ -259,7 +483,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    *
    * @return {@code true} if it is compressible
    */
-  public boolean isCompressible() { return easyConfig.compressible; }
+  public boolean isCompressible() { return easyConfig.isCompressible(); }
 
   /**
    * Return a record reader for the specific file format, when using the original
@@ -279,7 +503,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
   protected CloseableRecordBatch getReaderBatch(FragmentContext context,
       EasySubScan scan) throws ExecutionSetupException {
-    if (useEnhancedScan(context.getOptions())) {
+    if (useEnhancedScan()) {
       return buildScan(context, scan);
     } else {
       return buildScanBatch(context, scan);
@@ -295,8 +519,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * @return true to use the enhanced scan framework, false for the
    * traditional scan-batch framework
    */
-  protected boolean useEnhancedScan(OptionManager options) {
-    return easyConfig.useEnhancedScan;
+  protected boolean useEnhancedScan() {
+    return easyConfig.useEnhancedScan();
   }
 
   /**
@@ -409,7 +633,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     // Additional error context to identify this plugin
     builder.errorContext(
         currentBuilder -> currentBuilder
-            .addContext("Format plugin", easyConfig.defaultName)
+            .addContext("Format plugin", easyConfig.getDefaultName())
             .addContext("Format plugin", EasyFormatPlugin.this.getClass().getSimpleName())
             .addContext("Plugin config name", getName()));
   }
@@ -498,27 +722,30 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   public StoragePluginConfig getStorageConfig() { return storageConfig; }
 
   @Override
-  public boolean supportsRead() { return easyConfig.readable; }
+  public boolean supportsRead() { return easyConfig.isReadable(); }
 
   @Override
-  public boolean supportsWrite() { return easyConfig.writable; }
+  public boolean supportsWrite() { return easyConfig.isWritable(); }
 
   @Override
-  public boolean supportsAutoPartitioning() { return easyConfig.supportsAutoPartitioning; }
+  public boolean supportsAutoPartitioning() { return easyConfig.supportsAutoPartitioning(); }
 
   @Override
-  public FormatMatcher getMatcher() { return easyConfig.matcher; }
+  public FormatMatcher getMatcher() { return easyConfig.getMatcher(); }
 
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
     return ImmutableSet.of();
   }
 
-  public int getReaderOperatorType() { return easyConfig.readerOperatorType; }
-  public int getWriterOperatorType() { return easyConfig.writerOperatorType; }
+  public String getReaderOperatorType() {
+    return easyConfig.getReaderOperatorType();
+  }
+
+  public String getWriterOperatorType() { return easyConfig.getWriterOperatorType(); }
 
   @Override
-  public boolean supportsStatistics() { return easyConfig.supportsStatistics; }
+  public boolean supportsStatistics() { return easyConfig.supportsStatistics(); }
 
   @Override
   public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {

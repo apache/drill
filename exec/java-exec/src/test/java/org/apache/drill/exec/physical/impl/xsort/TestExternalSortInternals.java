@@ -25,6 +25,7 @@ import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.impl.xsort.SortMemoryManager.MergeAction;
 import org.apache.drill.exec.physical.impl.xsort.SortMemoryManager.MergeTask;
 import org.apache.drill.test.BaseDirTestWatcher;
@@ -655,7 +656,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
 
   @Test
   public void testMetrics() {
-    OperatorStats stats = new OperatorStats(100, 101, 0, fixture.allocator());
+    OperatorStats stats = new OperatorStats(100, ExternalSort.OPERATOR_TYPE, 0, fixture.allocator());
     SortMetrics metrics = new SortMetrics(stats);
 
     // Input stats

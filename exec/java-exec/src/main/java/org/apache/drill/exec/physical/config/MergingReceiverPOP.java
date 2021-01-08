@@ -23,7 +23,6 @@ import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.AbstractReceiver;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,8 +33,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 // is guaranteed to be in order, so the operator simply merges the incoming
 // batches.  This is accomplished by building and depleting a priority queue.
 @JsonTypeName("merging-receiver")
-public class MergingReceiverPOP extends AbstractReceiver{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergingReceiverPOP.class);
+public class MergingReceiverPOP extends AbstractReceiver {
+
+  public static final String OPERATOR_TYPE = "MERGING_RECEIVER";
 
   private final List<Ordering> orderings;
 
@@ -63,7 +63,7 @@ public class MergingReceiverPOP extends AbstractReceiver{
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.MERGING_RECEIVER_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

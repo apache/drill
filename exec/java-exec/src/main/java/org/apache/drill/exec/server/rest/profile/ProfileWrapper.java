@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
@@ -68,7 +67,7 @@ public class ProfileWrapper {
   private Map<String, String> physicalOperatorMap;
   private final String noProgressWarningThreshold;
   private final int defaultAutoLimit;
-  private boolean showEstimatedRows;
+  private final boolean showEstimatedRows;
   private final String csrfToken;
 
   public ProfileWrapper(final QueryProfile profile, DrillConfig drillConfig, HttpServletRequest request) {
@@ -322,16 +321,6 @@ public class ProfileWrapper {
       ow.addSummary(tb, this.majorFragmentTallyMap, this.majorFragmentTallyTotal);
     }
     return tb.build();
-  }
-
-  public String getOperatorsJSON() {
-    final StringBuilder sb = new StringBuilder("{");
-    String sep = "";
-    for (final CoreOperatorType op : CoreOperatorType.values()) {
-      sb.append(String.format("%s\"%d\" : \"%s\"", sep, op.ordinal(), op));
-      sep = ", ";
-    }
-    return sb.append("}").toString();
   }
 
   public Map<String, String> getOptions() {

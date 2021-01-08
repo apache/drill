@@ -26,7 +26,6 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchem
 
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
@@ -34,13 +33,7 @@ import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.store.esri.ShpBatchReader.ShpReaderConfig;
 import org.apache.hadoop.conf.Configuration;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
-
-  private static final Logger logger = LoggerFactory.getLogger(ShpFormatPlugin.class);
 
   public static final String PLUGIN_NAME = "shp";
 
@@ -79,18 +72,17 @@ public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
   }
 
   private static EasyFormatConfig easyConfig(Configuration fsConf, ShpFormatConfig pluginConfig) {
-    EasyFormatConfig config = new EasyFormatConfig();
-    config.readable = true;
-    config.writable = false;
-    config.blockSplittable = false;
-    config.compressible = false;
-    config.supportsProjectPushdown = true;
-    config.extensions = Lists.newArrayList(pluginConfig.getExtensions());
-    config.fsConf = fsConf;
-    config.defaultName = PLUGIN_NAME;
-    config.readerOperatorType = CoreOperatorType.SHP_SUB_SCAN_VALUE;
-    config.useEnhancedScan = true;
-    config.supportsLimitPushdown = true;
-    return config;
+    return EasyFormatConfig.builder()
+        .readable(true)
+        .writable(false)
+        .blockSplittable(false)
+        .compressible(false)
+        .supportsProjectPushdown(true)
+        .extensions(pluginConfig.getExtensions())
+        .fsConf(fsConf)
+        .defaultName(PLUGIN_NAME)
+        .useEnhancedScan(true)
+        .supportsLimitPushdown(true)
+        .build();
   }
 }

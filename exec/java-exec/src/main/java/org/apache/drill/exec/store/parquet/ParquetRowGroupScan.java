@@ -26,7 +26,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -43,6 +42,8 @@ import org.apache.hadoop.fs.Path;
 // Class containing information for reading a single parquet row group from HDFS
 @JsonTypeName("parquet-row-group-scan")
 public class ParquetRowGroupScan extends AbstractParquetRowGroupScan {
+
+  public static final String OPERATOR_TYPE = "PARQUET_ROW_GROUP_SCAN";
 
   private final ParquetFormatPlugin formatPlugin;
   private final ParquetFormatConfig formatConfig;
@@ -103,8 +104,8 @@ public class ParquetRowGroupScan extends AbstractParquetRowGroupScan {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.PARQUET_ROW_GROUP_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

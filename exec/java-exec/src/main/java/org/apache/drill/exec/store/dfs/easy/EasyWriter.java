@@ -31,12 +31,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @JsonTypeName("fs-writer")
 public class EasyWriter extends AbstractWriter {
-  static final Logger logger = LoggerFactory.getLogger(EasyWriter.class);
 
   private final String location;
   private final List<String> partitionColumns;
@@ -98,7 +95,7 @@ public class EasyWriter extends AbstractWriter {
   }
 
   @Override
-  public int getOperatorType() {
+  public String getOperatorType() {
     return formatPlugin.getWriterOperatorType();
   }
 

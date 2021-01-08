@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.config;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -29,6 +28,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("limit")
 public class Limit extends AbstractSingle {
+
+  public static final String OPERATOR_TYPE = "LIMIT";
+
   private final Integer first;
   private final Integer last;
 
@@ -63,7 +65,7 @@ public class Limit extends AbstractSingle {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.LIMIT_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

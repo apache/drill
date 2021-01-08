@@ -26,7 +26,6 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.planner.common.JoinControl;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.calcite.rel.core.JoinRelType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -41,7 +40,8 @@ import org.apache.drill.exec.work.filter.RuntimeFilterDef;
 @JsonTypeName("hash-join")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class HashJoinPOP extends AbstractJoinPop {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashJoinPOP.class);
+
+  public static final String OPERATOR_TYPE = "HASH_JOIN";
 
   private RuntimeFilterDef runtimeFilterDef;
 
@@ -134,9 +134,9 @@ public class HashJoinPOP extends AbstractJoinPop {
   }
 
   @Override
-  public int getOperatorType() {
-        return CoreOperatorType.HASH_JOIN_VALUE;
-    }
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
+  }
 
   /**
    *

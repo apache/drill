@@ -23,7 +23,6 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -32,6 +31,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class KuduWriter extends AbstractWriter {
+
+  public static final String OPERATOR_TYPE = "KUDU_WRITER";
 
   private final KuduStoragePlugin plugin;
   private final String name;
@@ -55,8 +56,8 @@ public class KuduWriter extends AbstractWriter {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.KUDU_WRITER_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

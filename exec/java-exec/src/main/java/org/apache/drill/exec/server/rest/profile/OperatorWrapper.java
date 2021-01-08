@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +32,9 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.OperatorMetricRegistry;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
+import org.apache.drill.exec.physical.config.ExternalSort;
+import org.apache.drill.exec.physical.config.HashAggregate;
+import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.proto.UserBitShared.MetricValue;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
@@ -51,7 +54,7 @@ public class OperatorWrapper {
   private final int major;
   private final List<ImmutablePair<ImmutablePair<OperatorProfile, Integer>, String>> opsAndHosts; // [(operatorProfile --> minorFragment number,host), ...]
   private final OperatorProfile firstProfile;
-  private final CoreOperatorType operatorType;
+  private final String operatorType;
   private final String operatorName;
   private final int size;
   private final int timeSkewMin;
@@ -70,12 +73,19 @@ public class OperatorWrapper {
     Preconditions.checkArgument(opsAndHostsList.size() > 0);
     this.major = major;
     firstProfile = opsAndHostsList.get(0).getLeft().getLeft();
-    operatorType = CoreOperatorType.valueOf(firstProfile.getOperatorType());
+    if (firstProfile.hasOperatorTypeName()) {
+      operatorType = firstProfile.getOperatorTypeName();
+    } else {
+      CoreOperatorType operatorType = CoreOperatorType.valueOf(firstProfile.getOperatorType());
+      this.operatorType = operatorType != null
+          ? Objects.requireNonNull(operatorType).name()
+          : null;
+    }
     //Update Name from Physical Map
     String path = new OperatorPathBuilder().setMajor(major).setOperator(firstProfile).build();
     //Use Plan Extracted Operator Names if available
     String extractedOpName = phyOperMap.get(path);
-    String inferredOpName = operatorType == null ? UNKNOWN_OPERATOR : operatorType.toString();
+    String inferredOpName = operatorType == null ? UNKNOWN_OPERATOR : operatorType;
     //Revert to inferred names for exceptional cases
     // 1. Extracted 'FLATTEN' operator is NULL
     // 2. Extracted 'SCAN' could be a PARQUET_ROW_GROUP_SCAN, or KAFKA_SUB_SCAN, or etc.
@@ -225,7 +235,7 @@ public class OperatorWrapper {
     tb.appendNanos(avgProcTime);
     long maxProcTime = longProcess.getLeft().getProcessNanos();
     //Calculating skew of longest processing fragment w.r.t. average
-    double maxSkew = (avgProcTime > 0) ? maxProcTime/Double.valueOf(avgProcTime) : 0.0d;
+    double maxSkew = (avgProcTime > 0) ? maxProcTime/ (double) avgProcTime : 0.0d;
     //Marking skew if both thresholds are crossed
     if (avgProcTime > TimeUnit.SECONDS.toNanos(timeSkewMin) && maxSkew > timeSkewRatio ) {
       timeSkewMap = new HashMap<>();
@@ -256,7 +266,7 @@ public class OperatorWrapper {
     //Skewed Wait Warning
     timeSkewMap = null; //Resetting
     //Calculating skew of longest waiting fragment w.r.t. average
-    maxSkew = (avgWaitTime > 0) ? maxWaitTime/Double.valueOf(avgWaitTime) : 0.0d;
+    maxSkew = (avgWaitTime > 0) ? maxWaitTime/ (double) avgWaitTime : 0.0d;
     //Marking skew if both thresholds are crossed
     if (avgWaitTime > TimeUnit.SECONDS.toNanos(timeSkewMin) && maxSkew > waitSkewRatio) {
       timeSkewMap = new HashMap<>();
@@ -303,7 +313,7 @@ public class OperatorWrapper {
    * @param operatorType
    * @return index of spill metric
    */
-  private int getSpillCycleMetricIndex(CoreOperatorType operatorType) {
+  private int getSpillCycleMetricIndex(String operatorType) {
     // TODO: DRILL-6642, replace null values for ProtocolMessageEnum with UNRECOGNIZED NullValue to avoid null checks
     if (operatorType == null) {
       return NO_SPILL_METRIC_INDEX;
@@ -311,11 +321,11 @@ public class OperatorWrapper {
     String metricName;
 
     switch (operatorType) {
-    case EXTERNAL_SORT:
+    case ExternalSort.OPERATOR_TYPE:
       metricName = "SPILL_COUNT";
       break;
-    case HASH_AGGREGATE:
-    case HASH_JOIN:
+    case HashAggregate.OPERATOR_TYPE:
+    case HashJoinPOP.OPERATOR_TYPE:
       metricName = "SPILL_CYCLE";
       break;
     default:
@@ -323,7 +333,7 @@ public class OperatorWrapper {
     }
 
     int metricIndex = 0; //Default
-    String[] metricNames = OperatorMetricRegistry.getMetricNames(operatorType.getNumber());
+    String[] metricNames = OperatorMetricRegistry.getMetricNames(operatorType);
     for (String name : metricNames) {
       if (name.equalsIgnoreCase(metricName)) {
         return metricIndex;
@@ -338,7 +348,7 @@ public class OperatorWrapper {
     if (operatorType == null) {
       return "";
     }
-    final String[] metricNames = OperatorMetricRegistry.getMetricNames(operatorType.getNumber());
+    final String[] metricNames = OperatorMetricRegistry.getMetricNames(operatorType);
     if (metricNames == null) {
       return "";
     }
