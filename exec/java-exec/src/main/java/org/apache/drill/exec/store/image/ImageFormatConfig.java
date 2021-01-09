@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.store.image;
 
 import java.util.List;
@@ -23,25 +22,22 @@ import java.util.Objects;
 
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
-@JsonTypeName("image") @JsonInclude(Include.NON_DEFAULT)
+@JsonTypeName(ImageFormatConfig.NAME)
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ImageFormatConfig implements FormatPluginConfig {
 
+  public static final String NAME = "image";
   private final List<String> extensions;
   private final boolean fileSystemMetadata;
   private final boolean descriptive;
   private final String timeZone;
-
-  public ImageFormatConfig() {
-    this(null, null, null, null);
-  }
 
   @JsonCreator
   public ImageFormatConfig(
@@ -49,25 +45,28 @@ public class ImageFormatConfig implements FormatPluginConfig {
       @JsonProperty("fileSystemMetadata") Boolean fileSystemMetadata,
       @JsonProperty("descriptive") Boolean descriptive,
       @JsonProperty("timeZone") String timeZone) {
-    this.extensions = extensions == null ?
-        ImmutableList.of() : ImmutableList.copyOf(extensions);
+    this.extensions = extensions == null ? ImmutableList.of(ImageFormatConfig.NAME) : ImmutableList.copyOf(extensions);
     this.fileSystemMetadata = fileSystemMetadata == null ? true : fileSystemMetadata;
     this.descriptive = descriptive == null ? true : descriptive;
     this.timeZone = timeZone;
   }
 
+  @JsonProperty("extensions")
   public List<String> getExtensions() {
     return extensions;
   }
 
+  @JsonProperty("fileSystemMetadata")
   public boolean hasFileSystemMetadata() {
     return fileSystemMetadata;
   }
 
+  @JsonProperty("descriptive")
   public boolean isDescriptive() {
     return descriptive;
   }
 
+  @JsonProperty("timeZone")
   public String getTimeZone() {
     return timeZone;
   }

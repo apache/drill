@@ -15,84 +15,79 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.store.image;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-
-import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.planner.common.DrillStatsTable;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.RecordWriter;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
-import org.apache.drill.exec.store.dfs.easy.EasyWriter;
-import org.apache.drill.exec.store.dfs.easy.FileWork;
+import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 public class ImageFormatPlugin extends EasyFormatPlugin<ImageFormatConfig> {
 
-  private final static String DEFAULT_NAME = "image";
-
-  public ImageFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
-                           StoragePluginConfig storageConfig) {
-    super(name, context, fsConf, storageConfig, new ImageFormatConfig(), true, false, false, false,
-        Collections.<String>emptyList(), DEFAULT_NAME);
+  public ImageFormatPlugin(String name,
+                           DrillbitContext context,
+                           Configuration fsConf,
+                           StoragePluginConfig storageConfig,
+                           ImageFormatConfig formatConfig) {
+    super(name, easyConfig(fsConf, formatConfig), context, storageConfig, formatConfig);
   }
 
-  public ImageFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
-                           StoragePluginConfig storageConfig, ImageFormatConfig formatConfig) {
-    super(name, context, fsConf, storageConfig, formatConfig, true, false, false, false,
-        formatConfig.getExtensions(), DEFAULT_NAME);
+  private static EasyFormatConfig easyConfig(Configuration fsConf, ImageFormatConfig pluginConfig) {
+    EasyFormatConfig config = new EasyFormatConfig();
+    config.readable = true;
+    config.writable = false;
+    config.blockSplittable = false;
+    config.compressible = true;
+    config.extensions = pluginConfig.getExtensions();
+    config.fsConf = fsConf;
+    config.readerOperatorType = CoreOperatorType.IMAGE_SUB_SCAN_VALUE;
+    config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
+    config.supportsProjectPushdown = true;
+    config.defaultName = ImageFormatConfig.NAME;
+    return config;
   }
 
-  @Override
-  public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
-      List<SchemaPath> columns, String userName) {
-    return new ImageRecordReader(context, dfs, fileWork.getPath(), formatConfig.hasFileSystemMetadata(),
-        formatConfig.isDescriptive(), formatConfig.getTimeZone());
-  }
+  private static class ImageReaderFactory extends FileReaderFactory {
 
-  @Override
-  public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
-    throw new UnsupportedOperationException("Drill doesn't currently support writing to image files.");
-  }
+    private final ImageFormatConfig config;
+    private final EasySubScan scan;
 
-  @Override
-  public int getReaderOperatorType() {
-    return CoreOperatorType.IMAGE_SUB_SCAN_VALUE;
-  }
+    public ImageReaderFactory(ImageFormatConfig config, EasySubScan scan) {
+      this.config = config;
+      this.scan = scan;
+    }
 
-  @Override
-  public int getWriterOperatorType() {
-    throw new UnsupportedOperationException("Drill doesn't currently support writing to image files.");
-  }
-
-  @Override
-  public boolean supportsPushDown() {
-    return true;
-  }
-
-  @Override
-  public boolean supportsStatistics() {
-    return false;
+    @Override
+    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
+      return new ImageBatchReader(config, scan);
+    }
   }
 
   @Override
-  public DrillStatsTable.TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
-    return null;
+  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options)
+      throws ExecutionSetupException {
+    return new ImageBatchReader(formatConfig, scan);
   }
 
   @Override
-  public void writeStatistics(DrillStatsTable.TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
+  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan)
+      throws ExecutionSetupException {
+    FileScanBuilder builder = new FileScanBuilder();
+    builder.setReaderFactory(new ImageReaderFactory(formatConfig, scan));
 
+    initScanBuilder(builder, scan);
+    builder.nullType(Types.optional(MinorType.VARCHAR));
+    return builder;
   }
 }
