@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.base.AbstractReceiver;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,6 +29,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("unordered-receiver")
 public class UnorderedReceiver extends AbstractReceiver{
+
+  public static final String OPERATOR_TYPE = "UNORDERED_RECEIVER";
 
   @JsonCreator
   public UnorderedReceiver(@JsonProperty("sender-major-fragment") int oppositeMajorFragmentId,
@@ -49,7 +50,7 @@ public class UnorderedReceiver extends AbstractReceiver{
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.UNORDERED_RECEIVER_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

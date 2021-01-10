@@ -25,7 +25,6 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReade
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
@@ -33,6 +32,8 @@ import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.hadoop.conf.Configuration;
 
 public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileFormatConfig> {
+
+  public static final String OPERATOR_TYPE = "SEQUENCE_SUB_SCAN";
 
   public SequenceFileFormatPlugin(String name,
                                   DrillbitContext context,
@@ -43,19 +44,19 @@ public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileForma
   }
 
   private static EasyFormatConfig easyConfig(Configuration fsConf, SequenceFileFormatConfig pluginConfig) {
-    EasyFormatConfig config = new EasyFormatConfig();
-    config.readable = true;
-    config.writable = false;
-    config.blockSplittable = true;
-    config.compressible = true;
-    config.extensions = pluginConfig.getExtensions();
-    config.fsConf = fsConf;
-    config.readerOperatorType = CoreOperatorType.SEQUENCE_SUB_SCAN_VALUE;
-    config.useEnhancedScan = true;
-    config.supportsLimitPushdown = true;
-    config.supportsProjectPushdown = true;
-    config.defaultName = SequenceFileFormatConfig.NAME;
-    return config;
+    return EasyFormatConfig.builder()
+        .readable(true)
+        .writable(false)
+        .blockSplittable(true)
+        .compressible(true)
+        .extensions(pluginConfig.getExtensions())
+        .fsConf(fsConf)
+        .readerOperatorType(OPERATOR_TYPE)
+        .useEnhancedScan(true)
+        .supportsLimitPushdown(true)
+        .supportsProjectPushdown(true)
+        .defaultName(SequenceFileFormatConfig.NAME)
+        .build();
   }
 
   private static class SequenceFileReaderFactory extends FileReaderFactory {

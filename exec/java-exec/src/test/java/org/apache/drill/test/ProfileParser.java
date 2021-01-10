@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,8 +37,7 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
 
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
-
+import org.apache.drill.exec.server.rest.profile.CoreOperatorType;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -396,8 +396,7 @@ public class ProfileParser {
           logger.info("Can't find operator def: {}-{}", major.id, op.opId);
           continue;
         }
-        op.opName = CoreOperatorType.forNumber(op.type).name();
-        op.opName = op.opName.replace("_", " ");
+        op.opName = op.type.replace("_", " ");
         op.name = opDef.name;
         if (op.name.equalsIgnoreCase(op.opName)) {
           op.opName = null;
@@ -422,7 +421,7 @@ public class ProfileParser {
     public int majorFragId;
     public int minorFragId;
     public int opId;
-    public int type;
+    public String type;
     public String name;
     public long processMs;
     public long waitMs;
@@ -437,7 +436,10 @@ public class ProfileParser {
       majorFragId = majorId;
       minorFragId = minorId;
       opId = opProfile.getInt("operatorId");
-      type = opProfile.getInt("operatorType");
+      JsonValue.ValueType valueType = opProfile.get("operatorType").getValueType();
+      type = valueType == JsonValue.ValueType.STRING
+          ? opProfile.getString("operatorType")
+          : Objects.requireNonNull(CoreOperatorType.valueOf(opProfile.getInt("operatorType"))).name();
       processMs = opProfile.getJsonNumber("processNanos").longValue() / 1_000_000;
       waitMs = opProfile.getJsonNumber("waitNanos").longValue() / 1_000_000;
       setupMs = opProfile.getJsonNumber("setupNanos").longValue() / 1_000_000;
@@ -469,7 +471,7 @@ public class ProfileParser {
 
     @Override
     public String toString() {
-      return String.format("[OperatorProfile %02d-%02d-%02d, type: %d, name: %s]",
+      return String.format("[OperatorProfile %02d-%02d-%02d, type: %s, name: %s]",
           majorFragId, opId, minorFragId, type,
           (name == null) ? "null" : name);
     }
@@ -489,7 +491,7 @@ public class ProfileParser {
    */
 
   public static class OperatorSummary {
-    public int type;
+    public String type;
     public long processMs;
     public long setupMs;
     public int execCount;
@@ -697,9 +699,9 @@ public class ProfileParser {
   public static class FindOpVisitor extends TreeVisitor
   {
     private List<OperatorSummary> ops;
-    private int type;
+    private String type;
 
-    public List<OperatorSummary> find(int type, OperatorSummary node) {
+    public List<OperatorSummary> find(String type, OperatorSummary node) {
       ops = new ArrayList<>();
       this.type = type;
       visit(node);
@@ -708,7 +710,7 @@ public class ProfileParser {
 
     @Override
     protected void visitOp(OperatorSummary node, int indentLevel) {
-      if (node.type == type) {
+      if (type.equals(node.type)) {
         ops.add(node);
       }
     }
@@ -738,12 +740,11 @@ public class ProfileParser {
   /**
    * For a single-slice query, get all operators of a given numeric operator
    * type.
-   * @param type the operator type as specified in
-   * {@link org.apache.drill.exec.proto.UserBitShared.CoreOperatorType}
+   * @param type the operator type
    * @return a list of operators of the given type
    */
 
-  public List<OperatorProfile> getOpsOfType(int type) {
+  public List<OperatorProfile> getOpsOfType(String type) {
     List<OperatorProfile> ops = new ArrayList<>();
     List<OperatorSummary> opDefs = getOpDefsOfType(type);
     for (OperatorSummary opDef : opDefs) {
@@ -752,7 +753,7 @@ public class ProfileParser {
     return ops;
   }
 
-  public List<OperatorSummary> getOpDefsOfType(int type) {
+  public List<OperatorSummary> getOpDefsOfType(String type) {
     return new FindOpVisitor().find(type, topoOrder.get(0));
   }
 
@@ -891,7 +892,7 @@ public class ProfileParser {
       logger.info("Op: {} {}", op.opId, op.name);
       logger.info("Setup:   {} - {}%, {}%", op.setupMs, percent(op.setupMs, totalSetup), percent(op.setupMs, total));
       logger.info("Process: {} - {}%, {}%", op.processMs, percent(op.processMs, totalProcess), percent(op.processMs, total));
-      if (op.type == 17) {
+      if (op.type.equals("EXTERNAL_SORT")) {
         long value = op.getMetric(0);
         logger.info("  Spills: {}", value);
       }

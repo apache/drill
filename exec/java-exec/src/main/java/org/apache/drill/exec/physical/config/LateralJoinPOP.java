@@ -27,13 +27,13 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.AbstractJoinPop;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import java.util.List;
 
 @JsonTypeName("lateral-join")
 public class LateralJoinPOP extends AbstractJoinPop {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LateralJoinPOP.class);
+
+  public static final String OPERATOR_TYPE = "LATERAL_JOIN";
 
   @JsonProperty("excludedColumns")
   private List<SchemaPath> excludedColumns;
@@ -87,8 +87,8 @@ public class LateralJoinPOP extends AbstractJoinPop {
   public String getImplicitRIDColumn() { return this.implicitRIDColumn; }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.LATERAL_JOIN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

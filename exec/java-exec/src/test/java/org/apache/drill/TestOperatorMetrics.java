@@ -19,13 +19,15 @@ package org.apache.drill;
 
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.exec.ops.OperatorMetricRegistry;
-import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.physical.config.ExternalSort;
+import org.apache.drill.exec.physical.config.NestedLoopJoinPOP;
+import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNull;
 
 @Category(OperatorTest.class)
@@ -33,18 +35,18 @@ public class TestOperatorMetrics extends BaseTestQuery {
 
   @Test
   public void testMetricNames() {
-    assertEquals(new String[]{"BYTES_SENT"},
-              OperatorMetricRegistry.getMetricNames(UserBitShared.CoreOperatorType.SCREEN_VALUE));
+    assertArrayEquals(new String[]{"BYTES_SENT"},
+              OperatorMetricRegistry.getMetricNames(Screen.OPERATOR_TYPE));
 
-    assertEquals(new String[]{"SPILL_COUNT", "NOT_USED", "PEAK_BATCHES_IN_MEMORY", "MERGE_COUNT", "MIN_BUFFER",
+    assertArrayEquals(new String[]{"SPILL_COUNT", "NOT_USED", "PEAK_BATCHES_IN_MEMORY", "MERGE_COUNT", "MIN_BUFFER",
                       "SPILL_MB"},
-              OperatorMetricRegistry.getMetricNames(UserBitShared.CoreOperatorType.EXTERNAL_SORT_VALUE));
+              OperatorMetricRegistry.getMetricNames(ExternalSort.OPERATOR_TYPE));
   }
 
   @Test
   public void testNonExistentMetricNames() {
-    assertNull(OperatorMetricRegistry.getMetricNames(UserBitShared.CoreOperatorType.NESTED_LOOP_JOIN_VALUE));
+    assertNull(OperatorMetricRegistry.getMetricNames(NestedLoopJoinPOP.OPERATOR_TYPE));
 
-    assertNull(OperatorMetricRegistry.getMetricNames(202));
+    assertNull(OperatorMetricRegistry.getMetricNames("FOO_BAR"));
   }
 }

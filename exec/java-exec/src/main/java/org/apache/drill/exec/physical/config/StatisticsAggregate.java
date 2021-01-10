@@ -21,7 +21,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,6 +30,9 @@ import java.util.List;
 
 @JsonTypeName("statistics-aggregate")
 public class StatisticsAggregate extends StreamingAggregate {
+
+  public static final String OPERATOR_TYPE = "STATISTICS_AGGREGATE";
+
   private final List<String> functions;
 
   @JsonCreator
@@ -57,8 +59,8 @@ public class StatisticsAggregate extends StreamingAggregate {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.STATISTICS_AGGREGATE_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
 }

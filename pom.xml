@@ -223,6 +223,16 @@
     <url>https://issues.apache.org/jira/browse/DRILL</url>
   </issueManagement>
 
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>6.0.4</version>
+      </plugin>
+    </plugins>
+  </reporting>
+
   <build>
     <plugins>
       <plugin>

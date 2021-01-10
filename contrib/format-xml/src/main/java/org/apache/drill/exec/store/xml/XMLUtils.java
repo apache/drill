@@ -76,21 +76,18 @@ public class XMLUtils {
    * @param fieldName The nested field name
    * @return The field name
    */
-  public static String removeField(String fieldName) {
-    if (Strings.isNullOrEmpty(fieldName)) {
-      return fieldName;
+  public static String removeField(String prefix, String fieldName) {
+    if (fieldName == null) {
+      return "";
     }
 
-    String[] components = fieldName.split("_");
-    StringBuilder newField = new StringBuilder();
-    for (int i = 0; i < components.length - 1; i++) {
-      if (i > 0) {
-        newField.append("_").append(components[i]);
-      } else {
-        newField = new StringBuilder(components[i]);
-      }
+    int index = prefix.lastIndexOf(fieldName);
+    if (index == 0) {
+      return "";
+    } else if (index < 0) {
+      return prefix;
     }
-    return newField.toString();
+
+    return prefix.substring(0, index-1);
   }
-
 }

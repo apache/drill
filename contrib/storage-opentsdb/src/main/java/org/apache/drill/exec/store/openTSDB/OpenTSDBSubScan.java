@@ -29,7 +29,6 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import java.util.Collections;
@@ -39,6 +38,8 @@ import java.util.List;
 
 @JsonTypeName("openTSDB-sub-scan")
 public class OpenTSDBSubScan extends AbstractBase implements SubScan {
+
+  public static final String OPERATOR_TYPE = "OPEN_TSDB_SUB_SCAN";
 
   public final OpenTSDBStoragePluginConfig storage;
 
@@ -68,8 +69,8 @@ public class OpenTSDBSubScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.OPEN_TSDB_SUB_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

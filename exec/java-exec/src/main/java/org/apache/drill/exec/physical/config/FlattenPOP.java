@@ -25,15 +25,15 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared;
 
 import java.util.Iterator;
 
 @JsonTypeName("flatten")
 public class FlattenPOP extends AbstractSingle {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FlattenPOP.class);
 
-  private SchemaPath column;
+  public static final String OPERATOR_TYPE = "FLATTEN";
+
+  private final SchemaPath column;
 
   @JsonCreator
   public FlattenPOP(
@@ -64,7 +64,7 @@ public class FlattenPOP extends AbstractSingle {
   }
 
   @Override
-  public int getOperatorType() {
-    return UserBitShared.CoreOperatorType.FLATTEN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

@@ -30,11 +30,8 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -45,7 +42,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 @JsonTypeName("mongo-shard-read")
 public class MongoSubScan extends AbstractBase implements SubScan {
-  static final Logger logger = LoggerFactory.getLogger(MongoSubScan.class);
+
+  public static final String OPERATOR_TYPE = "MONGO_SUB_SCAN";
 
   @JsonProperty
   private final MongoStoragePluginConfig mongoPluginConfig;
@@ -114,8 +112,8 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.MONGO_SUB_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

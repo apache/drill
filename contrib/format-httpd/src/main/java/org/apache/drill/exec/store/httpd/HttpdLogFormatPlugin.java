@@ -25,7 +25,6 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
@@ -35,6 +34,8 @@ import org.apache.hadoop.conf.Configuration;
 public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig> {
 
   protected static final String DEFAULT_NAME = "httpd";
+
+  public static final String OPERATOR_TYPE = "HTPPD_LOG_SUB_SCAN";
 
   private static class HttpLogReaderFactory extends FileReaderFactory {
 
@@ -64,19 +65,19 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
   }
 
   private static EasyFormatConfig easyConfig(Configuration fsConf, HttpdLogFormatConfig pluginConfig) {
-    EasyFormatConfig config = new EasyFormatConfig();
-    config.readable = true;
-    config.writable = false;
-    config.blockSplittable = false;
-    config.compressible = true;
-    config.supportsProjectPushdown = true;
-    config.extensions = pluginConfig.getExtensions();
-    config.fsConf = fsConf;
-    config.defaultName = DEFAULT_NAME;
-    config.readerOperatorType = UserBitShared.CoreOperatorType.HTPPD_LOG_SUB_SCAN_VALUE;
-    config.useEnhancedScan = true;
-    config.supportsLimitPushdown = true;
-    return config;
+    return EasyFormatConfig.builder()
+        .readable(true)
+        .writable(false)
+        .blockSplittable(false)
+        .compressible(true)
+        .supportsProjectPushdown(true)
+        .extensions(pluginConfig.getExtensions())
+        .fsConf(fsConf)
+        .defaultName(DEFAULT_NAME)
+        .readerOperatorType(OPERATOR_TYPE)
+        .useEnhancedScan(true)
+        .supportsLimitPushdown(true)
+        .build();
   }
 
   @Override

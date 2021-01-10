@@ -28,7 +28,6 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Store;
 import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -37,7 +36,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("screen")
 public class Screen extends AbstractStore {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Screen.class);
+
+  public static final String OPERATOR_TYPE = "SCREEN";
 
   private final DrillbitEndpoint endpoint;
 
@@ -99,8 +99,8 @@ public class Screen extends AbstractStore {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.SCREEN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

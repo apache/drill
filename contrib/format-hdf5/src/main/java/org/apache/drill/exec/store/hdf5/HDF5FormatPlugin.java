@@ -19,7 +19,6 @@
 package org.apache.drill.exec.store.hdf5;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -28,7 +27,6 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
@@ -55,23 +53,22 @@ public class HDF5FormatPlugin extends EasyFormatPlugin<HDF5FormatConfig> {
   }
 
   private static EasyFormatConfig easyConfig(Configuration fsConf, HDF5FormatConfig pluginConfig) {
-    EasyFormatConfig config = new EasyFormatConfig();
-    config.readable = true;
-    config.writable = false;
-    config.blockSplittable = false;
-    config.compressible = true;
-    config.supportsProjectPushdown = true;
-    config.extensions = pluginConfig.getExtensions();
-    config.fsConf = fsConf;
-    config.defaultName = DEFAULT_NAME;
-    config.readerOperatorType = UserBitShared.CoreOperatorType.HDF5_SUB_SCAN_VALUE;
-    config.useEnhancedScan = true;
-    config.supportsLimitPushdown = true;
-    return config;
+    return EasyFormatConfig.builder()
+        .readable(true)
+        .writable(false)
+        .blockSplittable(false)
+        .compressible(true)
+        .supportsProjectPushdown(true)
+        .extensions(pluginConfig.getExtensions())
+        .fsConf(fsConf)
+        .defaultName(DEFAULT_NAME)
+        .useEnhancedScan(true)
+        .supportsLimitPushdown(true)
+        .build();
   }
 
   @Override
-  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) throws ExecutionSetupException {
+  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanBuilder builder = new FileScanBuilder();
 
     builder.setReaderFactory(new HDF5ReaderFactory(new HDF5BatchReader.HDF5ReaderConfig(this, formatConfig), scan.getMaxRecords()));

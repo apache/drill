@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -87,7 +88,6 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
   private List<EndpointAffinity> endpointAffinities;
   private final Path selectionRoot;
   private final int maxRecords;
-  private final boolean supportsLimitPushdown;
 
   @JsonCreator
   public EasyGroupScan(
@@ -106,7 +106,6 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
     this.maxRecords = getMaxRecords();
-    this.supportsLimitPushdown = formatPlugin.easyConfig().supportsLimitPushdown;
     this.metadataProvider = defaultTableMetadataProviderBuilder(new FileSystemMetadataProviderManager())
         .withSelection(selection)
         .withSchema(schema)
@@ -142,7 +141,6 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
     this.usedMetastore = metadataProviderManager.usesMetastore();
     initFromSelection(selection, formatPlugin);
     checkMetadataConsistency(selection, formatPlugin.getFsConf());
-    this.supportsLimitPushdown = formatPlugin.easyConfig().supportsLimitPushdown;
     this.maxRecords = getMaxRecords();
   }
 
@@ -180,7 +178,6 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
     partitionDepth = that.partitionDepth;
     metadataProvider = that.metadataProvider;
     maxRecords = getMaxRecords();
-    supportsLimitPushdown = that.formatPlugin.easyConfig().supportsLimitPushdown;
   }
 
   @JsonIgnore
@@ -402,7 +399,7 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
       EasyGroupScan newScan = new EasyGroupScan((EasyGroupScan) source);
       newScan.tableMetadata = tableMetadata;
       // updates common row count and nulls counts for every column
-      if (newScan.getTableMetadata() != null && files != null && newScan.getFilesMetadata().size() != files.size()) {
+      if (newScan.getTableMetadata() != null && MapUtils.isNotEmpty(files) && newScan.getFilesMetadata().size() != files.size()) {
         newScan.tableMetadata = TableMetadataUtils.updateRowCount(newScan.getTableMetadata(), files.values());
       }
       newScan.partitions = partitions;

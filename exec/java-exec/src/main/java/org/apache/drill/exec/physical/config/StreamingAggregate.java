@@ -21,7 +21,6 @@ import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,6 +30,8 @@ import java.util.List;
 
 @JsonTypeName("streaming-aggregate")
 public class StreamingAggregate extends AbstractSingle {
+
+  public static final String OPERATOR_TYPE = "STREAMING_AGGREGATE";
 
   private final List<NamedExpression> keys;
   private final List<NamedExpression> exprs;
@@ -63,7 +64,7 @@ public class StreamingAggregate extends AbstractSingle {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.STREAMING_AGGREGATE_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

@@ -15,28 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.ops;
 
-public class OpProfileDef {
+package org.apache.drill.exec.store.xml;
 
-  public int operatorId;
-  public String operatorType;
-  public int incomingCount;
+import org.junit.Test;
 
-  public OpProfileDef(int operatorId, String operatorType, int incomingCount) {
-    this.operatorId = operatorId;
-    this.operatorType = operatorType;
-    this.incomingCount = incomingCount;
+import static org.junit.Assert.assertEquals;
+
+public class TestXMLUtils {
+
+  @Test
+  public void testRemoveField() {
+    String test1 = "field1_field2_field3";
+    assertEquals(XMLUtils.removeField(test1, "field3"), "field1_field2");
+
+    // Test with underscores
+    String test2 = "field_1_field_2_field_3";
+    assertEquals(XMLUtils.removeField(test2, "field_3"), "field_1_field_2");
+
+    // Test with missing field
+    String test3 = "field_1_field_2_field_3";
+    assertEquals(XMLUtils.removeField(test3, "field_4"), "field_1_field_2_field_3");
+
+    // Test with empty string
+    String test4 = "";
+    assertEquals(XMLUtils.removeField(test4, "field_4"), "");
   }
-  public int getOperatorId(){
-    return operatorId;
-  }
-
-  public String getOperatorType(){
-    return operatorType;
-  }
-  public int getIncomingCount(){
-    return incomingCount;
-  }
-
 }

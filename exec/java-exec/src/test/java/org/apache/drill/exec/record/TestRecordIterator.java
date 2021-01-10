@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.apache.drill.exec.store.mock.MockSubScanPOP;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 import org.apache.drill.categories.VectorTest;
@@ -41,7 +42,6 @@ import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.BitControl;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
@@ -76,7 +76,7 @@ public class TestRecordIterator extends PopUnitTestBase {
 
     RecordBatch singleBatch = exec.getIncoming();
     PhysicalOperator dummyPop = operatorList.iterator().next();
-    OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
+    OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), MockSubScanPOP.OPERATOR_TYPE,
       OperatorUtilities.getChildCount(dummyPop));
     OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
     RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0, false, null);
@@ -132,7 +132,7 @@ public class TestRecordIterator extends PopUnitTestBase {
 
     RecordBatch singleBatch = exec.getIncoming();
     PhysicalOperator dummyPop = operatorList.iterator().next();
-    OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
+    OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), MockSubScanPOP.OPERATOR_TYPE,
         OperatorUtilities.getChildCount(dummyPop));
     OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
     RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0, null);

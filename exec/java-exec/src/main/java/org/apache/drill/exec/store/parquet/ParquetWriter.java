@@ -26,9 +26,6 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.store.StorageStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -39,7 +36,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("parquet-writer")
 public class ParquetWriter extends AbstractWriter {
-  static final Logger logger = LoggerFactory.getLogger(ParquetWriter.class);
 
 /** Version of Drill's Parquet writer. Increment this version (by 1) any time we make any format change to the file.
  * Format changes include:
@@ -52,6 +48,8 @@ public class ParquetWriter extends AbstractWriter {
  * or metadata when that data changes format from one writer version to another.
  */
   public static final int WRITER_VERSION = 3;
+
+  public static final String OPERATOR_TYPE = "PARQUET_WRITER";
 
   private final String location;
   private final List<String> partitionColumns;
@@ -117,8 +115,8 @@ public class ParquetWriter extends AbstractWriter {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.PARQUET_WRITER_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

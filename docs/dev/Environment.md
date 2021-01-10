@@ -23,6 +23,11 @@ On other systems your success may vary. On Redhat/CentOS based systems no longer
     # mvn --version
     Apache Maven 3.6.3
 
+## Formatter Configuration
+
+Setting up IDE formatters is recommended and can be done by importing the following settings into your browser.
+[Formatter File](../../dev-support/formatter)
+
 ## Checkout
 
     git clone https://github.com/apache/drill.git
@@ -31,6 +36,14 @@ On other systems your success may vary. On Redhat/CentOS based systems no longer
 
     cd drill
     mvn clean install -DskipTests
+
+## Build Quickly
+This command works to build Drill in about 2 minutes for quick testing. 
+
+    mvn install -T 4 -Dmaven.test.skip=true -Dmaven.javadoc.skip=true -Drat.skip=true -Dlicense.skip=true -Dcheckstyle.skip=true -Dfindbugs.skip=true -Dmaven.site.skip=true -Denforcer.skip=true -DskipIfEmpty=true -Dmaven.compiler.optimize=true
+
+## Generate Dependency Report
+    mvn clean site
 
 ## Explode tarball in installation directory
    

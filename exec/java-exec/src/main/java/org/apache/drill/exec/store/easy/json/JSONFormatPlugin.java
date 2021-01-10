@@ -33,7 +33,6 @@ import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
@@ -61,10 +60,13 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
+
   private static final Logger logger = LoggerFactory.getLogger(JSONFormatPlugin.class);
   public static final String DEFAULT_NAME = "json";
 
   private static final boolean IS_COMPRESSIBLE = true;
+
+  public static final String OPERATOR_TYPE = "JSON_SUB_SCAN";
 
   public JSONFormatPlugin(String name, DrillbitContext context,
       Configuration fsConf, StoragePluginConfig storageConfig) {
@@ -215,13 +217,13 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   }
 
   @Override
-  public int getReaderOperatorType() {
-    return CoreOperatorType.JSON_SUB_SCAN_VALUE;
+  public String getReaderOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override
-  public int getWriterOperatorType() {
-     return CoreOperatorType.JSON_WRITER_VALUE;
+  public String getWriterOperatorType() {
+     return "JSON_WRITER";
   }
 
   @Override

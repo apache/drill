@@ -96,7 +96,7 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
     return new ArrayList<>(affinityMap.values());
   }
 
-  protected void setupSenders(List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException {
+  protected void setupSenders(List<DrillbitEndpoint> senderLocations) {
     this.senderLocations = ImmutableList.copyOf(senderLocations);
   }
 
@@ -122,7 +122,7 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
   }
 
   @Override
-  public int getOperatorType() {
+  public String getOperatorType() {
     throw new UnsupportedOperationException();
   }
 

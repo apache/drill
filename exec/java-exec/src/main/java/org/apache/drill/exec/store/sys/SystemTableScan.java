@@ -37,11 +37,12 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 @JsonTypeName("sys")
 public class SystemTableScan extends AbstractGroupScan implements SubScan {
+
+  public static final String OPERATOR_TYPE = "SYSTEM_TABLE_SCAN";
 
   private final SystemTable table;
   private final SystemTablePlugin plugin;
@@ -137,8 +138,8 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.SYSTEM_TABLE_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   /**

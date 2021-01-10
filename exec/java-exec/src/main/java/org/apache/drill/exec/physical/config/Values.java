@@ -33,8 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Values extends AbstractBase implements Leaf {
 
-  @SuppressWarnings("unused")
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Values.class);
+  public static final String OPERATOR_TYPE = "VALUES";
 
   private final JSONOptions content;
 
@@ -59,9 +58,8 @@ public class Values extends AbstractBase implements Leaf {
   }
 
   @Override
-  public int getOperatorType() {
-    // TODO: DRILL-6643: this implementation should be revisited
-    return -1;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

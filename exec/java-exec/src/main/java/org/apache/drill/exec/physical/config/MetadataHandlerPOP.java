@@ -24,10 +24,12 @@ import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.metastore.analyze.MetadataHandlerContext;
-import org.apache.drill.exec.proto.UserBitShared;
 
 @JsonTypeName("metadataHandler")
 public class MetadataHandlerPOP extends AbstractSingle {
+
+  public static final String OPERATOR_TYPE = "METADATA_HANDLER";
+
   private final MetadataHandlerContext context;
 
   @JsonCreator
@@ -48,8 +50,8 @@ public class MetadataHandlerPOP extends AbstractSingle {
   }
 
   @Override
-  public int getOperatorType() {
-    return UserBitShared.CoreOperatorType.METADATA_HANDLER_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   public MetadataHandlerContext getContext() {

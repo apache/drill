@@ -25,13 +25,13 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.physical.base.AbstractJoinPop;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import java.util.List;
 
 @JsonTypeName("nested-loop-join")
 public class NestedLoopJoinPOP extends AbstractJoinPop {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedLoopJoinPOP.class);
+
+  public static final String OPERATOR_TYPE = "NESTED_LOOP_JOIN";
 
   @JsonCreator
   public NestedLoopJoinPOP(
@@ -50,7 +50,7 @@ public class NestedLoopJoinPOP extends AbstractJoinPop {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.NESTED_LOOP_JOIN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }

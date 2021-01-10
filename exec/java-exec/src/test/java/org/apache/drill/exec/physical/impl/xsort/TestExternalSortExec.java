@@ -32,7 +32,6 @@ import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.config.ExternalSort;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.test.DrillTest;
 import org.junit.Test;
@@ -174,7 +173,7 @@ public class TestExternalSortExec extends DrillTest {
     assertSame(ordering, popConfig.getOrderings().get(0));
     assertFalse(popConfig.getReverse());
     assertEquals(SelectionVectorMode.FOUR_BYTE, popConfig.getSVMode());
-    assertEquals(CoreOperatorType.EXTERNAL_SORT_VALUE, popConfig.getOperatorType());
+    assertEquals(ExternalSort.OPERATOR_TYPE, popConfig.getOperatorType());
     assertEquals(ExternalSort.DEFAULT_SORT_ALLOCATION, popConfig.getInitialAllocation());
     assertEquals(AbstractBase.MAX_ALLOCATION, popConfig.getMaxAllocation());
     assertTrue(popConfig.isExecutable());

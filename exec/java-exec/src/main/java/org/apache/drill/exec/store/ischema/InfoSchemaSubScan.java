@@ -20,9 +20,10 @@ package org.apache.drill.exec.store.ischema;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 public class InfoSchemaSubScan extends AbstractSubScan {
+
+  public static final String OPERATOR_TYPE = "INFO_SCHEMA_SUB_SCAN";
 
   private final InfoSchemaTableType table;
   private final InfoSchemaFilter filter;
@@ -46,7 +47,7 @@ public class InfoSchemaSubScan extends AbstractSubScan {
   }
 
   @Override
-  public int getOperatorType() {
-    return CoreOperatorType.INFO_SCHEMA_SUB_SCAN_VALUE;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 }
