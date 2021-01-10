@@ -15,78 +15,79 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.ltsv;
 
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.RecordWriter;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
-import org.apache.drill.exec.store.dfs.easy.EasyWriter;
-import org.apache.drill.exec.store.dfs.easy.FileWork;
+import org.apache.drill.exec.store.dfs.easy.EasySubScan;
+import org.apache.drill.exec.store.ltsv.LTSVBatchReader.LTSVReaderConfig;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
-import java.util.List;
-
+/**
+ * Enables Drill to query data in Labeled Tab Separated Values (LTSV) format.
+ * <a href="http://ltsv.org" target="_blank">LTSV Spec</a>
+ */
 public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
-
-  private static final boolean IS_COMPRESSIBLE = true;
 
   private static final String DEFAULT_NAME = "ltsv";
 
-  public LTSVFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
-    this(name, context, fsConf, storageConfig, new LTSVFormatPluginConfig(null));
+  public static class LTSVReaderFactory extends FileReaderFactory {
+
+    private final LTSVReaderConfig readerConfig;
+
+    public LTSVReaderFactory(LTSVReaderConfig config) {
+      readerConfig = config;
+    }
+    @Override
+    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
+      return new LTSVBatchReader(readerConfig);
+    }
   }
 
-  public LTSVFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, LTSVFormatPluginConfig formatPluginConfig) {
-    super(name, context, fsConf, config, formatPluginConfig, true, false, false, IS_COMPRESSIBLE, formatPluginConfig.getExtensions(), DEFAULT_NAME);
+  public LTSVFormatPlugin(String name, DrillbitContext context,
+                         Configuration fsConf, StoragePluginConfig storageConfig,
+                          LTSVFormatPluginConfig formatConfig) {
+    super(name, easyConfig(fsConf, formatConfig), context, storageConfig, formatConfig);
   }
 
-  @Override
-  public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork, List<SchemaPath> columns, String userName) {
-    return new LTSVRecordReader(context, fileWork.getPath(), dfs, columns);
-  }
-
-
-  @Override
-  public int getReaderOperatorType() {
-    return UserBitShared.CoreOperatorType.LTSV_SUB_SCAN_VALUE;
-  }
-
-  @Override
-  public int getWriterOperatorType() {
-    throw new UnsupportedOperationException("Drill doesn't currently support writing to LTSV files.");
-  }
-
-  @Override
-  public boolean supportsPushDown() {
-    return true;
-  }
-
-  @Override
-  public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) {
-    throw new UnsupportedOperationException("Drill doesn't currently support writing to LTSV files.");
-  }
-
-  @Override
-  public boolean supportsStatistics() {
-    return false;
+  private static EasyFormatConfig easyConfig(Configuration fsConf, LTSVFormatPluginConfig pluginConfig) {
+    EasyFormatConfig config = new EasyFormatConfig();
+    config.readable = true;
+    config.writable = false;
+    config.blockSplittable = true;
+    config.compressible = true;
+    config.supportsProjectPushdown = true;
+    config.extensions = Lists.newArrayList(pluginConfig.getExtensions());
+    config.fsConf = fsConf;
+    config.defaultName = DEFAULT_NAME;
+    config.readerOperatorType = UserBitShared.CoreOperatorType.LTSV_SUB_SCAN_VALUE;
+    config.useEnhancedScan = true;
+    return config;
   }
 
   @Override
-  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) {
-    throw new UnsupportedOperationException("unimplemented");
+  public ManagedReader<?extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options) {
+    return new LTSVBatchReader(formatConfig.getReaderConfig(this));
   }
 
   @Override
-  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) {
-    throw new UnsupportedOperationException("unimplemented");
+  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
+    FileScanBuilder builder = new FileScanBuilder();
+    LTSVReaderConfig readerConfig = new LTSVReaderConfig(this);
+    builder.setReaderFactory(new LTSVReaderFactory(readerConfig));
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    initScanBuilder(builder, scan);
+    return builder;
   }
 }
