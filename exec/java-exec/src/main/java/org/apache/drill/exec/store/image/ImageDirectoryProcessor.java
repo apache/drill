@@ -190,6 +190,7 @@ public class ImageDirectoryProcessor {
    * Convert the value if necessary
    * @see org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriter#setObject(Object)
    * @param writer MapColumnDefn
+   * @param name Tag Name
    * @param value  Tag Value
    */
   protected static void processValue(final MapColumnDefn writer, final String name, final Object value) {
@@ -218,6 +219,8 @@ public class ImageDirectoryProcessor {
       writer.addDate(name).setTimestamp(Instant.ofEpochMilli(((Date) value).getTime()));
     } else if (value instanceof String[]) {
       writer.addList(name).setObject(value);
+    } else if (value instanceof byte[]) {
+      writer.addListByte(name).setObject(value);
     } else if (value instanceof JpegComponent) {
       JpegComponent v = (JpegComponent) value;
       TupleWriter component = writer.addMap(name);

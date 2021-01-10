@@ -297,7 +297,7 @@ public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
     public void bind(RowSetLoader loader) {
       index = loader.tupleSchema().index(getName());
       if (index == -1) {
-        index = loader.addColumn(SchemaBuilder.columnSchema(getName(), MinorType.MAP, DataMode.OPTIONAL));
+        index = loader.addColumn(SchemaBuilder.columnSchema(getName(), MinorType.MAP, DataMode.REQUIRED));
       }
       writer = loader.tuple(index);
     }
@@ -363,10 +363,21 @@ public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
     public TupleWriter addMap(String name) {
       index = writer.tupleSchema().index(name);
       if (index == -1) {
-        index = writer.addColumn(SchemaBuilder.columnSchema(name, MinorType.MAP, DataMode.OPTIONAL));
+        index = writer.addColumn(SchemaBuilder.columnSchema(name, MinorType.MAP, DataMode.REQUIRED));
         return writer.tuple(index);
       }
       return writer.tuple(name);
+    }
+
+    /**
+     * example : { a : 1 } > { a : 1, [ 0, -1, 0, -1 ] }
+     */
+    public ArrayWriter addListByte(String name) {
+      index = writer.tupleSchema().index(name);
+      if (index == -1) {
+        index = writer.addColumn(SchemaBuilder.columnSchema(name, MinorType.TINYINT, DataMode.REPEATED));
+      }
+      return writer.array(index);
     }
 
     /**
