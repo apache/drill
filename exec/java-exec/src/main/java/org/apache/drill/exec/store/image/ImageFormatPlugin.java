@@ -25,7 +25,6 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReade
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
@@ -43,19 +42,18 @@ public class ImageFormatPlugin extends EasyFormatPlugin<ImageFormatConfig> {
   }
 
   private static EasyFormatConfig easyConfig(Configuration fsConf, ImageFormatConfig pluginConfig) {
-    EasyFormatConfig config = new EasyFormatConfig();
-    config.readable = true;
-    config.writable = false;
-    config.blockSplittable = false;
-    config.compressible = true;
-    config.extensions = pluginConfig.getExtensions();
-    config.fsConf = fsConf;
-    config.readerOperatorType = CoreOperatorType.IMAGE_SUB_SCAN_VALUE;
-    config.useEnhancedScan = true;
-    config.supportsLimitPushdown = true;
-    config.supportsProjectPushdown = true;
-    config.defaultName = ImageFormatConfig.NAME;
-    return config;
+    return EasyFormatConfig.builder()
+        .readable(true)
+        .writable(false)
+        .blockSplittable(false)
+        .compressible(true)
+        .extensions(pluginConfig.getExtensions())
+        .fsConf(fsConf)
+        .useEnhancedScan(true)
+        .supportsLimitPushdown(true)
+        .supportsProjectPushdown(true)
+        .defaultName(ImageFormatConfig.NAME)
+        .build();
   }
 
   private static class ImageReaderFactory extends FileReaderFactory {
