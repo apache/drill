@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.image;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
+import static org.apache.drill.test.rowSet.RowSetUtilities.singleMap;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 
@@ -113,7 +114,7 @@ public class TestImageBatchReader extends ClusterTest {
         .addRow("JPEG", 600, false,
           mapValue(25,
           mapValue("Ian Britton", "Communications", "Photographer", "Ian Britton", "FreeFoto.com", " ", " ", "Ubited Kingdom", "BUS", "2002-06-20", "5", strArray("Communications")),
-          mapValue(mapArray(mapValue("Photographer"))),
+          singleMap(mapArray(mapValue("Photographer"))),
           mapValue("adobe:docid:photoshop:84d4dba8-9b11-11d6-895d-c4d063a70fb0", "uuid:3ff5d382-9b12-11d6-895d-c4d063a70fb0"),
           mapValue("www.freefoto.com", "True"), mapValue("Communications", strArray("Ian Britton"), "Communications", "ian Britton - FreeFoto.com", strArray("Communications"))))
         .build();
