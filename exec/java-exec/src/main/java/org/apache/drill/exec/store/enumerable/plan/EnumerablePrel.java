@@ -42,6 +42,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * {@link LeafPrel} implementation that generates java code that may be executed to obtain results
+ * for the provided plan part.
+ */
 public class EnumerablePrel extends AbstractRelNode implements LeafPrel {
   private final String code;
   private final String schemaPath;

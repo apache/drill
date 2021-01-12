@@ -70,7 +70,8 @@ public class ElasticPlanTransformer extends RelShuttleImpl {
 
   @Override
   public RelNode visit(RelNode other) {
-    // replaces project expressions with ITEM calls, since Calcite returns results as a map
+    // replaces project expressions with ITEM calls, since Calcite returns single map column `_MAP`
+    // with actual table fields
     if (other instanceof ElasticsearchProject) {
       ElasticsearchProject project = (ElasticsearchProject) other;
       RelNode input = project.getInput().accept(this);

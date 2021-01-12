@@ -27,7 +27,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.elasticsearch.schema.ElasticsearchDrillSchemaFactory;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 import java.util.Collections;
 import java.util.Set;
@@ -61,16 +60,15 @@ public class ElasticsearchStoragePlugin extends AbstractStoragePlugin {
   @Override
   public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
     switch (phase) {
-      case LOGICAL_PRUNE_AND_JOIN:
-      case LOGICAL_PRUNE:
-      case PARTITION_PRUNING:
-        return Collections.emptySet();
       case PHYSICAL:
       case LOGICAL:
         return CalciteUtils.elasticSearchRules();
+      case LOGICAL_PRUNE_AND_JOIN:
+      case LOGICAL_PRUNE:
+      case PARTITION_PRUNING:
       case JOIN_PLANNING:
       default:
-        return ImmutableSet.of();
+        return Collections.emptySet();
     }
   }
 }

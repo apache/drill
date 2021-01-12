@@ -44,6 +44,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
+/**
+ * {@link ManagedReader} implementation that compiles and executes specified code,
+ * calls the method on it for obtaining the values, and reads the results using column converters.
+ */
 public class EnumerableRecordReader implements ManagedReader<SchemaNegotiator> {
 
   private static final String CLASS_NAME = "Baz";

@@ -27,6 +27,10 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 
 import java.util.List;
 
+/**
+ * The vertex simply holds the child nodes but contains its own traits.
+ * Used for completing Drill logical planning when child nodes have some specific traits.
+ */
 public class VertexDrel extends SingleRel implements DrillRel {
 
   public VertexDrel(RelOptCluster cluster, RelTraitSet traits, RelNode input) {

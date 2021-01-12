@@ -20,6 +20,9 @@ package org.apache.drill.exec.planner.physical;
 import java.util.Collections;
 import java.util.Iterator;
 
+/**
+ * Prel without children.
+ */
 public interface LeafPrel extends Prel {
 
   @Override
