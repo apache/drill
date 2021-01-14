@@ -25,7 +25,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.TimeZone;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -212,7 +211,7 @@ public class TestImageBatchReader extends ClusterTest {
 
   @Test
   public void testTimeZoneOption() throws Exception {
-    cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("psd"), true, false, TimeZone.getDefault().getID()));
+    cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("psd"), true, false, "UTC"));
     String sql = "select ExifIFD0 from dfs.`store/image/*.psd`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
@@ -229,7 +228,7 @@ public class TestImageBatchReader extends ClusterTest {
         .build();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
-        .addRow(singleMap(mapValue(1, 72.009, 72.009, 2, "Adobe Photoshop CS2 Windows", Instant.ofEpochMilli(1454688537000L))))
+        .addRow(singleMap(mapValue(1, 72.009, 72.009, 2, "Adobe Photoshop CS2 Windows", Instant.ofEpochMilli(1454717337000L))))
         .build();
 
     new RowSetComparison(expected).verifyAndClearAll(sets);
