@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.drill.exec.planner.StarColumnHelper;
+import org.apache.drill.exec.planner.physical.LeafPrel;
 import org.apache.drill.exec.planner.physical.MetadataControllerPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectAllowDupPrel;
@@ -240,12 +241,17 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
 
   @Override
   public Prel visitScan(ScanPrel scanPrel, Void value) throws RuntimeException {
-    return prefixTabNameToStar(scanPrel, value);
+    return visitLeaf(scanPrel, value);
+  }
+
+  @Override
+  public Prel visitLeaf(LeafPrel prel, Void value) throws RuntimeException {
+    return prefixTabNameToStar(prel, value);
   }
 
   @Override
   public Prel visitUnnest(UnnestPrel unnestPrel, Void value) throws RuntimeException {
-    return prefixTabNameToStar(unnestPrel, value);
+    return visitLeaf(unnestPrel, value);
   }
 
   private List<String> makeUniqueNames(List<String> names) {

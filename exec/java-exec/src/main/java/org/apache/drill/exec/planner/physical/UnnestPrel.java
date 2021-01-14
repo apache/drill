@@ -36,11 +36,9 @@ import org.apache.drill.exec.record.BatchSchema;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
-public class UnnestPrel extends DrillUnnestRelBase implements Prel {
+public class UnnestPrel extends DrillUnnestRelBase implements LeafPrel {
 
   protected final UnnestPOP unnestPOP;
 
@@ -49,11 +47,6 @@ public class UnnestPrel extends DrillUnnestRelBase implements Prel {
     super(cluster, traits, ref);
     this.unnestPOP = new UnnestPOP(null, SchemaPath.getSimplePath(((RexFieldAccess)ref).getField().getName()), DrillUnnestRelBase.IMPLICIT_COLUMN);
     this.rowType = rowType;
-  }
-
-  @Override
-  public Iterator<Prel> iterator() {
-    return Collections.emptyIterator();
   }
 
   @Override
@@ -75,11 +68,6 @@ public class UnnestPrel extends DrillUnnestRelBase implements Prel {
   @Override
   public BatchSchema.SelectionVectorMode getEncoding() {
     return BatchSchema.SelectionVectorMode.NONE;
-  }
-
-  @Override
-  public boolean needsFinalColumnReordering() {
-    return true;
   }
 
   public Class<?> getParentClass() {

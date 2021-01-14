@@ -249,7 +249,7 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
         case BIGINT:
           return Long.parseLong(value);
         case FLOAT4:
-          return (double) Float.parseFloat(value);
+          return Float.parseFloat(value);
         case FLOAT8:
           return Double.parseDouble(value);
         case VARDECIMAL:

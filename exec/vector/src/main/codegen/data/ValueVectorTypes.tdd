@@ -68,7 +68,7 @@
       minor: [
         { class: "Int", valueHolder: "IntHolder"},
         { class: "UInt4", valueHolder: "UInt4Holder" },
-        { class: "Float4", javaType: "float" , boxedType: "Float", accessorType: "double", accessorCast: "set",
+        { class: "Float4", javaType: "float" , boxedType: "Float", accessorType: "float", accessorCast: "set",
           fields: [{name: "value", type: "float"}]},
         { class: "Time", javaType: "int", friendlyType: "LocalTime", accessorType: "int" },
         { class: "IntervalYear", javaType: "int", friendlyType: "Period" }

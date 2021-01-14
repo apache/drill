@@ -139,7 +139,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
    * tuple writer. If no listener is bound, then an attempt to add a column
    * throws an exception.
    */
-  public static interface TupleWriterListener {
+  public interface TupleWriterListener {
 
     ObjectWriter addColumn(TupleWriter tuple, ColumnMetadata column);
 
@@ -190,8 +190,9 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     this.writers = writers;
   }
 
+  @SuppressWarnings("unused")
   protected AbstractTupleWriter(TupleMetadata schema) {
-    this(schema, new ArrayList<AbstractObjectWriter>());
+    this(schema, new ArrayList<>());
   }
 
   @Override
@@ -201,8 +202,8 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     vectorIndex = index;
     this.childIndex = childIndex;
 
-    for (int i = 0; i < writers.size(); i++) {
-      writers.get(i).events().bindIndex(childIndex);
+    for (AbstractObjectWriter writer : writers) {
+      writer.events().bindIndex(childIndex);
     }
   }
 
@@ -239,8 +240,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
 
   @Override
   public boolean isProjected(String columnName) {
-    return listener == null ? true
-        : listener.isProjected(columnName);
+    return listener == null || listener.isProjected(columnName);
   }
 
   @Override
@@ -288,8 +288,8 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   public void startWrite() {
     assert state == State.IDLE;
     state = State.IN_WRITE;
-    for (int i = 0; i < writers.size(); i++) {
-      writers.get(i).events().startWrite();
+    for (AbstractObjectWriter writer : writers) {
+      writer.events().startWrite();
     }
   }
 
@@ -300,16 +300,16 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
 
     assert state == State.IN_WRITE;
     state = State.IN_ROW;
-    for (int i = 0; i < writers.size(); i++) {
-      writers.get(i).events().startRow();
+    for (AbstractObjectWriter writer : writers) {
+      writer.events().startRow();
     }
   }
 
   @Override
   public void endArrayValue() {
     assert state == State.IN_ROW;
-    for (int i = 0; i < writers.size(); i++) {
-      writers.get(i).events().endArrayValue();
+    for (AbstractObjectWriter writer : writers) {
+      writer.events().endArrayValue();
     }
   }
 
@@ -325,16 +325,16 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     // the current row.
 
     assert state == State.IN_ROW;
-    for (int i = 0; i < writers.size(); i++) {
-      writers.get(i).events().restartRow();
+    for (AbstractObjectWriter writer : writers) {
+      writer.events().restartRow();
     }
   }
 
   @Override
   public void saveRow() {
     assert state == State.IN_ROW;
-    for (int i = 0; i < writers.size(); i++) {
-      writers.get(i).events().saveRow();
+    for (AbstractObjectWriter writer : writers) {
+      writer.events().saveRow();
     }
     state = State.IN_WRITE;
   }
@@ -345,8 +345,8 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     // Rollover can only happen while a row is in progress.
 
     assert state == State.IN_ROW;
-    for (int i = 0; i < writers.size(); i++) {
-      writers.get(i).events().preRollover();
+    for (AbstractObjectWriter writer : writers) {
+      writer.events().preRollover();
     }
   }
 

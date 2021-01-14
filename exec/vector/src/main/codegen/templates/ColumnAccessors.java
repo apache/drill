@@ -448,6 +448,13 @@ public class ColumnAccessors {
     }
 
     @Override
+    public final void setFloat(final float value) {
+      // Does not catch overflow from
+      // double. See Math.round for details.
+      setLong(Math.round(value));
+    }
+
+    @Override
     public final void setDouble(final double value) {
       // Does not catch overflow from
       // double. See Math.round for details.
@@ -463,7 +470,7 @@ public class ColumnAccessors {
         throw InvalidConversionError.writeError(schema(), value, e);
       }
     }
-    <#elseif drillType == "Float4" || drillType == "Float8">
+    <#elseif drillType == "Float8">
 
     @Override
     public final void setInt(final int value) {
@@ -476,8 +483,34 @@ public class ColumnAccessors {
     }
 
     @Override
+    public final void setFloat(final float value) {
+      setDouble(value);
+    }
+
+    @Override
     public final void setDecimal(final BigDecimal value) {
       setDouble(value.doubleValue());
+    }
+    <#elseif drillType == "Float4">
+
+    @Override
+    public final void setInt(final int value) {
+      setFloat(value);
+    }
+
+    @Override
+    public final void setLong(final long value) {
+      setFloat(value);
+    }
+
+    @Override
+    public final void setDouble(final double value) {
+      setFloat((float) value);
+    }
+
+    @Override
+    public final void setDecimal(final BigDecimal value) {
+      setFloat(value.floatValue());
     }
     <#elseif decimal>
 
@@ -493,6 +526,11 @@ public class ColumnAccessors {
 
     @Override
     public final void setDouble(final double value) {
+      setDecimal(BigDecimal.valueOf(value));
+    }
+
+    @Override
+    public final void setFloat(final float value) {
       setDecimal(BigDecimal.valueOf(value));
     }
       <#if drillType == "VarDecimal">

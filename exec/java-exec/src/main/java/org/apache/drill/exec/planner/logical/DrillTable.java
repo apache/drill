@@ -140,10 +140,6 @@ public abstract class DrillTable implements Table {
     return metadataProviderManager;
   }
 
-  public TableMetadataProvider getMetadataProvider() throws IOException {
-    return getGroupScan().getMetadataProvider();
-  }
-
   public StoragePluginConfig getStorageEngineConfig() {
     return storageEngineConfig;
   }

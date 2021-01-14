@@ -155,6 +155,13 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
   }
 
   @Override
+  public void setFloat(float value) {
+    baseWriter.setFloat(value);
+    isSetWriter.setInt(1);
+    writerIndex.nextElement();
+  }
+
+  @Override
   public void setDouble(double value) {
     baseWriter.setDouble(value);
     isSetWriter.setInt(1);

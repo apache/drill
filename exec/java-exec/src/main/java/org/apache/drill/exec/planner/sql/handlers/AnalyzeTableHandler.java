@@ -37,7 +37,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.logical.DrillAnalyzeRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
-import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillWriterRel;
@@ -210,16 +209,6 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
     return new DrillScreenRel(writerRel.getCluster(), writerRel.getTraitSet(), writerRel);
   }
 
-  public static DrillScanRel findScan(RelNode... rels) {
-    for (RelNode rel : rels) {
-      if (rel instanceof DrillScanRel) {
-        return (DrillScanRel) rel;
-      } else {
-        return findScan(rel.getInputs().toArray(new RelNode[0]));
-      }
-    }
-    return null;
-  }
   // Make sure no unsupported features in ANALYZE statement are used
   private static void verifyNoUnsupportedFunctions(final SqlAnalyzeTable analyzeTable) {
     // throw unsupported error for functions that are not yet implemented

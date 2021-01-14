@@ -708,7 +708,7 @@ public class TestDirectConverter extends SubOperatorTest {
     expect(ConversionType.IMPLICIT, conversions.analyze(tinyIntCol, bigIntCol));
     expect(ConversionType.IMPLICIT, conversions.analyze(tinyIntCol, float4Col));
     expect(ConversionType.IMPLICIT, conversions.analyze(tinyIntCol, float8Col));
-    expect(ConversionType.IMPLICIT, conversions.analyze(tinyIntCol, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(tinyIntCol, decimalCol));
     expect(ConversionType.EXPLICIT, conversions.analyze(tinyIntCol, stringCol));
 
     // SmallInt --> x
@@ -718,7 +718,7 @@ public class TestDirectConverter extends SubOperatorTest {
     expect(ConversionType.IMPLICIT, conversions.analyze(smallIntCol, bigIntCol));
     expect(ConversionType.IMPLICIT, conversions.analyze(smallIntCol, float4Col));
     expect(ConversionType.IMPLICIT, conversions.analyze(smallIntCol, float8Col));
-    expect(ConversionType.IMPLICIT, conversions.analyze(smallIntCol, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(smallIntCol, decimalCol));
     expect(ConversionType.EXPLICIT, conversions.analyze(smallIntCol, stringCol));
 
     // Int --> x
@@ -728,7 +728,7 @@ public class TestDirectConverter extends SubOperatorTest {
     expect(ConversionType.IMPLICIT, conversions.analyze(intCol, bigIntCol));
     expect(ConversionType.IMPLICIT, conversions.analyze(intCol, float4Col));
     expect(ConversionType.IMPLICIT, conversions.analyze(intCol, float8Col));
-    expect(ConversionType.IMPLICIT, conversions.analyze(intCol, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(intCol, decimalCol));
     expect(ConversionType.EXPLICIT, conversions.analyze(intCol, stringCol));
 
     // BigInt --> x
@@ -738,7 +738,7 @@ public class TestDirectConverter extends SubOperatorTest {
     expect(ConversionType.NONE, conversions.analyze(bigIntCol, bigIntCol));
     expect(ConversionType.IMPLICIT, conversions.analyze(bigIntCol, float4Col));
     expect(ConversionType.IMPLICIT, conversions.analyze(bigIntCol, float8Col));
-    expect(ConversionType.IMPLICIT, conversions.analyze(bigIntCol, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(bigIntCol, decimalCol));
     expect(ConversionType.EXPLICIT, conversions.analyze(bigIntCol, stringCol));
 
     // Float4 --> x
@@ -748,7 +748,7 @@ public class TestDirectConverter extends SubOperatorTest {
     expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float4Col, bigIntCol));
     expect(ConversionType.NONE, conversions.analyze(float4Col, float4Col));
     expect(ConversionType.IMPLICIT, conversions.analyze(float4Col, float8Col));
-    expect(ConversionType.IMPLICIT, conversions.analyze(float4Col, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(float4Col, decimalCol));
     expect(ConversionType.EXPLICIT, conversions.analyze(float4Col, stringCol));
 
     // Float8 --> x
@@ -758,7 +758,7 @@ public class TestDirectConverter extends SubOperatorTest {
     expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float8Col, bigIntCol));
     expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float8Col, float4Col));
     expect(ConversionType.NONE, conversions.analyze(float8Col, float8Col));
-    expect(ConversionType.IMPLICIT, conversions.analyze(float8Col, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(float8Col, decimalCol));
     expect(ConversionType.EXPLICIT, conversions.analyze(float8Col, stringCol));
 
     // Decimal --> x

@@ -138,6 +138,17 @@ public abstract class AbstractFixedWidthWriter extends BaseScalarWriter {
     }
 
     @Override
+    public final void setFloat(final float value) {
+      try {
+        // Catches int overflow. Does not catch overflow from
+        // double. See Math.round for details.
+        setInt(Math.toIntExact(Math.round(value)));
+      } catch (final ArithmeticException e) {
+        throw InvalidConversionError.writeError(schema(), value, e);
+      }
+    }
+
+    @Override
     public final void setDouble(final double value) {
       try {
         // Catches int overflow. Does not catch overflow from
