@@ -45,66 +45,48 @@ public class ImageMetadataUtils {
   public static boolean isVarchar(String name) {
     HashMap<Integer, String> tags = GenericMetadataDirectory._tagNameMap;
     // Format,Color Mode,Video Codec,Audio Codec
-    if (name.equals(tags.get(GenericMetadataDirectory.TAG_FORMAT))
+    return name.equals(tags.get(GenericMetadataDirectory.TAG_FORMAT))
         || name.equals(tags.get(GenericMetadataDirectory.TAG_COLOR_MODE))
         || name.equals(tags.get(GenericMetadataDirectory.TAG_VIDEO_CODEC))
-        || name.equals(tags.get(GenericMetadataDirectory.TAG_AUDIO_CODEC))) {
-      return true;
-    }
-    return false;
+        || name.equals(tags.get(GenericMetadataDirectory.TAG_AUDIO_CODEC));
   }
 
   public static boolean isInt(String name) {
     HashMap<Integer, String> tags = GenericMetadataDirectory._tagNameMap;
     // Pixel Width,Pixel Height,Orientation,Bits Per Pixel,Audio Sample Size
-    if (name.equals(tags.get(GenericMetadataDirectory.TAG_PIXEL_WIDTH))
+    return name.equals(tags.get(GenericMetadataDirectory.TAG_PIXEL_WIDTH))
         || name.equals(tags.get(GenericMetadataDirectory.TAG_PIXEL_HEIGHT))
         || name.equals(tags.get(GenericMetadataDirectory.TAG_ORIENTATION))
         || name.equals(tags.get(GenericMetadataDirectory.TAG_BITS_PER_PIXEL))
-        || name.equals(tags.get(GenericMetadataDirectory.TAG_AUDIO_SAMPLE_SIZE))) {
-      return true;
-    }
-    return false;
+        || name.equals(tags.get(GenericMetadataDirectory.TAG_AUDIO_SAMPLE_SIZE));
   }
 
   public static boolean isLong(String name) {
     HashMap<Integer, String> tags = GenericMetadataDirectory._tagNameMap;
     // File Size,Duration
-    if (name.equals(tags.get(GenericMetadataDirectory.TAG_FILE_SIZE))
-        || name.equals(tags.get(GenericMetadataDirectory.TAG_DURATION))) {
-      return true;
-    }
-    return false;
+    return name.equals(tags.get(GenericMetadataDirectory.TAG_FILE_SIZE))
+        || name.equals(tags.get(GenericMetadataDirectory.TAG_DURATION));
   }
 
   public static boolean isDouble(String name) {
     HashMap<Integer, String> tags = GenericMetadataDirectory._tagNameMap;
     // DPI Width,DPI Height,Frame Rate,Audio Sample Rate
-    if (name.equals(tags.get(GenericMetadataDirectory.TAG_DPI_WIDTH))
+    return name.equals(tags.get(GenericMetadataDirectory.TAG_DPI_WIDTH))
         || name.equals(tags.get(GenericMetadataDirectory.TAG_DPI_HEIGHT))
         || name.equals(tags.get(GenericMetadataDirectory.TAG_FRAME_RATE))
-        || name.equals(tags.get(GenericMetadataDirectory.TAG_AUDIO_SAMPLE_RATE))) {
-      return true;
-    }
-    return false;
+        || name.equals(tags.get(GenericMetadataDirectory.TAG_AUDIO_SAMPLE_RATE));
   }
 
   public static boolean isBoolean(String name) {
     HashMap<Integer, String> tags = GenericMetadataDirectory._tagNameMap;
     // Has Alpha
-    if (name.equals(tags.get(GenericMetadataDirectory.TAG_HAS_ALPHA))) {
-      return true;
-    }
-    return false;
+    return name.equals(tags.get(GenericMetadataDirectory.TAG_HAS_ALPHA));
   }
 
   public static boolean isDate(String name) {
     HashMap<Integer, String> tags = GenericMetadataDirectory._tagNameMap;
     // File Date Time
-    if (name.equals(tags.get(GenericMetadataDirectory.TAG_FILE_DATE_TIME))) {
-      return true;
-    }
-    return false;
+    return name.equals(tags.get(GenericMetadataDirectory.TAG_FILE_DATE_TIME));
   }
 
   /**
@@ -133,11 +115,8 @@ public class ImageMetadataUtils {
    */
   public static boolean isSkipTag(String name) {
     HashMap<Integer, String> tags = GenericMetadataDirectory._tagNameMap;
-    if (name.equals(tags.get(GenericMetadataDirectory.TAG_FILE_SIZE))
-        || name.equals(tags.get(GenericMetadataDirectory.TAG_FILE_DATE_TIME))) {
-      return true;
-    }
-    return false;
+    return name.equals(tags.get(GenericMetadataDirectory.TAG_FILE_SIZE))
+        || name.equals(tags.get(GenericMetadataDirectory.TAG_FILE_DATE_TIME));
   }
 
   public static boolean isDescriptionTag(final Directory directory, final int tagType) {

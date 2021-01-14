@@ -46,8 +46,8 @@ public class ImageFormatConfig implements FormatPluginConfig {
       @JsonProperty("descriptive") Boolean descriptive,
       @JsonProperty("timeZone") String timeZone) {
     this.extensions = extensions == null ? ImmutableList.of() : ImmutableList.copyOf(extensions);
-    this.fileSystemMetadata = fileSystemMetadata == null ? true : fileSystemMetadata;
-    this.descriptive = descriptive == null ? true : descriptive;
+    this.fileSystemMetadata = fileSystemMetadata == null || fileSystemMetadata;
+    this.descriptive = descriptive == null || descriptive;
     this.timeZone = timeZone;
   }
 

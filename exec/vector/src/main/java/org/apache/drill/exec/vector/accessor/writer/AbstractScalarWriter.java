@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector.accessor.writer;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
@@ -61,6 +62,8 @@ public abstract class AbstractScalarWriter implements ScalarWriter {
       setDate((LocalDate) value);
     } else if (value instanceof Instant) {
       setTimestamp((Instant) value);
+    } else if (value instanceof Date) {
+      setTimestamp(Instant.ofEpochMilli(((Date) value).getTime()));
     } else if (value instanceof byte[]) {
       final byte[] bytes = (byte[]) value;
       setBytes(bytes, bytes.length);

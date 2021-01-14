@@ -20,8 +20,6 @@ package org.apache.drill.exec.store.image;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 
 import org.apache.drill.common.AutoCloseables;
@@ -43,8 +41,6 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.joda.time.Instant;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.drew.imaging.FileType;
@@ -59,7 +55,7 @@ import com.drew.metadata.xmp.XmpDirectory;
 
 public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
-  private static final Logger logger = LoggerFactory.getLogger(ImageBatchReader.class);
+  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ImageBatchReader.class);
 
   private final ImageFormatConfig config;
   private final EasySubScan scan;
@@ -153,7 +149,6 @@ public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
       }
       genericColumns.put(ImageMetadataUtils.formatName(tagName), columnDefn);
     }
-    Collections.unmodifiableMap(genericColumns);
     return builder.buildSchema();
   }
 
@@ -199,6 +194,12 @@ public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
+  /**
+   * The class mainly process schema definition, index binding,
+   * and set up the vector (Column Writers) values.
+   * Because the new vector needs to specify schema
+   * depends on data type, must override some methods in derived classes.
+   */
   protected abstract static class ColumnDefn {
 
     private final String name;
@@ -251,6 +252,11 @@ public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
+  /**
+   * Responsible for process of the image GenericMetadataDirectory
+   * metadata and create data type based on different tags.
+   * @see org.apache.drill.exec.store.image.GenericMetadataDirectory
+   */
   protected static class GenericColumnDefn extends ColumnDefn {
 
     public GenericColumnDefn(String name) {
@@ -276,14 +282,15 @@ public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
     @Override
     public void load(Object value) {
-      if (value instanceof Date) {
-        getWriter().setTimestamp(Instant.ofEpochMilli(((Date) value).getTime()));
-      } else {
-        getWriter().setObject(value);
-      }
+      getWriter().setObject(value);
     }
   }
 
+  /**
+   * Responsible for process of the map writer (nested structure).
+   * Not only work with scalar, but also provide an entry point
+   * for create the nested structures, such as List or List-Map in a Map.
+   */
   protected static class MapColumnDefn extends ColumnDefn {
 
     private int index;
@@ -425,9 +432,11 @@ public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
+  /**
+   * Responsible for process of the list-map with array writer.
+   */
   protected static class ListColumnDefn extends ColumnDefn {
 
-    private int index;
     private ArrayWriter writer;
 
     public ListColumnDefn(String name) {
@@ -451,7 +460,7 @@ public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
     @Override
     public ScalarWriter addText(String name) {
       TupleWriter map = writer.tuple();
-      index = map.tupleSchema().index(name);
+      int index = map.tupleSchema().index(name);
       if (index == -1) {
         index = map.addColumn(SchemaBuilder.columnSchema(name, MinorType.VARCHAR, DataMode.OPTIONAL));
       }

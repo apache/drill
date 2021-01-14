@@ -30,7 +30,6 @@ import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.joda.time.Instant;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.adobe.internal.xmp.XMPException;
@@ -51,9 +50,16 @@ import com.drew.metadata.jpeg.JpegComponent;
 import com.drew.metadata.png.PngDirectory;
 import com.drew.metadata.xmp.XmpDirectory;
 
+/**
+ * Although each image format can contain different metadata,
+ * they also have common basic information. The class handles
+ * basic metadata as well as complex tags.
+ * @see org.apache.drill.exec.store.image.GenericMetadataDirectory
+ * @see com.drew.metadata.Directory
+ */
 public class ImageDirectoryProcessor {
 
-  private static final Logger logger = LoggerFactory.getLogger(ImageDirectoryProcessor.class);
+  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ImageDirectoryProcessor.class);
 
   protected static void processGenericMetadataDirectory(final GenericMetadataDirectory directory,
                                                         final LinkedHashMap<String, ColumnDefn> genericColumns,

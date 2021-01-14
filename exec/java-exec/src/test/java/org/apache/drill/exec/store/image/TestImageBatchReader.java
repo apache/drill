@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.TimeZone;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -37,6 +38,7 @@ import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.test.rowSet.RowSetComparison;
+import org.joda.time.Instant;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,12 +49,12 @@ public class TestImageBatchReader extends ClusterTest {
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
-    cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("bmp", "jpg", "mp4"), false, false, null));
     dirTestWatcher.copyResourceToRoot(Paths.get("store", "image"));
   }
 
   @Test
   public void testStarQuery() throws Exception {
+    cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("bmp"), false, false, null));
     String sql = "select * from dfs.`store/image/*.bmp`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
@@ -63,6 +65,7 @@ public class TestImageBatchReader extends ClusterTest {
 
   @Test
   public void testExplicitQuery() throws Exception {
+    cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("jpg"), false, false, null));
     String sql = "select Format, PixelWidth, HasAlpha, `XMP` from dfs.`store/image/withExifAndIptc.jpg`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
@@ -125,6 +128,7 @@ public class TestImageBatchReader extends ClusterTest {
 
   @Test
   public void testLimitPushdown() throws Exception {
+    cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("mp4"), false, false, null));
     String sql = "select * from dfs.`store/image/*.mp4` limit 1";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
@@ -135,6 +139,7 @@ public class TestImageBatchReader extends ClusterTest {
 
   @Test
   public void testSerDe() throws Exception {
+    cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("jpg"), false, false, null));
     String sql = "select count(*) from dfs.`store/image/*.jpg`";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
@@ -144,6 +149,7 @@ public class TestImageBatchReader extends ClusterTest {
 
   @Test
   public void testExplicitQueryWithCompressedFile() throws Exception {
+    cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("jpg"), false, false, null));
     QueryTestUtil.generateCompressedFile("store/image/LearningApacheDrill.jpg", "zip", "store/image/LearningApacheDrill.jpg.zip");
     String sql = "select Format, PixelWidth, PixelHeight, `FileType` from dfs.`store/image/LearningApacheDrill.jpg.zip`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
@@ -166,6 +172,66 @@ public class TestImageBatchReader extends ClusterTest {
         .build();
 
     assertEquals(1, sets.rowCount());
+    new RowSetComparison(expected).verifyAndClearAll(sets);
+  }
+
+  @Test
+  public void testFileSystemMetadataOption() throws Exception {
+    cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("gif"), true, false, null));
+    String sql = "select FileSize, Format, PixelWidth, PixelHeight, ColorMode, BitsPerPixel,"
+        + " Orientaion, DPIWidth, DPIHeight, HasAlpha, Duration, VideoCodec, FrameRate, AudioCodec,"
+        + " AudioSampleSize, AudioSampleRate from dfs.`store/image/*.gif`";
+    QueryBuilder builder = client.queryBuilder().sql(sql);
+    RowSet sets = builder.rowSet();
+
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("FileSize", MinorType.BIGINT)
+        .addNullable("Format", MinorType.VARCHAR)
+        .addNullable("PixelWidth", MinorType.INT)
+        .addNullable("PixelHeight", MinorType.INT)
+        .addNullable("ColorMode", MinorType.VARCHAR)
+        .addNullable("BitsPerPixel", MinorType.INT)
+        .addNullable("Orientaion", MinorType.INT)
+        .addNullable("DPIWidth", MinorType.FLOAT8)
+        .addNullable("DPIHeight", MinorType.FLOAT8)
+        .addNullable("HasAlpha", MinorType.BIT)
+        .addNullable("Duration", MinorType.BIGINT)
+        .addNullable("VideoCodec", MinorType.VARCHAR)
+        .addNullable("FrameRate", MinorType.FLOAT8)
+        .addNullable("AudioCodec", MinorType.VARCHAR)
+        .addNullable("AudioSampleSize", MinorType.INT)
+        .addNullable("AudioSampleRate", MinorType.FLOAT8)
+        .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow(10463, "GIF", 128, 174, "Indexed", 8, 0, 0.0, 0.0, true, 0, "Unknown", 0.0, "Unknown", 0, 0.0)
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(sets);
+  }
+
+  @Test
+  public void testTimeZoneOption() throws Exception {
+    cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("psd"), true, false, TimeZone.getDefault().getID()));
+    String sql = "select ExifIFD0 from dfs.`store/image/*.psd`";
+    QueryBuilder builder = client.queryBuilder().sql(sql);
+    RowSet sets = builder.rowSet();
+
+    TupleMetadata schema = new SchemaBuilder()
+        .addMap("ExifIFD0")
+          .addNullable("Orientation", MinorType.INT)
+          .addNullable("XResolution", MinorType.FLOAT8)
+          .addNullable("YResolution", MinorType.FLOAT8)
+          .addNullable("ResolutionUnit", MinorType.INT)
+          .addNullable("Software", MinorType.VARCHAR)
+          .addNullable("DateTime", MinorType.TIMESTAMP)
+          .resumeSchema()
+        .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow(singleMap(mapValue(1, 72.009, 72.009, 2, "Adobe Photoshop CS2 Windows", Instant.ofEpochMilli(1454688537000L))))
+        .build();
+
     new RowSetComparison(expected).verifyAndClearAll(sets);
   }
 }
