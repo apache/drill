@@ -53,6 +53,7 @@ public class CalciteUtils {
           new ElasticSearchEnumerablePrelContext(ElasticsearchStorageConfig.NAME));
 
   public static Set<RelOptRule> elasticSearchRules() {
+    // filters Calcite implementations of some rules and adds alternative versions specific for Drill
     Set<RelOptRule> rules = Arrays.stream(ElasticsearchRules.RULES)
         .filter(RULE_PREDICATE)
         .collect(Collectors.toSet());

@@ -34,6 +34,11 @@ import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Rule for converting Drill project to ElasticSearch project.
+ * This rule contains a logic to split the project if it would have expressions
+ * and convert only a simple project to ElasticSearch project.
+ */
 public class ElasticsearchProjectRule extends ConverterRule {
   private final Convention out;
 

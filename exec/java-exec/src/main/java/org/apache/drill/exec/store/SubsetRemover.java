@@ -24,6 +24,8 @@ import org.apache.calcite.rel.RelShuttleImpl;
 
 /**
  * Removes {@link RelSubset} nodes from the plan.
+ * It may be useful when we want to do some operations on the plan
+ * which aren't supported by {@link RelSubset} during the planning phase.
  */
 public class SubsetRemover extends RelShuttleImpl {
   public static RelShuttle INSTANCE = new SubsetRemover();
