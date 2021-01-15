@@ -57,10 +57,6 @@
           "extensions" : [ "csvh" ],
           "delimiter" : ",",
           "extractHeader" : true
-        },
-        "image" : {
-          "type" : "image",
-          "extensions" : [ "jpg", "jpeg", "jpe", "tif", "tiff", "dng", "psd", "png", "bmp", "gif", "ico", "pcx", "wav", "wave", "avi", "webp", "mov", "mp4", "m4a", "m4p", "m4b", "m4r", "m4v", "3gp", "3g2", "eps", "epsf", "epsi", "ai", "arw", "crw", "cr2", "nef", "orf", "raf", "rw2", "rwl", "srw", "x3f" ]
         }
       },
       "enabled" : true
@@ -162,10 +158,6 @@
           "extensions" : [ "csvh" ],
           "fieldDelimiter" : ",",
           "extractHeader" : true
-        },
-        "image" : {
-          "type" : "image",
-          "extensions" : [ "jpg", "jpeg", "jpe", "tif", "tiff", "dng", "psd", "png", "bmp", "gif", "ico", "pcx", "wav", "wave", "avi", "webp", "mov", "mp4", "m4a", "m4p", "m4b", "m4r", "m4v", "3gp", "3g2", "eps", "epsf", "epsi", "ai", "arw", "crw", "cr2", "nef", "orf", "raf", "rw2", "rwl", "srw", "x3f" ]
         }
       },
       "enabled" : true
