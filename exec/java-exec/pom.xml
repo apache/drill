@@ -606,10 +606,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.drewnoakes</groupId>
-      <artifactId>metadata-extractor</artifactId>
-    </dependency>
-    <dependency>
       <groupId>fr.bmartel</groupId>
       <artifactId>pcapngdecoder</artifactId>
       <version>1.2</version>

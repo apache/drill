@@ -43,18 +43,18 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(RowSetTests.class)
-public class TestImageBatchReader extends ClusterTest {
+public class TestImageRecordReader extends ClusterTest {
 
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
-    dirTestWatcher.copyResourceToRoot(Paths.get("store", "image"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("image/"));
   }
 
   @Test
   public void testStarQuery() throws Exception {
     cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("bmp"), false, false, null));
-    String sql = "select * from dfs.`store/image/*.bmp`";
+    String sql = "select * from dfs.`image/*.bmp`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -65,7 +65,7 @@ public class TestImageBatchReader extends ClusterTest {
   @Test
   public void testExplicitQuery() throws Exception {
     cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("jpg"), false, false, null));
-    String sql = "select Format, PixelWidth, HasAlpha, `XMP` from dfs.`store/image/withExifAndIptc.jpg`";
+    String sql = "select Format, PixelWidth, HasAlpha, `XMP` from dfs.`image/withExifAndIptc.jpg`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -128,7 +128,7 @@ public class TestImageBatchReader extends ClusterTest {
   @Test
   public void testLimitPushdown() throws Exception {
     cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("mp4"), false, false, null));
-    String sql = "select * from dfs.`store/image/*.mp4` limit 1";
+    String sql = "select * from dfs.`image/*.mp4` limit 1";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -139,7 +139,7 @@ public class TestImageBatchReader extends ClusterTest {
   @Test
   public void testSerDe() throws Exception {
     cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("jpg"), false, false, null));
-    String sql = "select count(*) from dfs.`store/image/*.jpg`";
+    String sql = "select count(*) from dfs.`image/*.jpg`";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
 
@@ -149,7 +149,7 @@ public class TestImageBatchReader extends ClusterTest {
   @Test
   public void testExplicitQueryWithCompressedFile() throws Exception {
     cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("jpg"), false, false, null));
-    QueryTestUtil.generateCompressedFile("store/image/LearningApacheDrill.jpg", "zip", "store/image/LearningApacheDrill.jpg.zip");
+    QueryTestUtil.generateCompressedFile("image/LearningApacheDrill.jpg", "zip", "store/image/LearningApacheDrill.jpg.zip");
     String sql = "select Format, PixelWidth, PixelHeight, `FileType` from dfs.`store/image/LearningApacheDrill.jpg.zip`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
@@ -179,7 +179,7 @@ public class TestImageBatchReader extends ClusterTest {
     cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("gif"), true, false, null));
     String sql = "select FileSize, Format, PixelWidth, PixelHeight, ColorMode, BitsPerPixel,"
         + " Orientaion, DPIWidth, DPIHeight, HasAlpha, Duration, VideoCodec, FrameRate, AudioCodec,"
-        + " AudioSampleSize, AudioSampleRate from dfs.`store/image/*.gif`";
+        + " AudioSampleSize, AudioSampleRate from dfs.`image/*.gif`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -212,7 +212,7 @@ public class TestImageBatchReader extends ClusterTest {
   @Test
   public void testTimeZoneOption() throws Exception {
     cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("psd"), true, false, "UTC"));
-    String sql = "select ExifIFD0 from dfs.`store/image/*.psd`";
+    String sql = "select ExifIFD0 from dfs.`image/*.psd`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
