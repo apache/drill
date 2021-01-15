@@ -71,14 +71,14 @@ type) for each column in each table or view.
 
 ## VIEWS
 
-The VIEWS table returns the name and definition for each view in your
-databases. Note that file schemas are the canonical repository for views in
-Drill. Depending on how you create a view, they may only be displayed in Drill
-after it has been used.
+The VIEWS table returns the name and definition for each view in your databases.  Note that file
+schemas are the canonical repository for views in Drill.  Depending on how you create it, a view may
+only be displayed in Drill after it has been used.
 
 ## PARTITIONS
 
-The PARTITIONS table returns information about table partitions including partition columns, partition keys, etc. for each table.
+The PARTITIONS table returns information about table partitions, including partition columns,
+partition keys, etc. for each table.
 
 ## FILES
 
@@ -142,7 +142,8 @@ For this example, S3 buckets were configured as data sources in Drill. Storage p
 	| DRILL         | s3_years_bucket.root     | <owner>       | file  | NO          |
 	|---------------|--------------------------|---------------|-------|-------------|  
 
-Querying the FILES table and filtering on the SCHEMA_NAME provides information about the files that exist within a workspace:  
+Querying the FILES table and filtering on the SCHEMA_NAME provides information about the files
+within a workspace:  
 
 **Note:** The word “files” is a reserved word in Drill and requires backticks (``).   
 
