@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
@@ -43,7 +42,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ScanPrel extends DrillScanRelBase implements Prel, HasDistributionAffinity {
+public class ScanPrel extends DrillScanRelBase implements LeafPrel, HasDistributionAffinity {
   private static final Logger logger = LoggerFactory.getLogger(ScanPrel.class);
 
   private final RelDataType rowType;
@@ -137,11 +136,6 @@ public class ScanPrel extends DrillScanRelBase implements Prel, HasDistributionA
   }
 
   @Override
-  public Iterator<Prel> iterator() {
-    return Collections.emptyIterator();
-  }
-
-  @Override
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
     return logicalVisitor.visitScan(this, value);
   }
@@ -154,11 +148,6 @@ public class ScanPrel extends DrillScanRelBase implements Prel, HasDistributionA
   @Override
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
-  }
-
-  @Override
-  public boolean needsFinalColumnReordering() {
-    return true;
   }
 
   @Override

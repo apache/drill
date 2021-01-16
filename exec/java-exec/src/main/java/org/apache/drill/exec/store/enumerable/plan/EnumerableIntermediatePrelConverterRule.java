@@ -15,36 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.jdbc;
+package org.apache.drill.exec.store.enumerable.plan;
 
-import java.util.List;
-
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.SingleRel;
-import org.apache.drill.common.logical.data.LogicalOperator;
-import org.apache.drill.exec.planner.logical.DrillImplementor;
+import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.drill.exec.planner.logical.DrillRel;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import org.apache.drill.exec.planner.physical.Prel;
 
-public class JdbcDrel extends SingleRel implements DrillRel {
+import java.util.function.Predicate;
 
-  public JdbcDrel(RelOptCluster cluster, RelTraitSet traits, RelNode child) {
-    super(cluster, traits, child);
+public class EnumerableIntermediatePrelConverterRule extends ConverterRule {
+
+  private final EnumerablePrelContext context;
+
+  public EnumerableIntermediatePrelConverterRule(EnumerablePrelContext context) {
+    super(VertexDrel.class, (Predicate<RelNode>) input -> true, DrillRel.DRILL_LOGICAL,
+        Prel.DRILL_PHYSICAL, DrillRelFactories.LOGICAL_BUILDER,
+        "EnumerableIntermediatePrelConverterRule:" + context.getPlanPrefix());
+    this.context = context;
   }
 
   @Override
-  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new JdbcDrel(getCluster(), traitSet, inputs.iterator().next());
-  }
-
-  @Override
-  protected Object clone() throws CloneNotSupportedException {
-    return copy(getTraitSet(), getInputs());
-  }
-
-  @Override
-  public LogicalOperator implement(DrillImplementor implementor) {
-    throw new UnsupportedOperationException();
+  public RelNode convert(RelNode in) {
+    return new EnumerableIntermediatePrel(
+        in.getCluster(),
+        in.getTraitSet().replace(getOutTrait()),
+        in.getInput(0),
+        context);
   }
 }

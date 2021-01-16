@@ -533,21 +533,21 @@ public class TestScalarAccessors extends SubOperatorTest {
 
     RowSetReader reader = rs.reader();
     ScalarReader colReader = reader.scalar(0);
-    assertEquals(ValueType.DOUBLE, colReader.valueType());
+    assertEquals(ValueType.FLOAT, colReader.valueType());
 
     assertTrue(reader.next());
     assertFalse(colReader.isNull());
-    assertEquals(0, colReader.getDouble(), 0.000001);
+    assertEquals(0, colReader.getFloat(), 0.000001);
 
     assertTrue(reader.next());
-    assertEquals(Float.MAX_VALUE, colReader.getDouble(), 0.000001);
-    assertEquals(Float.MAX_VALUE, (double) colReader.getObject(), 0.000001);
+    assertEquals(Float.MAX_VALUE, colReader.getFloat(), 0.000001);
+    assertEquals(Float.MAX_VALUE, (float) colReader.getObject(), 0.000001);
 
     assertTrue(reader.next());
-    assertEquals(Float.MIN_VALUE, colReader.getDouble(), 0.000001);
+    assertEquals(Float.MIN_VALUE, colReader.getFloat(), 0.000001);
 
     assertTrue(reader.next());
-    assertEquals(100, colReader.getDouble(), 0.000001);
+    assertEquals(100, colReader.getFloat(), 0.000001);
     assertEquals("100.0", colReader.getAsString());
 
     assertFalse(reader.next());
@@ -587,7 +587,7 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testNullableFloat() {
-    nullableDoubleTester(MinorType.FLOAT4);
+    nullableDoubleTester(MinorType.FLOAT8);
   }
 
   private void doubleArrayTester(MinorType type) {
@@ -636,7 +636,7 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testFloatArray() {
-    doubleArrayTester(MinorType.FLOAT4);
+    doubleArrayTester(MinorType.FLOAT8);
   }
 
   @Test

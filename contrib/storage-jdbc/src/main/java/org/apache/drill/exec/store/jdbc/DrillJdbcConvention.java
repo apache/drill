@@ -35,6 +35,7 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.planner.RuleInstance;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import org.apache.drill.exec.store.enumerable.plan.VertexDrelConverterRule;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 /**
@@ -60,7 +61,7 @@ class DrillJdbcConvention extends JdbcConvention {
     this.rules = ImmutableSet.<RelOptRule>builder()
         .addAll(calciteJdbcRules)
         .add(JdbcIntermediatePrelConverterRule.INSTANCE)
-        .add(new JdbcDrelConverterRule(this))
+        .add(new VertexDrelConverterRule(this))
         .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(Convention.NONE, this))
         .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(DrillRel.DRILL_LOGICAL, this))
         .add(new DrillJdbcRuleBase.DrillJdbcFilterRule(Convention.NONE, this))

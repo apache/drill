@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
@@ -144,20 +143,21 @@ public class ClassBuilder {
       saveCode(code, name);
     }
 
+    Class<?> compiledClass = getCompiledClass(code, className, config, options);
+    logger.debug("Compiled {}: time = {} ms.",
+        className,
+        (System.nanoTime() - t1 + 500_000) / 1_000_000);
+    return compiledClass;
+  }
+
+  public static Class<?> getCompiledClass(String code, String className,
+      DrillConfig config, OptionSet options) throws CompileException, ClassNotFoundException, ClassTransformationException, IOException {
     // Compile the code and load it into a class loader.
     CachedClassLoader classLoader = new CachedClassLoader();
     ClassCompilerSelector compilerSelector = new ClassCompilerSelector(classLoader, config, options);
+    ClassNames name = new ClassNames(className);
     Map<String,byte[]> results = compilerSelector.compile(name, code);
     classLoader.addClasses(results);
-
-    long totalBytecodeSize = 0;
-    for (byte[] clazz : results.values()) {
-      totalBytecodeSize += clazz.length;
-    }
-    logger.debug("Compiled {}: bytecode size = {}, time = {} ms.",
-                 cg.getClassName(),
-                  DrillStringUtils.readable(totalBytecodeSize),
-                  (System.nanoTime() - t1 + 500_000) / 1_000_000);
 
     // Get the class from the class loader.
     try {

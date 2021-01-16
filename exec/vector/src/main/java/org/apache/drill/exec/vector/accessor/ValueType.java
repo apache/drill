@@ -49,6 +49,11 @@ public enum ValueType {
   LONG,
 
   /**
+   * Type is set from a float: FLOAT4.
+   */
+  FLOAT,
+
+  /**
    * Type is set from a double: FLOAT4 and FLOAT8.
    */
   DOUBLE,

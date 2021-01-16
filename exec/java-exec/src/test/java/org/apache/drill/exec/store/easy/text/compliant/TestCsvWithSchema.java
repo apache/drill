@@ -1022,7 +1022,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           "col_int integer not null default '10', " +
           "col_bigint bigint not null default '10', " +
           "col_double double not null default '10.5', " +
-          "col_float float not null default '10.5', " +
+          "col_float float not null default '10.5f', " +
           "col_var varchar not null default 'foo', " +
           "col_boolean boolean not null default '1', " +
           "col_interval interval not null default 'P10D', " +
@@ -1051,7 +1051,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
       LocalDate ld = new LocalDate(2019, 3, 28);
       Instant ts = ld.toDateTime(lt).toInstant();
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(10, 10L, 10.5, 10.5D, "foo", true, new Period(0).plusDays(10),
+          .addRow(10, 10L, 10.5, 10.5f, "foo", true, new Period(0).plusDays(10),
               lt, ld, ts, "1")
           .build();
       RowSetUtilities.verify(expected, actual);

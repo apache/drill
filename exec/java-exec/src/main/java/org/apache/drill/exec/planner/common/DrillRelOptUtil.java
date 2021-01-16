@@ -284,7 +284,7 @@ public abstract class DrillRelOptUtil {
   public static boolean isProjectOutputRowcountUnknown(Project project) {
     for (RexNode rex : project.getProjects()) {
       if (rex instanceof RexCall) {
-        if ("flatten".equals(((RexCall) rex).getOperator().getName().toLowerCase())) {
+        if ("flatten".equalsIgnoreCase(((RexCall) rex).getOperator().getName())) {
           return true;
         }
       }
@@ -304,7 +304,7 @@ public abstract class DrillRelOptUtil {
           new RexVisitorImpl<Void>(true) {
             @Override
             public Void visitCall(RexCall call) {
-              if ("convert_fromjson".equals(call.getOperator().getName().toLowerCase())) {
+              if ("convert_fromjson".equalsIgnoreCase(call.getOperator().getName())) {
                 throw new Util.FoundOne(call); /* throw exception to interrupt tree walk (this is similar to
                                               other utility methods in RexUtil.java */
               }
@@ -319,6 +319,17 @@ public abstract class DrillRelOptUtil {
       return true;
     }
     return false;
+  }
+
+  public static TableScan findScan(RelNode... rels) {
+    for (RelNode rel : rels) {
+      if (rel instanceof TableScan) {
+        return (TableScan) rel;
+      } else {
+        return findScan(rel.getInputs().toArray(new RelNode[0]));
+      }
+    }
+    return null;
   }
 
   /**
@@ -677,8 +688,7 @@ public abstract class DrillRelOptUtil {
   }
 
   public static DrillTable getDrillTable(final TableScan scan) {
-    DrillTable drillTable = null;
-    drillTable = scan.getTable().unwrap(DrillTable.class);
+    DrillTable drillTable = scan.getTable().unwrap(DrillTable.class);
     if (drillTable == null) {
       DrillTranslatableTable transTable = scan.getTable().unwrap(DrillTranslatableTable.class);
       if (transTable != null) {

@@ -64,6 +64,9 @@ public class DummyScalarWriter extends AbstractScalarWriterImpl {
   public void setLong(long value) { }
 
   @Override
+  public void setFloat(float value) { }
+
+  @Override
   public void setDouble(double value) { }
 
   @Override

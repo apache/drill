@@ -24,13 +24,14 @@ import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.store.enumerable.plan.VertexDrel;
 
 final class JdbcIntermediatePrelConverterRule extends ConverterRule {
 
   static final JdbcIntermediatePrelConverterRule INSTANCE = new JdbcIntermediatePrelConverterRule();
 
   private JdbcIntermediatePrelConverterRule() {
-    super(JdbcDrel.class, (Predicate<RelNode>) input -> true, DrillRel.DRILL_LOGICAL,
+    super(VertexDrel.class, (Predicate<RelNode>) input -> true, DrillRel.DRILL_LOGICAL,
         Prel.DRILL_PHYSICAL, DrillRelFactories.LOGICAL_BUILDER, "JDBC_PREL_Converter");
   }
 

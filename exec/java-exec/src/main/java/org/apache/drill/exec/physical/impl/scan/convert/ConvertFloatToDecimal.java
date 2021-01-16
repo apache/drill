@@ -15,25 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.jdbc;
+package org.apache.drill.exec.physical.impl.scan.convert;
 
-import java.util.function.Predicate;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.convert.ConverterRule;
-import org.apache.drill.exec.planner.logical.DrillRel;
-import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import java.math.BigDecimal;
 
-class JdbcDrelConverterRule extends ConverterRule {
+public class ConvertFloatToDecimal extends DirectConverter {
 
-  JdbcDrelConverterRule(DrillJdbcConvention in) {
-    super(RelNode.class, (Predicate<RelNode>) input -> true, in, DrillRel.DRILL_LOGICAL,
-        DrillRelFactories.LOGICAL_BUILDER, "JDBC_DREL_Converter" + in.getName());
+  public ConvertFloatToDecimal(ScalarWriter baseWriter) {
+    super(baseWriter);
   }
 
   @Override
-  public RelNode convert(RelNode in) {
-    return new JdbcDrel(in.getCluster(), in.getTraitSet().replace(DrillRel.DRILL_LOGICAL),
-        convert(in, in.getTraitSet().replace(this.getInTrait()).simplify()));
+  public void setFloat(float value) {
+    baseWriter.setDecimal(BigDecimal.valueOf(value));
+  }
+
+  @Override
+  public void setValue(Object value) {
+    if (value == null) {
+      setNull();
+    } else {
+      setDouble((float) value);
+    }
   }
 }

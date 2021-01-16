@@ -901,7 +901,7 @@ public class TestRowSet extends SubOperatorTest {
     final String dictName = "d";
     final TupleMetadata schema = new SchemaBuilder()
         .add("id", MinorType.INT)
-        .addDictArray(dictName, MinorType.FLOAT4)
+        .addDictArray(dictName, MinorType.FLOAT8)
           .value(MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();

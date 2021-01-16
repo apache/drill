@@ -241,6 +241,11 @@ public abstract class BaseScalarWriter extends AbstractScalarWriterImpl {
   }
 
   @Override
+  public void setFloat(float value) {
+    throw conversionError("float");
+  }
+
+  @Override
   public void setDouble(double value) {
     throw conversionError("double");
   }

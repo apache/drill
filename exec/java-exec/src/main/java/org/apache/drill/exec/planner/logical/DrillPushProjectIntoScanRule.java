@@ -28,10 +28,8 @@ import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.planner.common.DrillProjectRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil.ProjectPushInfo;
-import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
@@ -89,7 +87,7 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
         }
       };
 
-  private DrillPushProjectIntoScanRule(Class<? extends Project> projectClass, Class<? extends TableScan> scanClass, String description) {
+  protected DrillPushProjectIntoScanRule(Class<? extends Project> projectClass, Class<? extends TableScan> scanClass, String description) {
     super(RelOptHelper.some(projectClass, RelOptHelper.any(scanClass)), description);
   }
 
@@ -110,14 +108,14 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
         return;
       }
 
-      DrillScanRelBase newScan = createScan(scan, projectPushInfo);
+      TableScan newScan = createScan(scan, projectPushInfo);
 
       List<RexNode> newProjects = new ArrayList<>();
       for (RexNode n : project.getChildExps()) {
         newProjects.add(n.accept(projectPushInfo.getInputReWriter()));
       }
 
-      DrillProjectRelBase newProject =
+      Project newProject =
           createProject(project, newScan, newProjects);
 
       if (ProjectRemoveRule.isTrivial(newProject)) {
@@ -151,7 +149,7 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
    * @param newProjects new project expressions
    * @return new project instance
    */
-  protected DrillProjectRelBase createProject(Project project, TableScan newScan, List<RexNode> newProjects) {
+  protected Project createProject(Project project, TableScan newScan, List<RexNode> newProjects) {
     return new DrillProjectRel(project.getCluster(),
         project.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
         newScan,
@@ -168,7 +166,7 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
    * @param projectPushInfo the source of row type and fields list
    * @return new scan instance
    */
-  protected DrillScanRelBase createScan(TableScan scan, ProjectPushInfo projectPushInfo) {
+  protected TableScan createScan(TableScan scan, ProjectPushInfo projectPushInfo) {
     return new DrillScanRel(scan.getCluster(),
         scan.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
         scan.getTable(),
@@ -184,7 +182,7 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
    * @param projectPushInfo fields information
    * @return true if push project into scan can be performed, false otherwise
    */
-  private boolean canPushProjectIntoScan(RelOptTable table, ProjectPushInfo projectPushInfo) throws IOException {
+  protected boolean canPushProjectIntoScan(RelOptTable table, ProjectPushInfo projectPushInfo) throws IOException {
     DrillTable drillTable = Utilities.getDrillTable(table);
     return !Utilities.isStarQuery(projectPushInfo.getFields())
         && drillTable.getGroupScan().canPushdownProjects(projectPushInfo.getFields());

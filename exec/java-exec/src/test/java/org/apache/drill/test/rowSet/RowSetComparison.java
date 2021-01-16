@@ -347,6 +347,12 @@ public class RowSetComparison {
 
       // Double must be handled specially since BigDecimal cannot handle
       // INF or NAN double values.
+      case FLOAT:
+        assertEquals(label, ec.getFloat(), ac.getFloat(), delta);
+        break;
+
+      // Double must be handled specially since BigDecimal cannot handle
+      // INF or NAN double values.
       case DOUBLE:
         assertEquals(label, ec.getDouble(), ac.getDouble(), delta);
         break;
@@ -367,6 +373,8 @@ public class RowSetComparison {
     switch (scalarReader.valueType()) {
       case BYTES:
         return ByteBuffer.wrap(scalarReader.getBytes());
+      case FLOAT:
+        return new BigDecimal(scalarReader.getFloat(), this.scale).stripTrailingZeros();
       case DOUBLE:
         return new BigDecimal(scalarReader.getDouble(), this.scale).stripTrailingZeros();
       default:

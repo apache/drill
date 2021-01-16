@@ -88,6 +88,8 @@ public class RowSetUtilities {
     switch (valueType) {
     case BYTES:
       return Integer.toHexString(value).getBytes();
+    case FLOAT:
+      return (float) value;
     case DOUBLE:
       return (double) value;
     case INTEGER:
@@ -165,6 +167,9 @@ public class RowSetUtilities {
         assertTrue(msg, Arrays.equals(expected, actual));
         break;
      }
+      case FLOAT:
+       assertEquals(msg, (float) expectedObj, (float) actualObj, 0.0001);
+       break;
      case DOUBLE:
        assertEquals(msg, (double) expectedObj, (double) actualObj, 0.0001);
        break;

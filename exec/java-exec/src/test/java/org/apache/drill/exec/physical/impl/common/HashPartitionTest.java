@@ -88,9 +88,9 @@ public class HashPartitionTest extends BaseTest {
       @Override
       public CloseableRecordBatch createProbeBatch(BatchSchema schema, FragmentContext context) {
         probeRowSet = new RowSetBuilder(context.getAllocator(), schema)
-          .addRow(.5, "yellow")
-          .addRow(1.5, "blue")
-          .addRow(2.5, "black")
+          .addRow(.5f, "yellow")
+          .addRow(1.5f, "blue")
+          .addRow(2.5f, "black")
           .build();
         return new MockRecordBatch.Builder().
           sendData(probeRowSet).
@@ -187,9 +187,9 @@ public class HashPartitionTest extends BaseTest {
       @Override
       public CloseableRecordBatch createProbeBatch(BatchSchema schema, FragmentContext context) {
         probeRowSet = new RowSetBuilder(context.getAllocator(), schema)
-          .addRow(.5, "yellow")
-          .addRow(1.5, "blue")
-          .addRow(2.5, "black")
+          .addRow(.5f, "yellow")
+          .addRow(1.5f, "blue")
+          .addRow(2.5f, "black")
           .build();
         return new MockRecordBatch.Builder().
           sendData(probeRowSet).

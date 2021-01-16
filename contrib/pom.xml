@@ -60,6 +60,7 @@
     <module>storage-opentsdb</module>
     <module>storage-http</module>
     <module>storage-druid</module>
+    <module>storage-elasticsearch</module>
   </modules>
 
 </project>
