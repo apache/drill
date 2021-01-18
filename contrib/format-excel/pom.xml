@@ -31,7 +31,7 @@
   <name>contrib/format-excel</name>
 
   <properties>
-    <poi.version>4.1.2</poi.version>
+    <poi.version>5.0.0</poi.version>
   </properties>
   <dependencies>
     <dependency>
@@ -67,7 +67,7 @@
     <dependency>
       <groupId>com.github.pjfanning</groupId>
       <artifactId>excel-streaming-reader</artifactId>
-      <version>2.3.5</version>
+      <version>2.4.0</version>
     </dependency>
   </dependencies>
   <build>
