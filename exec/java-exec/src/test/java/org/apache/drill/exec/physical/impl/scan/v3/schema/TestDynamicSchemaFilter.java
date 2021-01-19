@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.test.BaseTest;
 import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -40,7 +41,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(EvfTest.class)
-public class TestDynamicSchemaFilter {
+public class TestDynamicSchemaFilter extends BaseTest{
 
   private static final ColumnMetadata A_COL =
       MetadataUtils.newScalar("a", Types.required(MinorType.INT));
