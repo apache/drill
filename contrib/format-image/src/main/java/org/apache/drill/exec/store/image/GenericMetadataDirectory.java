@@ -15,16 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.store.image;
+
+import java.util.HashMap;
 
 import com.drew.lang.annotations.NotNull;
 import com.drew.metadata.Directory;
 import com.drew.metadata.MetadataException;
 
-import java.util.HashMap;
-
-@SuppressWarnings("WeakerAccess")
 public class GenericMetadataDirectory extends Directory
 {
   public static final int TAG_FILE_SIZE = 1;

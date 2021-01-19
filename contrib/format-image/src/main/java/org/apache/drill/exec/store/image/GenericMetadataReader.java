@@ -15,8 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.store.image;
+
+import java.util.Date;
+import java.util.TimeZone;
+
+import org.apache.hadoop.fs.FileStatus;
 
 import com.drew.imaging.FileType;
 import com.drew.imaging.png.PngChunkType;
@@ -46,10 +50,6 @@ import com.drew.metadata.photoshop.PsdHeaderDirectory;
 import com.drew.metadata.png.PngDirectory;
 import com.drew.metadata.wav.WavDirectory;
 import com.drew.metadata.webp.WebpDirectory;
-import org.apache.hadoop.fs.FileStatus;
-
-import java.util.Date;
-import java.util.TimeZone;
 
 public class GenericMetadataReader
 {

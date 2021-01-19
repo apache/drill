@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.store.image;
 
 import java.util.TimeZone;
@@ -25,7 +24,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestImageRecordReader extends BaseTestQuery {
+public class TestImageTagValue extends BaseTestQuery {
 
   private static TimeZone defaultTimeZone;
 
@@ -37,16 +36,16 @@ public class TestImageRecordReader extends BaseTestQuery {
 
   private void createAndQuery(String tableName, String imageFile) throws Exception {
     final String query = String.format(
-      "select * from table(cp.`store/image/%s`(type => 'image', fileSystemMetadata => false))",
+      "select * from table(cp.`image/%s`(type => 'image', fileSystemMetadata => false))",
       imageFile);
 
     runSQL("alter session set `store.format`='json'");
-    test("create table dfs.tmp.`%s` as %s", tableName, query);
+    test("create table dfs.`%s` as %s", tableName, query);
 
     testBuilder()
-      .sqlQuery("select * from dfs.tmp.`%s`", tableName)
+      .sqlQuery("select * from dfs.`%s`", tableName)
       .ordered()
-      .jsonBaselineFile("store/image/" + tableName + ".json")
+      .jsonBaselineFile("image/" + tableName + ".json")
       .go();
     runSQL("alter session set `store.format` = 'parquet'");
   }

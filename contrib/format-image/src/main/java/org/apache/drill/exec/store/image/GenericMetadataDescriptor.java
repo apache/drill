@@ -15,18 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.store.image;
+
+import static org.apache.drill.exec.store.image.GenericMetadataDirectory.TAG_DURATION;
+import static org.apache.drill.exec.store.image.GenericMetadataDirectory.TAG_FILE_SIZE;
+import static org.apache.drill.exec.store.image.GenericMetadataDirectory.TAG_ORIENTATION;
 
 import com.drew.lang.annotations.NotNull;
 import com.drew.lang.annotations.Nullable;
 import com.drew.metadata.TagDescriptor;
 
-import static org.apache.drill.exec.store.image.GenericMetadataDirectory.TAG_FILE_SIZE;
-import static org.apache.drill.exec.store.image.GenericMetadataDirectory.TAG_ORIENTATION;
-import static org.apache.drill.exec.store.image.GenericMetadataDirectory.TAG_DURATION;
-
-@SuppressWarnings("WeakerAccess")
 public class GenericMetadataDescriptor extends TagDescriptor<GenericMetadataDirectory>
 {
   public GenericMetadataDescriptor(@NotNull GenericMetadataDirectory directory)

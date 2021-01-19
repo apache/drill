@@ -165,10 +165,6 @@
           <artifactId>libpam4j</artifactId>
         </exclusion>
         <exclusion>
-          <artifactId>metadata-extractor</artifactId>
-          <groupId>com.drewnoakes</groupId>
-        </exclusion>
-        <exclusion>
           <groupId>sqlline</groupId>
           <artifactId>sqlline</artifactId>
         </exclusion>
