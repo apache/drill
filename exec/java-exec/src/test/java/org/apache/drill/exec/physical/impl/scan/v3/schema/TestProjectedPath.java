@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.scan.v3.schema;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.drill.test.BaseTest;
 import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -38,7 +39,7 @@ import org.junit.experimental.categories.Category;
  * verify the consistency checks.
  */
 @Category(EvfTest.class)
-public class TestProjectedPath {
+public class TestProjectedPath extends BaseTest{
 
   // INT is a proxy for all scalar columns.
   private static final ColumnMetadata INT_COLUMN = intSchema().metadata("a");

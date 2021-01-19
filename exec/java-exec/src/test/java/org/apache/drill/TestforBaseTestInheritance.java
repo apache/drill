@@ -30,7 +30,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class BaseTestInheritance extends BaseTest {
+public class TestforBaseTestInheritance extends BaseTest {
 
   @Test
   @Category(UnlikelyTest.class)
