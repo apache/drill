@@ -32,7 +32,7 @@
   <artifactId>drill-shaded</artifactId>
   <version>1.0</version>
 
-  <name>drill-shaded</name>
+  <name>Drill : Shaded</name>
   <packaging>pom</packaging>
 
   <build>

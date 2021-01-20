@@ -29,7 +29,7 @@
 
   <artifactId>drill-storage-hive-core</artifactId>
   <packaging>jar</packaging>
-  <name>contrib/hive-storage-plugin/core</name>
+  <name>Drill : Contrib : Storage : Hive : Core</name>
   <properties>
     <freemarker.conf.file>src/main/codegen/configHive3.fmpp</freemarker.conf.file>
   </properties>

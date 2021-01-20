@@ -33,7 +33,7 @@
   <version>1.19.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Apache Drill Root POM</name>
+  <name>Drill : </name>
   <description>Apache Drill is an open source, low latency SQL query engine for Hadoop and NoSQL.</description>
   <url>http://drill.apache.org/</url>
 

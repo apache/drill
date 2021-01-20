@@ -29,7 +29,7 @@
 
   <artifactId>drill-common</artifactId>
   <packaging>jar</packaging>
-  <name>Common (Logical Plan, Base expressions)</name>
+  <name>Drill : Common</name>
 
   <dependencies>
     <dependency>

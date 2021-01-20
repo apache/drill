@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-storage-http</artifactId>
-  <name>contrib/http-storage-plugin</name>
+  <name>Drill : Contrib : Storage : HTTP</name>
 
   <properties>
     <okhttp.version>4.5.0</okhttp.version>

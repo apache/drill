@@ -26,7 +26,7 @@
     <version>1.19.0-SNAPSHOT</version>
   </parent>
   <artifactId>drill-jdbc</artifactId>
-  <name>exec/JDBC Driver using dependencies</name>
+  <name>Drill : Exec : JDBC Driver using dependencies</name>
 
   <dependencies>
     <dependency>

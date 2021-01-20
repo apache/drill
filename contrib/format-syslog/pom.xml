@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-format-syslog</artifactId>
-  <name>contrib/format-syslog</name>
+  <name>Drill : Contrib : Format : Syslog</name>
 
   <dependencies>
     <dependency>

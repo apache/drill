@@ -26,7 +26,7 @@
     <version>1.19.0-SNAPSHOT</version>
   </parent>
   <artifactId>drill-format-httpd</artifactId>
-  <name>contrib/httpd-format-plugin</name>
+  <name>Drill : Contrib : Format : Httpd/Nginx Access Log</name>
 
   <dependencies>
     <dependency>

@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-format-mapr</artifactId>
-  <name>contrib/mapr-format-plugin</name>
+  <name>Drill : Contrib : Format : MaprDB</name>
 
   <properties>
     <mapr-format-plugin.hbase.version>1.1.1-mapr-1602-m7-5.2.0</mapr-format-plugin.hbase.version>

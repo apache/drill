@@ -28,7 +28,7 @@
 
   <artifactId>drill-yarn</artifactId>
   <packaging>jar</packaging>
-  <name>Drill-on-YARN</name>
+  <name>Drill : On-YARN</name>
 
   <build>
     <plugins>

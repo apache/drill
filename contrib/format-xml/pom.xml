@@ -30,7 +30,7 @@
   </parent>
 
   <artifactId>drill-format-xml</artifactId>
-  <name>contrib/format-xml</name>
+  <name>Drill : Contrib : Format : XML</name>
 
   <dependencies>
     <dependency>

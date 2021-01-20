@@ -28,7 +28,7 @@
 
   <groupId>org.apache.drill.contrib</groupId>
   <artifactId>drill-contrib-parent</artifactId>
-  <name>contrib/Parent Pom</name>
+  <name>Drill : Contrib : </name>
   <packaging>pom</packaging>
 
   <properties>

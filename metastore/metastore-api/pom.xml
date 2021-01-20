@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-metastore-api</artifactId>
-  <name>metastore/Drill Metastore API</name>
+  <name>Drill : Metastore : API</name>
 
   <dependencies>
     <dependency>

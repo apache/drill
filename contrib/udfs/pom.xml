@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-udfs</artifactId>
-  <name>contrib/drill-udfs</name>
+  <name>Drill : Contrib : UDFs</name>
 
   <dependencies>
     <dependency>

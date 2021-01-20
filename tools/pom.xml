@@ -29,7 +29,7 @@
   <groupId>org.apache.drill.tools</groupId>
   <artifactId>tools-parent</artifactId>
   <packaging>pom</packaging>
-  <name>tools/Parent Pom</name>
+  <name>Drill : Tools : </name>
 
   <modules>
     <module>fmpp</module>

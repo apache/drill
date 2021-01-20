@@ -29,7 +29,7 @@
   <groupId>org.apache.drill.memory</groupId>
   <artifactId>memory-parent</artifactId>
   <packaging>pom</packaging>
-  <name>exec/memory/Parent Pom</name>
+  <name>Drill : Exec : Memory : </name>
 
   <modules>
     <module>base</module>

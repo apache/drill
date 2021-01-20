@@ -27,7 +27,7 @@
   </parent>
 
   <artifactId>tpch-sample-data</artifactId>
-  <name>contrib/data/tpch-sample-data</name>
+  <name>Drill : Contrib : Data : TPCH Sample</name>
   <packaging>jar</packaging>
 
   <dependencies>

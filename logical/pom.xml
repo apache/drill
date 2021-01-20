@@ -29,7 +29,7 @@
 
   <artifactId>drill-logical</artifactId>
   <packaging>jar</packaging>
-  <name>Logical Plan, Base expressions</name>
+  <name>Drill : Logical Plan</name>
 
   <dependencies>
     <dependency>

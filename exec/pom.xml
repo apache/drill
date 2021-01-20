@@ -29,7 +29,7 @@
   <groupId>org.apache.drill.exec</groupId>
   <artifactId>exec-parent</artifactId>
   <packaging>pom</packaging>
-  <name>exec/Parent Pom</name>
+  <name>Drill : Exec : </name>
 
 
   <profiles>

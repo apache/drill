@@ -29,7 +29,7 @@
 
   <artifactId>drill-protocol</artifactId>
   <packaging>jar</packaging>
-  <name>Drill Protocol</name>
+  <name>Drill : Protocol</name>
 
   <dependencies>
     <dependency>

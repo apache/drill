@@ -28,7 +28,7 @@
 
     <artifactId>drill-opentsdb-storage</artifactId>
 
-    <name>contrib/opentsdb-storage-plugin</name>
+    <name>Drill : Contrib : Storage : OpenTSDB</name>
 
     <properties>
         <retrofit.version>2.8.1</retrofit.version>

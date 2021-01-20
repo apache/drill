@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-format-esri</artifactId>
-  <name>contrib/format-esri</name>
+  <name>Drill : Contrib : Format : Esri</name>
 
   <dependencies>
     <dependency>

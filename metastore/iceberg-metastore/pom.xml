@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-iceberg-metastore</artifactId>
-  <name>metastore/Drill Iceberg Metastore</name>
+  <name>Drill : Metastore : Iceberg</name>
 
   <properties>
     <iceberg.version>93d51b9</iceberg.version>

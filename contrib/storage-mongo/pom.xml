@@ -28,7 +28,7 @@
 
   <artifactId>drill-mongo-storage</artifactId>
 
-  <name>contrib/mongo-storage-plugin</name>
+  <name>Drill : Contrib : Storage : MongoDB</name>
 
   <properties>
      <mongo.TestSuite>**/MongoTestSuite.class</mongo.TestSuite>

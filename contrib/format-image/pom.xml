@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-format-image</artifactId>
-  <name>contrib/format-image</name>
+  <name>Drill : Contrib : Format : Image</name>
 
   <dependencies>
     <dependency>

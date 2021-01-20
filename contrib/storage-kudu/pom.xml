@@ -27,7 +27,7 @@
   </parent>
 
   <artifactId>drill-kudu-storage</artifactId>
-  <name>contrib/kudu-storage-plugin</name>
+  <name>Drill : Contrib : Storage : Kudu</name>
 
 
   <dependencies>

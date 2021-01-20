@@ -28,7 +28,7 @@
 
   <artifactId>drill-jdbc-storage</artifactId>
 
-  <name>contrib/jdbc-storage-plugin</name>
+  <name>Drill : Contrib : Storage : JDBC</name>
 
   <properties>
     <mysql.connector.version>8.0.19</mysql.connector.version>

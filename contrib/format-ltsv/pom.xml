@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-format-ltsv</artifactId>
-  <name>contrib/ltsv-format-plugin</name>
+  <name>Drill : Contrib : Format : LTSV</name>
 
   <dependencies>
     <dependency>

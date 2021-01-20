@@ -27,7 +27,7 @@
   </parent>
 
   <artifactId>drill-jdbc-all</artifactId>
-  <name>JDBC JAR with all dependencies</name>
+  <name>Drill : Exec : JDBC JAR with all dependencies</name>
 
   <!-- Since we are packaging hadoop dependencies under the namespace with "oadd." prefix by default,
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->

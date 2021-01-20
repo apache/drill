@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-storage-kafka</artifactId>
-  <name>contrib/kafka-storage-plugin</name>
+  <name>Drill : Contrib : Storage : Kafka</name>
 
   <properties>
     <kafka.version>2.3.1</kafka.version>

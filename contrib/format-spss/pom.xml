@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-format-spss</artifactId>
-  <name>contrib/format-spss</name>
+  <name>Drill : Contrib : Format : SPSS</name>
 
   <dependencies>
     <dependency>

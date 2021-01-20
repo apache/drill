@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-rdbms-metastore</artifactId>
-  <name>metastore/Drill RDBMS Metastore</name>
+  <name>Drill : Metastore : RDBMS</name>
 
   <properties>
     <jooq.version>3.13.1</jooq.version>

@@ -33,7 +33,7 @@
 
   <artifactId>drill-storage-elasticsearch</artifactId>
 
-  <name>contrib/elasticsearch-storage-plugin</name>
+  <name>Drill : Contrib : Storage : ElasticSearch</name>
 
   <dependencies>
     <dependency>

@@ -27,7 +27,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>drill-druid-storage</artifactId>
-    <name>contrib/druid-storage-plugin</name>
+    <name>Drill : Contrib : Storage : Druid</name>
     <properties>
         <druid.TestSuite>**/DruidTestSuit.class</druid.TestSuite>
     </properties>

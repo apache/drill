@@ -28,7 +28,7 @@
 
   <groupId>org.apache.drill.contrib.storage-hive</groupId>
   <artifactId>drill-contrib-storage-hive-parent</artifactId>
-  <name>contrib/hive-storage-plugin/Parent Pom</name>
+  <name>Drill : Contrib : Storage : Hive : </name>
   <packaging>pom</packaging>
 
   <dependencies>

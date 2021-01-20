@@ -26,7 +26,7 @@
     <version>1.19.0-SNAPSHOT</version>
   </parent>
   <artifactId>drill-java-exec</artifactId>
-  <name>exec/Java Execution Engine</name>
+  <name>Drill : Exec : Java Execution Engine</name>
 
   <properties>
     <libpam4j.version>1.8-rev2</libpam4j.version>

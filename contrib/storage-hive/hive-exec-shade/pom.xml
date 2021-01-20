@@ -29,7 +29,7 @@
 
   <artifactId>drill-hive-exec-shaded</artifactId>
   <packaging>jar</packaging>
-  <name>contrib/hive-storage-plugin/hive-exec-shaded</name>
+  <name>Drill : Contrib : Storage : Hive : Exec Shaded</name>
 
   <properties>
     <hive.parquet.version>1.8.3</hive.parquet.version>

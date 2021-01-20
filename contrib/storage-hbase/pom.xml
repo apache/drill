@@ -28,7 +28,7 @@
 
   <artifactId>drill-storage-hbase</artifactId>
 
-  <name>contrib/hbase-storage-plugin</name>
+  <name>Drill : Contrib : Storage : HBase</name>
 
   <properties>
     <hbase.TestSuite>**/HBaseTestsSuite.class</hbase.TestSuite>

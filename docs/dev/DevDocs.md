@@ -15,3 +15,7 @@ For more information about working with license headers see [LicenseHeaders.md](
 ## Javadocs
 
 For more info about generating and using javadocs see [Javadocs.md](Javadocs.md)
+
+## Building with Maven
+
+For more info about the use of maven see [Maven.md](Maven.md)

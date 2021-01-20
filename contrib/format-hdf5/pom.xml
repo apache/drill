@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-format-hdf5</artifactId>
-  <name>contrib/format-hdf5</name>
+  <name>Drill : Contrib : Format : HDF5</name>
   
   <dependencies>
     <dependency>
