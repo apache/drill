@@ -33,15 +33,18 @@ Drill must be running in order to access the Web UI to configure a storage plugi
   2. In the [Drill Web UI]({{ site.baseurl }}/docs/plugin-configuration-basics/#using-the-drill-web-console), select the **Storage** tab.
   4. Under Disabled Storage Plugins, select **Update** to choose the `mongo` storage plugin configuration.
   5. In the Configuration window, take a look at the default configuration:
-     
+  ```json
         {
           "type": "mongo",
           "connection": "mongodb://localhost:27017/",
           "enabled": false
         }
+  ```
 
-     {% include startnote.html %}27017 is the default port for `mongodb` instances.{% include endnote.html %} 
-     {% include startnote.html %}In some cases you will need an authentication to perform certain `mongodb` queries. You can add login and password directly to connection URL: 'mongodb://root:password@localhost:27017/'{% include endnote.html %} 
+{% include startnote.html %}27017 is the default port for `mongodb` instances.{% include endnote.html %}
+{% include startnote.html %}In some cases you will need an authentication to perform certain `mongodb` queries. You can add login and password directly to connection URL: 'mongodb://root:password@localhost:27017/'.{% include endnote.html %}
+{% include startnote.html %}See more info [Connection String URI Format]({{site.baseurl}}https://docs.mongodb.com/v3.0/reference/connection-string/){% include endnote.html %} 
+
   6. Click **Enable** to enable the storage plugin.
 
 ## Querying MongoDB
