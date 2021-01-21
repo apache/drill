@@ -607,11 +607,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>fr.bmartel</groupId>
-      <artifactId>pcapngdecoder</artifactId>
-      <version>1.2</version>
-    </dependency>
-    <dependency>
       <groupId>sqlline</groupId>
       <artifactId>sqlline</artifactId>
     </dependency>

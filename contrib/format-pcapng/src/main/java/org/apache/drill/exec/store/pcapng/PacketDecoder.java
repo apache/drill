@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.pcapng.decoder;
+package org.apache.drill.exec.store.pcapng;
 
 import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.exec.store.pcap.decoder.PacketConstants;

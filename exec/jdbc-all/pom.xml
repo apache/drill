@@ -340,7 +340,6 @@
               <exclude>io.netty:netty-tcnative:jar:*</exclude>
               <exclude>com.google.code.findbugs:jsr305:*</exclude>
               <exclude>com.esri.geometry:esri-geometry-api:*</exclude>
-              <exclude>fr.bmartel:pcapngdecoder:*</exclude>
               <exclude>dnsjava:dnsjava:jar:*</exclude>
             </excludes>
           </artifactSet>
@@ -674,7 +673,6 @@
                     <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
                     <exclude>com.google.code.findbugs:jsr305:*</exclude>
                     <exclude>com.esri.geometry:esri-geometry-api:*</exclude>
-                    <exclude>fr.bmartel:pcapngdecoder:*</exclude>
                   </excludes>
                 </artifactSet>
                 <relocations>

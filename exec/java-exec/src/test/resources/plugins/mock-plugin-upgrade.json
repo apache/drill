@@ -36,9 +36,6 @@
         "pcap" : {
           "type" : "pcap"
         },
-        "pcapng" : {
-          "type" : "pcapng"
-        },
         "avro" : {
           "type" : "avro",
           "extensions" : [ "avro" ]
@@ -152,9 +149,6 @@
         },
         "pcap" : {
           "type" : "pcap"
-        },
-        "pcapng" : {
-          "type" : "pcapng"
         },
         "avro" : {
           "type" : "avro",

@@ -42,12 +42,12 @@ public class TestPcapngStatRecordReader extends ClusterTest {
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
     cluster.defineFormat("dfs", "pcapng", new PcapngFormatConfig(null, true));
-    dirTestWatcher.copyResourceToRoot(Paths.get("store", "pcapng"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("pcapng/"));
   }
 
   @Test
   public void testStarQuery() throws Exception {
-    String sql = "select * from dfs.`store/pcapng/example.pcapng`";
+    String sql = "select * from dfs.`pcapng/example.pcapng`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -57,7 +57,7 @@ public class TestPcapngStatRecordReader extends ClusterTest {
 
   @Test
   public void testExplicitQuery() throws Exception {
-    String sql = "select path, shb_hardware, shb_os, if_name, isb_ifrecv from dfs.`store/pcapng/sniff.pcapng`";
+    String sql = "select path, shb_hardware, shb_os, if_name, isb_ifrecv from dfs.`pcapng/sniff.pcapng`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -82,7 +82,7 @@ public class TestPcapngStatRecordReader extends ClusterTest {
 
   @Test
   public void testLimitPushdown() throws Exception {
-    String sql = "select * from dfs.`store/pcapng/example.pcapng` limit 2";
+    String sql = "select * from dfs.`pcapng/example.pcapng` limit 2";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -92,7 +92,7 @@ public class TestPcapngStatRecordReader extends ClusterTest {
 
   @Test
   public void testSerDe() throws Exception {
-    String sql = "select count(*) from dfs.`store/pcapng/*.pcapng`";
+    String sql = "select count(*) from dfs.`pcapng/*.pcapng`";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
 
@@ -101,7 +101,7 @@ public class TestPcapngStatRecordReader extends ClusterTest {
 
   @Test
   public void testValidHeaders() throws Exception {
-    String sql = "select * from dfs.`store/pcapng/sniff.pcapng`";
+    String sql = "select * from dfs.`pcapng/sniff.pcapng`";
     RowSet sets = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata schema = new SchemaBuilder()

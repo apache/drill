@@ -44,12 +44,12 @@ public class TestPcapngRecordReader extends ClusterTest {
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
-    dirTestWatcher.copyResourceToRoot(Paths.get("store", "pcapng"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("pcapng/"));
   }
 
   @Test
   public void testStarQuery() throws Exception {
-    String sql = "select * from dfs.`store/pcapng/sniff.pcapng`";
+    String sql = "select * from dfs.`pcapng/sniff.pcapng`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -59,7 +59,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testExplicitQuery() throws Exception {
-    String sql = "select type, packet_length, `timestamp` from dfs.`store/pcapng/sniff.pcapng` where type = 'ARP'";
+    String sql = "select type, packet_length, `timestamp` from dfs.`pcapng/sniff.pcapng` where type = 'ARP'";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -80,7 +80,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testLimitPushdown() throws Exception {
-    String sql = "select * from dfs.`store/pcapng/sniff.pcapng` where type = 'UDP' limit 10 offset 65";
+    String sql = "select * from dfs.`pcapng/sniff.pcapng` where type = 'UDP' limit 10 offset 65";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -90,7 +90,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testSerDe() throws Exception {
-    String sql = "select count(*) from dfs.`store/pcapng/example.pcapng`";
+    String sql = "select count(*) from dfs.`pcapng/example.pcapng`";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
 
@@ -99,8 +99,8 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testExplicitQueryWithCompressedFile() throws Exception {
-    QueryTestUtil.generateCompressedFile("store/pcapng/sniff.pcapng", "zip", "store/pcapng/sniff.pcapng.zip");
-    String sql = "select type, packet_length, `timestamp` from dfs.`store/pcapng/sniff.pcapng.zip` where type = 'ARP'";
+    QueryTestUtil.generateCompressedFile("pcapng/sniff.pcapng", "zip", "pcapng/sniff.pcapng.zip");
+    String sql = "select type, packet_length, `timestamp` from dfs.`pcapng/sniff.pcapng.zip` where type = 'ARP'";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -121,7 +121,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testCaseInsensitiveQuery() throws Exception {
-    String sql = "select `timestamp`, paCket_dAta, TyPe from dfs.`store/pcapng/sniff.pcapng`";
+    String sql = "select `timestamp`, paCket_dAta, TyPe from dfs.`pcapng/sniff.pcapng`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -131,7 +131,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testWhereSyntaxQuery() throws Exception {
-    String sql = "select type, src_ip, dst_ip, packet_length from dfs.`store/pcapng/sniff.pcapng` where src_ip= '10.2.15.239'";
+    String sql = "select type, src_ip, dst_ip, packet_length from dfs.`pcapng/sniff.pcapng` where src_ip= '10.2.15.239'";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -154,7 +154,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testValidHeaders() throws Exception {
-    String sql = "select * from dfs.`store/pcapng/sniff.pcapng`";
+    String sql = "select * from dfs.`pcapng/sniff.pcapng`";
     RowSet sets = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata schema = new SchemaBuilder()
@@ -191,7 +191,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testGroupBy() throws Exception {
-    String sql = "select src_ip, count(1), sum(packet_length) from dfs.`store/pcapng/sniff.pcapng` group by src_ip";
+    String sql = "select src_ip, count(1), sum(packet_length) from dfs.`pcapng/sniff.pcapng` group by src_ip";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -201,7 +201,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testDistinctQuery() throws Exception {
-    String sql = "select distinct `timestamp`, src_ip from dfs.`store/pcapng/sniff.pcapng`";
+    String sql = "select distinct `timestamp`, src_ip from dfs.`pcapng/sniff.pcapng`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -211,7 +211,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test(expected = UserRemoteException.class)
   public void testBasicQueryWithIncorrectFileName() throws Exception {
-    String sql = "select * from dfs.`store/pcapng/drill.pcapng`";
+    String sql = "select * from dfs.`pcapng/drill.pcapng`";
     client.queryBuilder().sql(sql).rowSet();
   }
 }

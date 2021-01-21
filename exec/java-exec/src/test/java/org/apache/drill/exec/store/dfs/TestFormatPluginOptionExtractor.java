@@ -62,9 +62,6 @@ public class TestFormatPluginOptionExtractor extends BaseTest {
         case "sequencefile":
           assertEquals(d.typeName, "(type: String)", d.presentParams());
           break;
-        case "pcapng":
-          assertEquals(d.typeName, "(type: String, stat: boolean)", d.presentParams());
-          break;
         case "avro":
           assertEquals(d.typeName, "(type: String)", d.presentParams());
           break;

@@ -26,7 +26,6 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.store.pcap.PcapFormatUtils;
-import org.apache.drill.exec.store.pcapng.decoder.PacketDecoder;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 import fr.bmartel.pcapdecoder.structure.options.inter.IOptionsStatisticsHeader;
