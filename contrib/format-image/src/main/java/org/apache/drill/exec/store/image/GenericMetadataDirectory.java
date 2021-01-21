@@ -52,7 +52,7 @@ public class GenericMetadataDirectory extends Directory
     _tagNameMap.put(TAG_FORMAT, "Format");
     _tagNameMap.put(TAG_PIXEL_WIDTH, "Pixel Width");
     _tagNameMap.put(TAG_PIXEL_HEIGHT, "Pixel Height");
-    _tagNameMap.put(TAG_ORIENTATION, "Orientaion");
+    _tagNameMap.put(TAG_ORIENTATION, "Orientation");
     _tagNameMap.put(TAG_DPI_WIDTH, "DPI Width");
     _tagNameMap.put(TAG_DPI_HEIGHT, "DPI Height");
     _tagNameMap.put(TAG_COLOR_MODE, "Color Mode");

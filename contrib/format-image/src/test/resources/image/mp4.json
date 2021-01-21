@@ -11,7 +11,7 @@
   "AudioCodec" : "MPEG-4, Advanced Audio Coding (AAC)",
   "AudioSampleSize" : "16",
   "AudioSampleRate" : "48000",
-  "Orientaion" : "Unknown (0)",
+  "Orientation" : "Unknown (0)",
   "ColorMode" : "RGB",
   "HasAlpha" : "false",
   "MP4" : {

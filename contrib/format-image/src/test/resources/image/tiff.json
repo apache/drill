@@ -2,7 +2,7 @@
   "Format" : "ARW",
   "PixelWidth" : "128",
   "PixelHeight" : "174",
-  "Orientaion" : "Top, left side (Horizontal / normal)",
+  "Orientation" : "Top, left side (Horizontal / normal)",
   "DPIWidth" : "72",
   "DPIHeight" : "72",
   "BitsPerPixel" : "24",

@@ -178,7 +178,7 @@ public class TestImageRecordReader extends ClusterTest {
   public void testFileSystemMetadataOption() throws Exception {
     cluster.defineFormat("dfs", "image", new ImageFormatConfig(Arrays.asList("gif"), true, false, null));
     String sql = "select FileSize, Format, PixelWidth, PixelHeight, ColorMode, BitsPerPixel,"
-        + " Orientaion, DPIWidth, DPIHeight, HasAlpha, Duration, VideoCodec, FrameRate, AudioCodec,"
+        + " Orientation, DPIWidth, DPIHeight, HasAlpha, Duration, VideoCodec, FrameRate, AudioCodec,"
         + " AudioSampleSize, AudioSampleRate from dfs.`image/*.gif`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
@@ -190,7 +190,7 @@ public class TestImageRecordReader extends ClusterTest {
         .addNullable("PixelHeight", MinorType.INT)
         .addNullable("ColorMode", MinorType.VARCHAR)
         .addNullable("BitsPerPixel", MinorType.INT)
-        .addNullable("Orientaion", MinorType.INT)
+        .addNullable("Orientation", MinorType.INT)
         .addNullable("DPIWidth", MinorType.FLOAT8)
         .addNullable("DPIHeight", MinorType.FLOAT8)
         .addNullable("HasAlpha", MinorType.BIT)
