@@ -24,7 +24,7 @@ import java.util.Map;
 
 public interface EnumerablePrelContext {
 
-  String generateCode(RelOptCluster cluster, RelNode elasticNode);
+  String generateCode(RelOptCluster cluster, RelNode relNode);
 
   RelNode transformNode(RelNode input);
 
