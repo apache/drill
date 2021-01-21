@@ -147,7 +147,7 @@ public class TestLogReader extends ClusterTest {
   private static LogFormatConfig dateTimeConfig() {
     String regex = "(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}),(\\d+)\\s\\[(\\w+)\\]\\s([A-Z]+)\\s(.+)";
     List<LogFormatField> schema = Lists.newArrayList(
-        new LogFormatField("entry_date", "TIMESTAMP", "yy-MM-dd hh:mm:ss"),
+        new LogFormatField("entry_date", "TIMESTAMP", "yyyy-MM-dd HH:mm:ss"),
         new LogFormatField("pid", "INT"),
         new LogFormatField("location"),
         new LogFormatField("message_type"),

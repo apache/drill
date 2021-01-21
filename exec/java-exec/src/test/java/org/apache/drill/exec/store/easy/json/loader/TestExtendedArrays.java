@@ -23,7 +23,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
@@ -341,7 +343,7 @@ public class TestExtendedArrays extends BaseJsonLoaderTest {
     TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("a", MinorType.DATE)
         .build();
-    org.joda.time.LocalDate date = new org.joda.time.LocalDate(2020, 04, 21);
+    LocalDate date = LocalDate.of(2020, 04, 21);
     RowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(date)
         .addSingleCol(null)
@@ -368,7 +370,7 @@ public class TestExtendedArrays extends BaseJsonLoaderTest {
     TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("a", MinorType.TIME)
         .build();
-    org.joda.time.LocalTime time  = new org.joda.time.LocalTime(11, 22, 33);
+    LocalTime time  = LocalTime.of(11, 22, 33);
     RowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(time)
         .addSingleCol(null)

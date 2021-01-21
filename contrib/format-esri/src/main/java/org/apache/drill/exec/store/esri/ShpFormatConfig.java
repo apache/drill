@@ -51,10 +51,6 @@ public class ShpFormatConfig implements FormatPluginConfig {
     return extensions;
   }
 
-  public ShpBatchReader.ShpReaderConfig getReaderConfig(ShpFormatPlugin plugin) {
-    return new ShpBatchReader.ShpReaderConfig(plugin);
-  }
-
   @Override
   public int hashCode() {
     return Objects.hash(extensions);

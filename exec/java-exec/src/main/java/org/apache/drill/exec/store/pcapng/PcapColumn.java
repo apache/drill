@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.pcapng;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,7 +28,6 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.store.pcap.PcapFormatUtils;
 import org.apache.drill.exec.store.pcapng.decoder.PacketDecoder;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.joda.time.Instant;
 
 import fr.bmartel.pcapdecoder.structure.options.inter.IOptionsStatisticsHeader;
 import fr.bmartel.pcapdecoder.structure.types.IPcapngType;

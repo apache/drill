@@ -91,26 +91,7 @@ public class WebUserConnection extends BaseWebUserConnection {
       // DRILL-6847:  This section adds query metadata to the REST results
       MaterializedField col = schema.getColumn(i);
       columns.add(col.getName());
-      StringBuilder dataType = new StringBuilder(col.getType().getMinorType().name());
-
-      // For DECIMAL type
-      if (col.getType().hasPrecision()) {
-        dataType.append("(");
-        dataType.append(col.getType().getPrecision());
-
-        if (col.getType().hasScale()) {
-          dataType.append(", ");
-          dataType.append(col.getType().getScale());
-        }
-
-        dataType.append(")");
-      } else if (col.getType().hasWidth()) {
-        // Case for VARCHAR columns with specified width
-        dataType.append("(");
-        dataType.append(col.getType().getWidth());
-        dataType.append(")");
-      }
-      metadata.add(dataType.toString());
+      metadata.add(webDataType(col.getType()));
     }
   }
 

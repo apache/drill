@@ -31,12 +31,12 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.stream.Collectors;
 
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
@@ -228,16 +228,16 @@ public class TestHTTPDLogReader extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(null, new LocalTime("04:11:25"), null)
-      .addRow(null, new LocalTime("04:11:26"), null)
-      .addRow(null, new LocalTime("04:11:27"), null)
-      .addRow(null, new LocalTime("04:24:31"), null)
-      .addRow(null, new LocalTime("04:24:32"), null)
-      .addRow(null, new LocalTime("04:24:37"), null)
-      .addRow(null, new LocalTime("04:24:39"), null)
-      .addRow(null, new LocalTime("04:24:41"), null)
-      .addRow(null, new LocalTime("04:32:22"), null)
-      .addRow(null, new LocalTime("04:34:37"), null)
+      .addRow(null, LocalTime.parse("04:11:25"), null)
+      .addRow(null, LocalTime.parse("04:11:26"), null)
+      .addRow(null, LocalTime.parse("04:11:27"), null)
+      .addRow(null, LocalTime.parse("04:24:31"), null)
+      .addRow(null, LocalTime.parse("04:24:32"), null)
+      .addRow(null, LocalTime.parse("04:24:37"), null)
+      .addRow(null, LocalTime.parse("04:24:39"), null)
+      .addRow(null, LocalTime.parse("04:24:41"), null)
+      .addRow(null, LocalTime.parse("04:32:22"), null)
+      .addRow(null, LocalTime.parse("04:34:37"), null)
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
@@ -259,16 +259,16 @@ public class TestHTTPDLogReader extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(null, new LocalTime("04:11:25"), null)
-      .addRow(null, new LocalTime("04:11:26"), null)
-      .addRow(null, new LocalTime("04:11:27"), null)
-      .addRow(null, new LocalTime("04:24:31"), null)
-      .addRow(null, new LocalTime("04:24:32"), null)
-      .addRow(null, new LocalTime("04:24:37"), null)
-      .addRow(null, new LocalTime("04:24:39"), null)
-      .addRow(null, new LocalTime("04:24:41"), null)
-      .addRow(null, new LocalTime("04:32:22"), null)
-      .addRow(null, new LocalTime("04:34:37"), null)
+      .addRow(null, LocalTime.parse("04:11:25"), null)
+      .addRow(null, LocalTime.parse("04:11:26"), null)
+      .addRow(null, LocalTime.parse("04:11:27"), null)
+      .addRow(null, LocalTime.parse("04:24:31"), null)
+      .addRow(null, LocalTime.parse("04:24:32"), null)
+      .addRow(null, LocalTime.parse("04:24:37"), null)
+      .addRow(null, LocalTime.parse("04:24:39"), null)
+      .addRow(null, LocalTime.parse("04:24:41"), null)
+      .addRow(null, LocalTime.parse("04:32:22"), null)
+      .addRow(null, LocalTime.parse("04:34:37"), null)
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
@@ -405,10 +405,10 @@ public class TestHTTPDLogReader extends ClusterTest {
                     "GET /linux/doing-pxe-without-dhcp-control HTTP/1.1", "GET",
                     "HTTP/1.1", "1.1", "/linux/doing-pxe-without-dhcp-control", null, "/linux/doing-pxe-without-dhcp-control", null, null, null, null, null,
                     "HTTP/1.1", "1.1", "/linux/doing-pxe-without-dhcp-control", null, "/linux/doing-pxe-without-dhcp-control", null, null, null, null, null,
-                    1445742685000L, new LocalDate("2015-10-25"), new LocalDate("2015-10-25"), 25, 25, 1445742685000L, 4, 3,
-                    1445742685000L, new LocalDate("2015-10-25"), new LocalDate("2015-10-25"), 25, 25, 1445742685000L, 4, 3,
-                    0, 0, 0, 0, 11, 11, 10, 10, "October", "October", 0, 0, 25, 25, new LocalTime("04:11:25"), new LocalTime("03:11:25"), "+01:00", 43, 43, 2015, 2015, 2015, 2015,
-                    0, 0, 0, 0, 11, 11, 10, 10, "October", "October", 0, 0, 25, 25, new LocalTime("04:11:25"), new LocalTime("03:11:25"), "+01:00", 43, 43, 2015, 2015, 2015, 2015,
+                    1445742685000L, LocalDate.parse("2015-10-25"), LocalDate.parse("2015-10-25"), 25, 25, 1445742685000L, 4, 3,
+                    1445742685000L, LocalDate.parse("2015-10-25"), LocalDate.parse("2015-10-25"), 25, 25, 1445742685000L, 4, 3,
+                    0, 0, 0, 0, 11, 11, 10, 10, "October", "October", 0, 0, 25, 25, LocalTime.parse("04:11:25"), LocalTime.parse("03:11:25"), "+01:00", 43, 43, 2015, 2015, 2015, 2015,
+                    0, 0, 0, 0, 11, 11, 10, 10, "October", "October", 0, 0, 25, 25, LocalTime.parse("04:11:25"), LocalTime.parse("03:11:25"), "+01:00", 43, 43, 2015, 2015, 2015, 2015,
                     "http://howto.basjes.nl/", "howto.basjes.nl",
                     "http://howto.basjes.nl/", "howto.basjes.nl",
                     "/", null, "http", null, null, null,

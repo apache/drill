@@ -42,14 +42,10 @@ import static org.mockito.Mockito.verify;
  * associated with it.
  */
 public class WebSessionResourcesTest extends BaseTest {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebSessionResourcesTest.class);
 
   private WebSessionResources webSessionResources;
-
   private boolean listenerComplete;
-
   private CountDownLatch latch;
-
   private EventExecutor executor;
 
   // A close listener added in close future in one of the test to see if it's invoked correctly.

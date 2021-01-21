@@ -24,6 +24,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Arrays;
 
 import org.apache.drill.categories.RowSetTests;
@@ -37,7 +38,6 @@ import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.joda.time.Instant;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

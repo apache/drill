@@ -17,54 +17,32 @@
  */
 package org.apache.drill.test.rowSet.file;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.accessor.ScalarReader;
-import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetReader;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+
+import org.apache.drill.exec.physical.resultSet.util.JsonWriter;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetReader;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * <h4>Overview</h4>
  * <p>
- *   Builds a json file containing the data in a {@link RowSet}.
+ *   Builds a JSON file containing the data in a {@link RowSet}.
  * </p>
  * <h4>Example</h4>
  * <p>
- *   You can find an example of how to use {@link JsonFileBuilder} at {@link org.apache.drill.test.ExampleTest#secondTest()}.
+ *   You can find an example of how to use {@link JsonFileBuilder} at
+ *   {@link org.apache.drill.test.ExampleTest#secondTest()}.
  * </p>
  */
-public class JsonFileBuilder
-{
-  public static final String DEFAULT_DOUBLE_FORMATTER = "%f";
-  public static final String DEFAULT_INTEGER_FORMATTER = "%d";
-  public static final String DEFAULT_LONG_FORMATTER = "%d";
-  public static final String DEFAULT_STRING_FORMATTER = "\"%s\"";
-  public static final String DEFAULT_DECIMAL_FORMATTER = "%s";
-  public static final String DEFAULT_PERIOD_FORMATTER = "%s";
-
-  public static final Map<ValueType, String> DEFAULT_FORMATTERS = new ImmutableMap.Builder<ValueType, String>()
-    .put(ValueType.DOUBLE, DEFAULT_DOUBLE_FORMATTER)
-    .put(ValueType.INTEGER, DEFAULT_INTEGER_FORMATTER)
-    .put(ValueType.LONG, DEFAULT_LONG_FORMATTER)
-    .put(ValueType.STRING, DEFAULT_STRING_FORMATTER)
-    .put(ValueType.DECIMAL, DEFAULT_DECIMAL_FORMATTER)
-    .put(ValueType.PERIOD, DEFAULT_PERIOD_FORMATTER)
-    .build();
+public class JsonFileBuilder {
 
   private final RowSet rowSet;
-  private final Map<String, String> customFormatters = new HashMap<>();
+  private boolean pretty = true;
+  private boolean useExtendedOutput;
 
   /**
    * Creates a {@link JsonFileBuilder} that will write the given {@link RowSet} to a file.
@@ -76,33 +54,13 @@ public class JsonFileBuilder
     Preconditions.checkArgument(rowSet.rowCount() > 0, "The given rowset is empty.");
   }
 
-  /**
-   * Sets a custom formatter for a column using {@link String#format(String, Object...)} notation.
-   * @param columnName The name of the column to change the formatter for.
-   * @param columnFormatter The {@link String#format(String, Object...)} to use when writing a column value to the json file.
-   * @return The {@link JsonFileBuilder}.
-   */
-  public JsonFileBuilder setCustomFormatter(final String columnName, final String columnFormatter) {
-    Preconditions.checkNotNull(columnName);
-    Preconditions.checkNotNull(columnFormatter);
+  public JsonFileBuilder prettyPrint(boolean flag) {
+    this.pretty = flag;
+    return this;
+  }
 
-    Iterator<MaterializedField> fields = rowSet
-      .batchSchema()
-      .iterator();
-
-    boolean hasColumn = false;
-
-    while (!hasColumn && fields.hasNext()) {
-      hasColumn = fields.next()
-        .getName()
-        .equals(columnName);
-    }
-
-    final String message = String.format("(%s) is not a valid column", columnName);
-    Preconditions.checkArgument(hasColumn, message);
-
-    customFormatters.put(columnName, columnFormatter);
-
+  public JsonFileBuilder extended(boolean flag) {
+    this.useExtendedOutput = flag;
     return this;
   }
 
@@ -115,67 +73,10 @@ public class JsonFileBuilder
     tableFile.getParentFile().mkdirs();
 
     try (BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(tableFile))) {
+      JsonWriter jsonWriter = new JsonWriter(os, pretty, useExtendedOutput);
       final RowSetReader reader = rowSet.reader();
-      final int numCols = rowSet
-        .batchSchema()
-        .getFieldCount();
-      final Iterator<MaterializedField> fieldIterator = rowSet
-        .batchSchema()
-        .iterator();
-      final List<String> columnNames = new ArrayList<>();
-      final List<String> columnFormatters = new ArrayList<>();
-
-      // Build formatters from first row.
-      while (fieldIterator.hasNext()) {
-        final String columnName = fieldIterator.next().getName();
-        final ScalarReader columnReader = reader.scalar(columnName);
-        final ValueType valueType = columnReader.valueType();
-        final String columnFormatter;
-
-        if (customFormatters.containsKey(columnName)) {
-          columnFormatter = customFormatters.get(columnName);
-        } else if (DEFAULT_FORMATTERS.containsKey(valueType)) {
-          columnFormatter = DEFAULT_FORMATTERS.get(valueType);
-        } else {
-          final String message = String.format("Unsupported column type %s", valueType);
-          throw new UnsupportedOperationException(message);
-        }
-
-        columnNames.add(columnName);
-        columnFormatters.add(columnFormatter);
-      }
-
-      final StringBuilder sb = new StringBuilder();
-      String lineSeparator = "";
-
-      for (int index = 0; index < rowSet.rowCount(); index++) {
-        reader.next();
-        sb.append(lineSeparator);
-        sb.append('{');
-        String separator = "";
-
-        for (int columnIndex = 0; columnIndex < numCols; columnIndex++) {
-          sb.append(separator);
-
-          final String columnName = columnNames.get(columnIndex);
-          final ScalarReader columnReader = reader.scalar(columnIndex);
-          final String columnFormatter = columnFormatters.get(columnIndex);
-          final Object columnObject = columnReader.getObject();
-          final String columnString = String.format(columnFormatter, columnObject);
-
-          sb.append('"')
-            .append(columnName)
-            .append('"')
-            .append(':')
-            .append(columnString);
-
-          separator = ",";
-        }
-
-        sb.append('}');
-        lineSeparator = "\n";
-        os.write(sb.toString().getBytes());
-        sb.delete(0, sb.length());
+      while (reader.next()) {
+        jsonWriter.writeRow(reader);
       }
     }
   }

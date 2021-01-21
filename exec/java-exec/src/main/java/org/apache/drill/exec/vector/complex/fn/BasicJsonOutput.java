@@ -31,8 +31,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
- * A JSON output class that generates standard JSON. By default, literals are output such that they can be implicitly
- * cast.
+ * A JSON output class that generates standard JSON. By default, literals are
+ * output such that they can be implicitly cast.
  */
 public class BasicJsonOutput implements JsonOutput {
 
@@ -52,21 +52,21 @@ public class BasicJsonOutput implements JsonOutput {
     this.gen = gen;
 
     switch (dateOutput) {
-    case SQL: {
-      dateFormatter = DateUtility.formatDate;
-      timeFormatter = DateUtility.formatTime;
-      timestampFormatter = DateUtility.formatTimeStamp;
-      break;
-    }
-    case ISO: {
-      dateFormatter = DateUtility.isoFormatDate;
-      timeFormatter = DateUtility.isoFormatTime;
-      timestampFormatter = DateUtility.isoFormatTimeStamp;
-      break;
-    }
+      case SQL: {
+        dateFormatter = DateUtility.formatDate;
+        timeFormatter = DateUtility.formatTime;
+        timestampFormatter = DateUtility.formatTimeStamp;
+        break;
+      }
+      case ISO: {
+        dateFormatter = DateUtility.isoFormatDate;
+        timeFormatter = DateUtility.isoFormatTime;
+        timestampFormatter = DateUtility.isoFormatTimeStamp;
+        break;
+      }
 
-    default:
-      throw new UnsupportedOperationException(String.format("Unable to support date output of type %s.", dateOutput));
+      default:
+        throw new UnsupportedOperationException(String.format("Unable to support date output of type %s.", dateOutput));
     }
   }
 

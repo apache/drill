@@ -23,7 +23,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
@@ -325,7 +327,7 @@ public class TestExtendedWithSchema extends BaseJsonLoaderTest {
     RowSet results = loader.next();
     assertNotNull(results);
 
-    org.joda.time.LocalDate date = new org.joda.time.LocalDate(2020, 04, 21);
+    LocalDate date = LocalDate.of(2020, 04, 21);
     RowSet expected = fixture.rowSetBuilder(providedSchema)
         .addRow(date, null, date)
         .addRow(date, date, null)
@@ -357,7 +359,7 @@ public class TestExtendedWithSchema extends BaseJsonLoaderTest {
     RowSet results = loader.next();
     assertNotNull(results);
 
-    org.joda.time.LocalTime time  = new org.joda.time.LocalTime(11, 22, 33);
+    LocalTime time = LocalTime.of(11, 22, 33);
     RowSet expected = fixture.rowSetBuilder(providedSchema)
         .addRow(time, null, time)
         .addRow(time, time, null)

@@ -249,7 +249,7 @@ public class TypeValidators {
       super(name, description);
     }
 
-    public String getAdminUsers(OptionManager optionManager) {
+    public String getAdminUsers(OptionSet optionManager) {
       String adminUsers = optionManager.getOption(ExecConstants.ADMIN_USERS_VALIDATOR);
       // if this option has not been changed by the user then return the
       // process user
@@ -273,7 +273,7 @@ public class TypeValidators {
       super(name, description);
     }
 
-    public String getAdminUserGroups(OptionManager optionManager) {
+    public String getAdminUserGroups(OptionSet optionManager) {
       String adminUserGroups = optionManager.getOption(ExecConstants.ADMIN_USER_GROUPS_VALIDATOR);
       // if this option has not been changed by the user then return the
       // process user groups

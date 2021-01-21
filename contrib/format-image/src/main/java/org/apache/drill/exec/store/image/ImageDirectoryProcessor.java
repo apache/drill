@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.image;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,7 +30,6 @@ import org.apache.drill.exec.store.image.ImageBatchReader.MapColumnDefn;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.joda.time.Instant;
 import org.slf4j.LoggerFactory;
 
 import com.adobe.internal.xmp.XMPException;

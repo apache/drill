@@ -70,7 +70,6 @@ public class HeaderBuilder implements TextOutput {
    * Prefix used to create numbered columns for missing
    * headers. Typical names: column_1, column_2, ...
    */
-
   public static final String ANONYMOUS_COLUMN_PREFIX = "column_";
 
   private final Path filePath;
@@ -98,7 +97,6 @@ public class HeaderBuilder implements TextOutput {
   public boolean endEmptyField() {
 
     // Empty header will be rewritten to "column_<n>".
-
     return endField();
   }
 
@@ -149,7 +147,6 @@ public class HeaderBuilder implements TextOutput {
    * @param header the original header
    * @return the rewritten header, valid for SQL
    */
-
   private String rewriteHeader(String header) {
     final StringBuilder buf = new StringBuilder();
 

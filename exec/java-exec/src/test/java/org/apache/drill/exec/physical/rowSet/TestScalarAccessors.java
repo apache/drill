@@ -26,6 +26,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 
 import org.apache.drill.categories.RowSetTests;
@@ -58,10 +63,6 @@ import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.joda.time.DateTimeZone;
-import org.joda.time.Instant;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.joda.time.Period;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -554,9 +555,10 @@ public class TestScalarAccessors extends SubOperatorTest {
     rs.clear();
   }
 
-  private void nullableDoubleTester(MinorType type) {
+  @Test
+  public void testNullableFloat() {
     TupleMetadata schema = new SchemaBuilder()
-        .addNullable("col", type)
+        .addNullable("col", MinorType.FLOAT4)
         .buildSchema();
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(10F)
@@ -570,6 +572,7 @@ public class TestScalarAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertFalse(colReader.isNull());
+    assertEquals(10, colReader.getFloat(), 0.000001);
     assertEquals(10, colReader.getDouble(), 0.000001);
 
     assertTrue(reader.next());
@@ -579,6 +582,7 @@ public class TestScalarAccessors extends SubOperatorTest {
     // Data value is undefined, may be garbage
 
     assertTrue(reader.next());
+    assertEquals(30, colReader.getFloat(), 0.000001);
     assertEquals(30, colReader.getDouble(), 0.000001);
 
     assertFalse(reader.next());
@@ -586,13 +590,9 @@ public class TestScalarAccessors extends SubOperatorTest {
   }
 
   @Test
-  public void testNullableFloat() {
-    nullableDoubleTester(MinorType.FLOAT8);
-  }
-
-  private void doubleArrayTester(MinorType type) {
+  public void testFloatArray() {
     TupleMetadata schema = new SchemaBuilder()
-        .addArray("col", type)
+        .addArray("col", MinorType.FLOAT4)
         .buildSchema();
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(new double[] {})
@@ -603,7 +603,7 @@ public class TestScalarAccessors extends SubOperatorTest {
     RowSetReader reader = rs.reader();
     ArrayReader arrayReader = reader.array(0);
     ScalarReader colReader = arrayReader.scalar();
-    assertEquals(ValueType.DOUBLE, colReader.valueType());
+    assertEquals(ValueType.FLOAT, colReader.valueType());
 
     assertTrue(reader.next());
     assertEquals(0, arrayReader.size());
@@ -613,30 +613,25 @@ public class TestScalarAccessors extends SubOperatorTest {
 
     assertTrue(arrayReader.next());
     assertEquals(0, colReader.getDouble(), 0.00001);
-    assertEquals(0, (double) colReader.getObject(), 0.00001);
+    assertEquals(0, (float) colReader.getObject(), 0.00001);
     assertEquals("0.0", colReader.getAsString());
 
     assertTrue(arrayReader.next());
     assertEquals(20.5, colReader.getDouble(), 0.00001);
-    assertEquals(20.5, (double) colReader.getObject(), 0.00001);
+    assertEquals(20.5, (float) colReader.getObject(), 0.00001);
     assertEquals("20.5", colReader.getAsString());
 
     assertTrue(arrayReader.next());
     assertEquals(30.0, colReader.getDouble(), 0.00001);
-    assertEquals(30.0, (double) colReader.getObject(), 0.00001);
+    assertEquals(30.0, (float) colReader.getObject(), 0.00001);
     assertEquals("30.0", colReader.getAsString());
     assertFalse(arrayReader.next());
 
     assertEquals("[0.0, 20.5, 30.0]", arrayReader.getAsString());
-    assertEquals(Arrays.asList(0.0D, 20.5D, 30D), arrayReader.getObject());
+    assertEquals(Arrays.asList(0.0F, 20.5F, 30F), arrayReader.getObject());
 
     assertFalse(reader.next());
     rs.clear();
-  }
-
-  @Test
-  public void testFloatArray() {
-    doubleArrayTester(MinorType.FLOAT8);
   }
 
   @Test
@@ -677,12 +672,34 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testNullableDouble() {
-    nullableDoubleTester(MinorType.FLOAT8);
-  }
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("col", MinorType.FLOAT8)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
+        .addRow(10D)
+        .addSingleCol(null)
+        .addRow(30D)
+        .build();
+    assertEquals(3, rs.rowCount());
 
-  @Test
-  public void testDoubleArray() {
-    doubleArrayTester(MinorType.FLOAT8);
+    RowSetReader reader = rs.reader();
+    ScalarReader colReader = reader.scalar(0);
+
+    assertTrue(reader.next());
+    assertFalse(colReader.isNull());
+    assertEquals(10, colReader.getDouble(), 0.000001);
+
+    assertTrue(reader.next());
+    assertTrue(colReader.isNull());
+    assertNull(colReader.getObject());
+    assertEquals("null", colReader.getAsString());
+    // Data value is undefined, may be garbage
+
+    assertTrue(reader.next());
+    assertEquals(30, colReader.getDouble(), 0.000001);
+
+    assertFalse(reader.next());
+    rs.clear();
   }
 
   @Test
@@ -831,7 +848,6 @@ public class TestScalarAccessors extends SubOperatorTest {
    * as explained in the Javadoc for
    * @{link org.apache.drill.exec.vector.accessor.writer.OffsetVectorWriterImpl}
    */
-
   @Test
   public void testEmptyVarcharArray() {
     TupleMetadata schema = new SchemaBuilder()
@@ -880,7 +896,6 @@ public class TestScalarAccessors extends SubOperatorTest {
   /**
    * Test the low-level interval-year utilities used by the column accessors.
    */
-
   @Test
   public void testIntervalYearUtils() {
     {
@@ -1028,7 +1043,6 @@ public class TestScalarAccessors extends SubOperatorTest {
   /**
    * Test the low-level interval-day utilities used by the column accessors.
    */
-
   @Test
   public void testIntervalDayUtils() {
     {
@@ -1698,7 +1712,7 @@ public class TestScalarAccessors extends SubOperatorTest {
         .add("col", MinorType.DATE)
         .buildSchema();
 
-    LocalDate v1 = new LocalDate(2019, 3, 24);
+    LocalDate v1 = LocalDate.of(2019, 3, 24);
 
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(v1)
@@ -1722,7 +1736,7 @@ public class TestScalarAccessors extends SubOperatorTest {
         .add("col", MinorType.TIME)
         .buildSchema();
 
-    LocalTime v1 = new LocalTime(12, 13, 14);
+    LocalTime v1 = LocalTime.of(12, 13, 14);
 
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(v1)
@@ -1746,9 +1760,9 @@ public class TestScalarAccessors extends SubOperatorTest {
         .add("col", MinorType.TIMESTAMP)
         .buildSchema();
 
-    LocalDate dt = new LocalDate(2019, 3, 24);
-    LocalTime lt = new LocalTime(12, 13, 14);
-    Instant v1 = dt.toDateTime(lt, DateTimeZone.UTC).toInstant();
+    LocalDate dt = LocalDate.of(2019, 3, 24);
+    LocalTime lt = LocalTime.of(12, 13, 14);
+    Instant v1 = LocalDateTime.of(dt, lt).toInstant(ZoneOffset.UTC);
 
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(v1)
