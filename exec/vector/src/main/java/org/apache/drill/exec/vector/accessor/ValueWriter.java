@@ -18,10 +18,10 @@
 package org.apache.drill.exec.vector.accessor;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
-import org.joda.time.Instant;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 /**

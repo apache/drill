@@ -26,6 +26,7 @@ import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.QueryWrapper.RestQueryBuilder;
 import org.apache.drill.exec.server.rest.RestQueryRunner.QueryResult;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
+import org.apache.drill.exec.server.rest.stream.QueryRunner;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
@@ -41,9 +42,14 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.StreamingOutput;
+
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -90,14 +96,40 @@ public class QueryResources {
   @Path("/query.json")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public QueryResult submitQueryJSON(QueryWrapper query) throws Exception {
+  public StreamingOutput submitQueryJSON(QueryWrapper query) throws Exception {
+
+    // Prior to Drill 1.18, REST queries would batch the entire result set
+    // in memory, limiting query size. In Drill 1.19 and later, results are
+    // streamed from the executor, to the JSON writer and to the HTTP connection
+    // with no buffering.
+    //
+    // For compatibility with Drill 1.18 and before, Drill places the query
+    // schema *after* the data. Any tool that needs to know the schema will
+    // need to buffer the entire result set to wait for the schema. An obvious
+    // improvement is to provide an option to send the schema *before* the data.
+    // One drawback of doing so is that the schema will report that of the first
+    // batch: Drill allows schema to change across batches and thus the schema
+    // of the JSON-encoded data would change. This is more a bug with how Drill
+    // handles schemas than a JSON issue. (ODBC and JDBC have the same issues.)
+    QueryRunner runner = new QueryRunner(work, webUserConnection);
     try {
-      // Run the query
-      return new RestQueryRunner(query, work, webUserConnection).run();
-    } finally {
-      // no-op for authenticated user
-      webUserConnection.cleanupSession();
+      runner.start(query);
+    } catch (Exception e) {
+      throw new WebApplicationException("Query submission failed", e);
     }
+    return new StreamingOutput() {
+      @Override
+      public void write(OutputStream output)
+          throws IOException, WebApplicationException {
+        try {
+          runner.sendResults(output);
+        } catch (IOException e) {
+          throw e;
+        } catch (Exception e) {
+          throw new WebApplicationException("JSON query failed", e);
+        }
+      }
+    };
   }
 
   @POST
@@ -111,15 +143,20 @@ public class QueryResources {
                               @FormParam("defaultSchema") String defaultSchema,
                               Form form) throws Exception {
     try {
-      final QueryResult result = submitQueryJSON(
-          new RestQueryBuilder()
-            .query(query)
-            .queryType(queryType)
-            .rowLimit(autoLimit)
-            .userName(userName)
-            .defaultSchema(defaultSchema)
-            .sessionOptions(readOptionsFromForm(form))
-            .build());
+      // Run the query and wrap the result sets in a model to be
+      // transformed to HTML. This can be memory-intensive for larger
+      // queries.
+      QueryWrapper wrapper = new RestQueryBuilder()
+          .query(query)
+          .queryType(queryType)
+          .rowLimit(autoLimit)
+          .userName(userName)
+          .defaultSchema(defaultSchema)
+          .sessionOptions(readOptionsFromForm(form))
+          .build();
+      final QueryResult result = new RestQueryRunner(wrapper,
+              work, webUserConnection)
+        .run();
       List<Integer> rowsPerPageValues = work.getContext().getConfig().getIntList(
           ExecConstants.HTTP_WEB_CLIENT_RESULTSET_ROWS_PER_PAGE_VALUES);
       Collections.sort(rowsPerPageValues);
@@ -128,6 +165,9 @@ public class QueryResources {
     } catch (Exception | Error e) {
       logger.error("Query from Web UI Failed: {}", e);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/errorMessage.ftl", sc, e);
+    } finally {
+      // no-op for authenticated user
+      webUserConnection.cleanupSession();
     }
   }
 

@@ -30,7 +30,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.drill.exec.store.esri.ShpBatchReader.ShpReaderConfig;
 import org.apache.hadoop.conf.Configuration;
 
 public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
@@ -38,18 +37,16 @@ public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
   public static final String PLUGIN_NAME = "shp";
 
   public static class ShpReaderFactory extends FileReaderFactory {
-    private final ShpReaderConfig readerConfig;
 
     private final int maxRecords;
 
-    public ShpReaderFactory(ShpReaderConfig config, int maxRecords) {
-      readerConfig = config;
+    public ShpReaderFactory(int maxRecords) {
       this.maxRecords = maxRecords;
     }
 
     @Override
     public ManagedReader<? extends FileScanFramework.FileSchemaNegotiator> newReader() {
-      return new ShpBatchReader(readerConfig, maxRecords);
+      return new ShpBatchReader(maxRecords);
     }
   }
 
@@ -59,13 +56,13 @@ public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
 
   @Override
   public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options) throws ExecutionSetupException {
-    return new ShpBatchReader(formatConfig.getReaderConfig(this), scan.getMaxRecords());
+    return new ShpBatchReader(scan.getMaxRecords());
   }
 
   @Override
   protected FileScanFramework.FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanFramework.FileScanBuilder builder = new FileScanFramework.FileScanBuilder();
-    builder.setReaderFactory(new ShpReaderFactory(new ShpReaderConfig(this), scan.getMaxRecords()));
+    builder.setReaderFactory(new ShpReaderFactory(scan.getMaxRecords()));
     initScanBuilder(builder, scan);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;

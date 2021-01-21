@@ -198,7 +198,7 @@ public class OperatorDriver {
    */
 
   private IterOutcome doNext() {
-    if (! operatorExec.next()) {
+    if (!operatorExec.next()) {
       state = State.END;
       return IterOutcome.NONE;
     }

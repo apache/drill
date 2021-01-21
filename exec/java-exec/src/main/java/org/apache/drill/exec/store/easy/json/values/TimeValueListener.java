@@ -53,7 +53,7 @@ public class TimeValueListener extends ScalarListener {
       case VALUE_STRING:
         try {
           LocalTime localTime = LocalTime.parse(tokenizer.stringValue(), TIME_FORMAT);
-          writer.setInt((int) ((localTime.toNanoOfDay() + 500_000L) / 1_000_000L)); // round to milliseconds
+          writer.setTime(localTime);
         } catch (Exception e) {
           throw loader.dataConversionError(schema(), "string", tokenizer.stringValue());
         }

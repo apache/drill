@@ -38,6 +38,7 @@ public class TestResponseHeaders extends ClusterTest {
 
   private static final String BASE_URL = "";
 
+  @SuppressWarnings("serial")
   @BeforeClass
   public static void setUp() throws Exception {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)

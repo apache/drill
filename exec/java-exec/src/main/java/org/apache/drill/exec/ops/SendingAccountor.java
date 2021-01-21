@@ -20,14 +20,18 @@ package org.apache.drill.exec.ops;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * Account for whether all messages sent have been completed. Necessary before finishing a task so we don't think
- * buffers are hanging when they will be released.
+ * Account for whether all messages sent have been completed. Necessary before
+ * finishing a task so we don't think buffers are hanging when they will be
+ * released.
  *
  * TODO: Need to update to use long for number of pending messages.
  */
 public class SendingAccountor {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SendingAccountor.class);
+  private static final Logger logger = LoggerFactory.getLogger(SendingAccountor.class);
 
   private final AtomicInteger batchesSent = new AtomicInteger(0);
   private final Semaphore wait = new Semaphore(0);

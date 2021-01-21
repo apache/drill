@@ -30,12 +30,12 @@ import org.apache.drill.exec.store.pcap.decoder.TcpSession;
 import org.apache.drill.exec.store.pcap.schema.Schema;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.hadoop.mapred.FileSplit;
-import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -407,7 +407,7 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
     rowWriter.start();
 
     typeWriter.setString(packet.getPacketType());
-    timestampWriter.setTimestamp(new Instant(packet.getTimestamp()));
+    timestampWriter.setTimestamp(Instant.ofEpochMilli(packet.getTimestamp()));
     timestampMicroWriter.setLong(packet.getTimestampMicro());
     networkWriter.setInt(networkType);
     srcMacAddressWriter.setString(packet.getEthernetSource());

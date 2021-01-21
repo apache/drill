@@ -44,9 +44,6 @@ public class TestExternalSort extends BaseTestQuery {
    * This test simply verifies that the sort handles these types, even though
    * Drill does not.
    *
-   * @param testLegacy
-   *          true to test the old (pre-1.11) sort, false to test the new (1.11
-   *          and later) sort
    * @throws Exception
    */
   @Test
@@ -66,7 +63,7 @@ public class TestExternalSort extends BaseTestQuery {
 
       final RowSet rowSet = rowSetBuilder.build();
       final File tableFile = createTableFile(tableDirName, "a.json");
-      new JsonFileBuilder(rowSet).build(tableFile);
+      new JsonFileBuilder(rowSet).prettyPrint(false).build(tableFile);
       rowSet.clear();
     }
 
@@ -83,7 +80,6 @@ public class TestExternalSort extends BaseTestQuery {
       final RowSet rowSet = rowSetBuilder.build();
       final File tableFile = createTableFile(tableDirName, "b.json");
       new JsonFileBuilder(rowSet)
-        .setCustomFormatter("a", "%.2f")
         .build(tableFile);
       rowSet.clear();
     }
@@ -137,7 +133,6 @@ public class TestExternalSort extends BaseTestQuery {
       final RowSet rowSet = rowSetBuilder.build();
       final File tableFile = createTableFile(tableDirName, "b.json");
       new JsonFileBuilder(rowSet)
-        .setCustomFormatter("a", "\"%05d\"")
         .build(tableFile);
       rowSet.clear();
     }
@@ -216,7 +211,6 @@ public class TestExternalSort extends BaseTestQuery {
     builder.go();
 
     // TODO: Useless test: just dumps to console
-
     test("select * from dfs.`%s` order by a desc", tableDirName);
   }
 

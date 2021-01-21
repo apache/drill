@@ -24,126 +24,44 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.tools.ValidationException;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
-import org.apache.drill.exec.proto.UserProtos.QueryResultsMode;
-import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
-import org.apache.drill.exec.server.options.SessionOptionManager;
-import org.apache.drill.exec.store.SchemaTreeProvider;
-import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.WorkManager;
-import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestQueryRunner {
+public class RestQueryRunner extends BaseQueryRunner {
   private static final Logger logger = LoggerFactory.getLogger(QueryWrapper.class);
   private static final MemoryMXBean memMXBean = ManagementFactory.getMemoryMXBean();
 
   private final QueryWrapper query;
-  private final WorkManager workManager;
-  private final WebUserConnection webUserConnection;
-  private final SessionOptionManager options;
 
   public RestQueryRunner(final QueryWrapper query, final WorkManager workManager, final WebUserConnection webUserConnection) {
+    super(workManager, webUserConnection);
     this.query = query;
-    this.workManager = workManager;
-    this.webUserConnection = webUserConnection;
-    this.options = webUserConnection.getSession().getOptions();
   }
 
   public QueryResult run() throws Exception {
-    applyUserName();
-    applyOptions();
-    applyDefaultSchema();
-    int maxRows = applyRowLimit();
-    return submitQuery(maxRows);
+    applyUserName(query.getUserName());
+    applyOptions(query.getOptions());
+    applyDefaultSchema(query.getDefaultSchema());
+    applyRowLimit(query.getAutoLimitRowCount());
+    return submitQuery();
   }
 
-  private void applyUserName() {
-    String userName = query.getUserName();
-    if (!Strings.isNullOrEmpty(userName)) {
-      DrillConfig config = workManager.getContext().getConfig();
-      if (!config.getBoolean(ExecConstants.IMPERSONATION_ENABLED)) {
-        throw UserException.permissionError()
-          .message("User impersonation is not enabled")
-          .build(logger);
-      }
-      InboundImpersonationManager inboundImpersonationManager = new InboundImpersonationManager();
-      boolean isAdmin = !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED) ||
-        ImpersonationUtil.hasAdminPrivileges(
-            webUserConnection.getSession().getCredentials().getUserName(),
-            ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
-            ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options));
-      if (isAdmin) {
-        // Admin user can impersonate any user they want to (when authentication is disabled, all users are admin)
-        webUserConnection.getSession().replaceUserCredentials(
-          inboundImpersonationManager,
-          UserBitShared.UserCredentials.newBuilder().setUserName(userName).build());
-      } else {
-        // Check configured impersonation rules to see if this user is allowed to impersonate the given user
-        inboundImpersonationManager.replaceUserOnSession(userName, webUserConnection.getSession());
-      }
-    }
-  }
-
-  private void applyOptions() {
-    Map<String, String> options = query.getOptions();
-    if (options != null) {
-      SessionOptionManager sessionOptionManager = webUserConnection.getSession().getOptions();
-      for (Map.Entry<String, String> entry : options.entrySet()) {
-        sessionOptionManager.setLocalOption(entry.getKey(), entry.getValue());
-      }
-    }
-  }
-
-  private void applyDefaultSchema() throws ValidationException {
-    String defaultSchema = query.getDefaultSchema();
-    if (!Strings.isNullOrEmpty(defaultSchema)) {
-      SessionOptionManager options = webUserConnection.getSession().getOptions();
-      @SuppressWarnings("resource")
-      SchemaTreeProvider schemaTreeProvider = new SchemaTreeProvider(workManager.getContext());
-      SchemaPlus rootSchema = schemaTreeProvider.createRootSchema(options);
-      webUserConnection.getSession().setDefaultSchemaPath(defaultSchema, rootSchema);
-    }
-  }
-
-  private int applyRowLimit() {
-    int defaultMaxRows = webUserConnection.getSession().getOptions().getInt(ExecConstants.QUERY_MAX_ROWS);
-    int maxRows;
-    int limit = query.getAutoLimitRowCount();
-    if (limit > 0 && defaultMaxRows > 0) {
-      maxRows = Math.min(limit, defaultMaxRows);
-    } else {
-      maxRows = Math.max(limit, defaultMaxRows);
-    }
+  private QueryResult submitQuery() {
     webUserConnection.setAutoLimitRowCount(maxRows);
-    return maxRows;
-  }
-
-  public QueryResult submitQuery(int maxRows) {
-    final RunQuery runQuery = RunQuery.newBuilder()
-        .setType(QueryType.valueOf(query.getQueryType()))
-        .setPlan(query.getQuery())
-        .setResultsMode(QueryResultsMode.STREAM_FULL)
-        .setAutolimitRowcount(maxRows)
-        .build();
+    startQuery(QueryType.valueOf(query.getQueryType()),
+        query.getQuery(),
+        webUserConnection);
 
     // Heap usage threshold/trigger to provide resiliency on web server for queries submitted via HTTP
     double memoryFailureThreshold = workManager.getContext().getConfig().getDouble(ExecConstants.HTTP_MEMORY_HEAP_FAILURE_THRESHOLD);
-
-    // Submit user query to Drillbit work queue.
-    final QueryId queryId = workManager.getUserWorker().submitWork(webUserConnection, runQuery);
 
     boolean isComplete = false;
     boolean nearlyOutOfHeapSpace = false;
@@ -181,7 +99,6 @@ public class RestQueryRunner {
       throw new UserRemoteException(webUserConnection.getError());
     }
 
-    // Return the QueryResult.
     return new QueryResult(queryId, webUserConnection, webUserConnection.results);
   }
 

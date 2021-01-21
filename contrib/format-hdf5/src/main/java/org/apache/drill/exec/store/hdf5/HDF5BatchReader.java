@@ -52,7 +52,6 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 
 import org.apache.hadoop.mapred.FileSplit;
-import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +61,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -970,7 +970,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void writeTimestampColumn(TupleWriter rowWriter, String name, long timestamp) {
-    Instant ts = new Instant(timestamp);
+    Instant ts = Instant.ofEpochMilli(timestamp);
     ScalarWriter colWriter = getColWriter(rowWriter, name, TypeProtos.MinorType.TIMESTAMP);
     colWriter.setTimestamp(ts);
   }
@@ -984,7 +984,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
 
     ScalarWriter arrayWriter = rowWriter.column(index).array().scalar();
     for (long l : list) {
-      arrayWriter.setTimestamp(new Instant(l));
+      arrayWriter.setTimestamp(Instant.ofEpochMilli(l));
     }
   }
 

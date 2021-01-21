@@ -18,10 +18,11 @@
 
 package org.apache.drill.exec.store.hdf5.writers;
 
+import java.time.Instant;
+
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.store.hdf5.HDF5Utils;
 import org.apache.drill.exec.vector.accessor.ValueWriter;
-import org.joda.time.Instant;
 
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
@@ -45,7 +46,7 @@ public class HDF5TimestampDataWriter extends HDF5DataWriter {
     if (counter > data.length) {
       return false;
     } else {
-      colWriter.setTimestamp(new Instant(data[counter++]));
+      colWriter.setTimestamp(Instant.ofEpochMilli(data[counter++]));
       return true;
     }
   }

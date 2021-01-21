@@ -19,6 +19,12 @@ package org.apache.drill.exec.record.metadata;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 import org.apache.drill.common.types.BooleanType;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -26,13 +32,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.record.MaterializedField;
-import org.joda.time.Instant;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.joda.time.Period;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,15 +133,15 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
       switch (type) {
         case TIME:
           return formatValue == null
-            ? ISODateTimeFormat.localTimeParser() : DateTimeFormat.forPattern(formatValue);
+            ? DateTimeFormatter.ISO_LOCAL_TIME : DateTimeFormatter.ofPattern(formatValue);
         case DATE:
           formatValue = format();
           return formatValue == null
-            ? ISODateTimeFormat.localDateParser() : DateTimeFormat.forPattern(formatValue);
+            ? DateTimeFormatter.ISO_LOCAL_DATE : DateTimeFormatter.ofPattern(formatValue);
         case TIMESTAMP:
           formatValue = format();
           return formatValue == null
-            ? ISODateTimeFormat.dateTimeNoMillis() : DateTimeFormat.forPattern(formatValue);
+            ? DateTimeFormatter.ISO_LOCAL_DATE_TIME : DateTimeFormatter.ofPattern(formatValue);
         default:
           throw new IllegalArgumentException("Column is not a date/time type: " + type.toString());
       }
@@ -264,7 +264,7 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
         case DATE:
           return LocalDate.parse(value, dateTimeFormatter());
         case TIMESTAMP:
-          return Instant.parse(value, dateTimeFormatter());
+          return LocalDateTime.parse(value, dateTimeFormatter()).toInstant(ZoneOffset.UTC);
         case INTERVAL:
         case INTERVALDAY:
         case INTERVALYEAR:
@@ -293,11 +293,11 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
     }
     switch (type) {
       case TIME:
-        return dateTimeFormatter().print((LocalTime) value);
+        return dateTimeFormatter().format((LocalTime) value);
       case DATE:
-        return dateTimeFormatter().print((LocalDate) value);
+        return dateTimeFormatter().format((LocalDate) value);
       case TIMESTAMP:
-        return dateTimeFormatter().print((Instant) value);
+        return dateTimeFormatter().format((Instant) value);
       default:
        return value.toString();
     }

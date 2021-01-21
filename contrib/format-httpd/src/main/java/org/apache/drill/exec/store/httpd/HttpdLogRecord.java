@@ -32,13 +32,13 @@ import java.util.Map;
 
 import nl.basjes.parse.core.Casts;
 import nl.basjes.parse.core.Parser;
-import org.joda.time.Instant;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Date;
 
 public class HttpdLogRecord {
@@ -129,7 +129,7 @@ public class HttpdLogRecord {
       final ScalarWriter w = dates.get(field);
       if (w != null) {
         logger.debug("Parsed field: {}, as long: {}", field, value);
-        w.setDate(new LocalDate(value));
+        w.setDate(LocalDate.parse(value));
       } else {
         logger.warn("No 'date' writer found for field: {}", field);
       }
@@ -149,7 +149,7 @@ public class HttpdLogRecord {
       final ScalarWriter w = times.get(field);
       if (w != null) {
         logger.debug("Parsed field: {}, as long: {}", field, value);
-        w.setTime(new LocalTime(value));
+        w.setTime(LocalTime.parse(value));
       } else {
         logger.warn("No 'date' writer found for field: {}", field);
       }
@@ -169,13 +169,12 @@ public class HttpdLogRecord {
       final ScalarWriter w = timestamps.get(field);
       if (w != null) {
         logger.debug("Parsed field: {}, as timestamp: {}", field, value);
-        w.setTimestamp(new Instant(value));
+        w.setTimestamp(Instant.ofEpochMilli(value));
       } else {
         logger.warn("No 'timestamp' writer found for field: {}", field);
       }
     }
   }
-
 
   /**
    * This method is referenced and called via reflection. This is added as a parsing target for the parser. It will get
@@ -199,7 +198,7 @@ public class HttpdLogRecord {
       final ScalarWriter tw = timestamps.get(field);
       if (tw != null) {
         logger.debug("Parsed field: {}, as time: {}", field, value);
-        tw.setTimestamp(new Instant(ts));
+        tw.setTimestamp(Instant.ofEpochMilli(ts));
       } else {
         logger.warn("No 'timestamp' writer found for field: {}", field);
       }

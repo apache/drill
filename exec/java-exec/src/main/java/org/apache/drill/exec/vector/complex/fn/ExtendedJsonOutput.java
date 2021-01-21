@@ -29,8 +29,9 @@ import org.joda.time.Period;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
- * Writes JSON Output that will wrap Binary, Date, Time, Timestamp, Integer, Decimal and Interval types with wrapping
- * maps for better type resolution upon deserialization.
+ * Writes JSON Output that will wrap Binary, Date, Time, Timestamp, Integer,
+ * Decimal and Interval types with wrapping maps for better type resolution upon
+ * deserialization.
  */
 public class ExtendedJsonOutput extends BasicJsonOutput {
 

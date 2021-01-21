@@ -35,7 +35,6 @@ import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.hadoop.mapred.FileSplit;
-import org.joda.time.Instant;
 import org.realityforge.jsyslog.message.StructuredDataParameter;
 import org.realityforge.jsyslog.message.SyslogMessage;
 import org.slf4j.Logger;
@@ -45,6 +44,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -231,7 +231,7 @@ public class SyslogBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private void writeStructuredColumns(SyslogMessage parsedMessage) {
     long milliseconds = parsedMessage.getTimestamp().getMillis();
-    writerArray.get(0).setTimestamp(new Instant(milliseconds));
+    writerArray.get(0).setTimestamp(Instant.ofEpochMilli(milliseconds));
     writerArray.get(1).setInt(parsedMessage.getLevel().ordinal());
     writerArray.get(2).setInt(parsedMessage.getFacility().ordinal());
     setString(writerArray.get(3), parsedMessage.getLevel().name());

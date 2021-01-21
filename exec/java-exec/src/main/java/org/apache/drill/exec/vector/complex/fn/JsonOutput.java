@@ -25,8 +25,9 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.joda.time.Period;
 
 /**
- * Interface through which UDFs, RecordWriters and other systems can write out a JSON output.
- * Generally used to control how non-json types are mapped to a json output stream.
+ * Interface through which UDFs, RecordWriters and other systems can write out a
+ * JSON output. Generally used to control how non-JSON types are mapped to a
+ * JSON output stream.
  */
 public interface JsonOutput {
 
@@ -38,7 +39,6 @@ public interface JsonOutput {
   void writeEndObject() throws IOException;
   void writeUntypedNull() throws IOException;
   void writeFieldName(String name) throws IOException;
-
 
   // literals
   void writeDecimal(BigDecimal value) throws IOException;
@@ -71,7 +71,6 @@ public interface JsonOutput {
   void writeTimeNull() throws IOException;
   void writeTimestampNull() throws IOException;
   void writeIntervalNull() throws IOException;
-
 
   // scalars reader
   void writeDecimal(FieldReader reader) throws IOException;

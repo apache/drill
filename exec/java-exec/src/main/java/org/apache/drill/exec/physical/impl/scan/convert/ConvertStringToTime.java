@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.physical.impl.scan.convert;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.joda.time.LocalTime;
-import org.joda.time.format.DateTimeFormatter;
 
 /**
  * Convert a VARCHAR column to an TIME column following the Java rules
@@ -48,7 +48,7 @@ public class ConvertStringToTime extends AbstractConvertFromString {
     try {
       baseWriter.setTime(LocalTime.parse(prepared, dateTimeFormatter));
     }
-    catch (final IllegalStateException e) {
+    catch (final Exception e) {
       throw InvalidConversionError.writeError(schema(), value, e);
     }
   }

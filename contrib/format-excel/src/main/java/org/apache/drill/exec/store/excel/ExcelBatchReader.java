@@ -42,12 +42,12 @@ import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -563,7 +563,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       if (timeValue == null) {
         metadataColumnWriters.get(index).setNull();
       } else {
-        metadataColumnWriters.get(index).setTimestamp(new Instant(timeValue));
+        metadataColumnWriters.get(index).setTimestamp(Instant.ofEpochMilli(timeValue.getTime()));
       }
     }
   }
@@ -604,6 +604,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       super(columnWriter);
     }
 
+    @Override
     public void load(Cell cell) {
       if (cell == null) {
         columnWriter.setNull();
@@ -622,6 +623,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       super(columnWriter);
     }
 
+    @Override
     public void load(Cell cell) {
       if (cell == null) {
         columnWriter.setNull();
@@ -637,6 +639,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       super(columnWriter);
     }
 
+    @Override
     public void load(Cell cell) {
       if (cell == null) {
         columnWriter.setNull();
@@ -652,13 +655,14 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       super(columnWriter);
     }
 
+    @Override
     public void load(Cell cell) {
       if (cell == null) {
         columnWriter.setNull();
       } else {
         logger.debug("Cell value: {}", cell.getNumericCellValue());
         Date dt = DateUtil.getJavaDate(cell.getNumericCellValue(), TimeZone.getTimeZone("UTC"));
-        Instant timeStamp = new Instant(dt.toInstant().getEpochSecond() * 1000);
+        Instant timeStamp = Instant.ofEpochMilli(dt.toInstant().getEpochSecond() * 1000);
         columnWriter.setTimestamp(timeStamp);
       }
     }

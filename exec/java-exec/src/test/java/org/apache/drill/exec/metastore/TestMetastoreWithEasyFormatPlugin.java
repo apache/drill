@@ -79,7 +79,7 @@ public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
       "`o_custkey` INT not null, " +
       "`o_orderstatus` VARCHAR not null, " +
       "`o_totalprice` DOUBLE not null, " +
-      "`o_orderdate` DATE not null format \"yyyy-MM-dd''T''HH:mm:ss.SSSZZ\", " +
+      "`o_orderdate` DATE not null format \"yyyy-MM-dd''T''HH:mm:ss.SSSXXX\", " +
       "`o_orderpriority` VARCHAR not null, " +
       "`o_clerk` VARCHAR not null, " +
       "`o_shippriority` INT not null, " +
