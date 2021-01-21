@@ -25,7 +25,8 @@ To create a name and new configuration:
 name. Names are case-sensitive.  
      ![sandbox plugin]({{ site.baseurl }}/images/docs/storage_plugin_config.png)
 
-    {% include startnote.html %}The URL differs depending on your installation and configuration.{% include endnote.html %}  
+{% include startnote.html %}The URL differs depending on your installation and configuration.{% include endnote.html %}
+  
 4. Click **Create**.  
 5. In Configuration, use JSON formatting to modify a copy of an existing configuration if possible.  
    Using a copy of an existing configuration reduces the risk of JSON coding errors. Use the Storage Plugin Attributes table in the next section as a guide for making typical modifications.  
