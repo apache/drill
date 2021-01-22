@@ -30,7 +30,6 @@ import org.apache.drill.exec.store.cassandra.schema.CassandraRootDrillSchemaFact
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Set;
 
 public class CassandraStoragePlugin extends AbstractStoragePlugin {
@@ -63,13 +62,12 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
   @Override
   public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
     switch (phase) {
-      case LOGICAL_PRUNE_AND_JOIN:
-      case LOGICAL_PRUNE:
-      case PARTITION_PRUNING:
-        return Collections.emptySet();
       case PHYSICAL:
       case LOGICAL:
         return CalciteUtils.cassandraRules();
+      case LOGICAL_PRUNE_AND_JOIN:
+      case LOGICAL_PRUNE:
+      case PARTITION_PRUNING:
       case JOIN_PLANNING:
       default:
         return ImmutableSet.of();
