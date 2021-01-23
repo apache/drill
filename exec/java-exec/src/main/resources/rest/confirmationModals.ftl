@@ -44,9 +44,10 @@
 <script>
     //Populate the confirmation modal with the right message params and show
     function showConfirmationDialog(confirmationMessage, okCallback) {
-      modalBody.innerHTML = confirmationMessage;
+      let confirmationModal = $('#confirmationModal');
+      confirmationModal.find('.modal-body').html(confirmationMessage);
       //Show dialog
-      $('#confirmationModal').modal('show');
+      confirmationModal.modal('show');
       $('#confirmationOk').unbind('click')
           .click(okCallback);
       $('#confirmationCancel').focus();

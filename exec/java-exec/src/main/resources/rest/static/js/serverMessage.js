@@ -20,6 +20,7 @@ function serverMessage(data) {
             .addClass("alert-info")
             .text(data.result).alert();
         setTimeout(function() { window.location.href = "/storage"; }, 800);
+        return true;
     } else {
         messageEl.addClass("d-none");
         // Wait a fraction of a second before showing the message again. This
@@ -31,5 +32,6 @@ function serverMessage(data) {
                 .addClass("alert-danger")
                 .text("Please retry: " + data.result).alert();
         }, 200);
+        return false;
     }
 }
