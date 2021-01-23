@@ -80,7 +80,7 @@ jobs:
       # Install libraries required for protobuf generation
       - name: Install dependencies
         run: |
-          sudo apt-get install -y libboost-all-dev libzookeeper-mt-dev libsasl2-dev cmake libcppunit-dev checkinstall && \
+          sudo apt update -y && sudo apt install -y libboost-all-dev libzookeeper-mt-dev libsasl2-dev cmake libcppunit-dev checkinstall && \
           pushd .. && \
           if [ -f $HOME/protobuf/protobuf_3.11.1* ]; then \
             sudo dpkg -i $HOME/protobuf/protobuf_3.11.1*; \
