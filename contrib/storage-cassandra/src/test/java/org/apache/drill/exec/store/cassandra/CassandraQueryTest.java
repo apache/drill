@@ -17,17 +17,7 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
-import com.github.nosan.embedded.cassandra.Cassandra;
-import com.github.nosan.embedded.cassandra.CassandraBuilder;
-import com.github.nosan.embedded.cassandra.Settings;
-import com.github.nosan.embedded.cassandra.cql.CqlScript;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.ClusterTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -37,50 +27,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
-public class CassandraQueryTest extends ClusterTest {
-
-  private static Cassandra cassandra;
-
-  @BeforeClass
-  public static void init() throws Exception {
-    startCluster(ClusterFixture.builder(dirTestWatcher));
-
-    startCassandra();
-
-    CassandraStorageConfig config = new CassandraStorageConfig(
-        cassandra.getSettings().getAddress().getHostAddress(),
-        cassandra.getSettings().getPort(),
-        null,
-        null);
-    config.setEnabled(true);
-    cluster.defineStoragePlugin("cassandra", config);
-
-    prepareData();
-  }
-
-  @AfterClass
-  public static void cleanUp() {
-    cassandra.stop();
-  }
-
-  private static void startCassandra() {
-    cassandra = new CassandraBuilder().build();
-    cassandra.start();
-  }
-
-  private static void prepareData() {
-    Settings settings = cassandra.getSettings();
-
-    try (Cluster cluster = Cluster.builder()
-        .addContactPoints(settings.getAddress())
-        .withPort(settings.getPort())
-        .withoutMetrics()
-        .withoutJMXReporting()
-        .build()) {
-      Session session = cluster.connect();
-      CqlScript.ofClassPath("queries.cql").forEachStatement(session::execute);
-    }
-  }
+public class CassandraQueryTest extends BaseCassandraTest {
 
   @Test
   public void testSelectAll() throws Exception {
