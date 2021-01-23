@@ -48,26 +48,29 @@
 <script>
     //Populate the alert modal with the right message params and show
     function populateAndShowAlert(errorMsg, inputValues) {
+      let errorModal=$('#errorModal');
+      let title;
+      let body;
       if (!(errorMsg in errorMap)) {
         //Using default errorId to represent message
-        modalHeader.innerHTML=errorMsg;
-        modalBody.innerHTML="[Auto Description] "+JSON.stringify(inputValues);
+        title=errorMsg;
+        body="[Auto Description] "+JSON.stringify(inputValues);
       } else {
-        modalHeader.innerHTML=errorMap[errorMsg].msgHeader;
-        modalBody.innerHTML=errorMap[errorMsg].msgBody;
+        title=errorMap[errorMsg].msgHeader;
+        body=errorMap[errorMsg].msgBody;
       }
       //Check if substitutions are needed
-      let updatedHtml=modalBody.innerHTML;
       if (inputValues != null) {
-        var inputValuesKeys = Object.keys(inputValues);
+        let inputValuesKeys = Object.keys(inputValues);
         for (i=0; i<inputValuesKeys.length; ++i) {
-            let currKey=inputValuesKeys[i];
-            updatedHtml=updatedHtml.replace(currKey, escapeHtml(inputValues[currKey]));
+          let currKey=inputValuesKeys[i];
+          body=body.replace(currKey, escapeHtml(inputValues[currKey]));
         }
-        modalBody.innerHTML=updatedHtml;
       }
+      errorModal.find('.modal-title').text(title);
+      errorModal.find('.modal-body').html(body);
       //Show Alert
-      $('#errorModal').modal('show');
+      errorModal.modal('show');
     }
 
     function escapeHtml(str) {
@@ -104,6 +107,10 @@
         "queryMissing": {
             msgHeader:"   ERROR: No Query to execute",
             msgBody:"Please provide a query. The query textbox cannot be empty."
+        },
+        "pluginEnablingFailure": {
+            msgHeader:"   ERROR: Unable to enable/disable plugin",
+            msgBody:"<span style='font-family:courier;white-space:pre'>_pluginName_</span>: _errorMessage_"
         },
         "errorId": {
             msgHeader:"~header~",

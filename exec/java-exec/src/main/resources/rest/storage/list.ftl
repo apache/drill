@@ -210,8 +210,12 @@
         showConfirmationDialog('"' + name + '"' + ' plugin will be disabled. Proceed?', proceed);
       }
       function proceed() {
-        $.get("/storage/" + encodeURIComponent(name) + "/enable/" + flag, function() {
-          location.reload();
+        $.post("/storage/" + encodeURIComponent(name) + "/enable/" + flag, function(data) {
+          if (data.result === "Success") {
+            location.reload();
+          } else {
+              populateAndShowAlert('pluginEnablingFailure', {'_pluginName_': name,'_errorMessage_': data.result});
+          }
         });
       }
     }
@@ -290,6 +294,7 @@
       });
     });
   </script>
+  <#include "*/alertModals.ftl">
 </#macro>
 
 <@page_html/>

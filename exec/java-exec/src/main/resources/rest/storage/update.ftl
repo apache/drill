@@ -121,9 +121,10 @@
         proceed();
       }
       function proceed() {
-        $.get("/storage/" + encodeURIComponent("${model.getPlugin().getName()}") + "/enable/<#if model.getPlugin().enabled()>false<#else>true</#if>", function(data) {
-          $("#message").removeClass("d-none").text(data.result).alert();
-          setTimeout(function() { location.reload(); }, 800);
+        $.post("/storage/" + encodeURIComponent("${model.getPlugin().getName()}") + "/enable/" + !enabled, function(data) {
+          if (serverMessage(data)) {
+              setTimeout(function() { location.reload(); }, 800);
+          }
         });
       }
     });
