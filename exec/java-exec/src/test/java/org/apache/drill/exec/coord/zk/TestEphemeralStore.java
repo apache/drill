@@ -22,7 +22,7 @@ import java.io.IOException;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.listen.ListenerContainer;
+import org.apache.curator.framework.listen.MappingListenerManager;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.RetryNTimes;
@@ -36,7 +36,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-
 public class TestEphemeralStore extends BaseTest {
   private final static String root = "/test";
   private final static String path = "test-key";
@@ -116,8 +115,8 @@ public class TestEphemeralStore extends BaseTest {
         .when(client.getCache())
         .thenReturn(cache);
 
-    @SuppressWarnings("unchecked")
-    final ListenerContainer<PathChildrenCacheListener> container = Mockito.mock(ListenerContainer.class);
+ @SuppressWarnings("unchecked")
+    final MappingListenerManager<PathChildrenCacheListener,PathChildrenCacheListener> container = Mockito.mock(MappingListenerManager.class);
     Mockito
         .when(cache.getListenable())
         .thenReturn(container);
