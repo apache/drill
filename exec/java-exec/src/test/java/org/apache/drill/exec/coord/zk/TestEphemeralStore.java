@@ -36,6 +36,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
 public class TestEphemeralStore extends BaseTest {
   private final static String root = "/test";
   private final static String path = "test-key";
