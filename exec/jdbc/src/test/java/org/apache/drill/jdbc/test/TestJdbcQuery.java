@@ -62,7 +62,7 @@ public class TestJdbcQuery extends JdbcTestQueryBase {
     // didn't yet receive a terminal message. To test this, we run CTAS then immediately run a query on the newly
     // created table.
 
-    final String tableName = "dfs.tmp.`testDDLs`";
+    final String tableName = "dfs.tmp.`testDDLs3635`";
 
     try (Connection conn = connect()) {
       Statement s = conn.createStatement();

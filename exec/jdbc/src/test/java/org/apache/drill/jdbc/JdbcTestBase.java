@@ -33,6 +33,10 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.drill.exec.store.SchemaFactory;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.jdbc.impl.DrillConnectionImpl;
+import org.apache.drill.jdbc.impl.DrillConnectionUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 
@@ -47,11 +51,9 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.jdbc.test.Hook;
-import org.apache.drill.test.BaseDirTestWatcher;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -68,9 +70,6 @@ public class JdbcTestBase extends ExecTest {
   @SuppressWarnings("unused")
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTestBase.class);
 
-  @ClassRule
-  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
-
   @Rule
   public final TestRule watcher = new TestWatcher() {
     @Override
@@ -84,7 +83,11 @@ public class JdbcTestBase extends ExecTest {
   @BeforeClass
   public static void setUpTestCase() {
     factory = new SingleConnectionCachingFactory(
-        info -> DriverManager.getConnection(info.getUrl(), info.getParamsAsProperties()));
+        info -> {
+          Connection connection = DriverManager.getConnection(info.getUrl(), info.getParamsAsProperties());
+          updateSchemaLocations(connection);
+          return connection;
+        });
   }
 
   /**
@@ -110,6 +113,23 @@ public class JdbcTestBase extends ExecTest {
     final Connection conn = factory.getConnection(new ConnectionInfo(url, info));
     changeSchemaIfSupplied(conn, info);
     return conn;
+  }
+
+  private static void updateSchemaLocations(Connection conn) {
+    if (conn instanceof DrillConnectionImpl) {
+      StoragePluginRegistry storage = DrillConnectionUtils.getStorage((DrillConnectionImpl) conn);
+      try {
+        StoragePluginTestUtils.configureFormatPlugins(storage);
+        StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, storage,
+            dirTestWatcher.getDfsTestTmpDir(), StoragePluginTestUtils.TMP_SCHEMA);
+        StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, storage,
+            dirTestWatcher.getRootDir(), StoragePluginTestUtils.ROOT_SCHEMA);
+        StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, storage,
+            dirTestWatcher.getRootDir(), SchemaFactory.DEFAULT_WS_NAME);
+      } catch (StoragePluginRegistry.PluginException e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   /**
@@ -171,11 +191,7 @@ public class JdbcTestBase extends ExecTest {
    */
   public static Properties getDefaultProperties() {
     final Properties properties = new Properties();
-    properties.setProperty(StoragePluginTestUtils.UNIT_TEST_PROP_PREFIX, "true");
 
-    properties.setProperty(StoragePluginTestUtils.UNIT_TEST_DFS_TMP_PROP, dirTestWatcher.getDfsTestTmpDir().getAbsolutePath());
-    properties.setProperty(StoragePluginTestUtils.UNIT_TEST_DFS_ROOT_PROP, dirTestWatcher.getRootDir().getAbsolutePath());
-    properties.setProperty(StoragePluginTestUtils.UNIT_TEST_DFS_DEFAULT_PROP, dirTestWatcher.getRootDir().getAbsolutePath());
     properties.setProperty(ExecConstants.DRILL_TMP_DIR, dirTestWatcher.getTmpDir().getAbsolutePath());
     properties.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
     properties.setProperty(ExecConstants.HTTP_ENABLE, "false");
