@@ -22,7 +22,7 @@ import java.io.IOException;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.listen.ListenerContainer;
+import org.apache.curator.framework.listen.MappingListenerManager;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.RetryNTimes;
@@ -117,7 +117,7 @@ public class TestEphemeralStore extends BaseTest {
         .thenReturn(cache);
 
     @SuppressWarnings("unchecked")
-    final ListenerContainer<PathChildrenCacheListener> container = Mockito.mock(ListenerContainer.class);
+    final MappingListenerManager<PathChildrenCacheListener,PathChildrenCacheListener> container = Mockito.mock(MappingListenerManager.class);
     Mockito
         .when(cache.getListenable())
         .thenReturn(container);
