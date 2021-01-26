@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -34,9 +33,7 @@ import org.apache.drill.exec.store.easy.sequencefile.SequenceFileFormatConfig;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 
 /**
- * Utility methods to speed up tests. Some of the production code currently
- * calls this method when the production code is executed as part of the test
- * runs. That's the reason why this code has to be in production module.
+ * Utility methods to speed up tests.
  */
 public class StoragePluginTestUtils {
   public static final String CP_PLUGIN_NAME = "cp";
@@ -46,13 +43,6 @@ public class StoragePluginTestUtils {
   public static final String ROOT_SCHEMA = "root";
 
   public static final String DFS_TMP_SCHEMA = DFS_PLUGIN_NAME + "." + TMP_SCHEMA;
-  public static final String DFS_DEFAULT_SCHEMA = DFS_PLUGIN_NAME + "." + SchemaFactory.DEFAULT_WS_NAME;
-  public static final String DFS_ROOT_SCHEMA = DFS_PLUGIN_NAME + "." + ROOT_SCHEMA;
-
-  public static final String UNIT_TEST_PROP_PREFIX = "drillJDBCUnitTests";
-  public static final String UNIT_TEST_DFS_TMP_PROP = UNIT_TEST_PROP_PREFIX + "." + DFS_TMP_SCHEMA;
-  public static final String UNIT_TEST_DFS_DEFAULT_PROP = UNIT_TEST_PROP_PREFIX + "." + DFS_DEFAULT_SCHEMA;
-  public static final String UNIT_TEST_DFS_ROOT_PROP = UNIT_TEST_PROP_PREFIX + "." + DFS_ROOT_SCHEMA;
 
   /**
    * Update the workspace locations for a plugin.
