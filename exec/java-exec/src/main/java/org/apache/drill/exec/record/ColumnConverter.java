@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,7 +102,14 @@ public interface ColumnConverter {
         return;
       }
 
-      Iterable<?> array = (Iterable<?>) value;
+      Iterable<?> array;
+      if (value instanceof Iterable) {
+        array = (Iterable<?>) value;
+      } else if (value.getClass().isArray()) {
+        array = Arrays.asList(((Object[]) value));
+      } else {
+        throw new IllegalStateException("Invalid value type for list ArrayColumnConverter: " + value.getClass());
+      }
       array.forEach(arrayValue -> {
         valueConverter.convert(arrayValue);
         arrayWriter.save();
