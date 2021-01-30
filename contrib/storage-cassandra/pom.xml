@@ -31,7 +31,7 @@
 
   <artifactId>drill-storage-cassandra</artifactId>
 
-  <name>contrib/cassandra-storage-plugin</name>
+  <name>Drill : Contrib : Storage : Cassandra</name>
 
   <dependencies>
     <dependency>
