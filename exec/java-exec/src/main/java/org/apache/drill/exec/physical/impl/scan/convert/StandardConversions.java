@@ -181,6 +181,10 @@ public class StandardConversions {
       final Constructor<? extends DirectConverter> ctor = conversionClass.getDeclaredConstructor(ScalarWriter.class, Map.class);
       return ctor.newInstance(baseWriter, mergeProperties(properties));
     } catch (final ReflectiveOperationException e) {
+      // Not a real reflection error: pass along underlying cause.
+      if (e.getCause() instanceof IllegalArgumentException) {
+        throw new IllegalArgumentException(e.getCause());
+      }
       // Ignore
     }
 
