@@ -189,7 +189,8 @@ public class MaterializedField {
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.name, this.type, this.children);
+    String name = this.name == null ? null : this.name.toLowerCase();
+    return Objects.hash(name, this.type);
   }
 
   /**
