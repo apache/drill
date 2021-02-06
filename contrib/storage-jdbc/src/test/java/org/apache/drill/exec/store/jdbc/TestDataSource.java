@@ -53,7 +53,7 @@ public class TestDataSource extends BaseTest {
   @Test
   public void testInitWithoutUserAndPassword() {
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, null, null, false, null);
+      DRIVER, url, null, null, false, null, null);
     try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config)) {
       assertEquals(DRIVER, dataSource.getDriverClassName());
       assertEquals(url, dataSource.getJdbcUrl());
@@ -65,7 +65,7 @@ public class TestDataSource extends BaseTest {
   @Test
   public void testInitWithUserAndPassword() {
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, null);
+      DRIVER, url, "user", "password", false, null, null);
     try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config)) {
       assertEquals("user", dataSource.getUsername());
       assertEquals("password", dataSource.getPassword());
@@ -81,7 +81,7 @@ public class TestDataSource extends BaseTest {
     sourceParameters.put("dataSource.cachePrepStmts", true);
     sourceParameters.put("dataSource.prepStmtCacheSize", 250);
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, sourceParameters);
+      DRIVER, url, "user", "password", false, sourceParameters, null);
     try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config)) {
       assertEquals(5, dataSource.getMinimumIdle());
       assertFalse(dataSource.isAutoCommit());
@@ -96,7 +96,7 @@ public class TestDataSource extends BaseTest {
     Map<String, Object> sourceParameters = new HashMap<>();
     sourceParameters.put("abc", "abc");
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, sourceParameters);
+      DRIVER, url, "user", "password", false, sourceParameters, null);
 
     thrown.expect(UserException.class);
     thrown.expectMessage(UserBitShared.DrillPBError.ErrorType.CONNECTION.name());
@@ -109,7 +109,7 @@ public class TestDataSource extends BaseTest {
     Map<String, Object> sourceParameters = new HashMap<>();
     sourceParameters.put("minimumIdle", "abc");
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, sourceParameters);
+      DRIVER, url, "user", "password", false, sourceParameters, null);
 
     thrown.expect(UserException.class);
     thrown.expectMessage(UserBitShared.DrillPBError.ErrorType.CONNECTION.name());

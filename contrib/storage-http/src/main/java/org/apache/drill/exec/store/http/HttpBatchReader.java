@@ -32,6 +32,7 @@ import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBui
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 
 import java.io.File;
 import java.io.InputStream;
@@ -132,12 +133,13 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         .fromConfigForURL(drillConfig, url.toString());
     final String proxyType = config.proxyType();
     if (proxyType != null && !"direct".equals(proxyType)) {
+      UsernamePasswordCredentials credentials = config.getUsernamePasswordCredentials();
       builder
         .type(config.proxyType())
         .host(config.proxyHost())
         .port(config.proxyPort())
-        .username(config.proxyUsername())
-        .password(config.proxyPassword());
+        .username(credentials.getUsername())
+        .password(credentials.getPassword());
     }
     return builder.build();
   }

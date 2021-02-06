@@ -33,6 +33,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -89,6 +90,10 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
       fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.getConnection());
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
+      CredentialsProvider credentialsProvider = config.getCredentialsProvider();
+      if (credentialsProvider != null) {
+        credentialsProvider.getCredentials().forEach(fsConf::set);
+      }
 
       addCodecs(fsConf);
 

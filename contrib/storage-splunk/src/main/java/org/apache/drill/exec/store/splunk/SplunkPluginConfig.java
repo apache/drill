@@ -19,20 +19,22 @@
 package org.apache.drill.exec.store.splunk;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
-import org.apache.drill.common.logical.StoragePluginConfigBase;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.store.security.CredentialProviderUtils;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 
 import java.util.Objects;
 
 @JsonTypeName(SplunkPluginConfig.NAME)
-public class SplunkPluginConfig extends StoragePluginConfigBase {
+public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
 
   public static final String NAME = "splunk";
 
-  private final String username;
-  private final String password;
   private final String hostname;
   private final String earliestTime;
   private final String latestTime;
@@ -45,23 +47,35 @@ public class SplunkPluginConfig extends StoragePluginConfigBase {
                             @JsonProperty("hostname") String hostname,
                             @JsonProperty("port") int port,
                             @JsonProperty("earliestTime") String earliestTime,
-                            @JsonProperty("latestTime") String latestTime) {
-    this.username = username;
-    this.password = password;
+                            @JsonProperty("latestTime") String latestTime,
+                            @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
+    super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
+        credentialsProvider == null);
     this.hostname = hostname;
     this.port = port;
     this.earliestTime = earliestTime;
     this.latestTime = latestTime == null ? "now" : latestTime;
   }
 
+  @JsonIgnore
+  public UsernamePasswordCredentials getUsernamePasswordCredentials() {
+    return new UsernamePasswordCredentials(credentialsProvider);
+  }
+
   @JsonProperty("username")
   public String getUsername() {
-    return username;
+    if (directCredentials) {
+      return getUsernamePasswordCredentials().getUsername();
+    }
+    return null;
   }
 
   @JsonProperty("password")
   public String getPassword() {
-    return password;
+    if (directCredentials) {
+      return getUsernamePasswordCredentials().getPassword();
+    }
+    return null;
   }
 
   @JsonProperty("hostname")
@@ -93,8 +107,7 @@ public class SplunkPluginConfig extends StoragePluginConfigBase {
       return false;
     }
     SplunkPluginConfig thatConfig = (SplunkPluginConfig) that;
-    return Objects.equals(username, thatConfig.username) &&
-      Objects.equals(password, thatConfig.password) &&
+    return Objects.equals(credentialsProvider, thatConfig.credentialsProvider) &&
       Objects.equals(hostname, thatConfig.hostname) &&
       Objects.equals(port, thatConfig.port) &&
       Objects.equals(earliestTime, thatConfig.earliestTime) &&
@@ -103,14 +116,13 @@ public class SplunkPluginConfig extends StoragePluginConfigBase {
 
   @Override
   public int hashCode() {
-    return Objects.hash(username, password, hostname, port, earliestTime, latestTime);
+    return Objects.hash(credentialsProvider, hostname, port, earliestTime, latestTime);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
-      .field("username", username)
-      .maskedField("password", password)
+      .field("credentialsProvider", credentialsProvider)
       .field("hostname", hostname)
       .field("port", port)
       .field("earliestTime", earliestTime)

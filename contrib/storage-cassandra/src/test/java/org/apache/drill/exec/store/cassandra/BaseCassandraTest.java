@@ -38,7 +38,8 @@ public class BaseCassandraTest extends ClusterTest {
         cassandra.getHost(),
         cassandra.getMappedPort(CassandraContainer.CQL_PORT),
         cassandra.getUsername(),
-        cassandra.getPassword());
+        cassandra.getPassword(),
+        null);
     config.setEnabled(true);
     cluster.defineStoragePlugin("cassandra", config);
   }

@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.hbase;
 
 import java.util.Map;
 
-import org.apache.drill.common.logical.StoragePluginConfigBase;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
@@ -35,7 +35,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 @JsonTypeName(HBaseStoragePluginConfig.NAME)
-public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements DrillHBaseConstants {
+public class HBaseStoragePluginConfig extends StoragePluginConfig implements DrillHBaseConstants {
   private static final Logger logger = LoggerFactory.getLogger(HBaseStoragePluginConfig.class);
 
   private Map<String, String> config;

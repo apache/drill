@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.elasticsearch;
 
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.http.HttpHost;
@@ -51,7 +52,7 @@ public class ElasticInfoSchemaTest extends ClusterTest {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
-        Collections.singletonList(HOST), null, null);
+        Collections.singletonList(HOST), null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 

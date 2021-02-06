@@ -24,7 +24,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.exec.store.security.CredentialProviderUtils;
+import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 
 import java.util.List;
@@ -32,23 +35,21 @@ import java.util.Map;
 import java.util.Objects;
 
 @JsonTypeName(ElasticsearchStorageConfig.NAME)
-public class ElasticsearchStorageConfig extends StoragePluginConfig {
+public class ElasticsearchStorageConfig extends AbstractSecuredStoragePluginConfig {
   public static final String NAME = "elastic";
 
   private static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writerFor(List.class);
 
   private final List<String> hosts;
-  private final String username;
-  private final String password;
 
   @JsonCreator
   public ElasticsearchStorageConfig(
       @JsonProperty("hosts") List<String> hosts,
       @JsonProperty("username") String username,
-      @JsonProperty("password") String password) {
+      @JsonProperty("password") String password,
+      @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
+    super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider), credentialsProvider == null);
     this.hosts = hosts;
-    this.username = username;
-    this.password = password;
   }
 
   public List<String> getHosts() {
@@ -56,11 +57,22 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
   }
 
   public String getUsername() {
-    return username;
+    if (directCredentials) {
+      return getUsernamePasswordCredentials().getUsername();
+    }
+    return null;
   }
 
   public String getPassword() {
-    return password;
+    if (directCredentials) {
+      return getUsernamePasswordCredentials().getPassword();
+    }
+    return null;
+  }
+
+  @JsonIgnore
+  public UsernamePasswordCredentials getUsernamePasswordCredentials() {
+    return new UsernamePasswordCredentials(credentialsProvider);
   }
 
   @JsonIgnore
@@ -68,10 +80,8 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
       throws JsonProcessingException {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     builder.put("hosts", OBJECT_WRITER.writeValueAsString(hosts));
-    if (username != null) {
-      builder.put("username", username)
-          .put("password", password);
-    }
+
+    builder.putAll(credentialsProvider.getCredentials());
     return builder.build();
   }
 
@@ -85,12 +95,11 @@ public class ElasticsearchStorageConfig extends StoragePluginConfig {
     }
     ElasticsearchStorageConfig that = (ElasticsearchStorageConfig) o;
     return Objects.equals(hosts, that.hosts)
-        && Objects.equals(username, that.username)
-        && Objects.equals(password, that.password);
+        && Objects.equals(credentialsProvider, that.credentialsProvider);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(hosts, username, password);
+    return Objects.hash(hosts, credentialsProvider);
   }
 }

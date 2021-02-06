@@ -15,7 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.logical;
+package org.apache.drill.exec.store.security;
 
-public abstract class StoragePluginConfigBase extends StoragePluginConfig {
+import org.apache.drill.common.logical.security.CredentialsProvider;
+
+import java.util.Map;
+
+public class UsernamePasswordCredentials {
+  public static final String USERNAME = "username";
+  public static final String PASSWORD = "password";
+
+  private final String username;
+  private final String password;
+
+  public UsernamePasswordCredentials(CredentialsProvider credentialsProvider) {
+    Map<String, String> credentials = credentialsProvider.getCredentials();
+    this.username = credentials.get(USERNAME);
+    this.password = credentials.get(PASSWORD);
+  }
+
+  public String getUsername() {
+    return username;
+  }
+
+  public String getPassword() {
+    return password;
+  }
 }

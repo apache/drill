@@ -33,6 +33,7 @@ import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.BeforeClass;
@@ -65,7 +66,8 @@ public class TestCTTAS extends BaseTestQuery {
         pluginConfig.getConnection(),
         pluginConfig.getConfig(),
         newWorkspaces,
-        pluginConfig.getFormats());
+        pluginConfig.getFormats(),
+        PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     newPluginConfig.setEnabled(pluginConfig.isEnabled());
     pluginRegistry.put(DFS_PLUGIN_NAME, newPluginConfig);
   }

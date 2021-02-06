@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.common.logical.StoragePluginConfigBase;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
@@ -63,7 +63,7 @@ public class TestClassicLocator extends BasePluginRegistryTest {
 
       // Abstract classes do not appear
       assertFalse(result.contains(StoragePluginConfig.class));
-      assertFalse(result.contains(StoragePluginConfigBase.class));
+      assertFalse(result.contains(AbstractSecuredStoragePluginConfig.class));
 
       // The private plugin class does not appear
       assertFalse(result.contains(StoragePluginFixtureConfig.class));

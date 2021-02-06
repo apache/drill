@@ -17,27 +17,38 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
-import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap.Builder;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 
 @JsonTypeName(FileSystemConfig.NAME)
-public class FileSystemConfig extends StoragePluginConfig {
+public class FileSystemConfig extends AbstractSecuredStoragePluginConfig {
+  private static final List<String> FS_CREDENTIAL_KEYS =
+      Arrays.asList(
+          CommonConfigurationKeysPublic.HADOOP_SECURITY_CREDENTIAL_PROVIDER_PATH,
+          "fs.s3a.access.key",
+          "fs.s3a.secret.key");
 
   public static final String NAME = "file";
 
@@ -50,7 +61,9 @@ public class FileSystemConfig extends StoragePluginConfig {
   public FileSystemConfig(@JsonProperty("connection") String connection,
                           @JsonProperty("config") Map<String, String> config,
                           @JsonProperty("workspaces") Map<String, WorkspaceConfig> workspaces,
-                          @JsonProperty("formats") Map<String, FormatPluginConfig> formats) {
+                          @JsonProperty("formats") Map<String, FormatPluginConfig> formats,
+                          @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
+    super(getCredentialsProvider(config, credentialsProvider), credentialsProvider == null);
     this.connection = connection;
 
     // Force creation of an empty map so that configs compare equal
@@ -147,8 +160,26 @@ public class FileSystemConfig extends StoragePluginConfig {
       formatsCopy = formatsCopy == null ? new LinkedHashMap<>() : formatsCopy;
       formatsCopy.putAll(newFormats);
     }
-    FileSystemConfig newConfig = new FileSystemConfig(connection, configCopy, workspaces, formatsCopy);
+    FileSystemConfig newConfig =
+        new FileSystemConfig(connection, configCopy, workspaces, formatsCopy, credentialsProvider);
     newConfig.setEnabled(isEnabled());
     return newConfig;
+  }
+
+  private static CredentialsProvider getCredentialsProvider(
+      Map<String, String> config,
+      CredentialsProvider credentialsProvider) {
+    if (credentialsProvider != null) {
+      return credentialsProvider;
+    }
+
+    if (config != null) {
+      Map<String, String> credentials = FS_CREDENTIAL_KEYS.stream()
+          .filter(config::containsKey)
+          .collect(Collectors.toMap(fsCredentialKey -> fsCredentialKey, config::get));
+
+      return new PlainCredentialsProvider(credentials);
+    }
+    return PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
   }
 }

@@ -76,6 +76,7 @@ public class PhysicalPlanReader {
     lpMapper.registerSubtypes(DynamicPojoRecordReader.class);
     InjectableValues injectables = new InjectableValues.Std()
         .addValue(StoragePluginRegistry.class, pluginRegistry)
+        .addValue(DrillConfig.class, config)
         .addValue(DrillbitEndpoint.class, endpoint);
 
     this.mapper = lpMapper;

@@ -33,13 +33,17 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.mongo.schema.MongoSchemaFactory;
+import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.store.security.HadoopCredentialsProvider;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
 import org.apache.drill.shaded.guava.com.google.common.cache.RemovalNotification;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,20 +76,16 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
     this.schemaFactory = new MongoSchemaFactory(this, name);
   }
 
-  private static String addCredentialsFromCredentialsProvider(String connection, String name) {
+  private String addCredentialsFromCredentialsProvider(String connection, String name) {
     MongoClientURI parsed = new MongoClientURI(connection);
     if (parsed.getCredentials() == null) {
-      Configuration configuration = new Configuration();
+      UsernamePasswordCredentials credentials = getUsernamePasswordCredentials(name);
       try {
         // The default connection has the name "mongo" but multiple connections can be added;
         // each will need their own credentials.
-        char[] usernameChars = configuration.getPassword(
-            DrillMongoConstants.STORE_CONFIG_PREFIX + name + DrillMongoConstants.USERNAME_CONFIG_SUFFIX);
-        char[] passwordChars = configuration.getPassword(
-            DrillMongoConstants.STORE_CONFIG_PREFIX + name + DrillMongoConstants.PASSWORD_CONFIG_SUFFIX);
-        if (usernameChars != null && passwordChars != null) {
-          String username = URLEncoder.encode(new String(usernameChars), "UTF-8");
-          String password = URLEncoder.encode(new String(passwordChars), "UTF-8");
+        if (credentials.getUsername() != null && credentials.getPassword() != null) {
+          String username = URLEncoder.encode(credentials.getUsername(), "UTF-8");
+          String password = URLEncoder.encode(credentials.getPassword(), "UTF-8");
           return connection.replaceFirst("://",
               String.format("://%s:%s@", username, password));
         }
@@ -94,6 +94,20 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
       }
     }
     return connection;
+  }
+
+  private UsernamePasswordCredentials getUsernamePasswordCredentials(String name) {
+    CredentialsProvider credentialsProvider = mongoConfig.getCredentialsProvider();
+    // for the case if empty credentials, tries to obtain credentials using HadoopCredentialsProvider
+    if (credentialsProvider == null || credentialsProvider == PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER) {
+      credentialsProvider = new HadoopCredentialsProvider(
+          ImmutableMap.of(
+              UsernamePasswordCredentials.USERNAME,
+              DrillMongoConstants.STORE_CONFIG_PREFIX + name + DrillMongoConstants.USERNAME_CONFIG_SUFFIX,
+              UsernamePasswordCredentials.PASSWORD,
+              DrillMongoConstants.STORE_CONFIG_PREFIX + name + DrillMongoConstants.PASSWORD_CONFIG_SUFFIX));
+    }
+    return new UsernamePasswordCredentials(credentialsProvider);
   }
 
   @Override

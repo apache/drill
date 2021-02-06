@@ -19,6 +19,7 @@ package org.apache.drill.common.config;
 
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -26,6 +27,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +58,10 @@ public class LogicalPlanPersistence {
         .addDeserializer(LogicalExpression.class, new LogicalExpression.De(conf))
         .addDeserializer(SchemaPath.class, new SchemaPath.De());
 
+    InjectableValues injectables = new InjectableValues.Std()
+        .addValue(DrillConfig.class, conf);
+
+    mapper.setInjectableValues(injectables);
     mapper.registerModule(deserModule);
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
     mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
@@ -68,6 +74,7 @@ public class LogicalPlanPersistence {
     registerSubtypes(getSubTypes(scanResult, StoragePluginConfig.class));
     // For FormatPluginConfigBase
     registerSubtypes(getSubTypes(scanResult, FormatPluginConfig.class));
+    registerSubtypes(getSubTypes(scanResult, CredentialsProvider.class));
   }
 
   public ObjectMapper getMapper() {

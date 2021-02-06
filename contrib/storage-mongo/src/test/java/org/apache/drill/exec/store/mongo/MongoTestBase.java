@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.mongo;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.AfterClass;
@@ -37,7 +38,8 @@ public class MongoTestBase extends ClusterTest implements MongoTestConstants {
   }
 
   private static void initMongoStoragePlugin(String connectionURI) throws Exception {
-    MongoStoragePluginConfig storagePluginConfig = new MongoStoragePluginConfig(connectionURI);
+    MongoStoragePluginConfig storagePluginConfig = new MongoStoragePluginConfig(connectionURI,
+        PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     storagePluginConfig.setEnabled(true);
     pluginRegistry.put(MongoStoragePluginConfig.NAME, storagePluginConfig);
 

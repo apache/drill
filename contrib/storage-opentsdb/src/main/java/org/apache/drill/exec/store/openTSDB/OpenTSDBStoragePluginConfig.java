@@ -21,14 +21,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.StoragePluginConfigBase;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
 @JsonTypeName(OpenTSDBStoragePluginConfig.NAME)
-public class OpenTSDBStoragePluginConfig extends StoragePluginConfigBase {
+public class OpenTSDBStoragePluginConfig extends StoragePluginConfig {
 
   private static final Logger logger = LoggerFactory.getLogger(OpenTSDBStoragePluginConfig.class);
 
