@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.store.kudu;
 
-import org.apache.drill.common.logical.StoragePluginConfigBase;
+import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName(KuduStoragePluginConfig.NAME)
-public class KuduStoragePluginConfig extends StoragePluginConfigBase {
+public class KuduStoragePluginConfig extends StoragePluginConfig {
 
   public static final String NAME = "kudu";
 

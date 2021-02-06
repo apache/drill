@@ -458,7 +458,6 @@ public class TestInfoSchema extends BaseTestQuery {
 
     // check some stable properties existence
     assertTrue(configMap.containsKey("connection"));
-    assertTrue(configMap.containsKey("config"));
     assertTrue(configMap.containsKey("formats"));
     assertFalse(configMap.containsKey("workspaces"));
 

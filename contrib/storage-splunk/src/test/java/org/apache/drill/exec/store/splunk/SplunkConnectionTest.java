@@ -48,7 +48,8 @@ public class SplunkConnectionTest extends SplunkBaseTest {
               SPLUNK_STORAGE_PLUGIN_CONFIG.getHostname(),
               SPLUNK_STORAGE_PLUGIN_CONFIG.getPort(),
               SPLUNK_STORAGE_PLUGIN_CONFIG.getEarliestTime(),
-              SPLUNK_STORAGE_PLUGIN_CONFIG.getLatestTime()
+              SPLUNK_STORAGE_PLUGIN_CONFIG.getLatestTime(),
+              null
       );
       SplunkConnection sc = new SplunkConnection(invalidSplunkConfig);
       sc.connect();

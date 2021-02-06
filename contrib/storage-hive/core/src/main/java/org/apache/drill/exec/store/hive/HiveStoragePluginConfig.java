@@ -20,14 +20,14 @@ package org.apache.drill.exec.store.hive;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
-import org.apache.drill.common.logical.StoragePluginConfigBase;
+import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName(HiveStoragePluginConfig.NAME)
-public class HiveStoragePluginConfig extends StoragePluginConfigBase {
+public class HiveStoragePluginConfig extends StoragePluginConfig {
 
   public static final String NAME = "hive";
 

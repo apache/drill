@@ -15,28 +15,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.mock;
-
-import org.apache.drill.common.logical.StoragePluginConfig;
+package org.apache.drill.exec.store.security;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.logical.security.CredentialsProvider;
 
-@JsonTypeName(MockStorageEngineConfig.NAME)
-public class MockStorageEngineConfig extends StoragePluginConfig {
-  public static final String NAME = "mock";
-  public static final MockStorageEngineConfig INSTANCE = new MockStorageEngineConfig("mock:///");
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
-  private final String url;
+/**
+ * Implementation of {@link CredentialsProvider} that obtains credential values from
+ * environment variables.
+ * <p>
+ * Its constructor accepts a map with credential names as keys and env variable names as values.
+ */
+public class EnvCredentialsProvider implements CredentialsProvider {
+  private final Map<String, String> envVariables;
 
   @JsonCreator
-  public MockStorageEngineConfig(@JsonProperty("url") String url) {
-    this.url = url;
+  public EnvCredentialsProvider(@JsonProperty("envVariableNames") Map<String, String> envVariableNames) {
+    this.envVariables = envVariableNames;
   }
 
-  public String getUrl() {
-    return url;
+  @Override
+  public Map<String, String> getCredentials() {
+    Map<String, String> credentials = new HashMap<>();
+    envVariables.forEach((key, value) -> credentials.put(key, System.getenv(value)));
+
+    return credentials;
+  }
+
+  public Map<String, String> getEnvVariables() {
+    return envVariables;
   }
 
   @Override
@@ -47,18 +59,12 @@ public class MockStorageEngineConfig extends StoragePluginConfig {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
-    MockStorageEngineConfig that = (MockStorageEngineConfig) o;
-
-    if (url != null ? !url.equals(that.url) : that.url != null) {
-      return false;
-    }
-
-    return true;
+    EnvCredentialsProvider that = (EnvCredentialsProvider) o;
+    return Objects.equals(envVariables, that.envVariables);
   }
 
   @Override
   public int hashCode() {
-    return url != null ? url.hashCode() : 0;
+    return Objects.hash(envVariables);
   }
 }

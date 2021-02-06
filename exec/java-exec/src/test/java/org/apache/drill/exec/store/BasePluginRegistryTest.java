@@ -51,7 +51,7 @@ public class BasePluginRegistryTest extends BaseTest {
 
   protected static final String RESOURCE_BASE = "plugins/";
 
-  protected class PluginRegistryContextFixture implements PluginRegistryContext {
+  protected static class PluginRegistryContextFixture implements PluginRegistryContext {
 
     private final DrillConfig drillConfig;
     private final ScanResult classpathScan;
@@ -171,7 +171,7 @@ public class BasePluginRegistryTest extends BaseTest {
     public void init() { }
 
     @Override
-    public StoragePlugins bootstrapPlugins() throws IOException {
+    public StoragePlugins bootstrapPlugins() {
       return null;
     }
 

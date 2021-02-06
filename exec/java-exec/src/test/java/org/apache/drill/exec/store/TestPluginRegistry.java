@@ -43,6 +43,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.BaseTest;
 import org.apache.drill.test.ClusterFixture;
@@ -83,7 +84,8 @@ public class TestPluginRegistry extends BaseTest {
 
   private FileSystemConfig myConfig1() {
     FileSystemConfig config = new FileSystemConfig("myConn",
-        new HashMap<>(), new HashMap<>(), new HashMap<>());
+        new HashMap<>(), new HashMap<>(), new HashMap<>(),
+        PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     config.setEnabled(true);
     return config;
   }
@@ -92,7 +94,8 @@ public class TestPluginRegistry extends BaseTest {
     Map<String, String> props = new HashMap<>();
     props.put("foo", "bar");
     FileSystemConfig config = new FileSystemConfig("myConn",
-        props, new HashMap<>(), new HashMap<>());
+        props, new HashMap<>(), new HashMap<>(),
+        PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     config.setEnabled(true);
     return config;
   }

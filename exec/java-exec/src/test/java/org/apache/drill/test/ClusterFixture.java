@@ -57,6 +57,7 @@ import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
@@ -558,7 +559,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       pluginConfig.getConnection(),
       pluginConfig.getConfig(),
       newWorkspaces == null ? pluginConfig.getWorkspaces() : newWorkspaces,
-      newFormats == null ? pluginConfig.getFormats() : newFormats);
+      newFormats == null ? pluginConfig.getFormats() : newFormats,
+      PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     newPluginConfig.setEnabled(pluginConfig.isEnabled());
 
     pluginRegistry.put(pluginName, newPluginConfig);

@@ -20,14 +20,14 @@ package org.apache.drill.exec.store.druid;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.logical.StoragePluginConfigBase;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
 @JsonTypeName(DruidStoragePluginConfig.NAME)
-public class DruidStoragePluginConfig extends StoragePluginConfigBase {
+public class DruidStoragePluginConfig extends StoragePluginConfig {
 
   private static final Logger logger = LoggerFactory.getLogger(DruidStoragePluginConfig.class);
   public static final String NAME = "druid";

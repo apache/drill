@@ -34,6 +34,7 @@ import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,8 +113,9 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
       hikariConfig.setDriverClassName(config.getDriver());
       hikariConfig.setJdbcUrl(config.getUrl());
-      hikariConfig.setUsername(config.getUsername());
-      hikariConfig.setPassword(config.getPassword());
+      UsernamePasswordCredentials credentials = config.getUsernamePasswordCredentials();
+      hikariConfig.setUsername(credentials.getUsername());
+      hikariConfig.setPassword(credentials.getPassword());
 
       return new HikariDataSource(hikariConfig);
     } catch (RuntimeException e) {

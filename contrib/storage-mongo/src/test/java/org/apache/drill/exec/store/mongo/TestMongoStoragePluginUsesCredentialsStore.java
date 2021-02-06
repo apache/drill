@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.mongo;
 import com.mongodb.MongoCredential;
 import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,8 +33,9 @@ import static org.junit.Assert.assertEquals;
 public class TestMongoStoragePluginUsesCredentialsStore extends BaseTest {
 
   private void test(String expectedUserName, String expectedPassword, String connection, String name) throws ExecutionSetupException {
-    MongoStoragePlugin plugin = new MongoStoragePlugin(new MongoStoragePluginConfig(
-      connection), null, name);
+    MongoStoragePlugin plugin = new MongoStoragePlugin(
+        new MongoStoragePluginConfig(connection, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER),
+        null, name);
     List<MongoCredential> creds = plugin.getClient().getCredentialsList();
     if (expectedUserName == null) {
       assertEquals(0, creds.size());

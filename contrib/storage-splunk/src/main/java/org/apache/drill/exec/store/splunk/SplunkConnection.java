@@ -26,6 +26,7 @@ import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,15 +37,13 @@ public class SplunkConnection {
 
   private static final Logger logger = LoggerFactory.getLogger(SplunkConnection.class);
 
-  private final String username;
-  private final String password;
+  private final UsernamePasswordCredentials credentials;
   private final String hostname;
   private final int port;
   private Service service;
 
   public SplunkConnection(SplunkPluginConfig config) {
-    this.username = config.getUsername();
-    this.password = config.getPassword();
+    this.credentials = config.getUsernamePasswordCredentials();
     this.hostname = config.getHostname();
     this.port = config.getPort();
     service = connect();
@@ -53,12 +52,9 @@ public class SplunkConnection {
 
   /**
    * This constructor is used for testing only
-   * @param config
-   * @param service
    */
   public SplunkConnection(SplunkPluginConfig config, Service service) {
-    this.username = config.getUsername();
-    this.password = config.getPassword();
+    this.credentials = config.getUsernamePasswordCredentials();
     this.hostname = config.getHostname();
     this.port = config.getPort();
     this.service = service;
@@ -73,8 +69,8 @@ public class SplunkConnection {
     ServiceArgs loginArgs = new ServiceArgs();
     loginArgs.setHost(hostname);
     loginArgs.setPort(port);
-    loginArgs.setPassword(password);
-    loginArgs.setUsername(username);
+    loginArgs.setPassword(credentials.getPassword());
+    loginArgs.setUsername(credentials.getUsername());
 
     try {
       service = Service.connect(loginArgs);

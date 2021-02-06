@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 /*
  * Simple class that extends the regular java.util.HashMap but overrides the
@@ -30,12 +31,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class JsonStringHashMap<K, V> extends LinkedHashMap<K, V> {
 
-  private static ObjectMapper mapper;
-
-  static {
-    mapper = new ObjectMapper();
-    mapper.registerModule(SerializationModule.getModule());
-  }
+  private static final ObjectMapper mapper = new ObjectMapper()
+      .registerModule(SerializationModule.getModule())
+      .registerModule(new JodaModule());
 
   @Override
   public boolean equals(Object obj) {

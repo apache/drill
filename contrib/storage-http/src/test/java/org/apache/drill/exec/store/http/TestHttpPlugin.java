@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixture;
@@ -100,7 +101,8 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("sunrise", sunriseConfig);
     configs.put("sunrise2", sunriseWithParamsConfig);
 
-    HttpStoragePluginConfig mockStorageConfigWithWorkspace = new HttpStoragePluginConfig(false, configs, 10, "", 80, "", "", "");
+    HttpStoragePluginConfig mockStorageConfigWithWorkspace =
+        new HttpStoragePluginConfig(false, configs, 10, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("live", mockStorageConfigWithWorkspace);
   }
@@ -145,7 +147,8 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("mockcsv", mockCsvConfig);
     configs.put("mockxml", mockXmlConfig);
 
-    HttpStoragePluginConfig mockStorageConfigWithWorkspace = new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "");
+    HttpStoragePluginConfig mockStorageConfigWithWorkspace =
+        new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
   }

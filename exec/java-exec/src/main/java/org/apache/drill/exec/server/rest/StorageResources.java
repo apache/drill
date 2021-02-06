@@ -245,7 +245,7 @@ public class StorageResources {
       storage.putJson(name, storagePluginConfig);
       return message("Success");
     } catch (PluginEncodingException e) {
-      logger.debug("Error in JSON mapping: {}", storagePluginConfig, e);
+      logger.warn("Error in JSON mapping: {}", storagePluginConfig, e);
       return message("Invalid JSON");
     } catch (PluginException e) {
       return message(e.getMessage());
