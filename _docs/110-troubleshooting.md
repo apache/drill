@@ -105,7 +105,7 @@ Solutions:
   * Parquet
   * JSON
 
-### Access Nested Fields without Table Name/Alias
+### <span id='access-nested-fields-without-table-name-alias'>Access Nested Fields without Table Name/Alias</span>
 Symptom: 
 
        SELECT x.y …  
@@ -179,7 +179,7 @@ Symptom: ODBC errors.
 Solution: Make sure that the ODBC driver version is compatible with the server version. [Driver installation instructions]({{site.baseurl}}/docs/installing-the-odbc-driver) include how to check the driver version. 
 Turn on ODBC driver debug logging to better understand failure.  
 
-### JDBC/ODBC Connection Issues with ZooKeeper
+### <span id='jdbc-odbc-connection-issues-with-zookeeper'>JDBC/ODBC Connection Issues with ZooKeeper</span>
 
 Symptom: Client cannot resolve ZooKeeper host names for JDBC/ODBC.
 Symptom: "IllegalStateException: No active Drillbit endpoint found from ZooKeeper. Check connection parameters?" 
@@ -211,7 +211,7 @@ Symptom: UNSUPPORTED\_OPERATION ERROR: Null values are not supported in lists by
 
 Solution: Avoid selecting fields that are arrays containing nulls. Change Drill session settings to enable all_text_mode. Set store.json.all\_text_mode to true, so Drill treats JSON null values as a string containing the word 'null'.
 
-### SELECT COUNT (\*) Takes a Long Time to Run
+### <span id='select-count-takes-a-long-time-to-run'>SELECT COUNT (\*) Takes a Long Time to Run</span>
 
 Solution: In some cases, the underlying storage format does not have a built-in capability to return a count of records in a table.  In these cases, Drill does a full scan of the data to verify the number of records.
 
