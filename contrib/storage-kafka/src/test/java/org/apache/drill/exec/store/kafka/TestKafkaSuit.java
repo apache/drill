@@ -61,7 +61,7 @@ public class TestKafkaSuit extends BaseTest {
 
   private static ZkClient zkClient;
 
-  private static volatile AtomicInteger initCount = new AtomicInteger(0);
+  private static AtomicInteger initCount = new AtomicInteger(0);
 
   static final int NUM_JSON_MSG = 10;
 

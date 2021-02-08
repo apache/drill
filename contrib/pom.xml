@@ -59,6 +59,7 @@
     <module>storage-kafka</module>
     <module>storage-kudu</module>
     <module>storage-opentsdb</module>
+    <module>storage-splunk</module>
     <module>storage-http</module>
     <module>storage-druid</module>
     <module>storage-elasticsearch</module>
