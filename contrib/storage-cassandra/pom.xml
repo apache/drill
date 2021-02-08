@@ -57,7 +57,7 @@
     <dependency>
       <groupId>com.scylladb</groupId>
       <artifactId>scylla-driver-core</artifactId>
-      <version>3.10.1-scylla-0</version>
+      <version>3.10.2-scylla-1</version>
     </dependency>
     <dependency>
       <groupId>org.ow2.asm</groupId>
@@ -82,7 +82,7 @@
     <dependency>
       <groupId>com.github.nosan</groupId>
       <artifactId>embedded-cassandra</artifactId>
-      <version>4.0.0</version>
+      <version>4.0.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -98,7 +98,14 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <forkCount combine.self="override">1</forkCount>
+          <includes>
+            <include>**/TestCassandraSuit.class</include>
+          </includes>
+          <excludes>
+            <exclude>**/CassandraComplexTypesTest.java</exclude>
+            <exclude>**/CassandraPlanTest.java</exclude>
+            <exclude>**/CassandraQueryTest.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>

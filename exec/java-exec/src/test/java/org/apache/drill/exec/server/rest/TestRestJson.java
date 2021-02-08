@@ -71,6 +71,8 @@ public class TestRestJson extends ClusterTest {
       MediaType.parse("application/json");
   public static final int TIMEOUT = 3000; // for debugging
 
+  private static int portNumber;
+
   protected static File testDir;
   private final OkHttpClient httpClient = new OkHttpClient.Builder()
       .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
@@ -83,9 +85,12 @@ public class TestRestJson extends ClusterTest {
 
   @BeforeClass
   public static void setup() throws Exception {
-    ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher);
-    builder.configBuilder().put(ExecConstants.HTTP_ENABLE, true);
+    ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
+        .configProperty(ExecConstants.HTTP_ENABLE, true)
+        .configProperty(ExecConstants.HTTP_PORT_HUNT, true);
     startCluster(builder);
+
+    portNumber = cluster.drillbit().getWebServerPort();
 
     // Set up CSV storage plugin using headers.
     TextFormatConfig csvFormat = new TextFormatConfig(
@@ -217,7 +222,7 @@ public class TestRestJson extends ClusterTest {
   private void runQuery(QueryWrapper query, File destFile) throws IOException {
     ObjectWriter writer = mapper.writerFor(QueryWrapper.class);
     String json = writer.writeValueAsString(query);
-    String url = "http://localhost:8047/query.json";
+    String url = String.format("http://localhost:%d/query.json", portNumber);
     Request request = new Request.Builder()
         .url(url)
         .post(RequestBody.create(json, JSON_MEDIA_TYPE))
@@ -232,7 +237,7 @@ public class TestRestJson extends ClusterTest {
   private void runQuery(QueryWrapper query) throws IOException {
     ObjectWriter writer = mapper.writerFor(QueryWrapper.class);
     String json = writer.writeValueAsString(query);
-    String url = "http://localhost:8047/query.json";
+    String url = String.format("http://localhost:%d/query.json", portNumber);
     Request request = new Request.Builder()
         .url(url)
         .post(RequestBody.create(json, JSON_MEDIA_TYPE))

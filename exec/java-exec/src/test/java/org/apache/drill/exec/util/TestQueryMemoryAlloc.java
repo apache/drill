@@ -67,17 +67,17 @@ public class TestQueryMemoryAlloc extends DrillTest {
   public void testCustomFloor() throws Exception {
     OperatorFixture.Builder builder = OperatorFixture.builder(dirTestWatcher);
     builder.systemOption(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.05);
-    builder.systemOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 3 * ONE_GB);
+    builder.systemOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 2 * ONE_GB);
 
     try (OperatorFixture fixture = builder.build()) {
       final OptionManager optionManager = fixture.getOptionManager();
 
       optionManager.setLocalOption(ExecConstants.PERCENT_MEMORY_PER_QUERY_KEY, 0.05);
-      optionManager.setLocalOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 3 * ONE_GB);
+      optionManager.setLocalOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 2 * ONE_GB);
 
       // Out-of-box memory, use query memory per node as floor.
       long mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 8 * ONE_GB);
-      assertEquals(3 * ONE_GB, mem);
+      assertEquals(2 * ONE_GB, mem);
 
       // Up to 60 GB, query memory dominates.
 
