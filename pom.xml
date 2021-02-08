@@ -216,6 +216,11 @@
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
     </repository>
+    <repository>
+      <id>splunk-artifactory</id>
+      <name>Splunk Releases</name>
+      <url>https://splunk.jfrog.io/artifactory/ext-releases-local</url>
+    </repository>
   </repositories>
 
   <issueManagement>
