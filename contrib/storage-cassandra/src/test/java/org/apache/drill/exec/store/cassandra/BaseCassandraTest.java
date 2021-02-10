@@ -19,12 +19,9 @@ package org.apache.drill.exec.store.cassandra;
 
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
-import org.apache.hadoop.util.ComparableVersion;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.testcontainers.containers.CassandraContainer;
-
-import static org.junit.Assume.assumeTrue;
 
 public class BaseCassandraTest extends ClusterTest {
 
@@ -35,11 +32,6 @@ public class BaseCassandraTest extends ClusterTest {
   }
 
   private static void initCassandraPlugin(CassandraContainer<?> cassandra) throws Exception {
-    assumeTrue(
-        "Skipping tests for JDK 12+ since Cassandra supports only versions up to 11 (including).",
-        new ComparableVersion(System.getProperty("java.version"))
-            .compareTo(new ComparableVersion("12")) < 0);
-
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
     CassandraStorageConfig config = new CassandraStorageConfig(
