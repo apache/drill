@@ -80,9 +80,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.github.nosan</groupId>
-      <artifactId>embedded-cassandra</artifactId>
-      <version>4.0.1</version>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>cassandra</artifactId>
+      <version>1.15.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>

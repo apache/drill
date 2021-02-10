@@ -17,46 +17,33 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
-import com.github.nosan.embedded.cassandra.Cassandra;
-import com.github.nosan.embedded.cassandra.CassandraBuilder;
-import com.github.nosan.embedded.cassandra.Settings;
-import com.github.nosan.embedded.cassandra.cql.CqlScript;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.test.BaseTest;
-import org.apache.hadoop.util.ComparableVersion;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+import org.testcontainers.containers.CassandraContainer;
 
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.Assume.assumeTrue;
 
 @Category(SlowTest.class)
 @RunWith(Suite.class)
 @Suite.SuiteClasses({CassandraComplexTypesTest.class, CassandraPlanTest.class, CassandraQueryTest.class})
 public class TestCassandraSuit extends BaseTest {
 
-  private static final AtomicInteger initCount = new AtomicInteger(0);
+  protected static CassandraContainer<?> cassandra;
 
-  protected static Cassandra cassandra;
+  private static final AtomicInteger initCount = new AtomicInteger(0);
 
   private static volatile boolean runningSuite = false;
 
   @BeforeClass
   public static void initCassandra() {
-    assumeTrue(
-        "Skipping tests for JDK 12+ since Cassandra supports only versions up to 11 (including).",
-        new ComparableVersion(System.getProperty("java.version"))
-            .compareTo(new ComparableVersion("12")) < 0);
     synchronized (TestCassandraSuit.class) {
       if (initCount.get() == 0) {
         startCassandra();
-        prepareData();
       }
       initCount.incrementAndGet();
       runningSuite = true;
@@ -77,21 +64,8 @@ public class TestCassandraSuit extends BaseTest {
   }
 
   private static void startCassandra() {
-    cassandra = new CassandraBuilder().build();
+    cassandra = new CassandraContainer<>("cassandra")
+        .withInitScript("queries.cql");
     cassandra.start();
-  }
-
-  private static void prepareData() {
-    Settings settings = cassandra.getSettings();
-
-    try (Cluster cluster = Cluster.builder()
-        .addContactPoints(settings.getAddress())
-        .withPort(settings.getPort())
-        .withoutMetrics()
-        .withoutJMXReporting()
-        .build()) {
-      Session session = cluster.connect();
-      CqlScript.ofClassPath("queries.cql").forEachStatement(session::execute);
-    }
   }
 }
