@@ -84,6 +84,12 @@
       <artifactId>cassandra</artifactId>
       <version>1.15.1</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.datastax.cassandra</groupId>
+          <artifactId>cassandra-driver-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>net.hydromatic</groupId>
