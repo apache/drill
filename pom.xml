@@ -95,8 +95,8 @@
     <jersey.version>2.25.1</jersey.version>
     <asm.version>7.3.1</asm.version>
     <excludedGroups />
-    <memoryMb>4096</memoryMb>
-    <directMemoryMb>4096</directMemoryMb>
+    <memoryMb>4000</memoryMb>
+    <directMemoryMb>2500</directMemoryMb>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>
     <docker.repository>apache/drill</docker.repository>
