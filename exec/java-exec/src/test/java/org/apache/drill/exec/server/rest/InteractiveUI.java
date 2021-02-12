@@ -28,8 +28,9 @@ import org.apache.drill.test.ClusterTest;
 public class InteractiveUI extends ClusterTest {
 
   public static void main(String[] args) {
-    ClusterFixtureBuilder builder = new ClusterFixtureBuilder();
-    builder.configBuilder().put(ExecConstants.HTTP_ENABLE, true);
+    ClusterFixtureBuilder builder = new ClusterFixtureBuilder()
+        .configProperty(ExecConstants.HTTP_ENABLE, true)
+        .configProperty(ExecConstants.HTTP_PORT_HUNT, true);
     try {
       startCluster(builder);
       while (true) {

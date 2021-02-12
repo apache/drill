@@ -35,7 +35,7 @@ import org.junit.Test;
 public final class ExecutorServiceUtilTest extends DrillTest {
 
   @Test
-  public void testSuccessfulExecution() throws Exception {
+  public void testSuccessfulExecution() {
     final int numThreads = 2;
     final int numTasks = 20;
     ExecutorService service = Executors.newFixedThreadPool(numThreads);
@@ -74,7 +74,7 @@ public final class ExecutorServiceUtilTest extends DrillTest {
   }
 
   @Test
-  public void testFailedExecution() throws Exception {
+  public void testFailedExecution() {
     final int numThreads = 2;
     final int numTasks = 20;
     ExecutorService service = Executors.newFixedThreadPool(numThreads);
@@ -117,7 +117,7 @@ public final class ExecutorServiceUtilTest extends DrillTest {
   }
 
   @Test
-  public void testMixedExecution() throws Exception {
+  public void testMixedExecution() {
     final int numThreads = 2;
     final int numTasks = 20;
     ExecutorService service = Executors.newFixedThreadPool(numThreads);
@@ -133,7 +133,7 @@ public final class ExecutorServiceUtilTest extends DrillTest {
 
     // Launch the tasks
     for (int idx = 0; idx < numTasks; idx++) {
-      CallableTask task = null;
+      CallableTask task;
 
       if (idx % 2 == 0) {
         task = new CallableTask(successParams);
@@ -172,10 +172,10 @@ public final class ExecutorServiceUtilTest extends DrillTest {
   }
 
   @Test
-  public void testCancelExecution() throws Exception {
+  public void testCancelExecution() {
     final int numThreads = 2;
     ExecutorService service = Executors.newFixedThreadPool(numThreads);
-    RequestContainer request = null;
+    RequestContainer request;
 
     // Set the test parameters
     TestParams params = new TestParams();
@@ -224,7 +224,7 @@ public final class ExecutorServiceUtilTest extends DrillTest {
       SUCCEEDED,
       FAILED,
       CANCELLED
-    };
+    }
 
     private ExecutionStatus status;
 
@@ -252,12 +252,12 @@ public final class ExecutorServiceUtilTest extends DrillTest {
 
   @SuppressWarnings("unused")
   private static final class TaskExecutionController {
-    private boolean canStart = false;
-    private boolean canExit = false;
-    private boolean started = false;
-    private boolean exited = false;
-    private int delayMillisOnExit = 0;
-    private Object monitor = new Object();
+    private volatile boolean canStart = false;
+    private volatile boolean canExit = false;
+    private volatile boolean started = false;
+    private volatile boolean exited = false;
+    private volatile int delayMillisOnExit = 0;
+    private final Object monitor = new Object();
 
     private void canStart() {
       synchronized(monitor) {
@@ -340,13 +340,13 @@ public final class ExecutorServiceUtilTest extends DrillTest {
   }
 
   private static final class TestParams {
-    private int waitTimeMillis = 2;
+    private final int waitTimeMillis = 2;
     private boolean generateException = false;
     private TaskExecutionController controller = null;
   }
 
   private static final class CallableTask implements Callable<TaskResult> {
-    private volatile TaskResult result = new TaskResult();
+    private final TaskResult result = new TaskResult();
     private final TestParams params;
 
     private CallableTask(TestParams params) {
