@@ -407,11 +407,16 @@ public class JsonReader extends BaseJsonReader {
     }
   }
 
-  private void handleString(JsonParser parser, MapWriter writer,
-      String fieldName) throws IOException {
-    writer.varChar(fieldName).writeVarChar(0,
-        workingBuffer.prepareVarCharHolder(parser.getText()),
-        workingBuffer.getBuf());
+  private void handleString(JsonParser parser, MapWriter writer, String fieldName) throws IOException {
+    try {
+      writer.varChar(fieldName)
+          .writeVarChar(0, workingBuffer.prepareVarCharHolder(parser.getText()), workingBuffer.getBuf());
+    } catch (IllegalArgumentException e) {
+      if (parser.getText() == null || parser.getText().isEmpty()) {
+        return;
+      }
+      throw e;
+    }
   }
 
   private void handleString(JsonParser parser, ListWriter writer)

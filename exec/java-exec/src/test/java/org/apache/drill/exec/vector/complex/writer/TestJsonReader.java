@@ -804,4 +804,60 @@ public class TestJsonReader extends BaseTestQuery {
         .baselineValues("2", "abc")
         .go();
   }
+
+  @Test // DRILL-7821
+  public void testEmptyObjectInference() throws Exception {
+    String fileName = "emptyObject.json";
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), fileName)))) {
+      writer.write("{\"sample\": [{\"data\": {}},{\"data\": \"\"}]}");
+    }
+
+    String sql = "SELECT * from dfs.`%s` t";
+
+    testBuilder()
+        .sqlQuery(sql, fileName)
+        .ordered()
+        .baselineColumns("sample")
+        .baselineValues(
+            listOf(
+                mapOf(
+                    "data", mapOf()
+                ),
+                mapOf(
+                    "data", mapOf()
+                )
+            )
+        )
+        .go();
+  }
+
+  @Test // DRILL-7821
+  public void testFilledObjectInference() throws Exception {
+    String fileName = "filledObject.json";
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), fileName)))) {
+      writer.write("{\"sample\": [{\"data\": {\"foo\": \"bar\"}},{\"data\": \"\"}]}");
+    }
+
+    String sql = "SELECT * from dfs.`%s` t";
+
+    testBuilder()
+        .sqlQuery(sql, fileName)
+        .ordered()
+        .baselineColumns("sample")
+        .baselineValues(
+            listOf(
+                mapOf(
+                    "data", mapOf(
+                        "foo", "bar"
+                    )
+                ),
+                mapOf(
+                    "data", mapOf()
+                )
+            )
+        )
+        .go();
+  }
 }
