@@ -318,6 +318,8 @@
               <exclude>com.beust:*</exclude>
               <exclude>jline:*</exclude>
               <exclude>io.netty:netty:jar:3.7.0.Final</exclude>
+              <exclude>io.netty:netty-transport-native-epoll:*</exclude>
+              <exclude>io.netty:netty-transport-native-unix-common:*</exclude>
               <exclude>org.xerial.snappy:*</exclude>
               <exclude>org.apache.avro:*</exclude>
               <exclude>org.tukaani:*</exclude>
