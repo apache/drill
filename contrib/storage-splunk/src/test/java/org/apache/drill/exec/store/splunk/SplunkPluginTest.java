@@ -25,14 +25,17 @@ import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+@FixMethodOrder(MethodSorters.JVM)
 @Category({SlowTest.class})
 public class SplunkPluginTest extends SplunkBaseTest {
 
@@ -177,7 +180,6 @@ public class SplunkPluginTest extends SplunkBaseTest {
   public void testExplicitFieldsWithOneFieldLimitQuery() throws Exception {
     String sql = "SELECT `component` FROM splunk.`_introspection` ORDER BY `component` LIMIT 2";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .add("component", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
