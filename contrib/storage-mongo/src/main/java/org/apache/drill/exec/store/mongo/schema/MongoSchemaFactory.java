@@ -20,11 +20,13 @@ package org.apache.drill.exec.store.mongo.schema;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -57,11 +59,13 @@ public class MongoSchemaFactory extends AbstractSchemaFactory {
 
   private LoadingCache<String, List<String>> databases;
   private LoadingCache<String, List<String>> tableNameLoader;
+  private Map<String, String> schemaNameMap;
   private final MongoStoragePlugin plugin;
 
   public MongoSchemaFactory(MongoStoragePlugin plugin, String schemaName) throws ExecutionSetupException {
     super(schemaName);
     this.plugin = plugin;
+    this.schemaNameMap = new HashMap<String, String>();
 
     databases = CacheBuilder //
         .newBuilder() //
@@ -83,7 +87,21 @@ public class MongoSchemaFactory extends AbstractSchemaFactory {
       }
       try {
         List<String> dbNames = new ArrayList<>();
-        plugin.getClient().listDatabaseNames().into(dbNames);
+        plugin.getClient().listDatabaseNames().forEach(new Consumer<String>() {
+          @Override
+          public void accept(String name) {
+            // 1. Schemas in drill are case insensitive and stored in lower case.
+            dbNames.add(name.toLowerCase());
+            /**
+             * 2. Support database name with capital letters.
+             * case 1: "show tables from mongo.HELLO", Should using the lower case name
+             *  to resolve the schema lookup in `CalciteSchema`.
+             * case 2: "select * from mongo.HEllO.myTable", Must be using origin name
+             *  to create `MongoScanSpec` and initial connection in `MongoRecordReader`.
+             */
+            schemaNameMap.put(name.toLowerCase(), name);
+          }
+        });
         return dbNames;
       } catch (MongoException me) {
         logger.warn("Failure while loading databases in Mongo. {}",
@@ -101,7 +119,7 @@ public class MongoSchemaFactory extends AbstractSchemaFactory {
     @Override
     public List<String> load(String dbName) throws Exception {
       try {
-        MongoDatabase db = plugin.getClient().getDatabase(dbName);
+        MongoDatabase db = plugin.getClient().getDatabase(schemaNameMap.get(dbName));
         List<String> collectionNames = new ArrayList<>();
         db.listCollectionNames().into(collectionNames);
         return collectionNames;
@@ -183,7 +201,7 @@ public class MongoSchemaFactory extends AbstractSchemaFactory {
     }
 
     DrillTable getDrillTable(String dbName, String collectionName) {
-      MongoScanSpec mongoScanSpec = new MongoScanSpec(dbName, collectionName);
+      MongoScanSpec mongoScanSpec = new MongoScanSpec(schemaNameMap.get(dbName), collectionName);
       return new DynamicDrillTable(plugin, getName(), null, mongoScanSpec);
     }
 

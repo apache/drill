@@ -37,19 +37,21 @@ public interface MongoTestConstants {
   String EMPLOYEE_DB = "employee";
   String AUTHENTICATION_DB = "admin";
   String DONUTS_DB = "donuts";
+  String DATATYPE_DB = "datatype";
+  String ISSUE7820_DB = "ISSUE7820"; // capital letters
 
   String DONUTS_COLLECTION = "donuts";
   String EMPINFO_COLLECTION = "empinfo";
   String EMPTY_COLLECTION = "empty";
   String SCHEMA_CHANGE_COLLECTION = "schema_change";
+  String DATATYPE_COLLECTION = "types";
+  String ISSUE7820_COLLECTION = "Issue7820";
 
   String DONUTS_DATA = "donuts.json";
   String EMP_DATA = "emp.json";
   String SCHEMA_CHANGE_DATA = "schema_change_int_to_string.json";
 
   String STORAGE_ENGINE = "wiredTiger";
-  String DATATYPE_DB = "datatype";
-  String DATATYPE_COLLECTION = "types";
   String DATATYPE_DATA = "datatype-oid.json";
 
   String CONFIG_REPLICA_SET = "config_replicas";
