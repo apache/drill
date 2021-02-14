@@ -53,7 +53,6 @@ import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,9 +66,15 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(Suite.class)
-@SuiteClasses({TestMongoFilterPushDown.class, TestMongoProjectPushDown.class,
-    TestMongoQueries.class, TestMongoChunkAssignment.class,
-    TestMongoStoragePluginUsesCredentialsStore.class})
+@Suite.SuiteClasses({
+  TestMongoFilterPushDown.class,
+  TestMongoProjectPushDown.class,
+  TestMongoQueries.class,
+  TestMongoChunkAssignment.class,
+  TestMongoStoragePluginUsesCredentialsStore.class,
+  TestMongoDrillIssue.class
+})
+
 @Category({SlowTest.class, MongoStorageTest.class})
 public class MongoTestSuite extends BaseTest implements MongoTestConstants {
 
