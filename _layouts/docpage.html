@@ -20,7 +20,7 @@ title: Documentation
     </div>
 
     <!-- jt: we don't need to display a last-modified date on each page to users
-    {% unless page.nodate %} {{ page.date | date: "%b %-d, %Y" }}{% endunless %}
+    {% unless page.nodate or true %} {{ page.date | date: "%b %-d, %Y" }}{% endunless %}
     --> 
 
     <div class="int_text" align="left">
