@@ -2,29 +2,35 @@ The Apache Drill website is built using [Jekyll](http://jekyllrb.com/).
 
 # Configuring env
 1. Install `ruby`
-2. Install `bundler` and `jekyll` `v2.5.2`:
+2. Install `bundler` and `jekyll` `v3.9.0`:
 ```
-gem install bundler jekyll:2.5.2
+gem install bundler jekyll:3.9.0
 ```
 3. Install `jekyll-redirect-from` `v0.9.1`:
 ```
 gem install jekyll-redirect-from:0.9.1
 ```
-4. Install Python v2.7.15.
+4. Install Python 3
 
 Please make sure that specific versions of libraries are installed since building the site with other versions may cause some issues like including md document index into the references, etc.
 
+## Note for existing contributors
+The software version numbers above underwent a major increase in 2020 and the Markdown processor
+changed from Redcarpet to Kramdown.  Please check the versions in your environment if you're having
+trouble generating the site.
+
 # Documentation Guidelines
 
-The documentation pages are placed under `_docs`. You can modify existing .md files, or you can create new .md files to add to the Apache Drill documentation site. Create pull requests to submit your documentation updates. The Kramdown MarkDown processor employed by Jekyll supports [a dialect of MarkDown](https://kramdown.gettalong.org/quickref.html) which is a superset of standard MarkDown.
+The documentation pages are placed under `_docs`. You can modify existing .md files, or you can create new .md files to add to the Apache Drill documentation site. Create pull requests to submit your documentation updates. The Kramdown Markdown processor employed by Jekyll supports [a dialect of Markdown](https://kramdown.gettalong.org/quickref.html) which is a superset of standard Markdown.
 
-## Creating New MarkDown Files
+## Creating New Markdown Files
 
-If you create new MarkDown (.md) files, include the required YAML front matter and name the file using the methods described in this section. 
+If you create new Markdown (.md) files, include the required YAML front matter and name the file using the methods described in this section. 
 
 The YAML front matter has three important parameters:
 
 * `title:` - This is the title of the page enclosed in quotation marks. Each page must have a *unique* title
+* `slug:` - Set this to the same value as `title`, it will be slugified automatically by Jekyll.
 * `date:` - This field is needed for Jekyll to write a last-modified date. Initially, leave this field blank.
 * `parent:` - This is the title of the page's parent page. It should be empty for top-level sections/guides, and be identical to the title attribute of another page in all other cases.
 
@@ -33,7 +39,7 @@ The name of the file itself doesn't matter except for the alphanumeric order of 
 Best practices:
 
 * Prefix the filenames with `010-foo.md`, `020-bar.md`, `030-baz.md`, etc. This allows room to add files in-between (eg, `005-qux.md`).  
-* Use the slug of the title as the filename. For example, if the title is "Getting Started with Drill", name the file `...-getting-started-with-drill.md`. If you're not sure what the slug is, you should be able to see it in the URL and then adjust (the URLs are auto-generated based on the title attribute).
+* Use the slugified title as the filename. For example, if the title is "Getting Started with Drill", name the file `...-getting-started-with-drill.md`. If you're not sure what the slug is, you should be able to see it in the URL and then adjust (the URLs are auto-generated based on the title attribute).
 
 # Developing and Previewing the Website
 
@@ -42,7 +48,7 @@ To preview the website on your local machine:
 ```bash
 jekyll build --config _config.yml,_config-prod.yml
 _tools/createdatadocs.py
-jekyll serve --config _config.yml,_config-prod.yml
+jekyll serve --config _config.yml,_config-prod.yml [--livereload] [--incremental]
 ```
 Note that you can skip the first two commands (and only run `jekyll serve`) if you haven't changed the title or path of any of the documentation pages.
 
