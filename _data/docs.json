@@ -4708,12 +4708,12 @@
                 }
             ],
             "children": [],
-            "next_title": "Performance Tuning Introduction",
-            "next_url": "/docs/performance-tuning-introduction/",
+            "next_title": "RDBMS Metastore",
+            "next_url": "/docs/rdbms-metastore/",
             "parent": "Drill Metastore",
             "previous_title": "Using Drill Metastore",
             "previous_url": "/docs/using-drill-metastore/",
-            "relative_path": "_docs/performance-tuning/drill-metastore/030-drill-iceberg-metastore.md",
+            "relative_path": "_docs/performance-tuning/drill-metastore/020-drill-iceberg-metastore.md",
             "title": "Drill Iceberg Metastore",
             "url": "/docs/drill-iceberg-metastore/"
         },
@@ -4775,14 +4775,35 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Performance Tuning Introduction",
-                    "next_url": "/docs/performance-tuning-introduction/",
+                    "next_title": "RDBMS Metastore",
+                    "next_url": "/docs/rdbms-metastore/",
                     "parent": "Drill Metastore",
                     "previous_title": "Using Drill Metastore",
                     "previous_url": "/docs/using-drill-metastore/",
-                    "relative_path": "_docs/performance-tuning/drill-metastore/030-drill-iceberg-metastore.md",
+                    "relative_path": "_docs/performance-tuning/drill-metastore/020-drill-iceberg-metastore.md",
                     "title": "Drill Iceberg Metastore",
                     "url": "/docs/drill-iceberg-metastore/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill Metastore",
+                            "url": "/docs/drill-metastore/"
+                        },
+                        {
+                            "title": "Performance Tuning",
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Performance Tuning Introduction",
+                    "next_url": "/docs/performance-tuning-introduction/",
+                    "parent": "Drill Metastore",
+                    "previous_title": "Drill Iceberg Metastore",
+                    "previous_url": "/docs/drill-iceberg-metastore/",
+                    "relative_path": "_docs/performance-tuning/drill-metastore/030-rdbms-metastore.md",
+                    "title": "RDBMS Metastore",
+                    "url": "/docs/rdbms-metastore/"
                 }
             ],
             "next_title": "Using Drill Metastore",
@@ -8419,14 +8440,35 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Performance Tuning Introduction",
-                            "next_url": "/docs/performance-tuning-introduction/",
+                            "next_title": "RDBMS Metastore",
+                            "next_url": "/docs/rdbms-metastore/",
                             "parent": "Drill Metastore",
                             "previous_title": "Using Drill Metastore",
                             "previous_url": "/docs/using-drill-metastore/",
-                            "relative_path": "_docs/performance-tuning/drill-metastore/030-drill-iceberg-metastore.md",
+                            "relative_path": "_docs/performance-tuning/drill-metastore/020-drill-iceberg-metastore.md",
                             "title": "Drill Iceberg Metastore",
                             "url": "/docs/drill-iceberg-metastore/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Drill Metastore",
+                                    "url": "/docs/drill-metastore/"
+                                },
+                                {
+                                    "title": "Performance Tuning",
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "Performance Tuning Introduction",
+                            "next_url": "/docs/performance-tuning-introduction/",
+                            "parent": "Drill Metastore",
+                            "previous_title": "Drill Iceberg Metastore",
+                            "previous_url": "/docs/drill-iceberg-metastore/",
+                            "relative_path": "_docs/performance-tuning/drill-metastore/030-rdbms-metastore.md",
+                            "title": "RDBMS Metastore",
+                            "url": "/docs/rdbms-metastore/"
                         }
                     ],
                     "next_title": "Using Drill Metastore",
@@ -8449,8 +8491,8 @@
                     "next_title": "Partition Pruning",
                     "next_url": "/docs/partition-pruning/",
                     "parent": "Performance Tuning",
-                    "previous_title": "Drill Iceberg Metastore",
-                    "previous_url": "/docs/drill-iceberg-metastore/",
+                    "previous_title": "RDBMS Metastore",
+                    "previous_url": "/docs/rdbms-metastore/",
                     "relative_path": "_docs/performance-tuning/010-performance-tuning-introduction.md",
                     "title": "Performance Tuning Introduction",
                     "url": "/docs/performance-tuning-introduction/"
@@ -8944,8 +8986,8 @@
             "next_title": "Partition Pruning",
             "next_url": "/docs/partition-pruning/",
             "parent": "Performance Tuning",
-            "previous_title": "Drill Iceberg Metastore",
-            "previous_url": "/docs/drill-iceberg-metastore/",
+            "previous_title": "RDBMS Metastore",
+            "previous_url": "/docs/rdbms-metastore/",
             "relative_path": "_docs/performance-tuning/010-performance-tuning-introduction.md",
             "title": "Performance Tuning Introduction",
             "url": "/docs/performance-tuning-introduction/"
@@ -10826,6 +10868,27 @@
             "relative_path": "_docs/query-data/060-querying-the-information-schema.md",
             "title": "Querying the INFORMATION SCHEMA",
             "url": "/docs/querying-the-information-schema/"
+        },
+        "RDBMS Metastore": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill Metastore",
+                    "url": "/docs/drill-metastore/"
+                },
+                {
+                    "title": "Performance Tuning",
+                    "url": "/docs/performance-tuning/"
+                }
+            ],
+            "children": [],
+            "next_title": "Performance Tuning Introduction",
+            "next_url": "/docs/performance-tuning-introduction/",
+            "parent": "Drill Metastore",
+            "previous_title": "Drill Iceberg Metastore",
+            "previous_url": "/docs/drill-iceberg-metastore/",
+            "relative_path": "_docs/performance-tuning/drill-metastore/030-rdbms-metastore.md",
+            "title": "RDBMS Metastore",
+            "url": "/docs/rdbms-metastore/"
         },
         "RDBMS Storage Plugin": {
             "breadcrumbs": [
@@ -20035,14 +20098,35 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Performance Tuning Introduction",
-                            "next_url": "/docs/performance-tuning-introduction/",
+                            "next_title": "RDBMS Metastore",
+                            "next_url": "/docs/rdbms-metastore/",
                             "parent": "Drill Metastore",
                             "previous_title": "Using Drill Metastore",
                             "previous_url": "/docs/using-drill-metastore/",
-                            "relative_path": "_docs/performance-tuning/drill-metastore/030-drill-iceberg-metastore.md",
+                            "relative_path": "_docs/performance-tuning/drill-metastore/020-drill-iceberg-metastore.md",
                             "title": "Drill Iceberg Metastore",
                             "url": "/docs/drill-iceberg-metastore/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Drill Metastore",
+                                    "url": "/docs/drill-metastore/"
+                                },
+                                {
+                                    "title": "Performance Tuning",
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "Performance Tuning Introduction",
+                            "next_url": "/docs/performance-tuning-introduction/",
+                            "parent": "Drill Metastore",
+                            "previous_title": "Drill Iceberg Metastore",
+                            "previous_url": "/docs/drill-iceberg-metastore/",
+                            "relative_path": "_docs/performance-tuning/drill-metastore/030-rdbms-metastore.md",
+                            "title": "RDBMS Metastore",
+                            "url": "/docs/rdbms-metastore/"
                         }
                     ],
                     "next_title": "Using Drill Metastore",
@@ -20065,8 +20149,8 @@
                     "next_title": "Partition Pruning",
                     "next_url": "/docs/partition-pruning/",
                     "parent": "Performance Tuning",
-                    "previous_title": "Drill Iceberg Metastore",
-                    "previous_url": "/docs/drill-iceberg-metastore/",
+                    "previous_title": "RDBMS Metastore",
+                    "previous_url": "/docs/rdbms-metastore/",
                     "relative_path": "_docs/performance-tuning/010-performance-tuning-introduction.md",
                     "title": "Performance Tuning Introduction",
                     "url": "/docs/performance-tuning-introduction/"
