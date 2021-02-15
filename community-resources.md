@@ -6,6 +6,7 @@ title: "Community Resources"
 ## User Resources
 
 * [Documentation]({{ site.baseurl }}/docs/)
+* [Slack channels for users and developers](https://apache-drill.slack.com/)
 * Twitter: [@ApacheDrill](https://twitter.com/ApacheDrill)
 * Meetups:
     * [Bay Area](http://www.meetup.com/Bay-Area-Apache-Drill-User-Group/)
