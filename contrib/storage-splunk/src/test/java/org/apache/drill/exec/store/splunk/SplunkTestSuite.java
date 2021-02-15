@@ -75,8 +75,8 @@ public class SplunkTestSuite extends ClusterTest {
         SPLUNK_STORAGE_PLUGIN_CONFIG.setEnabled(true);
         pluginRegistry.put(SplunkPluginConfig.NAME, SPLUNK_STORAGE_PLUGIN_CONFIG);
         runningSuite = true;
-        logger.info("Take a time to ready more Splunk events (3 sec)...");
-        Thread.sleep(3000);
+        logger.info("Take a time to ready more Splunk events (10 sec)...");
+        Thread.sleep(10000);
       }
       initCount.incrementAndGet();
       runningSuite = true;
