@@ -19,6 +19,8 @@
 package org.apache.drill.exec.udfs;
 
 import io.netty.buffer.DrillBuf;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
@@ -31,7 +33,7 @@ public class ComplexSchemaUtils {
 
     BaseWriter.MapWriter queryMapWriter = outWriter.rootAsMap();
 
-    if (!reader.getType().getMinorType().toString().equalsIgnoreCase("MAP")) {
+    if (reader.getType().getMinorType() != MinorType.MAP) {
       // If the field is not a map, return an empty map
       queryMapWriter.start();
       queryMapWriter.end();
@@ -39,15 +41,14 @@ public class ComplexSchemaUtils {
 
     Iterator<String> fieldIterator = reader.iterator();
     queryMapWriter.start();
-    int fieldCount = 0;
 
     while (fieldIterator.hasNext()) {
       String fieldName = fieldIterator.next();
       FieldReader fieldReader = reader.reader(fieldName);
       String dataType = fieldReader.getType().getMinorType().toString();
 
-      String dataMode = fieldReader.getType().getMode().toString();
-      if (dataMode.equalsIgnoreCase("REPEATED")) {
+      DataMode dataMode = fieldReader.getType().getMode();
+      if (dataMode == DataMode.REPEATED) {
         dataType = dataMode + "_" + dataType;
       }
 
@@ -61,7 +62,6 @@ public class ComplexSchemaUtils {
       rowHolder.buffer = buffer;
 
       queryMapWriter.varChar(fieldName).write(rowHolder);
-      fieldCount++;
     }
     queryMapWriter.end();
   }

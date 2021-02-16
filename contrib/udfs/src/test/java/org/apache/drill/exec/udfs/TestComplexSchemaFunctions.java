@@ -60,14 +60,16 @@ public class TestComplexSchemaFunctions extends ClusterTest {
           .addNullable("int_field", MinorType.VARCHAR)
           .addNullable("double_field", MinorType.VARCHAR)
           .addNullable("string_field", MinorType.VARCHAR)
+          .addNullable("boolean_field", MinorType.VARCHAR)
           .addNullable("int_list", MinorType.VARCHAR)
           .addNullable("double_list", MinorType.VARCHAR)
+          .addNullable("boolean_list", MinorType.VARCHAR)
           .addNullable("map", MinorType.VARCHAR)
         .resumeSchema()
       .build();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow((Object)strArray("BIGINT", "FLOAT8", "VARCHAR", "REPEATED_BIGINT", "REPEATED_FLOAT8", "MAP"))
+      .addRow((Object)strArray("BIGINT", "FLOAT8", "VARCHAR", "BIT", "REPEATED_BIGINT", "REPEATED_FLOAT8", "REPEATED_BIT", "MAP"))
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
