@@ -11,7 +11,11 @@
       "nested_int_field" : 5,
       "nested_double_field": 5.0,
       "nested_string_field": "5.0"
-    }
+    },
+    "repeated_map": [
+      { "a" : 1 },
+      { "b" : "abc" }
+    ]
   },
   "single_field": 10
 }
