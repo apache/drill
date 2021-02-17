@@ -58,6 +58,7 @@
     <module>storage-jdbc</module>
     <module>storage-kafka</module>
     <module>storage-kudu</module>
+    <module>storage-phoenix</module>
     <module>storage-opentsdb</module>
     <module>storage-splunk</module>
     <module>storage-http</module>
