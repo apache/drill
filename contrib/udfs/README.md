@@ -272,3 +272,40 @@ The function can also be called with an optional field as an argument. IE:
 SELECT parse_user_agent( `user_agent`, 'AgentName` ) as AgentName ...
 ```
 which will just return the requested field. If the user agent string is empty, all fields will have the value of `Hacker`.  
+
+## Map Schema Function
+This function allows you to drill down into the schema of maps.  The REST API and JDBC interfaces will only return `MAP`, `LIST` for the MAP, however, it is not possible to get 
+the schema of the inner map. The function `getMapSchema(<MAP>)` will return a `MAP` of the fields and datatypes.
+
+### Example Usage
+
+Using the data below, the query below will return the schema as shown below.
+```bash
+apache drill> SELECT getMapSchema(record) AS schema FROM dfs.test.`schema_test.json`;
++----------------------------------------------------------------------------------+
+|                                      schema                                      |
++----------------------------------------------------------------------------------+
+| {"int_field":"BIGINT","double_field":"FLOAT8","string_field":"VARCHAR","int_list":"REPEATED_BIGINT","double_list":"REPEATED_FLOAT8","map":"MAP"} |
++----------------------------------------------------------------------------------+
+1 row selected (0.298 seconds)
+```
+
+```json
+{
+  "record" : {
+    "int_field": 1,
+    "double_field": 2.0,
+    "string_field": "My string",
+    "int_list": [1,2,3],
+    "double_list": [1.0,2.0,3.0],
+    "map": {
+      "nested_int_field" : 5,
+      "nested_double_field": 5.0,
+      "nested_string_field": "5.0"
+    }
+  },
+  "single_field": 10
+}
+```
+
+The function returns an empty map if the row is `null`.
