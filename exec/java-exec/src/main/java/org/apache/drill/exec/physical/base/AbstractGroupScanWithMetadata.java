@@ -777,7 +777,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     }
 
     public B limit(int maxRecords) {
-      source.maxRecords = maxRecords;
+      this.maxRecords = maxRecords;
       return self();
     }
 
