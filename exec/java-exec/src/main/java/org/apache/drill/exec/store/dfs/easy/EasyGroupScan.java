@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.dfs.easy;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.drill.common.PlanStringBuilder;
@@ -42,6 +43,7 @@ import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.metastore.store.FileTableMetadataProviderBuilder;
+import org.apache.drill.metastore.metadata.FileMetadata;
 import org.apache.drill.metastore.metadata.LocationProvider;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -87,7 +89,6 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
   private List<CompleteFileWork> chunks;
   private List<EndpointAffinity> endpointAffinities;
   private final Path selectionRoot;
-  private final int maxRecords;
 
   @JsonCreator
   public EasyGroupScan(
@@ -177,7 +178,6 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
     mappings = that.mappings;
     partitionDepth = that.partitionDepth;
     metadataProvider = that.metadataProvider;
-    maxRecords = getMaxRecords();
   }
 
   @JsonIgnore
@@ -407,9 +407,13 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
       newScan.files = files;
       newScan.matchAllMetadata = matchAllMetadata;
       newScan.nonInterestingColumnsMetadata = nonInterestingColumnsMetadata;
+      newScan.maxRecords = maxRecords;
 
-      newScan.fileSet = newScan.getFilesMetadata().keySet();
-      newScan.selection = FileSelection.create(null, new ArrayList<>(newScan.fileSet), newScan.selectionRoot);
+      Map<Path, FileMetadata> filesMetadata = newScan.getFilesMetadata();
+      if (MapUtils.isNotEmpty(filesMetadata)) {
+        newScan.fileSet = filesMetadata.keySet();
+        newScan.selection = FileSelection.create(null, new ArrayList<>(newScan.fileSet), newScan.selectionRoot);
+      }
       try {
         newScan.initFromSelection(newScan.selection, newScan.formatPlugin);
       } catch (IOException e) {
