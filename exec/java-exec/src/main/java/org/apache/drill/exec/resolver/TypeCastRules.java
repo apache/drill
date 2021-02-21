@@ -683,14 +683,16 @@ public class TypeCastRules {
     rules.put(MinorType.DICT, Sets.newHashSet(MinorType.DICT));
   }
 
-  public static boolean isCastableWithNullHandling(MajorType from, MajorType to, NullHandling nullHandling) {
-    if ((from.getMode() == DataMode.REPEATED || to.getMode() == DataMode.REPEATED) && from.getMode() != to.getMode()) {
+  public static boolean isCastableWithNullHandling(MajorType argumentType, MajorType paramType, NullHandling nullHandling) {
+    if ((argumentType.getMode() == DataMode.REPEATED || paramType.getMode() == DataMode.REPEATED) && argumentType.getMode() != paramType.getMode()) {
       return false;
     }
-    if (nullHandling == NullHandling.INTERNAL && from.getMode() != to.getMode()) {
+    // allow using functions with nullable parameters for required arguments only for the case of data mode mismatch
+    if (nullHandling == NullHandling.INTERNAL && argumentType.getMode() != paramType.getMode()
+        && (paramType.getMode() != DataMode.OPTIONAL || argumentType.getMode() != DataMode.REQUIRED)) {
       return false;
     }
-    return isCastable(from.getMinorType(), to.getMinorType());
+    return isCastable(argumentType.getMinorType(), paramType.getMinorType());
   }
 
   public static boolean isCastable(MinorType from, MinorType to) {
