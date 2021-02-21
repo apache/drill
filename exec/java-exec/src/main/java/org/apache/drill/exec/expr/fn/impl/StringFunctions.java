@@ -37,6 +37,7 @@ import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.impl.project.OutputSizeEstimateConstants;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import javax.inject.Inject;
 import java.nio.charset.Charset;
@@ -1360,46 +1361,6 @@ public class StringFunctions{
 
   @FunctionTemplate(name = "split", scope = FunctionScope.SIMPLE,
       outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
-  public static class Split implements DrillSimpleFunc {
-    @Param VarCharHolder in;
-    @Param VarCharHolder delimiter;
-
-    @Workspace com.google.common.base.Splitter splitter;
-    @Inject DrillBuf buffer;
-
-    @Output org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter writer;
-
-    @Override
-    public void setup() {
-      int len = delimiter.end - delimiter.start;
-      if (len != 1) {
-        throw new IllegalArgumentException("Only single character delimiters are supported for split()");
-      }
-      char splitChar = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.
-          toStringFromUTF8(delimiter.start, delimiter.end, delimiter.buffer).charAt(0);
-      splitter = com.google.common.base.Splitter.on(splitChar);
-    }
-
-    @Override
-    public void eval() {
-      String inputString =
-          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer);
-      // Convert the iterable to an array as Janino will not handle generics.
-      Object[] tokens = com.google.common.collect.Iterables.toArray(splitter.split(inputString), String.class);
-      org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter list = writer.rootAsList();
-      list.startList();
-      for (Object token : tokens) {
-        final byte[] strBytes = ((String) token).getBytes(com.google.common.base.Charsets.UTF_8);
-        buffer = buffer.reallocIfNeeded(strBytes.length);
-        buffer.setBytes(0, strBytes);
-        list.varChar().writeVarChar(0, strBytes.length, buffer);
-      }
-      list.endList();
-    }
-  }
-
-  @FunctionTemplate(name = "split", scope = FunctionScope.SIMPLE,
-      outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class SplitNullableInput implements DrillSimpleFunc {
     @Param NullableVarCharHolder in;
     @Param VarCharHolder delimiter;
@@ -1407,7 +1368,7 @@ public class StringFunctions{
     @Workspace com.google.common.base.Splitter splitter;
     @Inject DrillBuf buffer;
 
-    @Output org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter writer;
+    @Output ComplexWriter writer;
 
     @Override
     public void setup() {
