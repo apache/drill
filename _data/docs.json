@@ -3008,14 +3008,31 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "ODBC/JDBC Interfaces",
-                    "next_url": "/docs/odbc-jdbc-interfaces/",
+                    "next_title": "ElasticSearch Plugin",
+                    "next_url": "/docs/elasticsearch-plugin/",
                     "parent": "Connect a Data Source",
                     "previous_title": "Druid Storage Plugin",
                     "previous_url": "/docs/druid-storage-plugin/",
                     "relative_path": "_docs/connect-a-data-source/plugins/125-http-storage-plugin.md",
                     "title": "HTTP Storage Plugin",
                     "url": "/docs/http-storage-plugin/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source",
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "ODBC/JDBC Interfaces",
+                    "next_url": "/docs/odbc-jdbc-interfaces/",
+                    "parent": "Connect a Data Source",
+                    "previous_title": "HTTP Storage Plugin",
+                    "previous_url": "/docs/http-storage-plugin/",
+                    "relative_path": "_docs/connect-a-data-source/plugins/130-elasticsearch-plugin.md",
+                    "title": "ElasticSearch Plugin",
+                    "url": "/docs/elasticsearch-plugin/"
                 }
             ],
             "next_title": "Connect a Data Source Introduction",
@@ -5227,6 +5244,23 @@
             "title": "Ecosystem",
             "url": "/docs/ecosystem/"
         },
+        "ElasticSearch Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source",
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ],
+            "children": [],
+            "next_title": "ODBC/JDBC Interfaces",
+            "next_url": "/docs/odbc-jdbc-interfaces/",
+            "parent": "Connect a Data Source",
+            "previous_title": "HTTP Storage Plugin",
+            "previous_url": "/docs/http-storage-plugin/",
+            "relative_path": "_docs/connect-a-data-source/plugins/130-elasticsearch-plugin.md",
+            "title": "ElasticSearch Plugin",
+            "url": "/docs/elasticsearch-plugin/"
+        },
         "Embedded Mode Prerequisites": {
             "breadcrumbs": [
                 {
@@ -5632,8 +5666,8 @@
                 }
             ],
             "children": [],
-            "next_title": "ODBC/JDBC Interfaces",
-            "next_url": "/docs/odbc-jdbc-interfaces/",
+            "next_title": "ElasticSearch Plugin",
+            "next_url": "/docs/elasticsearch-plugin/",
             "parent": "Connect a Data Source",
             "previous_title": "Druid Storage Plugin",
             "previous_url": "/docs/druid-storage-plugin/",
@@ -8144,8 +8178,8 @@
             "next_title": "Interfaces Introduction",
             "next_url": "/docs/interfaces-introduction/",
             "parent": "",
-            "previous_title": "HTTP Storage Plugin",
-            "previous_url": "/docs/http-storage-plugin/",
+            "previous_title": "ElasticSearch Plugin",
+            "previous_url": "/docs/elasticsearch-plugin/",
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md",
             "title": "ODBC/JDBC Interfaces",
             "url": "/docs/odbc-jdbc-interfaces/"
@@ -18827,14 +18861,31 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "ODBC/JDBC Interfaces",
-                    "next_url": "/docs/odbc-jdbc-interfaces/",
+                    "next_title": "ElasticSearch Plugin",
+                    "next_url": "/docs/elasticsearch-plugin/",
                     "parent": "Connect a Data Source",
                     "previous_title": "Druid Storage Plugin",
                     "previous_url": "/docs/druid-storage-plugin/",
                     "relative_path": "_docs/connect-a-data-source/plugins/125-http-storage-plugin.md",
                     "title": "HTTP Storage Plugin",
                     "url": "/docs/http-storage-plugin/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source",
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "ODBC/JDBC Interfaces",
+                    "next_url": "/docs/odbc-jdbc-interfaces/",
+                    "parent": "Connect a Data Source",
+                    "previous_title": "HTTP Storage Plugin",
+                    "previous_url": "/docs/http-storage-plugin/",
+                    "relative_path": "_docs/connect-a-data-source/plugins/130-elasticsearch-plugin.md",
+                    "title": "ElasticSearch Plugin",
+                    "url": "/docs/elasticsearch-plugin/"
                 }
             ],
             "next_title": "Connect a Data Source Introduction",
@@ -19459,8 +19510,8 @@
             "next_title": "Interfaces Introduction",
             "next_url": "/docs/interfaces-introduction/",
             "parent": "",
-            "previous_title": "HTTP Storage Plugin",
-            "previous_url": "/docs/http-storage-plugin/",
+            "previous_title": "ElasticSearch Plugin",
+            "previous_url": "/docs/elasticsearch-plugin/",
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md",
             "title": "ODBC/JDBC Interfaces",
             "url": "/docs/odbc-jdbc-interfaces/"

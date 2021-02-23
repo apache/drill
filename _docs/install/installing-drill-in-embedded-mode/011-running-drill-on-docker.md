@@ -1,4 +1,4 @@
---
+---
 title: "Running Drill on Docker"
 slug: "Running Drill on Docker"
 parent: "Installing Drill in Embedded Mode"
@@ -19,8 +19,7 @@ You can start and run a Docker container in detached mode or foreground mode. [D
 
 Whether you run the Docker container in detached or foreground mode, you start Drill in a container by issuing the docker `run` command with some options, as described in the following table: 
 
- 
-|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
 | Option                   | Description                                                                                                                                                                                                                                                                                                     |
 |--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `-i`                     | Keeps STDIN open. STDIN is standard input, an input stream where data is sent to and read by a program.                                                                                                                                                                                                         |
@@ -29,7 +28,6 @@ Whether you run the Docker container in detached or foreground mode, you start D
 | `-p`                     | The TCP port for the Drill Web UI. If needed, you can   change this port using the `drill.exec.http.port` [start-up option]({{site.baseurl}}/docs/start-up-options/).                                                                                                                                           |
 | `apache/drill:<version>` | The Docker Hub repository and tag. In the following   example, `apache/drill` is   the repository and `1.17.0`   is the tag:     `apache/drill:1.17.0`.     The tag correlates with the version of Drill. When a new version of Drill   is available, you can use the new version as the tag.                   |
 | `bin/bash`               | Connects to the Drill container using a bash shell.                                                                                                                                                                                                                                                             |
-|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 ### Running the Drill Docker Container in Foreground Mode  
 
