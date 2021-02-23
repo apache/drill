@@ -49,6 +49,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 
 /**
  * Plugin registry. Caches plugin instances which correspond to configurations
@@ -510,6 +512,8 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
       return context.mapper().reader()
           .forType(StoragePluginConfig.class)
           .readValue(json);
+    } catch (InvalidTypeIdException | UnrecognizedPropertyException e) {
+      throw new PluginEncodingException(e.getMessage(), e);
     } catch (IOException e) {
       throw new PluginEncodingException("Failure when decoding plugin JSON", e);
     }
