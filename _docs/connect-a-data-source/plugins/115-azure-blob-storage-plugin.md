@@ -7,7 +7,7 @@ Drill works well with Azure Blob Storage thanks to the Hadoop compatible layer t
 
 ## Install Azure Jars
 
-The first step is to download the jars from Maven. The ones the works with the current version of Drill are the followin:
+The first step is to download the jars from Maven. The ones the works with the current version of Drill are the following:
 
 
 * [hadoop-azure-2.7.7.jar](https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-azure/2.7.7/hadoop-azure-2.7.7.jar)
