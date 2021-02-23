@@ -538,6 +538,7 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
       newScan.rowGroups = rowGroups;
       newScan.matchAllMetadata = matchAllMetadata;
       newScan.nonInterestingColumnsMetadata = nonInterestingColumnsMetadata;
+      newScan.maxRecords = maxRecords;
       // since builder is used when pruning happens, entries and fileSet should be expanded
       if (!newScan.getFilesMetadata().isEmpty()) {
         newScan.entries = newScan.getFilesMetadata().keySet().stream()

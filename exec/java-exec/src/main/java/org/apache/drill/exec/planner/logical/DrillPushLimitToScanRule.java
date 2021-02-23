@@ -111,10 +111,10 @@ public abstract class DrillPushLimitToScanRule extends RelOptRule {
 
       final RelNode newLimit;
       if (projectRel != null) {
-        final RelNode newProject = projectRel.copy(projectRel.getTraitSet(), ImmutableList.of((RelNode) newScanRel));
+        final RelNode newProject = projectRel.copy(projectRel.getTraitSet(), ImmutableList.of(newScanRel));
         newLimit = limitRel.copy(limitRel.getTraitSet(), ImmutableList.of(newProject));
       } else {
-        newLimit = limitRel.copy(limitRel.getTraitSet(), ImmutableList.of((RelNode) newScanRel));
+        newLimit = limitRel.copy(limitRel.getTraitSet(), ImmutableList.of(newScanRel));
       }
 
       call.transformTo(newLimit);
