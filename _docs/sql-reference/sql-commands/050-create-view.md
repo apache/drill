@@ -62,9 +62,9 @@ The following example shows a writable workspace as defined within the storage
 plugin in the `/tmp` directory of the file system:
 
     "tmp": {
-          "location": "/tmp",
-          "writable": true,
-           }
+      "location": "/tmp",
+      "writable": true,
+    }
 
 Drill stores the view definition in JSON format with the name that you specify
 when you run the CREATE VIEW command, suffixed `by .view.drill`. For example,
@@ -92,17 +92,17 @@ created for the steps in this example.
 Complete the following steps to create a view in Drill:
 
   1. Decide which workspace you will use to create the view, and verify that the writable option is set to “true.” You can use an existing workspace, or you can create a new workspace. See [Workspaces]({{site.baseurl}}/docs/workspaces/) for more information.  
-  
+
         "workspaces": {
            "donuts": {
              "location": "/home/donuts",
              "writable": true,
              "defaultInputFormat": null
            }
-         },
+         }
 
   2. Run SHOW DATABASES to verify that Drill recognizes the workspace.  
-
+```
         0: jdbc:drill:zk=local> show databases;
         |--------------------|
         | SCHEMA_NAME        |
@@ -115,45 +115,45 @@ Complete the following steps to create a view in Drill:
         | sys                |
         | INFORMATION_SCHEMA |
         |--------------------|
-
+```
   3. Use the writable workspace.  
-
+```
         0: jdbc:drill:zk=local> use dfs.donuts;
         |------|----------------------------------------|
         | ok   | summary                                |
         |------|----------------------------------------|
         | true | Default schema changed to 'dfs.donuts' |
         |------|----------------------------------------|
-
+```
   4. Test run the query that you plan to use with the CREATE VIEW command.  
-
+```
         0: jdbc:drill:zk=local> select id, type, name, ppu from `donuts.json`;
         |------|-------|------|------|
         | id   | type  | name | ppu  |
         |------|-------|------|------|
         | 0001 | donut | Cake | 0.55 |
         |------|-------|------|------|
-
+```
   5. Run the CREATE VIEW command with the query.  
-
+```
         0: jdbc:drill:zk=local> create view mydonuts as select id, type, name, ppu from `donuts.json`;
         |------|-------------------------------------------------------------|
         | ok   | summary                                                     |
         |------|-------------------------------------------------------------|
         | true | View 'mydonuts' created successfully in 'dfs.donuts' schema |
         |------|-------------------------------------------------------------|
-
+```
   6. Create a new view in another workspace from the current workspace.  
-
+```
         0: jdbc:drill:zk=local> create view dfs.tmp.yourdonuts as select id, type, name from `donuts.json`;
         |------|------------------------------------------------------------|
         | ok   | summary                                                    |
         |------|------------------------------------------------------------|
         | true | View 'yourdonuts' created successfully in 'dfs.tmp' schema |
         |------|------------------------------------------------------------|
-
+```
   7. Query the view created in both workspaces.
-
+```
         0: jdbc:drill:zk=local> select * from mydonuts;
         |------|-------|------|------|
         | id   | type  | name | ppu  |
@@ -168,4 +168,4 @@ Complete the following steps to create a view in Drill:
         |------|-------|------|
         | 0001 | donut | Cake |
         |------|-------|------|
-
+```
