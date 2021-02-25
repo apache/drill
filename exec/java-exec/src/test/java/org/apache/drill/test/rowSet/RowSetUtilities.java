@@ -219,6 +219,14 @@ public class RowSetUtilities {
     return array;
   }
 
+  public static float[] floatArray(Float... elements) {
+    float[] array = new float[elements.length];
+    for (int i = 0; i < elements.length; i++) {
+      array[i] = elements[i];
+    }
+    return array;
+  }
+
   public static boolean[] boolArray(Boolean... elements) {
     boolean[] array = new boolean[elements.length];
     for (int i = 0; i < elements.length; i++) {
@@ -241,6 +249,14 @@ public class RowSetUtilities {
 
   public static int[] intArray(Integer... elements) {
     int[] array = new int[elements.length];
+    for (int i = 0; i < elements.length; i++) {
+      array[i] = elements[i];
+    }
+    return array;
+  }
+
+  public static short[] shortArray(Short... elements) {
+    short[] array = new short[elements.length];
     for (int i = 0; i < elements.length; i++) {
       array[i] = elements[i];
     }

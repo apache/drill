@@ -174,6 +174,14 @@ public class ScalarArrayWriter extends BaseArrayWriter {
         setLongObjectArray((Long[]) array);
       } else if (memberClassName.equals(Double.class.getName())) {
         setDoubleObjectArray((Double[]) array);
+      } else if (memberClassName.equals(Float.class.getName())) {
+        setFloatObjectArray((Float[]) array);
+      } else if (memberClassName.equals(Short.class.getName())) {
+        setShortObjectArray((Short[]) array);
+      } else if (memberClassName.equals(Byte.class.getName())) {
+        setByteObjectArray((Byte[]) array);
+      } else if (memberClassName.equals(Boolean.class.getName())) {
+        setBooleanObjectArray((Boolean[]) array);
       } else {
         throw new IllegalArgumentException( "Unknown Java array type: " + memberClassName );
       }
@@ -183,9 +191,27 @@ public class ScalarArrayWriter extends BaseArrayWriter {
     }
   }
 
+  public void setObjectArray(Object[] value) {
+    for (int i = 0; i < value.length; i++) {
+      final Object element = value[i];
+      if (element != null) {
+        elementWriter.setObject(element);
+      }
+    }
+  }
+
   public void setBooleanArray(boolean[] value) {
     for (int i = 0; i < value.length; i++) {
       elementWriter.setInt(value[i] ? 1 : 0);
+    }
+  }
+
+  public void setBooleanObjectArray(Boolean[] value) {
+    for (int i = 0; i < value.length; i++) {
+      final Boolean element = value[i];
+      if (element != null) {
+        elementWriter.setBoolean(element);
+      }
     }
   }
 
@@ -201,9 +227,27 @@ public class ScalarArrayWriter extends BaseArrayWriter {
     }
   }
 
+  public void setByteObjectArray(Byte[] value) {
+    for (int i = 0; i < value.length; i++) {
+      final Byte element = value[i];
+      if (element != null) {
+        elementWriter.setInt(element);
+      }
+    }
+  }
+
   public void setShortArray(short[] value) {
     for (int i = 0; i < value.length; i++) {
       elementWriter.setInt(value[i]);
+    }
+  }
+
+  public void setShortObjectArray(Short[] value) {
+    for (int i = 0; i < value.length; i++) {
+      final Short element = value[i];
+      if (element != null) {
+        elementWriter.setInt(element);
+      }
     }
   }
 
@@ -216,9 +260,7 @@ public class ScalarArrayWriter extends BaseArrayWriter {
   public void setIntObjectArray(Integer[] value) {
     for (int i = 0; i < value.length; i++) {
       final Integer element = value[i];
-      if (element == null) {
-        elementWriter.setNull();
-      } else {
+      if (element != null) {
         elementWriter.setInt(element);
       }
     }
@@ -233,9 +275,7 @@ public class ScalarArrayWriter extends BaseArrayWriter {
   public void setLongObjectArray(Long[] value) {
     for (int i = 0; i < value.length; i++) {
       final Long element = value[i];
-      if (element == null) {
-        elementWriter.setNull();
-      } else {
+      if (element != null) {
         elementWriter.setLong(element);
       }
     }
@@ -244,6 +284,15 @@ public class ScalarArrayWriter extends BaseArrayWriter {
   public void setFloatArray(float[] value) {
     for (int i = 0; i < value.length; i++) {
       elementWriter.setDouble(value[i]);
+    }
+  }
+
+  public void setFloatObjectArray(Float[] value) {
+    for (int i = 0; i < value.length; i++) {
+      final Float element = value[i];
+      if (element != null) {
+        elementWriter.setDouble(element);
+      }
     }
   }
 
@@ -256,9 +305,7 @@ public class ScalarArrayWriter extends BaseArrayWriter {
   public void setDoubleObjectArray(Double[] value) {
     for (int i = 0; i < value.length; i++) {
       final Double element = value[i];
-      if (element == null) {
-        elementWriter.setNull();
-      } else {
+      if (element != null) {
         elementWriter.setDouble(element);
       }
     }
@@ -266,19 +313,28 @@ public class ScalarArrayWriter extends BaseArrayWriter {
 
   public void setStringArray(String[] value) {
     for (int i = 0; i < value.length; i++) {
-      elementWriter.setString(value[i]);
+      final String element = value[i];
+      if (element != null) {
+        elementWriter.setString(element);
+      }
     }
   }
 
   public void setPeriodArray(Period[] value) {
     for (int i = 0; i < value.length; i++) {
-      elementWriter.setPeriod(value[i]);
+      final Period element = value[i];
+      if (element != null) {
+        elementWriter.setPeriod(element);
+      }
     }
   }
 
   public void setBigDecimalArray(BigDecimal[] value) {
     for (int i = 0; i < value.length; i++) {
-      elementWriter.setDecimal(value[i]);
+      final BigDecimal element = value[i];
+      if (element != null) {
+        elementWriter.setDecimal(element);
+      }
     }
   }
 }
