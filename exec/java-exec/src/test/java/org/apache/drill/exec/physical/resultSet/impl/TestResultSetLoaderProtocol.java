@@ -17,6 +17,13 @@
  */
 package org.apache.drill.exec.physical.resultSet.impl;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.boolArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.byteArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.doubleArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.floatArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.longArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.shortArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -34,6 +41,9 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -42,9 +52,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter.UndefinedColumnException;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -441,15 +448,115 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
     assertEquals(4, schema.index("e"));
     assertEquals(4, schema.index("E"));
     rootWriter.array(4).setObject(strArray("e1", "e2", "e3"));
+
+    MaterializedField col6 = SchemaBuilder.columnSchema("f", MinorType.BIGINT, DataMode.REPEATED);
+    rootWriter.addColumn(col6);
+    assertEquals(6, rsLoader.schemaVersion());
+    assertTrue(col6.isEquivalent(schema.column(5)));
+    ColumnMetadata col6Metadata = schema.metadata(5);
+    assertSame(col6Metadata, schema.metadata("f"));
+    assertSame(col6Metadata, schema.metadata("F"));
+    assertEquals(6, schema.size());
+    assertEquals(5, schema.index("f"));
+    assertEquals(5, schema.index("F"));
+    rootWriter.array(5).setObject(new Long[] { Long.MIN_VALUE, Long.MAX_VALUE });
+
+    MaterializedField col7 = SchemaBuilder.columnSchema("g", MinorType.INT, DataMode.REPEATED);
+    rootWriter.addColumn(col7);
+    assertEquals(7, rsLoader.schemaVersion());
+    assertTrue(col7.isEquivalent(schema.column(6)));
+    ColumnMetadata col7Metadata = schema.metadata(6);
+    assertSame(col7Metadata, schema.metadata("g"));
+    assertSame(col7Metadata, schema.metadata("G"));
+    assertEquals(7, schema.size());
+    assertEquals(6, schema.index("g"));
+    assertEquals(6, schema.index("G"));
+    rootWriter.array(6).setObject(new Integer[] { Integer.MIN_VALUE, Integer.MAX_VALUE });
+
+    MaterializedField col8 = SchemaBuilder.columnSchema("h", MinorType.INT, DataMode.REPEATED);
+    rootWriter.addColumn(col8);
+    assertEquals(8, rsLoader.schemaVersion());
+    assertTrue(col8.isEquivalent(schema.column(7)));
+    ColumnMetadata col8Metadata = schema.metadata(7);
+    assertSame(col8Metadata, schema.metadata("h"));
+    assertSame(col8Metadata, schema.metadata("H"));
+    assertEquals(8, schema.size());
+    assertEquals(7, schema.index("h"));
+    assertEquals(7, schema.index("H"));
+    rootWriter.array(7).setObject(new Short[] { Short.MIN_VALUE, Short.MAX_VALUE });
+
+    MaterializedField col9 = SchemaBuilder.columnSchema("i", MinorType.INT, DataMode.REPEATED);
+    rootWriter.addColumn(col9);
+    assertEquals(9, rsLoader.schemaVersion());
+    assertTrue(col9.isEquivalent(schema.column(8)));
+    ColumnMetadata col9Metadata = schema.metadata(8);
+    assertSame(col9Metadata, schema.metadata("i"));
+    assertSame(col9Metadata, schema.metadata("I"));
+    assertEquals(9, schema.size());
+    assertEquals(8, schema.index("i"));
+    assertEquals(8, schema.index("I"));
+    rootWriter.array(8).setObject(new Byte[] { Byte.MIN_VALUE, Byte.MAX_VALUE });
+
+    MaterializedField col10 = SchemaBuilder.columnSchema("j", MinorType.FLOAT8, DataMode.REPEATED);
+    rootWriter.addColumn(col10);
+    assertEquals(10, rsLoader.schemaVersion());
+    assertTrue(col10.isEquivalent(schema.column(9)));
+    ColumnMetadata col10Metadata = schema.metadata(9);
+    assertSame(col10Metadata, schema.metadata("j"));
+    assertSame(col10Metadata, schema.metadata("J"));
+    assertEquals(10, schema.size());
+    assertEquals(9, schema.index("j"));
+    assertEquals(9, schema.index("J"));
+    rootWriter.array(9).setObject(new Double[] { Double.MIN_VALUE, Double.MAX_VALUE });
+
+    MaterializedField col11 = SchemaBuilder.columnSchema("k", MinorType.FLOAT4, DataMode.REPEATED);
+    rootWriter.addColumn(col11);
+    assertEquals(11, rsLoader.schemaVersion());
+    assertTrue(col11.isEquivalent(schema.column(10)));
+    ColumnMetadata col11Metadata = schema.metadata(10);
+    assertSame(col11Metadata, schema.metadata("k"));
+    assertSame(col11Metadata, schema.metadata("K"));
+    assertEquals(11, schema.size());
+    assertEquals(10, schema.index("k"));
+    assertEquals(10, schema.index("K"));
+    rootWriter.array(10).setObject(new Float[] { Float.MIN_VALUE, Float.MAX_VALUE });
+
+    MaterializedField col12 = SchemaBuilder.columnSchema("l", MinorType.BIT, DataMode.REPEATED);
+    rootWriter.addColumn(col12);
+    assertEquals(12, rsLoader.schemaVersion());
+    assertTrue(col12.isEquivalent(schema.column(11)));
+    ColumnMetadata col12Metadata = schema.metadata(11);
+    assertSame(col12Metadata, schema.metadata("l"));
+    assertSame(col12Metadata, schema.metadata("L"));
+    assertEquals(12, schema.size());
+    assertEquals(11, schema.index("l"));
+    assertEquals(11, schema.index("L"));
+    rootWriter.array(11).setObject(new Boolean[] { Boolean.TRUE, Boolean.FALSE });
     rootWriter.save();
 
     // Verify. No reason to expect problems, but might as well check.
 
     RowSet result = fixture.wrap(rsLoader.harvest());
-    assertEquals(5, rsLoader.schemaVersion());
+    assertEquals(12, rsLoader.schemaVersion());
     SingleRowSet expected = fixture.rowSetBuilder(result.batchSchema())
-        .addRow("foo", "second", "",    null,  strArray())
-        .addRow("bar", "",       "c.2", "d.2", strArray("e1", "e2", "e3"))
+        .addRow("foo", "second", "", null,
+            strArray(),
+            longArray(),
+            intArray(),
+            shortArray(),
+            byteArray(),
+            doubleArray(),
+            floatArray(),
+            boolArray())
+        .addRow("bar", "", "c.2", "d.2",
+            strArray("e1", "e2", "e3"),
+            longArray(Long.MIN_VALUE, Long.MAX_VALUE),
+            intArray(Integer.MIN_VALUE, Integer.MAX_VALUE),
+            shortArray(Short.MIN_VALUE, Short.MAX_VALUE),
+            byteArray((int) Byte.MIN_VALUE, (int) Byte.MAX_VALUE),
+            doubleArray(Double.MIN_VALUE, Double.MAX_VALUE),
+            floatArray(Float.MIN_VALUE, Float.MAX_VALUE),
+            boolArray(Boolean.TRUE, Boolean.FALSE))
         .build();
     RowSetUtilities.verify(expected, result);
 

@@ -114,7 +114,7 @@
     <dependency>
       <groupId>com.univocity</groupId>
       <artifactId>univocity-parsers</artifactId>
-      <version>2.8.3</version>
+      <version>${univocity-parsers.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

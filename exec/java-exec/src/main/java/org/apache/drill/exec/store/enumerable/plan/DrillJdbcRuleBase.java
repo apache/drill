@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.jdbc;
+package org.apache.drill.exec.store.enumerable.plan;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -39,13 +39,14 @@ import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
 import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 
-abstract class DrillJdbcRuleBase extends ConverterRule {
+public abstract class DrillJdbcRuleBase extends ConverterRule {
 
   protected final LoadingCache<RexNode, Boolean> checkedExpressions = CacheBuilder.newBuilder()
       .maximumSize(1000)
       .expireAfterWrite(10, TimeUnit.MINUTES)
       .build(
           new CacheLoader<RexNode, Boolean>() {
+            @Override
             public Boolean load(RexNode expr) {
               return JdbcExpressionCheck.isOnlyStandardExpressions(expr);
             }
@@ -58,12 +59,13 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
     this.out = out;
   }
 
-  static class DrillJdbcProjectRule extends DrillJdbcRuleBase {
+  public static class DrillJdbcProjectRule extends DrillJdbcRuleBase {
 
-    DrillJdbcProjectRule(RelTrait in, JdbcConvention out) {
+    public DrillJdbcProjectRule(RelTrait in, JdbcConvention out) {
       super(LogicalProject.class, in, out, "DrillJdbcProjectRule");
     }
 
+    @Override
     public RelNode convert(RelNode rel) {
       LogicalProject project = (LogicalProject) rel;
       return new JdbcRules.JdbcProject(rel.getCluster(), rel.getTraitSet().replace(this.out), convert(
@@ -89,12 +91,13 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
     }
   }
 
-  static class DrillJdbcFilterRule extends DrillJdbcRuleBase {
+  public static class DrillJdbcFilterRule extends DrillJdbcRuleBase {
 
-    DrillJdbcFilterRule(RelTrait in, JdbcConvention out) {
+    public DrillJdbcFilterRule(RelTrait in, JdbcConvention out) {
       super(LogicalFilter.class, in, out, "DrillJdbcFilterRule");
     }
 
+    @Override
     public RelNode convert(RelNode rel) {
       LogicalFilter filter = (LogicalFilter) rel;
 
@@ -120,9 +123,9 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
     }
   }
 
-  static class DrillJdbcSortRule extends DrillJdbcRuleBase {
+  public static class DrillJdbcSortRule extends DrillJdbcRuleBase {
 
-    DrillJdbcSortRule(RelTrait in, JdbcConvention out) {
+    public DrillJdbcSortRule(RelTrait in, JdbcConvention out) {
       super(Sort.class, in, out, "DrillJdbcSortRule");
     }
 
@@ -136,9 +139,9 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
     }
   }
 
-  static class DrillJdbcLimitRule extends DrillJdbcRuleBase {
+  public static class DrillJdbcLimitRule extends DrillJdbcRuleBase {
 
-    DrillJdbcLimitRule(RelTrait in, JdbcConvention out) {
+    public DrillJdbcLimitRule(RelTrait in, JdbcConvention out) {
       super(DrillLimitRelBase.class, in, out, "DrillJdbcLimitRule");
     }
 

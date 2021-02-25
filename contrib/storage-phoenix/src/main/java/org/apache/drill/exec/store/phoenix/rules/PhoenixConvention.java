@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.jdbc;
+package org.apache.drill.exec.store.phoenix.rules;
 
 import java.util.List;
 import java.util.Set;
@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcRules;
 import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcFilterRule;
+import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcJoinRule;
 import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcProjectRule;
 import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcSortRule;
 import org.apache.calcite.adapter.jdbc.JdbcToEnumerableConverterRule;
@@ -37,31 +38,31 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.store.enumerable.plan.DrillJdbcRuleBase;
 import org.apache.drill.exec.store.enumerable.plan.VertexDrelConverterRule;
+import org.apache.drill.exec.store.phoenix.PhoenixStoragePlugin;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
-/**
- * Convention with set of rules to register for jdbc plugin
- */
-public class DrillJdbcConvention extends JdbcConvention {
+public class PhoenixConvention extends JdbcConvention {
 
-  /**
-   * Unwanted Calcite's JdbcRules are filtered out using this set
-   */
   private static final Set<Class<? extends RelOptRule>> EXCLUDED_CALCITE_RULES = ImmutableSet.of(
-      JdbcToEnumerableConverterRule.class, JdbcFilterRule.class, JdbcProjectRule.class, JdbcSortRule.class);
+          JdbcToEnumerableConverterRule.class,
+          JdbcProjectRule.class,
+          JdbcFilterRule.class,
+          JdbcSortRule.class,
+          JdbcJoinRule.class);
 
   private final ImmutableSet<RelOptRule> rules;
-  private final JdbcStoragePlugin plugin;
+  private final PhoenixStoragePlugin plugin;
 
-  DrillJdbcConvention(SqlDialect dialect, String name, JdbcStoragePlugin plugin) {
+  public PhoenixConvention(SqlDialect dialect, String name, PhoenixStoragePlugin plugin) {
     super(dialect, ConstantUntypedNull.INSTANCE, name);
     this.plugin = plugin;
-    List<RelOptRule> calciteJdbcRules = JdbcRules.rules(this, DrillRelFactories.LOGICAL_BUILDER).stream()
+    List<RelOptRule> calciteJdbcRules = JdbcRules
+        .rules(this, DrillRelFactories.LOGICAL_BUILDER).stream()
         .filter(rule -> !EXCLUDED_CALCITE_RULES.contains(rule.getClass()))
         .collect(Collectors.toList());
     this.rules = ImmutableSet.<RelOptRule>builder()
         .addAll(calciteJdbcRules)
-        .add(new JdbcIntermediatePrelConverterRule(this))
+        .add(PhoenixIntermediatePrelConverterRule.INSTANCE)
         .add(new VertexDrelConverterRule(this))
         .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(Convention.NONE, this))
         .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(DrillRel.DRILL_LOGICAL, this))
@@ -73,19 +74,20 @@ public class DrillJdbcConvention extends JdbcConvention {
         .add(new DrillJdbcRuleBase.DrillJdbcLimitRule(DrillRel.DRILL_LOGICAL, this))
         .add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE)
         .add(RuleInstance.PROJECT_REMOVE_RULE)
+        .add(new PhoenixJoinRule(Convention.NONE, this))
         .build();
   }
 
   @Override
   public void register(RelOptPlanner planner) {
-    rules.forEach(planner::addRule);
+    rules.forEach(planner :: addRule);
   }
 
   public Set<RelOptRule> getRules() {
     return rules;
   }
 
-  public JdbcStoragePlugin getPlugin() {
+  public PhoenixStoragePlugin getPlugin() {
     return plugin;
   }
 }
