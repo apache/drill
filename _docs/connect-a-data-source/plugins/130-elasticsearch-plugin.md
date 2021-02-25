@@ -44,11 +44,12 @@ Following is the default registration configuration.
 
 ### Configuration Options
 
-
+|----------|-----------------------|----------------------------------------------------|
 | Option   | Default               | Description                                        |
 |----------|-----------------------|----------------------------------------------------|
 | type     | (none)                | Set to "elastic" to use this plugin                |
 | hosts    | http://localhost:9200 | List of ElasticSearch hosts to be queried by Drill |
 | username | null                  | ElasticSearch username to be used by Drill         |
 | password | null                  | ElasticSearch password to be used by Drill         |
+|----------|-----------------------|----------------------------------------------------|
 

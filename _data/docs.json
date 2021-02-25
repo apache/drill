@@ -5264,24 +5264,25 @@
         "Embedded Mode Prerequisites": {
             "breadcrumbs": [
                 {
-                    "title": "Installing Drill in Embedded Mode", 
-                    "url": "/docs/:slug/"
-                }, 
+
+                    "title": "Installing Drill in Embedded Mode",
+                    "url": "/docs/installing-drill-in-embedded-mode/"
+                },
                 {
-                    "title": "Install Drill", 
-                    "url": "/docs/:slug/"
+                    "title": "Install Drill",
+                    "url": "/docs/install-drill/"
                 }
-            ], 
-            "children": [], 
-            "next_title": "Running Drill on Docker", 
-            "next_url": "/docs/:slug/", 
-            "parent": "Installing Drill in Embedded Mode", 
-            "previous_title": "Installing Drill in Embedded Mode", 
-            "previous_url": "/docs/:slug/", 
-            "relative_path": "_docs/install/installing-drill-in-embedded-mode/010-embedded-mode-prerequisites.md", 
-            "title": "Embedded Mode Prerequisites", 
-            "url": "/docs/:slug/"
-        }, 
+            ],
+            "children": [],
+            "next_title": "Running Drill on Docker",
+            "next_url": "/docs/running-drill-on-docker/",
+            "parent": "Installing Drill in Embedded Mode",
+            "previous_title": "Installing Drill in Embedded Mode",
+            "previous_url": "/docs/installing-drill-in-embedded-mode/",
+            "relative_path": "_docs/install/installing-drill-in-embedded-mode/010-embedded-mode-prerequisites.md",
+            "title": "Embedded Mode Prerequisites",
+            "url": "/docs/embedded-mode-prerequisites/"
+        },
         "Enabling Query Queuing": {
             "breadcrumbs": [
                 {
@@ -5952,41 +5953,62 @@
                                     "url": "/docs/:slug/"
                                 }, 
                                 {
-                                    "title": "Install Drill", 
-                                    "url": "/docs/:slug/"
+                                    "title": "Install Drill",
+                                    "url": "/docs/install-drill/"
                                 }
-                            ], 
-                            "children": [], 
-                            "next_title": "Running Drill on Docker", 
-                            "next_url": "/docs/:slug/", 
-                            "parent": "Installing Drill in Embedded Mode", 
-                            "previous_title": "Installing Drill in Embedded Mode", 
-                            "previous_url": "/docs/:slug/", 
-                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/010-embedded-mode-prerequisites.md", 
-                            "title": "Embedded Mode Prerequisites", 
-                            "url": "/docs/:slug/"
-                        }, 
+                            ],
+                            "children": [],
+                            "next_title": "Running Drill on Docker",
+                            "next_url": "/docs/running-drill-on-docker/",
+                            "parent": "Installing Drill in Embedded Mode",
+                            "previous_title": "Installing Drill in Embedded Mode",
+                            "previous_url": "/docs/installing-drill-in-embedded-mode/",
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/010-embedded-mode-prerequisites.md",
+                            "title": "Embedded Mode Prerequisites",
+                            "url": "/docs/embedded-mode-prerequisites/"
+                        },
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Installing Drill in Embedded Mode", 
-                                    "url": "/docs/:slug/"
-                                }, 
+                                    "title": "Installing Drill in Embedded Mode",
+                                    "url": "/docs/installing-drill-in-embedded-mode/"
+                                },
                                 {
-                                    "title": "Install Drill", 
-                                    "url": "/docs/:slug/"
+                                    "title": "Install Drill",
+                                    "url": "/docs/install-drill/"
                                 }
-                            ], 
-                            "children": [], 
-                            "next_title": "Installing Drill on Linux and Mac OS X", 
-                            "next_url": "/docs/:slug/", 
-                            "parent": "Installing Drill in Embedded Mode", 
-                            "previous_title": "Embedded Mode Prerequisites", 
-                            "previous_url": "/docs/:slug/", 
-                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/011-running-drill-on-docker.md", 
-                            "title": "Running Drill on Docker", 
-                            "url": "/docs/:slug/"
-                        }, 
+                            ],
+                            "children": [],
+                            "next_title": "Installing Drill on Linux and Mac OS X",
+                            "next_url": "/docs/installing-drill-on-linux-and-mac-os-x/",
+                            "parent": "Installing Drill in Embedded Mode",
+                            "previous_title": "Embedded Mode Prerequisites",
+                            "previous_url": "/docs/embedded-mode-prerequisites/",
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/011-running-drill-on-docker.md",
+                            "title": "Running Drill on Docker",
+                            "url": "/docs/running-drill-on-docker/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing Drill in Embedded Mode",
+                                    "url": "/docs/installing-drill-in-embedded-mode/"
+                                },
+                                {
+                                    "title": "Install Drill",
+                                    "url": "/docs/install-drill/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "Starting Drill on Linux and Mac OS X",
+                            "next_url": "/docs/starting-drill-on-linux-and-mac-os-x/",
+                            "parent": "Installing Drill in Embedded Mode",
+                            "previous_title": "Running Drill on Docker",
+                            "previous_url": "/docs/running-drill-on-docker/",
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux-and-mac-os-x.md",
+                            "title": "Installing Drill on Linux and Mac OS X",
+                            "url": "/docs/installing-drill-on-linux-and-mac-os-x/"
+                        },
                         {
                             "breadcrumbs": [
                                 {
@@ -6336,156 +6358,156 @@
                             "url": "/docs/:slug/"
                         }, 
                         {
-                            "title": "Install Drill", 
-                            "url": "/docs/:slug/"
+                            "title": "Install Drill",
+                            "url": "/docs/install-drill/"
                         }
-                    ], 
-                    "children": [], 
-                    "next_title": "Running Drill on Docker", 
-                    "next_url": "/docs/:slug/", 
-                    "parent": "Installing Drill in Embedded Mode", 
-                    "previous_title": "Installing Drill in Embedded Mode", 
-                    "previous_url": "/docs/:slug/", 
-                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/010-embedded-mode-prerequisites.md", 
-                    "title": "Embedded Mode Prerequisites", 
-                    "url": "/docs/:slug/"
-                }, 
+                    ],
+                    "children": [],
+                    "next_title": "Running Drill on Docker",
+                    "next_url": "/docs/running-drill-on-docker/",
+                    "parent": "Installing Drill in Embedded Mode",
+                    "previous_title": "Installing Drill in Embedded Mode",
+                    "previous_url": "/docs/installing-drill-in-embedded-mode/",
+                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/010-embedded-mode-prerequisites.md",
+                    "title": "Embedded Mode Prerequisites",
+                    "url": "/docs/embedded-mode-prerequisites/"
+                },
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Installing Drill in Embedded Mode", 
-                            "url": "/docs/:slug/"
-                        }, 
+                            "title": "Installing Drill in Embedded Mode",
+                            "url": "/docs/installing-drill-in-embedded-mode/"
+                        },
                         {
-                            "title": "Install Drill", 
-                            "url": "/docs/:slug/"
+                            "title": "Install Drill",
+                            "url": "/docs/install-drill/"
                         }
-                    ], 
-                    "children": [], 
-                    "next_title": "Installing Drill on Linux and Mac OS X", 
-                    "next_url": "/docs/:slug/", 
-                    "parent": "Installing Drill in Embedded Mode", 
-                    "previous_title": "Embedded Mode Prerequisites", 
-                    "previous_url": "/docs/:slug/", 
-                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/011-running-drill-on-docker.md", 
-                    "title": "Running Drill on Docker", 
-                    "url": "/docs/:slug/"
-                }, 
+                    ],
+                    "children": [],
+                    "next_title": "Installing Drill on Linux and Mac OS X",
+                    "next_url": "/docs/installing-drill-on-linux-and-mac-os-x/",
+                    "parent": "Installing Drill in Embedded Mode",
+                    "previous_title": "Embedded Mode Prerequisites",
+                    "previous_url": "/docs/embedded-mode-prerequisites/",
+                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/011-running-drill-on-docker.md",
+                    "title": "Running Drill on Docker",
+                    "url": "/docs/running-drill-on-docker/"
+                },
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Installing Drill in Embedded Mode", 
-                            "url": "/docs/:slug/"
-                        }, 
+                            "title": "Installing Drill in Embedded Mode",
+                            "url": "/docs/installing-drill-in-embedded-mode/"
+                        },
                         {
-                            "title": "Install Drill", 
-                            "url": "/docs/:slug/"
+                            "title": "Install Drill",
+                            "url": "/docs/install-drill/"
                         }
-                    ], 
-                    "children": [], 
-                    "next_title": "Starting Drill on Linux and Mac OS X", 
-                    "next_url": "/docs/:slug/", 
-                    "parent": "Installing Drill in Embedded Mode", 
-                    "previous_title": "Running Drill on Docker", 
-                    "previous_url": "/docs/:slug/", 
-                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux-and-mac-os-x.md", 
-                    "title": "Installing Drill on Linux and Mac OS X", 
-                    "url": "/docs/:slug/"
-                }, 
+                    ],
+                    "children": [],
+                    "next_title": "Starting Drill on Linux and Mac OS X",
+                    "next_url": "/docs/starting-drill-on-linux-and-mac-os-x/",
+                    "parent": "Installing Drill in Embedded Mode",
+                    "previous_title": "Running Drill on Docker",
+                    "previous_url": "/docs/running-drill-on-docker/",
+                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux-and-mac-os-x.md",
+                    "title": "Installing Drill on Linux and Mac OS X",
+                    "url": "/docs/installing-drill-on-linux-and-mac-os-x/"
+                },
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Installing Drill in Embedded Mode", 
-                            "url": "/docs/:slug/"
-                        }, 
+                            "title": "Installing Drill in Embedded Mode",
+                            "url": "/docs/installing-drill-in-embedded-mode/"
+                        },
                         {
-                            "title": "Install Drill", 
-                            "url": "/docs/:slug/"
+                            "title": "Install Drill",
+                            "url": "/docs/install-drill/"
                         }
-                    ], 
-                    "children": [], 
-                    "next_title": "Installing Drill on Windows", 
-                    "next_url": "/docs/:slug/", 
-                    "parent": "Installing Drill in Embedded Mode", 
-                    "previous_title": "Installing Drill on Linux and Mac OS X", 
-                    "previous_url": "/docs/:slug/", 
-                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/030-starting-drill-on-linux-and-mac-os-x.md", 
-                    "title": "Starting Drill on Linux and Mac OS X", 
-                    "url": "/docs/:slug/"
-                }, 
+                    ],
+                    "children": [],
+                    "next_title": "Installing Drill on Windows",
+                    "next_url": "/docs/installing-drill-on-windows/",
+                    "parent": "Installing Drill in Embedded Mode",
+                    "previous_title": "Installing Drill on Linux and Mac OS X",
+                    "previous_url": "/docs/installing-drill-on-linux-and-mac-os-x/",
+                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/030-starting-drill-on-linux-and-mac-os-x.md",
+                    "title": "Starting Drill on Linux and Mac OS X",
+                    "url": "/docs/starting-drill-on-linux-and-mac-os-x/"
+                },
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Installing Drill in Embedded Mode", 
-                            "url": "/docs/:slug/"
-                        }, 
+                            "title": "Installing Drill in Embedded Mode",
+                            "url": "/docs/installing-drill-in-embedded-mode/"
+                        },
                         {
-                            "title": "Install Drill", 
-                            "url": "/docs/:slug/"
+                            "title": "Install Drill",
+                            "url": "/docs/install-drill/"
                         }
-                    ], 
-                    "children": [], 
-                    "next_title": "Starting Drill on Windows", 
-                    "next_url": "/docs/:slug/", 
-                    "parent": "Installing Drill in Embedded Mode", 
-                    "previous_title": "Starting Drill on Linux and Mac OS X", 
-                    "previous_url": "/docs/:slug/", 
-                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/040-installing-drill-on-windows.md", 
-                    "title": "Installing Drill on Windows", 
-                    "url": "/docs/:slug/"
-                }, 
+                    ],
+                    "children": [],
+                    "next_title": "Starting Drill on Windows",
+                    "next_url": "/docs/starting-drill-on-windows/",
+                    "parent": "Installing Drill in Embedded Mode",
+                    "previous_title": "Starting Drill on Linux and Mac OS X",
+                    "previous_url": "/docs/starting-drill-on-linux-and-mac-os-x/",
+                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/040-installing-drill-on-windows.md",
+                    "title": "Installing Drill on Windows",
+                    "url": "/docs/installing-drill-on-windows/"
+                },
                 {
                     "breadcrumbs": [
                         {
-                            "title": "Installing Drill in Embedded Mode", 
-                            "url": "/docs/:slug/"
-                        }, 
+                            "title": "Installing Drill in Embedded Mode",
+                            "url": "/docs/installing-drill-in-embedded-mode/"
+                        },
                         {
-                            "title": "Install Drill", 
-                            "url": "/docs/:slug/"
+                            "title": "Install Drill",
+                            "url": "/docs/install-drill/"
                         }
-                    ], 
-                    "children": [], 
-                    "next_title": "Installing Drill in Distributed Mode", 
-                    "next_url": "/docs/:slug/", 
-                    "parent": "Installing Drill in Embedded Mode", 
-                    "previous_title": "Installing Drill on Windows", 
-                    "previous_url": "/docs/:slug/", 
-                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/050-starting-drill-on-windows.md", 
-                    "title": "Starting Drill on Windows", 
-                    "url": "/docs/:slug/"
+                    ],
+                    "children": [],
+                    "next_title": "Installing Drill in Distributed Mode",
+                    "next_url": "/docs/installing-drill-in-distributed-mode/",
+                    "parent": "Installing Drill in Embedded Mode",
+                    "previous_title": "Installing Drill on Windows",
+                    "previous_url": "/docs/installing-drill-on-windows/",
+                    "relative_path": "_docs/install/installing-drill-in-embedded-mode/050-starting-drill-on-windows.md",
+                    "title": "Starting Drill on Windows",
+                    "url": "/docs/starting-drill-on-windows/"
                 }
-            ], 
-            "next_title": "Embedded Mode Prerequisites", 
-            "next_url": "/docs/:slug/", 
-            "parent": "Install Drill", 
-            "previous_title": "Migrating Parquet Data", 
-            "previous_url": "/docs/:slug/", 
-            "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md", 
-            "title": "Installing Drill in Embedded Mode", 
-            "url": "/docs/:slug/"
-        }, 
+            ],
+            "next_title": "Embedded Mode Prerequisites",
+            "next_url": "/docs/embedded-mode-prerequisites/",
+            "parent": "Install Drill",
+            "previous_title": "Migrating Parquet Data",
+            "previous_url": "/docs/migrating-parquet-data/",
+            "relative_path": "_docs/install/030-installing-drill-in-embedded-mode.md",
+            "title": "Installing Drill in Embedded Mode",
+            "url": "/docs/installing-drill-in-embedded-mode/"
+        },
         "Installing Drill on Linux and Mac OS X": {
             "breadcrumbs": [
                 {
-                    "title": "Installing Drill in Embedded Mode", 
-                    "url": "/docs/:slug/"
-                }, 
+                    "title": "Installing Drill in Embedded Mode",
+                    "url": "/docs/installing-drill-in-embedded-mode/"
+                },
                 {
-                    "title": "Install Drill", 
-                    "url": "/docs/:slug/"
+                    "title": "Install Drill",
+                    "url": "/docs/install-drill/"
                 }
-            ], 
-            "children": [], 
-            "next_title": "Starting Drill on Linux and Mac OS X", 
-            "next_url": "/docs/:slug/", 
-            "parent": "Installing Drill in Embedded Mode", 
-            "previous_title": "Running Drill on Docker", 
-            "previous_url": "/docs/:slug/", 
-            "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux-and-mac-os-x.md", 
-            "title": "Installing Drill on Linux and Mac OS X", 
-            "url": "/docs/:slug/"
-        }, 
+            ],
+            "children": [],
+            "next_title": "Starting Drill on Linux and Mac OS X",
+            "next_url": "/docs/starting-drill-on-linux-and-mac-os-x/",
+            "parent": "Installing Drill in Embedded Mode",
+            "previous_title": "Running Drill on Docker",
+            "previous_url": "/docs/running-drill-on-docker/",
+            "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux-and-mac-os-x.md",
+            "title": "Installing Drill on Linux and Mac OS X",
+            "url": "/docs/installing-drill-on-linux-and-mac-os-x/"
+        },
         "Installing Drill on Windows": {
             "breadcrumbs": [
                 {
@@ -11720,45 +11742,45 @@
         "Roles and Privileges": {
             "breadcrumbs": [
                 {
-                    "title": "Securing Drill", 
-                    "url": "/docs/:slug/"
-                }, 
+                    "title": "Securing Drill",
+                    "url": "/docs/securing-drill/"
+                },
                 {
-                    "title": "Configure Drill", 
-                    "url": "/docs/:slug/"
+                    "title": "Configure Drill",
+                    "url": "/docs/configure-drill/"
                 }
-            ], 
-            "children": [], 
-            "next_title": "Configuring User Impersonation", 
-            "next_url": "/docs/:slug/", 
-            "parent": "Securing Drill", 
-            "previous_title": "Secure Communication Paths", 
-            "previous_url": "/docs/:slug/", 
-            "relative_path": "_docs/configure-drill/securing-drill/030-roles-privileges.md", 
-            "title": "Roles and Privileges", 
-            "url": "/docs/:slug/"
-        }, 
+            ],
+            "children": [],
+            "next_title": "Configuring User Impersonation",
+            "next_url": "/docs/configuring-user-impersonation/",
+            "parent": "Securing Drill",
+            "previous_title": "Secure Communication Paths",
+            "previous_url": "/docs/secure-communication-paths/",
+            "relative_path": "_docs/configure-drill/securing-drill/030-roles-privileges.md",
+            "title": "Roles and Privileges",
+            "url": "/docs/roles-and-privileges/"
+        },
         "Running Drill on Docker": {
             "breadcrumbs": [
                 {
-                    "title": "Installing Drill in Embedded Mode", 
-                    "url": "/docs/:slug/"
-                }, 
+                    "title": "Installing Drill in Embedded Mode",
+                    "url": "/docs/installing-drill-in-embedded-mode/"
+                },
                 {
-                    "title": "Install Drill", 
-                    "url": "/docs/:slug/"
+                    "title": "Install Drill",
+                    "url": "/docs/install-drill/"
                 }
-            ], 
-            "children": [], 
-            "next_title": "Installing Drill on Linux and Mac OS X", 
-            "next_url": "/docs/:slug/", 
-            "parent": "Installing Drill in Embedded Mode", 
-            "previous_title": "Embedded Mode Prerequisites", 
-            "previous_url": "/docs/:slug/", 
-            "relative_path": "_docs/install/installing-drill-in-embedded-mode/011-running-drill-on-docker.md", 
-            "title": "Running Drill on Docker", 
-            "url": "/docs/:slug/"
-        }, 
+            ],
+            "children": [],
+            "next_title": "Installing Drill on Linux and Mac OS X",
+            "next_url": "/docs/installing-drill-on-linux-and-mac-os-x/",
+            "parent": "Installing Drill in Embedded Mode",
+            "previous_title": "Embedded Mode Prerequisites",
+            "previous_url": "/docs/embedded-mode-prerequisites/",
+            "relative_path": "_docs/install/installing-drill-in-embedded-mode/011-running-drill-on-docker.md",
+            "title": "Running Drill on Docker",
+            "url": "/docs/running-drill-on-docker/"
+        },
         "S3 Storage Plugin": {
             "breadcrumbs": [
                 {
@@ -17726,41 +17748,62 @@
                                     "url": "/docs/:slug/"
                                 }, 
                                 {
-                                    "title": "Install Drill", 
-                                    "url": "/docs/:slug/"
+                                    "title": "Install Drill",
+                                    "url": "/docs/install-drill/"
                                 }
-                            ], 
-                            "children": [], 
-                            "next_title": "Running Drill on Docker", 
-                            "next_url": "/docs/:slug/", 
-                            "parent": "Installing Drill in Embedded Mode", 
-                            "previous_title": "Installing Drill in Embedded Mode", 
-                            "previous_url": "/docs/:slug/", 
-                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/010-embedded-mode-prerequisites.md", 
-                            "title": "Embedded Mode Prerequisites", 
-                            "url": "/docs/:slug/"
-                        }, 
+                            ],
+                            "children": [],
+                            "next_title": "Running Drill on Docker",
+                            "next_url": "/docs/running-drill-on-docker/",
+                            "parent": "Installing Drill in Embedded Mode",
+                            "previous_title": "Installing Drill in Embedded Mode",
+                            "previous_url": "/docs/installing-drill-in-embedded-mode/",
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/010-embedded-mode-prerequisites.md",
+                            "title": "Embedded Mode Prerequisites",
+                            "url": "/docs/embedded-mode-prerequisites/"
+                        },
                         {
                             "breadcrumbs": [
                                 {
-                                    "title": "Installing Drill in Embedded Mode", 
-                                    "url": "/docs/:slug/"
-                                }, 
+                                    "title": "Installing Drill in Embedded Mode",
+                                    "url": "/docs/installing-drill-in-embedded-mode/"
+                                },
                                 {
-                                    "title": "Install Drill", 
-                                    "url": "/docs/:slug/"
+                                    "title": "Install Drill",
+                                    "url": "/docs/install-drill/"
                                 }
-                            ], 
-                            "children": [], 
-                            "next_title": "Installing Drill on Linux and Mac OS X", 
-                            "next_url": "/docs/:slug/", 
-                            "parent": "Installing Drill in Embedded Mode", 
-                            "previous_title": "Embedded Mode Prerequisites", 
-                            "previous_url": "/docs/:slug/", 
-                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/011-running-drill-on-docker.md", 
-                            "title": "Running Drill on Docker", 
-                            "url": "/docs/:slug/"
-                        }, 
+                            ],
+                            "children": [],
+                            "next_title": "Installing Drill on Linux and Mac OS X",
+                            "next_url": "/docs/installing-drill-on-linux-and-mac-os-x/",
+                            "parent": "Installing Drill in Embedded Mode",
+                            "previous_title": "Embedded Mode Prerequisites",
+                            "previous_url": "/docs/embedded-mode-prerequisites/",
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/011-running-drill-on-docker.md",
+                            "title": "Running Drill on Docker",
+                            "url": "/docs/running-drill-on-docker/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Installing Drill in Embedded Mode",
+                                    "url": "/docs/installing-drill-in-embedded-mode/"
+                                },
+                                {
+                                    "title": "Install Drill",
+                                    "url": "/docs/install-drill/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "Starting Drill on Linux and Mac OS X",
+                            "next_url": "/docs/starting-drill-on-linux-and-mac-os-x/",
+                            "parent": "Installing Drill in Embedded Mode",
+                            "previous_title": "Running Drill on Docker",
+                            "previous_url": "/docs/running-drill-on-docker/",
+                            "relative_path": "_docs/install/installing-drill-in-embedded-mode/020-installing-drill-on-linux-and-mac-os-x.md",
+                            "title": "Installing Drill on Linux and Mac OS X",
+                            "url": "/docs/installing-drill-on-linux-and-mac-os-x/"
+                        },
                         {
                             "breadcrumbs": [
                                 {
