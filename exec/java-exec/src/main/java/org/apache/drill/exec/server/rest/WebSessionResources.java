@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import io.netty.channel.ChannelPromise;
+import io.netty.util.concurrent.Promise;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.ChannelClosedException;
@@ -40,10 +40,10 @@ public class WebSessionResources implements AutoCloseable {
 
   private final UserSession webUserSession;
 
-  private ChannelPromise closeFuture;
+  private Promise<Void> closeFuture;
 
   WebSessionResources(BufferAllocator allocator, SocketAddress remoteAddress,
-                      UserSession userSession, ChannelPromise closeFuture) {
+                      UserSession userSession, Promise<Void> closeFuture) {
     this.allocator = allocator;
     this.remoteAddress = remoteAddress;
     this.webUserSession = userSession;
@@ -58,7 +58,7 @@ public class WebSessionResources implements AutoCloseable {
     return allocator;
   }
 
-  public ChannelPromise getCloseFuture() {
+  public Promise<Void> getCloseFuture() {
     return closeFuture;
   }
 

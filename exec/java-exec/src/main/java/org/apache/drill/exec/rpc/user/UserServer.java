@@ -19,14 +19,12 @@ package org.apache.drill.exec.rpc.user;
 
 import com.google.protobuf.MessageLite;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -284,14 +282,9 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
     }
 
     @Override
-    public ChannelFuture getChannelClosureFuture() {
+    public Future<Void> getClosureFuture() {
       return getChannel().closeFuture()
-          .addListener(new GenericFutureListener<Future<? super Void>>() {
-            @Override
-            public void operationComplete(Future<? super Void> future) throws Exception {
-              cleanup();
-            }
-          });
+          .addListener(future -> cleanup());
     }
 
     @Override

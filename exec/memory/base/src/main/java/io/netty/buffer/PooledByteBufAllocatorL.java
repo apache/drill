@@ -68,6 +68,14 @@ public class PooledByteBufAllocatorL {
     }
   }
 
+  public ByteBuf allocateHeap(int initialCapacity, int maxCapacity) {
+    try {
+      return allocator.heapBuffer(initialCapacity, maxCapacity);
+    } catch (OutOfMemoryError e) {
+      throw new OutOfMemoryException("Failure allocating heap buffer.", e);
+    }
+  }
+
   public int getChunkSize() {
     return allocator.chunkSize;
   }
@@ -199,12 +207,6 @@ public class PooledByteBufAllocatorL {
       }
       validate(initialCapacity, maxCapacity);
       return newDirectBufferL(initialCapacity, maxCapacity);
-    }
-
-    @Override
-    public ByteBuf heapBuffer(int initialCapacity, int maxCapacity) {
-      throw new UnsupportedOperationException(
-          "Drill doesn't support using heap buffers.");
     }
 
     private void validate(int initialCapacity, int maxCapacity) {

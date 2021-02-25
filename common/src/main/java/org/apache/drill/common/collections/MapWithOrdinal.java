@@ -29,7 +29,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import io.netty.util.collection.IntObjectHashMap;
-import io.netty.util.collection.IntObjectMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,12 +128,7 @@ public class MapWithOrdinal<K, V> implements Map<K, V> {
 
     @Override
     public Collection<V> values() {
-      return Lists.newArrayList(Iterables.transform(secondary.entries(), new Function<IntObjectMap.Entry<V>, V>() {
-        @Override
-        public V apply(IntObjectMap.Entry<V> entry) {
-          return Preconditions.checkNotNull(entry).value();
-        }
-      }));
+      return Lists.newArrayList(Iterables.transform(secondary.entries(), entry -> Preconditions.checkNotNull(entry).value()));
     }
 
     @Override

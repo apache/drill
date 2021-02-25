@@ -22,7 +22,6 @@ import org.apache.drill.exec.work.filter.RuntimeFilterRouter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
-import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -116,7 +115,7 @@ public class Foreman implements Runnable {
 
   private final ResponseSendListener responseListener = new ResponseSendListener();
   private final GenericFutureListener<Future<Void>> closeListener = future -> cancel();
-  private final ChannelFuture closeFuture;
+  private final Future<Void> closeFuture;
   private final FragmentsRunner fragmentsRunner;
   private final QueryStateProcessor queryStateProcessor;
 
@@ -141,7 +140,7 @@ public class Foreman implements Runnable {
     this.queryRequest = queryRequest;
     this.drillbitContext = drillbitContext;
     this.initiatingClient = connection;
-    this.closeFuture = initiatingClient.getChannelClosureFuture();
+    this.closeFuture = initiatingClient.getClosureFuture();
     closeFuture.addListener(closeListener);
 
     // Apply AutoLimit on resultSet (Usually received via REST APIs)
