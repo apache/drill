@@ -19,7 +19,7 @@ package org.apache.drill.exec.work.prepare;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 
-import io.netty.channel.ChannelFuture;
+import io.netty.util.concurrent.Future;
 import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -244,8 +244,8 @@ public class PreparedStatementProvider {
     }
 
     @Override
-    public ChannelFuture getChannelClosureFuture() {
-      return inner.getChannelClosureFuture();
+    public Future<Void> getClosureFuture() {
+      return inner.getClosureFuture();
     }
 
     @Override

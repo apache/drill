@@ -57,7 +57,7 @@ public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
 
   private UnsafeDirectLittleEndian(AbstractByteBuf buf, boolean fake, AtomicLong bufferCount, AtomicLong bufferSize) {
     super(buf);
-    if (!NATIVE_ORDER || buf.order() != ByteOrder.BIG_ENDIAN) {
+    if (!NATIVE_ORDER) {
       throw new IllegalStateException("Drill only runs on LittleEndian systems.");
     }
 

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import io.netty.channel.DefaultChannelPromise;
+import io.netty.util.concurrent.Promise;
 import io.netty.channel.local.LocalAddress;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
@@ -30,6 +30,7 @@ import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.test.ClusterTest;
+import org.mockito.Mockito;
 
 public class RestServerTest extends ClusterTest {
 
@@ -55,7 +56,7 @@ public class RestServerTest extends ClusterTest {
         .withOptionManager(systemOptions)
         .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName(principal.getName()).build())
         .build(),
-      new DefaultChannelPromise(null));
+      Mockito.mock(Promise.class));
     WebUserConnection connection = new WebUserConnection.AnonWebUserConnection(webSessionResources);
     return new RestQueryRunner(q, cluster.drillbit().getManager(), connection).run();
   }

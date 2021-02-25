@@ -29,8 +29,8 @@ import freemarker.cache.TemplateLoader;
 import freemarker.cache.WebappTemplateLoader;
 import freemarker.core.HTMLOutputFormat;
 import freemarker.template.Configuration;
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.DefaultChannelPromise;
+import io.netty.util.concurrent.DefaultPromise;
+import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.EventExecutor;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -221,11 +221,11 @@ public class DrillRestServer extends ResourceConfig {
                 config.getLong(ExecConstants.HTTP_SESSION_MEMORY_RESERVATION),
                 config.getLong(ExecConstants.HTTP_SESSION_MEMORY_MAXIMUM));
 
-        // Create a dummy close future which is needed by Foreman only. Foreman uses this future to add a close
+        // Create a future which is needed by Foreman only. Foreman uses this future to add a close
         // listener to known about channel close event from underlying layer. We use this future to notify Foreman
         // listeners when the Web session (not connection) between Web Client and WebServer is closed. This will help
         // Foreman to cancel all the running queries for this Web Client.
-        final ChannelPromise closeFuture = new DefaultChannelPromise(null, executor);
+        final Promise<Void> closeFuture = new DefaultPromise<>(executor);
 
         // Create a WebSessionResource instance which owns the lifecycle of all the session resources.
         // Set this instance as an attribute of HttpSession, since it will be used until session is destroyed
@@ -283,12 +283,12 @@ public class DrillRestServer extends ResourceConfig {
         logger.trace("Failed to get the remote address of the http session request", ex);
       }
 
-      // Create a dummy close future which is needed by Foreman only. Foreman uses this future to add a close
+      // Create a close future which is needed by Foreman only. Foreman uses this future to add a close
       // listener to known about channel close event from underlying layer.
       //
       // The invocation of this close future is no-op as it will be triggered after query completion in unsecure case.
       // But we need this close future as it's expected by Foreman.
-      final ChannelPromise closeFuture = new DefaultChannelPromise(null, executor);
+      final Promise<Void> closeFuture = new DefaultPromise(executor);
 
       final WebSessionResources webSessionResources = new WebSessionResources(sessionAllocator, remoteAddress,
           drillUserSession, closeFuture);
