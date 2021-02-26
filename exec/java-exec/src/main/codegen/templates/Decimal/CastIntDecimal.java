@@ -66,7 +66,6 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     out.precision = precision.value;
 
     out.start = 0;
-    out.buffer = buffer;
     java.math.BigDecimal bd = new java.math.BigDecimal(in.value);
 
     org.apache.drill.exec.util.DecimalUtility.checkValueOverflow(bd, precision.value, scale.value);
@@ -75,7 +74,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     byte[] bytes = bd.unscaledValue().toByteArray();
     int len = bytes.length;
-    out.buffer = out.buffer.reallocIfNeeded(len);
+    out.buffer = buffer = buffer.reallocIfNeeded(len);
     out.buffer.setBytes(out.start, bytes);
     out.end = out.start + len;
   }

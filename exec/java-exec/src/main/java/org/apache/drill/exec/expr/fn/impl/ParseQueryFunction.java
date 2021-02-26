@@ -96,7 +96,7 @@ public class ParseQueryFunction {
         }
 
         byte[] valueBytes = keyValue[1].getBytes();
-        outBuffer.reallocIfNeeded(valueBytes.length);
+        outBuffer = outBuffer.reallocIfNeeded(valueBytes.length);
         outBuffer.setBytes(0, valueBytes);
 
         org.apache.drill.exec.expr.holders.VarCharHolder valueHolder =
@@ -170,7 +170,7 @@ public class ParseQueryFunction {
         }
 
         byte[] valueBytes = keyValue[1].getBytes();
-        outBuffer.reallocIfNeeded(valueBytes.length);
+        outBuffer = outBuffer.reallocIfNeeded(valueBytes.length);
         outBuffer.setBytes(0, valueBytes);
 
         org.apache.drill.exec.expr.holders.VarCharHolder valueHolder =

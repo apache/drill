@@ -65,10 +65,9 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
   public void eval() {
     java.math.BigDecimal bigDecimal = org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDrillBuf(in.buffer, in.start, in.end - in.start, in.scale);
     String str = bigDecimal.toString();
-    out.buffer = buffer;
     out.start = 0;
     out.end = Math.min((int) len.value, str.length());
-    buffer = buffer.reallocIfNeeded((int) out.end);
+    out.buffer = buffer = buffer.reallocIfNeeded((int) out.end);
     out.buffer.setBytes(0, str.substring(0, out.end).getBytes());
   }
 }

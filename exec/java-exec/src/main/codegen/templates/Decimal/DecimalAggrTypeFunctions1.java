@@ -110,7 +110,7 @@ public class Decimal${aggrtype.className}Functions {
         value.obj = ((java.math.BigDecimal) value.obj).setScale(out.scale, java.math.BigDecimal.ROUND_HALF_UP);
         byte[] bytes = ((java.math.BigDecimal) value.obj).unscaledValue().toByteArray();
         int len = bytes.length;
-        out.buffer = buffer.reallocIfNeeded(len);
+        out.buffer = buffer = buffer.reallocIfNeeded(len);
         out.buffer.setBytes(0, bytes);
         out.end = len;
       } else {
@@ -180,7 +180,7 @@ public class Decimal${aggrtype.className}Functions {
         byte[] bytes = ((java.math.BigDecimal)value.obj).unscaledValue().toByteArray();
         int len = bytes.length;
         out.start  = 0;
-        out.buffer = buffer.reallocIfNeeded(len);
+        out.buffer = buffer = buffer.reallocIfNeeded(len);
         out.buffer.setBytes(0, bytes);
         out.end = len;
         out.scale = scale.value;

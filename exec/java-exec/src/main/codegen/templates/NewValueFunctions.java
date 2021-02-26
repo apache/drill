@@ -18,7 +18,7 @@
 <@pp.dropOutputFile />
 
 <#macro reassignHolder>
-        previous.buffer = buf.reallocIfNeeded(length);
+        previous.buffer = buf = buf.reallocIfNeeded(length);
         previous.buffer.setBytes(0, in.buffer, in.start, length);
         previous.end = length;
 </#macro>

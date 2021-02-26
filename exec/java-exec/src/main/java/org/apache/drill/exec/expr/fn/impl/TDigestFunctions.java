@@ -87,7 +87,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -146,7 +146,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -201,7 +201,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -260,7 +260,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -315,7 +315,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -374,7 +374,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -429,7 +429,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -488,7 +488,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -543,7 +543,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -602,7 +602,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -657,7 +657,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -716,7 +716,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -771,7 +771,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -830,7 +830,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -885,7 +885,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -944,7 +944,7 @@ public class TDigestFunctions {
             int size = tdigest.smallByteSize();
             java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
             tdigest.asSmallBytes(byteBuf);
-            out.buffer = buffer.reallocIfNeeded(size);
+            out.buffer = buffer = buffer.reallocIfNeeded(size);
             out.start = 0;
             out.end = size;
             out.buffer.setBytes(0, byteBuf.array());
@@ -1125,7 +1125,7 @@ public class TDigestFunctions {
           int size = tdigest.smallByteSize();
           java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
           tdigest.asSmallBytes(byteBuf);
-          out.buffer = buffer.reallocIfNeeded(size);
+          out.buffer = buffer = buffer.reallocIfNeeded(size);
           out.start = 0;
           out.end = size;
           out.buffer.setBytes(0, byteBuf.array());

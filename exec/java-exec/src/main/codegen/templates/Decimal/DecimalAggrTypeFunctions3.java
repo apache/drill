@@ -158,7 +158,7 @@ public class Decimal${aggrtype.className}Functions {
           org.apache.drill.exec.util.DecimalUtility.checkValueOverflow(result, out.precision, out.scale);
           byte[] bytes = result.unscaledValue().toByteArray();
           int len = bytes.length;
-          out.buffer = buffer.reallocIfNeeded(len);
+          out.buffer = buffer = buffer.reallocIfNeeded(len);
           out.buffer.setBytes(0, bytes);
           out.end = len;
         } else {

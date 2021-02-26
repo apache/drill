@@ -29,7 +29,7 @@ import java.util.Iterator;
 
 public class ComplexSchemaUtils {
 
-  public static void getFields(FieldReader reader, BaseWriter.ComplexWriter outWriter, DrillBuf buffer) {
+  public static DrillBuf getFields(FieldReader reader, BaseWriter.ComplexWriter outWriter, DrillBuf buffer) {
 
     BaseWriter.MapWriter queryMapWriter = outWriter.rootAsMap();
 
@@ -54,7 +54,7 @@ public class ComplexSchemaUtils {
 
       VarCharHolder rowHolder = new VarCharHolder();
       byte[] rowStringBytes = dataType.getBytes();
-      buffer.reallocIfNeeded(rowStringBytes.length);
+      buffer = buffer.reallocIfNeeded(rowStringBytes.length);
       buffer.setBytes(0, rowStringBytes);
 
       rowHolder.start = 0;
@@ -64,5 +64,6 @@ public class ComplexSchemaUtils {
       queryMapWriter.varChar(fieldName).write(rowHolder);
     }
     queryMapWriter.end();
+    return buffer;
   }
 }

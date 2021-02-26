@@ -111,7 +111,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       out.precision = org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
       byte[] bytes = average.unscaledValue().toByteArray();
       int len = bytes.length;
-      out.buffer = buffer.reallocIfNeeded(len);
+      out.buffer = buffer = buffer.reallocIfNeeded(len);
       out.buffer.setBytes(0, bytes);
       out.end = len;
     } else {
