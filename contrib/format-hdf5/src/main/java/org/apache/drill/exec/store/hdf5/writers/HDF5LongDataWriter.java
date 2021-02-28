@@ -18,13 +18,12 @@
 
 package org.apache.drill.exec.store.hdf5.writers;
 
-import java.util.List;
 
+import io.jhdf.HdfFile;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.store.hdf5.HDF5Utils;
 import org.apache.drill.exec.vector.accessor.ValueWriter;
 
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 public class HDF5LongDataWriter extends HDF5DataWriter {
 
@@ -33,36 +32,32 @@ public class HDF5LongDataWriter extends HDF5DataWriter {
   private final ValueWriter colWriter;
 
   // This constructor is used when the data is a 1D column.  The column is inferred from the datapath
-  public HDF5LongDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String datapath) {
+  public HDF5LongDataWriter(HdfFile reader, WriterSpec writerSpec, String datapath) {
     super(reader, datapath);
-    data = reader.readLongArray(datapath);
-
+    data = (long[]) reader.getDatasetByPath(datapath).getData();
     fieldName = HDF5Utils.getNameFromPath(datapath);
     colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL);
   }
 
   // This constructor is used when the data is part of a 2D array.  In this case the column name is provided in the constructor
-  public HDF5LongDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String datapath, String fieldName, int currentColumn) {
+  public HDF5LongDataWriter(HdfFile reader, WriterSpec writerSpec, String datapath, String fieldName, int currentColumn) {
     super(reader, datapath, fieldName, currentColumn);
     // Get dimensions
-    long[] dimensions = reader.object().getDataSetInformation(datapath).getDimensions();
-    long[][] tempData;
+    int[] dimensions = reader.getDatasetByPath(datapath).getDimensions();
+    long[][] tempData = new long[0][];
     if (dimensions.length == 2) {
-      tempData = transpose(reader.readLongMatrix(datapath));
+      tempData = transpose((long[][]) reader.getDatasetByPath(datapath).getData());
     } else {
-      tempData = transpose(reader.int64().readMDArray(datapath).toMatrix());
+      tempData = transpose(HDF5Utils.toLongMatrix((Object[])reader.getDatasetByPath(datapath).getData()));
     }
     data = tempData[currentColumn];
     colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL);
   }
 
-  public HDF5LongDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String fieldName, List<Long> tempListData) {
+  public HDF5LongDataWriter(HdfFile reader, WriterSpec writerSpec, String fieldName, long[] tempListData) {
     super(reader, null);
     this.fieldName = fieldName;
-    data = new long[tempListData.size()];
-    for (int i = 0; i < tempListData.size(); i++) {
-      data[i] = tempListData.get(i);
-    }
+    data = tempListData;
     colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL);
   }
 

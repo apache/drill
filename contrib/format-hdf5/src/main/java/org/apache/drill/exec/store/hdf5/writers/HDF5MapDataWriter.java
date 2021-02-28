@@ -18,33 +18,33 @@
 
 package org.apache.drill.exec.store.hdf5.writers;
 
-import ch.systemsx.cisd.hdf5.HDF5CompoundMemberInformation;
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import io.jhdf.HdfFile;
+import io.jhdf.object.datatype.CompoundDataType;
+import io.jhdf.object.datatype.CompoundDataType.CompoundDataMember;
 import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
+
 public class HDF5MapDataWriter extends HDF5DataWriter {
+
   private static final Logger logger = LoggerFactory.getLogger(HDF5MapDataWriter.class);
-
   private static final String UNSAFE_SPACE_SEPARATOR = " ";
-
   private static final String SAFE_SPACE_SEPARATOR = "_";
-
   private final List<HDF5DataWriter> dataWriters;
+  private final List<CompoundDataMember> data;
 
-  private List<String> fieldNames;
-
-  public HDF5MapDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String datapath) {
+  public HDF5MapDataWriter(HdfFile reader, WriterSpec writerSpec, String datapath) {
     super(reader, datapath);
-    fieldNames = new ArrayList<>();
-
-    compoundData = reader.compound().readArray(datapath, Object[].class);
+    // Get the members of the dataset
+    compoundData = (LinkedHashMap<String, ?>)reader.getDatasetByPath(datapath).getData();
+    data = ((CompoundDataType) reader.getDatasetByPath(datapath).getDataType()).getMembers();
     dataWriters = new ArrayList<>();
-    fieldNames = getFieldNames();
+
     try {
       getDataWriters(writerSpec);
     } catch (Exception e) {
@@ -75,16 +75,6 @@ public class HDF5MapDataWriter extends HDF5DataWriter {
     return counter < dataWriters.get(0).getDataSize();
   }
 
-  private List<String> getFieldNames() {
-    List<String> names = new ArrayList<>();
-
-    HDF5CompoundMemberInformation[] infos = reader.compound().getDataSetInfo(datapath);
-    for (HDF5CompoundMemberInformation info : infos) {
-      names.add(info.getName().replace(UNSAFE_SPACE_SEPARATOR, SAFE_SPACE_SEPARATOR));
-    }
-    return names;
-  }
-
   /**
    * Populates the ArrayList of DataWriters. Since HDF5 Maps contain homogeneous
    * columns, it is fine to get the first row, and iterate through the columns
@@ -92,27 +82,30 @@ public class HDF5MapDataWriter extends HDF5DataWriter {
    */
   private void getDataWriters(WriterSpec writerSpec) {
 
-    for (int col = 0; col < compoundData[0].length; col++) {
-      Object currentColumn = compoundData[0][col];
-      String dataType = currentColumn.getClass().getSimpleName();
-
+    for (CompoundDataMember dataMember : data) {
+      String dataType = dataMember.getDataType().getJavaType().getName();
+      String fieldName = dataMember.getName();
       switch (dataType) {
-        case "Byte":
-        case "Short":
-        case "Integer":
-          dataWriters.add(new HDF5IntDataWriter(reader, writerSpec, fieldNames.get(col), getColumn(col)));
+        case "byte":
+          dataWriters.add(new HDF5ByteDataWriter(reader, writerSpec, fieldName.replace(UNSAFE_SPACE_SEPARATOR, SAFE_SPACE_SEPARATOR), (byte[])compoundData.get(fieldName)));
           break;
-        case "Long":
-          dataWriters.add(new HDF5LongDataWriter(reader, writerSpec, fieldNames.get(col), getColumn(col)));
+        case "short":
+          dataWriters.add(new HDF5SmallIntDataWriter(reader, writerSpec, fieldName.replace(UNSAFE_SPACE_SEPARATOR, SAFE_SPACE_SEPARATOR), (short[])compoundData.get(fieldName)));
           break;
-        case "Double":
-          dataWriters.add(new HDF5DoubleDataWriter(reader, writerSpec, fieldNames.get(col), getColumn(col)));
+        case "int":
+          dataWriters.add(new HDF5IntDataWriter(reader, writerSpec, fieldName.replace(UNSAFE_SPACE_SEPARATOR, SAFE_SPACE_SEPARATOR), (int[])compoundData.get(fieldName)));
           break;
-        case "Float":
-          dataWriters.add(new HDF5FloatDataWriter(reader, writerSpec, fieldNames.get(col), getColumn(col)));
+        case "long":
+          dataWriters.add(new HDF5LongDataWriter(reader, writerSpec, fieldName.replace(UNSAFE_SPACE_SEPARATOR, SAFE_SPACE_SEPARATOR), (long[])compoundData.get(fieldName)));
           break;
-        case "String":
-          dataWriters.add(new HDF5StringDataWriter(reader, writerSpec, fieldNames.get(col), getColumn(col)));
+        case "double":
+          dataWriters.add(new HDF5DoubleDataWriter(reader, writerSpec, fieldName.replace(UNSAFE_SPACE_SEPARATOR, SAFE_SPACE_SEPARATOR), (double[])compoundData.get(fieldName)));
+          break;
+        case "float":
+          dataWriters.add(new HDF5FloatDataWriter(reader, writerSpec, fieldName.replace(UNSAFE_SPACE_SEPARATOR, SAFE_SPACE_SEPARATOR), (float[])compoundData.get(fieldName)));
+          break;
+        case "java.lang.String":
+          dataWriters.add(new HDF5StringDataWriter(reader, writerSpec, fieldName.replace(UNSAFE_SPACE_SEPARATOR, SAFE_SPACE_SEPARATOR),  (String[])compoundData.get(fieldName)));
           break;
         default:
           // Log unknown data type

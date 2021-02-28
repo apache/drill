@@ -13,7 +13,7 @@ There are three configuration variables in this plugin:
 
 ### Example Configuration
 For most uses, the configuration below will suffice to enable Drill to query HDF5 files.
-```
+```json
 "hdf5": {
       "type": "hdf5",
       "extensions": [
@@ -34,7 +34,7 @@ apache drill> select * from dfs.test.`dset.h5`;
 ```
 The actual data in this file is mapped to a column called int_data. In order to effectively access the data, you should use Drill's `FLATTEN()` function on the `int_data` column, which produces the following result.
 
-```
+```bash
 apache drill> select flatten(int_data) as int_data from dfs.test.`dset.h5`;
 +---------------------+
 |      int_data       |
@@ -47,7 +47,7 @@ apache drill> select flatten(int_data) as int_data from dfs.test.`dset.h5`;
 ```
 Once the data is in this form, you can access it similarly to how you might access nested data in JSON or other files. 
 
-```
+```bash
 apache drill> SELECT int_data[0] as col_0,
 . .semicolon> int_data[1] as col_1,
 . .semicolon> int_data[2] as col_2
@@ -73,13 +73,13 @@ However, a better way to query the actual data in an HDF5 file is to use the `de
  
  You can set the `defaultPath` variable in either the plugin configuration, or at query time using the `table()` function as shown in the example below:
  
- ```
+ ```sql
 SELECT * 
 FROM table(dfs.test.`dset.h5` (type => 'hdf5', defaultPath => '/dset'))
 ```
  This query will return the result below:
  
- ```
+ ```bash
  apache drill> SELECT * FROM table(dfs.test.`dset.h5` (type => 'hdf5', defaultPath => '/dset'));
  +-----------+-----------+-----------+-----------+-----------+-----------+
  | int_col_0 | int_col_1 | int_col_2 | int_col_3 | int_col_4 | int_col_5 |
@@ -98,7 +98,7 @@ If the data in `defaultPath` is a column, the column name will be the last part 
 
 ### Attributes
 Occasionally, HDF5 paths will contain attributes. Drill will map these to a map data structure called `attributes`, as shown in the query below.
-```
+```bash
 apache drill> SELECT attributes FROM dfs.test.`browsing.h5`;
 +----------------------------------------------------------------------------------+
 |                                    attributes                                    |
@@ -115,7 +115,7 @@ apache drill> SELECT attributes FROM dfs.test.`browsing.h5`;
 8 rows selected (0.292 seconds)
 ```
 You can access the individual fields within the `attributes` map by using the structure `table.map.key`. Note that you will have to give the table an alias for this to work properly.
-```
+```bash
 apache drill> SELECT path, data_type, file_name
 FROM dfs.test.`browsing.h5` AS t1 WHERE t1.attributes.important = false;
 +---------+-----------+-------------+
@@ -132,7 +132,7 @@ There are several limitations with the HDF5 format plugin in Drill.
 * HDF5 files can contain nested data sets of up to `n` dimensions. Since Drill works best with two dimensional data, datasets with more than two dimensions are reduced to 2
  dimensions.
  * HDF5 has a `COMPOUND` data type. At present, Drill supports reading `COMPOUND` data types that contain multiple datasets. At present Drill does not support `COMPOUND` fields
-  with multidimesnional columns. Drill will ignore multidimensional columns within `COMPOUND` fields.
+  with multidimensional columns. Drill will ignore multidimensional columns within `COMPOUND` fields.
  
  [1]: https://en.wikipedia.org/wiki/Hierarchical_Data_Format
  [2]: https://www.hdfgroup.org

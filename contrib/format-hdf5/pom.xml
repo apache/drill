@@ -37,9 +37,9 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>cisd</groupId>
-      <artifactId>jhdf5</artifactId>
-      <version>14.12.6</version>
+      <groupId>io.jhdf</groupId>
+      <artifactId>jhdf</artifactId>
+      <version>0.6.1</version>
     </dependency>
 
     <!-- Test dependencies -->

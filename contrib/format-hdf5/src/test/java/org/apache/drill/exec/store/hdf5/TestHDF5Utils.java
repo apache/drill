@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.hdf5;
 
 import org.apache.drill.test.BaseTest;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 

@@ -18,26 +18,24 @@
 
 package org.apache.drill.exec.store.hdf5;
 
-import ch.systemsx.cisd.hdf5.HDF5DataClass;
-import ch.systemsx.cisd.hdf5.HDF5EnumerationValue;
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import ch.systemsx.cisd.hdf5.HDF5DataSetInformation;
-import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation;
+import io.jhdf.HdfFile;
+import io.jhdf.api.Attribute;
+import io.jhdf.object.datatype.DataType;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.BitSet;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class HDF5Utils {
   private static final Logger logger = LoggerFactory.getLogger(HDF5Utils.class);
-
-  private static final boolean CASE_SENSITIVE = false;
 
   /*
    * This regex is used to extract the final part of an HDF5 path, which is the name of the data field or column.
@@ -46,132 +44,93 @@ public class HDF5Utils {
    */
   private static final Pattern PATH_PATTERN = Pattern.compile("/*.*/(.+?)$");
 
+
   /**
    * This function returns and HDF5Attribute object for use when Drill maps the attributes.
    *
    * @param pathName The path to retrieve attributes from
    * @param key The key for the specific attribute you are retrieving
-   * @param reader The IHDF5 reader object for the file you are querying
+   * @param hdf5File The hdfFile reader object for the file you are querying
    * @return HDF5Attribute The attribute from the path with the key that was requested.
    */
-  public static HDF5Attribute getAttribute(String pathName, String key, IHDF5Reader reader) {
+  public static HDF5Attribute getAttribute(String pathName, String key, HdfFile hdf5File) {
     if (pathName.equals("")) {
       pathName = "/";
     }
-
-    if (!reader.exists(pathName)) {
+    if (hdf5File.getByPath(pathName) == null) {
       return null;
     }
 
     if (key.equals("dimensions")) {
-      HDF5DataSetInformation datasetInfo = reader.object().getDataSetInformation(pathName);
-      long[] dimensions = datasetInfo.getDimensions();
+      int[] dimensions = hdf5File.getDatasetByPath(pathName).getDimensions();
       ArrayUtils.reverse(dimensions);
       return new HDF5Attribute(MinorType.LIST, "dimensions", dimensions);
     }
 
     if (key.equals("dataType")) {
-      HDF5DataSetInformation datasetInfo = reader.object().getDataSetInformation(pathName);
-      return new HDF5Attribute(getDataType(datasetInfo), "DataType", datasetInfo.getTypeInformation().getDataClass());
+      String typeName = hdf5File.getDatasetByPath(pathName).getDataType().getJavaType().getName();
+      return new HDF5Attribute(getDataType(hdf5File.getDatasetByPath(pathName).getDataType()), "DataType", typeName);
     }
-
-    if (!reader.object().hasAttribute(pathName, key)) {
+    if (hdf5File.getByPath(pathName).getAttribute(key) == null) {
       return null;
     }
 
-    HDF5DataTypeInformation attributeInfo = reader.object().getAttributeInformation(pathName, key);
-    Class<?> type = attributeInfo.tryGetJavaType();
+    Attribute attribute = hdf5File.getByPath(pathName).getAttribute(key);
+    Class<?> type = hdf5File.getByPath(pathName).getAttribute(key).getJavaType();
+
     if (type.isAssignableFrom(long[].class)) {
-      if (attributeInfo.isSigned()) {
-        return new HDF5Attribute(MinorType.BIGINT, key, reader.int64().getAttr(pathName, key));
-      } else {
-        return new HDF5Attribute(MinorType.BIGINT, key, reader.uint64().getAttr(pathName, key));
-      }
+      return new HDF5Attribute(MinorType.BIGINT, key, attribute.getData(), true);
     } else if (type.isAssignableFrom(int[].class)) {
-      if (attributeInfo.isSigned()) {
-        return new HDF5Attribute(MinorType.INT, key, reader.int32().getAttr(pathName, key));
-      } else {
-        return new HDF5Attribute(MinorType.INT, key, reader.uint32().getAttr(pathName, key));
-      }
+      return new HDF5Attribute(MinorType.INT, key, attribute.getData(), true);
     } else if (type.isAssignableFrom(short[].class)) {
-      if (attributeInfo.isSigned()) {
-        return new HDF5Attribute(MinorType.INT, key, reader.int16().getAttr(pathName, key));
-      } else {
-        return new HDF5Attribute(MinorType.INT, key, reader.uint16().getAttr(pathName, key));
-      }
+      return new HDF5Attribute(MinorType.INT, key, attribute.getData(), true);
     } else if (type.isAssignableFrom(byte[].class)) {
-      if (attributeInfo.isSigned()) {
-        return new HDF5Attribute(MinorType.INT, key, reader.int8().getAttr(pathName, key));
-      } else {
-        return new HDF5Attribute(MinorType.INT, key, reader.uint8().getAttr(pathName, key));
-      }
+      return new HDF5Attribute(MinorType.INT, key,  attribute.getData(), true);
     } else if (type.isAssignableFrom(double[].class)) {
-      return new HDF5Attribute(MinorType.FLOAT8, key, reader.float64().getAttr(pathName, key));
+      return new HDF5Attribute(MinorType.FLOAT8, key, attribute.getData(), true);
     } else if (type.isAssignableFrom(float[].class)) {
-      return new HDF5Attribute(MinorType.FLOAT8, key, reader.float32().getAttr(pathName, key));
+      return new HDF5Attribute(MinorType.FLOAT8, key,  attribute.getData(), true);
     } else if (type.isAssignableFrom(String[].class)) {
-      return new HDF5Attribute(MinorType.VARCHAR, key, reader.string().getAttr(pathName, key));
-    } else if (type.isAssignableFrom(long.class)) {
-      if (attributeInfo.isSigned()) {
-        return new HDF5Attribute(MinorType.BIGINT, key, reader.int64().getAttr(pathName, key));
-      } else {
-        return new HDF5Attribute(MinorType.BIGINT, key, reader.uint64().getAttr(pathName, key));
-      }
-    } else if (type.isAssignableFrom(int.class)) {
-      if (attributeInfo.isSigned()) {
-        return new HDF5Attribute(MinorType.INT, key, reader.int32().getAttr(pathName, key));
-      } else {
-        return new HDF5Attribute(MinorType.INT, key, reader.uint32().getAttr(pathName, key));
-      }
-    } else if (type.isAssignableFrom(short.class)) {
-      if (attributeInfo.isSigned()) {
-        return new HDF5Attribute(MinorType.INT, key, reader.int16().getAttr(pathName, key));
-      } else {
-        return new HDF5Attribute(MinorType.INT, key, reader.uint16().getAttr(pathName, key));
-      }
-    } else if (type.isAssignableFrom(byte.class)) {
-      if (attributeInfo.isSigned()) {
-        return new HDF5Attribute(MinorType.INT, key, reader.int8().getAttr(pathName, key));
-      } else {
-        return new HDF5Attribute(MinorType.INT, key, reader.uint8().getAttr(pathName, key));
-      }
-    } else if (type.isAssignableFrom(double.class)) {
-      return new HDF5Attribute(MinorType.FLOAT8, key, reader.float64().getAttr(pathName, key));
+      return new HDF5Attribute(MinorType.VARCHAR, key,  attribute.getData(), true);
+    } else if (type.isAssignableFrom(java.lang.Long.class)) {
+      return new HDF5Attribute(MinorType.BIGINT, key, attribute.getData());
+    } else if (type.isAssignableFrom(java.lang.Integer.class)) {
+      return new HDF5Attribute(MinorType.INT, key,  attribute.getData());
+    } else if (type.isAssignableFrom(java.lang.Short.class)) {
+      return new HDF5Attribute(MinorType.INT, key, attribute.getData());
+    } else if (type.isAssignableFrom(java.lang.Byte.class)) {
+      return new HDF5Attribute(MinorType.INT, key, attribute.getData());
+    } else if (type.isAssignableFrom(java.lang.Double.class)) {
+      return new HDF5Attribute(MinorType.FLOAT8, key, attribute.getData());
     } else if (type.isAssignableFrom(float.class)) {
-      return new HDF5Attribute(MinorType.FLOAT4, key, reader.float32().getAttr(pathName, key));
+      return new HDF5Attribute(MinorType.FLOAT4, key, attribute.getData());
     } else if (type.isAssignableFrom(String.class)) {
-      return new HDF5Attribute(MinorType.VARCHAR, key, reader.string().getAttr(pathName, key));
+      return new HDF5Attribute(MinorType.VARCHAR, key, attribute.getData());
     } else if (type.isAssignableFrom(boolean.class)) {
-      return new HDF5Attribute(MinorType.BIT, key, reader.bool().getAttr(pathName, key));
-    } else if (type.isAssignableFrom(HDF5EnumerationValue.class)) {
+      return new HDF5Attribute(MinorType.BIT, key, attribute.getData());
+    }/*else if (type.isAssignableFrom(HDF5EnumerationValue.class)) {
       // Convert HDF5 Enum to String
-      return new HDF5Attribute(MinorType.GENERIC_OBJECT, key, reader.enumeration().getAttr(pathName, key));
-    } else if (type.isAssignableFrom(BitSet.class)) {
-      return new HDF5Attribute(MinorType.BIT, key, reader.bool().getAttr(pathName, key));
+      return new HDF5Attribute(MinorType.GENERIC_OBJECT, key, attribute.getData());
+    }*/ else if (type.isAssignableFrom(BitSet.class)) {
+      return new HDF5Attribute(MinorType.BIT, key, attribute.getData());
     }
 
-    logger.warn("Reading attributes of type {} not yet implemented.", attributeInfo);
+    logger.warn("Reading attributes of type {} not yet implemented.", attribute.getJavaType());
     return null;
   }
 
   /**
    * This function returns the Drill data type of a given HDF5 dataset.
-   * @param datasetInfo The input data set.
+   * @param dataType The input data set.
    * @return MinorType The Drill data type of the dataset in question
    */
-  public static MinorType getDataType(HDF5DataSetInformation datasetInfo) {
+  public static MinorType getDataType(DataType dataType) {
 
-    HDF5DataTypeInformation typeInfo = datasetInfo.getTypeInformation();
-    Class<?> type = typeInfo.tryGetJavaType();
-    String name = typeInfo.getDataClass().name();
+    Class<?> type = dataType.getJavaType();
     if (type == null) {
-      logger.warn("Datasets of type {} not implemented.", typeInfo);
+      logger.warn("Datasets of type {} not implemented.", dataType.getDataClass());
       //Fall back to string
-      if(name.equalsIgnoreCase("OTHER")) {
-        return MinorType.GENERIC_OBJECT;
-      } else {
-        return MinorType.VARCHAR;
-      }
+      return MinorType.VARCHAR;
     } else if (type.isAssignableFrom(long.class)) {
       return MinorType.BIGINT;
     } else if (type.isAssignableFrom(short.class)) {
@@ -180,11 +139,13 @@ public class HDF5Utils {
       return MinorType.TINYINT;
     } else if (type.isAssignableFrom(int.class)) {
       return MinorType.INT;
-    } else if (type.isAssignableFrom(double.class) || type.isAssignableFrom(float.class)) {
+    } else if (type.isAssignableFrom(float.class)) {
+      return MinorType.FLOAT4;
+    } else if (type.isAssignableFrom(double.class)) {
       return MinorType.FLOAT8;
     } else if (type.isAssignableFrom(String.class)) {
       return MinorType.VARCHAR;
-    } else if (type.isAssignableFrom(java.util.Date.class)) {
+    } else if (type.isAssignableFrom(java.util.Date.class) || type.isAssignableFrom(java.lang.Long.class)) {
       return MinorType.TIMESTAMP;
     } else if (type.isAssignableFrom(boolean.class) || type.isAssignableFrom(BitSet.class)) {
       return MinorType.BIT;
@@ -202,49 +163,8 @@ public class HDF5Utils {
    * @param reader The HDF5 reader
    * @return The data type
    */
-  public static Class<?> getDatasetClass(String path, IHDF5Reader reader) {
-    HDF5DataSetInformation info = reader.getDataSetInformation(resolvePath(path, reader));
-    return info.getTypeInformation().tryGetJavaType();
-  }
-
-  /**
-   * This function resolves path references
-   * @param path The path for the possible reference
-   * @param reader The HDF5 reader object for the file
-   * @return the string for the relative path
-   */
-  public static String resolvePath(String path, IHDF5Reader reader) {
-    if (reader.exists(path)) {
-      // Resolve references, if any.
-      if (reader.object().isDataSet(path)) {
-        HDF5DataClass dataClass = reader.getDataSetInformation(path).getTypeInformation().getDataClass();
-        if (dataClass.toString().equals("REFERENCE")) {
-          return reader.reference().read(path);
-        }
-      }
-      return path;
-    } else if (!CASE_SENSITIVE) {
-      // Look for a match with a different case.
-      String[] pathParts = path.split("/");
-      String resolvedPath = "/";
-      for (int i = 1; i < pathParts.length; i++) {
-        String testPath = (resolvedPath.endsWith("/")) ? resolvedPath + pathParts[i] : resolvedPath + "/" + pathParts[i];
-        if (reader.exists(testPath)) {
-          resolvedPath = testPath;
-        } else if (reader.isGroup(resolvedPath)) {
-          List<String> children = reader.getGroupMembers(resolvedPath);
-          for (String child : children) {
-            if (child.equalsIgnoreCase(pathParts[i])) {
-              resolvedPath = resolvedPath + "/" + child;
-            }
-          }
-        }
-      }
-      if (path.equalsIgnoreCase(resolvedPath)) {
-        return resolvedPath;
-      }
-    }
-    return null;
+  public static Class<?> getDatasetClass(String path, HdfFile reader) {
+    return reader.getDatasetByPath(path).getJavaType();
   }
 
   /**
@@ -264,5 +184,127 @@ public class HDF5Utils {
     } else {
       return "";
     }
+  }
+
+  public static Object[] toMatrix(Object[] inputArray) {
+    return flatten(inputArray).toArray();
+  }
+
+  public static boolean[][] toBooleanMatrix(Object[] inputArray) {
+    Object[] input = flatten(inputArray).toArray();
+    int rows = input.length;
+    int cols = ((boolean[][])input[0]).length;
+
+    boolean[][] result = new boolean[cols][rows];
+
+    for (int i = 0; i <  rows; i++) {
+      boolean[] row = (boolean[])input[i];
+      for (int j = 0; j < cols; j++) {
+        result[j][i] = row[j];
+      }
+    }
+    return result;
+  }
+
+  public static byte[][] toByteMatrix(Object[] inputArray) {
+    Object[] input = flatten(inputArray).toArray();
+    int rows = input.length;
+    int cols = ((byte[])input[0]).length;
+
+    byte[][] result = new byte[cols][rows];
+
+    for (int i = 0; i <  rows; i++) {
+      byte[] row = (byte[])input[i];
+      for (int j = 0; j < cols; j++) {
+        result[j][i] = row[j];
+      }
+    }
+    return result;
+  }
+
+  public static short[][] toShortMatrix(Object[] inputArray) {
+    Object[] input = flatten(inputArray).toArray();
+    int rows = input.length;
+    int cols = ((short[])input[0]).length;
+
+    short[][] result = new short[cols][rows];
+
+    for (int i = 0; i <  rows; i++) {
+      short[] row = (short[])input[i];
+      for (int j = 0; j < cols; j++) {
+        result[j][i] = row[j];
+      }
+    }
+    return result;
+  }
+
+
+  public static int[][] toIntMatrix(Object[] inputArray) {
+    Object[] input = flatten(inputArray).toArray();
+    int rows = input.length;
+    int cols = ((int[])input[0]).length;
+
+    int[][] result = new int[cols][rows];
+
+    for (int i = 0; i <  rows; i++) {
+      int[] row = (int[])input[i];
+      for (int j = 0; j < cols; j++) {
+        result[j][i] = row[j];
+      }
+    }
+    return result;
+  }
+
+  public static long[][] toLongMatrix(Object[] inputArray) {
+    Object[] input = flatten(inputArray).toArray();
+    int rows = input.length;
+    int cols = ((long[])input[0]).length;
+
+    long[][] result = new long[cols][rows];
+
+    for (int i = 0; i <  rows; i++) {
+      long[] row = (long[])input[i];
+      for (int j = 0; j < cols; j++) {
+        result[j][i] = row[j];
+      }
+    }
+    return result;
+  }
+
+  public static float[][] toFloatMatrix(Object[] inputArray) {
+    Object[] input = flatten(inputArray).toArray();
+    int rows = input.length;
+    int cols = ((float[])input[0]).length;
+
+    float[][] result = new float[cols][rows];
+
+    for (int i = 0; i <  rows; i++) {
+      float[] row = (float[])input[i];
+      for (int j = 0; j < cols; j++) {
+        result[j][i] = row[j];
+      }
+    }
+    return result;
+  }
+
+  public static double[][] toDoubleMatrix(Object[] inputArray) {
+    Object[] input = flatten(inputArray).toArray();
+    int rows = input.length;
+    int cols = ((double[])input[0]).length;
+
+    double[][] result = new double[cols][rows];
+
+    for (int i = 0; i <  rows; i++) {
+      double[] row = (double[])input[i];
+      for (int j = 0; j < cols; j++) {
+        result[j][i] = row[j];
+      }
+    }
+    return result;
+  }
+
+  public static Stream<Object> flatten(Object[] array) {
+    return Arrays.stream(array)
+      .flatMap(o -> o instanceof Object[]? flatten((Object[])o): Stream.of(o));
   }
 }
