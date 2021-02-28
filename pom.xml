@@ -207,12 +207,6 @@
     </repository>
 
     <repository>
-      <id>jhdf5-repo</id>
-      <name>ImageJ Repository</name>
-      <url>https://maven.scijava.org/content/repositories/public/</url>
-    </repository>
-
-    <repository>
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
     </repository>

@@ -21,11 +21,10 @@ package org.apache.drill.exec.store.hdf5.writers;
 import java.util.Arrays;
 import java.util.List;
 
+import io.jhdf.HdfFile;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.store.hdf5.HDF5Utils;
 import org.apache.drill.exec.vector.accessor.ValueWriter;
-
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 public class HDF5StringDataWriter extends HDF5DataWriter {
 
@@ -36,18 +35,18 @@ public class HDF5StringDataWriter extends HDF5DataWriter {
   private final ValueWriter colWriter;
 
   // This constructor is used when the data is a 1D column.  The column is inferred from the datapath
-  public HDF5StringDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String datapath) {
+  public HDF5StringDataWriter(HdfFile reader, WriterSpec writerSpec, String datapath) {
     super(reader, datapath);
-    data = reader.readStringArray(datapath);
+    data = (String[]) reader.getDatasetByPath(datapath).getData();
     listData = Arrays.asList(data);
     fieldName = HDF5Utils.getNameFromPath(datapath);
     colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
   }
 
-  public HDF5StringDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String fieldName, List<String> data) {
+  public HDF5StringDataWriter(HdfFile reader, WriterSpec writerSpec, String fieldName, String[] data) {
     super(reader, null);
     this.fieldName = fieldName;
-    this.listData = data;
+    this.listData = Arrays.asList(data);
     colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
   }
 

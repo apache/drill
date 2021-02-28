@@ -18,13 +18,11 @@
 
 package org.apache.drill.exec.store.hdf5.writers;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import java.util.LinkedHashMap;
+import io.jhdf.HdfFile;
 
 public abstract class HDF5DataWriter {
-  protected final IHDF5Reader reader;
+  protected final HdfFile reader;
 
   protected final String datapath;
 
@@ -34,14 +32,14 @@ public abstract class HDF5DataWriter {
 
   protected int counter;
 
-  protected Object[][] compoundData;
+  protected LinkedHashMap<String, ?> compoundData;
 
-  public HDF5DataWriter(IHDF5Reader reader, String datapath) {
+  public HDF5DataWriter(HdfFile reader, String datapath) {
     this.reader = reader;
     this.datapath = datapath;
   }
 
-  public HDF5DataWriter(IHDF5Reader reader, String datapath, String fieldName, int colCount) {
+  public HDF5DataWriter(HdfFile reader, String datapath, String fieldName, int colCount) {
     this(reader, datapath);
     this.fieldName = fieldName;
     this.colCount = colCount;
@@ -57,15 +55,6 @@ public abstract class HDF5DataWriter {
 
   public int currentRowCount() {
     return counter;
-  }
-
-  @SuppressWarnings("unchecked")
-  public <T> List<T> getColumn(int columnIndex) {
-    List<T> result = new ArrayList<>();
-    for (Object[] compoundDatum : compoundData) {
-      result.add((T) compoundDatum[columnIndex]);
-    }
-    return result;
   }
 
   public abstract int getDataSize();

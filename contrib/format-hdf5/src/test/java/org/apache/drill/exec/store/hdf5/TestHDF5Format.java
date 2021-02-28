@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.hdf5;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.test.ClusterFixtureBuilder;
@@ -85,7 +87,7 @@ public class TestHDF5Format extends ClusterTest {
       .sqlQuery("SELECT * FROM dfs.`hdf5/dset.h5`")
       .unOrdered()
       .baselineColumns("path", "data_type", "file_name", "data_size", "element_count", "dataset_data_type", "dimensions", "int_data")
-      .baselineValues("/dset", "DATASET", "dset.h5", 96L, 24L, "INTEGER", "[4, 6]", finalList)
+      .baselineValues("/dset", "DATASET", "dset.h5", 96L, 24L, "int", "[4, 6]", finalList)
       .go();
   }
 
@@ -121,9 +123,9 @@ public class TestHDF5Format extends ClusterTest {
             ")";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("col1", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
-      .add("col2", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
-      .add("col3", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
+      .add("col1", MinorType.FLOAT8, DataMode.OPTIONAL)
+      .add("col2", MinorType.FLOAT8, DataMode.OPTIONAL)
+      .add("col3", MinorType.FLOAT8, DataMode.OPTIONAL)
       .buildSchema();
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .addRow(1.1, 2.2, 3.3)
@@ -139,7 +141,7 @@ public class TestHDF5Format extends ClusterTest {
 
    RowSet results = client.queryBuilder().sql(sql).rowSet();
    TupleMetadata expectedSchema = new SchemaBuilder()
-     .add("path", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+     .add("path", MinorType.VARCHAR, DataMode.OPTIONAL)
      .buildSchema();
 
    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -159,7 +161,7 @@ public class TestHDF5Format extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("float_col", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.REQUIRED)
+      .add("float_col", TypeProtos.MinorType.FLOAT4, TypeProtos.DataMode.REQUIRED)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -493,7 +495,7 @@ public class TestHDF5Format extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("1D", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+      .add("1D", MinorType.INT, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -567,18 +569,17 @@ public class TestHDF5Format extends ClusterTest {
       "WHERE path='/nd/3D'\n" +
       ") AS t1";
 
-
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("col1", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("col2", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+      .add("col1", MinorType.INT, DataMode.OPTIONAL)
+      .add("col2", MinorType.INT, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(-2147483648, 1)
-      .addRow(2, 3)
-      .addRow(4, 5)
-      .addRow(6, 7)
+      .addRow(-2147483648, 5)
+      .addRow(1, 6)
+      .addRow(2, 7)
+      .addRow(3, 8)
       .build();
 
     new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
@@ -590,15 +591,15 @@ public class TestHDF5Format extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("int_col_0", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("int_col_1", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+      .add("int_col_0", MinorType.INT, DataMode.OPTIONAL)
+      .add("int_col_1", MinorType.INT, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(-2147483648, 1)
-      .addRow(2, 3)
-      .addRow(4, 5)
-      .addRow(6, 7)
+      .addRow(-2147483648, 5)
+      .addRow(1, 6)
+      .addRow(2, 7)
+      .addRow(3, 8)
       .build();
 
     new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
@@ -617,13 +618,13 @@ public class TestHDF5Format extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("col1", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("col2", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+      .add("col1", MinorType.INT, DataMode.OPTIONAL)
+      .add("col2", MinorType.INT, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(-2147483648, 1)
-      .addRow(2, 3)
+      .addRow(-2147483648, 5)
+      .addRow(1, 6)
       .build();
 
     new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
@@ -635,13 +636,13 @@ public class TestHDF5Format extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("int_col_0", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("int_col_1", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+      .add("int_col_0", MinorType.INT, DataMode.OPTIONAL)
+      .add("int_col_1", MinorType.INT, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(-2147483648, 1)
-      .addRow(2, 3)
+      .addRow(-2147483648, 5)
+      .addRow(1, 6)
       .build();
 
     new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
@@ -674,7 +675,7 @@ public class TestHDF5Format extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("field_2", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.REQUIRED)
+      .add("field_2", MinorType.FLOAT8, DataMode.REQUIRED)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -714,10 +715,12 @@ public class TestHDF5Format extends ClusterTest {
     String sql = "SELECT path, file_name\n" +
             "FROM dfs.`hdf5/browsing.h5` AS t1 WHERE t1.attributes.`important` = false";
 
+    //String sql = "SELECT path, attributes FROM dfs.`hdf5/browsing.h5`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
+
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("path", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-      .add("file_name", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("path", MinorType.VARCHAR, DataMode.OPTIONAL)
+      .add("file_name", MinorType.VARCHAR, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -735,12 +738,12 @@ public class TestHDF5Format extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("int_col_0", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("int_col_1", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("int_col_2", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("int_col_3", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("int_col_4", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("int_col_5", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+      .add("int_col_0", MinorType.INT, DataMode.OPTIONAL)
+      .add("int_col_1", MinorType.INT, DataMode.OPTIONAL)
+      .add("int_col_2", MinorType.INT, DataMode.OPTIONAL)
+      .add("int_col_3", MinorType.INT, DataMode.OPTIONAL)
+      .add("int_col_4", MinorType.INT, DataMode.OPTIONAL)
+      .add("int_col_5", MinorType.INT, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -761,11 +764,11 @@ public class TestHDF5Format extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("int_col_0", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("int_col_1", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("int_col_2", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("int_col_3", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("int_col_4", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+      .add("int_col_0", MinorType.INT, DataMode.OPTIONAL)
+      .add("int_col_1", MinorType.INT, DataMode.OPTIONAL)
+      .add("int_col_2", MinorType.INT, DataMode.OPTIONAL)
+      .add("int_col_3", MinorType.INT, DataMode.OPTIONAL)
+      .add("int_col_4", MinorType.INT, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -785,9 +788,9 @@ public class TestHDF5Format extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("field_1", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("field_2", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL)
-      .add("field_3", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("field_1", MinorType.INT, DataMode.OPTIONAL)
+      .add("field_2", MinorType.FLOAT8, DataMode.OPTIONAL)
+      .add("field_3", MinorType.VARCHAR, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -808,8 +811,8 @@ public class TestHDF5Format extends ClusterTest {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("field_1", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
-      .add("field_3", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("field_1", MinorType.INT, DataMode.OPTIONAL)
+      .add("field_3", MinorType.VARCHAR, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)

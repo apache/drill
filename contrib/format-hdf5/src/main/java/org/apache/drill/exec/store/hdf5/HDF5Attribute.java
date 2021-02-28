@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.hdf5;
 
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
 /**
@@ -27,11 +26,20 @@ public class HDF5Attribute {
   private final MinorType dataType;
   private final String key;
   private final Object value;
+  private final boolean isCompound;
 
-  public HDF5Attribute(TypeProtos.MinorType type, String key, Object value) {
+  public HDF5Attribute(MinorType type, String key, Object value) {
     this.dataType = type;
     this.key = key;
     this.value = value;
+    this.isCompound = false;
+  }
+
+  public HDF5Attribute(MinorType type, String key, Object value, boolean isCompound) {
+    this.dataType = type;
+    this.key = key;
+    this.value = value;
+    this.isCompound = isCompound;
   }
 
   public MinorType getDataType(){ return dataType; }
@@ -41,6 +49,8 @@ public class HDF5Attribute {
   public Object getValue() {
     return value;
   }
+
+  public boolean isCompound() { return isCompound; }
 
   @Override
   public String toString() {
