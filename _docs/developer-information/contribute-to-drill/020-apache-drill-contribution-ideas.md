@@ -25,7 +25,7 @@ This is a good place to begin if you are new to Drill. Feel free to pick
 issues from the Drill JIRA list. When you pick an issue, assign it to
 yourself, inform the team, and start fixing it.
 
-For any questions, seek help from the team through the [mailing list](http://drill.apache.org/community/#mailinglists).
+For any questions, seek help from the team through the [mailing list](http://drill.apache.org/community/#mailinglists).  Kindly note that the mailing lists are text only so please use attachments or pastebin services instead of inline images.
 
 [https://issues.apache.org/jira/browse/DRILL/?selectedTab=com.atlassian.jira
 .jira-projects-plugin:summary-panel](https://issues.apache.org/jira/browse/DRILL/?selectedTab=com.atlassian.jira
