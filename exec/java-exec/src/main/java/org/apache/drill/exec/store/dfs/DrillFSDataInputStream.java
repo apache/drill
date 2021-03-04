@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs;
 
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.shaded.guava.com.google.common.io.ByteStreams;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.PositionedReadable;
@@ -40,12 +41,12 @@ public class DrillFSDataInputStream extends FSDataInputStream {
   private final OpenFileTracker openFileTracker;
   private final OperatorStats operatorStats;
 
-  public DrillFSDataInputStream(FSDataInputStream in, OperatorStats operatorStats) throws IOException {
+  public DrillFSDataInputStream(FSDataInputStream in, OperatorStats operatorStats) {
     this(in, operatorStats, null);
   }
 
   public DrillFSDataInputStream(FSDataInputStream in, OperatorStats operatorStats,
-      OpenFileTracker openFileTracker) throws IOException {
+      OpenFileTracker openFileTracker) {
     super(new WrappedInputStream(in, operatorStats));
     underlyingIs = in;
     this.openFileTracker = openFileTracker;
@@ -213,7 +214,7 @@ public class DrillFSDataInputStream extends FSDataInputStream {
     public int read(byte[] b, int off, int len) throws IOException {
       operatorStats.startWait();
       try {
-        return is.read(b, off, len);
+        return readBytes(b, off, len);
       } finally {
         operatorStats.stopWait();
       }
@@ -223,10 +224,26 @@ public class DrillFSDataInputStream extends FSDataInputStream {
     public int read(byte[] b) throws IOException {
       operatorStats.startWait();
       try {
-        return is.read(b);
+        return readBytes(b, 0, b.length);
       } finally {
         operatorStats.stopWait();
       }
+    }
+
+    /**
+     * Reads up to {@code len} bytes of data from the input stream into an array of bytes.
+     * This method guarantees that regardless of the underlying stream implementation,
+     * the byte array will be populated with either {@code len} bytes or
+     * all available in stream bytes if they are less than {@code len}.
+     */
+    private int readBytes(byte[] b, int off, int len) throws IOException {
+      int read = ByteStreams.read(is, b, off, len);
+      if (read == 0 && len > 0) {
+        // ByteStreams.read() doesn't return -1 at EOF, but returns 0,
+        // if no bytes available in the stream
+        return -1;
+      }
+      return read;
     }
 
     @Override

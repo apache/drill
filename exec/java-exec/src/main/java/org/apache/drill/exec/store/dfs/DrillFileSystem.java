@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.dfs;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
@@ -788,51 +785,18 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
 
   /**
    * Returns an InputStream from a Hadoop path. If the data is compressed, this method will return a compressed
-   * InputStream depending on the codec.  Note that if the results of this method are sent to a third party parser
-   * that works with bytes or individual characters directly, you should use the openDecompressedInputStream method.
+   * InputStream depending on the codec.
    * @param path Input file path
    * @return InputStream of opened file path
    * @throws IOException If the file is unreachable, unavailable or otherwise unreadable
    */
   public InputStream openPossiblyCompressedStream(Path path) throws IOException {
-    CompressionCodec codec = codecFactory.getCodec(path); // infers from file ext.
+    CompressionCodec codec = getCodec(path); // infers from file ext.
+    InputStream inputStream = open(path);
     if (codec != null) {
-      return codec.createInputStream(open(path));
-    } else {
-      return open(path);
+      inputStream = codec.createInputStream(inputStream);
     }
-  }
-
-  /**
-   * Returns a normal, decompressed InputStream. Some parsers, particularly those
-   * that read raw bytes, generate errors when passed Hadoop ZipCompressed InputStreams.
-   * This utility function wraps some of these functions so that a format plugin can be guaranteed
-   * readable bytes.
-   * @param path The file being read
-   * @return Decompressed InputStream of the input file
-   * @throws IOException If the file is unreadable or uses an unknown compression codec
-   */
-  public InputStream openDecompressedInputStream(Path path) throws IOException {
-    CompressionCodec codec = getCodec(path);
-    if (codec == null) {
-      return open(path);
-    } else {
-      InputStream compressedStream = codec.createInputStream(open(path));
-      byte[] bytes = IOUtils.toByteArray(compressedStream);
-      AutoCloseables.closeSilently(compressedStream);
-      return new ByteArrayInputStream(bytes);
-    }
-  }
-
-  /**
-   * There are parsers which require an uncompressed input stream to read the data
-   * properly. This method helps identify whether the file being read is in fact compressed.
-   * @param path The file being read
-   * @return True if the file is compressed, false if not.
-   */
-  public boolean isCompressed(Path path) {
-    CompressionCodec codec = codecFactory.getCodec(path);
-    return codec != null;
+    return inputStream;
   }
 
   /**

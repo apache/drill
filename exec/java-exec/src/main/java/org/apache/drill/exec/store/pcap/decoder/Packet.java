@@ -467,7 +467,7 @@ public class Packet implements Comparable<Packet> {
     originalLength = getIntFileOrder(byteOrder, header, offset + PacketConstants.ORIGINAL_LENGTH_OFFSET);
     packetLength = getIntFileOrder(byteOrder, header, offset + PacketConstants.ACTUAL_LENGTH_OFFSET);
     Preconditions.checkState(originalLength <= maxLength,
-        "Packet too long (%d bytes)", originalLength);
+        "Packet too long (%s bytes)", originalLength);
   }
 
   private long getTimestampMicro(final byte[] header, final boolean byteOrder, final int offset) {
