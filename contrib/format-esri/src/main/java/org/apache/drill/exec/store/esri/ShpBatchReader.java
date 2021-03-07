@@ -125,7 +125,7 @@ public class ShpBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private void openFile(FileSchemaNegotiator negotiator) {
     try {
-      fileReaderShp = negotiator.fileSystem().open(split.getPath());
+      fileReaderShp = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
       byte[] shpBuf = new byte[fileReaderShp.available()];
       fileReaderShp.read(shpBuf);
 
@@ -135,10 +135,10 @@ public class ShpBatchReader implements ManagedReader<FileSchemaNegotiator> {
       ShapefileReader shpReader = new ShapefileReader();
       geomCursor = shpReader.getGeometryCursor(byteBuffer);
 
-      fileReaderDbf = negotiator.fileSystem().open(hadoopDbf);
+      fileReaderDbf = negotiator.fileSystem().openPossiblyCompressedStream(hadoopDbf);
       dbfReader = new DbfReader(fileReaderDbf);
 
-      fileReaderPrj = negotiator.fileSystem().open(hadoopPrj);
+      fileReaderPrj = negotiator.fileSystem().openPossiblyCompressedStream(hadoopPrj);
       byte[] prjBuf = new byte[fileReaderPrj.available()];
       fileReaderPrj.read(prjBuf);
       fileReaderPrj.close();
