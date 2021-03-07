@@ -369,8 +369,12 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
 
     @Override
     public void load(String[] record) {
-      int value = Integer.parseInt(record[columnIndex]);
-      columnWriter.setInt(value);
+      if (record[columnIndex] != null) {
+        int value = Integer.parseInt(record[columnIndex]);
+        columnWriter.setInt(value);
+      } else {
+        columnWriter.setNull();
+      }
     }
   }
 
@@ -385,8 +389,12 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
 
     @Override
     public void load(String[] record) {
-      long value = Long.parseLong(record[columnIndex]) * 1000;
-      columnWriter.setTimestamp(Instant.ofEpochMilli(value));
+      if (record[columnIndex] != null) {
+        long value = Long.parseLong(record[columnIndex]) * 1000;
+        columnWriter.setTimestamp(Instant.ofEpochMilli(value));
+      } else {
+        columnWriter.setNull();
+      }
     }
   }
 }
