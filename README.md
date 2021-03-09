@@ -10,7 +10,7 @@ Apache Drill is a distributed MPP query layer that supports SQL and alternative 
 
 ## Developers
 
-Please read [Environment.md](docs/dev/Environment.md) for setting up and running Apache Drill. For complete developer documentation see [DevDocs.md](docs/dev/DevDocs.md)
+Please read [Environment.md](docs/dev/Environment.md) for setting up and running Apache Drill. For complete developer documentation see [DevDocs.md](docs/dev/DevDocs.md).
 
 ## More Information
 Please see the [Apache Drill Website](http://drill.apache.org/) or the [Apache Drill Documentation](http://drill.apache.org/docs/) for more information including:
@@ -25,8 +25,7 @@ Please see the [Apache Drill Website](http://drill.apache.org/) or the [Apache D
 ## Join the community!
 Apache Drill is an Apache Foundation project and is seeking all types of users and contributions.
 Please say hello on the [Apache Drill mailing list](http://drill.apache.org/mailinglists/).You can also join our [Google Hangouts](http://drill.apache.org/community-resources/)
-or [join](https://bit.ly/2VM0XS8) our [Slack Channel](https://join.slack.com/t/apache-drill/shared_invite/enQtNTQ4MjM1MDA3MzQ2LTJlYmUxMTRkMmUwYmQ2NTllYmFmMjU4MDk0NjYwZjBmYjg0MDZmOTE2ZDg0ZjBlYmI3Yjc4Y2I2NTQyNGVlZTc) if you need help with using or developing Apache Drill.
-(More information can be found on [Apache Drill website](http://drill.apache.org/)).
+or [join](https://bit.ly/2VM0XS8) our [Slack Channel](https://join.slack.com/t/apache-drill/shared_invite/enQtNTQ4MjM1MDA3MzQ2LTJlYmUxMTRkMmUwYmQ2NTllYmFmMjU4MDk0NjYwZjBmYjg0MDZmOTE2ZDg0ZjBlYmI3Yjc4Y2I2NTQyNGVlZTc) if you need help with using or developing Apache Drill (more information can be found on [Apache Drill website](http://drill.apache.org/)).
 
 ## Export Control
 This distribution includes cryptographic software. The country in which you currently reside may have restrictions on the import, possession, use, and/or re-export to another country, of encryption software. BEFORE using any encryption software, please check your country's laws, regulations and policies concerning the import, possession, or use, and re-export of encryption software, to see if this is permitted. See <http://www.wassenaar.org/> for more information.  
