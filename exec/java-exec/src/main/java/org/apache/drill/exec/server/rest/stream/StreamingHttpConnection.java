@@ -104,11 +104,9 @@ public class StreamingHttpConnection extends BaseWebUserConnection {
   public void sendData(RpcOutcomeListener<Ack> listener, QueryDataPackage data) {
     VectorContainer batch = data.batch();
     try {
-      if (batchCount == 0) {
-        batchHolder = new BatchHolder(batch);
-        reader = new PushResultSetReaderImpl(batchHolder);
-        startSignal.await();
-      }
+      batchHolder = new BatchHolder(batch);
+      reader = new PushResultSetReaderImpl(batchHolder);
+      startSignal.await();
       batchHolder.newBatch();
       RowSetReader batchReader = reader.start();
       emitBatch(batchReader);
