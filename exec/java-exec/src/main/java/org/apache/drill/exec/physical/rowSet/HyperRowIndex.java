@@ -31,7 +31,7 @@ public class HyperRowIndex extends ReaderIndex {
   private final SelectionVector4 sv4;
 
   public HyperRowIndex(SelectionVector4 sv4) {
-    super(sv4.getCount());
+    super(sv4::getCount);
     this.sv4 = sv4;
   }
 

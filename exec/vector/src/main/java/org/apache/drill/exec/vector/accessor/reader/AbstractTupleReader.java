@@ -94,6 +94,7 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
     for (AbstractObjectReader reader : readers) {
       reader.events().bindBuffer();
     }
+    nullStateReader.bindBuffer();
   }
 
   @Override

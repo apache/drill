@@ -42,6 +42,10 @@ public class NullStateReaders {
 
     @Override
     public boolean isNull() { return false; }
+
+    @Override
+    public void bindBuffer() {
+    }
   }
 
   /**
@@ -76,6 +80,11 @@ public class NullStateReaders {
     public boolean isNull() {
       return isSetReader.getInt() == 0;
     }
+
+    @Override
+    public void bindBuffer() {
+      isSetReader.bindBuffer();
+    }
   }
 
   /**
@@ -109,6 +118,11 @@ public class NullStateReaders {
     public boolean isNull() {
       return isSetReader.getInt() == 0;
     }
+
+    @Override
+    public void bindBuffer() {
+      isSetReader.bindBuffer();
+    }
   }
 
   /**
@@ -138,6 +152,11 @@ public class NullStateReaders {
     public boolean isNull() {
       return unionNullState.isNull() || memberNullState.isNull();
     }
+
+    @Override
+    public void bindBuffer() {
+      memberNullState.bindBuffer();
+    }
   }
 
   /**
@@ -150,8 +169,8 @@ public class NullStateReaders {
 
   protected static class ComplexMemberStateReader implements NullStateReader {
 
-    private UInt1ColumnReader typeReader;
-    private MinorType type;
+    private final UInt1ColumnReader typeReader;
+    private final MinorType type;
 
     public ComplexMemberStateReader(UInt1ColumnReader typeReader, MinorType type) {
       this.typeReader = typeReader;
@@ -164,6 +183,10 @@ public class NullStateReaders {
     @Override
     public boolean isNull() {
       return typeReader.getInt() != type.getNumber();
+    }
+
+    @Override
+    public void bindBuffer() {
     }
   }
 
@@ -189,6 +212,11 @@ public class NullStateReaders {
     public boolean isNull() {
       return typeReader.getInt() == UnionVector.NULL_MARKER;
     }
+
+    @Override
+    public void bindBuffer() {
+      typeReader.bindBuffer();
+    }
   }
 
   protected static class AlwaysNullStateReader implements NullStateReader {
@@ -200,6 +228,10 @@ public class NullStateReaders {
     @Override
     public boolean isNull() {
       return true;
+    }
+
+    @Override
+    public void bindBuffer() {
     }
   }
 }
