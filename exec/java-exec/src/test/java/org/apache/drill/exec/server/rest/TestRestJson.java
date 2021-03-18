@@ -118,6 +118,16 @@ public class TestRestJson extends ClusterTest {
   }
 
   @Test
+  public void testGroupby() throws IOException {
+    File outFile = new File(dirTestWatcher.getTmpDir(), "group.json");
+    String sql = "SELECT position_title, COUNT(*) as pc FROM cp.`employee.json` GROUP BY position_title";
+    QueryWrapper query = new QueryWrapper(sql, QueryType.SQL.name(),
+      null, null, null, null);
+    runQuery(query, outFile);
+    verifier.verifyFileWithResource(outFile, "group.json");
+  }
+
+  @Test
   public void testNoLimit() throws IOException {
     File outFile = new File(dirTestWatcher.getTmpDir(), "cust20.json");
     String sql = "SELECT * FROM cp.`employee.json` LIMIT 20";

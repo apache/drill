@@ -49,4 +49,5 @@ import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 public interface NullStateReader {
   void bindIndex(ColumnReaderIndex rowIndex);
   boolean isNull();
+  void bindBuffer();
 }

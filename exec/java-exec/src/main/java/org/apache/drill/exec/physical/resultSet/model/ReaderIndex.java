@@ -19,6 +19,8 @@ package org.apache.drill.exec.physical.resultSet.model;
 
 import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 
+import java.util.function.Supplier;
+
 /**
  * Row set index base class used when indexing rows within a row
  * set for a row set reader. Keeps track of the current position,
@@ -29,14 +31,14 @@ import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 public abstract class ReaderIndex implements ColumnReaderIndex {
 
   protected int position = -1;
-  protected final int rowCount;
+  protected final Supplier<Integer> rowCount;
 
-  public ReaderIndex(int rowCount) {
+  public ReaderIndex(Supplier<Integer> rowCount) {
     this.rowCount = rowCount;
   }
 
   public void set(int index) {
-    assert position >= -1 && position <= rowCount;
+    assert position >= -1 && position <= rowCount.get();
     position = index;
   }
 
@@ -44,19 +46,19 @@ public abstract class ReaderIndex implements ColumnReaderIndex {
   public int logicalIndex() { return position; }
 
   @Override
-  public int size() { return rowCount; }
+  public int size() { return rowCount.get(); }
 
   @Override
   public boolean next() {
-    if (++position < rowCount) {
+    if (++position < rowCount.get()) {
       return true;
     }
-    position = rowCount;
+    position = rowCount.get();
     return false;
   }
 
   @Override
   public boolean hasNext() {
-    return position + 1 < rowCount;
+    return position + 1 < rowCount.get();
   }
 }

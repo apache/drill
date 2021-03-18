@@ -82,6 +82,7 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
     for (AbstractObjectReader reader : readers) {
       reader.events().bindIndex(index);
     }
+    nullStateReader.bindIndex(index);
   }
 
   @Override
@@ -94,6 +95,7 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
     for (AbstractObjectReader reader : readers) {
       reader.events().bindBuffer();
     }
+    nullStateReader.bindBuffer();
   }
 
   @Override
