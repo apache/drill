@@ -145,6 +145,7 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
     unionAccessor.bind(index);
     typeAccessor.bind(index);
     typeReader.bindIndex(index);
+    nullStateReader.bindIndex(index);
     for (AbstractObjectReader variant : variants) {
       if (variant != null) {
         variant.events().bindIndex(index);
