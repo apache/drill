@@ -129,7 +129,7 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
     }
   }
 
-  public static AbstractObjectReader build(ColumnMetadata schema, VectorAccessor va, AbstractObjectReader variants[]) {
+  public static AbstractObjectReader build(ColumnMetadata schema, VectorAccessor va, AbstractObjectReader[] variants) {
     return new UnionObjectReader(
         new UnionReaderImpl(schema, va, variants));
   }
@@ -145,9 +145,10 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
     unionAccessor.bind(index);
     typeAccessor.bind(index);
     typeReader.bindIndex(index);
-    for (int i = 0; i < variants.length; i++) {
-      if (variants[i] != null) {
-        variants[i].events().bindIndex(index);
+    nullStateReader.bindIndex(index);
+    for (AbstractObjectReader variant : variants) {
+      if (variant != null) {
+        variant.events().bindIndex(index);
       }
     }
   }
@@ -190,6 +191,7 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
         variantReader.events().bindBuffer();
       }
     }
+    nullStateReader.bindBuffer();
   }
 
   @Override

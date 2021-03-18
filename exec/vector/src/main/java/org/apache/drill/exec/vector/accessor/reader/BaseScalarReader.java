@@ -169,6 +169,7 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
   @Override
   public void bindBuffer() {
     bufferAccessor.rebind();
+    nullStateReader.bindBuffer();
   }
 
   public final DrillBuf buffer() {

@@ -34,7 +34,7 @@ public class IndirectRowIndex extends ReaderIndex {
   private final SelectionVector2 sv2;
 
   public IndirectRowIndex(SelectionVector2 sv2) {
-    super(sv2.getCount());
+    super(sv2::getCount);
     this.sv2 = sv2;
   }
 

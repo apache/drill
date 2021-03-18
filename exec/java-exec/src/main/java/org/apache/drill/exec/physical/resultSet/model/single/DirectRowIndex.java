@@ -30,7 +30,7 @@ import org.apache.drill.exec.record.VectorContainer;
 public class DirectRowIndex extends ReaderIndex {
 
   public DirectRowIndex(VectorContainer container) {
-    super(container.getRecordCount());
+    super(container::getRecordCount);
   }
 
   @Override

@@ -373,6 +373,7 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
   @Override
   public void bindBuffer() {
     elementReader.events().bindBuffer();
+    nullStateReader.bindBuffer();
   }
 
   @Override
