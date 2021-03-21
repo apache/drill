@@ -24,6 +24,7 @@ import io.jhdf.api.Dataset;
 import io.jhdf.api.Group;
 import io.jhdf.api.Node;
 import io.jhdf.exceptions.HdfException;
+import io.jhdf.links.SoftLink;
 import io.jhdf.object.datatype.CompoundDataType;
 import io.jhdf.object.datatype.CompoundDataType.CompoundDataMember;
 import org.apache.drill.common.AutoCloseables;
@@ -56,6 +57,7 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 
 import org.apache.hadoop.mapred.FileSplit;
+import org.jvnet.libpam.impl.CLibrary.group;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +80,8 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   private static final String PATH_COLUMN_NAME = "path";
 
   private static final String DATA_TYPE_COLUMN_NAME = "data_type";
+
+  private static final String IS_LINK_COLUMN_NAME = "is_link";
 
   private static final String FILE_NAME_COLUMN_NAME = "file_name";
 
@@ -107,6 +111,8 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private static final int PREVIEW_ROW_LIMIT = 20;
 
+  private static final int PREVIEW_COL_LIMIT = 100;
+
   private static final int MAX_DATASET_SIZE = ValueVector.MAX_BUFFER_SIZE;
 
   private final HDF5ReaderConfig readerConfig;
@@ -134,6 +140,8 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   private ScalarWriter dataTypeWriter;
 
   private ScalarWriter fileNameWriter;
+
+  private ScalarWriter linkWriter;
 
   private ScalarWriter dataSizeWriter;
 
@@ -192,13 +200,14 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
 
       // Schema for Metadata query
       SchemaBuilder builder = new SchemaBuilder()
-        .addNullable(PATH_COLUMN_NAME, TypeProtos.MinorType.VARCHAR)
-        .addNullable(DATA_TYPE_COLUMN_NAME, TypeProtos.MinorType.VARCHAR)
-        .addNullable(FILE_NAME_COLUMN_NAME, TypeProtos.MinorType.VARCHAR)
-        .addNullable(DATA_SIZE_COLUMN_NAME,  TypeProtos.MinorType.BIGINT )
-        .addNullable(ELEMENT_COUNT_NAME,  TypeProtos.MinorType.BIGINT)
-        .addNullable(DATASET_DATA_TYPE_NAME, TypeProtos.MinorType.VARCHAR)
-        .addNullable(DIMENSIONS_FIELD_NAME, TypeProtos.MinorType.VARCHAR);
+        .addNullable(PATH_COLUMN_NAME, MinorType.VARCHAR)
+        .addNullable(DATA_TYPE_COLUMN_NAME, MinorType.VARCHAR)
+        .addNullable(FILE_NAME_COLUMN_NAME, MinorType.VARCHAR)
+        .addNullable(DATA_SIZE_COLUMN_NAME, MinorType.BIGINT)
+        .addNullable(IS_LINK_COLUMN_NAME, MinorType.BIT)
+        .addNullable(ELEMENT_COUNT_NAME, MinorType.BIGINT)
+        .addNullable(DATASET_DATA_TYPE_NAME, MinorType.VARCHAR)
+        .addNullable(DIMENSIONS_FIELD_NAME, MinorType.VARCHAR);
 
       negotiator.tableSchema(builder.buildSchema(), false);
 
@@ -231,6 +240,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
       dataTypeWriter = rowWriter.scalar(DATA_TYPE_COLUMN_NAME);
       fileNameWriter = rowWriter.scalar(FILE_NAME_COLUMN_NAME);
       dataSizeWriter = rowWriter.scalar(DATA_SIZE_COLUMN_NAME);
+      linkWriter = rowWriter.scalar(IS_LINK_COLUMN_NAME);
       elementCountWriter = rowWriter.scalar(ELEMENT_COUNT_NAME);
       datasetTypeWriter = rowWriter.scalar(DATASET_DATA_TYPE_NAME);
       dimensionsWriter = rowWriter.scalar(DIMENSIONS_FIELD_NAME);
@@ -408,6 +418,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     pathWriter.setString(metadataRow.getPath());
     dataTypeWriter.setString(metadataRow.getDataType());
     fileNameWriter.setString(fileName);
+    linkWriter.setBoolean(metadataRow.isLink());
 
     //Write attributes if present
     if (metadataRow.getAttributes().size() > 0) {
@@ -422,7 +433,10 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
       datasetTypeWriter.setString(dataset.getJavaType().getName());
       dimensionsWriter.setString(Arrays.toString(dataset.getDimensions()));
 
-      projectDataset(rowWriter, metadataRow.getPath());
+      // Do not project links
+      if (! metadataRow.isLink()) {
+        projectDataset(rowWriter, metadataRow.getPath());
+      }
     }
     rowWriter.save();
   }
@@ -448,26 +462,33 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
     for (Node node : group) {
       HDF5DrillMetadata metadataRow = new HDF5DrillMetadata();
-      metadataRow.setPath(node.getPath());
-      metadataRow.setDataType(node.getType().name());
 
-      switch (node.getType()) {
-        case DATASET:
-          attribs = getAttributes(node.getPath());
-          metadataRow.setAttributes(attribs);
-          metadata.add(metadataRow);
-          break;
-        case GROUP:
-          attribs = getAttributes(node.getPath());
-          metadataRow.setAttributes(attribs);
-          metadata.add(metadataRow);
-          if (!node.isLink()) {
-            // Links don't have metadata
-            getFileMetadata((Group) node, metadata);
-          }
-          break;
-        default:
-          logger.warn("Unknown data type: {}", node.getType());
+      if (node.isLink()) {
+        SoftLink link = (SoftLink) node;
+        metadataRow.setPath(link.getTargetPath());
+        metadataRow.setLink(true);
+      } else {
+        metadataRow.setPath(node.getPath());
+        metadataRow.setDataType(node.getType().name());
+        metadataRow.setLink(false);
+        switch (node.getType()) {
+          case DATASET:
+            attribs = getAttributes(node.getPath());
+            metadataRow.setAttributes(attribs);
+            metadata.add(metadataRow);
+            break;
+          case GROUP:
+            attribs = getAttributes(node.getPath());
+            metadataRow.setAttributes(attribs);
+            metadata.add(metadataRow);
+            if (!node.isLink()) {
+              // Links don't have metadata
+              getFileMetadata((Group) node, metadata);
+            }
+            break;
+          default:
+            logger.warn("Unknown data type: {}", node.getType());
+        }
       }
     }
     return metadata;
@@ -548,6 +569,12 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
         return;
       }
       assert currentDataType != null;
+
+      // Skip null datasets
+      if (data == null) {
+        return;
+      }
+
       switch (currentDataType) {
         case GENERIC_OBJECT:
           logger.warn("Couldn't read {}", datapath );
@@ -570,7 +597,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
           break;
         case TINYINT:
           byte[] byteList = (byte[])data;
-          writeByteColumn(rowWriter, fieldName, byteList);
+          writeByteListColumn(rowWriter, fieldName, byteList);
           break;
         case FLOAT4:
           float[] tempFloatList = (float[])data;
@@ -725,7 +752,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
    * @param name the name of the outer list
    * @param list the list of data
    */
-  private void writeByteColumn(TupleWriter rowWriter, String name, byte[] list) {
+  private void writeByteListColumn(TupleWriter rowWriter, String name, byte[] list) {
     int index = rowWriter.tupleSchema().index(name);
     if (index == -1) {
       ColumnMetadata colSchema = MetadataUtils.newScalar(name, MinorType.TINYINT, TypeProtos.DataMode.REPEATED);
@@ -932,9 +959,10 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     ArrayWriter innerWriter = listWriter.array();
     // The strings within the inner array
     ScalarWriter floatWriter = innerWriter.scalar();
-    int maxElements = Math.min(rows, PREVIEW_ROW_LIMIT);
+    int maxElements = Math.min(colData.length, PREVIEW_ROW_LIMIT);
+    int maxCols = Math.min(colData[0].length, PREVIEW_COL_LIMIT);
     for (int i = 0; i < maxElements; i++) {
-      for (int k = 0; k < cols; k++) {
+      for (int k = 0; k < maxCols; k++) {
         floatWriter.setDouble(colData[i][k]);
       }
       listWriter.save();
@@ -979,9 +1007,10 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     // The strings within the inner array
     ScalarWriter floatWriter = innerWriter.scalar();
 
-    int maxElements = Math.min(rows, PREVIEW_ROW_LIMIT);
+    int maxElements = Math.min(colData.length, PREVIEW_ROW_LIMIT);
+    int maxCols = Math.min(colData[0].length, PREVIEW_COL_LIMIT);
     for (int i = 0; i < maxElements; i++) {
-      for (int k = 0; k < cols; k++) {
+      for (int k = 0; k < maxCols; k++) {
         floatWriter.setDouble(colData[i][k]);
       }
       listWriter.save();
@@ -1026,9 +1055,10 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     // The strings within the inner array
     ScalarWriter bigintWriter = innerWriter.scalar();
 
-    int maxElements = Math.min(rows, PREVIEW_ROW_LIMIT);
+    int maxElements = Math.min(colData.length, PREVIEW_ROW_LIMIT);
+    int maxCols = Math.min(colData[0].length, PREVIEW_COL_LIMIT);
     for (int i = 0; i < maxElements; i++) {
-      for (int k = 0; k < cols; k++) {
+      for (int k = 0; k < maxCols; k++) {
         bigintWriter.setLong(colData[i][k]);
       }
       listWriter.save();

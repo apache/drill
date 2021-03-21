@@ -86,8 +86,8 @@ public class TestHDF5Format extends ClusterTest {
     testBuilder()
       .sqlQuery("SELECT * FROM dfs.`hdf5/dset.h5`")
       .unOrdered()
-      .baselineColumns("path", "data_type", "file_name", "data_size", "element_count", "dataset_data_type", "dimensions", "int_data")
-      .baselineValues("/dset", "DATASET", "dset.h5", 96L, 24L, "int", "[4, 6]", finalList)
+      .baselineColumns("path", "data_type", "file_name", "data_size", "element_count", "dataset_data_type", "dimensions", "int_data", "is_link")
+      .baselineValues("/dset", "DATASET", "dset.h5", 96L, 24L, "int", "[4, 6]", finalList, false)
       .go();
   }
 
@@ -412,7 +412,6 @@ public class TestHDF5Format extends ClusterTest {
 
     new RowSetComparison(expected).unorderedVerifyAndClearAll(results);
   }
-
 
   @Test
   public void testUnicodeScalarQuery() throws Exception {
