@@ -481,10 +481,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
             attribs = getAttributes(node.getPath());
             metadataRow.setAttributes(attribs);
             metadata.add(metadataRow);
-            if (!node.isLink()) {
-              // Links don't have metadata
-              getFileMetadata((Group) node, metadata);
-            }
+            getFileMetadata((Group) node, metadata);
             break;
           default:
             logger.warn("Unknown data type: {}", node.getType());
