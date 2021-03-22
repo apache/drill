@@ -28,6 +28,8 @@ public class HDF5DrillMetadata {
 
   private Map<String, HDF5Attribute> attributes;
 
+  private boolean isLink;
+
   public HDF5DrillMetadata() {
     attributes = new HashMap<>();
   }
@@ -57,5 +59,13 @@ public class HDF5DrillMetadata {
 
   public void setAttributes(Map<String, HDF5Attribute> attribs) {
     this.attributes = attribs;
+  }
+
+  public boolean isLink() {
+    return isLink;
+  }
+
+  public void setLink(boolean linkStatus) {
+    isLink = linkStatus;
   }
 }
