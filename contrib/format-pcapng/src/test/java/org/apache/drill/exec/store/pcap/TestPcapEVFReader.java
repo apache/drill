@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.pcap;
 
 import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.exec.store.plugin.PcapFormatConfig;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
@@ -34,12 +35,12 @@ public class TestPcapEVFReader extends ClusterTest {
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
-    cluster.defineFormat("cp", "sample", new PcapFormatConfig(null, null));
+    cluster.defineFormat("cp", "sample", new PcapFormatConfig(null, true, false));
   }
 
   @Test
   public void testStarQuery() throws Exception {
-    String sql = "SELECT * FROM cp.`store/pcap/synscan.pcap` LIMIT 1";
+    String sql = "SELECT * FROM cp.`pcap/synscan.pcap` LIMIT 1";
 
     testBuilder()
       .sqlQuery(sql)
@@ -58,7 +59,7 @@ public class TestPcapEVFReader extends ClusterTest {
       "packet_length, tcp_session, " +
       "tcp_sequence, tcp_ack, tcp_flags," +
       " tcp_parsed_flags, tcp_flags_ns, tcp_flags_cwr, tcp_flags_ece, tcp_flags_ece_ecn_capable, tcp_flags_ece_congestion_experienced, tcp_flags_urg, tcp_flags_ack, tcp_flags_psh, tcp_flags_rst, tcp_flags_syn," +
-      " tcp_flags_fin, data, is_corrupt FROM cp.`store/pcap/synscan.pcap` LIMIT 1";
+      " tcp_flags_fin, data, is_corrupt FROM cp.`pcap/synscan.pcap` LIMIT 1";
 
     testBuilder()
       .sqlQuery(sql)
@@ -72,7 +73,7 @@ public class TestPcapEVFReader extends ClusterTest {
 
   @Test
   public void testAggregateQuery() throws Exception {
-    String sql = "SELECT is_corrupt, COUNT(*) as packet_count FROM cp.`store/pcap/testv1.pcap` GROUP BY is_corrupt ORDER BY packet_count DESC";
+    String sql = "SELECT is_corrupt, COUNT(*) as packet_count FROM cp.`pcap/testv1.pcap` GROUP BY is_corrupt ORDER BY packet_count DESC";
 
     testBuilder()
       .sqlQuery(sql)
@@ -85,7 +86,7 @@ public class TestPcapEVFReader extends ClusterTest {
 
   @Test
   public void testArpPcapFile() throws Exception {
-    String sql = "SELECT src_ip, dst_ip FROM cp.`store/pcap/arpWithNullIP.pcap` WHERE src_port=1";
+    String sql = "SELECT src_ip, dst_ip FROM cp.`pcap/arpWithNullIP.pcap` WHERE src_port=1";
     testBuilder()
       .sqlQuery(sql)
       .ordered()

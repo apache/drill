@@ -103,7 +103,7 @@ public class ColumnsScanFramework extends FileScanFramework {
   }
 
   @Override
-  protected SchemaNegotiatorImpl newNegotiator() {
+  public SchemaNegotiatorImpl newNegotiator() {
     return new ColumnsSchemaNegotiatorImpl(this);
   }
 

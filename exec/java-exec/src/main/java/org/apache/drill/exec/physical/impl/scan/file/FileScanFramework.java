@@ -168,7 +168,7 @@ public class FileScanFramework extends ManagedScanFramework {
    */
   public abstract static class FileReaderFactory implements ReaderFactory {
 
-    private FileScanFramework fileFramework;
+    protected FileScanFramework fileFramework;
 
     @Override
     public void bind(ManagedScanFramework baseFramework) {
@@ -192,7 +192,7 @@ public class FileScanFramework extends ManagedScanFramework {
 
   private ImplicitColumnManager metadataManager;
   private DrillFileSystem dfs;
-  private final List<FileSplit> spilts = new ArrayList<>();
+  private final List<FileSplit> splits = new ArrayList<>();
   private Iterator<FileSplit> splitIter;
   private FileSplit currentSplit;
 
@@ -230,9 +230,9 @@ public class FileScanFramework extends ManagedScanFramework {
       Path path = dfs.makeQualified(work.getPath());
       paths.add(path);
       FileSplit split = new FileSplit(path, work.getStart(), work.getLength(), new String[]{""});
-      spilts.add(split);
+      splits.add(split);
     }
-    splitIter = spilts.iterator();
+    splitIter = splits.iterator();
 
     // Create the metadata manager to handle file metadata columns
     // (so-called implicit columns and partition columns.)
@@ -258,7 +258,7 @@ public class FileScanFramework extends ManagedScanFramework {
   }
 
   @Override
-  protected SchemaNegotiatorImpl newNegotiator() {
+  public SchemaNegotiatorImpl newNegotiator() {
     return new FileSchemaNegotiatorImpl(this);
   }
 

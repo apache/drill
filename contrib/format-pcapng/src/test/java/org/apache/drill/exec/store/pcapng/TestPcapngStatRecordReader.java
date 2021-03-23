@@ -27,6 +27,7 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.plugin.PcapFormatConfig;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
@@ -41,7 +42,7 @@ public class TestPcapngStatRecordReader extends ClusterTest {
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
-    cluster.defineFormat("dfs", "pcapng", new PcapngFormatConfig(null, true));
+    cluster.defineFormat("dfs", "pcapng", new PcapFormatConfig(null, true, false));
     dirTestWatcher.copyResourceToRoot(Paths.get("pcapng/"));
   }
 

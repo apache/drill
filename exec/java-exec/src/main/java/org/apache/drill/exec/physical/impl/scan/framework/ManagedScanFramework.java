@@ -197,7 +197,7 @@ public class ManagedScanFramework implements ScanOperatorEvents {
     return reader == null ? null : new ShimBatchReader(this, reader);
   }
 
-  protected SchemaNegotiatorImpl newNegotiator() {
+  public SchemaNegotiatorImpl newNegotiator() {
     return new SchemaNegotiatorImpl(this);
   }
 

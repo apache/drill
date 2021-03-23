@@ -57,7 +57,7 @@ public class TestPcapDecoder extends BaseTestQuery {
 
   @Test
   public void testBasics() throws IOException {
-    InputStream in = Resources.getResource("store/pcap/tcp-2.pcap").openStream();
+    InputStream in = Resources.getResource("pcap/tcp-2.pcap").openStream();
     PacketDecoder pd = new PacketDecoder(in);
     Packet p = pd.packet();
     int offset = 0;
@@ -226,7 +226,7 @@ public class TestPcapDecoder extends BaseTestQuery {
         // might be faster to keep this open and rewind each time, but
         // that is hard to do with a resource, especially if it comes
         // from the class path instead of files.
-        try (InputStream in = Resources.getResource("store/pcap/tcp-2.pcap").openStream()) {
+        try (InputStream in = Resources.getResource("pcap/tcp-2.pcap").openStream()) {
           ConcatPcap.copy(first, in, out);
         }
         first = false;

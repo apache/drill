@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.pcap;
 
+import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
@@ -31,42 +32,42 @@ import static org.junit.Assert.assertEquals;
 public class TestPcapRecordReader extends BaseTestQuery {
   @BeforeClass
   public static void setupTestFiles() {
-    dirTestWatcher.copyResourceToRoot(Paths.get("store", "pcap"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("pcap"));
   }
 
   @Test
   public void testStarQuery() throws Exception {
-    runSQLVerifyCount("select * from dfs.`store/pcap/tcp-1.pcap`", 16);
-    runSQLVerifyCount("select distinct DST_IP from dfs.`store/pcap/tcp-1.pcap`", 1);
-    runSQLVerifyCount("select distinct DsT_IP from dfs.`store/pcap/tcp-1.pcap`", 1);
-    runSQLVerifyCount("select distinct dst_ip from dfs.`store/pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select * from dfs.`pcap/tcp-1.pcap`", 16);
+    runSQLVerifyCount("select distinct DST_IP from dfs.`pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select distinct DsT_IP from dfs.`pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select distinct dst_ip from dfs.`pcap/tcp-1.pcap`", 1);
   }
 
   @Test
   public void testCorruptPCAPQuery() throws Exception {
-    runSQLVerifyCount("select * from dfs.`store/pcap/testv1.pcap`", 7000);
+    runSQLVerifyCount("select * from dfs.`pcap/testv1.pcap`", 7000);
   }
 
   @Test
   public void testTrueCorruptPCAPQuery() throws Exception {
-    runSQLVerifyCount("select * from dfs.`store/pcap/testv1.pcap` WHERE is_corrupt=true", 16);
+    runSQLVerifyCount("select * from dfs.`pcap/testv1.pcap` WHERE is_corrupt=true", 16);
   }
 
   @Test
   public void testNotCorruptPCAPQuery() throws Exception {
-    runSQLVerifyCount("select * from dfs.`store/pcap/testv1.pcap` WHERE is_corrupt=false", 6984);
+    runSQLVerifyCount("select * from dfs.`pcap/testv1.pcap` WHERE is_corrupt=false", 6984);
   }
 
   @Test
   public void testCountQuery() throws Exception {
-    runSQLVerifyCount("select count(*) from dfs.`store/pcap/tcp-1.pcap`", 1);
-    runSQLVerifyCount("select count(*) from dfs.`store/pcap/tcp-2.pcap`", 1);
+    runSQLVerifyCount("select count(*) from dfs.`pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select count(*) from dfs.`pcap/tcp-2.pcap`", 1);
   }
 
   @Test
   public void testDistinctQuery() throws Exception {
     // omit data field from distinct count for now
-    runSQLVerifyCount("select distinct type, network, `timestamp`, src_ip, dst_ip, src_port, dst_port, src_mac_address, dst_mac_address, tcp_session, packet_length from dfs.`store/pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select distinct type, network, `timestamp`, src_ip, dst_ip, src_port, dst_port, src_mac_address, dst_mac_address, tcp_session, packet_length from dfs.`pcap/tcp-1.pcap`", 1);
   }
 
   @Test
@@ -86,7 +87,17 @@ public class TestPcapRecordReader extends BaseTestQuery {
 
   @Test
   public void checkFlags() throws Exception {
-    runSQLVerifyCount("select tcp_session, tcp_ack, tcp_flags from dfs.`store/pcap/synscan.pcap`", 2011);
+    runSQLVerifyCount("select tcp_session, tcp_ack, tcp_flags from dfs.`pcap/synscan.pcap`", 2011);
+  }
+
+  @Test
+  public void testSerDe() throws Exception {
+    String path = "pcap/tcp-1.pcap";
+    dirTestWatcher.copyResourceToRoot(Paths.get(path));
+    testPhysicalPlanSubmission(
+            String.format("select * from dfs.`%s`", path),
+            String.format("select * from table(dfs.`%s`(type=>'pcap'))", path)
+    );
   }
 
   private void runSQLVerifyCount(String sql, int expectedRowCount) throws Exception {
@@ -105,5 +116,11 @@ public class TestPcapRecordReader extends BaseTestQuery {
       result.release();
     }
     assertEquals(expectedRowCount, count);
+  }
+
+  private void testPhysicalPlanSubmission(String...queries) throws Exception {
+    for (String query : queries) {
+      PlanTestBase.testPhysicalPlanExecutionBasedOnQuery(query);
+    }
   }
 }

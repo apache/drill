@@ -82,16 +82,6 @@ public class FormatPluginSerDeTest extends PlanTestBase {
   }
 
   @Test
-  public void testPcap() throws Exception {
-    String path = "store/pcap/tcp-1.pcap";
-    dirTestWatcher.copyResourceToRoot(Paths.get(path));
-    testPhysicalPlanSubmission(
-        String.format("select * from dfs.`%s`", path),
-        String.format("select * from table(dfs.`%s`(type=>'pcap'))", path)
-    );
-  }
-
-  @Test
   public void testJson() throws Exception {
     testPhysicalPlanSubmission(
         "select * from cp.`donuts.json`",

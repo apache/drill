@@ -33,9 +33,6 @@
           "type" : "json",
           "extensions" : [ "json" ]
         },
-        "pcap" : {
-          "type" : "pcap"
-        },
         "avro" : {
           "type" : "avro",
           "extensions" : [ "avro" ]
@@ -146,9 +143,6 @@
         "json" : {
           "type" : "json",
           "extensions" : [ "json" ]
-        },
-        "pcap" : {
-          "type" : "pcap"
         },
         "avro" : {
           "type" : "avro",

@@ -28,6 +28,7 @@ import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.exec.store.pcap.decoder.PacketDecoder;
 import org.apache.drill.exec.store.pcap.decoder.TcpSession;
 import org.apache.drill.exec.store.pcap.schema.Schema;
+import org.apache.drill.exec.store.plugin.PcapFormatConfig;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.hadoop.mapred.FileSplit;
 import org.slf4j.Logger;
@@ -48,126 +49,61 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private static final Logger logger = LoggerFactory.getLogger(PcapBatchReader.class);
 
   private FileSplit split;
-
   private PacketDecoder decoder;
-
   private InputStream fsStream;
-
   private RowSetLoader rowWriter;
-
   private int validBytes;
-
   private byte[] buffer;
-
   private int offset;
-
   private ScalarWriter typeWriter;
-
   private ScalarWriter timestampWriter;
-
   private ScalarWriter timestampMicroWriter;
-
   private ScalarWriter networkWriter;
-
   private ScalarWriter srcMacAddressWriter;
-
   private ScalarWriter dstMacAddressWriter;
-
   private ScalarWriter dstIPWriter;
-
   private ScalarWriter srcIPWriter;
-
   private ScalarWriter srcPortWriter;
-
   private ScalarWriter dstPortWriter;
-
   private ScalarWriter packetLengthWriter;
-
   private ScalarWriter tcpSessionWriter;
-
   private ScalarWriter tcpSequenceWriter;
-
   private ScalarWriter tcpAckNumberWriter;
-
   private ScalarWriter tcpFlagsWriter;
-
   private ScalarWriter tcpParsedFlagsWriter;
-
   private ScalarWriter tcpNsWriter;
-
   private ScalarWriter tcpCwrWriter;
-
   private ScalarWriter tcpEceWriter;
-
   private ScalarWriter tcpFlagsEceEcnCapableWriter;
-
   private ScalarWriter tcpFlagsCongestionWriter;
-
   private ScalarWriter tcpUrgWriter;
-
   private ScalarWriter tcpAckWriter;
-
   private ScalarWriter tcpPshWriter;
-
   private ScalarWriter tcpRstWriter;
-
   private ScalarWriter tcpSynWriter;
-
   private ScalarWriter tcpFinWriter;
-
   private ScalarWriter dataWriter;
-
   private ScalarWriter isCorruptWriter;
-
-  private final PcapReaderConfig readerConfig;
-
-
+  private final PcapFormatConfig readerConfig;
   // Writers for TCP Sessions
   private ScalarWriter sessionStartTimeWriter;
-
   private ScalarWriter sessionEndTimeWriter;
-
   private ScalarWriter sessionDurationWriter;
-
   private ScalarWriter connectionTimeWriter;
-
   private ScalarWriter packetCountWriter;
-
   private ScalarWriter originPacketCounterWriter;
-
   private ScalarWriter remotePacketCounterWriter;
-
   private ScalarWriter originDataVolumeWriter;
-
   private ScalarWriter remoteDataVolumeWriter;
-
   private ScalarWriter hostDataWriter;
-
   private ScalarWriter remoteDataWriter;
-
   private final int maxRecords;
-
   private Map<Long, TcpSession> sessionQueue;
 
 
-  public static class PcapReaderConfig {
-
-    protected final PcapFormatPlugin plugin;
-
-    public boolean sessionizeTCPStreams;
-
-    private final PcapFormatConfig config;
-
-    public PcapReaderConfig(PcapFormatPlugin plugin) {
-      this.plugin = plugin;
-      this.config = plugin.getConfig();
-      this.sessionizeTCPStreams = config.getSessionizeTCPStreams();
-    }
-  }
-
-  public PcapBatchReader(PcapReaderConfig readerConfig, int maxRecords) {
+  public PcapBatchReader(PcapFormatConfig readerConfig, int maxRecords) {
     this.readerConfig = readerConfig;
-    if (readerConfig.sessionizeTCPStreams) {
+    if (readerConfig.getSessionizeTCPStreams()) {
       sessionQueue = new HashMap<>();
     }
     this.maxRecords = maxRecords;
@@ -178,7 +114,7 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
     split = negotiator.split();
     openFile(negotiator);
     SchemaBuilder builder = new SchemaBuilder();
-    Schema pcapSchema = new Schema(readerConfig.sessionizeTCPStreams);
+    Schema pcapSchema = new Schema(readerConfig.getSessionizeTCPStreams());
     TupleMetadata schema = pcapSchema.buildSchema(builder);
     negotiator.tableSchema(schema, false);
     ResultSetLoader loader = negotiator.build();
@@ -238,7 +174,7 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void populateColumnWriters(RowSetLoader rowWriter) {
-    if (readerConfig.sessionizeTCPStreams) {
+    if (readerConfig.getSessionizeTCPStreams()) {
       srcMacAddressWriter = rowWriter.scalar("src_mac_address");
       dstMacAddressWriter = rowWriter.scalar("dst_mac_address");
       dstIPWriter = rowWriter.scalar("dst_ip");
@@ -323,7 +259,7 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
 
     // If we are resessionizing the TCP Stream, add the packet to the stream
-    if (readerConfig.sessionizeTCPStreams) {
+    if (readerConfig.getSessionizeTCPStreams()) {
       // If the session has not been seen before, add it to the queue
       long sessionID = packet.getSessionHash();
       if (!sessionQueue.containsKey(sessionID)) {

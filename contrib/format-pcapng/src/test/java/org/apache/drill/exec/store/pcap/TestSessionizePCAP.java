@@ -23,6 +23,7 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.plugin.PcapFormatConfig;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
@@ -43,15 +44,15 @@ public class TestSessionizePCAP extends ClusterTest {
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    PcapFormatConfig sampleConfig = new PcapFormatConfig(null, true);
+    PcapFormatConfig sampleConfig = new PcapFormatConfig(null, true, true);
     cluster.defineFormat("cp", "pcap", sampleConfig);
-    dirTestWatcher.copyResourceToRoot(Paths.get("store/pcap/"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("pcap/"));
   }
 
   @Test
   public void testSessionizedStarQuery() throws Exception {
-    String sql = "SELECT * FROM cp.`/store/pcap/http.pcap`";
-    String dataFromRemote = readAFileIntoString(dirTestWatcher.getRootDir().getAbsolutePath() + "/store/pcap/dataFromRemote.txt");
+    String sql = "SELECT * FROM cp.`/pcap/http.pcap`";
+    String dataFromRemote = readAFileIntoString(dirTestWatcher.getRootDir().getAbsolutePath() + "/pcap/dataFromRemote.txt");
 
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
@@ -104,9 +105,9 @@ public class TestSessionizePCAP extends ClusterTest {
     String sql = "SELECT src_ip, dst_ip, src_port, dst_port, src_mac_address, dst_mac_address," +
       "session_start_time, session_end_time, session_duration, total_packet_count, data_volume_from_origin, data_volume_from_remote," +
       "packet_count_from_origin, packet_count_from_remote, connection_time, tcp_session, is_corrupt, data_from_originator, data_from_remote " +
-      "FROM cp.`/store/pcap/http.pcap`";
+      "FROM cp.`/pcap/http.pcap`";
 
-    String dataFromRemote = readAFileIntoString(dirTestWatcher.getRootDir().getAbsolutePath() + "/store/pcap/dataFromRemote.txt");
+    String dataFromRemote = readAFileIntoString(dirTestWatcher.getRootDir().getAbsolutePath() + "/pcap/dataFromRemote.txt");
 
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
@@ -156,7 +157,7 @@ public class TestSessionizePCAP extends ClusterTest {
 
   @Test
   public void testSerDe() throws Exception {
-    String sql = "SELECT COUNT(*) FROM cp.`/store/pcap/http.pcap`";
+    String sql = "SELECT COUNT(*) FROM cp.`/pcap/http.pcap`";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
     assertEquals("Counts should match", 1L, cnt);
