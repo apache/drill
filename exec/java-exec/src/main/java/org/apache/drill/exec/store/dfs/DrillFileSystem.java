@@ -842,5 +842,6 @@ public class DrillFileSystem extends FileSystem implements OpenFileTracker {
       }
       sb.append("\n");
     }
+    return inputStream;
   }
 }

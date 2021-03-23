@@ -73,12 +73,13 @@ public class GenericMetadataDescriptor extends TagDescriptor<GenericMetadataDire
   }
 
   @Nullable
+  @SuppressWarnings("lgtm[java/non-null-boxed-variable]")
+
   private String getDurationDescription() {
     Long value = _directory.getLongObject(TAG_DURATION);
     if (value == null) {
       return null;
     }
-
     Integer hours = (int)(value / (Math.pow(60, 2)));
     Integer minutes = (int)((value / (Math.pow(60, 1))) - (hours * 60));
     Integer seconds = (int)Math.ceil((value / (Math.pow(60, 0))) - (minutes * 60));

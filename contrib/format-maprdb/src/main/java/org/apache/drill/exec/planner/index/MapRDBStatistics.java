@@ -774,11 +774,13 @@ public class MapRDBStatistics implements Statistics {
         }
       }
       // Get the PATTERN strings from the corresponding RexLiteral
-      if (pattern.getTypeName() == SqlTypeName.DECIMAL ||
-          pattern.getTypeName() == SqlTypeName.INTEGER) {
-        patternStr = pattern.getValue().toString();
-      } else if (pattern.getTypeName() == SqlTypeName.CHAR) {
-        patternStr = pattern.getValue2().toString();
+      if (pattern != null) {
+        if (pattern.getTypeName() == SqlTypeName.DECIMAL ||
+                pattern.getTypeName() == SqlTypeName.INTEGER) {
+          patternStr = pattern.getValue().toString();
+        } else if (pattern.getTypeName() == SqlTypeName.CHAR) {
+          patternStr = pattern.getValue2().toString();
+        }
       }
       if (patternStr != null) {
         parser = new HBaseRegexParser(patternStr);
@@ -798,17 +800,21 @@ public class MapRDBStatistics implements Statistics {
         }
       }
       // Get the PATTERN and ESCAPE strings from the corresponding RexLiteral
-      if (pattern.getTypeName() == SqlTypeName.DECIMAL ||
-          pattern.getTypeName() == SqlTypeName.INTEGER) {
-        patternStr = pattern.getValue().toString();
-      } else if (pattern.getTypeName() == SqlTypeName.CHAR) {
-        patternStr = pattern.getValue2().toString();
+      if (pattern != null) {
+        if (pattern.getTypeName() == SqlTypeName.DECIMAL ||
+                pattern.getTypeName() == SqlTypeName.INTEGER) {
+          patternStr = pattern.getValue().toString();
+        } else if (pattern.getTypeName() == SqlTypeName.CHAR) {
+          patternStr = pattern.getValue2().toString();
+        }
       }
-      if (escape.getTypeName() == SqlTypeName.DECIMAL ||
-          escape.getTypeName() == SqlTypeName.INTEGER) {
-        escapeStr = escape.getValue().toString();
-      } else if (escape.getTypeName() == SqlTypeName.CHAR) {
-        escapeStr = escape.getValue2().toString();
+      if (escape != null) {
+        if (escape.getTypeName() == SqlTypeName.DECIMAL ||
+                escape.getTypeName() == SqlTypeName.INTEGER) {
+          escapeStr = escape.getValue().toString();
+        } else if (escape.getTypeName() == SqlTypeName.CHAR) {
+          escapeStr = escape.getValue2().toString();
+        }
       }
       if (patternStr != null && escapeStr != null) {
         parser = new HBaseRegexParser(patternStr, escapeStr.toCharArray()[0]);

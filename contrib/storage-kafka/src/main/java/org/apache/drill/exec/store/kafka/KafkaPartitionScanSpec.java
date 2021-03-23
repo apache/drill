@@ -22,7 +22,7 @@ import org.apache.drill.common.FunctionNames;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class KafkaPartitionScanSpec {
+public class KafkaPartitionScanSpec { //lgtm[java/inconsistent-equals-and-hashcode]
   private final String topicName;
   private final int partitionId;
   private long startOffset;

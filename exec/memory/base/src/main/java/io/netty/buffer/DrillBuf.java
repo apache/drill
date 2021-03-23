@@ -593,6 +593,31 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   }
 
   @Override
+  public ByteBuf setShortLE(int index, int value) {
+    chk(index, 2);
+    PlatformDependent.putShort(addr(index), Short.reverseBytes((short)value));
+    return this;
+  }
+
+  @Override
+  public ByteBuf setMedium(int index, int value) {
+    chk(index, 3);
+    long addr = this.addr(index);
+    PlatformDependent.putByte(addr, (byte)(value >>> 16));
+    PlatformDependent.putShort(addr + 1L, (short)value);
+    return this;
+  }
+
+  @Override
+  public ByteBuf setMediumLE(int index, int value) {
+    chk(index, 3);
+    long addr = this.addr(index);
+    PlatformDependent.putByte(addr, (byte)value);
+    PlatformDependent.putShort(addr + 1L, Short.reverseBytes((short)(value >>> 8)));
+    return this;
+  }
+
+  @Override
   public ByteBuf setInt(int index, int value) {
     chk(index, 4);
     PlatformDependent.putInt(addr(index), value);
@@ -610,6 +635,13 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   public ByteBuf setLong(int index, long value) {
     chk(index, 8);
     PlatformDependent.putLong(addr(index), value);
+    return this;
+  }
+
+  @Override
+  public ByteBuf setLongLE(int index, long value) {
+    chk(index, 4);
+    PlatformDependent.putLong(addr(index), Long.reverseBytes(value));
     return this;
   }
 

@@ -76,7 +76,7 @@ public class HBaseUtils {
       FilterProtos.Filter pbFilter = FilterProtos.Filter.parseFrom(filterBytes);
       return ProtobufUtil.toFilter(pbFilter);
     } catch (Exception e) {
-      throw new DrillRuntimeException("Error deserializing filter: " + filterBytes, e);
+      throw new DrillRuntimeException("Error deserializing filter: " + filterBytes, e); //lgtm[java/print-array]
     }
   }
 

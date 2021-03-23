@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.mapr;
 
 import org.apache.drill.common.logical.FormatPluginConfig;
 
-public abstract class TableFormatPluginConfig implements FormatPluginConfig {
+public abstract class TableFormatPluginConfig implements FormatPluginConfig { //lgtm[java/inconsistent-equals-and-hashcode]
 
   @Override
   public boolean equals(Object obj) {

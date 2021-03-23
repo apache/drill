@@ -617,7 +617,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
           try {
             getAndMapCompoundData(datapath, hdfFile, rowWriter);
           } catch (Exception e) {
-            throw UserException
+            throw UserException //lgtm[java/unused-format-argument]
               .dataReadError()
               .message("Error writing Compound Field: {}", e.getMessage())
               .addContext(errorContext)

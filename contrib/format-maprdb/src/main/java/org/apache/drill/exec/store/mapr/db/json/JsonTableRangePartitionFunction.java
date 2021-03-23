@@ -43,7 +43,7 @@ import com.mapr.fs.jni.MapRConstants;
 import com.mapr.org.apache.hadoop.hbase.util.Bytes;
 
 @JsonTypeName("jsontable-range-partition-function")
-public class JsonTableRangePartitionFunction extends AbstractRangePartitionFunction {
+public class JsonTableRangePartitionFunction extends AbstractRangePartitionFunction { //lgtm [java/inconsistent-equals-and-hashcode]
   private static final Logger logger = LoggerFactory.getLogger(JsonTableRangePartitionFunction.class);
 
   @JsonProperty("refList")

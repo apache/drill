@@ -294,7 +294,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
           // Do nothing... empty value in data cell
         }
 
-        switch (dataCell.getCellType()) {
+        switch (dataCell.getCellType()) { //lgtm[java/dereferenced-value-may-be-null]
           case STRING:
             tempColumnName = cell.getStringCellValue()
               .replace(PARSER_WILDCARD, SAFE_WILDCARD)

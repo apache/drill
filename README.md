@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Stack Overflow](https://img.shields.io/:stack%20overflow-apache--drill-brightgreen.svg)](http://stackoverflow.com/questions/tagged/apache-drill)
 [![Join Drill Slack](https://img.shields.io/badge/slack-open-e01563.svg)](http://apache-drill.slack.com "Join our Slack community")
-
+<a href="https://lgtm.com/projects/g/apache/drill/alerts/"><img alt="Total alerts" src="https://img.shields.io/lgtm/alerts/g/apache/drill.svg?logo=lgtm&logoWidth=18"/></a>
 
 Apache Drill is a distributed MPP query layer that supports SQL and alternative query languages against NoSQL and Hadoop data storage systems.  It was inspired in part by [Google's Dremel](http://research.google.com/pubs/pub36632.html).  
 

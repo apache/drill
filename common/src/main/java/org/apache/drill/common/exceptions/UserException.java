@@ -1,4 +1,4 @@
-/*
+  /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -478,7 +478,7 @@ public class UserException extends DrillRuntimeException {
         if (args.length == 0) {
           message = format;
         } else {
-          message = String.format(format, args);
+          message = String.format(format, args); //lgtm [java/tainted-format-string]
         }
       }
       return this;
@@ -640,7 +640,8 @@ public class UserException extends DrillRuntimeException {
         while (SPIN_FILE.exists()) {
           try { sleep(1_000); } catch (final Exception ex) { /* ignore interruptions */ }
         }
-        try { outErr.delete(); } catch (final Exception ex) { } // cleanup - remove err msg file
+        // cleanup - remove err msg file
+        try { outErr.delete(); } catch (final Exception ex) { } //lgtm[java/dereferenced-value-may-be-null]
       }
 
       if (uex != null) {

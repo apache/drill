@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("maprdb")
 @JsonInclude(Include.NON_DEFAULT)
-public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
+public class MapRDBFormatPluginConfig extends TableFormatPluginConfig { //lgtm[java/inconsistent-equals-and-hashcode]
 
   public boolean allTextMode = false;
   public boolean enablePushdown = true;

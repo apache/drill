@@ -428,7 +428,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
         throw UserException.unsupportedError(e)
             .addContext(String.format("Table: %s, document id: '%s'",
                 table.getPath(),
-                    document.asReader() == null ? null :
+                    document.asReader() == null ? null : //lgtm[java/dereferenced-value-may-be-null]
                         IdCodec.asString(((DBDocumentReaderBase)document.asReader()).getId())))
             .build(logger);
       } catch (SchemaChangeException e) {

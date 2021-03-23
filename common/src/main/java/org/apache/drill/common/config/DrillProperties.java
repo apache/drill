@@ -112,7 +112,7 @@ public final class DrillProperties extends Properties {
   }
 
   @Override
-  public Object setProperty(final String key, final String value) {
+  public Object setProperty(final String key, final String value) { //lgtm[java/non-sync-override]
     return super.setProperty(key.toLowerCase(), value);
   }
 
