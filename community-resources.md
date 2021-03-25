@@ -21,6 +21,7 @@ title: "Community Resources"
 * [Contribute to Drill]({{ site.baseurl }}/docs/contribute-to-drill/)
 * Hangout: A [bi-weekly Drill hangout](https://plus.google.com/hangouts/_/event/ci4rdiju8bv04a64efj5fedd0lc) occurs every other Tuesday at 10 am PDT. For more information and hangout notes, see [Apache Drill Hangout Notes](https://docs.google.com/document/d/1o2GvZUtJvKzN013JdM715ZBzhseT0VyZ9WgmLMeeUUk/edit?ts=5744c15c#heading=h.z8q6drmaybbj).
 * Source code: [GitHub](https://github.com/apache/drill) 
+* Paul Rogers' wiki: [An informal set of notes describing Drill internals](https://github.com/paul-rogers/drill/wiki)
 
 ## Apache Software Foundation Resources 
 
