@@ -66,9 +66,13 @@ public class HDF5LongDataWriter extends HDF5DataWriter {
     if (counter > data.length) {
       return false;
     } else {
-      colWriter.setLong(data[counter++]); //lgtm[java/index-out-of-bounds]
-      return true;
+      try {
+        colWriter.setLong(data[counter++]);
+      } catch (Exception e) {
+        return false;
+      }
     }
+    return true;
   }
 
   @Override

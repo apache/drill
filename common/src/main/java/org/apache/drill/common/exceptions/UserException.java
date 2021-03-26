@@ -641,7 +641,7 @@ public class UserException extends DrillRuntimeException {
           try { sleep(1_000); } catch (final Exception ex) { /* ignore interruptions */ }
         }
         // cleanup - remove err msg file
-        try { outErr.delete(); } catch (final Exception ex) { } //lgtm[java/dereferenced-value-may-be-null]
+        try { outErr.delete(); } catch (final Exception ex) { }
       }
 
       if (uex != null) {

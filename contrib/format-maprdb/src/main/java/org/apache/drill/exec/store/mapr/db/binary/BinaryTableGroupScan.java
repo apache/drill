@@ -186,8 +186,8 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
     //TODO: look at stats for this.
     long rowCount = (long) ((hbaseScanSpec.getFilter() != null ? .5 : 1) * tableStats.getNumRows());
     int avgColumnSize = 10;
-    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
-    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, avgColumnSize * numColumns * rowCount); //lgtm[java/integer-multiplication-cast-to-long]
+    long numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
+    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, avgColumnSize * numColumns * rowCount);
   }
 
   @Override

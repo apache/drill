@@ -66,10 +66,14 @@ public class HDF5DoubleDataWriter extends HDF5DataWriter {
     if (counter > data.length) {
       return false;
     } else {
-      colWriter.setDouble(data[counter++]); //lgtm[java/index-out-of-bounds]
+      try {
+        colWriter.setDouble(data[counter++]);
+      } catch (Exception e) {
+        return false;
+      }
+    }
       return true;
     }
-  }
 
   @Override
   public boolean hasNext() {

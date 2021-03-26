@@ -251,8 +251,8 @@ public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
 
     /* no slot should be empty at this point */
     assert (minHeap.peek() == null || minHeap.peek().size() > 0) : String.format(
-        "Unable to assign tasks to some endpoints.\nEndpoints: {}.\nAssignment Map: {}.",
-        incomingEndpoints, endpointFragmentMapping.toString()); //lgtm[java/unused-format-argument]
+        "Unable to assign tasks to some endpoints.\n Endpoints: %s.\n Assignment Map: %s.",
+        incomingEndpoints, endpointFragmentMapping.toString());
 
     logger.debug("Built assignment map in {} µs.\nEndpoints: {}.\nAssignment Map: {}",
         watch.elapsed(TimeUnit.NANOSECONDS)/1000, incomingEndpoints, endpointFragmentMapping.toString());

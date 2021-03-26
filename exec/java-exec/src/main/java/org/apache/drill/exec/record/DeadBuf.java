@@ -373,11 +373,6 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
-  public ByteBuf setShortLE(int index, int value) {
-    throw new UnsupportedOperationException(ERROR_MESSAGE);
-  }
-
-  @Override
   public ByteBuf setMedium(int index, int value) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }

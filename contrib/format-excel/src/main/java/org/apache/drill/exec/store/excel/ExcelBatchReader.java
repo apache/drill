@@ -293,13 +293,13 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
         } catch (NoSuchElementException e) {
           // Do nothing... empty value in data cell
         }
-
-        switch (dataCell.getCellType()) { //lgtm[java/dereferenced-value-may-be-null]
+        if (dataCell != null) {
+        switch (dataCell.getCellType()) {
           case STRING:
             tempColumnName = cell.getStringCellValue()
-              .replace(PARSER_WILDCARD, SAFE_WILDCARD)
-              .replaceAll("\\.", SAFE_SEPARATOR)
-              .replaceAll("\\n", HEADER_NEW_LINE_REPLACEMENT);
+                    .replace(PARSER_WILDCARD, SAFE_WILDCARD)
+                    .replaceAll("\\.", SAFE_SEPARATOR)
+                    .replaceAll("\\n", HEADER_NEW_LINE_REPLACEMENT);
             makeColumn(builder, tempColumnName, TypeProtos.MinorType.VARCHAR);
             excelFieldNames.add(colPosition, tempColumnName);
             break;
@@ -312,6 +312,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
             excelFieldNames.add(colPosition, tempColumnName);
             break;
         }
+      }
         colPosition++;
       }
     }

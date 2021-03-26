@@ -45,9 +45,13 @@ public class HDF5TimestampDataWriter extends HDF5DataWriter {
     if (counter > data.length) {
       return false;
     } else {
-      colWriter.setTimestamp(Instant.ofEpochMilli(data[counter++])); //lgtm[java/index-out-of-bounds]
-      return true;
+      try {
+        colWriter.setTimestamp(Instant.ofEpochMilli(data[counter++]));
+      } catch (Exception e) {
+        return false;
+      }
     }
+    return true;
   }
 
   @Override
