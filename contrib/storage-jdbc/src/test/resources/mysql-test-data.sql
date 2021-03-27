@@ -38,6 +38,7 @@ create table person (
   long_text_field LONGTEXT,
   blob_field      BLOB,
   bit_field       BIT,
+  decimal_field   DECIMAL(15, 2),
 
   enum_field      ENUM('XXX', 'YYY', 'ZZZ') NOT NULL
 );
@@ -47,7 +48,7 @@ insert into person (first_name, last_name, address, city, state, zip, bigint_fie
                     time_field, timestamp_field, date_field, datetime_field, year_field,
                     json,
                     text_field, tiny_text_field, medium_text_field, long_text_field, blob_field, bit_field,
-                    enum_field)
+                    decimal_field, enum_field)
     values ('first_name_1', 'last_name_1', '1401 John F Kennedy Blvd', 'Philadelphia', 'PA', 19107, 123456789, 1, 10.01,
             false, 1.0, 1.1, 1.2,
             '13:00:01', '2012-02-29 13:00:01', '2012-02-29', '2012-02-29 13:00:01', 2015,
@@ -56,7 +57,7 @@ insert into person (first_name, last_name, address, city, state, zip, bigint_fie
             'a medium piece of text', 'a longer piece of text this is going on.....',
             'this is a test',
             1,
-            'XXX');
+            123.321, 'XXX');
 
 insert into person (first_name, last_name, address, city, state, zip, bigint_field, smallint_field, numeric_field,
                     boolean_field, double_field, float_field, real_field,

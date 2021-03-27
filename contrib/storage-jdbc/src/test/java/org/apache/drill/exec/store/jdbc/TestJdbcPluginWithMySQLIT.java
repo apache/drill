@@ -23,10 +23,16 @@ import com.wix.mysql.config.MysqldConfig;
 import com.wix.mysql.config.SchemaConfig;
 import com.wix.mysql.distribution.Version;
 import org.apache.drill.categories.JdbcStorageTest;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryTestUtil;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.joda.time.DateTimeZone;
 import org.junit.AfterClass;
 import org.junit.Assume;
@@ -195,6 +201,24 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .planMatcher()
         .exclude("Join", "Filter")
         .match();
+  }
+
+  @Test
+  public void pushDownAggWithDecimal() throws Exception {
+    String query = "SELECT sum(decimal_field * smallint_field) AS `order_total`\n" +
+        "FROM mysql.`drill_mysql_test`.person e";
+
+    DirectRowSet results = queryBuilder().sql(query).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("order_total", TypeProtos.MinorType.VARDECIMAL, 38, 2)
+        .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+        .addRow(123.32)
+        .build();
+
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
