@@ -21,8 +21,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.DrillExceptionUtil;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.materialize.QueryDataPackage;
 import org.apache.drill.exec.physical.resultSet.PushResultSetReader;
 import org.apache.drill.exec.physical.resultSet.impl.PushResultSetReaderImpl;
@@ -148,11 +151,8 @@ public class StreamingHttpConnection extends BaseWebUserConnection {
    * </code></pre>
    */
   private void emitHeader(TupleMetadata rowSchema) throws IOException {
+    startHeader();
     JsonOutput gen = writer.jsonOutput();
-    gen.writeStartObject();
-    gen.writeFieldName("queryId");
-    gen.writeVarChar(QueryIdHelper.getQueryId(queryId));
-    writeNewline(gen);
     gen.writeFieldName("columns");
     writeColNames(gen, rowSchema);
     writeNewline(gen);
@@ -167,6 +167,14 @@ public class StreamingHttpConnection extends BaseWebUserConnection {
     writeNewline(gen);
 
     // The array of rows is now open, ready to send batches.
+  }
+
+  private void startHeader() throws IOException {
+    JsonOutput gen = writer.jsonOutput();
+    gen.writeStartObject();
+    gen.writeFieldName("queryId");
+    gen.writeVarChar(QueryIdHelper.getQueryId(queryId));
+    writeNewline(gen);
   }
 
   public void writeNewline(JsonOutput gen) throws IOException {
@@ -219,12 +227,42 @@ public class StreamingHttpConnection extends BaseWebUserConnection {
    */
   public void finish() throws IOException {
     JsonOutput gen = writer.jsonOutput();
-    gen.writeEndArray();
-    writeNewline(gen);
+    if (batchCount == 0) {
+      startHeader();
+      if (getSession().getOptions().getBoolean(ExecConstants.ENABLE_REST_VERBOSE_ERRORS_KEY)) {
+        emitErrorInfo();
+      }
+    } else {
+      gen.writeEndArray();
+      writeNewline(gen);
+    }
     gen.writeFieldName("queryState");
     gen.writeVarChar(getQueryState());
     writeNewline(gen);
     gen.writeEndObject();
+    writeNewline(gen);
+  }
+
+  private void emitErrorInfo() throws IOException {
+    JsonOutput gen = writer.jsonOutput();
+    Throwable exception = DrillExceptionUtil.getThrowable(error.getException());
+    if (exception != null) {
+      gen.writeFieldName("exception");
+      gen.writeVarChar(exception.getClass().getName());
+      writeNewline(gen);
+      gen.writeFieldName("errorMessage");
+      gen.writeVarChar(exception.getMessage());
+      writeNewline(gen);
+      gen.writeFieldName("stackTrace");
+      gen.writeStartArray();
+      for (String stackFrame : ExceptionUtils.getStackFrames(exception)) {
+        gen.writeVarChar(stackFrame);
+      }
+      gen.writeEndArray();
+    } else {
+      gen.writeFieldName("errorMessage");
+      gen.writeVarChar(error.getMessage());
+    }
     writeNewline(gen);
   }
 }
