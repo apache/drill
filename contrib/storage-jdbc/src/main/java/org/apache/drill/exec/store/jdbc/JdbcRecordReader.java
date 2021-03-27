@@ -64,6 +64,8 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM;
+
 class JdbcRecordReader extends AbstractRecordReader {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcRecordReader.class);
@@ -210,8 +212,8 @@ class JdbcRecordReader extends AbstractRecordReader {
         String name = columns.get(i - 1).getRootSegmentPath();
         // column index in ResultSetMetaData starts from 1
         int jdbcType = meta.getColumnType(i);
-        int width = meta.getPrecision(i);
-        int scale = meta.getScale(i);
+        int width = Math.min(meta.getPrecision(i), DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision());
+        int scale = Math.min(meta.getScale(i), DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale());
         MinorType minorType = JDBC_TYPE_MAPPINGS.get(jdbcType);
         if (minorType == null) {
           logger.warn("Ignoring column that is unsupported.", UserException
@@ -381,6 +383,14 @@ class JdbcRecordReader extends AbstractRecordReader {
     void copy(int index) throws SQLException {
       BigDecimal decimal = result.getBigDecimal(columnIndex);
       if (decimal != null) {
+        if (decimal.precision() > DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision()
+            || decimal.scale() > DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()) {
+          throw UserException.unsupportedError()
+              .message("Drill doesn't support reading values with precision or scale larger than 38.\n" +
+                  "Please use round() UDF to obtain results with supported precision")
+              .addContext("Column index", index)
+              .build(logger);
+        }
         mutator.setSafe(index, decimal);
       }
     }
