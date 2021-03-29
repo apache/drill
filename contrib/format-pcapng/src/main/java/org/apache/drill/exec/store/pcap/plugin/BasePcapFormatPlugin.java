@@ -15,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.plugin;
+package org.apache.drill.exec.store.pcap.plugin;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
@@ -42,18 +41,17 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.regex.Pattern;
 
-public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
+public abstract class BasePcapFormatPlugin<T extends PcapFormatConfig> extends EasyFormatPlugin<T> {
 
   static final Logger logger = LoggerFactory.getLogger(ManagedScanFramework.class);
   private static PacketDecoder.FileFormat fileFormat = PacketDecoder.FileFormat.UNKNOWN;
 
-  public PcapFormatPlugin(String name,
-                          DrillbitContext context,
-                          Configuration fsConf,
-                          StoragePluginConfig storageConfig,
-                          PcapFormatConfig formatConfig) {
+  public BasePcapFormatPlugin(String name,
+                              DrillbitContext context,
+                              Configuration fsConf,
+                              StoragePluginConfig storageConfig,
+                              T formatConfig) {
     super(name, easyConfig(fsConf, formatConfig), context, storageConfig, formatConfig);
   }
 
@@ -84,8 +82,23 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
 
     @Override
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      fileFormat = fromMagicNumber(fileFramework);
-      return createReader(scan, config);
+      Path path = scan.getWorkUnits().stream()
+              .findFirst()
+              .orElseThrow(() -> UserException.
+                      dataReadError()
+                      .addContext("There are no files for scanning")
+                      .build(logger))
+              .getPath();
+      fileFormat = getFileFormat(fileFramework.fileSystem(), path);
+      if(config.getExtensions().stream()
+              .anyMatch(f -> f.equals(fileFormat.name().toLowerCase()))) {
+        return createReader(scan, config);
+      } else {
+        throw UserException.
+                dataReadError()
+                .addContext("Unknown file format")
+                .build(logger);
+      }
     }
   }
 
@@ -116,13 +129,10 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
   /**
    * Helper method to detect PCAP or PCAPNG file format based on file Magic Number
    *
-   * @param fileFramework for obtaining InputStream
+   * @param dfs for obtaining InputStream
    * @return PCAP/PCAPNG file format
    */
-  private static PacketDecoder.FileFormat fromMagicNumber(FileScanFramework fileFramework) {
-    FileScanFramework.FileSchemaNegotiatorImpl negotiator = (FileScanFramework.FileSchemaNegotiatorImpl) fileFramework.newNegotiator();
-    DrillFileSystem dfs = negotiator.fileSystem();
-    Path path = dfs.makeQualified(negotiator.split().getPath());
+  private static PacketDecoder.FileFormat getFileFormat(DrillFileSystem dfs, Path path) {
     try (InputStream inputStream = dfs.openPossiblyCompressedStream(path)) {
       PacketDecoder decoder = new PacketDecoder(inputStream);
       return decoder.getFileFormat();
@@ -132,26 +142,5 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
               .addContext("File name:", path.toString())
               .build(logger);
     }
-  }
-
-  /**
-   * Detects PCAP or PCAPNG file format based on file extension. Not used now due to {@link #fromMagicNumber} usage for
-   * this purpose
-   *
-   * @param filePath to be scanned
-   * @return PCAP/PCAPNG file format
-   */
-  private static PacketDecoder.FileFormat fromFileExtension(Path filePath) {
-    Pattern pcap = Pattern.compile(".*\\.pcap");
-    Pattern archivedPcap = Pattern.compile(".*\\.pcap\\..*");
-    Pattern pcapng = Pattern.compile(".*\\.pcapng");
-    Pattern archivedPcapNG = Pattern.compile(".*\\.pcapng\\..*");
-    String fileName = filePath.toString();
-    if (pcap.matcher(fileName).matches() || archivedPcap.matcher(fileName).matches()) {
-      return PacketDecoder.FileFormat.PCAP;
-    } else if (pcapng.matcher(fileName).matches() || archivedPcapNG.matcher(fileName).matches()) {
-      return PacketDecoder.FileFormat.PCAPNG;
-    }
-    return PacketDecoder.FileFormat.UNKNOWN;
   }
 }

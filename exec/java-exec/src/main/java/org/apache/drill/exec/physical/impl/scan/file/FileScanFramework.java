@@ -258,7 +258,7 @@ public class FileScanFramework extends ManagedScanFramework {
   }
 
   @Override
-  public SchemaNegotiatorImpl newNegotiator() {
+  protected SchemaNegotiatorImpl newNegotiator() {
     return new FileSchemaNegotiatorImpl(this);
   }
 
@@ -273,5 +273,9 @@ public class FileScanFramework extends ManagedScanFramework {
         .addContext("File", currentSplit.getPath().toString())
         .build(logger);
     }
+  }
+
+  public DrillFileSystem fileSystem() {
+    return dfs;
   }
 }
