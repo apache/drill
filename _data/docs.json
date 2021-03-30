@@ -1530,8 +1530,8 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Configuring Plain Security",
-                            "next_url": "/docs/configuring-plain-security/",
+                            "next_title": "Configuring User Security",
+                            "next_url": "/docs/configuring-user-security/",
                             "parent": "Securing Drill",
                             "previous_title": "Configuring Inbound Impersonation",
                             "previous_url": "/docs/configuring-inbound-impersonation/",
@@ -1551,11 +1551,32 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Configuring SSL/TLS for Encryption",
-                            "next_url": "/docs/configuring-ssl-tls-for-encryption/",
+                            "next_title": "Configuring Plain Security",
+                            "next_url": "/docs/configuring-plain-security/",
                             "parent": "Securing Drill",
                             "previous_title": "Configuring User Impersonation with Hive Authorization",
                             "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/",
+                            "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-security.md",
+                            "title": "Configuring User Security",
+                            "url": "/docs/configuring-user-security/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill",
+                                    "url": "/docs/securing-drill/"
+                                },
+                                {
+                                    "title": "Configure Drill",
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "Configuring SSL/TLS for Encryption",
+                            "next_url": "/docs/configuring-ssl-tls-for-encryption/",
+                            "parent": "Securing Drill",
+                            "previous_title": "Configuring User Security",
+                            "previous_url": "/docs/configuring-user-security/",
                             "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-security.md",
                             "title": "Configuring Plain Security",
                             "url": "/docs/configuring-plain-security/"
@@ -2385,8 +2406,8 @@
             "next_title": "Configuring SSL/TLS for Encryption",
             "next_url": "/docs/configuring-ssl-tls-for-encryption/",
             "parent": "Securing Drill",
-            "previous_title": "Configuring User Impersonation with Hive Authorization",
-            "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/",
+            "previous_title": "Configuring User Security",
+            "previous_url": "/docs/configuring-user-security/",
             "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-security.md",
             "title": "Configuring Plain Security",
             "url": "/docs/configuring-plain-security/"
@@ -2508,14 +2529,35 @@
                 }
             ],
             "children": [],
-            "next_title": "Configuring Plain Security",
-            "next_url": "/docs/configuring-plain-security/",
+            "next_title": "Configuring User Security",
+            "next_url": "/docs/configuring-user-security/",
             "parent": "Securing Drill",
             "previous_title": "Configuring Inbound Impersonation",
             "previous_url": "/docs/configuring-inbound-impersonation/",
             "relative_path": "_docs/configure-drill/securing-drill/060-configuring-user-impersonation-with-hive-authorization.md",
             "title": "Configuring User Impersonation with Hive Authorization",
             "url": "/docs/configuring-user-impersonation-with-hive-authorization/"
+        },
+        "Configuring User Security": {
+            "breadcrumbs": [
+                {
+                    "title": "Securing Drill",
+                    "url": "/docs/securing-drill/"
+                },
+                {
+                    "title": "Configure Drill",
+                    "url": "/docs/configure-drill/"
+                }
+            ],
+            "children": [],
+            "next_title": "Configuring Plain Security",
+            "next_url": "/docs/configuring-plain-security/",
+            "parent": "Securing Drill",
+            "previous_title": "Configuring User Impersonation with Hive Authorization",
+            "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/",
+            "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-security.md",
+            "title": "Configuring User Security",
+            "url": "/docs/configuring-user-security/"
         },
         "Configuring Web UI and REST API Security": {
             "breadcrumbs": [
@@ -14961,8 +15003,8 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Configuring Plain Security",
-                    "next_url": "/docs/configuring-plain-security/",
+                    "next_title": "Configuring User Security",
+                    "next_url": "/docs/configuring-user-security/",
                     "parent": "Securing Drill",
                     "previous_title": "Configuring Inbound Impersonation",
                     "previous_url": "/docs/configuring-inbound-impersonation/",
@@ -14982,11 +15024,32 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Configuring SSL/TLS for Encryption",
-                    "next_url": "/docs/configuring-ssl-tls-for-encryption/",
+                    "next_title": "Configuring Plain Security",
+                    "next_url": "/docs/configuring-plain-security/",
                     "parent": "Securing Drill",
                     "previous_title": "Configuring User Impersonation with Hive Authorization",
                     "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/",
+                    "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-security.md",
+                    "title": "Configuring User Security",
+                    "url": "/docs/configuring-user-security/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Securing Drill",
+                            "url": "/docs/securing-drill/"
+                        },
+                        {
+                            "title": "Configure Drill",
+                            "url": "/docs/configure-drill/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Configuring SSL/TLS for Encryption",
+                    "next_url": "/docs/configuring-ssl-tls-for-encryption/",
+                    "parent": "Securing Drill",
+                    "previous_title": "Configuring User Security",
+                    "previous_url": "/docs/configuring-user-security/",
                     "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-security.md",
                     "title": "Configuring Plain Security",
                     "url": "/docs/configuring-plain-security/"
@@ -18159,8 +18222,8 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Configuring Plain Security",
-                            "next_url": "/docs/configuring-plain-security/",
+                            "next_title": "Configuring User Security",
+                            "next_url": "/docs/configuring-user-security/",
                             "parent": "Securing Drill",
                             "previous_title": "Configuring Inbound Impersonation",
                             "previous_url": "/docs/configuring-inbound-impersonation/",
@@ -18180,11 +18243,32 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "Configuring SSL/TLS for Encryption",
-                            "next_url": "/docs/configuring-ssl-tls-for-encryption/",
+                            "next_title": "Configuring Plain Security",
+                            "next_url": "/docs/configuring-plain-security/",
                             "parent": "Securing Drill",
                             "previous_title": "Configuring User Impersonation with Hive Authorization",
                             "previous_url": "/docs/configuring-user-impersonation-with-hive-authorization/",
+                            "relative_path": "_docs/configure-drill/securing-drill/070-configuring-user-security.md",
+                            "title": "Configuring User Security",
+                            "url": "/docs/configuring-user-security/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Securing Drill",
+                                    "url": "/docs/securing-drill/"
+                                },
+                                {
+                                    "title": "Configure Drill",
+                                    "url": "/docs/configure-drill/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "Configuring SSL/TLS for Encryption",
+                            "next_url": "/docs/configuring-ssl-tls-for-encryption/",
+                            "parent": "Securing Drill",
+                            "previous_title": "Configuring User Security",
+                            "previous_url": "/docs/configuring-user-security/",
                             "relative_path": "_docs/configure-drill/securing-drill/080-configuring-plain-security.md",
                             "title": "Configuring Plain Security",
                             "url": "/docs/configuring-plain-security/"

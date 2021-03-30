@@ -1,4 +1,4 @@
-c---
+---
 title: "Configuring User Security"
 slug: "Configuring User Security"
 parent: "Securing Drill"
