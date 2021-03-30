@@ -42,13 +42,15 @@ You can use the LIKE pattern matching operator in your Drill queries.
 
 You can use the following math operators in your Drill queries:
 
-**Operator**| **Description**  
----|---  
-+| Addition  
--| Subtraction  
-*| Multiplication  
-/| Division  
-  
+|--------------|-----------------|
+| **Operator** | **Description** |
+|--------------|-----------------|
+| +            | Addition        |
+| -            | Subtraction     |
+| *            | Multiplication  |
+| /            | Division        |
+|--------------|-----------------|
+
 ## Subquery Operators
 
 You can use the following subquery operators in your Drill queries:
@@ -72,6 +74,7 @@ The concat function treats NULL as an empty string. The concatenate operator (||
 
 The following table shows the precedence of operators in decreasing order:
 
+|--------------------------------------|---------------|-------------------------------------------------------------|
 | Operator/Element                     | Associativity | Description                                                 |
 |--------------------------------------|---------------|-------------------------------------------------------------|
 | .                                    | left          | dot notation used, for example, to drill down in a JSON map |
@@ -85,7 +88,7 @@ The following table shows the precedence of operators in decreasing order:
 | IS NOT NULL                          |               | test for not null                                           |
 | (any other)                          | left          | all other native and user-defined operators                 |
 | IN                                   |               | set membership                                              |
-| BETWEEN                              |               | range containment, includes end points                                            |
+| BETWEEN                              |               | range containment, includes end points                      |
 | OVERLAPS                             |               | time interval overlap                                       |
 | LIKE ILIKE SIMILAR TO NOT SIMILAR TO |               | string pattern matching                                     |
 | < >                                  |               | less than, greater than                                     |
@@ -93,4 +96,4 @@ The following table shows the precedence of operators in decreasing order:
 | NOT                                  | right         | logical negation                                            |
 | AND                                  | left          | logical conjunction                                         |
 | OR                                   | left          | logical disjunction                                         |
-
+|--------------------------------------|---------------|-------------------------------------------------------------|
