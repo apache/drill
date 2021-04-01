@@ -552,11 +552,11 @@
   </build>
 
   <pluginRepositories>
-    <pluginRepository>
+    <pluginRepository> //lgtm[java/maven/non-https-url]
       <id>onejar-maven-plugin.googlecode.com</id>
       <url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
     </pluginRepository>
-    <pluginRepository>
+    <pluginRepository> //lgtm[java/maven/non-https-url]
       <id>scala-tools.org</id>
       <name>Scala-tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
