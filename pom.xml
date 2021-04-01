@@ -186,7 +186,7 @@
 
     <repository>
       <id>mapr-releases</id>
-      <url>http://repository.mapr.com/maven/</url>
+      <url>https://repository.mapr.com/maven/</url>
       <releases>
         <enabled>true</enabled>
       </releases>
@@ -3795,7 +3795,7 @@
           </snapshots>
           <id>HDPReleases</id>
           <name>HDP Releases</name>
-          <url>http://repo.hortonworks.com/content/repositories/releases</url>
+          <url>https://repo.hortonworks.com/content/repositories/releases</url>
           <layout>default</layout>
         </repository>
       </repositories>
