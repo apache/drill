@@ -25,7 +25,6 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
-import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ScanPrel;
@@ -51,8 +50,8 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillScanRelBase scan = (DrillScanRelBase) call.rel(1);
-    final Filter filter = (Filter) call.rel(0);
+    final DrillScanRelBase scan = call.rel(1);
+    final Filter filter = call.rel(0);
     final RexNode condition = filter.getCondition();
 
     MongoGroupScan groupScan = (MongoGroupScan) scan.getGroupScan();
