@@ -51,7 +51,7 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillScanRel scan = (DrillScanRel) call.rel(1);
+    final DrillScanRelBase scan = (DrillScanRelBase) call.rel(1);
     final Filter filter = (Filter) call.rel(0);
     final RexNode condition = filter.getCondition();
 
@@ -79,7 +79,7 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
     }
     newGroupsScan.setFilterPushedDown(true);
 
-    final ScanPrel newScanPrel = new ScanPrel(scan.getCluster(), filter.getTraitSet(),
+    final DrillScanRelBase newScanPrel = new ScanPrel(scan.getCluster(), filter.getTraitSet(),
         newGroupsScan, scan.getRowType(), scan.getTable());
 
     if (mongoFilterBuilder.isAllExpressionsConverted()) {
@@ -97,7 +97,7 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    final DrillScanRel scan = call.rel(1);
+    final DrillScanRelBase scan = (DrillScanRelBase)call.rel(1);
     if (scan.getGroupScan() instanceof MongoGroupScan) {
       return super.matches(call);
     }
