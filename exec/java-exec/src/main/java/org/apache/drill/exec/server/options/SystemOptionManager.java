@@ -257,7 +257,6 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ClassCompilerSelector.JAVA_COMPILER_JANINO_MAXSIZE),
       new OptionDefinition(ClassCompilerSelector.JAVA_COMPILER_DEBUG),
       new OptionDefinition(ExecConstants.ENABLE_VERBOSE_ERRORS),
-      new OptionDefinition(ExecConstants.ENABLE_REST_VERBOSE_ERRORS),
       new OptionDefinition(ExecConstants.ENABLE_WINDOW_FUNCTIONS_VALIDATOR),
       new OptionDefinition(ExecConstants.SCALAR_REPLACEMENT_VALIDATOR),
       new OptionDefinition(ExecConstants.ENABLE_NEW_TEXT_READER),

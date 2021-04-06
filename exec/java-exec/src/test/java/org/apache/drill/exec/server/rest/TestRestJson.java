@@ -31,7 +31,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
@@ -146,26 +145,6 @@ public class TestRestJson extends ClusterTest {
         null, "bogusUser", null, null);
     runQuery(query, outFile);
     verifier.verifyFileWithResource(outFile, "failed.json");
-  }
-
-  @Test
-  public void testQueryWithException() throws IOException {
-    File outFile = new File(dirTestWatcher.getTmpDir(), "exception.json");
-    String sql = "SELECT * FROM cp.`employee123321123321.json` LIMIT 20";
-    QueryWrapper query = new QueryWrapper(sql, QueryType.SQL.name(),
-        null, null, null, null);
-    runQuery(query, outFile);
-    verifier.verifyFileWithResource(outFile, "exception.json");
-  }
-
-  @Test
-  public void testQueryWithVerboseException() throws IOException {
-    File outFile = new File(dirTestWatcher.getTmpDir(), "verboseExc.json");
-    String sql = "SELECT * FROM cp.`employee123321123321.json` LIMIT 20";
-    QueryWrapper query = new QueryWrapper(sql, QueryType.SQL.name(),
-        null, null, null, ImmutableMap.of(ExecConstants.ENABLE_REST_VERBOSE_ERRORS_KEY, "true"));
-    runQuery(query, outFile);
-    verifier.verifyFileWithResource(outFile, "verboseExc.json");
   }
 
   @SuppressWarnings("unused")
