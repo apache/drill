@@ -522,14 +522,12 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
       if (maxRecords > 0 && numDocs > 0) {
         recordCount = Math.min(maxRecords, numDocs);
-      } else if (maxRecords == -1) {
-        recordCount = numDocs;
       } else {
-        recordCount = maxRecords;
+        recordCount = numDocs;
       }
 
       float approxDiskCost = 0;
-      if (numDocs != 0) {
+      if (recordCount != 0) {
         //toJson should use client's codec, otherwise toJson could fail on
         // some types not known to DocumentCodec, e.g. DBRef.
         final DocumentCodec codec =

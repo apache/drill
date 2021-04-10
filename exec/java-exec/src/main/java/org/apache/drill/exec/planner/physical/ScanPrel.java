@@ -60,6 +60,11 @@ public class ScanPrel extends DrillScanRelBase implements LeafPrel, HasDistribut
   }
 
   @Override
+  public ScanPrel copy(RelTraitSet traitSet, GroupScan scan) {
+    return new ScanPrel(getCluster(), traitSet, scan, getRowType(), getTable());
+  }
+
+  @Override
   protected Object clone() throws CloneNotSupportedException {
     return new ScanPrel(this.getCluster(), this.getTraitSet(), getCopy(this.getGroupScan()),
         this.rowType, this.getTable());
@@ -78,12 +83,6 @@ public class ScanPrel extends DrillScanRelBase implements LeafPrel, HasDistribut
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator)
       throws IOException {
     return creator.addMetadata(this, this.getGroupScan());
-  }
-
-  public static ScanPrel create(RelNode old, RelTraitSet traitSets,
-      GroupScan scan, RelDataType rowType) {
-    return new ScanPrel(old.getCluster(), traitSets,
-        getCopy(scan), rowType, old.getTable());
   }
 
   @Override
