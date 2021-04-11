@@ -4,7 +4,10 @@
 [![Artifact](https://img.shields.io/maven-central/v/org.apache.drill/distribution.svg)](https://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.drill%22%20AND%20a%3A%22distribution%22)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Join Drill Slack](https://img.shields.io/badge/slack-open-e01563.svg)](http://apache-drill.slack.com "Join our Slack community")
-
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/apache/drill.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/apache/drill/alerts/)
+[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/apache/drill.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/apache/drill/context:java)
+[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/apache/drill.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/apache/drill/context:javascript)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/apache/drill.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/apache/drill/context:python)
 
 Apache Drill is a distributed MPP query layer that supports SQL and alternative query languages against NoSQL and Hadoop data storage systems.  It was inspired in part by [Google's Dremel](http://research.google.com/pubs/pub36632.html).  
 
