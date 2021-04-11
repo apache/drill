@@ -191,4 +191,9 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
     return projectedColumns;
   }
+
+  @Override
+  public DrillScanRel copy(RelTraitSet traitSet, GroupScan scan) {
+    return new DrillScanRel(getCluster(), getTraitSet(), getTable(), scan, getRowType(), getColumns(), partitionFilterPushdown());
+  }
 }

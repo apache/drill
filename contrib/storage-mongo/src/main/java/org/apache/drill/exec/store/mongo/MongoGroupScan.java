@@ -37,6 +37,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -79,7 +80,7 @@ import com.mongodb.client.MongoDatabase;
 public class MongoGroupScan extends AbstractGroupScan implements
     DrillMongoConstants {
 
-  private static final Integer select = Integer.valueOf(1);
+  private static final Integer select = 1;
 
   private static final Logger logger = LoggerFactory.getLogger(MongoGroupScan.class);
 
@@ -102,6 +103,8 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   private List<SchemaPath> columns;
 
+  private int maxRecords;
+
   private Map<Integer, List<MongoSubScanSpec>> endpointFragmentMapping;
 
   // Sharding with replica sets contains all the replica server addresses for
@@ -120,23 +123,26 @@ public class MongoGroupScan extends AbstractGroupScan implements
       @JsonProperty("mongoScanSpec") MongoScanSpec scanSpec,
       @JsonProperty("storage") MongoStoragePluginConfig storagePluginConfig,
       @JsonProperty("columns") List<SchemaPath> columns,
-      @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException,
+      @JacksonInject StoragePluginRegistry pluginRegistry,
+      @JsonProperty("maxRecords") int maxRecords) throws IOException,
       ExecutionSetupException {
     this(userName,
         pluginRegistry.resolve(storagePluginConfig, MongoStoragePlugin.class),
-        scanSpec, columns);
+        scanSpec, columns, maxRecords);
   }
 
   public MongoGroupScan(String userName, MongoStoragePlugin storagePlugin,
-      MongoScanSpec scanSpec, List<SchemaPath> columns) throws IOException {
+      MongoScanSpec scanSpec, List<SchemaPath> columns, int maxRecords) throws IOException {
     super(userName);
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
     this.scanSpec = scanSpec;
     this.columns = columns;
     this.storagePluginConfig.getConnection();
+    this.maxRecords = maxRecords;
     init();
   }
+
 
   /**
    * Private constructor, used for cloning.
@@ -153,6 +159,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
     this.chunksInverseMapping = that.chunksInverseMapping;
     this.endpointFragmentMapping = that.endpointFragmentMapping;
     this.filterPushedDown = that.filterPushedDown;
+    this.maxRecords = that.maxRecords;
   }
 
   @JsonIgnore
@@ -371,6 +378,12 @@ public class MongoGroupScan extends AbstractGroupScan implements
     return clone;
   }
 
+  public GroupScan clone(int maxRecords) {
+    MongoGroupScan clone = new MongoGroupScan(this);
+    clone.maxRecords = maxRecords;
+    return clone;
+  }
+
   @Override
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;
@@ -476,6 +489,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
         .setHosts(chunkInfo.getChunkLocList())
         .setMinFilters(chunkInfo.getMinFilters())
         .setMaxFilters(chunkInfo.getMaxFilters())
+        .setMaxRecords(maxRecords)
         .setFilter(scanSpec.getFilters());
     return subScanSpec;
   }
@@ -499,21 +513,29 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   @Override
   public ScanStats getScanStats() {
+    long recordCount;
     try{
       MongoClient client = storagePlugin.getClient();
       MongoDatabase db = client.getDatabase(scanSpec.getDbName());
       MongoCollection<Document> collection = db.getCollection(scanSpec.getCollectionName());
-      long numDocs = collection.count();
+      long numDocs = collection.countDocuments();
+
+      if (maxRecords > 0 && numDocs > 0) {
+        recordCount = Math.min(maxRecords, numDocs);
+      } else {
+        recordCount = numDocs;
+      }
+
       float approxDiskCost = 0;
-      if (numDocs != 0) {
+      if (recordCount != 0) {
         //toJson should use client's codec, otherwise toJson could fail on
         // some types not known to DocumentCodec, e.g. DBRef.
         final DocumentCodec codec =
             new DocumentCodec(client.getMongoClientOptions().getCodecRegistry(), new BsonTypeClassMap());
         String json = collection.find().first().toJson(codec);
-        approxDiskCost = json.getBytes().length * numDocs;
+        approxDiskCost = json.getBytes().length * recordCount;
       }
-      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, numDocs, 1, approxDiskCost);
+      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, recordCount, 1, approxDiskCost);
     } catch (Exception e) {
       throw new DrillRuntimeException(e.getMessage(), e);
     }
@@ -563,6 +585,19 @@ public class MongoGroupScan extends AbstractGroupScan implements
   }
 
   @Override
+  public boolean supportsLimitPushdown() {
+    return true;
+  }
+
+  @Override
+  public GroupScan applyLimit(int maxRecords) {
+    if (maxRecords == this.maxRecords) {
+      return null;
+    }
+    return clone(maxRecords);
+  }
+
+  @Override
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
@@ -578,6 +613,9 @@ public class MongoGroupScan extends AbstractGroupScan implements
     return storagePluginConfig;
   }
 
+  @JsonProperty("maxRecords")
+  public int getMaxRecords() { return maxRecords; }
+
   @JsonIgnore
   public MongoStoragePlugin getStoragePlugin() {
     return storagePlugin;
@@ -585,8 +623,11 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   @Override
   public String toString() {
-    return "MongoGroupScan [MongoScanSpec=" + scanSpec + ", columns=" + columns
-        + "]";
+    return new PlanStringBuilder(this)
+      .field("MongoScanSpec", scanSpec)
+      .field("columns", columns)
+      .field("maxRecords", maxRecords)
+      .toString();
   }
 
   @VisibleForTesting
@@ -611,5 +652,4 @@ public class MongoGroupScan extends AbstractGroupScan implements
   void setInverseChunsMapping(Map<String, List<ChunkInfo>> chunksInverseMapping) {
     this.chunksInverseMapping = chunksInverseMapping;
   }
-
 }

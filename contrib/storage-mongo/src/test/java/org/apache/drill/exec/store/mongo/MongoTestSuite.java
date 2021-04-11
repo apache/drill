@@ -70,6 +70,7 @@ import java.util.concurrent.atomic.AtomicInteger;
   TestMongoFilterPushDown.class,
   TestMongoProjectPushDown.class,
   TestMongoQueries.class,
+  TestMongoLimitPushDown.class,
   TestMongoChunkAssignment.class,
   TestMongoStoragePluginUsesCredentialsStore.class,
   TestMongoDrillIssue.class

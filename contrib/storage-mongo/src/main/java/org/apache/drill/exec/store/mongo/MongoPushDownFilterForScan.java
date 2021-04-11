@@ -18,23 +18,22 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
+import java.util.Collections;
 
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Filter;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.drill.exec.planner.physical.FilterPrel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rex.RexNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
   private static final Logger logger = LoggerFactory
@@ -43,14 +42,14 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
 
   private MongoPushDownFilterForScan() {
     super(
-        RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)),
+        RelOptHelper.some(Filter.class, RelOptHelper.any(DrillScanRelBase.class)),
         "MongoPushDownFilterForScan");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final ScanPrel scan = (ScanPrel) call.rel(1);
-    final FilterPrel filter = (FilterPrel) call.rel(0);
+    final DrillScanRelBase scan = call.rel(1);
+    final Filter filter = call.rel(0);
     final RexNode condition = filter.getCondition();
 
     MongoGroupScan groupScan = (MongoGroupScan) scan.getGroupScan();
@@ -67,18 +66,17 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
       return; // no filter pushdown so nothing to apply.
     }
 
-    MongoGroupScan newGroupsScan = null;
+    MongoGroupScan newGroupsScan;
     try {
       newGroupsScan = new MongoGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(),
-          newScanSpec, groupScan.getColumns());
+          newScanSpec, groupScan.getColumns(), groupScan.getMaxRecords());
     } catch (IOException e) {
       logger.error(e.getMessage(), e);
       throw new DrillRuntimeException(e.getMessage(), e);
     }
     newGroupsScan.setFilterPushedDown(true);
 
-    final ScanPrel newScanPrel = new ScanPrel(scan.getCluster(), filter.getTraitSet(),
-        newGroupsScan, scan.getRowType(), scan.getTable());
+    RelNode newScanPrel = scan.copy(filter.getTraitSet(), newGroupsScan);
 
     if (mongoFilterBuilder.isAllExpressionsConverted()) {
       /*
@@ -88,18 +86,14 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
       call.transformTo(newScanPrel);
     } else {
       call.transformTo(filter.copy(filter.getTraitSet(),
-          ImmutableList.of((RelNode) newScanPrel)));
+          Collections.singletonList(newScanPrel)));
     }
 
   }
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    final ScanPrel scan = (ScanPrel) call.rel(1);
-    if (scan.getGroupScan() instanceof MongoGroupScan) {
-      return super.matches(call);
-    }
-    return false;
+    DrillScanRelBase scan = call.rel(1);
+    return scan.getGroupScan() instanceof MongoGroupScan && super.matches(call);
   }
-
 }

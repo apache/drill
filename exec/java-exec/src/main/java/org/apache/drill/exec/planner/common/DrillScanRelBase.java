@@ -86,4 +86,6 @@ public abstract class DrillScanRelBase extends TableScan implements DrillRelNode
     double dIo = 0;
     return planner.getCostFactory().makeCost(dRows, dCpu, dIo);
   }
+
+  public abstract DrillScanRelBase copy(RelTraitSet traitSet, GroupScan scan);
 }

@@ -73,8 +73,7 @@ public class DruidPushDownFilterForScan extends StoragePluginOptimizerRule {
             groupScan.getMaxRecordsToRead());
     newGroupsScan.setFilterPushedDown(true);
 
-    final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(),
-      newGroupsScan, scan.getRowType());
+    ScanPrel newScanPrel = scan.copy(filter.getTraitSet(), newGroupsScan);
     if (druidFilterBuilder.isAllExpressionsConverted()) {
       /*
        * Since we could convert the entire filter condition expression into a
