@@ -64,9 +64,11 @@
       <url>https://oss.sonatype.org/content/groups/public</url>
       <snapshots>
         <enabled>true</enabled>
+        <checksumPolicy>fail</checksumPolicy>
       </snapshots>
       <releases>
         <enabled>true</enabled>
+        <checksumPolicy>fail</checksumPolicy>
       </releases>
     </pluginRepository>
   </pluginRepositories>

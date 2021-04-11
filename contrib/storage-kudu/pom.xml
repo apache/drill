@@ -79,6 +79,7 @@
       <url>https://repository.apache.org/content/groups/snapshots/</url>
       <snapshots>
         <enabled>true</enabled>
+        <checksumPolicy>fail</checksumPolicy>
       </snapshots>
       <releases>
         <enabled>false</enabled>

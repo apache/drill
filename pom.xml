@@ -35,7 +35,7 @@
 
   <name>Drill : </name>
   <description>Apache Drill is an open source, low latency SQL query engine for Hadoop and NoSQL.</description>
-  <url>http://drill.apache.org/</url>
+  <url>https://drill.apache.org/</url>
 
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>
@@ -177,7 +177,7 @@
       <releases>
         <enabled>true</enabled>
         <updatePolicy>never</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
+        <checksumPolicy>fail</checksumPolicy>
       </releases>
       <snapshots>
         <enabled>false</enabled>
@@ -186,9 +186,10 @@
 
     <repository>
       <id>mapr-releases</id>
-      <url>http://repository.mapr.com/maven/</url>
+      <url>https://repository.mapr.com/maven/</url>
       <releases>
         <enabled>true</enabled>
+        <checksumPolicy>fail</checksumPolicy>
       </releases>
       <snapshots>
         <enabled>false</enabled>
@@ -203,6 +204,7 @@
       </releases>
       <snapshots>
         <enabled>true</enabled>
+        <checksumPolicy>fail</checksumPolicy>
       </snapshots>
     </repository>
 
@@ -513,7 +515,7 @@
             <manifestEntries>
               <Extension-Name>org.apache.drill</Extension-Name>
               <Built-By>${user.name}</Built-By>
-              <url>http://drill.apache.org/</url>
+              <url>https://drill.apache.org/</url>
             </manifestEntries>
           </archive>
         </configuration>
@@ -3659,6 +3661,12 @@
         <repository>
           <id>cloudera</id>
           <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+          <releases>
+            <checksumPolicy>fail</checksumPolicy>
+          </releases>
+          <snapshots>
+            <checksumPolicy>fail</checksumPolicy>
+          </snapshots>
         </repository>
       </repositories>
     </profile>
@@ -3790,7 +3798,7 @@
           <releases>
             <enabled>true</enabled>
             <updatePolicy>always</updatePolicy>
-            <checksumPolicy>warn</checksumPolicy>
+            <checksumPolicy>fail</checksumPolicy>
           </releases>
           <snapshots>
             <enabled>false</enabled>
@@ -3799,7 +3807,7 @@
           </snapshots>
           <id>HDPReleases</id>
           <name>HDP Releases</name>
-          <url>http://repo.hortonworks.com/content/repositories/releases</url>
+          <url>https://repo.hortonworks.com/content/repositories/releases</url>
           <layout>default</layout>
         </repository>
       </repositories>
