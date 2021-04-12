@@ -91,7 +91,7 @@ public class XMLBatchReader implements ManagedReader<FileSchemaNegotiator> {
     } catch (Exception e) {
       throw UserException //lgtm[java/unused-format-argument]
         .dataReadError(e)
-        .message("Failed to open open input file: {}", split.getPath().toString())
+        .message("Failed to open open input file: %s", split.getPath().toString())
         .addContext(errorContext)
         .addContext(e.getMessage())
         .build(logger);
