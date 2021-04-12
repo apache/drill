@@ -377,7 +377,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
     int totalColNum = STAR_COLS;
     PluginCost pluginCostModel = formatPlugin.getPluginCostModel();
     final int avgColumnSize = pluginCostModel.getAverageColumnSize(this);
-    boolean filterPushed = (scanSpec.getSerializedFilter() != null);  //lgtm[java/dereferenced-value-may-be-null]
+    boolean filterPushed = (scanSpec != null && scanSpec.getSerializedFilter() != null);
     if (scanSpec != null && scanSpec.getIndexDesc() != null) {
       totalColNum = scanSpec.getIndexDesc().getIncludedFields().size()
           + scanSpec.getIndexDesc().getIndexedFields().size() + 1;
