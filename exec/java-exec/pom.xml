@@ -259,10 +259,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.parquet</groupId>
-      <artifactId>parquet-format</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.parquet</groupId>
       <artifactId>parquet-common</artifactId>
       <version>${parquet.version}</version>
     </dependency>

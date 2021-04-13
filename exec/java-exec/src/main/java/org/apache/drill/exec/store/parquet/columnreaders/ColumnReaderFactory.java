@@ -201,13 +201,15 @@ public class ColumnReaderFactory {
         } else if (convertedType == ConvertedType.INTERVAL) {
           return new NullableFixedByteAlignedReaders.NullableIntervalReader(recordReader, descriptor,
               columnChunkMetaData, fixedLength, (NullableIntervalVector) v, schemaElement);
+        } else {
+          return new NullableFixedByteAlignedReaders.NullableFixedBinaryReader(recordReader, descriptor,
+                  columnChunkMetaData, fixedLength, (NullableVarBinaryVector) v, schemaElement);
         }
       } else {
         return getNullableColumnReader(recordReader, descriptor,
             columnChunkMetaData, fixedLength, v, schemaElement);
       }
     }
-    throw new Exception("Unexpected parquet metadata configuration.");
   }
 
   static VarLengthValuesColumn<?> getReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,

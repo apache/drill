@@ -887,4 +887,18 @@ public class TestParquetComplex extends BaseTestQuery {
         .baselineValues(2, null)
         .go();
   }
+
+  @Test
+  public void testNewComplexParquetReaderUUID() throws Exception {
+    String query = "select `uuid_req1`, `uuid_opt1`, `uuid_req2` from cp.`store/parquet/complex/uuid.parquet` order by `uuid_req1`, `uuid_opt1`, `uuid_req2` limit 1";
+    byte[] firstValue = {0, 39, -125, -76, -113, 95, 73, -68, -68, 61, -89, -24, 123, -40, 94, -6};
+    byte[] secondValue = {74, -38, 0, -43, -73, 101, 67, -11, -68, -17, -63, 111, -20, 70, -93, -76};
+    testBuilder()
+            .optionSettingQueriesForTestQuery("alter session set `store.parquet.use_new_reader` = false")
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("uuid_req1", "uuid_opt1", "uuid_req2")
+            .baselineValues(firstValue, null, secondValue)
+            .go();
+  }
 }
