@@ -89,7 +89,7 @@ public class XMLBatchReader implements ManagedReader<FileSchemaNegotiator> {
       reader = new XMLReader(fsStream, dataLevel, maxRecords);
       reader.open(rootRowWriter, errorContext);
     } catch (Exception e) {
-      throw UserException //lgtm[java/unused-format-argument]
+      throw UserException 
         .dataReadError(e)
         .message("Failed to open open input file: %s", split.getPath().toString())
         .addContext(errorContext)
