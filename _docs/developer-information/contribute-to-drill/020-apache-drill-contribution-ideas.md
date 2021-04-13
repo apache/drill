@@ -12,9 +12,6 @@ parent: "Contribute to Drill"
     * BI Tool testing
   * General CLI improvements 
   * Eco system integrations
-    * MapReduce
-    * Hive views
-    * YARN
     * Spark
     * Hue
     * Phoenix
@@ -55,12 +52,8 @@ Currently Drill supports text, JSON and Parquet file formats natively when
 interacting with file system. More readers/writers can be introduced by
 implementing custom storage plugins. Example formats are.
 
-  * Sequence
-  * RC
   * ORC
-  * Protobuf
-  * XML
-  * Thrift
+  * XML (<https://issues.apache.org/jira/browse/DRILL-7823>)
 
 ## Support for new data sources
 
@@ -108,10 +101,8 @@ Drill currently provides JDBC/ODBC drivers for the applications to interact
 along with a basic version of REST API and a C++ API. The following list
 provides a few possible application interface opportunities:
 
-  * Enhancements to REST APIs (<https://issues.apache.org/jira/browse/DRILL-77>)
   * Expose Drill tables/views as REST APIs
   * Language drivers for Drill (python etc)
-  * Thrift support
   * ....
 
 ### BI Tool testing
@@ -129,23 +120,7 @@ file, output results to a file, display version information, and so on.
 
 ## Eco system integrations
 
-### MapReduce
-
-Allow using result set from Drill queries as input to the Hadoop/MapReduce
-jobs.
-
-### Hive views
-
-Query data from existing Hive views using Drill queries. Drill needs to parse
-the HiveQL and translate them appropriately (into Drill's SQL or
-logical/physical plans) to execute the requests.
-
-### YARN
-
-[https://issues.apache.org/jira/browse/_DRILL_-1170](https://issues.apache.org
-/jira/browse/DRILL-1170)
-
-## Spark
+### Spark
 
 Provide ability to invoke Drill queries as part of Apache Spark programs. This
 gives ability for Spark developers/users to leverage Drill richness of the
@@ -158,7 +133,7 @@ Hue is a GUI for users to interact with various Hadoop eco system components
 expose Drill as an application inside Hue so users can explore Drill metadata
 and do SQL queries.
 
-### Phoenix
+### Phoenix (<https://issues.apache.org/jira/browse/DRILL-7863>)
 
 Phoenix provides a low latency query layer on HBase for operational
 applications. The goal of this effort is to explore opportunities for
