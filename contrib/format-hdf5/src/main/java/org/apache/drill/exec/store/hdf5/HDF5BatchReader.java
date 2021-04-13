@@ -498,7 +498,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
    * @return Map The attributes for the given path.  Empty Map if no attributes present
    */
   private Map<String, HDF5Attribute> getAttributes(String path) {
-
+    Map<String, Attribute> attributeList;
     // Remove trailing slashes
     if (path.endsWith("/")) {
       path = path.substring(0, path.length() - 1);
@@ -516,7 +516,12 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
       return attributes;
     }
 
-    Map<String, Attribute> attributeList = theNode.getAttributes();
+    try {
+      attributeList = theNode.getAttributes();
+    } catch (HdfException e) {
+      logger.warn("Unable to get attributes for {}: Only Huge objects BTrees with 1 record are currently supported.", path);
+      return attributes;
+    }
 
     logger.debug("Found {} attribtutes for {}", attributeList.size(), path);
     for (Map.Entry<String, Attribute> attributeEntry : attributeList.entrySet()) {
