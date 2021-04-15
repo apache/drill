@@ -31,6 +31,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -109,7 +110,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
       // evaluates lazily, seeking to the
       // first/last offset in all partitions only when poll(long) or
       // position(TopicPartition) are called
-      kafkaConsumer.poll(0);
+      kafkaConsumer.poll(Duration.ofSeconds(0));
       Set<TopicPartition> assignments = kafkaConsumer.assignment();
 
       if (flag == -2) {
