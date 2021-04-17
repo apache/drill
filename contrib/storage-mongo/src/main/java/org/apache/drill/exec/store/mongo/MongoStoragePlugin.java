@@ -19,12 +19,15 @@ package org.apache.drill.exec.store.mongo;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClients;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -49,9 +52,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class MongoStoragePlugin extends AbstractStoragePlugin {
@@ -60,7 +63,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   private final MongoStoragePluginConfig mongoConfig;
   private final MongoSchemaFactory schemaFactory;
   private final Cache<MongoCnxnKey, MongoClient> addressClientMap;
-  private final MongoClientURI clientURI;
+  private final ConnectionString clientURI;
 
   public MongoStoragePlugin(
       MongoStoragePluginConfig mongoConfig,
@@ -69,16 +72,17 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
     super(context, name);
     this.mongoConfig = mongoConfig;
     String connection = addCredentialsFromCredentialsProvider(this.mongoConfig.getConnection(), name);
-    this.clientURI = new MongoClientURI(connection);
+    this.clientURI = new ConnectionString(connection);
     this.addressClientMap = CacheBuilder.newBuilder()
-      .expireAfterAccess(24, TimeUnit.HOURS)
-      .removalListener(new AddressCloser()).build();
+        .expireAfterAccess(24, TimeUnit.HOURS)
+        .removalListener(new AddressCloser())
+        .build();
     this.schemaFactory = new MongoSchemaFactory(this, name);
   }
 
   private String addCredentialsFromCredentialsProvider(String connection, String name) {
-    MongoClientURI parsed = new MongoClientURI(connection);
-    if (parsed.getCredentials() == null) {
+    ConnectionString parsed = new ConnectionString(connection);
+    if (parsed.getCredential() == null) {
       UsernamePasswordCredentials credentials = getUsernamePasswordCredentials(name);
       try {
         // The default connection has the name "mongo" but multiple connections can be added;
@@ -148,10 +152,6 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
     }
   }
 
-  public MongoClient getClient(String host) {
-    return getClient(Collections.singletonList(new ServerAddress(host)));
-  }
-
   public MongoClient getClient() {
     List<String> hosts = clientURI.getHosts();
     List<ServerAddress> addresses = Lists.newArrayList();
@@ -163,22 +163,22 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
 
   public synchronized MongoClient getClient(List<ServerAddress> addresses) {
     // Take the first replica from the replicated servers
-    final ServerAddress serverAddress = addresses.get(0);
-    final MongoCredential credential = clientURI.getCredentials();
+    ServerAddress serverAddress = addresses.get(0);
+    MongoCredential credential = clientURI.getCredential();
     String userName = credential == null ? null : credential.getUserName();
     MongoCnxnKey key = new MongoCnxnKey(serverAddress, userName);
-    MongoClient client = addressClientMap.getIfPresent(key);
-    if (client == null) {
-      if (credential != null) {
-        client = new MongoClient(addresses, credential, clientURI.getOptions());
-      } else {
-        client = new MongoClient(addresses, clientURI.getOptions());
-      }
-      addressClientMap.put(key, client);
-      logger.debug("Created connection to {}.", key.toString());
-      logger.debug("Number of open connections {}.", addressClientMap.size());
+    try {
+      return addressClientMap.get(key, () -> {
+        logger.info("Created connection to {}.", key);
+        logger.info("Number of open connections {}.", addressClientMap.size());
+        return MongoClients.create(MongoClientSettings.builder()
+            .applyConnectionString(clientURI)
+            .applyToClusterSettings(builder -> builder.hosts(addresses))
+            .build());
+      });
+    } catch (ExecutionException e) {
+      throw new DrillRuntimeException(e);
     }
-    return client;
   }
 
   @Override

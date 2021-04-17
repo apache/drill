@@ -23,9 +23,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientURI;
-import com.mongodb.MongoCredential;
+import com.mongodb.ConnectionString;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
@@ -38,14 +36,14 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
   private final String connection;
 
   @JsonIgnore
-  private final MongoClientURI clientURI;
+  private final ConnectionString clientURI;
 
   @JsonCreator
   public MongoStoragePluginConfig(@JsonProperty("connection") String connection,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
     super(getCredentialsProvider(credentialsProvider), credentialsProvider == null);
     this.connection = connection;
-    this.clientURI = new MongoClientURI(connection);
+    this.clientURI = new ConnectionString(connection);
   }
 
   @Override
@@ -63,16 +61,6 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
   @Override
   public int hashCode() {
     return this.connection != null ? this.connection.hashCode() : 0;
-  }
-
-  @JsonIgnore
-  public MongoCredential getMongoCredentials() {
-    return clientURI.getCredentials();
-  }
-
-  @JsonIgnore
-  public MongoClientOptions getMongoOptions() {
-    return clientURI.getOptions();
   }
 
   @JsonIgnore

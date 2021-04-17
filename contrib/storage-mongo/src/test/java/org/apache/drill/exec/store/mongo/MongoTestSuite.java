@@ -18,32 +18,17 @@
 package org.apache.drill.exec.store.mongo;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
-import de.flapdoodle.embed.mongo.Command;
-import de.flapdoodle.embed.mongo.MongodExecutable;
-import de.flapdoodle.embed.mongo.MongodProcess;
-import de.flapdoodle.embed.mongo.MongodStarter;
-import de.flapdoodle.embed.mongo.config.IMongoCmdOptions;
-import de.flapdoodle.embed.mongo.config.IMongodConfig;
-import de.flapdoodle.embed.mongo.config.IMongosConfig;
-import de.flapdoodle.embed.mongo.config.MongoCmdOptionsBuilder;
-import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
-import de.flapdoodle.embed.mongo.config.MongosConfigBuilder;
-import de.flapdoodle.embed.mongo.config.Net;
-import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
-import de.flapdoodle.embed.mongo.config.Storage;
-import de.flapdoodle.embed.mongo.distribution.Version;
-import de.flapdoodle.embed.mongo.tests.MongosSystemForTestFactory;
-import de.flapdoodle.embed.process.config.IRuntimeConfig;
-import de.flapdoodle.embed.process.runtime.Network;
 import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.categories.SlowTest;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.conf.Configuration;
 import org.bson.Document;
@@ -55,15 +40,19 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.Container;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
+import org.testcontainers.images.builder.Transferable;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -82,152 +71,125 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
   private static final Logger logger = LoggerFactory.getLogger(MongoTestSuite.class);
   protected static MongoClient mongoClient;
 
-  private static boolean distMode = Boolean.parseBoolean(System.getProperty("drill.mongo.tests.shardMode", "false"));
-  private static boolean authEnabled = Boolean.parseBoolean(System.getProperty("drill.mongo.tests.authEnabled", "false"));
+  private static final boolean distMode = Boolean.parseBoolean(System.getProperty("drill.mongo.tests.shardMode", "false"));
   private static volatile String connectionURL = null;
-  private static volatile AtomicInteger initCount = new AtomicInteger(0);
+  private static final AtomicInteger initCount = new AtomicInteger(0);
+
+  private static ContainerManager containerManager;
 
   public static String getConnectionURL() {
     return connectionURL;
   }
 
-  private static class DistributedMode {
-    private static MongosSystemForTestFactory mongosTestFactory;
+  private abstract static class ContainerManager {
+    protected static List<GenericContainer<?>> mongoContainers;
 
-    private static String setup() throws Exception {
-      // creating configServers
-      List<IMongodConfig> configServers = new ArrayList<>(1);
-      configServers.add(crateConfigServerConfig(CONFIG_SERVER_1_PORT));
-      configServers.add(crateConfigServerConfig(CONFIG_SERVER_2_PORT));
-      configServers.add(crateConfigServerConfig(CONFIG_SERVER_3_PORT));
+    public abstract String setup() throws Exception;
 
-      // creating replicaSets
-      // A LinkedHashMap ensures that the config servers are started first.
-      Map<String, List<IMongodConfig>> replicaSets = new LinkedHashMap<>();
+    public void cleanup() {
+      mongoContainers.forEach(GenericContainer::stop);
+    }
 
-      List<IMongodConfig> replicaSet1 = new ArrayList<>();
-      replicaSet1.add(crateIMongodConfig(MONGOD_1_PORT, false, REPLICA_SET_1_NAME));
-      replicaSet1.add(crateIMongodConfig(MONGOD_2_PORT, false, REPLICA_SET_1_NAME));
-      replicaSet1.add(crateIMongodConfig(MONGOD_3_PORT, false, REPLICA_SET_1_NAME));
+    public GenericContainer<?> getMasterContainer() {
+      return mongoContainers.iterator().next();
+    }
+  }
 
-      List<IMongodConfig> replicaSet2 = new ArrayList<>();
-      replicaSet2.add(crateIMongodConfig(MONGOD_4_PORT, false, REPLICA_SET_2_NAME));
-      replicaSet2.add(crateIMongodConfig(MONGOD_5_PORT, false, REPLICA_SET_2_NAME));
-      replicaSet2.add(crateIMongodConfig(MONGOD_6_PORT, false, REPLICA_SET_2_NAME));
+  private static class DistributedMode extends ContainerManager {
 
-      replicaSets.put(CONFIG_REPLICA_SET, configServers);
-      replicaSets.put(REPLICA_SET_1_NAME, replicaSet1);
-      replicaSets.put(REPLICA_SET_2_NAME, replicaSet2);
+    @Override
+    public String setup() throws Exception {
+      Network network = Network.newNetwork();
 
-      // create mongo shards
-      IMongosConfig mongosConfig = createIMongosConfig();
-      mongosTestFactory = new MongosSystemForTestFactory(mongosConfig, replicaSets, Lists.newArrayList(),
-          EMPLOYEE_DB, EMPINFO_COLLECTION,"employee_id");
-      try {
-        mongosTestFactory.start();
-        mongoClient = (MongoClient) mongosTestFactory.getMongo();
-      } catch (Throwable e) {
-        logger.error(" Error while starting sharded cluster. ", e);
-        throw new Exception(" Error while starting sharded cluster. ", e);
-      }
+      mongoContainers = Stream.of("m1", "m2", "m3")
+          .map(networkAlias -> new GenericContainer<>("mongo:4.4.5")
+              .withNetwork(network)
+              .withNetworkAliases(networkAlias)
+              .withExposedPorts(MONGOS_PORT)
+              .withCommand("--replSet rs0 --bind_ip localhost," + networkAlias))
+          .collect(Collectors.toList());
+
+      mongoContainers.forEach(GenericContainer::start);
+
+      GenericContainer<?> master = getMasterContainer();
+
+      Container.ExecResult execResult = master.execInContainer("/bin/bash", "-c",
+          String.format("mongo --eval 'printjson(rs.initiate({_id:\"rs0\"," +
+          "members:[{_id:0,host:\"m1:%1$s\"},{_id:1,host:\"m2:%1$s\"},{_id:2,host:\"m3:%1$s\"}]}))' --quiet", MONGOS_PORT));
+      logger.info(execResult.toString());
+      execResult = master.execInContainer("/bin/bash", "-c",
+          "until mongo --eval \"printjson(rs.isMaster())\" | grep ismaster | grep true > /dev/null 2>&1;do sleep 1;done");
+      logger.info(execResult.toString());
+
+      String hosts = Stream.of(master)
+          .map(c -> c.getContainerIpAddress() + ":" + c.getMappedPort(MONGOS_PORT))
+          .collect(Collectors.joining(","));
+
+      String replicaSetUrl = String.format("mongodb://%s", hosts);
+
+      mongoClient = MongoClients.create(replicaSetUrl);
+
+      logger.info("Execute list shards.");
+      execResult = master.execInContainer("/bin/bash", "-c", "mongo --eval 'db.adminCommand({ listShards: 1 })'");
+      logger.info(execResult.toString());
+
+      // Enabled sharding at database level
+      logger.info("Enabled sharding at database level");
+      execResult = master.execInContainer("/bin/bash", "-c", String.format("mongo --eval 'db.adminCommand( {\n" +
+          "   enableSharding: \"%s\"\n" +
+          "} )'", EMPLOYEE_DB));
+      logger.info(execResult.toString());
+
+      // Create index in sharded collection
+      logger.info("Create index in sharded collection");
+      MongoDatabase db = mongoClient.getDatabase(EMPLOYEE_DB);
+      db.getCollection(EMPINFO_COLLECTION).createIndex(Indexes.ascending("employee_id"));
+
+      // Shard the collection
+      logger.info("Shard the collection: {}.{}", EMPLOYEE_DB, EMPINFO_COLLECTION);
+      execResult = master.execInContainer("/bin/bash", "-c", String.format(
+          "mongo --eval '{\n" +
+              "   shardCollection: \"%s.%s\",\n" +
+              "   key: { employee_id: 1 },\n" +
+              "}'", EMPLOYEE_DB, EMPINFO_COLLECTION));
+      logger.info(execResult.toString());
+      createMongoUser();
       createDbAndCollections(DONUTS_DB, DONUTS_COLLECTION, "id");
       createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
       createDbAndCollections(DATATYPE_DB, DATATYPE_COLLECTION, "_id");
 
       // the way how it work: client -> router(mongos) -> Shard1 ... ShardN
-      return String.format("mongodb://%s:%s", LOCALHOST, MONGOS_PORT);
-    }
-
-    private static IMongodConfig crateConfigServerConfig(int configServerPort) throws IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder()
-        .useNoPrealloc(false)
-        .useSmallFiles(false)
-        .useNoJournal(false)
-        .useStorageEngine(STORAGE_ENGINE)
-        .verbose(false)
-        .build();
-
-      Storage replication = new Storage(null, CONFIG_REPLICA_SET, 0);
-
-      return new MongodConfigBuilder()
-          .version(Version.Main.V3_4)
-          .net(new Net(LOCALHOST, configServerPort, Network.localhostIsIPv6()))
-          .replication(replication)
-          .shardServer(false)
-          .configServer(true).cmdOptions(cmdOptions).build();
-    }
-
-    private static IMongodConfig crateIMongodConfig(int mongodPort, boolean flag, String replicaName)
-        throws IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder()
-        .useNoPrealloc(false)
-        .useSmallFiles(false)
-        .useNoJournal(false)
-        .useStorageEngine(STORAGE_ENGINE)
-        .verbose(false)
-        .build();
-
-      Storage replication = new Storage(null, replicaName, 0);
-
-      return new MongodConfigBuilder()
-          .version(Version.Main.V3_4)
-          .shardServer(true)
-          .net(new Net(LOCALHOST, mongodPort, Network.localhostIsIPv6()))
-          .configServer(flag).replication(replication).cmdOptions(cmdOptions)
-          .build();
-    }
-
-    private static IMongosConfig createIMongosConfig() throws IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder()
-        .useNoPrealloc(false)
-        .useSmallFiles(false)
-        .useNoJournal(false)
-        .useStorageEngine(STORAGE_ENGINE)
-        .verbose(false)
-        .build();
-
-      return new MongosConfigBuilder()
-          .version(Version.Main.V3_4)
-          .net(new Net(LOCALHOST, MONGOS_PORT, Network.localhostIsIPv6()))
-          .replicaSet(CONFIG_REPLICA_SET)
-          .configDB(LOCALHOST + ":" + CONFIG_SERVER_1_PORT)
-          .cmdOptions(cmdOptions).build();
-    }
-
-    private static void cleanup() {
-      if (mongosTestFactory != null) {
-        // ignoring exception because sometimes provided time isn't enough to stop mongod processes
-        try {
-            mongosTestFactory.stop();
-          } catch (IllegalStateException e) {
-            logger.warn("Failed to close all mongod processes during provided timeout", e);
-          }
-      }
+      return String.format("mongodb://%s:%s", LOCALHOST, master.getMappedPort(MONGOS_PORT));
     }
   }
 
-  private static class SingleMode {
+  public static class SingleMode extends ContainerManager {
 
-    private static MongodExecutable mongodExecutable;
-    private static MongodProcess mongod;
+    @Override
+    public String setup() throws IOException {
+      mongoContainers = Collections.singletonList(new GenericContainer<>("mongo:4.4.5")
+          .withNetwork(Network.SHARED)
+          .withNetworkAliases("M1")
+          .withExposedPorts(MONGOS_PORT)
+          .withCommand("--replSet rs0 --bind_ip localhost,M1"));
 
-    private static String setup() throws IOException {
-      IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().verbose(false)
-          .enableAuth(authEnabled).build();
+      mongoContainers.forEach(GenericContainer::start);
+      GenericContainer<?> master = getMasterContainer();
 
-      IMongodConfig mongodConfig = new MongodConfigBuilder()
-          .version(Version.Main.V3_4)
-          .net(new Net(LOCALHOST, MONGOS_PORT, Network.localhostIsIPv6()))
-          .cmdOptions(cmdOptions).build();
+      try {
+        master.execInContainer("/bin/bash", "-c",
+            "mongo --eval 'printjson(rs.initiate({_id:\"rs0\","
+                + "members:[{_id:0,host:\"M1:27017\"}]}))' "
+                + "--quiet");
+        master.execInContainer("/bin/bash", "-c",
+            "until mongo --eval \"printjson(rs.isMaster())\" | grep ismaster | grep true > /dev/null 2>&1;"
+                + "do sleep 1;done");
+      } catch (Exception e) {
+        throw new IllegalStateException("Failed to initiate rs.", e);
+      }
 
-      // Configure to write Mongo message to the log. Change this to
-      // defaults() if needed for debugging; will write to the console instead.
-      IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaultsWithLogger(
-          Command.MongoD, logger).build();
-      mongodExecutable = MongodStarter.getInstance(runtimeConfig).prepare(
-          mongodConfig);
-      mongod = mongodExecutable.start();
-      mongoClient = new MongoClient(new ServerAddress(LOCALHOST, MONGOS_PORT));
+      String connectionString = String.format("mongodb://%s:%d", master.getContainerIpAddress(), master.getFirstMappedPort());
+      mongoClient = MongoClients.create(connectionString);
 
       createMongoUser();
       createDbAndCollections(EMPLOYEE_DB, EMPINFO_COLLECTION, "employee_id");
@@ -235,16 +197,7 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
       createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
       createDbAndCollections(DATATYPE_DB, DATATYPE_COLLECTION, "_id");
 
-      return String.format("mongodb://%s:%s", LOCALHOST, MONGOS_PORT);
-    }
-
-    private static void cleanup() {
-      if (mongod != null) {
-        mongod.stop();
-      }
-      if (mongodExecutable != null) {
-        mongodExecutable.stop();
-      }
+      return connectionString;
     }
   }
 
@@ -254,17 +207,22 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
       if (initCount.get() == 0) {
         if (distMode) {
           logger.info("Executing tests in distributed mode");
-          connectionURL = DistributedMode.setup();
+          containerManager = new DistributedMode();
         } else {
           logger.info("Executing tests in single mode");
-          connectionURL = SingleMode.setup();
+          containerManager = new SingleMode();
         }
+        connectionURL = containerManager.setup();
         // ToDo DRILL-7269: fix the way how data are imported for the sharded mongo cluster
-        TestTableGenerator.importData(EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
-        TestTableGenerator.importData(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
-        TestTableGenerator.importData(DONUTS_DB, DONUTS_COLLECTION, DONUTS_DATA);
-        TestTableGenerator.importData(DATATYPE_DB, DATATYPE_COLLECTION, DATATYPE_DATA);
-        TestTableGenerator.importData(ISSUE7820_DB, ISSUE7820_COLLECTION, EMP_DATA);
+        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(EMP_DATA).toURI()), Charsets.UTF_8).read().getBytes()), EMP_DATA);
+        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(SCHEMA_CHANGE_DATA).toURI()), Charsets.UTF_8).read().getBytes()), SCHEMA_CHANGE_DATA);
+        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(DONUTS_DATA).toURI()), Charsets.UTF_8).read().getBytes()), DONUTS_DATA);
+        containerManager.getMasterContainer().copyFileToContainer(Transferable.of(Files.asCharSource(new File(Resources.getResource(DATATYPE_DATA).toURI()), Charsets.UTF_8).read().getBytes()), DATATYPE_DATA);
+        TestTableGenerator.importData(containerManager.getMasterContainer(), EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
+        TestTableGenerator.importData(containerManager.getMasterContainer(), EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
+        TestTableGenerator.importData(containerManager.getMasterContainer(), DONUTS_DB, DONUTS_COLLECTION, DONUTS_DATA);
+        TestTableGenerator.importData(containerManager.getMasterContainer(), DATATYPE_DB, DATATYPE_COLLECTION, DATATYPE_DATA);
+        TestTableGenerator.importData(containerManager.getMasterContainer(), ISSUE7820_DB, ISSUE7820_COLLECTION, EMP_DATA);
       }
       initCount.incrementAndGet();
     }
@@ -316,19 +274,15 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
       if (initCount.decrementAndGet() == 0) {
         try {
           if (mongoClient != null) {
-            mongoClient.dropDatabase(EMPLOYEE_DB);
-            mongoClient.dropDatabase(DATATYPE_DB);
-            mongoClient.dropDatabase(DONUTS_DB);
+            mongoClient.getDatabase(EMPLOYEE_DB).drop();
+            mongoClient.getDatabase(DATATYPE_DB).drop();
+            mongoClient.getDatabase(DONUTS_DB).drop();
           }
         } finally {
           if (mongoClient != null) {
             mongoClient.close();
           }
-          if (distMode) {
-            DistributedMode.cleanup();
-          } else {
-            SingleMode.cleanup();
-          }
+          containerManager.cleanup();
         }
       }
     }
