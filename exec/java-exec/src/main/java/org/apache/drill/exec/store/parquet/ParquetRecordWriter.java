@@ -63,7 +63,7 @@ import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.column.impl.ColumnWriteStoreV1;
 import org.apache.parquet.column.values.factory.DefaultV1ValuesWriterFactory;
 import org.apache.parquet.hadoop.CodecFactory;
-import org.apache.parquet.hadoop.ColumnChunkPageWriteStore;
+import org.apache.parquet.hadoop.ParquetColumnChunkPageWriteStore;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.io.ColumnIOFactory;
@@ -114,7 +114,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private long recordCountForNextMemCheck = MINIMUM_RECORD_COUNT_FOR_CHECK;
 
   private ColumnWriteStore store;
-  private ColumnChunkPageWriteStore pageStore;
+  private ParquetColumnChunkPageWriteStore pageStore;
 
   private RecordConsumer consumer;
   private BatchSchema batchSchema;
@@ -258,7 +258,10 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
         .withAllocator(new ParquetDirectByteBufferAllocator(oContext))
         .withValuesWriterFactory(new DefaultV1ValuesWriterFactory())
         .build();
-    pageStore = new ColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema,  parquetProperties.getAllocator(),
+    // TODO: Replace ParquetColumnChunkPageWriteStore with ColumnChunkPageWriteStore from parquet library
+    // once PARQUET-1006 will be resolved
+    pageStore = new ParquetColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema,
+            parquetProperties.getInitialSlabSize(), pageSize, parquetProperties.getAllocator(),
             parquetProperties.getColumnIndexTruncateLength(), parquetProperties.getPageWriteChecksumEnabled());
     store = new ColumnWriteStoreV1(pageStore, parquetProperties);
     MessageColumnIO columnIO = new ColumnIOFactory(false).getColumnIO(this.schema);
@@ -437,6 +440,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
       }
     } finally {
       store.close();
+      pageStore.close();
 
       store = null;
       pageStore = null;
