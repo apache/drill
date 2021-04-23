@@ -33,13 +33,13 @@ jobs:
     strategy:
       matrix:
         # Java versions to run unit tests
-        java: [ '1.8', '11', '14' ]
+        java: [ '8', '11', '14' ]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       # Caches maven cache and uses hashes of pom.xml files to find the required cache
       - name: Cache Maven Repository
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -52,11 +52,12 @@ jobs:
           path: ~/.embedmysql
           key: ${{ runner.os }}-mysql
       - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
+          distribution: 'adopt'
           java-version: ${{ matrix.java }}
       - name: Build and test
-        run: mvn install
+        run: mvn install -DdirectMemoryMb=4500 -DmemoryMb=1300
 
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
