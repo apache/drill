@@ -239,4 +239,25 @@ public class TestPcapngRecordReader extends ClusterTest {
 
     assertEquals("Counts should match", 1, cnt);
   }
+
+  @Test
+  public void testInlineSchema() throws Exception {
+    String sql =   "SELECT type, packet_length, `timestamp` FROM table(dfs.`pcapng/sniff.pcapng` " +
+            "(type => 'pcapng', stat => false, sessionizeTCPStreams => true )) where type = 'ARP'";
+    RowSet sets = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata schema = new SchemaBuilder()
+            .addNullable("type", MinorType.VARCHAR)
+            .add("packet_length", MinorType.INT)
+            .add("timestamp", MinorType.TIMESTAMP)
+            .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+            .addRow("ARP", 90, Instant.ofEpochMilli(1518010669927L))
+            .addRow("ARP", 90, Instant.ofEpochMilli(1518010671874L))
+            .build();
+
+    assertEquals(2, sets.rowCount());
+    new RowSetComparison(expected).verifyAndClearAll(sets);
+  }
 }

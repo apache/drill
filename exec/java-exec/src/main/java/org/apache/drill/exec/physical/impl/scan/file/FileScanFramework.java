@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
@@ -168,7 +169,7 @@ public class FileScanFramework extends ManagedScanFramework {
    */
   public abstract static class FileReaderFactory implements ReaderFactory {
 
-    protected FileScanFramework fileFramework;
+    private FileScanFramework fileFramework;
 
     @Override
     public void bind(ManagedScanFramework baseFramework) {
@@ -188,6 +189,13 @@ public class FileScanFramework extends ManagedScanFramework {
     }
 
     public abstract ManagedReader<? extends FileSchemaNegotiator> newReader();
+
+    /**
+     * @return FileScanFramework or empty object in case it is not binded yet with {@link #bind(ManagedScanFramework)}
+     */
+    protected Optional<FileScanFramework> fileFramework() {
+      return Optional.ofNullable(fileFramework);
+    }
   }
 
   private ImplicitColumnManager metadataManager;

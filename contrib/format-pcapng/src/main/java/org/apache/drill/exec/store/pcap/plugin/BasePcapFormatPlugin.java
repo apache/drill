@@ -80,25 +80,32 @@ public abstract class BasePcapFormatPlugin<T extends PcapFormatConfig> extends E
       this.scan = scan;
     }
 
+    /**
+     * Reader creator. If file format can't be detected try to use default PCAP format plugin
+     *
+     * @return PCAP or PCAPNG batch reader
+     */
     @Override
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      Path path = scan.getWorkUnits().stream()
-              .findFirst()
-              .orElseThrow(() -> UserException.
-                      dataReadError()
-                      .addContext("There are no files for scanning")
-                      .build(logger))
-              .getPath();
-      fileFormat = getFileFormat(fileFramework.fileSystem(), path);
-      if(config.getExtensions().stream()
-              .anyMatch(f -> f.equals(fileFormat.name().toLowerCase()))) {
-        return createReader(scan, config);
+      if (fileFramework().isPresent()) { // todo: can be simplified with java9 ifPresentOrElse
+        Path path = scan.getWorkUnits().stream()
+                .findFirst()
+                .orElseThrow(() -> UserException.
+                        dataReadError()
+                        .addContext("There are no files for scanning")
+                        .build(logger))
+                .getPath();
+        fileFormat = getFileFormat(fileFramework().get().fileSystem(), path);
+        if (config.getExtensions().stream()
+                .noneMatch(f -> f.equals(fileFormat.name().toLowerCase()))) {
+          logger.error("File format {} is not within plugin extensions: {}. Trying to use default PCAP format plugin to " +
+                  "read the file", fileFormat, config.getExtensions());
+        }
       } else {
-        throw UserException.
-                dataReadError()
-                .addContext("Unknown file format")
-                .build(logger);
+        logger.error("It is not possible to detect file format, because the File Framework is not initialized. " +
+                "Trying to use default PCAP format plugin to read the file");
       }
+      return createReader(scan, config);
     }
   }
 

@@ -19,8 +19,6 @@ package org.apache.drill.exec.store.sys;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryNTimes;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -143,18 +141,5 @@ public class TestPStoreProviders extends TestWithZookeeper {
         Assert.assertEquals(expectedValue, oldOptionValue);
       }
     }
-  }
-
-  private CuratorFramework createCurator() {
-    String connect = zkHelper.getConnectionString();
-    DrillConfig config = zkHelper.getConfig();
-
-    CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
-      .namespace(zkHelper.getConfig().getString(ExecConstants.ZK_ROOT))
-      .retryPolicy(new RetryNTimes(1, 100))
-      .connectionTimeoutMs(config.getInt(ExecConstants.ZK_TIMEOUT))
-      .connectString(connect);
-
-    return builder.build();
   }
 }
