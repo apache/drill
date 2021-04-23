@@ -47,7 +47,7 @@ import static org.apache.drill.exec.store.parquet.ParquetSimpleTestFileGenerator
  * examples but can be added.
  * To create a new parquet file, define a schema, create a GroupWriter based on the schema, then add values
  * for individual records to the GroupWriter.<br>
- *     TODO: to run this tool please use 28.2-jre <guava.version> instead of 19.0 in main POM file
+ *     TODO: DRILL-7904. To run this tool please use 28.2-jre <guava.version> instead of 19.0 in main POM file
  * @see  org.apache.drill.exec.store.parquet.TestFileGenerator TestFileGenerator
  * @see org.apache.parquet.hadoop.example.GroupWriteSupport GroupWriteSupport
  * @see org.apache.parquet.example.Paper Dremel Example

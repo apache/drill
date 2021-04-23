@@ -95,7 +95,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Internal implementation of the Parquet file writer as a block container<br>
  * Note: this is temporary Drill-Parquet class needed to write empty parquet files. Details in
- * <a href="https://issues.apache.org/jira/browse/PARQUET-2026">PARQUET-2026</a>
+ * <a href="https://issues.apache.org/jira/browse/PARQUET-2026">PARQUET-2026</a> and
+ * <a href="https://issues.apache.org/jira/browse/DRILL-7907">DRILL-7907</a>
  */
 public class ParquetFileWriter {
     private static final Logger LOG = LoggerFactory.getLogger(ParquetFileWriter.class);

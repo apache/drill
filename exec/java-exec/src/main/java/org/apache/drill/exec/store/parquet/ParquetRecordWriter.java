@@ -259,7 +259,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
         .withValuesWriterFactory(new DefaultV1ValuesWriterFactory())
         .build();
     // TODO: Replace ParquetColumnChunkPageWriteStore with ColumnChunkPageWriteStore from parquet library
-    // once PARQUET-1006 will be resolved
+    //   once DRILL-7906 (PARQUET-1006) will be resolved
     pageStore = new ParquetColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema,
             parquetProperties.getInitialSlabSize(), pageSize, parquetProperties.getAllocator(),
             parquetProperties.getColumnIndexTruncateLength(), parquetProperties.getPageWriteChecksumEnabled());
