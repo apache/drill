@@ -57,7 +57,6 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.bytes.CapacityByteArrayOutputStream;
 import org.apache.parquet.column.ColumnWriteStore;
 import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
@@ -251,10 +250,6 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     // We don't want this number to be too small either. Ideally, slightly bigger than the page size,
     // but not bigger than the block buffer
     int initialPageBufferSize = max(MINIMUM_BUFFER_SIZE, min(pageSize + pageSize / 10, initialBlockBufferSize));
-    // TODO: Use initialSlabSize from ParquetProperties once drill will be updated to the latest version of Parquet library
-    int initialSlabSize = CapacityByteArrayOutputStream.initialSlabSizeHeuristic(64, pageSize, 10);
-    // TODO: Replace ParquetColumnChunkPageWriteStore with ColumnChunkPageWriteStore from parquet library
-    // once PARQUET-1006 will be resolved
     ParquetProperties parquetProperties = ParquetProperties.builder()
         .withPageSize(pageSize)
         .withDictionaryEncoding(enableDictionary)
@@ -263,10 +258,11 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
         .withAllocator(new ParquetDirectByteBufferAllocator(oContext))
         .withValuesWriterFactory(new DefaultV1ValuesWriterFactory())
         .build();
-    pageStore = new ParquetColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema, initialSlabSize,
-        pageSize, parquetProperties.getAllocator(), parquetProperties.getPageWriteChecksumEnabled(),
-        parquetProperties.getColumnIndexTruncateLength()
-    );
+    // TODO: Replace ParquetColumnChunkPageWriteStore with ColumnChunkPageWriteStore from parquet library
+    //   once DRILL-7906 (PARQUET-1006) will be resolved
+    pageStore = new ParquetColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema,
+            parquetProperties.getInitialSlabSize(), pageSize, parquetProperties.getAllocator(),
+            parquetProperties.getColumnIndexTruncateLength(), parquetProperties.getPageWriteChecksumEnabled());
     store = new ColumnWriteStoreV1(pageStore, parquetProperties);
     MessageColumnIO columnIO = new ColumnIOFactory(false).getColumnIO(this.schema);
     consumer = columnIO.getRecordWriter(store);

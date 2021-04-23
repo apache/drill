@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -71,6 +72,7 @@ import org.apache.parquet.io.api.Converter;
 import org.apache.parquet.io.api.GroupConverter;
 import org.apache.parquet.io.api.PrimitiveConverter;
 import org.apache.parquet.schema.GroupType;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Type.Repetition;
@@ -328,23 +330,30 @@ public class DrillParquetGroupConverter extends GroupConverter {
         }
       }
       case FIXED_LEN_BYTE_ARRAY:
-        switch (type.getOriginalType()) {
-          case DECIMAL: {
+        LogicalTypeAnnotation.LogicalTypeAnnotationVisitor<PrimitiveConverter> typeAnnotationVisitor = new LogicalTypeAnnotation.LogicalTypeAnnotationVisitor<PrimitiveConverter>() {
+          @Override
+          public Optional<PrimitiveConverter> visit(LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalType) {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
-            return getVarDecimalConverter(name, type);
+            return Optional.of(getVarDecimalConverter(name, type));
           }
-          case INTERVAL: {
+
+          @Override
+          public Optional<PrimitiveConverter> visit(LogicalTypeAnnotation.IntervalLogicalTypeAnnotation intervalLogicalType) {
             IntervalWriter writer = type.isRepetition(Repetition.REPEATED)
                 ? getWriter(name, (m, f) -> m.list(f).interval(), l -> l.list().interval())
-                : getWriter(name, (m, f) -> m.interval(f), l -> l.interval());
-            return new DrillFixedLengthByteArrayToInterval(writer);
+                : getWriter(name, MapWriter::interval, ListWriter::interval);
+            return Optional.of(new DrillFixedLengthByteArrayToInterval(writer));
           }
-          default: {
+        };
+
+        LogicalTypeAnnotation logicalTypeAnnotation = type.getLogicalTypeAnnotation();
+        if (logicalTypeAnnotation != null) {
+          return logicalTypeAnnotation.accept(typeAnnotationVisitor).orElseGet(() -> {
             VarBinaryWriter writer = type.isRepetition(Repetition.REPEATED)
                 ? getWriter(name, (m, f) -> m.list(f).varBinary(), l -> l.list().varBinary())
-                : getWriter(name, (m, f) -> m.varBinary(f), l -> l.varBinary());
+                : getWriter(name, MapWriter::varBinary, ListWriter::varBinary);
             return new DrillFixedBinaryToVarbinaryConverter(writer, type.getTypeLength(), mutator.getManagedBuffer());
-          }
+          });
         }
       default:
         throw new UnsupportedOperationException("Unsupported type: " + type.getPrimitiveTypeName());

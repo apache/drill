@@ -535,7 +535,7 @@
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                   </message>
-                  <maxsize>46300000</maxsize>
+                  <maxsize>46600000</maxsize>
                   <minsize>15000000</minsize>
                   <files>
                    <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -560,39 +560,6 @@
 
         <build>
           <plugins>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-enforcer-plugin</artifactId>
-              <executions>
-                <execution>
-                  <id>enforce-jdbc-jar-compactness</id>
-                  <goals>
-                    <goal>enforce</goal>
-                  </goals>
-                  <phase>verify</phase>
-                  <configuration>
-                    <rules>
-                      <requireFilesSize>
-                        <message>
-
-                          The file drill-jdbc-all-${project.version}.jar is outside the expected size range.
-
-                          This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
-
-                        </message>
-                        <maxsize>46300000</maxsize>
-                        <minsize>15000000</minsize>
-                        <files>
-                          <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
-                        </files>
-                      </requireFilesSize>
-                    </rules>
-                    <fail>true</fail>
-                  </configuration>
-                </execution>
-              </executions>
-            </plugin>
-
             <plugin>
               <artifactId>maven-shade-plugin</artifactId>
               <configuration>
