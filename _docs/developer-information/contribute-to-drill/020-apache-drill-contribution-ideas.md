@@ -77,8 +77,8 @@ Initially, concentrate on basics:
 
 Implement custom storage plugins for the following non-Hadoop data sources:
 
-  * NoSQL databases (such as Mongo, Cassandra, Couch etc)
-  * Search engines (such as Solr, Lucidworks, Elastic Search etc)
+  * NoSQL databases (such as Mongo, Couch etc)
+  * Search engines (such as Solr, Lucidworks etc)
   * SQL databases (MySQL< PostGres etc)
   * Generic JDBC/ODBC data sources
   * HTTP URL
