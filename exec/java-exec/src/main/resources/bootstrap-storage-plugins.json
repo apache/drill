@@ -38,9 +38,6 @@
           "type" : "json",
           "extensions" : [ "json" ]
         },
-        "pcap" : {
-          "type" : "pcap"
-        },
         "avro" : {
           "type" : "avro",
           "extensions" : [ "avro" ]
@@ -98,9 +95,6 @@
           "type" : "json",
           "extensions" : [ "json" ]
         },
-        "pcap" : {
-          "type" : "pcap"
-        },
        "avro" : {
           "type" : "avro"
         },
@@ -134,9 +128,6 @@
         "json" : {
           "type" : "json",
           "extensions" : [ "json" ]
-        },
-        "pcap" : {
-          "type" : "pcap"
         },
         "parquet" : {
           "type" : "parquet"

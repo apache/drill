@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.pcapng;
+package org.apache.drill.exec.store.pcap.plugin;
 
 import java.util.List;
 import java.util.Objects;
@@ -29,18 +29,23 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName(PcapngFormatConfig.NAME)
+@JsonTypeName(PcapFormatConfig.NAME)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-public class PcapngFormatConfig implements FormatPluginConfig {
+public class PcapFormatConfig implements FormatPluginConfig {
+  private static final List<String> DEFAULT_EXTNS = ImmutableList.of("pcap");
 
-  public static final String NAME = "pcapng";
+  public static final String NAME = "pcap";
   private final List<String> extensions;
   private final boolean stat;
+  private final boolean sessionizeTCPStreams;
 
   @JsonCreator
-  public PcapngFormatConfig(@JsonProperty("extensions") List<String> extensions, @JsonProperty("stat") boolean stat) {
-    this.extensions = extensions == null ? ImmutableList.of(PcapngFormatConfig.NAME) : ImmutableList.copyOf(extensions);
+  public PcapFormatConfig(@JsonProperty("extensions") List<String> extensions,
+                          @JsonProperty("stat") boolean stat,
+                          @JsonProperty("sessionizeTCPStreams") Boolean sessionizeTCPStreams) {
+    this.extensions = extensions == null ? DEFAULT_EXTNS : ImmutableList.copyOf(extensions);
     this.stat = stat;
+    this.sessionizeTCPStreams = sessionizeTCPStreams != null && sessionizeTCPStreams;
   }
 
   @JsonProperty("extensions")
@@ -53,6 +58,11 @@ public class PcapngFormatConfig implements FormatPluginConfig {
     return this.stat;
   }
 
+  @JsonProperty("sessionizeTCPStreams")
+  public boolean getSessionizeTCPStreams() {
+    return sessionizeTCPStreams;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -61,17 +71,22 @@ public class PcapngFormatConfig implements FormatPluginConfig {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    PcapngFormatConfig that = (PcapngFormatConfig) o;
-    return Objects.equals(extensions, that.extensions) && Objects.equals(stat, that.getStat());
+    PcapFormatConfig that = (PcapFormatConfig) o;
+    return Objects.equals(extensions, that.extensions) && Objects.equals(stat, that.getStat()) &&
+            Objects.equals(sessionizeTCPStreams, that.sessionizeTCPStreams);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(extensions, stat);
+    return Objects.hash(extensions, stat, sessionizeTCPStreams);
   }
 
   @Override
   public String toString() {
-    return new PlanStringBuilder(this).field("extensions", extensions).field("stat", stat).toString();
+    return new PlanStringBuilder(this)
+            .field("extensions", extensions)
+            .field("stat", stat)
+            .field("sessionizeTCPStreams", sessionizeTCPStreams)
+            .toString();
   }
 }

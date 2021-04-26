@@ -3,8 +3,9 @@
     "dfs": {
       "type": "file",
       "formats": {
-        "pcapng": {
-          "type": "pcapng",
+        "pcap": {
+          "type": "pcap",
+          "extensions": ["pcap", "pcapng"],
           "stat" : false
         }
       }
@@ -12,8 +13,9 @@
     "cp": {
       "type": "file",
       "formats": {
-        "pcapng": {
-          "type": "pcapng",
+        "pcap": {
+          "type": "pcap",
+          "extensions": ["pcap", "pcapng"],
           "stat" : false
         }
       }
@@ -21,8 +23,9 @@
     "s3": {
       "type": "file",
       "formats": {
-        "pcapng": {
-          "type": "pcapng",
+        "pcap": {
+          "type": "pcap",
+          "extensions": ["pcap", "pcapng"],
           "stat" : false
         }
       }

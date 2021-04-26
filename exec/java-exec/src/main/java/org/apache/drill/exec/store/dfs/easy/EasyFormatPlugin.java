@@ -382,8 +382,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    */
   protected EasyFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
       StoragePluginConfig storageConfig, T formatConfig, boolean readable, boolean writable,
-      boolean blockSplittable,
-      boolean compressible, List<String> extensions, String defaultName) {
+      boolean blockSplittable, boolean compressible, List<String> extensions, String defaultName) {
     this.name = name == null ? defaultName : name;
     easyConfig = EasyFormatConfig.builder()
         .matcher(new BasicFormatMatcher(this, fsConf, extensions, compressible))

@@ -35,6 +35,7 @@ import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -45,6 +46,7 @@ public class TestPcapngRecordReader extends ClusterTest {
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
     dirTestWatcher.copyResourceToRoot(Paths.get("pcapng/"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("todo/"));
   }
 
   @Test
@@ -190,6 +192,20 @@ public class TestPcapngRecordReader extends ClusterTest {
   }
 
   @Test
+  @Ignore // todo: infinite loop with current PcapNGReader
+  public void testPcapNG() throws Exception {
+//    String sql = "select * from dfs.`todo/dhcp_big_endian.pcapng` limit 1"; // Bad magic number = 000a0a0a
+//    String sql = "select * from dfs.`todo/dhcp_little_endian.pcapng` limit 1"; // Bad magic number = 1c0a0a0a
+//    String sql = "select * from dfs.`todo/many_interfaces.pcapng` limit 1"; // Bad magic number = ef0a0a0a
+    String sql = "select * from dfs.`todo/mac2.pcap` limit 1";  // Bad magic number = 1c0a0a0a
+    QueryBuilder builder = client.queryBuilder().sql(sql);
+    RowSet sets = builder.rowSet();
+
+    assertEquals(1, sets.rowCount());
+    sets.clear();
+  }
+
+  @Test
   public void testGroupBy() throws Exception {
     String sql = "select src_ip, count(1), sum(packet_length) from dfs.`pcapng/sniff.pcapng` group by src_ip";
     QueryBuilder builder = client.queryBuilder().sql(sql);
@@ -213,5 +229,35 @@ public class TestPcapngRecordReader extends ClusterTest {
   public void testBasicQueryWithIncorrectFileName() throws Exception {
     String sql = "select * from dfs.`pcapng/drill.pcapng`";
     client.queryBuilder().sql(sql).rowSet();
+  }
+
+  @Test
+  public void testPcapNGFileWithPcapExt() throws Exception {
+    String sql = "select count(*) from dfs.`pcapng/example.pcap`";
+    String plan = queryBuilder().sql(sql).explainJson();
+    long cnt = queryBuilder().physical(plan).singletonLong();
+
+    assertEquals("Counts should match", 1, cnt);
+  }
+
+  @Test
+  public void testInlineSchema() throws Exception {
+    String sql =   "SELECT type, packet_length, `timestamp` FROM table(dfs.`pcapng/sniff.pcapng` " +
+            "(type => 'pcapng', stat => false, sessionizeTCPStreams => true )) where type = 'ARP'";
+    RowSet sets = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata schema = new SchemaBuilder()
+            .addNullable("type", MinorType.VARCHAR)
+            .add("packet_length", MinorType.INT)
+            .add("timestamp", MinorType.TIMESTAMP)
+            .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+            .addRow("ARP", 90, Instant.ofEpochMilli(1518010669927L))
+            .addRow("ARP", 90, Instant.ofEpochMilli(1518010671874L))
+            .build();
+
+    assertEquals(2, sets.rowCount());
+    new RowSetComparison(expected).verifyAndClearAll(sets);
   }
 }

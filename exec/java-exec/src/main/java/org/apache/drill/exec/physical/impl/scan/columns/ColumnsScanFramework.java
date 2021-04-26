@@ -62,7 +62,6 @@ public class ColumnsScanFramework extends FileScanFramework {
   /**
    * Implementation of the columns array schema negotiator.
    */
-
   public static class ColumnsSchemaNegotiatorImpl extends FileSchemaNegotiatorImpl
           implements ColumnsSchemaNegotiator {
 

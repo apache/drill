@@ -49,7 +49,8 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
   @Test
   public void testTableProvider() throws StoreException {
     LogicalPlanPersistence lp = PhysicalPlanReaderTestFactory.defaultLogicalPlanPersistence(config);
-    PersistentStore<String> hbaseStore = provider.getOrCreateStore(PersistentStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase").build());
+    PersistentStore<String> hbaseStore = provider.getOrCreateStore(
+            PersistentStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase").build());
     hbaseStore.put("", "v0");
     hbaseStore.put("k1", "v1");
     hbaseStore.put("k2", "v2");
@@ -66,7 +67,8 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
 
     assertEquals(7, Lists.newArrayList(hbaseStore.getAll()).size());
 
-    PersistentStore<String> hbaseTestStore = provider.getOrCreateStore(PersistentStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase.test").build());
+    PersistentStore<String> hbaseTestStore = provider.getOrCreateStore(
+            PersistentStoreConfig.newJacksonBuilder(lp.getMapper(), String.class).name("hbase.test").build());
     hbaseTestStore.put("", "v0");
     hbaseTestStore.put("k1", "v1");
     hbaseTestStore.put("k2", "v2");

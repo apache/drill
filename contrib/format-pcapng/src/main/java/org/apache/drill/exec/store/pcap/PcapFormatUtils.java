@@ -40,7 +40,7 @@ public class PcapFormatUtils {
 
   /**
    *
-   * @param byteOrder true for forward file order, false fore revers file order
+   * @param byteOrder true for forward file order, false for reverse file order
    * @param buf byte buffer
    * @param offset buffer offset
    * @return short value as int of specific bytes from buffer

@@ -40,6 +40,7 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
+import org.apache.drill.exec.store.pcap.plugin.PcapFormatConfig;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.hadoop.fs.Path;
@@ -54,7 +55,7 @@ public class PcapngBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private static final Logger logger = LoggerFactory.getLogger(PcapngBatchReader.class);
 
-  private final PcapngFormatConfig config;
+  private final PcapFormatConfig config;
   private final EasySubScan scan;
   private final int maxRecords;
   private CustomErrorContext errorContext;
@@ -66,7 +67,7 @@ public class PcapngBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private InputStream in;
   private Path path;
 
-  public PcapngBatchReader(final PcapngFormatConfig config, final EasySubScan scan) {
+  public PcapngBatchReader(final PcapFormatConfig config, final EasySubScan scan) {
     this.config = config;
     this.scan = scan;
     this.maxRecords = scan.getMaxRecords();

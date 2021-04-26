@@ -15,20 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.sys.local;
+package org.apache.drill.exec.store.pcap.plugin;
 
-import org.apache.drill.exec.exception.StoreException;
-import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
-import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
+import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.hadoop.conf.Configuration;
 
-/**
- * Kept for possible references to old class name in configuration.
- *
- * @deprecated will be removed in 1.7
- *    use {@link org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider} instead.
- */
-public class LocalPStoreProvider extends LocalPersistentStoreProvider {
-  public LocalPStoreProvider(PersistentStoreRegistry registry) throws StoreException {
-    super(registry);
+public class PcapFormatPlugin extends BasePcapFormatPlugin<PcapFormatConfig> {
+
+  public PcapFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
+                          StoragePluginConfig storageConfig, PcapFormatConfig formatConfig) {
+    super(name, context, fsConf, storageConfig, formatConfig);
   }
 }

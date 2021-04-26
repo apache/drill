@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.RetryNTimes;
+import org.apache.drill.common.config.DrillConfig;
 import org.junit.After;
 import org.junit.Before;
 
@@ -34,5 +38,18 @@ public class TestWithZookeeper extends ExecTest {
   @After
   public void tearDown() throws Exception {
     zkHelper.stopZookeeper();
+  }
+
+  protected CuratorFramework createCurator() {
+    String connect = zkHelper.getConnectionString();
+    DrillConfig config = zkHelper.getConfig();
+
+    CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
+            .namespace(zkHelper.getConfig().getString(ExecConstants.ZK_ROOT))
+            .retryPolicy(new RetryNTimes(1, 100))
+            .connectionTimeoutMs(config.getInt(ExecConstants.ZK_TIMEOUT))
+            .connectString(connect);
+
+    return builder.build();
   }
 }
