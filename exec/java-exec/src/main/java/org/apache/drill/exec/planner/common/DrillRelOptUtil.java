@@ -642,8 +642,8 @@ public abstract class DrillRelOptUtil {
   /**
    * Returns whether the join condition is a simple equi-join or not. A simple equi-join is
    * defined as an two-table equality join (no self-join)
-   * @param join : input join
-   * @param joinFieldOrdinals: join field ordinal w.r.t. the underlying inputs to the join
+   * @param join input join
+   * @param joinFieldOrdinals join field ordinal w.r.t. the underlying inputs to the join
    * @return TRUE if the join is a simple equi-join (not a self-join), FALSE otherwise
    * */
   public static boolean analyzeSimpleEquiJoin(Join join, int[] joinFieldOrdinals) {

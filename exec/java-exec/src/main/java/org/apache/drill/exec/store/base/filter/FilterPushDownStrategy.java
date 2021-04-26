@@ -246,10 +246,7 @@ public class FilterPushDownStrategy {
      * Rebuilds the query plan subtree to include any substitutions and removals requested
      * by the listener.
      *
-     * @param oldScan the original scan node
      * @param newGroupScan the optional replacement scan node given by the listener
-     * @param filter the original filter
-     * @param project the original optional project node
      * @param remainingPreds the Calcite predicates which the listener *does not* handle
      * and which should remain in the plan tree
      * @return a rebuilt query subtree
