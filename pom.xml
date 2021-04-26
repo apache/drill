@@ -69,7 +69,7 @@
     <kerby.version>1.0.0</kerby.version>
     <findbugs.version>3.0.0</findbugs.version>
     <netty.tcnative.classifier />
-    <commons.io.version>2.4</commons.io.version>
+    <commons.io.version>2.7</commons.io.version>
     <hamcrest.core.version>1.3</hamcrest.core.version>
     <curator.version>5.1.0</curator.version>
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
