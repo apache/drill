@@ -171,10 +171,12 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
       return addressClientMap.get(key, () -> {
         logger.info("Created connection to {}.", key);
         logger.info("Number of open connections {}.", addressClientMap.size());
-        return MongoClients.create(MongoClientSettings.builder()
-            .applyConnectionString(clientURI)
-            .applyToClusterSettings(builder -> builder.hosts(addresses))
-            .build());
+        MongoClientSettings.Builder settings = MongoClientSettings.builder()
+            .applyToClusterSettings(builder -> builder.hosts(addresses));
+        if (credential != null) {
+          settings.credential(credential);
+        }
+        return MongoClients.create(settings.build());
       });
     } catch (ExecutionException e) {
       throw new DrillRuntimeException(e);

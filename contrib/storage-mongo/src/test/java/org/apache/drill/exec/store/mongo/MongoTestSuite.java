@@ -102,40 +102,63 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
       Network network = Network.newNetwork();
 
       mongoContainers = Stream.of("m1", "m2", "m3")
-          .map(networkAlias -> new GenericContainer<>("mongo:4.4.5")
+          .map(host -> new GenericContainer<>("mongo:4.4.5")
               .withNetwork(network)
-              .withNetworkAliases(networkAlias)
+              .withNetworkAliases(host)
               .withExposedPorts(MONGOS_PORT)
-              .withCommand("--replSet rs0 --bind_ip localhost," + networkAlias))
+              .withCommand(String.format("mongod --port %d --shardsvr --replSet rs0 --bind_ip localhost,%s", MONGOS_PORT, host)))
           .collect(Collectors.toList());
+
+      String configServerHost = "m4";
+      GenericContainer<?> configServer = new GenericContainer<>("mongo:4.4.5")
+          .withNetwork(network)
+          .withNetworkAliases(configServerHost)
+          .withExposedPorts(MONGOS_PORT)
+          .withCommand(String.format("mongod --configsvr --port %s --replSet rs0conf --bind_ip localhost,%s", MONGOS_PORT, configServerHost));
+
+      configServer.start();
+
+      Container.ExecResult execResult = configServer.execInContainer("/bin/bash", "-c",
+          String.format("echo 'rs.initiate({_id: \"rs0conf\",configsvr: true, members: [{ _id : 0, host : \"%s:%2$s\" }]})' | mongo --port %2$s", configServerHost, MONGOS_PORT));
+
+      logger.info(execResult.toString());
+
+      String mongosHost = "m5";
+      GenericContainer<?> mongos = new GenericContainer<>("mongo:4.4.5")
+          .withNetwork(network)
+          .withNetworkAliases(mongosHost)
+          .withExposedPorts(MONGOS_PORT)
+          .withCommand(String.format("mongos --configdb rs0conf/%1$s:%2$s --bind_ip localhost,%3$s --port %2$s", configServerHost, MONGOS_PORT, mongosHost));
+
+      mongos.start();
 
       mongoContainers.forEach(GenericContainer::start);
 
       GenericContainer<?> master = getMasterContainer();
 
-      Container.ExecResult execResult = master.execInContainer("/bin/bash", "-c",
-          String.format("mongo --eval 'printjson(rs.initiate({_id:\"rs0\"," +
-          "members:[{_id:0,host:\"m1:%1$s\"},{_id:1,host:\"m2:%1$s\"},{_id:2,host:\"m3:%1$s\"}]}))' --quiet", MONGOS_PORT));
-      logger.info(execResult.toString());
       execResult = master.execInContainer("/bin/bash", "-c",
-          "until mongo --eval \"printjson(rs.isMaster())\" | grep ismaster | grep true > /dev/null 2>&1;do sleep 1;done");
+          String.format("mongo --port %1$s --eval 'printjson(rs.initiate({_id:\"rs0\"," +
+              "members:[{_id:0,host:\"m1:%1$s\"},{_id:1,host:\"m2:%1$s\"},{_id:2,host:\"m3:%1$s\"}]}))' --quiet", MONGOS_PORT));
       logger.info(execResult.toString());
 
-      String hosts = Stream.of(master)
-          .map(c -> c.getContainerIpAddress() + ":" + c.getMappedPort(MONGOS_PORT))
-          .collect(Collectors.joining(","));
+      execResult = master.execInContainer("/bin/bash", "-c",
+          String.format("until mongo --port %s --eval \"printjson(rs.isMaster())\" | grep ismaster | grep true > /dev/null 2>&1;do sleep 1;done", MONGOS_PORT));
+      logger.info(execResult.toString());
 
-      String replicaSetUrl = String.format("mongodb://%s", hosts);
+      execResult = mongos.execInContainer("/bin/bash", "-c", "echo 'sh.addShard(\"rs0/m1\")' | mongo --port " + MONGOS_PORT);
+      logger.info(execResult.toString());
+
+      String replicaSetUrl = String.format("mongodb://%s:%s", mongos.getContainerIpAddress(), mongos.getMappedPort(MONGOS_PORT));
 
       mongoClient = MongoClients.create(replicaSetUrl);
 
       logger.info("Execute list shards.");
-      execResult = master.execInContainer("/bin/bash", "-c", "mongo --eval 'db.adminCommand({ listShards: 1 })'");
+      execResult = master.execInContainer("/bin/bash", "-c", "mongo --eval 'db.adminCommand({ listShards: 1 })' --port " + MONGOS_PORT);
       logger.info(execResult.toString());
 
       // Enabled sharding at database level
       logger.info("Enabled sharding at database level");
-      execResult = master.execInContainer("/bin/bash", "-c", String.format("mongo --eval 'db.adminCommand( {\n" +
+      execResult = mongos.execInContainer("/bin/bash", "-c", String.format("mongo --eval 'db.adminCommand( {\n" +
           "   enableSharding: \"%s\"\n" +
           "} )'", EMPLOYEE_DB));
       logger.info(execResult.toString());
@@ -147,11 +170,8 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
 
       // Shard the collection
       logger.info("Shard the collection: {}.{}", EMPLOYEE_DB, EMPINFO_COLLECTION);
-      execResult = master.execInContainer("/bin/bash", "-c", String.format(
-          "mongo --eval '{\n" +
-              "   shardCollection: \"%s.%s\",\n" +
-              "   key: { employee_id: 1 },\n" +
-              "}'", EMPLOYEE_DB, EMPINFO_COLLECTION));
+      execResult = mongos.execInContainer("/bin/bash", "-c", String.format(
+          "echo 'sh.shardCollection(\"%s.%s\", {\"employee_id\" : 1})' | mongo ", EMPLOYEE_DB, EMPINFO_COLLECTION));
       logger.info(execResult.toString());
       createMongoUser();
       createDbAndCollections(DONUTS_DB, DONUTS_COLLECTION, "id");
@@ -159,7 +179,7 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
       createDbAndCollections(DATATYPE_DB, DATATYPE_COLLECTION, "_id");
 
       // the way how it work: client -> router(mongos) -> Shard1 ... ShardN
-      return String.format("mongodb://%s:%s", LOCALHOST, master.getMappedPort(MONGOS_PORT));
+      return String.format("mongodb://%s:%s", LOCALHOST, mongos.getMappedPort(MONGOS_PORT));
     }
   }
 

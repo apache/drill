@@ -206,7 +206,8 @@ public class MongoGroupScan extends AbstractGroupScan implements
       while (iterator.hasNext()) {
         Document chunkObj = iterator.next();
         String shardName = (String) chunkObj.get(SHARD);
-        String chunkId = (String) chunkObj.get(ID);
+        // creates hexadecimal string representation of ObjectId
+        String chunkId = chunkObj.get(ID).toString();
         filter = new Document(ID, shardName);
         FindIterable<Document> hostCursor = shardsCollection.find(filter).projection(projection);
         for (Document hostObj : hostCursor) {
