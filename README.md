@@ -3,6 +3,7 @@
 [![Build Status](https://github.com/apache/drill/workflows/Github%20CI/badge.svg)](https://github.com/apache/drill/actions)
 [![Artifact](https://img.shields.io/maven-central/v/org.apache.drill/distribution.svg)](https://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.drill%22%20AND%20a%3A%22distribution%22)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![Stack Overflow](https://img.shields.io/:stack%20overflow-apache--drill-brightgreen.svg)](http://stackoverflow.com/questions/tagged/apache-drill)
 [![Join Drill Slack](https://img.shields.io/badge/slack-open-e01563.svg)](http://apache-drill.slack.com "Join our Slack community")
 
 
