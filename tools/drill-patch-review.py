@@ -33,9 +33,9 @@ def get_jira():
     'server': 'https://issues.apache.org/jira'
   }
   # read the config file
-  home=jira_home=os.getenv('HOME')
-  home=home.rstrip('/')
-  jira_config = dict(line.strip().split('=') for line in open(home + '/jira.ini'))
+  jira_home=os.getenv('HOME')
+  jira_home=jira_home.rstrip('/')
+  jira_config = dict(line.strip().split('=') for line in open(jira_home + '/jira.ini'))
   jira = JIRA(options,basic_auth=(jira_config['user'], jira_config['password']))
   return jira 
 
