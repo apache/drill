@@ -22,7 +22,6 @@ import java.util.Collections;
 import org.apache.drill.exec.planner.physical.ComplexToJsonPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
-import org.apache.calcite.rel.RelNode;
 
 public class ComplexToJsonPrelVisitor extends BasePrelVisitor<Prel, Void, RuntimeException> {
 
@@ -34,7 +33,7 @@ public class ComplexToJsonPrelVisitor extends BasePrelVisitor<Prel, Void, Runtim
 
   @Override
   public Prel visitScreen(ScreenPrel prel, Void value) throws RuntimeException {
-    return prel.copy(prel.getTraitSet(), Collections.singletonList((RelNode)new ComplexToJsonPrel((Prel)prel.getInput())));
+    return prel.copy(prel.getTraitSet(), Collections.singletonList(new ComplexToJsonPrel((Prel) prel.getInput())));
   }
 
 }

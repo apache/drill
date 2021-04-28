@@ -55,13 +55,15 @@ public class RewriteProjectToFlatten extends BasePrelVisitor<Prel, Object, RelCo
       child = child.accept(this, null);
       children.add(child);
     }
+    if (children.equals(prel.getInputs())) {
+      return prel;
+    }
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }
 
 
   @Override
-  public Prel visitProject(ProjectPrel node, Object unused) throws RelConversionException {
-    ProjectPrel project = node;
+  public Prel visitProject(ProjectPrel project, Object unused) throws RelConversionException {
     List<RexNode> exprList = new ArrayList<>();
     boolean rewrite = false;
 
@@ -88,15 +90,18 @@ public class RewriteProjectToFlatten extends BasePrelVisitor<Prel, Object, RelCo
       i++;
       exprList.add(newExpr);
     }
-    if (rewrite == true) {
+    if (rewrite) {
       // TODO - figure out what is the right setting for the traits
       Prel newChild = ((Prel)project.getInput(0)).accept(this, null);
-      ProjectPrel newProject = new ProjectPrel(node.getCluster(), project.getTraitSet(), newChild, exprList, new RelRecordType(relDataTypes));
+      ProjectPrel newProject = new ProjectPrel(project.getCluster(), project.getTraitSet(), newChild, exprList, new RelRecordType(relDataTypes));
       FlattenPrel flatten = new FlattenPrel(project.getCluster(), project.getTraitSet(), newProject, flatttenExpr);
       return flatten;
     }
 
     Prel child = ((Prel)project.getInput()).accept(this, null);
+    if (child == project.getInput() && exprList.equals(project.getChildExps())) {
+      return project;
+    }
     return (Prel) project.copy(project.getTraitSet(), child, exprList, new RelRecordType(relDataTypes));
   }
 

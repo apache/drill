@@ -40,7 +40,7 @@ import java.util.Map;
  */
 public class LateralUnnestRowIDVisitor extends BasePrelVisitor<Prel, Boolean, RuntimeException> {
 
-  private static LateralUnnestRowIDVisitor INSTANCE = new LateralUnnestRowIDVisitor();
+  private static final LateralUnnestRowIDVisitor INSTANCE = new LateralUnnestRowIDVisitor();
 
   public static Prel insertRowID(Prel prel){
     return prel.accept(INSTANCE, false);
@@ -51,6 +51,8 @@ public class LateralUnnestRowIDVisitor extends BasePrelVisitor<Prel, Boolean, Ru
     List<RelNode> children = getChildren(prel, isRightOfLateral);
     if (isRightOfLateral) {
       return prel.prepareForLateralUnnestPipeline(children);
+    } else if (children.equals(prel.getInputs())) {
+      return prel;
     } else {
       return (Prel) prel.copy(prel.getTraitSet(), children);
     }

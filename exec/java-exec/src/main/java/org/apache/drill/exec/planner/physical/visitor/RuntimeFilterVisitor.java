@@ -57,13 +57,13 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class RuntimeFilterVisitor extends BasePrelVisitor<Prel, Void, RuntimeException> {
 
-  private Set<ScanPrel> toAddRuntimeFilter = new HashSet<>();
+  private final Set<ScanPrel> toAddRuntimeFilter = new HashSet<>();
 
-  private Multimap<ScanPrel, HashJoinPrel> probeSideScan2hj = HashMultimap.create();
+  private final Multimap<ScanPrel, HashJoinPrel> probeSideScan2hj = HashMultimap.create();
 
-  private double fpp;
+  private final double fpp;
 
-  private int bloomFilterMaxSizeInBytesDef;
+  private final int bloomFilterMaxSizeInBytesDef;
 
   private static final AtomicLong rfIdCounter = new AtomicLong();
 
@@ -86,6 +86,9 @@ public class RuntimeFilterVisitor extends BasePrelVisitor<Prel, Void, RuntimeExc
     for (Prel child : prel) {
       child = child.accept(this, value);
       children.add(child);
+    }
+    if (children.equals(prel.getInputs())) {
+      return prel;
     }
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }

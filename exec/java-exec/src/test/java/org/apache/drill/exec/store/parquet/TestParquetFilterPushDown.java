@@ -704,6 +704,19 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     testParquetFilterPruning(query, 25, 1, new String[]{"Filter\\("});
   }
 
+  @Test
+  public void testPreservingColumnAliasAfterRemovingFilter() throws Exception {
+    test("create table dfs.tmp.`testAliasTable` as select * from cp.`tpch/nation.parquet` limit 1");
+    String query = "select n_regionkey as x from dfs.tmp.`testAliasTable` where n_nationkey > -100500";
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("x")
+        .baselineValues(0)
+        .go();
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Some test helper functions.
   //////////////////////////////////////////////////////////////////////////////////////////////////
