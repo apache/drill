@@ -17,64 +17,25 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.Container;
+import org.testcontainers.containers.GenericContainer;
 
-import de.flapdoodle.embed.mongo.Command;
-import de.flapdoodle.embed.mongo.MongoImportExecutable;
-import de.flapdoodle.embed.mongo.MongoImportProcess;
-import de.flapdoodle.embed.mongo.MongoImportStarter;
-import de.flapdoodle.embed.mongo.config.IMongoImportConfig;
-import de.flapdoodle.embed.mongo.config.MongoImportConfigBuilder;
-import de.flapdoodle.embed.mongo.config.Net;
-import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
-import de.flapdoodle.embed.mongo.distribution.Version;
-import de.flapdoodle.embed.process.config.IRuntimeConfig;
-import de.flapdoodle.embed.process.runtime.Network;
+import java.io.IOException;
 
 public class TestTableGenerator implements MongoTestConstants {
 
   private static final Logger logger = LoggerFactory
       .getLogger(TestTableGenerator.class);
 
-  public static void importData(String dbName, String collectionName,
-                                String fileName) throws InterruptedException, IOException, URISyntaxException {
-    File jsonFile = new File(Resources.getResource(fileName).toURI());
-    generateTable(dbName, collectionName, jsonFile.getAbsolutePath(), true, true, false);
-  }
+  public static void importData(GenericContainer<?> mongo, String dbName, String collectionName,
+                                String fileName) throws InterruptedException, IOException {
+    Container.ExecResult execResult = mongo.execInContainer("/bin/bash", "-c",
+        "mongoimport --db " + dbName + " --collection " + collectionName + " --jsonArray --upsert --file " + fileName);
+    logger.info(execResult.toString());
 
-  public static void generateTable(String dbName, String collection,
-      String jsonFile, Boolean jsonArray, Boolean upsert, Boolean drop)
-      throws InterruptedException, IOException {
-    logger.info("Started importing file {} into collection {} ", jsonFile,
-        collection);
-    IMongoImportConfig mongoImportConfig = new MongoImportConfigBuilder()
-        .version(Version.Main.V3_4)
-        .net(new Net(MONGOS_PORT, Network.localhostIsIPv6())).db(dbName)
-        .collection(collection).upsert(upsert).dropCollection(drop)
-        .jsonArray(jsonArray).importFile(jsonFile).build();
-    // Configure to write Mongo message to the log. Change this to
-    // .getDefaultInstance() if needed for debugging; will write to
-    // the console instead.
-    IRuntimeConfig rtConfig = new RuntimeConfigBuilder()
-        .defaultsWithLogger(Command.MongoImport, logger)
-        .daemonProcess(false)
-        .build();
-    MongoImportExecutable importExecutable = MongoImportStarter
-        .getInstance(rtConfig).prepare(mongoImportConfig);
-    MongoImportProcess importProcess = importExecutable.start();
-
-    // import is in a separate process, we should wait until the process exit
-    while (importProcess.isProcessRunning()) {
-        Thread.sleep(1000);
-    }
-
-    logger.info("Imported file {} into collection {} ", jsonFile, collection);
+    logger.info("Imported file {} into collection {} ", fileName, collectionName);
   }
 
 }

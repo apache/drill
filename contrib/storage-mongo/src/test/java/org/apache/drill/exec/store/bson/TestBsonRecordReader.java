@@ -17,13 +17,14 @@
  */
 package org.apache.drill.exec.store.bson;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.ZoneOffset;
-import java.util.Arrays;
 
 import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -59,14 +60,14 @@ import org.junit.Test;
 public class TestBsonRecordReader extends BaseTest {
   private BufferAllocator allocator;
   private VectorContainerWriter writer;
-  private TestOutputMutator mutator;
+
   private BufferManager bufferManager;
   private BsonRecordReader bsonReader;
 
   @Before
   public void setUp() {
     allocator = new RootAllocator(Long.MAX_VALUE);
-    mutator = new TestOutputMutator(allocator);
+    TestOutputMutator mutator = new TestOutputMutator(allocator);
     writer = new VectorContainerWriter(mutator);
     bufferManager = new BufferManagerImpl(allocator);
     bsonReader = new BsonRecordReader(bufferManager.getManagedBuffer(1024), false, false);
@@ -134,7 +135,7 @@ public class TestBsonRecordReader extends BaseTest {
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
     byte[] readByteArray = mapReader.reader("_idKey").readByteArray();
-    assertTrue(Arrays.equals(value.getValue().toByteArray(), readByteArray));
+    assertArrayEquals(value.getValue().toByteArray(), readByteArray);
   }
 
   @Test
@@ -144,7 +145,7 @@ public class TestBsonRecordReader extends BaseTest {
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
-    assertEquals(null, mapReader.reader("nullKey").readObject());
+    assertNull(mapReader.reader("nullKey").readObject());
   }
 
   @Test
@@ -154,7 +155,7 @@ public class TestBsonRecordReader extends BaseTest {
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
-    assertEquals(12.35d, mapReader.reader("doubleKey").readDouble().doubleValue(), 0.00001);
+    assertEquals(12.35d, mapReader.reader("doubleKey").readDouble(), 0.00001);
   }
 
   @Test
@@ -251,11 +252,11 @@ public class TestBsonRecordReader extends BaseTest {
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
     SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
-    assertTrue(Arrays.equals(bytes, mapReader.reader("binaryKey").readByteArray()));
+    assertArrayEquals(bytes, mapReader.reader("binaryKey").readByteArray());
     assertEquals("binaryStringValue", mapReader.reader("binaryStringKey").readText().toString());
-    assertEquals(23.0123, mapReader.reader("binaryDouble").readDouble().doubleValue(), 0);
+    assertEquals(23.0123, mapReader.reader("binaryDouble").readDouble(), 0);
     FieldReader reader = mapReader.reader("bsonBoolean");
-    assertEquals(true, reader.readBoolean().booleanValue());
+    assertEquals(true, reader.readBoolean());
   }
 
   @Test
@@ -292,7 +293,7 @@ public class TestBsonRecordReader extends BaseTest {
     try {
       writer.close();
     } catch (Exception e) {
-
+      // noop
     }
 
     bufferManager.close();

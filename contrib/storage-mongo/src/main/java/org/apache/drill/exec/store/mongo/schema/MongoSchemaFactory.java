@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.mongo.schema;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,11 +25,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -45,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
 import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import com.mongodb.MongoException;
@@ -57,15 +53,15 @@ public class MongoSchemaFactory extends AbstractSchemaFactory {
 
   private static final String DATABASES = "databases";
 
-  private LoadingCache<String, List<String>> databases;
-  private LoadingCache<String, List<String>> tableNameLoader;
-  private Map<String, String> schemaNameMap;
+  private final LoadingCache<String, List<String>> databases;
+  private final LoadingCache<String, List<String>> tableNameLoader;
+  private final Map<String, String> schemaNameMap;
   private final MongoStoragePlugin plugin;
 
-  public MongoSchemaFactory(MongoStoragePlugin plugin, String schemaName) throws ExecutionSetupException {
+  public MongoSchemaFactory(MongoStoragePlugin plugin, String schemaName) {
     super(schemaName);
     this.plugin = plugin;
-    this.schemaNameMap = new HashMap<String, String>();
+    this.schemaNameMap = new HashMap<>();
 
     databases = CacheBuilder //
         .newBuilder() //
@@ -81,26 +77,23 @@ public class MongoSchemaFactory extends AbstractSchemaFactory {
   private class DatabaseLoader extends CacheLoader<String, List<String>> {
 
     @Override
-    public List<String> load(String key) throws Exception {
+    public List<String> load(String key) {
       if (!DATABASES.equals(key)) {
         throw new UnsupportedOperationException();
       }
       try {
         List<String> dbNames = new ArrayList<>();
-        plugin.getClient().listDatabaseNames().forEach(new Consumer<String>() {
-          @Override
-          public void accept(String name) {
-            // 1. Schemas in drill are case insensitive and stored in lower case.
-            dbNames.add(name.toLowerCase());
-            /**
-             * 2. Support database name with capital letters.
-             * case 1: "show tables from mongo.HELLO", Should using the lower case name
-             *  to resolve the schema lookup in `CalciteSchema`.
-             * case 2: "select * from mongo.HEllO.myTable", Must be using origin name
-             *  to create `MongoScanSpec` and initial connection in `MongoRecordReader`.
-             */
-            schemaNameMap.put(name.toLowerCase(), name);
-          }
+        plugin.getClient().listDatabaseNames().forEach(name -> {
+          // 1. Schemas in drill are case insensitive and stored in lower case.
+          dbNames.add(name.toLowerCase());
+          /*
+           * 2. Support database name with capital letters.
+           * case 1: "show tables from mongo.HELLO", Should using the lower case name
+           *  to resolve the schema lookup in `CalciteSchema`.
+           * case 2: "select * from mongo.HEllO.myTable", Must be using origin name
+           *  to create `MongoScanSpec` and initial connection in `MongoRecordReader`.
+           */
+          schemaNameMap.put(name.toLowerCase(), name);
         });
         return dbNames;
       } catch (MongoException me) {
@@ -117,7 +110,7 @@ public class MongoSchemaFactory extends AbstractSchemaFactory {
   private class TableNameLoader extends CacheLoader<String, List<String>> {
 
     @Override
-    public List<String> load(String dbName) throws Exception {
+    public List<String> load(String dbName) {
       try {
         MongoDatabase db = plugin.getClient().getDatabase(schemaNameMap.get(dbName));
         List<String> collectionNames = new ArrayList<>();
@@ -134,7 +127,7 @@ public class MongoSchemaFactory extends AbstractSchemaFactory {
   }
 
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     MongoSchema schema = new MongoSchema(getName());
     SchemaPlus hPlus = parent.add(getName(), schema);
     schema.setHolder(hPlus);
@@ -145,7 +138,7 @@ public class MongoSchemaFactory extends AbstractSchemaFactory {
     private final Map<String, MongoDatabaseSchema> schemaMap = Maps.newHashMap();
 
     public MongoSchema(String name) {
-      super(ImmutableList.<String> of(), name);
+      super(Collections.emptyList(), name);
     }
 
     @Override

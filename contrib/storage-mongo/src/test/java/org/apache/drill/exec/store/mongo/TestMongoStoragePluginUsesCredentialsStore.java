@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mongo;
 
 import com.mongodb.MongoCredential;
+import com.mongodb.client.internal.MongoClientImpl;
 import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
@@ -25,9 +26,9 @@ import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.List;
-
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 @Category({MongoStorageTest.class})
 public class TestMongoStoragePluginUsesCredentialsStore extends BaseTest {
@@ -36,12 +37,12 @@ public class TestMongoStoragePluginUsesCredentialsStore extends BaseTest {
     MongoStoragePlugin plugin = new MongoStoragePlugin(
         new MongoStoragePluginConfig(connection, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER),
         null, name);
-    List<MongoCredential> creds = plugin.getClient().getCredentialsList();
+    MongoClientImpl client = (MongoClientImpl) plugin.getClient();
+    MongoCredential cred = client.getSettings().getCredential();
     if (expectedUserName == null) {
-      assertEquals(0, creds.size());
+      assertNull(cred);
     } else {
-      assertEquals(1, creds.size());
-      MongoCredential cred = creds.get(0);
+      assertNotNull(cred);
       assertEquals(expectedUserName, cred.getUserName());
       assertEquals(expectedPassword, new String(cred.getPassword()));
     }

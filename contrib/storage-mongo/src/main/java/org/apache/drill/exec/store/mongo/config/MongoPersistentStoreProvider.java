@@ -18,8 +18,11 @@
 package org.apache.drill.exec.store.mongo.config;
 
 import java.io.IOException;
+import java.util.Objects;
 
-import org.apache.drill.exec.exception.StoreException;
+import com.mongodb.ConnectionString;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import org.apache.drill.exec.store.mongo.DrillMongoConstants;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
@@ -28,17 +31,12 @@ import org.apache.drill.exec.store.sys.store.provider.BasePersistentStoreProvide
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Indexes;
 
 public class MongoPersistentStoreProvider extends BasePersistentStoreProvider {
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(MongoPersistentStoreProvider.class);
 
   static final String pKey = "pKey";
 
@@ -48,16 +46,16 @@ public class MongoPersistentStoreProvider extends BasePersistentStoreProvider {
 
   private final String mongoURL;
 
-  public MongoPersistentStoreProvider(PersistentStoreRegistry registry) throws StoreException {
+  public MongoPersistentStoreProvider(PersistentStoreRegistry<?> registry) {
     mongoURL = registry.getConfig().getString(DrillMongoConstants.SYS_STORE_PROVIDER_MONGO_URL);
   }
 
   @Override
   public void start() throws IOException {
-    MongoClientURI clientURI = new MongoClientURI(mongoURL);
-    client = new MongoClient(clientURI);
-    MongoDatabase db = client.getDatabase(clientURI.getDatabase());
-    collection = db.getCollection(clientURI.getCollection()).withWriteConcern(WriteConcern.JOURNALED);
+    ConnectionString clientURI = new ConnectionString(mongoURL);
+    client = MongoClients.create(clientURI);
+    MongoDatabase db = client.getDatabase(Objects.requireNonNull(clientURI.getDatabase()));
+    collection = db.getCollection(Objects.requireNonNull(clientURI.getCollection())).withWriteConcern(WriteConcern.JOURNALED);
     Bson index = Indexes.ascending(pKey);
     collection.createIndex(index);
   }
