@@ -544,7 +544,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * If two fragments are both estimated to be parallelization one, remove the exchange
      * separating them.
      */
-    phyRelNode = ExcessiveExchangeIdentifier.removeExcessiveEchanges(phyRelNode, targetSliceSize);
+    phyRelNode = ExcessiveExchangeIdentifier.removeExcessiveExchanges(phyRelNode, targetSliceSize);
 
     /* Insert the IMPLICIT_COLUMN in the lateral unnest pipeline */
     phyRelNode = LateralUnnestRowIDVisitor.insertRowID(phyRelNode);
@@ -589,7 +589,13 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      */
     phyRelNode = SelectionVectorPrelVisitor.addSelectionRemoversWhereNecessary(phyRelNode);
 
-    /* 10.)
+    /*
+     * 10.)
+     * Insert project above the screen operator or writer to ensure that final output column names are preserved after all optimizations.
+     */
+    phyRelNode = TopProjectVisitor.insertTopProject(phyRelNode, validatedRowType);
+
+    /* 11.)
      * Finally, Make sure that the no rels are repeats.
      * This could happen in the case of querying the same table twice as Optiq may canonicalize these.
      */

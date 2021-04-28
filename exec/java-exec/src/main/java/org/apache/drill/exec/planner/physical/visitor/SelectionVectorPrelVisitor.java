@@ -29,7 +29,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class SelectionVectorPrelVisitor extends BasePrelVisitor<Prel, Void, RuntimeException>{
 
-  private static SelectionVectorPrelVisitor INSTANCE = new SelectionVectorPrelVisitor();
+  private static final SelectionVectorPrelVisitor INSTANCE = new SelectionVectorPrelVisitor();
 
   public static Prel addSelectionRemoversWhereNecessary(Prel prel) {
     return prel.accept(INSTANCE, null);
@@ -44,6 +44,9 @@ public class SelectionVectorPrelVisitor extends BasePrelVisitor<Prel, Void, Runt
       children.add(convert(encodings, child));
     }
 
+    if (children.equals(prel.getInputs())) {
+      return prel;
+    }
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }
 

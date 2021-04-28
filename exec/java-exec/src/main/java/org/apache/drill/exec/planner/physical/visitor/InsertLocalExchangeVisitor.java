@@ -60,6 +60,9 @@ public class InsertLocalExchangeVisitor extends BasePrelVisitor<Prel, Void, Runt
     for(Prel child : prel){
       children.add(child.accept(this, null));
     }
+    if (children.equals(prel.getInputs())) {
+      return prel;
+    }
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }
 }

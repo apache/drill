@@ -62,6 +62,9 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
       child = child.accept(this, unused);
       children.add(child);
     }
+    if (children.equals(prel.getInputs())) {
+      return prel;
+    }
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }
 

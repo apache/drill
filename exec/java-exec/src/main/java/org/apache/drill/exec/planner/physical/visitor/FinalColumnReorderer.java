@@ -32,10 +32,9 @@ import org.apache.calcite.rex.RexNode;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
-public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeException>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FinalColumnReorderer.class);
+public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeException> {
 
-  private static FinalColumnReorderer INSTANCE = new FinalColumnReorderer();
+  private static final FinalColumnReorderer INSTANCE = new FinalColumnReorderer();
 
   public static Prel addFinalColumnOrdering(Prel prel) {
     return prel.accept(INSTANCE, null);
@@ -43,8 +42,11 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
 
   @Override
   public Prel visitScreen(ScreenPrel prel, Void value) throws RuntimeException {
-    Prel newChild = ((Prel) prel.getInput()).accept(this, value);
-    return prel.copy(prel.getTraitSet(), Collections.singletonList( (RelNode) addTrivialOrderedProjectPrel(newChild, true)));
+    Prel newChild = addTrivialOrderedProjectPrel(((Prel) prel.getInput()).accept(this, value), true);
+    if (newChild == prel.getInput()) {
+      return prel;
+    }
+    return prel.copy(prel.getTraitSet(), Collections.singletonList(newChild));
   }
 
   private Prel addTrivialOrderedProjectPrel(Prel prel) {
@@ -76,7 +78,10 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
   @Override
   public Prel visitWriter(WriterPrel prel, Void value) throws RuntimeException {
     Prel newChild = ((Prel) prel.getInput()).accept(this, null);
-    return prel.copy(prel.getTraitSet(), Collections.singletonList( (RelNode) addTrivialOrderedProjectPrel(newChild, true)));
+    if (newChild == prel.getInput()) {
+      return prel;
+    }
+    return prel.copy(prel.getTraitSet(), Collections.singletonList(addTrivialOrderedProjectPrel(newChild, true)));
   }
 
   @Override

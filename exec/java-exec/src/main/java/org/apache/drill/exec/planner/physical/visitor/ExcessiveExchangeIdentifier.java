@@ -43,7 +43,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
     this.targetSliceSize = targetSliceSize;
   }
 
-  public static Prel removeExcessiveEchanges(Prel prel, long targetSliceSize) {
+  public static Prel removeExcessiveExchanges(Prel prel, long targetSliceSize) {
     ExcessiveExchangeIdentifier exchange = new ExcessiveExchangeIdentifier(targetSliceSize);
     return prel.accept(exchange, exchange.getNewStat());
   }
@@ -67,8 +67,10 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
 
     if (canRemoveExchange(parent, newFrag)) {
       return newChild;
+    } else if (newChild != prel.getInput()) {
+      return (Prel) prel.copy(prel.getTraitSet(), Collections.singletonList(newChild));
     } else {
-      return (Prel) prel.copy(prel.getTraitSet(), Collections.singletonList((RelNode) newChild));
+      return prel;
     }
   }
 
@@ -85,6 +87,9 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
   public Prel visitScreen(ScreenPrel prel, MajorFragmentStat s) throws RuntimeException {
     s.addScreen(prel);
     RelNode child = ((Prel) prel.getInput()).accept(this, s);
+    if (child == prel.getInput()) {
+      return prel;
+    }
     return prel.copy(prel.getTraitSet(), Collections.singletonList(child));
   }
 
@@ -119,6 +124,9 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
       topMostLateralJoin = null;
       s.setRightSideOfLateral(false);
     }
+    if (children.equals(prel.getInputs())) {
+      return prel;
+    }
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }
 
@@ -145,6 +153,9 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
 
     for (Prel p : prel) {
       children.add(p.accept(this, s));
+    }
+    if (children.equals(prel.getInputs())) {
+      return prel;
     }
     return (Prel) prel.copy(prel.getTraitSet(), children);
   }
