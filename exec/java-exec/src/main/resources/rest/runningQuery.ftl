@@ -27,7 +27,7 @@
         </div>
         <div class="modal-body" style="line-height:3">
             <table border="0px" width="100%"><tr>
-                <td align="center" style="font-size:125%">Waiting for results... (This may take some time) <br>Please don't close this window</td>
+                <td align="center" style="font-size:125%">Waiting for results...<br>Please don't close this window</td>
                 <td align="right"><img src="/static/img/loader.gif"></td>
             </tr></table>
         </div>
