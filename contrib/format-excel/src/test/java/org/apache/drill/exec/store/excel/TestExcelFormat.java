@@ -38,6 +38,7 @@ import org.junit.experimental.categories.Category;
 import java.nio.file.Paths;
 
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -509,6 +510,22 @@ public class TestExcelFormat extends ClusterTest {
     "America/Puerto_Rico")
       .addRow(606.0, 18.16724, -66.93828, "Maricao", "PR", "Puerto Rico", "TRUE", 0.0, 6437.0, 60.4, 72093.0, "Maricao", "{'72093':94.88,'72121':1.35,'72153':3.78}", "Maricao|Yauco" +
     "|Sabana Grande", "72093|72153|72121", "FALSE", "FALSE", "America/Puerto_Rico")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testGetSheetNames() throws RpcException {
+    String sql = "SELECT _sheets FROM dfs.`excel/test_data.xlsx` LIMIT 1";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addArray("_sheets", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow((Object)strArray("data", "secondSheet", "thirdSheet", "fourthSheet", "emptySheet", "missingDataSheet", "inconsistentData", "comps"))
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
