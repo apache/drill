@@ -23,6 +23,7 @@ import com.github.pjfanning.xlsx.impl.StreamingWorkbook;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
@@ -116,6 +117,23 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
+  private enum IMPLICIT_LIST_COLUMN {
+    /**
+     * A list of the available sheets in the file.
+     */
+    SHEETS("_sheets");
+
+    private final String fieldName;
+
+    IMPLICIT_LIST_COLUMN(String fieldName) {
+      this.fieldName = fieldName;
+    }
+
+    public String getFieldName() {
+      return fieldName;
+    }
+  }
+
   private static final int ROW_CACHE_SIZE = 100;
   private static final int BUFFER_SIZE = 4096;
 
@@ -129,6 +147,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private List<ScalarWriter> columnWriters;
   private List<CellWriter> cellWriterArray;
   private List<ScalarWriter> metadataColumnWriters;
+  private ScalarWriter sheetNameWriter;
   private Iterator<Row> rowIterator;
   private RowSetLoader rowWriter;
   private int totalColumnCount;
@@ -137,6 +156,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private int recordCount;
   private Map<String, String> stringMetadata;
   private Map<String, Date> dateMetadata;
+  private Map<String, List<String>> listMetadata;
   private CustomErrorContext errorContext;
 
 
@@ -287,7 +307,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
             excelFieldNames.add(colPosition, tempColumnName);
             break;
           case FORMULA:
-            case NUMERIC:
+          case NUMERIC:
           case _NONE:
           case BLANK:
             tempColumnName = cell.getStringCellValue();
@@ -417,6 +437,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
     stringMetadata = new HashMap<>();
     dateMetadata = new HashMap<>();
+    listMetadata = new HashMap<>();
 
     // Populate String metadata columns
     stringMetadata.put(IMPLICIT_STRING_COLUMN.CATEGORY.getFieldName(), fileMetadata.getCategory());
@@ -435,6 +456,9 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     dateMetadata.put(IMPLICIT_TIMESTAMP_COLUMN.CREATED.getFieldName(), fileMetadata.getCreated());
     dateMetadata.put(IMPLICIT_TIMESTAMP_COLUMN.LAST_PRINTED.getFieldName(), fileMetadata.getLastPrinted());
     dateMetadata.put(IMPLICIT_TIMESTAMP_COLUMN.MODIFIED.getFieldName(), fileMetadata.getModified());
+
+    // Populate List columns
+    listMetadata.put(IMPLICIT_LIST_COLUMN.SHEETS.getFieldName(), getSheetNames());
   }
 
   /**
@@ -485,9 +509,14 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     for (IMPLICIT_TIMESTAMP_COLUMN name : IMPLICIT_TIMESTAMP_COLUMN.values()) {
       makeColumn(builder, name.getFieldName(), MinorType.TIMESTAMP);
     }
+
+    // Add List Column Names
+    for (IMPLICIT_LIST_COLUMN name : IMPLICIT_LIST_COLUMN.values()) {
+      makeColumn(builder, name.getFieldName(), MinorType.LIST);
+    }
   }
 
-  private void makeColumn(SchemaBuilder builder, String name, TypeProtos.MinorType type) {
+  private void makeColumn(SchemaBuilder builder, String name, MinorType type) {
     // Verify supported types
     switch (type) {
       // The Excel Reader only Supports Strings, Floats and Date/Times
@@ -497,6 +526,9 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       case TIMESTAMP:
       case TIME:
         builder.addNullable(name, type);
+        break;
+      case LIST:
+        builder.addArray(name, MinorType.VARCHAR);
         break;
       default:
         throw UserException
@@ -566,6 +598,34 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
         metadataColumnWriters.get(index).setTimestamp(Instant.ofEpochMilli(timeValue.getTime()));
       }
     }
+
+    // Write the sheet names.  Since this is the only list field
+    int listIndex = IMPLICIT_STRING_COLUMN.values().length + IMPLICIT_TIMESTAMP_COLUMN.values().length;
+    String sheetColumnName = IMPLICIT_LIST_COLUMN.SHEETS.fieldName;
+    List<String> sheetNames = listMetadata.get(sheetColumnName);
+
+    if (sheetNameWriter == null) {
+      int sheetColumnIndex = rowWriter.tupleSchema().index(IMPLICIT_LIST_COLUMN.SHEETS.getFieldName());
+      if (sheetColumnIndex == -1) {
+        ColumnMetadata colSchema = MetadataUtils.newScalar(sheetColumnName, MinorType.VARCHAR, DataMode.REPEATED);
+        colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+        listIndex = rowWriter.addColumn(colSchema);
+      }
+      sheetNameWriter = rowWriter.column(listIndex).array().scalar();
+    }
+
+    for (String sheetName : sheetNames) {
+      sheetNameWriter.setString(sheetName);
+    }
+  }
+
+  private List<String> getSheetNames() {
+    List<String> sheets = new ArrayList<>();
+    int sheetCount = streamingWorkbook.getNumberOfSheets();
+    for (int i = 0; i < sheetCount; i++) {
+      sheets.add(streamingWorkbook.getSheetName(i));
+    }
+    return sheets;
   }
 
   @Override
