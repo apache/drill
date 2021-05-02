@@ -237,9 +237,6 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void getColumnHeaders(SchemaBuilder builder) {
-    //Get the field names
-    int columnCount;
-
     // Case for empty sheet
     if (sheet.getLastRowNum() == 0) {
       builder.buildSchema();
@@ -253,7 +250,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
     // Get the number of columns.
     // This menthod also advances the row reader to the location of the first row of data
-    columnCount = getColumnCount();
+    setFirstRow();
 
     excelFieldNames = new ArrayList<>();
     cellWriterArray = new ArrayList<>();
@@ -345,11 +342,10 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   /**
-   * Returns the column count.  There are a few gotchas here in that we have to know the header row and count the physical number of cells
+   * There are a few gotchas here in that we have to know the header row and count the physical number of cells
    * in that row.  This function also has to move the rowIterator object to the first row of data.
-   * @return The number of actual columns
    */
-  private int getColumnCount() {
+  private void setFirstRow() {
     // Initialize
     currentRow = rowIterator.next();
     int rowNumber = readerConfig.headerRow > 0 ? sheet.getFirstRowNum() : 0;
@@ -359,8 +355,6 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     for (int i = 1; i < rowNumber; i++) {
       currentRow = rowIterator.next();
     }
-
-    return currentRow.getPhysicalNumberOfCells();
   }
 
   @Override
