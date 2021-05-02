@@ -85,6 +85,10 @@
       Submit
     </button>
     &nbsp;&nbsp;&nbsp;
+    <button class="btn btn-secondary" type="button" onclick="resetQuery()">
+      Reset
+    </button>
+    &nbsp;&nbsp;&nbsp;
     <input type="checkbox" name="forceLimit" value="limit" <#if model.isAutoLimitEnabled()>checked</#if>>
       Limit results to <input type="text" id="autoLimit" name="autoLimit" min="0" value="${model.getDefaultRowsAutoLimited()?c}" size="6" pattern="[0-9]*">
       rows <span class="material-icons" title="Limits the number of records retrieved in the query.

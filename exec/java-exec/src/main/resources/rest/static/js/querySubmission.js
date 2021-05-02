@@ -86,3 +86,10 @@ function submitQuery() {
     $("#queryForm").submit();
     $(window).bind("pageshow", function(event) { closePopup();});
 }
+
+//Reset Query
+function resetQuery() {
+	var editor = ace.edit("query-editor-format");
+	editor.getSession().setValue("");
+	editor.focus();
+}
