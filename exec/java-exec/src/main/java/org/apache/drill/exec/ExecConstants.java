@@ -1217,6 +1217,7 @@ public final class ExecConstants {
   public static final String BOOTSTRAP_FORMAT_PLUGINS_FILE =  "drill.exec.storage.bootstrap.format";
 
   public static final String UPGRADE_STORAGE_PLUGINS_FILE = "drill.exec.storage.upgrade.storage";
+  public static final String APPEND_STORAGE_PLUGINS_FILE = "drill.exec.storage.append.storage";
 
   public static final String STORAGE_PLUGIN_REGISTRY_IMPL = "drill.exec.storage.registry";
   public static final String ACTION_ON_STORAGE_PLUGINS_OVERRIDE_FILE = "drill.exec.storage.action_on_plugins_override_file";

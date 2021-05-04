@@ -35,6 +35,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.PluginHandle.PluginType;
@@ -278,7 +279,12 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
   private void prepareStore() {
     if (loadEnabledPlugins()) {
+      // 1. Upgrade the plugin if the override file exist
       upgradeStore();
+      // 2. Check and add new plugin with the new release
+      if (context.config().hasPath(ExecConstants.APPEND_STORAGE_PLUGINS_FILE)) {
+        loadNewPlugins();
+      }
     } else {
       initStore();
     }
@@ -377,6 +383,43 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
     // If found at least one entry then this is an existing registry.
     return count > 0;
+  }
+
+  /**
+   * If users specified the boot option {@link ExecConstants#APPEND_STORAGE_PLUGINS_FILE} :
+   * <ul>
+   * <li> The user requested to use new plugins </li>
+   * <li> The user boot the Drill with the new release </li>
+   * </ul>
+   */
+  private void loadNewPlugins() {
+    if (context.config().getBoolean(ExecConstants.APPEND_STORAGE_PLUGINS_FILE)) {
+      StoragePlugins latestPlugins = new StoragePlugins();
+      List<String> pluginName = new ArrayList<>();
+      try {
+        for (ConnectorLocator locator : locators) {
+          StoragePlugins locatorPlugins = locator.bootstrapPlugins();
+          if (locatorPlugins != null) {
+            locatorPlugins.forEach(plugin -> {
+              // Compare the plugin use the name
+              // TODO If the user has already taken this name before the new plugin release
+              if (pluginStore.get(plugin.getKey()) == null) {
+                // load the newer
+                latestPlugins.put(plugin.getKey(), plugin.getValue());
+                pluginName.add(plugin.getKey());
+              }
+            });
+          }
+        }
+      } catch (IOException e) {
+        throw new IllegalStateException(
+            "Failure initializing the plugin store. Drillbit exiting.", e);
+      }
+      if (!latestPlugins.isEmpty()) {
+        pluginStore.putAll(latestPlugins);
+        logger.info("New plugin has been added to the system : {}", pluginName);
+      }
+    }
   }
 
   @Override
