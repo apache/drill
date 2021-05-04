@@ -23,20 +23,23 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
+import kafka.server.KafkaServer;
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.store.kafka.KafkaAsyncCloser;
 import org.apache.drill.exec.store.kafka.TestQueryConstants;
+import org.apache.kafka.common.utils.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import kafka.server.KafkaConfig;
-import kafka.server.KafkaServerStartable;
+import scala.Option;
 
 public class EmbeddedKafkaCluster implements TestQueryConstants {
 
   private static final Logger logger = LoggerFactory.getLogger(EmbeddedKafkaCluster.class);
-  private List<KafkaServerStartable> brokers;
+  private List<KafkaServer> brokers;
   private ZookeeperHelper zkHelper;
   private KafkaAsyncCloser closer;
   private final Properties props;
@@ -93,8 +96,9 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
     brokers.add(getBroker(properties));
   }
 
-  private static KafkaServerStartable getBroker(Properties properties) {
-    KafkaServerStartable broker = new KafkaServerStartable(new KafkaConfig(properties));
+  private static KafkaServer getBroker(Properties properties) {
+    KafkaServer broker = new KafkaServer(new KafkaConfig(properties),
+        Time.SYSTEM, Option.<String>apply("kafka"), false);
     broker.startup();
     return broker;
   }
@@ -104,9 +108,7 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
     closer = null;
 
     if (brokers != null) {
-      for (KafkaServerStartable broker : brokers) {
-        broker.shutdown();
-      }
+      brokers.forEach(KafkaServer::shutdown);
       brokers = null;
     }
     if (zkHelper != null) {
@@ -116,12 +118,10 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
   }
 
   public void shutDownBroker(int brokerId) {
-    for (KafkaServerStartable broker : brokers) {
-      if (Integer.parseInt(broker.staticServerConfig().getString(KafkaConfig.BrokerIdProp())) == brokerId) {
-        broker.shutdown();
-        return;
-      }
-    }
+    brokers.stream()
+        .filter(broker -> Integer.parseInt(broker.config().getString(KafkaConfig.BrokerIdProp())) == brokerId)
+        .findAny()
+        .ifPresent(KafkaServer::shutdown);
   }
 
   public Properties getProps() {
@@ -130,11 +130,11 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
     return tmpProps;
   }
 
-  public List<KafkaServerStartable> getBrokers() {
+  public List<KafkaServer> getBrokers() {
     return brokers;
   }
 
-  public void setBrokers(List<KafkaServerStartable> brokers) {
+  public void setBrokers(List<KafkaServer> brokers) {
     this.brokers = brokers;
   }
 
@@ -143,13 +143,10 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
   }
 
   public String getKafkaBrokerList() {
-    StringBuilder sb = new StringBuilder();
-    for (KafkaServerStartable broker : brokers) {
-      KafkaConfig serverConfig = broker.staticServerConfig();
-      sb.append(serverConfig.hostName()).append(":").append(serverConfig.port());
-      sb.append(",");
-    }
-    return sb.toString().substring(0, sb.toString().length() - 1);
+    return brokers.stream()
+        .map(KafkaServer::config)
+        .map(serverConfig -> serverConfig.hostName() + ":" + serverConfig.port())
+        .collect(Collectors.joining(","));
   }
 
   public void registerToClose(AutoCloseable autoCloseable) {
