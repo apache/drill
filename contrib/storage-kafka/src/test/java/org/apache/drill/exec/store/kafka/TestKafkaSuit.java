@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.store.kafka;
 
-import kafka.utils.ZKStringSerializer$;
-import org.I0Itec.zkclient.ZkClient;
+import kafka.zk.KafkaZkClient;
 import org.apache.drill.categories.KafkaStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ZookeeperTestUtil;
@@ -32,6 +31,8 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.common.security.JaasUtils;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.common.utils.Time;
+import org.apache.zookeeper.client.ZKClientConfig;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
@@ -40,6 +41,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Option;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -59,7 +61,7 @@ public class TestKafkaSuit extends BaseTest {
 
   public static EmbeddedKafkaCluster embeddedKafkaCluster;
 
-  private static ZkClient zkClient;
+  private static KafkaZkClient zkClient;
 
   private static final AtomicInteger initCount = new AtomicInteger(0);
 
@@ -78,7 +80,10 @@ public class TestKafkaSuit extends BaseTest {
         ZookeeperTestUtil.setZookeeperSaslTestConfigProps();
         System.setProperty(JaasUtils.JAVA_LOGIN_CONFIG_PARAM, ClassLoader.getSystemResource(LOGIN_CONF_RESOURCE_PATHNAME).getFile());
         embeddedKafkaCluster = new EmbeddedKafkaCluster();
-        zkClient = new ZkClient(embeddedKafkaCluster.getZkServer().getConnectionString(), SESSION_TIMEOUT, CONN_TIMEOUT, ZKStringSerializer$.MODULE$);
+        zkClient = KafkaZkClient.apply(embeddedKafkaCluster.getZkServer().getConnectionString(),
+            false, SESSION_TIMEOUT, CONN_TIMEOUT, 0, Time.SYSTEM,
+            "kafka.server", "SessionExpireListener",
+            Option.<String>empty(), Option.<ZKClientConfig>empty());
         createTopicHelper(TestQueryConstants.JSON_TOPIC, 1);
         KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), StringSerializer.class);
         generator.populateJsonMsgIntoKafka(TestQueryConstants.JSON_TOPIC, NUM_JSON_MSG);
