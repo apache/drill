@@ -8,21 +8,23 @@ parent: "SQL Functions"
 
 The following table lists the aggregate functions that you can use in Drill queries.
 
+|-------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
 | **Function**                              | **Argument Type**                                                                                                                       | **Return Type**                                                                                                                    |
 |-------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
 | ANY_VALUE(expression)                     | BIT, INT, BIGINT, FLOAT4, FLOAT8, DATE, TIMESTAMP, TIME, VARCHAR, VARBINARY, LIST, MAP, INTERVAL, INTERVALDAY, INTERVALYEAR, VARDECIMAL | Same as argument type                                                                                                              |
 | AVG(expression)                           | SMALLINT,   INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL                                                                           | DECIMAL for DECIMAL argument,   DOUBLE for all other arguments                                                                     |
 | BOOL_AND(expression), BOOL_OR(expression) | BIT                                                                                                                                     | BIT                                                                                                                                |
+| BIT_AND(expression), BIT_OR(expression)   | INT, BIGINT                                                                                                                             |                                                                                                                                    |
 | COUNT(*)                                  | -                                                                                                                                       | BIGINT                                                                                                                             |
 | COUNT([DISTINCT] expression)              | any                                                                                                                                     | BIGINT                                                                                                                             |
-| MAX(expression), MIN(expression)          | BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP                                                                                    | Same   as argument type                                                                                                            |
-| SUM(expression)                           | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL                                                                           | DECIMAL for DECIMAL   argument,     BIGINT for any integer-type argument (including BIGINT), DOUBLE for   floating-point arguments |
-
+| MAX(expression), MIN(expression)          | BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP                                                                                      | Same   as argument type                                                                                                            |
+| SUM(expression)                           | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL                                                                             | DECIMAL for DECIMAL   argument,     BIGINT for any integer-type argument (including BIGINT), DOUBLE for   floating-point arguments |
+|-------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
 
 
 - Drill 1.14 and later supports the ANY_VALUE function. 
-- Starting in Drill 1.14, the DECIMAL data type is enabled by default.  
-- AVG, COUNT, MIN, MAX, and SUM accept ALL and DISTINCT keywords. The default is ALL.  
+- Starting in Drill 1.14, the DECIMAL data type is enabled by default. 
+- AVG, COUNT, MIN, MAX, and SUM accept ALL and DISTINCT keywords. The default is ALL.
 - The aggregate function examples use the `cp` storage plugin to access the [`employee.json`]({{site.baseurl}}/docs/querying-json-files/) file installed with Drill. By default, JSON reads numbers as double-precision floating point numbers. These examples assume that you are using the default option [all_text_mode]({{site.baseurl}}/docs/json-data-model/#handling-type-differences) set to false.  
 
 ## ANY_VALUE
@@ -173,6 +175,31 @@ Returns the result of a logical AND (resp. OR) over the specified expression.
 ### BOOL_AND and BOOL_OR Usage Notes
 
 1. EVERY is nearly an alias for BOOL_AND but returns a TINYINT rather than a BIT.
+
+
+## BIT_AND and BIT_OR
+Returns the result of a bitwise AND (resp. OR) over the specified expression.
+
+### BIT_AND and BIT_OR Syntax
+
+    BIT_AND(expression)
+    BIT_OR(expression)
+
+### BIT_AND and BIT_OR Examples
+
+    SELECT BIT_AND(position_id) FROM cp.`employee.json`;
+    |--------|
+    | EXPR$0 |
+    |--------|
+    | 0      |
+    |--------|
+
+    SELECT BIT_OR(position_id) FROM cp.`employee.json`;
+    |--------|
+    | EXPR$0 |
+    |--------|
+    | 31     |
+    |--------|
 
 
 ## COUNT
