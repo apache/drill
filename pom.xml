@@ -111,6 +111,7 @@
     <joda.version>2.10.5</joda.version>
     <javax.el.version>3.0.0</javax.el.version>
     <surefire.version>3.0.0-M5</surefire.version>
+    <jna.version>5.8.0</jna.version>
     <commons.compress.version>1.20</commons.compress.version>
     <hikari.version>3.4.2</hikari.version>
     <netty.version>4.1.59.Final</netty.version>
@@ -120,6 +121,7 @@
     <commons.cli.version>1.4</commons.cli.version>
     <snakeyaml.version>1.26</snakeyaml.version>
     <commons.lang3.version>3.10</commons.lang3.version>
+    <testcontainers.version>1.15.3</testcontainers.version>
     <typesafe.config.version>1.0.0</typesafe.config.version>
     <commons.codec.version>1.14</commons.codec.version>
     <metadata.extractor.version>2.13.0</metadata.extractor.version>
@@ -450,6 +452,7 @@
             <exclude>**/*.prj</exclude>
             <exclude>**/*.shp</exclude>
             <exclude>**/*.dbf</exclude>
+            <exclude>**/*.cnf</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -1164,6 +1167,16 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>net.java.dev.jna</groupId>
+        <artifactId>jna</artifactId>
+        <version>${jna.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.java.dev.jna</groupId>
+        <artifactId>jna-platform</artifactId>
+        <version>${jna.version}</version>
+      </dependency>
+      <dependency>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-api</artifactId>
           <version>${slf4j.version}</version>
@@ -1728,7 +1741,7 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-tcnative</artifactId>
-        <version>2.0.1.Final</version>
+        <version>2.0.39.Final</version>
         <classifier>${netty.tcnative.classifier}</classifier>
         <scope>runtime</scope>
         <optional>true</optional>

@@ -31,8 +31,7 @@
   <name>Drill : Contrib : Storage : JDBC</name>
 
   <properties>
-    <mysql.connector.version>8.0.19</mysql.connector.version>
-    <wix-embedded-mysql.version>4.6.1</wix-embedded-mysql.version>
+    <mysql.connector.version>8.0.25</mysql.connector.version>
     <h2.version>1.4.200</h2.version>
   </properties>
 
@@ -69,9 +68,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.wix</groupId>
-      <artifactId>wix-embedded-mysql</artifactId>
-      <version>${wix-embedded-mysql.version}</version>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>mysql</artifactId>
+      <version>${testcontainers.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

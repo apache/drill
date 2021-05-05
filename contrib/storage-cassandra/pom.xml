@@ -82,7 +82,7 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>cassandra</artifactId>
-      <version>1.15.1</version>
+      <version>${testcontainers.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
