@@ -1,0 +1,2 @@
+[mysqld]
+tls_version=TLSv1.2
