@@ -213,12 +213,12 @@
               <input type="checkbox" name="forceLimit" value="limit" <#if model.hasAutoLimit()>checked</#if>>
                 Limit results to <input type="text" id="autoLimit" name="autoLimit" min="0"
                   value="<#if model.hasAutoLimit()>${model.getAutoLimit()?c}<#else>${model.getDefaultAutoLimit()?c}</#if>" size="6" pattern="[0-9]*">
-                  rows <span class="material-icons" title="Limits the number of records retrieved in the query.
-                  Ignored if query has a limit already" style="cursor:pointer">info</span>
+                  rows <span data-toggle="tooltip" class="material-icons" title="Limits the number of records retrieved in the query.
+                  Ignored if query has a limit already" style="cursor: help;">info</span>
               &nbsp;&nbsp;&nbsp;
               Default schema: <input type="text" size="10" name="defaultSchema" id="defaultSchema">
-                <span class="material-icons" title="Set the default schema used to find table names
-                and for SHOW FILES and SHOW TABLES." style="cursor:pointer">info</span>
+                <span data-toggle="tooltip" class="material-icons" title="Set the default schema used to find table names
+                and for SHOW FILES and SHOW TABLES." style="cursor: help;">info</span>
            </div>
             <input type="hidden" name="csrfToken" value="${model.getCsrfToken()}">
           </div>
@@ -520,6 +520,11 @@
   </div> <br>
 
     <script>
+    // Enable the tooltip
+    $(function () {
+      var options = { delay: { "show" : 100, "hide" : 100 } };
+      $('[data-toggle="tooltip"]').tooltip(options);
+    });
     //Inject Spilled Tags
     $(window).on('load', function () {
       injectIconByClass("spill-tag","get_app");

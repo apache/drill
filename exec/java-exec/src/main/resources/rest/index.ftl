@@ -60,11 +60,11 @@
           <thead>
             <tr>
               <th>#</th>
-              <th title="Drillbits in Cluster" style="cursor: help;">Address <span class="material-icons" style="font-size:100%">info</span></th>
-              <th title="Heap Memory in use (as percent of Total Heap)" style="cursor: help;">Heap Memory Usage <span class="material-icons" style="font-size:100%">info</span></th>
-              <th title="Estimated Direct Memory ACTIVELY in use (as percent of Peak Usage)" style="cursor: help;">Direct Memory Usage <span class="material-icons" style="font-size:100%">info</span></th>
-              <th title="Current CPU usage by Drill" style="cursor: help;">CPU Usage<span class="material-icons" style="font-size:100%">info</span></th>
-              <th title="Average load on the system in the last 1 minute" style="cursor: help;">Avg Sys Load <span class="material-icons" style="font-size:100%">info</span></th>
+              <th data-toggle="tooltip" title="Drillbits in Cluster" style="cursor: help;">Address <span class="material-icons" style="font-size:100%">info</span></th>
+              <th data-toggle="tooltip" title="Heap Memory in use (as percent of Total Heap)" style="cursor: help;">Heap Memory Usage <span class="material-icons" style="font-size:100%">info</span></th>
+              <th data-toggle="tooltip" title="Estimated Direct Memory ACTIVELY in use (as percent of Peak Usage)" style="cursor: help;">Direct Memory Usage <span class="material-icons" style="font-size:100%">info</span></th>
+              <th data-toggle="tooltip" title="Current CPU usage by Drill" style="cursor: help;">CPU Usage <span class="material-icons" style="font-size:100%">info</span></th>
+              <th data-toggle="tooltip" title="Average load on the system in the last 1 minute" style="cursor: help;">Avg Sys Load <span class="material-icons" style="font-size:100%">info</span></th>
               <th>User Port</th>
               <th>Control Port</th>
               <th>Data Port</th>
@@ -222,6 +222,12 @@
       var size = $("#size").html();
       reloadMetrics();
       setInterval(reloadMetrics, refreshTime);
+      
+      //Enable the tooltip
+      $(function () {
+        var options = { delay: { "show" : 100, "hide" : 100 } };
+        $('[data-toggle="tooltip"]').tooltip(options);
+      });
 
       //Gets a refresh time for graceful shutdown
       function getRefreshTime() {
