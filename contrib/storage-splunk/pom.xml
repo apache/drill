@@ -99,11 +99,10 @@
 
   <profiles>
     <profile>
-      <id>linux-aarch64</id>
+      <id>non-x86_64</id>
       <activation>
         <os>
-          <family>linux</family>
-          <arch>aarch64</arch>
+          <arch>!amd64</arch>
         </os>
       </activation>
       <build>
@@ -113,7 +112,7 @@
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-surefire-plugin</artifactId>
               <configuration>
-                <!-- DRILL-7911: There is no Docker image for Linux ARM64 -->
+                <!-- DRILL-7911: There is no Docker image for non-Linux/AMD64 -->
                 <skip>true</skip>
               </configuration>
             </plugin>
