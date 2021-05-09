@@ -5827,6 +5827,27 @@
             "title": "How to Partition Data",
             "url": "/docs/how-to-partition-data/"
         },
+        "IP Network functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Functions",
+                    "url": "/docs/sql-functions/"
+                },
+                {
+                    "title": "SQL Reference",
+                    "url": "/docs/sql-reference/"
+                }
+            ],
+            "children": [],
+            "next_title": "SQL Window Functions",
+            "next_url": "/docs/sql-window-functions/",
+            "parent": "SQL Functions",
+            "previous_title": "Time Series Analysis Functions",
+            "previous_url": "/docs/time-series-analysis-functions/",
+            "relative_path": "_docs/sql-reference/sql-functions/100-ip-net-functions.md",
+            "title": "IP Network functions",
+            "url": "/docs/ip-network-functions/"
+        },
         "Identifying Multiple Drill Versions in a Cluster": {
             "breadcrumbs": [
                 {
@@ -13042,14 +13063,35 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "SQL Window Functions",
-                    "next_url": "/docs/sql-window-functions/",
+                    "next_title": "IP Network functions",
+                    "next_url": "/docs/ip-network-functions/",
                     "parent": "SQL Functions",
                     "previous_title": "GIS functions",
                     "previous_url": "/docs/gis-functions/",
                     "relative_path": "_docs/sql-reference/sql-functions/090-time-series-analysis-functions.md",
                     "title": "Time Series Analysis Functions",
                     "url": "/docs/time-series-analysis-functions/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Functions",
+                            "url": "/docs/sql-functions/"
+                        },
+                        {
+                            "title": "SQL Reference",
+                            "url": "/docs/sql-reference/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "SQL Window Functions",
+                    "next_url": "/docs/sql-window-functions/",
+                    "parent": "SQL Functions",
+                    "previous_title": "Time Series Analysis Functions",
+                    "previous_url": "/docs/time-series-analysis-functions/",
+                    "relative_path": "_docs/sql-reference/sql-functions/100-ip-net-functions.md",
+                    "title": "IP Network functions",
+                    "url": "/docs/ip-network-functions/"
                 }
             ],
             "next_title": "About SQL Function Examples",
@@ -13489,14 +13531,35 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "SQL Window Functions",
-                            "next_url": "/docs/sql-window-functions/",
+                            "next_title": "IP Network functions",
+                            "next_url": "/docs/ip-network-functions/",
                             "parent": "SQL Functions",
                             "previous_title": "GIS functions",
                             "previous_url": "/docs/gis-functions/",
                             "relative_path": "_docs/sql-reference/sql-functions/090-time-series-analysis-functions.md",
                             "title": "Time Series Analysis Functions",
                             "url": "/docs/time-series-analysis-functions/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions",
+                                    "url": "/docs/sql-functions/"
+                                },
+                                {
+                                    "title": "SQL Reference",
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "SQL Window Functions",
+                            "next_url": "/docs/sql-window-functions/",
+                            "parent": "SQL Functions",
+                            "previous_title": "Time Series Analysis Functions",
+                            "previous_url": "/docs/time-series-analysis-functions/",
+                            "relative_path": "_docs/sql-reference/sql-functions/100-ip-net-functions.md",
+                            "title": "IP Network functions",
+                            "url": "/docs/ip-network-functions/"
                         }
                     ],
                     "next_title": "About SQL Function Examples",
@@ -13625,8 +13688,8 @@
                     "next_title": "SQL Window Functions Introduction",
                     "next_url": "/docs/sql-window-functions-introduction/",
                     "parent": "SQL Reference",
-                    "previous_title": "Time Series Analysis Functions",
-                    "previous_url": "/docs/time-series-analysis-functions/",
+                    "previous_title": "IP Network functions",
+                    "previous_url": "/docs/ip-network-functions/",
                     "relative_path": "_docs/sql-reference/055-sql-window-functions.md",
                     "title": "SQL Window Functions",
                     "url": "/docs/sql-window-functions/"
@@ -14720,8 +14783,8 @@
             "next_title": "SQL Window Functions Introduction",
             "next_url": "/docs/sql-window-functions-introduction/",
             "parent": "SQL Reference",
-            "previous_title": "Time Series Analysis Functions",
-            "previous_url": "/docs/time-series-analysis-functions/",
+            "previous_title": "IP Network functions",
+            "previous_url": "/docs/ip-network-functions/",
             "relative_path": "_docs/sql-reference/055-sql-window-functions.md",
             "title": "SQL Window Functions",
             "url": "/docs/sql-window-functions/"
@@ -15805,8 +15868,8 @@
                 }
             ],
             "children": [],
-            "next_title": "SQL Window Functions",
-            "next_url": "/docs/sql-window-functions/",
+            "next_title": "IP Network functions",
+            "next_url": "/docs/ip-network-functions/",
             "parent": "SQL Functions",
             "previous_title": "GIS functions",
             "previous_url": "/docs/gis-functions/",
@@ -21378,14 +21441,35 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "SQL Window Functions",
-                            "next_url": "/docs/sql-window-functions/",
+                            "next_title": "IP Network functions",
+                            "next_url": "/docs/ip-network-functions/",
                             "parent": "SQL Functions",
                             "previous_title": "GIS functions",
                             "previous_url": "/docs/gis-functions/",
                             "relative_path": "_docs/sql-reference/sql-functions/090-time-series-analysis-functions.md",
                             "title": "Time Series Analysis Functions",
                             "url": "/docs/time-series-analysis-functions/"
+                        },
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions",
+                                    "url": "/docs/sql-functions/"
+                                },
+                                {
+                                    "title": "SQL Reference",
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ],
+                            "children": [],
+                            "next_title": "SQL Window Functions",
+                            "next_url": "/docs/sql-window-functions/",
+                            "parent": "SQL Functions",
+                            "previous_title": "Time Series Analysis Functions",
+                            "previous_url": "/docs/time-series-analysis-functions/",
+                            "relative_path": "_docs/sql-reference/sql-functions/100-ip-net-functions.md",
+                            "title": "IP Network functions",
+                            "url": "/docs/ip-network-functions/"
                         }
                     ],
                     "next_title": "About SQL Function Examples",
@@ -21514,8 +21598,8 @@
                     "next_title": "SQL Window Functions Introduction",
                     "next_url": "/docs/sql-window-functions-introduction/",
                     "parent": "SQL Reference",
-                    "previous_title": "Time Series Analysis Functions",
-                    "previous_url": "/docs/time-series-analysis-functions/",
+                    "previous_title": "IP Network functions",
+                    "previous_url": "/docs/ip-network-functions/",
                     "relative_path": "_docs/sql-reference/055-sql-window-functions.md",
                     "title": "SQL Window Functions",
                     "url": "/docs/sql-window-functions/"
