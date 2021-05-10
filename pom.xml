@@ -110,7 +110,7 @@
     <codemodel.version>2.6</codemodel.version>
     <joda.version>2.10.5</joda.version>
     <javax.el.version>3.0.0</javax.el.version>
-    <surefire.version>3.0.0-M4</surefire.version>
+    <surefire.version>3.0.0-M5</surefire.version>
     <commons.compress.version>1.20</commons.compress.version>
     <hikari.version>3.4.2</hikari.version>
     <netty.version>4.1.59.Final</netty.version>
