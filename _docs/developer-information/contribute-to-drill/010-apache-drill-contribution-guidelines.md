@@ -28,7 +28,7 @@ First, you need the Drill source code. You can use Git to put the source code on
 
 ## Step 2: Get approval and modify the source code.
 
-Before you start, send a message to the [Drill developer mailing list](http://mail-archives.apache.org/mod_mbox/drill-dev/) or file a bug report in [JIRA](https://issues.apache.org/jira/browse/DRILL) describing your proposed changes. Doing this helps to verify that your changes will work with what others are doing and have planned for the project. Be patient, it may take folks a while to understand your requirements. For detailed designs, the Drill team uses [this design document template](https://docs.google.com/document/d/1PnBiOMV5mYBi5N6fLci-bRTva1gieCuxwlSYH9crMhU/edit?usp=sharing).
+Before you start, send a message to the [Drill developer mailing list](https://mail-archives.apache.org/mod_mbox/drill-dev/) or file a bug report in [JIRA](https://issues.apache.org/jira/browse/DRILL) describing your proposed changes. Doing this helps to verify that your changes will work with what others are doing and have planned for the project. Be patient, it may take folks a while to understand your requirements. For detailed designs, the Drill team uses [this design document template](https://docs.google.com/document/d/1PnBiOMV5mYBi5N6fLci-bRTva1gieCuxwlSYH9crMhU/edit?usp=sharing).
 
 Once your suggested changes are approved, you can modify the source code and add some features using your favorite IDE.
 
@@ -38,13 +38,13 @@ The following sections provide tips for working on the project:
 
 Please adhere to the points outlined below:
 
-  * All public classes and methods should have informative [Javadoc comments](http://www.oracle.com/technetwork/java/javase/documentation/index-137868.html). Do not use @author tags.
-  * Code should be formatted according to [Sun's conventions](http://www.oracle.com/technetwork/java/codeconvtoc-136057.html), with the following exceptions:
+  * All public classes and methods should have informative [Javadoc comments](https://www.oracle.com/technical-resources/articles/java/javadoc-tool.html). Do not use @author tags.
+  * Code should be formatted according to [Sun's conventions](https://www.oracle.com/java/technologies/javase/codeconventions-contents.html), with the following exceptions:
     * Indent two (2) spaces per level, not four (4).
     * Line length limit is 120 chars, instead of 80 chars.
   * Contributions should not introduce new Checkstyle violations.
   * Contributions should pass existing unit tests.
-  * New unit tests should be provided to demonstrate bugs and fixes. [JUnit](http://www.junit.org) 4.1 is our test framework which has the following requirements:
+  * New unit tests should be provided to demonstrate bugs and fixes. [JUnit](https://junit.org/junit4/) 4.12 is our test framework which has the following requirements:
     * You must implement a class that contains test methods annotated with JUnit's 4.x @Test annotation and whose class name ends with `Test`.
     * Define methods within your class whose names begin with `test`, and call JUnit's many assert methods to verify conditions; these methods will be executed when you run `mvn clean test`.
 
@@ -58,7 +58,7 @@ following settings into your browser:
 
 ### Understanding Maven
 
-You can use the Maven Java build tool to build Drill. To get started with Maven, see the [Maven tutorial](http://maven.apache.org/guides/getting-started/maven-in-five-minutes.html).
+You can use the Maven Java build tool to build Drill. To get started with Maven, see the [Maven tutorial](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html).
 
 To build Drill with Maven, run the following command:
 
@@ -151,5 +151,5 @@ Documentation committed into the `gh-pages` branch does not have any effect on t
 
 ### See Also
 
-  * [Apache contributor documentation](http://www.apache.org/dev/contributors.html)
-  * [Apache voting documentation](http://www.apache.org/foundation/voting.html)
+  * [Apache contributor documentation](https://infra.apache.org/contributors.html)
+  * [Apache voting documentation](https://www.apache.org/foundation/voting.html)
