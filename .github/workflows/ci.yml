@@ -57,7 +57,7 @@ jobs:
           distribution: 'adopt'
           java-version: ${{ matrix.java }}
       - name: Build and test
-        run: mvn install -DdirectMemoryMb=4500 -DmemoryMb=1300
+        run: mvn install -V -ntp -DdirectMemoryMb=4500 -DmemoryMb=1300
 
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
