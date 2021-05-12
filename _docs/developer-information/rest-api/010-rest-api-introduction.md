@@ -61,9 +61,12 @@ Submit a query and return results.
 
 **Parameters**
 
-* queryType--SQL, PHYSICAL, or LOGICAL are valid types. Use only "SQL". Other types are for internal use only.  
-* query--A SQL query that runs in Drill.  
-* autoLimit--Limits the number of rows returned from the result set. (Drill 1.16+)
+* `queryType`--SQL, PHYSICAL, or LOGICAL are valid types. Use only "SQL". Other types are for internal use only.  
+* `query`--A SQL query that runs in Drill.  
+* `autoLimit`--Limits the number of rows returned from the result set. (Drill 1.16+)
+* `defaultSchema`--Sets the default schema for the query.  Equavalent to executing a `USE <schema>` prior to the query. (Drill 1.18+)
+
+For Drill 1.19+ Drill switched to a streaming HTTP connection for REST queries.  The result being that 
 
 **Request Body**
 
@@ -92,6 +95,80 @@ Submit a query and return results.
          "filling" : "[]"
        } ]
      }
+
+**Error Reporting**
+Drill 1.19 added a streaming REST interface with the goal of reducing the response times from REST calls. As of Drill 1.19, error reporting is no longer enabled by default and in the event of a failed query, you will just get results as shown below:
+
+```json
+{
+    "queryId": "1fa0acc2-e507-6688-69fe-02fc627c8c47",
+    "queryState": "FAILED"
+}
+```
+To re-enable error reporting you will have to set the `http.rest.errors.verbose` to `true` as shown below:
+
+```json
+{
+    "query": "SELECT * FROM cp.`employee123321123321.json` LIMIT 20",
+    "queryType": "SQL",
+    "options": {
+        "drill.exec.http.rest.errors.verbose": "true"
+    }
+}
+```
+The above call will result in the response shown below.  Note that the response will contain the `exception`, the `errorMessage` and the `stackTrace` in separate fields.
+
+```json
+{
+    "queryId": "1f9c72aa-bafb-2d58-ebfa-5cd3f21f4ddd",
+    "exception": "org.apache.calcite.runtime.CalciteContextException",
+    "errorMessage": "From line 1, column 15 to line 1, column 16: Object 'employee123321123321.json' not found within 'cp': Object 'employee123321123321.json' not found within 'cp'",
+    "stackTrace": [
+        "org.apache.calcite.runtime.CalciteContextException: From line 1, column 15 to line 1, column 16: Object 'employee123321123321.json' not found within 'cp': Object 'employee123321123321.json' not found within 'cp'",
+        "\tat .......(:0)",
+        "\tat org.apache.calcite.runtime.Resources$ExInstWithCause.ex(Resources.java:463)",
+        "\tat org.apache.calcite.sql.SqlUtil.newContextException(SqlUtil.java:835)",
+        "\tat org.apache.calcite.sql.SqlUtil.newContextException(SqlUtil.java:820)",
+        "\tat org.apache.calcite.sql.validate.SqlValidatorImpl.newValidationError(SqlValidatorImpl.java:4881)",
+        "\tat org.apache.calcite.sql.validate.IdentifierNamespace.resolveImpl(IdentifierNamespace.java:127)",
+        "\tat org.apache.calcite.sql.validate.IdentifierNamespace.validateImpl(IdentifierNamespace.java:177)",
+        "\tat org.apache.calcite.sql.validate.AbstractNamespace.validate(AbstractNamespace.java:84)",
+        "\tat org.apache.calcite.sql.validate.SqlValidatorImpl.validateNamespace(SqlValidatorImpl.java:1009)",
+        "\tat org.apache.calcite.sql.validate.SqlValidatorImpl.validateQuery(SqlValidatorImpl.java:969)",
+        "\tat org.apache.calcite.sql.validate.SqlValidatorImpl.validateFrom(SqlValidatorImpl.java:3129)",
+        "\tat org.apache.drill.exec.planner.sql.conversion.DrillValidator.validateFrom(DrillValidator.java:63)",
+        "\tat org.apache.calcite.sql.validate.SqlValidatorImpl.validateFrom(SqlValidatorImpl.java:3111)",
+        "\tat org.apache.drill.exec.planner.sql.conversion.DrillValidator.validateFrom(DrillValidator.java:63)",
+        "\tat org.apache.calcite.sql.validate.SqlValidatorImpl.validateSelect(SqlValidatorImpl.java:3383)",
+        "\tat org.apache.calcite.sql.validate.SelectNamespace.validateImpl(SelectNamespace.java:60)",
+        "\tat org.apache.calcite.sql.validate.AbstractNamespace.validate(AbstractNamespace.java:84)",
+        "\tat org.apache.calcite.sql.validate.SqlValidatorImpl.validateNamespace(SqlValidatorImpl.java:1009)",
+        "\tat org.apache.calcite.sql.validate.SqlValidatorImpl.validateQuery(SqlValidatorImpl.java:969)",
+        "\tat org.apache.calcite.sql.SqlSelect.validate(SqlSelect.java:216)",
+        "\tat org.apache.calcite.sql.validate.SqlValidatorImpl.validateScopedExpression(SqlValidatorImpl.java:944)",
+        "\tat org.apache.calcite.sql.validate.SqlValidatorImpl.validate(SqlValidatorImpl.java:651)",
+        "\tat org.apache.drill.exec.planner.sql.conversion.SqlConverter.validate(SqlConverter.java:189)",
+        "\tat org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler.validateNode(DefaultSqlHandler.java:641)",
+        "\tat org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler.validateAndConvert(DefaultSqlHandler.java:195)",
+        "\tat org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler.getPlan(DefaultSqlHandler.java:169)",
+        "\tat org.apache.drill.exec.planner.sql.DrillSqlWorker.getQueryPlan(DrillSqlWorker.java:283)",
+        "\tat org.apache.drill.exec.planner.sql.DrillSqlWorker.getPhysicalPlan(DrillSqlWorker.java:163)",
+        "\tat org.apache.drill.exec.planner.sql.DrillSqlWorker.convertPlan(DrillSqlWorker.java:128)",
+        "\tat org.apache.drill.exec.planner.sql.DrillSqlWorker.getPlan(DrillSqlWorker.java:93)",
+        "\tat org.apache.drill.exec.work.foreman.Foreman.runSQL(Foreman.java:592)",
+        "\tat org.apache.drill.exec.work.foreman.Foreman.run(Foreman.java:273)",
+        "\tat .......(:0)",
+        "Caused by: org.apache.calcite.sql.validate.SqlValidatorException: Object 'employee123321123321.json' not found within 'cp'",
+        "\tat .......(:0)",
+        "\tat org.apache.calcite.runtime.Resources$ExInstWithCause.ex(Resources.java:463)",
+        "\tat org.apache.calcite.runtime.Resources$ExInst.ex(Resources.java:572)",
+        "\t... 31 more"
+    ],
+    "queryState": "FAILED"
+}
+```
+
+
 
 ## Profiles
 
