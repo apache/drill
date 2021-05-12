@@ -74,7 +74,7 @@ This section describes the GitHub pull request-based review process for Apache D
 The following steps outline the code review and commit process required to contribute new code to the Apache Drill project:  
 
 1. The contributor writes the code that addresses a specific JIRA report as a contribution to the Apache Drill project.
-2.   	The contributor organizes (squashes) their code into commits that segregate out refactoring/reorg, as necessary, to enable efficient review. The following list identifies how to combine code into commits:  
+2. The contributor organizes (squashes) their code into commits that segregate out refactoring/reorg, as necessary, to enable efficient review. The following list identifies how to combine code into commits:  
        * Combine WIP and other small commits together.
        * Address multiple JIRAs, for smaller bug fixes or enhancements, with a single commit.
        * Use separate commits to allow efficient review, separating out formatting changes or simple refactoring from core changes or additions.
@@ -102,6 +102,11 @@ This information can be found in the [component owners](https://issues.apache.or
        * The committer pushes the commit(s) to the Apache repo (the GitHub repo is just a read-only mirror).
        * The committer resolves the JIRA with a message like `"Fixed in <Git commit SHA>"`.
 
+### Continuous Integration
+
+All Pull requests at Github are automatically tested:
+* On Linux x86_64 at [Github Actions](https://github.com/apache/drill/actions) with JDK 8, 11 and 14
+* on Linux ARM64 at [Travis CI](https://travis-ci.com/github/apache/drill) with JDK 8
 
 ## Additional Information
 
