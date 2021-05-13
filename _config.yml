@@ -31,3 +31,6 @@ sass:
 
 plugins:
   - jekyll-redirect-from
+
+include:
+  - .asf.yaml
