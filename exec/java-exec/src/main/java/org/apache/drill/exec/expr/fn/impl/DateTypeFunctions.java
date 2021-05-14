@@ -424,19 +424,27 @@ public class DateTypeFunctions {
     public static class AgeTimeStampFunction implements DrillSimpleFunc {
         @Param TimeStampHolder left;
         @Param TimeStampHolder right;
+        @Workspace org.joda.time.PeriodType periodType;
         @Output IntervalHolder out;
 
         @Override
         public void setup() {
+            periodType = org.joda.time.PeriodType.forFields(
+                new org.joda.time.DurationFieldType[] {
+                    org.joda.time.DurationFieldType.months(),
+                    org.joda.time.DurationFieldType.days(),
+                    org.joda.time.DurationFieldType.millis()
+                }
+            );
         }
 
         @Override
         public void eval() {
-            long diff = left.value - right.value;
-            long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
-            out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+            org.joda.time.Period interval = new org.joda.time.Period(right.value, left.value, periodType);
+
+            out.months = interval.getMonths();
+            out.days = interval.getDays();
+            out.milliseconds = interval.getMillis();
         }
     }
 
@@ -444,6 +452,7 @@ public class DateTypeFunctions {
     public static class AgeTimeStamp2Function implements DrillSimpleFunc {
         @Param TimeStampHolder right;
         @Workspace long queryStartDate;
+        @Workspace org.joda.time.PeriodType periodType;
         @Output IntervalHolder out;
         @Inject ContextInformation contextInfo;
 
@@ -453,15 +462,23 @@ public class DateTypeFunctions {
             org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
             org.joda.time.DateTime now = new org.joda.time.DateTime(contextInfo.getQueryStartTime(), timeZone);
             queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
+
+            periodType = org.joda.time.PeriodType.forFields(
+                new org.joda.time.DurationFieldType[] {
+                    org.joda.time.DurationFieldType.months(),
+                    org.joda.time.DurationFieldType.days(),
+                    org.joda.time.DurationFieldType.millis()
+                }
+            );
         }
 
         @Override
         public void eval() {
-            long diff = queryStartDate - right.value;
-            long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
-            out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+            org.joda.time.Period interval = new org.joda.time.Period(right.value, queryStartDate, periodType);
+
+            out.months = interval.getMonths();
+            out.days = interval.getDays();
+            out.milliseconds = interval.getMillis();
         }
     }
 
@@ -469,19 +486,26 @@ public class DateTypeFunctions {
     public static class AgeDateFunction implements DrillSimpleFunc {
         @Param DateHolder left;
         @Param DateHolder right;
+        @Workspace org.joda.time.PeriodType periodType;
         @Output IntervalHolder out;
 
         @Override
         public void setup() {
+            periodType = org.joda.time.PeriodType.forFields(
+                new org.joda.time.DurationFieldType[] {
+                    org.joda.time.DurationFieldType.months(),
+                    org.joda.time.DurationFieldType.days(),
+                }
+            );
         }
 
         @Override
         public void eval() {
-          long diff = left.value - right.value;
-          long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
-          out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-          out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-          out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+            org.joda.time.Period interval = new org.joda.time.Period(right.value, left.value, periodType);
+
+            out.months = interval.getMonths();
+            out.days = interval.getDays();
+            out.milliseconds = interval.getMillis();
         }
     }
 
@@ -489,6 +513,7 @@ public class DateTypeFunctions {
     public static class AgeDate2Function implements DrillSimpleFunc {
         @Param DateHolder right;
         @Workspace long queryStartDate;
+        @Workspace org.joda.time.PeriodType periodType;
         @Output IntervalHolder out;
         @Inject ContextInformation contextInfo;
 
@@ -498,15 +523,22 @@ public class DateTypeFunctions {
             org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
             org.joda.time.DateTime now = new org.joda.time.DateTime(contextInfo.getQueryStartTime(), timeZone);
             queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
+
+            periodType = org.joda.time.PeriodType.forFields(
+                new org.joda.time.DurationFieldType[] {
+                    org.joda.time.DurationFieldType.months(),
+                    org.joda.time.DurationFieldType.days(),
+                }
+            );
         }
 
         @Override
         public void eval() {
-            long diff = queryStartDate - right.value;
-            long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
-            out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+            org.joda.time.Period interval = new org.joda.time.Period(right.value, queryStartDate, periodType);
+
+            out.months = interval.getMonths();
+            out.days = interval.getDays();
+            out.milliseconds = interval.getMillis();
         }
     }
 
