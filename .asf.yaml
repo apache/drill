@@ -1,7 +1,7 @@
 # https://cwiki.apache.org/confluence/display/INFRA/.asf.yaml+features+for+git+repositories
 
 github:
-description: "Apache Drill: An open source distributed query engine for self describing data."
+  description: "Apache Drill: An open source distributed query engine for self describing data."
   homepage: https://drill.apache.org/
   labels:
     - drill
