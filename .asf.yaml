@@ -12,8 +12,8 @@ github:
     - hadoop
     - jdbc
     - parquet
-
-features:
+  
+  features:
     # Enable wiki for documentation
     wiki: true
     # Enable issue management
