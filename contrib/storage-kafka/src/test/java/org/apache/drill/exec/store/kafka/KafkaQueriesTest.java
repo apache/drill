@@ -21,6 +21,7 @@ import org.apache.drill.categories.KafkaStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -73,6 +74,8 @@ public class KafkaQueriesTest extends KafkaTestBase {
     Map<TopicPartition, Long> startOffsetsMap = fetchOffsets(-2);
 
     String queryString = String.format(TestQueryConstants.MIN_OFFSET_QUERY, TestQueryConstants.JSON_TOPIC);
+    RowSet results = client.queryBuilder().sql(queryString).rowSet();
+
     testBuilder()
       .sqlQuery(queryString)
       .unOrdered()

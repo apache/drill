@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.kafka;
 
 import org.apache.drill.categories.KafkaStorageTest;
 import org.apache.drill.categories.SlowTest;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.BeforeClass;
 import org.junit.Test;
