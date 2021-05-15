@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.store.kafka;
 
-import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.kafka.cluster.EmbeddedKafkaCluster;
+import org.apache.drill.exec.store.kafka.decoders.JsonMessageReader;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -34,45 +34,40 @@ import org.junit.BeforeClass;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
-public class KafkaTestBase extends PlanTestBase {
+public class KafkaTestBase extends ClusterTest {
   protected static KafkaStoragePluginConfig storagePluginConfig;
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     // Make sure this test is only running as part of the suit
     Assume.assumeTrue(TestKafkaSuit.isRunningSuite());
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
+    startCluster(builder);
     TestKafkaSuit.initKafka();
     initKafkaStoragePlugin(TestKafkaSuit.embeddedKafkaCluster);
   }
 
   public static void initKafkaStoragePlugin(EmbeddedKafkaCluster embeddedKafkaCluster) throws Exception {
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
+    final StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
     Map<String, String> kafkaConsumerProps = Maps.newHashMap();
     kafkaConsumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, embeddedKafkaCluster.getKafkaBrokerList());
     kafkaConsumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "drill-test-consumer");
     storagePluginConfig = new KafkaStoragePluginConfig(kafkaConsumerProps);
     storagePluginConfig.setEnabled(true);
     pluginRegistry.put(KafkaStoragePluginConfig.NAME, storagePluginConfig);
-    testNoResult(String.format("alter session set `%s` = '%s'", ExecConstants.KAFKA_RECORD_READER,
-        "org.apache.drill.exec.store.kafka.decoders.JsonMessageReader"));
-    testNoResult(String.format("alter session set `%s` = %d", ExecConstants.KAFKA_POLL_TIMEOUT, 5000));
+    client.alterSession(ExecConstants.KAFKA_RECORD_READER, JsonMessageReader.class.getName());
+    client.alterSession(ExecConstants.KAFKA_POLL_TIMEOUT, 5000);
   }
 
-  public List<QueryDataBatch> runKafkaSQLWithResults(String sql) throws Exception {
-    return testSqlWithResults(sql);
-  }
-
-  public void runKafkaSQLVerifyCount(String sql, int expectedRowCount) throws Exception {
-    List<QueryDataBatch> results = runKafkaSQLWithResults(sql);
-    logResultAndVerifyRowCount(results, expectedRowCount);
-  }
-
-  public void logResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount)
-      throws SchemaChangeException {
-    int rowCount = logResult(results);
+  public void runKafkaSQLVerifyCount(String sql, int expectedRowCount) {
+    long rowCount = queryBuilder().sql(sql).log();
     if (expectedRowCount != -1) {
       Assert.assertEquals(expectedRowCount, rowCount);
     }
+  }
+
+  public static long testSql(String sql) {
+    return client.queryBuilder().sql(sql).log();
   }
 
   @AfterClass
