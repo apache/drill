@@ -384,7 +384,10 @@ public class StringFunctions{
 
   }
 
-
+  /**
+   * Return the string part at index after splitting the input string using the
+   * specified delimiter. The index must be a positive integer.
+   */
   @FunctionTemplate(name = "split_part", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
                     outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class SplitPart implements DrillSimpleFunc {
@@ -407,10 +410,6 @@ public class StringFunctions{
 
     @Override
     public void setup() {
-      if (index.value < 1) {
-        throw org.apache.drill.common.exceptions.UserException.functionError()
-            .message("Index in split_part must be positive, value provided was " + index.value).build();
-      }
       String split = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.
               toStringFromUTF8(delimiter.start, delimiter.end, delimiter.buffer);
       splitter = com.google.common.base.Splitter.on(split);
@@ -419,12 +418,85 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      String inputString =
-              org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer);
+      if (index.value < 1) {
+        throw org.apache.drill.common.exceptions.UserException.functionError()
+          .message("Index in split_part must be positive, value provided was "
+            + index.value).build();
+      }
+      String inputString = org.apache.drill.exec.expr.fn.impl.
+        StringFunctionHelpers.getStringFromVarCharHolder(in);
       int arrayIndex = index.value - 1;
       String result =
               (String) com.google.common.collect.Iterables.get(splitter.split(inputString), arrayIndex, "");
       byte[] strBytes = result.getBytes(com.google.common.base.Charsets.UTF_8);
+
+      out.buffer = buffer = buffer.reallocIfNeeded(strBytes.length);
+      out.start = 0;
+      out.end = strBytes.length;
+      out.buffer.setBytes(0, strBytes);
+    }
+
+  }
+
+  /**
+   * Return the string part from start to end after splitting the input string
+   * using the specified delimiter. The start must be a positive integer. The
+   * end is included and must be greater than or equal to the start index.
+   */
+  @FunctionTemplate(name = "split_part", scope = FunctionScope.SIMPLE, nulls =
+    NullHandling.NULL_IF_NULL, outputWidthCalculatorType =
+    OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
+  public static class SplitPartStartEnd implements DrillSimpleFunc {
+    @Param
+    VarCharHolder in;
+    @Param
+    VarCharHolder delimiter;
+    @Param
+    IntHolder start;
+    @Param
+    IntHolder end;
+
+    @Workspace
+    com.google.common.base.Splitter splitter;
+
+    @Workspace
+    com.google.common.base.Joiner joiner;
+
+    @Inject
+    DrillBuf buffer;
+
+    @Output
+    VarCharHolder out;
+
+    @Override
+    public void setup() {
+      String split = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.
+        toStringFromUTF8(delimiter.start, delimiter.end, delimiter.buffer);
+      splitter = com.google.common.base.Splitter.on(split);
+      joiner = com.google.common.base.Joiner.on(split);
+    }
+
+    @Override
+    public void eval() {
+      if (start.value < 1) {
+        throw org.apache.drill.common.exceptions.UserException.functionError()
+          .message("Start in split_part must be positive, value provided was "
+            + start.value).build();
+      }
+      if (end.value < start.value) {
+        throw org.apache.drill.common.exceptions.UserException.functionError()
+          .message("End in split_part must be greater than or equal to start, " +
+            "value provided was start:" + start.value + ",end:" + end.value).build();
+      }
+      String inputString = org.apache.drill.exec.expr.fn.impl.
+        StringFunctionHelpers.getStringFromVarCharHolder(in);
+      int arrayIndex = start.value - 1;
+      java.util.Iterator<String> iterator = com.google.common.collect.Iterables
+        .limit(com.google.common.collect.Iterables.skip(splitter
+            .split(inputString), arrayIndex),end.value - start.value + 1)
+        .iterator();
+      byte[] strBytes = joiner.join(iterator).getBytes(
+        com.google.common.base.Charsets.UTF_8);
 
       out.buffer = buffer = buffer.reallocIfNeeded(strBytes.length);
       out.start = 0;
