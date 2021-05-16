@@ -21,7 +21,6 @@ import org.apache.drill.categories.KafkaStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -29,12 +28,9 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Assert;
-import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runners.MethodSorters;
 
-import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +39,6 @@ import java.util.Set;
 import static org.apache.drill.exec.store.kafka.TestKafkaSuit.embeddedKafkaCluster;
 import static org.junit.Assert.fail;
 
-@FixMethodOrder(MethodSorters.JVM)
 @Category({KafkaStorageTest.class, SlowTest.class})
 public class KafkaQueriesTest extends KafkaTestBase {
 
@@ -74,8 +69,6 @@ public class KafkaQueriesTest extends KafkaTestBase {
     Map<TopicPartition, Long> startOffsetsMap = fetchOffsets(-2);
 
     String queryString = String.format(TestQueryConstants.MIN_OFFSET_QUERY, TestQueryConstants.JSON_TOPIC);
-    RowSet results = client.queryBuilder().sql(queryString).rowSet();
-
     testBuilder()
       .sqlQuery(queryString)
       .unOrdered()
@@ -107,7 +100,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
   private Map<TopicPartition, Long> fetchOffsets(int flag) {
     Consumer<byte[], byte[]> kafkaConsumer = null;
     try {
-     kafkaConsumer = new KafkaConsumer<>(storagePluginConfig.getKafkaConsumerProps(),
+      kafkaConsumer = new KafkaConsumer<>(storagePluginConfig.getKafkaConsumerProps(),
         new ByteArrayDeserializer(), new ByteArrayDeserializer());
 
       Map<TopicPartition, Long> offsetsMap = new HashMap<>();
@@ -116,7 +109,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
       // evaluates lazily, seeking to the
       // first/last offset in all partitions only when poll(long) or
       // position(TopicPartition) are called
-      kafkaConsumer.poll(Duration.ofSeconds(0));
+      kafkaConsumer.poll(0);
       Set<TopicPartition> assignments = kafkaConsumer.assignment();
 
       if (flag == -2) {
