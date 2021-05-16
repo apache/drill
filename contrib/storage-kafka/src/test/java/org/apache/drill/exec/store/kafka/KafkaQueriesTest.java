@@ -28,8 +28,10 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Assert;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +41,7 @@ import java.util.Set;
 import static org.apache.drill.exec.store.kafka.TestKafkaSuit.embeddedKafkaCluster;
 import static org.junit.Assert.fail;
 
+@FixMethodOrder(MethodSorters.JVM)
 @Category({KafkaStorageTest.class, SlowTest.class})
 public class KafkaQueriesTest extends KafkaTestBase {
 
