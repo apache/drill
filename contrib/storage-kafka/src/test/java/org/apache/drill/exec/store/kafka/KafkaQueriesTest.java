@@ -28,8 +28,10 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Assert;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +41,7 @@ import java.util.Set;
 import static org.apache.drill.exec.store.kafka.TestKafkaSuit.embeddedKafkaCluster;
 import static org.junit.Assert.fail;
 
+@FixMethodOrder(MethodSorters.JVM)
 @Category({KafkaStorageTest.class, SlowTest.class})
 public class KafkaQueriesTest extends KafkaTestBase {
 
@@ -100,7 +103,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
   private Map<TopicPartition, Long> fetchOffsets(int flag) {
     Consumer<byte[], byte[]> kafkaConsumer = null;
     try {
-     kafkaConsumer = new KafkaConsumer<>(storagePluginConfig.getKafkaConsumerProps(),
+      kafkaConsumer = new KafkaConsumer<>(storagePluginConfig.getKafkaConsumerProps(),
         new ByteArrayDeserializer(), new ByteArrayDeserializer());
 
       Map<TopicPartition, Long> offsetsMap = new HashMap<>();
