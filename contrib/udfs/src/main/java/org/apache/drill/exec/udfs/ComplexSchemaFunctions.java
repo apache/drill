@@ -57,7 +57,7 @@ public class ComplexSchemaFunctions {
     @Override
     public void eval() {
       if (reader.isSet()) {
-        org.apache.drill.exec.udfs.ComplexSchemaUtils.getFields(reader, outWriter, outBuffer);
+        outBuffer = org.apache.drill.exec.udfs.ComplexSchemaUtils.getFields(reader, outWriter, outBuffer);
       } else {
         org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter queryMapWriter = outWriter.rootAsMap();
         // Return empty map

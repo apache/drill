@@ -69,7 +69,7 @@ public class UserAgentFunctions {
         String field = agent.getValue(fieldName);
 
         byte[] rowStringBytes = field.getBytes();
-        outBuffer.reallocIfNeeded(rowStringBytes.length);
+        outBuffer = outBuffer.reallocIfNeeded(rowStringBytes.length);
         outBuffer.setBytes(0, rowStringBytes);
 
         rowHolder.start = 0;
@@ -123,7 +123,7 @@ public class UserAgentFunctions {
         String field = agent.getValue(fieldName);
 
         byte[] rowStringBytes = field.getBytes();
-        outBuffer.reallocIfNeeded(rowStringBytes.length);
+        outBuffer = outBuffer.reallocIfNeeded(rowStringBytes.length);
         outBuffer.setBytes(0, rowStringBytes);
 
         rowHolder.start = 0;
@@ -166,7 +166,7 @@ public class UserAgentFunctions {
       String field = agent.getValue(requestedField);
 
       byte[] rowStringBytes = field.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-      outBuffer.reallocIfNeeded(rowStringBytes.length);
+      outBuffer = outBuffer.reallocIfNeeded(rowStringBytes.length);
       outBuffer.setBytes(0, rowStringBytes);
 
       out.start = 0;

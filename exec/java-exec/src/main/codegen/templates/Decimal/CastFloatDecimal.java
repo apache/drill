@@ -79,7 +79,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     byte[] bytes = bd.unscaledValue().toByteArray();
     int len = bytes.length;
-    out.buffer = buffer.reallocIfNeeded(len);
+    out.buffer = buffer = buffer.reallocIfNeeded(len);
     out.buffer.setBytes(out.start, bytes);
     out.end = out.start + len;
   }

@@ -187,7 +187,7 @@ public class ${type.name}Functions {
 
       byte[] bytes = opResult.unscaledValue().toByteArray();
       int len = bytes.length;
-      result.buffer = buffer.reallocIfNeeded(len);
+      result.buffer = buffer = buffer.reallocIfNeeded(len);
       result.buffer.setBytes(0, bytes);
       result.end = len;
     }
@@ -246,7 +246,7 @@ public class ${type.name}Functions {
 
       byte[] bytes = opResult.unscaledValue().toByteArray();
       int len = bytes.length;
-      result.buffer = buffer.reallocIfNeeded(len);
+      result.buffer = buffer = buffer.reallocIfNeeded(len);
       result.buffer.setBytes(0, bytes);
       result.end = len;
     }
@@ -295,7 +295,7 @@ public class ${type.name}Functions {
                   .setScale(result.scale, java.math.BigDecimal.ROUND_DOWN);
       byte[] bytes = opResult.unscaledValue().toByteArray();
       int len = bytes.length;
-      result.buffer = buffer.reallocIfNeeded(len);
+      result.buffer = buffer = buffer.reallocIfNeeded(len);
       result.buffer.setBytes(0, bytes);
       result.end = len;
     }
@@ -324,7 +324,7 @@ public class ${type.name}Functions {
                   .setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
       byte[] bytes = bd.unscaledValue().toByteArray();
       int len = bytes.length;
-      result.buffer = buffer.reallocIfNeeded(len);
+      result.buffer = buffer = buffer.reallocIfNeeded(len);
       result.buffer.setBytes(0, bytes);
       result.end = len;
     }

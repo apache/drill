@@ -24,8 +24,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.test.BaseTestQuery;
@@ -315,5 +317,20 @@ public class TestBugFixes extends BaseTestQuery {
 
     rows = testSql("SELECT FLATTEN(data) AS d FROM cp.`jsoninput/bug6318.json` LIMIT 3 OFFSET 5");
     Assert.assertEquals(3, rows);
+  }
+
+  @Test
+  public void testDRILL6547() throws Exception {
+    String str1 = StringUtils.repeat('a', Types.MAX_VARCHAR_LENGTH);
+    String str2 = StringUtils.repeat('b', Types.MAX_VARCHAR_LENGTH * 2);
+    testBuilder()
+        .sqlQuery("select\n" +
+            "concat(cast(null as varchar), EXPR$0) as c1\n" +
+            "from (values('%1$s'), ('%2$s'))", str1, str2)
+        .ordered()
+        .baselineColumns("c1")
+        .baselineValuesForSingleColumn(str1, str2)
+        .build()
+        .run();
   }
 }

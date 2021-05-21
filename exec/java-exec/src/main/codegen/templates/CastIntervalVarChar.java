@@ -61,7 +61,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
   @Output ${type.to}Holder out;
 
   public void setup() {
-    buffer.reallocIfNeeded(${type.bufferLength});
+    buffer = buffer.reallocIfNeeded(${type.bufferLength});
   }
 
   public void eval() {

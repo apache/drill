@@ -90,7 +90,7 @@ public class ParseUrlFunction {
           if (entry.getValue() != null) {
             // Explicit casting to String is required because of Janino's limitations regarding generics.
             byte[] protocolBytes = ((String) entry.getValue()).getBytes();
-            outBuffer.reallocIfNeeded(protocolBytes.length);
+            outBuffer = outBuffer.reallocIfNeeded(protocolBytes.length);
             outBuffer.setBytes(0, protocolBytes);
             rowHolder.start = 0;
             rowHolder.end = protocolBytes.length;
@@ -165,7 +165,7 @@ public class ParseUrlFunction {
           if (entry.getValue() != null) {
             // Explicit casting to String is required because of Janino's limitations regarding generics.
             byte[] protocolBytes = ((String) entry.getValue()).getBytes();
-            outBuffer.reallocIfNeeded(protocolBytes.length);
+            outBuffer = outBuffer.reallocIfNeeded(protocolBytes.length);
             outBuffer.setBytes(0, protocolBytes);
             rowHolder.start = 0;
             rowHolder.end = protocolBytes.length;

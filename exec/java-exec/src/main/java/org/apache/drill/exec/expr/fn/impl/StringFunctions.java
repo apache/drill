@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.common.FunctionNames;
@@ -273,7 +272,6 @@ public class StringFunctions{
 
     @Param VarCharHolder input;
     @Param(constant=true) VarCharHolder pattern;
-    @Inject DrillBuf buffer;
     @Workspace java.util.regex.Matcher matcher;
     @Workspace org.apache.drill.exec.expr.fn.impl.CharSequenceWrapper charSequenceWrapper;
     @Output BitHolder out;
@@ -530,7 +528,6 @@ public class StringFunctions{
     @Param BigIntHolder length;
 
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
 
     @Override
     public void setup() {
@@ -568,7 +565,6 @@ public class StringFunctions{
     @Param BigIntHolder offset;
 
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
 
     @Override
     public void setup() {
@@ -678,7 +674,6 @@ public class StringFunctions{
     @Param BigIntHolder length;
 
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
 
     @Override
     public void setup() {
@@ -716,7 +711,6 @@ public class StringFunctions{
     @Param BigIntHolder length;
 
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
 
     @Override
     public void setup() {
@@ -1425,12 +1419,11 @@ public class StringFunctions{
       out.buffer = buffer = buffer.reallocIfNeeded((left.end - left.start) + (right.end - right.start));
       out.start = out.end = 0;
 
-      int id = 0;
-      for (id = left.start; id < left.end; id++) {
+      for (int id = left.start; id < left.end; id++) {
         out.buffer.setByte(out.end++, left.buffer.getByte(id));
       }
 
-      for (id = right.start; id < right.end; id++) {
+      for (int id = right.start; id < right.end; id++) {
         out.buffer.setByte(out.end++, right.buffer.getByte(id));
       }
     }
@@ -1486,18 +1479,21 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer = buffer.reallocIfNeeded((left.end - left.start) + (right.end - right.start));
-      out.start = out.end = 0;
-
-      int id = 0;
-      for (id = left.start; id < left.end; id++) {
-        out.buffer.setByte(out.end++, left.buffer.getByte(id));
-      }
-
       if (right.isSet == 1) {
-        for (id = right.start; id < right.end; id++) {
+        out.buffer = buffer = buffer.reallocIfNeeded((left.end - left.start) + (right.end - right.start));
+        out.start = out.end = 0;
+
+        for (int id = left.start; id < left.end; id++) {
+          out.buffer.setByte(out.end++, left.buffer.getByte(id));
+        }
+
+        for (int id = right.start; id < right.end; id++) {
           out.buffer.setByte(out.end++, right.buffer.getByte(id));
         }
+      } else {
+        out.buffer = left.buffer;
+        out.start = left.start;
+        out.end = left.end;
       }
     }
   }
@@ -1519,18 +1515,21 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));
-      out.start = out.end = 0;
-
-      int id = 0;
       if (left.isSet == 1) {
-        for (id = left.start; id < left.end; id++) {
+        out.buffer = buffer = buffer.reallocIfNeeded((left.end - left.start) + (right.end - right.start));
+        out.start = out.end = 0;
+
+        for (int id = left.start; id < left.end; id++) {
           out.buffer.setByte(out.end++, left.buffer.getByte(id));
         }
-      }
 
-      for (id = right.start; id < right.end; id++) {
-        out.buffer.setByte(out.end++, right.buffer.getByte(id));
+        for (int id = right.start; id < right.end; id++) {
+          out.buffer.setByte(out.end++, right.buffer.getByte(id));
+        }
+      } else {
+        out.buffer = right.buffer;
+        out.start = right.start;
+        out.end = right.end;
       }
     }
   }
@@ -1552,20 +1551,31 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));
-      out.start = out.end = 0;
+      if (left.isSet == 1 && right.isSet == 1) {
+        out.buffer = buffer = buffer.reallocIfNeeded((left.end - left.start) + (right.end - right.start));
+        out.start = out.end = 0;
 
-      int id = 0;
-      if (left.isSet == 1) {
-        for (id = left.start; id < left.end; id++) {
+        for (int id = left.start; id < left.end; id++) {
           out.buffer.setByte(out.end++, left.buffer.getByte(id));
         }
-      }
 
-      if (right.isSet == 1) {
-        for (id = right.start; id < right.end; id++) {
+        for (int id = right.start; id < right.end; id++) {
           out.buffer.setByte(out.end++, right.buffer.getByte(id));
         }
+      } else if (left.isSet == 1) {
+        // right is null
+        out.buffer = left.buffer;
+        out.start = left.start;
+        out.end = left.end;
+      } else if (right.isSet == 1) {
+        // left is null
+        out.buffer = right.buffer;
+        out.start = right.start;
+        out.end = right.end;
+      } else {
+        // both null
+        out.buffer = buffer;
+        out.start = out.end = 0;
       }
     }
   }
@@ -1584,7 +1594,7 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer.reallocIfNeeded(in.end - in.start);
+      out.buffer = buffer = buffer.reallocIfNeeded(in.end - in.start);
       out.start = out.end = 0;
       out.end = org.apache.drill.common.util.DrillStringUtils.parseBinaryString(in.buffer, in.start, in.end, out.buffer);
       out.buffer.setIndex(out.start, out.end);
@@ -1609,7 +1619,7 @@ public class StringFunctions{
     @Override
     public void eval() {
       byte[] buf = org.apache.drill.common.util.DrillStringUtils.toBinaryString(in.buffer, in.start, in.end).getBytes(charset);
-      out.buffer = buffer.reallocIfNeeded(buf.length);
+      out.buffer = buffer = buffer.reallocIfNeeded(buf.length);
       out.buffer.setBytes(0, buf);
       out.buffer.setIndex(0, buf.length);
 

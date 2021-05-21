@@ -202,7 +202,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -303,7 +303,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -364,7 +364,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -419,7 +419,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -474,7 +474,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -533,7 +533,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -588,7 +588,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -647,7 +647,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -702,7 +702,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -761,7 +761,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -816,7 +816,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -875,7 +875,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -930,7 +930,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -989,7 +989,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1044,7 +1044,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1103,7 +1103,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1158,7 +1158,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1217,7 +1217,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1272,7 +1272,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1331,7 +1331,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1386,7 +1386,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1445,7 +1445,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1509,7 +1509,7 @@ public class StatisticsAggrFunctions {
                 (com.clearspring.analytics.stream.cardinality.HyperLogLog) work.obj;
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1580,7 +1580,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1638,7 +1638,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1699,7 +1699,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1756,7 +1756,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1817,7 +1817,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1874,7 +1874,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
@@ -1934,7 +1934,7 @@ public class StatisticsAggrFunctions {
 
         try {
           byte[] ba = hll.getBytes();
-          out.buffer = buffer.reallocIfNeeded(ba.length);
+          out.buffer = buffer = buffer.reallocIfNeeded(ba.length);
           out.start = 0;
           out.end = ba.length;
           out.buffer.setBytes(0, ba);
