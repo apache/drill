@@ -29,7 +29,7 @@ jobs:
   build:
     name: Main Build
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 100
     strategy:
       matrix:
         # Java versions to run unit tests
@@ -57,7 +57,7 @@ jobs:
           distribution: 'adopt'
           java-version: ${{ matrix.java }}
       - name: Build and test
-        run: mvn install -V -ntp -DdirectMemoryMb=4500 -DmemoryMb=1300
+        run: mvn install -V -ntp -DdirectMemoryMb=2500 -DmemoryMb=2000 # Note: the total GitHub Actions memory is 7000Mb
 
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
