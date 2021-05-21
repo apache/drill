@@ -229,7 +229,7 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
       if (path.nameEquals("**")) {
         return true;
       } else {
-        return specialFields.contains(path.getAsNamePart());
+        return specialFields.contains(path.getAsNamePart()); //lgtm[java/type-mismatch-access]
       }
     }
     return false;

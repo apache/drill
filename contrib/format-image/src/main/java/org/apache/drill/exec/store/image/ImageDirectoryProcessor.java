@@ -121,7 +121,7 @@ public class ImageDirectoryProcessor {
               // 2. set up the value for writer
               String parent = elements[elements.length - 1];
               if (parent.startsWith("[")) {
-                subColumn.setObject(new String[] { value });
+                subColumn.setObject(new String[] { value }); //lgtm[java/dereferenced-value-may-be-null]
               } else {
                 rootColumn.addText(ImageMetadataUtils.formatName(parent)).setString(value);
                 if (subColumn instanceof ArrayWriter) {

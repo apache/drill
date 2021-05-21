@@ -113,6 +113,9 @@ public class HistoricalLog {
     buildHistory(sb, 0, includeStackTrace);
   }
 
+
+  @SuppressWarnings({"lgtm[java/unknown-javadoc-parameter]"})
+
   /**
    * Write the history of this object to the given {@link StringBuilder}. The history
    * includes the identifying string provided at construction time, and all the recorded

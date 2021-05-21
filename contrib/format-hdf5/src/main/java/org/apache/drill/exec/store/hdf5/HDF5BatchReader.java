@@ -619,7 +619,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
           } catch (Exception e) {
             throw UserException
               .dataReadError()
-              .message("Error writing Compound Field: {}", e.getMessage())
+              .message("Error writing Compound Field: %s", e.getMessage())
               .addContext(errorContext)
               .build(logger);
           }

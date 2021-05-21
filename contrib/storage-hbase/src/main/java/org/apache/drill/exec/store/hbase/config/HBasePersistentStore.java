@@ -198,7 +198,7 @@ public class HBasePersistentStore<V> extends BasePersistentStore<V> {
     public boolean hasNext()  {
       if (!done && current == null) {
         try {
-          if ((current = scanner.next()) == null) {
+          if ((current = scanner.next()) == null) { //lgtm[java/dereferenced-value-may-be-null]
             done = true;
           }
         } catch (IOException e) {

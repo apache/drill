@@ -70,7 +70,7 @@ public class MapRDBTableCache {
               key.path == null ? "null" : key.path, table == null ? "null" : table,
               key.indexDesc == null ? "null" : key.indexDesc.getIndexName(),
               key.ugi.getUserName() == null ? "null" : key.ugi.getUserName());
-          table.close(); // close the table
+          table.close(); // close the table //lgtm[java/dereferenced-value-may-be-null]
         }
       };
 

@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("streams")  @JsonInclude(Include.NON_DEFAULT)
-public class StreamsFormatPluginConfig extends TableFormatPluginConfig {
+public class StreamsFormatPluginConfig extends TableFormatPluginConfig { //lgtm[java/inconsistent-equals-and-hashcode]
 
   @Override
   public int hashCode() {

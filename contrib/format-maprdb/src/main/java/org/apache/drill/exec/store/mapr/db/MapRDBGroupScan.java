@@ -251,7 +251,7 @@ public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
 
     /* no slot should be empty at this point */
     assert (minHeap.peek() == null || minHeap.peek().size() > 0) : String.format(
-        "Unable to assign tasks to some endpoints.\nEndpoints: {}.\nAssignment Map: {}.",
+        "Unable to assign tasks to some endpoints.\n Endpoints: %s.\n Assignment Map: %s.",
         incomingEndpoints, endpointFragmentMapping.toString());
 
     logger.debug("Built assignment map in {} µs.\nEndpoints: {}.\nAssignment Map: {}",
@@ -321,7 +321,7 @@ public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
     if (discover == null) {
       logger.error("Null IndexDiscover was found for {}!", scanRel);
     }
-    return discover.getTableIndex(getTableName());
+    return discover.getTableIndex(getTableName()); //lgtm[java/dereferenced-value-may-be-null]
   }
 
   @JsonIgnore
