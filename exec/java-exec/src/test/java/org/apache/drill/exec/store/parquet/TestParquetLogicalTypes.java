@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.parquet;
 
 import static org.apache.drill.test.TestBuilder.mapOf;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -696,5 +697,15 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
             .baselineValues(new Object[]{null})
             .baselineValues(new Object[]{null})
             .go();
+  }
+
+  @Test
+  public void testDecimalDictionaryEncoding() throws Exception {
+    testBuilder()
+        .sqlQuery("select RegHrs from cp.`parquet/dict_dec.parquet`")
+        .ordered()
+        .baselineColumns("RegHrs")
+        .baselineValues(new BigDecimal("8.000000"))
+        .go();
   }
 }
