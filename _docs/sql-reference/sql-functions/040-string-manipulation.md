@@ -520,14 +520,14 @@ The _delimiter_ must not be null and must contain a single character.
     |------------------------------------|
 
 ## SPLIT_PART
-Return the string part at _index_ after splitting the input string using the specified delimiter.
+Return the string part at _start_ or from _start_ to _end_ after splitting the input string using the specified delimiter.
 
 ### SPLIT_PART Syntax
     SPLIT_PART(string, delimiter, start[, end])
 
 ### SPLIT_PART Usage Notes
-The _delimiter_ string may be multiple characters long.  The _start_ must be a positive integer.
-The _end_ must be greater or equal to _start_ if provided.
+The _delimiter_ string may be multiple characters long. The _start_ must be a positive integer.
+The _end_ must be greater than or equal to _start_ if provided.
 
 ### SPLIT_PART Examples
 
@@ -541,19 +541,19 @@ The _end_ must be greater or equal to _start_ if provided.
     
     SELECT split_part('The | quick | brown | fox | jumps', ' | ', 4, 5);
 
-    |-------------|
-    |    EXPR$0   |
-    |-------------|
-    | fox | jumps |
-    |-------------|
+    |--------------|
+    |    EXPR$0    |
+    |--------------|
+    | fox | jumps  |
+    |--------------|
     
     SELECT split_part('The | quick | brown | fox | jumps', ' | ', 4, 10);
 
-    |-------------|
-    |    EXPR$0   |
-    |-------------|
-    | fox | jumps |
-    |-------------|
+    |--------------|
+    |    EXPR$0    |
+    |--------------|
+    | fox | jumps  |
+    |--------------|
     
 ## STRPOS
 Returns the location of the first occurrence of a substring of the input
