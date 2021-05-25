@@ -42,6 +42,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.drill.exec.server.rest.CsrfTokenInjectFilter;
 import org.apache.drill.exec.server.rest.CsrfTokenValidateFilter;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.yarn.appMaster.Dispatcher;
 import org.apache.drill.yarn.core.DrillOnYarnConfig;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -65,11 +66,9 @@ import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.server.handler.ErrorHandler;
-import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -79,7 +78,6 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.joda.time.DateTime;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import com.typesafe.config.Config;
 
 /**
@@ -306,7 +304,7 @@ public class WebServer implements AutoCloseable {
   }
 
   /**
-   * It creates A {@link SessionHandler} which contains a {@link HashSessionManager}
+   * It creates A {@link SessionHandler}
    *
    * @param config Drill configs
    * @param securityHandler Set of initparameters that are used by the Authentication
@@ -314,10 +312,10 @@ public class WebServer implements AutoCloseable {
    */
   private SessionHandler createSessionHandler(Config config,
       final SecurityHandler securityHandler) {
-    SessionManager sessionManager = new HashSessionManager();
-    sessionManager.setMaxInactiveInterval(
+    SessionHandler sessionHandler = new SessionHandler();
+    sessionHandler.setMaxInactiveInterval(
         config.getInt(DrillOnYarnConfig.HTTP_SESSION_MAX_IDLE_SECS));
-    sessionManager.addEventListener(new HttpSessionListener() {
+    sessionHandler.addEventListener(new HttpSessionListener() {
       @Override
       public void sessionCreated(HttpSessionEvent se) {
         // No-op
@@ -340,7 +338,7 @@ public class WebServer implements AutoCloseable {
       }
     });
 
-    return new SessionHandler(sessionManager);
+    return sessionHandler;
   }
 
   /**
