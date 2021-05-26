@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.kafka;
 
 import java.util.Map;
 
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.kafka.cluster.EmbeddedKafkaCluster;
@@ -33,6 +34,8 @@ import org.junit.Assume;
 import org.junit.BeforeClass;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+
+import static org.apache.drill.exec.store.kafka.KafkaMessageGenerator.SCHEMA_REGISTRY_URL;
 
 public class KafkaTestBase extends ClusterTest {
   protected static KafkaStoragePluginConfig storagePluginConfig;
@@ -52,6 +55,7 @@ public class KafkaTestBase extends ClusterTest {
     Map<String, String> kafkaConsumerProps = Maps.newHashMap();
     kafkaConsumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, embeddedKafkaCluster.getKafkaBrokerList());
     kafkaConsumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "drill-test-consumer");
+    kafkaConsumerProps.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, SCHEMA_REGISTRY_URL);
     storagePluginConfig = new KafkaStoragePluginConfig(kafkaConsumerProps);
     storagePluginConfig.setEnabled(true);
     pluginRegistry.put(KafkaStoragePluginConfig.NAME, storagePluginConfig);

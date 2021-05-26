@@ -17,17 +17,14 @@
  */
 package org.apache.drill.exec.store.kafka.decoders;
 
-import java.io.Closeable;
-import java.util.List;
-
-import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.store.kafka.KafkaStoragePlugin;
 import org.apache.drill.exec.store.kafka.ReadOptions;
-import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
-import io.netty.buffer.DrillBuf;
+import java.io.Closeable;
 
 /**
  * MessageReader interface provides mechanism to handle various Kafka Message
@@ -35,11 +32,13 @@ import io.netty.buffer.DrillBuf;
  */
 public interface MessageReader extends Closeable {
 
-  void init(DrillBuf buf, List<SchemaPath> columns, VectorContainerWriter writer, ReadOptions readOptions);
+  void init(SchemaNegotiator negotiator, ReadOptions readOptions, KafkaStoragePlugin plugin);
 
-  boolean readMessage(ConsumerRecord<?, ?> message);
-
-  void ensureAtLeastOneField();
+  void readMessage(ConsumerRecord<?, ?> message);
 
   KafkaConsumer<byte[], byte[]> getConsumer(KafkaStoragePlugin plugin);
+
+  ResultSetLoader getResultSetLoader();
+
+  boolean endBatch();
 }

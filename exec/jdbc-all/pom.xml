@@ -336,6 +336,7 @@
               <exclude>javax.xml.stream:stax-api</exclude>
               <exclude>javax.activation:activation</exclude>
               <exclude>commons-cli:commons-cli</exclude>
+              <exclude>org.apache.commons:commons-collections4</exclude>
               <exclude>commons-io:commons-io</exclude>
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
@@ -622,6 +623,7 @@
                     <exclude>javax.xml.stream:stax-api</exclude>
                     <exclude>javax.activation:activation</exclude>
                     <exclude>commons-cli:commons-cli</exclude>
+                    <exclude>org.apache.commons:commons-collections4</exclude>
                     <exclude>commons-io:commons-io</exclude>
                     <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
                     <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>

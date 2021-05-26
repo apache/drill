@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import kafka.zk.KafkaZkClient;
 import org.apache.drill.categories.KafkaStorageTest;
 import org.apache.drill.categories.SlowTest;
@@ -85,8 +86,11 @@ public class TestKafkaSuit extends BaseTest {
             "kafka.server", "SessionExpireListener",
             Option.<String>empty(), Option.<ZKClientConfig>empty());
         createTopicHelper(TestQueryConstants.JSON_TOPIC, 1);
+        createTopicHelper(TestQueryConstants.AVRO_TOPIC, 1);
         KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), StringSerializer.class);
+        KafkaMessageGenerator avroGenerator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), KafkaAvroSerializer.class);
         generator.populateJsonMsgIntoKafka(TestQueryConstants.JSON_TOPIC, NUM_JSON_MSG);
+        avroGenerator.populateAvroMsgIntoKafka(TestQueryConstants.AVRO_TOPIC, NUM_JSON_MSG);
       }
       initCount.incrementAndGet();
       runningSuite = true;

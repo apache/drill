@@ -47,6 +47,13 @@ public class JsonStructureOptions {
    */
   public boolean skipMalformedRecords;
 
+  /**
+   * This property works only when {@link #skipMalformedRecords} enabled.
+   * If true, {@link TokenIterator.RecoverableJsonException} will be populated for the case of
+   * malformed empty document, so it will be possible to handle this exception by caller.
+   */
+  public boolean skipMalformedDocument;
+
   public boolean enableEscapeAnyChar;
 
   public JsonStructureOptions() { }

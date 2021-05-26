@@ -20,8 +20,10 @@ package org.apache.drill.exec.store.easy.json.parser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.Arrays;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.IterableUtils;
 import org.apache.drill.exec.store.easy.json.parser.MessageParser.MessageContextException;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.EmbeddedArrayParser;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.EmbeddedObjectParser;
@@ -74,7 +76,7 @@ public class JsonStructureParser {
   protected static final Logger logger = LoggerFactory.getLogger(JsonStructureParser.class);
 
   public static class JsonStructureParserBuilder {
-    private InputStream stream;
+    private Iterable<InputStream> streams;
     private Reader reader;
     private JsonStructureOptions options;
     private Function<JsonStructureParser, ObjectParser> parserFactory;
@@ -98,8 +100,13 @@ public class JsonStructureParser {
       return this;
     }
 
-    public JsonStructureParserBuilder fromStream(InputStream stream) {
-      this.stream = stream;
+    public JsonStructureParserBuilder fromStream(InputStream... stream) {
+      this.streams = Arrays.asList(stream);
+      return this;
+    }
+
+    public JsonStructureParserBuilder fromStream(Iterable<InputStream> streams) {
+      this.streams = streams;
       return this;
     }
 
@@ -130,7 +137,6 @@ public class JsonStructureParser {
     }
   }
 
-  private final JsonParser parser;
   private final JsonStructureOptions options;
   private final ErrorFactory errorFactory;
   private final TokenIterator tokenizer;
@@ -141,37 +147,23 @@ public class JsonStructureParser {
   /**
    * Constructor for the structure parser.
    *
-   * @param stream the source of JSON text
-   * @param options configuration options for the Jackson JSON parser
-   * and this structure parser
-   * @param rootListener listener for the top-level objects in the
-   * JSON stream
-   * @param errorFactory factory for errors thrown for various
-   * conditions
+   * @param builder builder
    */
   private JsonStructureParser(JsonStructureParserBuilder builder) {
     this.options = Preconditions.checkNotNull(builder.options);
     this.errorFactory = Preconditions.checkNotNull(builder.errorFactory);
-    try {
-      ObjectMapper mapper = new ObjectMapper()
-          .configure(JsonParser.Feature.ALLOW_COMMENTS, true)
-          .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
-          .configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature(),
-              options.allowNanInf)
-          .configure(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER.mappedFeature(),
-              options.enableEscapeAnyChar);
+    ObjectMapper mapper = new ObjectMapper()
+        .configure(JsonParser.Feature.ALLOW_COMMENTS, true)
+        .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
+        .configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature(),
+            options.allowNanInf)
+        .configure(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER.mappedFeature(),
+            options.enableEscapeAnyChar);
 
-      if (builder.stream != null) {
-        parser = mapper.getFactory().createParser(builder.stream);
-      } else {
-        parser = mapper.getFactory().createParser(Preconditions.checkNotNull(builder.reader));
-      }
-    } catch (JsonParseException e) {
-      throw errorFactory().parseError("Failed to create the JSON parser", e);
-    } catch (IOException e) {
-      throw errorFactory().ioException(e);
-    }
-    tokenizer = new TokenIterator(parser, options, errorFactory());
+    boolean isStream = !IterableUtils.isEmpty(builder.streams);
+    Function<InputStream, JsonParser> parserFunction = stream -> getJsonParser(builder, mapper, stream, isStream);
+
+    tokenizer = new TokenIterator(builder.streams, parserFunction, options, errorFactory());
     fieldFactory = new FieldParserFactory(this,
         Preconditions.checkNotNull(builder.parserFactory));
 
@@ -182,6 +174,20 @@ public class JsonStructureParser {
       rootState = makeRootState();
     } else {
       rootState = makeCustomRoot(builder.messageParser);
+    }
+  }
+
+  private JsonParser getJsonParser(JsonStructureParserBuilder builder, ObjectMapper mapper, InputStream stream, boolean isStream) {
+    try {
+      if (isStream) {
+        return mapper.getFactory().createParser(stream);
+      } else {
+        return mapper.getFactory().createParser(Preconditions.checkNotNull(builder.reader));
+      }
+    } catch (JsonParseException e) {
+      throw errorFactory().parseError("Failed to create the JSON parser", e);
+    } catch (IOException e) {
+      throw errorFactory().ioException(e);
     }
   }
 
@@ -263,7 +269,7 @@ public class JsonStructureParser {
    *
    * @return {@code true}  if another record can be read, {@code false}
    * if EOF.
-   * @throws UserException if the error is unrecoverable
+   * @throws org.apache.drill.common.exceptions.UserException if the error is unrecoverable
    * @see <a href="https://issues.apache.org/jira/browse/DRILL-4653">DRILL-4653</a>
    * @see <a href="https://issues.apache.org/jira/browse/DRILL-5953">DRILL-5953</a>
    */
@@ -273,12 +279,12 @@ public class JsonStructureParser {
     while (true) {
       while (true) {
         try {
-          if (parser.isClosed()) {
+          if (tokenizer.getParser().isClosed()) {
             throw errorFactory().unrecoverableError();
           }
           JsonToken token = tokenizer.next();
           if (token == null) {
-            if (firstAttempt) {
+            if (firstAttempt && !options().skipMalformedDocument) {
               throw errorFactory().unrecoverableError();
             }
             return false;
@@ -331,7 +337,7 @@ public class JsonStructureParser {
           errorRecoveryCount);
     }
     try {
-      parser.close();
+      tokenizer.close();
     } catch (IOException e) {
       logger.warn("Ignored failure when closing JSON source", e);
     }
