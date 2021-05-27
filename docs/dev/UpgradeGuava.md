@@ -55,7 +55,7 @@ Verify that all checks are passed and staging repository was closed. Otherwise, 
 
 Select uploaded staging repository and press `Release` button.
 
-## Check that artifacts were deployed
+## Check artifacts were deployed
 
 Find deployed artifacts at [repository.apache.org](https://repository.apache.org/content/groups/public/org/apache/drill/)
 
