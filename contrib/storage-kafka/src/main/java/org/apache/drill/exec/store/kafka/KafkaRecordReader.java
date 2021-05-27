@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -114,8 +115,9 @@ public class KafkaRecordReader implements ManagedReader<SchemaNegotiator> {
 
   @Override
   public String toString() {
-    return "KafkaRecordReader[readOptions=" + readOptions
-        + ", currentOffset=" + currentOffset
-        + "]";
+    return new PlanStringBuilder(this)
+        .field("readOptions", readOptions)
+        .field("currentOffset", currentOffset)
+        .toString();
   }
 }

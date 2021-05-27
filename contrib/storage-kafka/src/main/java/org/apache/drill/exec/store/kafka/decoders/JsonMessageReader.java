@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.store.kafka.decoders;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
@@ -71,7 +73,11 @@ public class JsonMessageReader implements MessageReader {
       parseAndWrite(record, recordArray);
     } catch (TokenIterator.RecoverableJsonException e) {
       if (!readOptions.isSkipInvalidRecords()) {
-        throw e;
+        throw UserException.dataReadError(e)
+            .message(String.format("Error happened when parsing invalid record. " +
+                "Please set `%s` option to 'true' to skip invalid records.", ExecConstants.KAFKA_READER_SKIP_INVALID_RECORDS))
+            .addContext(resultSetLoader.errorContext())
+            .build(logger);
       }
     }
   }
