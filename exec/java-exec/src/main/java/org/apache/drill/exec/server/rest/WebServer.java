@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillException;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.expr.fn.registry.FunctionHolder;
@@ -393,7 +394,7 @@ public class WebServer implements AutoCloseable {
    */
   public File getOrCreateTmpJavaScriptDir() {
     if (tmpJavaScriptDir == null && this.drillbit.getContext() != null) {
-      tmpJavaScriptDir = org.apache.drill.shaded.guava.com.google.common.io.Files.createTempDir();
+      tmpJavaScriptDir = DrillFileUtils.createTempDir();
       // Perform All auto generated files at this point
       try {
         generateOptionsDescriptionJSFile();

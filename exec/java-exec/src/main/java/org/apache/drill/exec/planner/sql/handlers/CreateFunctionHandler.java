@@ -18,12 +18,12 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.FunctionValidationException;
 import org.apache.drill.exec.exception.JarValidationException;
@@ -236,7 +236,7 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
       this.registryBinary = new Path(remoteRegistry.getRegistryArea(), binaryName);
       this.registrySource = new Path(remoteRegistry.getRegistryArea(), sourceName);
 
-      this.localTmpDir = new Path(Files.createTempDir().toURI());
+      this.localTmpDir = new Path(DrillFileUtils.createTempDir().toURI());
       this.fs = remoteRegistry.getFs();
     }
 

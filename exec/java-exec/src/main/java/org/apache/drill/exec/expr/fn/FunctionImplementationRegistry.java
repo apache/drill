@@ -36,7 +36,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.common.expression.fn.FunctionReplacementUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.config.ConfigConstants;
@@ -49,6 +48,7 @@ import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.store.TransientStoreEvent;
 import org.apache.drill.exec.coord.store.TransientStoreListener;
@@ -532,7 +532,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   /**
    * First tries to get drill temporary directory value from from config ${drill.tmp-dir},
    * then checks environmental variable $DRILL_TMP_DIR.
-   * If value is still missing, generates directory using {@link Files#createTempDir()}.
+   * If value is still missing, generates directory using {@link DrillFileUtils#createTempDir()}.
    * If temporary directory was generated, sets {@link #deleteTmpDir} to true
    * to delete directory on drillbit exit.
    *
@@ -549,7 +549,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
 
     if (drillTempDir == null) {
       deleteTmpDir = true;
-      return Files.createTempDir();
+      return DrillFileUtils.createTempDir();
     }
 
     return new File(drillTempDir);
