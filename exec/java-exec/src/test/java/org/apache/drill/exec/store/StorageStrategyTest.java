@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.fs.FileSystem;
@@ -173,7 +173,7 @@ public class StorageStrategyTest extends BaseTest {
   }
 
   private Path prepareStorageDirectory() throws IOException {
-    File storageDirectory = Files.createTempDir();
+    File storageDirectory = DrillFileUtils.createTempDir();
     storageDirectory.deleteOnExit();
     Path path = new Path(storageDirectory.toURI().getPath());
     fs.setPermission(path, FULL_PERMISSION);

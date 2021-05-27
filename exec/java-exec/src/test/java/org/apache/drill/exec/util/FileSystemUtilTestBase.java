@@ -18,8 +18,8 @@
 package org.apache.drill.exec.util;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.fs.FileSystem;
@@ -68,7 +68,7 @@ public class FileSystemUtilTestBase extends BaseTest {
     fs = ExecTest.getLocalFileSystem();
 
     // create temporary directory with sub-folders and files
-    final File tempDir = Files.createTempDir();
+    final File tempDir = DrillFileUtils.createTempDir();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> FileUtils.deleteQuietly(tempDir)));
     base = new Path(tempDir.toURI().getPath());
 

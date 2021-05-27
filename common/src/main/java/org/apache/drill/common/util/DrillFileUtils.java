@@ -43,4 +43,19 @@ public class DrillFileUtils {
   public static String getResourceAsString(String fileName) throws IOException {
     return Files.asCharSource(getResourceAsFile(fileName), Charsets.UTF_8).read();
   }
+
+  /**
+   * Creates a temporary directory under the default temporary directory location.
+   * This is a safe replacement for Guava {@code Files#createTempDir()}
+   *
+   * @return a temporary directory
+   * @throws IllegalStateException if the directory cannot be created
+   */
+  public static File createTempDir() {
+    try {
+      return java.nio.file.Files.createTempDirectory(System.currentTimeMillis() + "-").toFile();
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to create temporary directory");
+    }
+  }
 }
