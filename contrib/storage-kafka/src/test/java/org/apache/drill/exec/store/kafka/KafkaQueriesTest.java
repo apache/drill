@@ -67,6 +67,18 @@ public class KafkaQueriesTest extends KafkaTestBase {
   }
 
   @Test
+  public void testAvroResultCount() {
+    try {
+      client.alterSession(ExecConstants.KAFKA_RECORD_READER,
+          "org.apache.drill.exec.store.kafka.decoders.AvroMessageReader");
+      String queryString = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.AVRO_TOPIC);
+      runKafkaSQLVerifyCount(queryString, TestKafkaSuit.NUM_JSON_MSG);
+    } finally {
+      client.resetSession(ExecConstants.KAFKA_RECORD_READER);
+    }
+  }
+
+  @Test
   public void testPartitionMinOffset() throws Exception {
     // following kafka.tools.GetOffsetShell for earliest as -2
     Map<TopicPartition, Long> startOffsetsMap = fetchOffsets(-2);
@@ -141,6 +153,19 @@ public class KafkaQueriesTest extends KafkaTestBase {
     String query = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.JSON_TOPIC);
     String plan = queryBuilder().sql(query).explainJson();
     queryBuilder().physical(plan).run();
+  }
+
+  @Test
+  public void testPhysicalPlanSubmissionAvro() throws Exception {
+    try {
+      client.alterSession(ExecConstants.KAFKA_RECORD_READER,
+          "org.apache.drill.exec.store.kafka.decoders.AvroMessageReader");
+      String query = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.AVRO_TOPIC);
+      String plan = queryBuilder().sql(query).explainJson();
+      queryBuilder().physical(plan).run();
+    } finally {
+      client.resetSession(ExecConstants.KAFKA_RECORD_READER);
+    }
   }
 
   @Test

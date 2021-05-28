@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
@@ -141,7 +142,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     private TupleMetadata providedSchema;
     private JsonLoaderOptions options;
     private CustomErrorContext errorContext;
-    private InputStream stream;
+    private Iterable<InputStream> streams;
     private Reader reader;
     private String dataPath;
     private MessageParser messageParser;
@@ -171,8 +172,13 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
       return this;
     }
 
-    public JsonLoaderBuilder fromStream(InputStream stream) {
-      this.stream = stream;
+    public JsonLoaderBuilder fromStream(InputStream... stream) {
+      this.streams = Arrays.asList(stream);
+      return this;
+    }
+
+    public JsonLoaderBuilder fromStream(Iterable<InputStream> streams) {
+      this.streams = streams;
       return this;
     }
 
@@ -226,7 +232,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   // case. Usually just one or two fields have deferred nulls.
   private final List<NullTypeMarker> nullStates = new ArrayList<>();
 
-  private JsonLoaderImpl(JsonLoaderBuilder builder) {
+  protected JsonLoaderImpl(JsonLoaderBuilder builder) {
     this.rsLoader = builder.rsLoader;
     this.options = builder.options;
     this.errorContext = builder. errorContext;
@@ -236,7 +242,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
 
   private JsonStructureParser buildParser(JsonLoaderBuilder builder) {
     return new JsonStructureParserBuilder()
-            .fromStream(builder.stream)
+            .fromStream(builder.streams)
             .fromReader(builder.reader)
             .options(builder.options)
             .parserFactory(parser ->
@@ -307,15 +313,12 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
    * Bottom line: the user is responsible for not giving Drill
    * ambiguous data that would require Drill to predict the future.
    */
-  private void endBatch() {
+  protected void endBatch() {
 
     // Make a copy. Forcing resolution will remove the
     // element from the original list.
-    List<NullTypeMarker> copy = new ArrayList<>();
-    copy.addAll(nullStates);
-    for (NullTypeMarker marker : copy) {
-      marker.forceResolution();
-    }
+    List<NullTypeMarker> copy = new ArrayList<>(nullStates);
+    copy.forEach(NullTypeMarker::forceResolution);
     assert nullStates.isEmpty();
   }
 

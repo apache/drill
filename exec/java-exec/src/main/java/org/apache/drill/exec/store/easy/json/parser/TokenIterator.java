@@ -18,7 +18,11 @@
 package org.apache.drill.exec.store.easy.json.parser;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.function.Function;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 
 import com.fasterxml.jackson.core.JsonLocation;
@@ -37,16 +41,24 @@ public class TokenIterator {
   public static class RecoverableJsonException extends RuntimeException {
   }
 
-  private final JsonParser parser;
+  private final ParserManager parserManager;
   private final JsonStructureOptions options;
   private final ErrorFactory errorFactory;
   private final JsonToken[] lookahead = new JsonToken[MAX_LOOKAHEAD];
   private int count;
 
-  public TokenIterator(JsonParser parser, JsonStructureOptions options, ErrorFactory errorFactory) {
-    this.parser = parser;
+  public TokenIterator(Iterable<InputStream> streams, Function<InputStream, JsonParser> parserFunction, JsonStructureOptions options, ErrorFactory errorFactory) {
     this.options = options;
     this.errorFactory = errorFactory;
+    this.parserManager = new ParserManager(streams, parserFunction);
+  }
+
+  public JsonParser getParser() {
+    JsonParser parser = parserManager.getParser();
+    if (parser == null) {
+      parserManager.nextParser();
+    }
+    return parserManager.getParser();
   }
 
   public ErrorFactory errorFactory() { return errorFactory; }
@@ -56,7 +68,7 @@ public class TokenIterator {
       return lookahead[--count];
     }
     try {
-      return parser.nextToken();
+      return getNextToken();
     } catch (JsonParseException e) {
       if (options.skipMalformedRecords) {
         throw new RecoverableJsonException();
@@ -68,11 +80,23 @@ public class TokenIterator {
     }
   }
 
+  private JsonToken getNextToken() throws IOException {
+    JsonToken jsonToken = getParser().nextToken();
+    if (jsonToken == null) {
+      parserManager.nextParser();
+      JsonParser parser = getParser();
+      if (parser != null) {
+        jsonToken = parser.nextToken();
+      }
+    }
+    return jsonToken;
+  }
+
   public String context() {
-    JsonLocation location = parser.getCurrentLocation();
+    JsonLocation location = getParser().getCurrentLocation();
     String token;
     try {
-      token = parser.getText();
+      token = getParser().getText();
     } catch (IOException e) {
       token = "<unknown>";
     }
@@ -88,16 +112,19 @@ public class TokenIterator {
   }
 
   public int lineNumber() {
-    return parser.getCurrentLocation().getLineNr();
+    JsonParser parser = getParser();
+    return parser != null ? parser.getCurrentLocation().getLineNr() : 0;
   }
 
   public int columnNumber() {
-    return parser.getCurrentLocation().getColumnNr();
+    JsonParser parser = getParser();
+    return parser != null ? parser.getCurrentLocation().getColumnNr() : 0;
   }
 
   public String token() {
     try {
-      return parser.getText();
+      JsonParser parser = getParser();
+      return parser != null ? getParser().getText() : null;
     } catch (IOException e) {
       return null;
     }
@@ -127,7 +154,7 @@ public class TokenIterator {
 
   public String textValue() {
     try {
-      return parser.getText();
+      return getParser().getText();
     } catch (JsonParseException e) {
       throw errorFactory.syntaxError(e);
     } catch (IOException e) {
@@ -137,7 +164,7 @@ public class TokenIterator {
 
   public long longValue() {
     try {
-      return parser.getLongValue();
+      return getParser().getLongValue();
     } catch (JsonParseException e) {
       throw errorFactory.syntaxError(e);
     } catch (IOException e) {
@@ -149,7 +176,7 @@ public class TokenIterator {
 
   public String stringValue() {
     try {
-      return parser.getValueAsString();
+      return getParser().getValueAsString();
     } catch (JsonParseException e) {
       throw errorFactory.syntaxError(e);
     } catch (IOException e) {
@@ -161,7 +188,7 @@ public class TokenIterator {
 
   public double doubleValue() {
     try {
-      return parser.getValueAsDouble();
+      return getParser().getValueAsDouble();
     } catch (JsonParseException e) {
       throw errorFactory.syntaxError(e);
     } catch (IOException e) {
@@ -173,7 +200,7 @@ public class TokenIterator {
 
   public byte[] binaryValue() {
     try {
-      return parser.getBinaryValue();
+      return getParser().getBinaryValue();
     } catch (JsonParseException e) {
       throw errorFactory.syntaxError(e);
     } catch (IOException e) {
@@ -185,5 +212,47 @@ public class TokenIterator {
 
   public RuntimeException invalidValue(JsonToken token) {
     return errorFactory.structureError("Unexpected JSON value: " + token.name());
+  }
+
+  public static class ParserManager {
+    private final Function<InputStream, JsonParser> parserFunction;
+    private final Iterator<InputStream> parsersIterator;
+    private JsonParser currentParser;
+
+    public ParserManager(Iterable<InputStream> parsers, Function<InputStream, JsonParser> parserFunction) {
+      this.parsersIterator = parsers.iterator();
+      this.parserFunction = parserFunction;
+      this.nextParser();
+    }
+
+    public JsonParser getParser() {
+      return currentParser;
+    }
+
+    public ParserManager nextParser() {
+      if (parsersIterator.hasNext()) {
+        try {
+          if (currentParser != null) {
+            currentParser.close();
+          }
+        } catch (IOException e) {
+          throw new DrillRuntimeException(e);
+        }
+        currentParser = parserFunction.apply(parsersIterator.next());
+      } else {
+        currentParser = null;
+      }
+      return this;
+    }
+
+    public void close() throws IOException {
+      if (currentParser != null) {
+        currentParser.close();
+      }
+    }
+  }
+
+  public void close() throws IOException {
+    parserManager.close();
   }
 }

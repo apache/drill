@@ -21,33 +21,51 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.physical.impl.ScanBatch;
+import org.apache.drill.exec.physical.impl.scan.framework.BasicScanFactory;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
+import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.store.RecordReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.drill.exec.server.options.OptionManager;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class KafkaScanBatchCreator implements BatchCreator<KafkaSubScan> {
-  private static final Logger logger = LoggerFactory.getLogger(KafkaScanBatchCreator.class);
 
   @Override
   public CloseableRecordBatch getBatch(ExecutorFragmentContext context, KafkaSubScan subScan, List<RecordBatch> children)
       throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    List<SchemaPath> columns = subScan.getColumns() != null ? subScan.getColumns() : GroupScan.ALL_COLUMNS;
+    try {
+      ManagedScanFramework.ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan);
+      return builder.buildScanOperator(context, subScan);
+    } catch (UserException e) {
+      // Rethrow user exceptions directly
+      throw e;
+    } catch (Throwable e) {
+      // Wrap all others
+      throw new ExecutionSetupException(e);
+    }
+  }
 
-    List<RecordReader> readers = subScan.getPartitionSubScanSpecList().stream()
-      .map(scanSpec -> new KafkaRecordReader(scanSpec, columns, context, subScan.getKafkaStoragePlugin()))
-      .collect(Collectors.toList());
+  private ManagedScanFramework.ScanFrameworkBuilder createBuilder(OptionManager options,
+      KafkaSubScan subScan) {
+    ManagedScanFramework.ScanFrameworkBuilder builder = new ManagedScanFramework.ScanFrameworkBuilder();
+    builder.projection(subScan.getColumns());
+    builder.setUserName(subScan.getUserName());
 
-    logger.debug("Number of record readers initialized : {}", readers.size());
-    return new ScanBatch(subScan, context, readers);
+    List<ManagedReader<SchemaNegotiator>> readers = subScan.getPartitionSubScanSpecList().stream()
+        .map(scanSpec -> new KafkaRecordReader(scanSpec, options, subScan.getKafkaStoragePlugin(), -1))
+        .collect(Collectors.toList());
+    ManagedScanFramework.ReaderFactory readerFactory = new BasicScanFactory(readers.iterator());
+    builder.setReaderFactory(readerFactory);
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    return builder;
   }
 }
