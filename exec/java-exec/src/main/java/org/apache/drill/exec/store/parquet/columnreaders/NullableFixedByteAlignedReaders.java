@@ -318,6 +318,27 @@ public class NullableFixedByteAlignedReaders {
             }
           }
           break;
+        case FIXED_LEN_BYTE_ARRAY:
+        case BINARY:
+          if (usingDictionary) {
+            NullableVarDecimalVector.Mutator mutator = valueVec.getMutator();
+            for (int i = 0; i < recordsReadInThisIteration; i++) {
+              Binary currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+              mutator.setSafe(valuesReadInCurrentPass + i, currDictValToWrite.toByteBuffer().slice(), 0,
+                  currDictValToWrite.length());
+            }
+            // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
+            // and we will go into the else condition below. The readField method of the parent class requires the
+            // writer index to be set correctly.
+            int writerIndex = valueVec.getBuffer().writerIndex();
+            valueVec.getBuffer().setIndex(0, writerIndex + (int) readLength);
+          } else {
+            for (int i = 0; i < recordsToReadInThisPass; i++) {
+              Binary valueToWrite = pageReader.valueReader.readBytes();
+              valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valueToWrite.toByteBuffer().slice(), 0,
+                  valueToWrite.length());
+            }
+          }
       }
     }
 
@@ -468,31 +489,6 @@ public class NullableFixedByteAlignedReaders {
       } else {
         valueVec.getMutator().set(index, intValue * (long) DateTimeConstants.MILLIS_PER_DAY);
       }
-    }
-  }
-
-  public static class NullableVarDecimalReader extends NullableConvertedReader<NullableVarDecimalVector> {
-    NullableVarDecimalReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-        boolean fixedLength, NullableVarDecimalVector v, SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-    }
-
-    // TODO: allow reading page instead of reading every record separately
-    @Override
-    void addNext(int start, int index) {
-      switch (columnChunkMetaData.getType()) {
-        case INT32:
-          valueVec.getMutator().setSafe(index, Ints.toByteArray(bytebuf.getInt(start)), 0, dataTypeLengthInBytes);
-          break;
-        case INT64:
-          valueVec.getMutator().setSafe(index, Longs.toByteArray(bytebuf.getLong(start)), 0, dataTypeLengthInBytes);
-          break;
-        case FIXED_LEN_BYTE_ARRAY:
-        case BINARY:
-          valueVec.getMutator().setSafe(index, 1, start, start + dataTypeLengthInBytes, bytebuf);
-          break;
-      }
-
     }
   }
 
