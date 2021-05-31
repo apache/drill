@@ -21,9 +21,7 @@ package org.apache.drill.exec.store.jdbc;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.expression.SchemaPath;g
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
@@ -226,15 +224,6 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
           .build(logger));
         continue;
       }
-
-      // TODO Do something with this...
-      MajorType type = MajorType.newBuilder()
-        .setMode(TypeProtos.DataMode.OPTIONAL)
-        .setMinorType(minorType)
-        .setScale(scale)
-        .setPrecision(width)
-        .build();
-
 
       jdbcColumns.add(new JdbcColumn(name, minorType));
       if (minorType == MinorType.VARDECIMAL) {
