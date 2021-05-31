@@ -31,7 +31,9 @@ public class JdbcDoubleWriter extends JdbcColumnWriter {
 
   @Override
   public void load(ResultSet results) throws SQLException {
-    double value = results.getDouble(columnIndex);
-    columnWriter.setDouble(value);
+    if (!results.wasNull()) {
+      double value = results.getDouble(columnIndex);
+      columnWriter.setDouble(value);
+    }
   }
 }

@@ -31,7 +31,9 @@ public class JdbcBitWriter extends JdbcColumnWriter {
 
   @Override
   public void load(ResultSet results) throws SQLException {
-    boolean value = results.getBoolean(columnIndex);
-    columnWriter.setBoolean(value);
+    if (! results.wasNull()) {
+      boolean value = results.getBoolean(columnIndex);
+      columnWriter.setBoolean(value);
+    }
   }
 }

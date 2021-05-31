@@ -31,7 +31,10 @@ public class JdbcBigintWriter extends JdbcColumnWriter {
 
   @Override
   public void load(ResultSet results) throws SQLException {
-    long value = results.getLong(columnIndex);
-    columnWriter.setLong(value);
+    boolean b = results.wasNull();
+    if (! results.wasNull()) {
+      long value = results.getLong(columnIndex);
+      columnWriter.setLong(value);
+    }
   }
 }

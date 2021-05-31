@@ -31,7 +31,9 @@ public class JdbcIntWriter extends JdbcColumnWriter {
 
   @Override
   public void load(ResultSet results) throws SQLException {
-    int value = results.getInt(columnIndex);
-    columnWriter.setInt(value);
+    if (!results.wasNull()) {
+      int value = results.getInt(columnIndex);
+      columnWriter.setInt(value);
+    }
   }
 }
