@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -72,12 +73,20 @@ public class JdbcSubScan extends AbstractSubScan {
     return columns;
   }
 
-  public StoragePluginConfig getConfig() {
+  public JdbcStorageConfig getConfig() {
     return plugin.getConfig();
   }
 
   @JsonIgnore
   public JdbcStoragePlugin getPlugin() {
     return plugin;
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("sql", sql)
+      .field("columns", columns)
+      .toString();
   }
 }

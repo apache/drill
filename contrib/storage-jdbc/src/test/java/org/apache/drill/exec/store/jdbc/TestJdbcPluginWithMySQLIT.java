@@ -22,10 +22,12 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.AfterClass;
 import org.junit.Assume;
@@ -231,6 +233,8 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   public void testPhysicalPlanSubmission() throws Exception {
     String query = "select * from mysql.`drill_mysql_test`.person";
     String plan = queryBuilder().sql(query).explainJson();
+    QuerySummary r = queryBuilder().physical(plan).run();
+
     assertEquals(4, queryBuilder().physical(plan).run().recordCount());
   }
 
@@ -333,6 +337,34 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .baselineValuesForSingleColumn(1, 2, 3, 5)
         .go();
   }
+
+  @Test
+  public void testTest() throws Exception {
+    String sql = "select person_id, first_name, last_name from mysql.`drill_mysql_test`.person limit 100";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();
+
+    /*TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("TABLE_SCHEMA", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("TABLE_NAME", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("splunk", "summary")
+      .addRow("splunk", "splunklogger")
+      .addRow("splunk", "_thefishbucket")
+      .addRow("splunk", "_audit")
+      .addRow("splunk", "_internal")
+      .addRow("splunk", "_introspection")
+      .addRow("splunk", "main")
+      .addRow("splunk", "history")
+      .addRow("splunk", "spl")
+      .addRow("splunk", "_telemetry")
+      .build();
+
+    RowSetUtilities.verify(expected, results);*/
+  }
+
 
   @Test
   public void testInformationSchemaViews() throws Exception {
