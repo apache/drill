@@ -33,6 +33,8 @@ public class JdbcTimestampWriter extends JdbcColumnWriter {
   @Override
   public void load(ResultSet results) throws SQLException {
     Timestamp value = results.getTimestamp(columnIndex);
-    columnWriter.setTimestamp(value.toInstant());
+    if (value != null) {
+      columnWriter.setTimestamp(value.toInstant());
+    }
   }
 }

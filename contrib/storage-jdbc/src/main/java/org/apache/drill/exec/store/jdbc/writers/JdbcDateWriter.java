@@ -33,6 +33,8 @@ public class JdbcDateWriter extends JdbcColumnWriter {
   @Override
   public void load(ResultSet results) throws SQLException {
     Date value = results.getDate(columnIndex);
-    columnWriter.setDate(value.toLocalDate());
+    if (value != null) {
+      columnWriter.setDate(value.toLocalDate());
+    }
   }
 }

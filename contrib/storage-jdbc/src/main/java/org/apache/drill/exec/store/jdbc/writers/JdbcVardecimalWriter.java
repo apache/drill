@@ -33,6 +33,8 @@ public class JdbcVardecimalWriter extends JdbcColumnWriter {
   @Override
   public void load(ResultSet results) throws SQLException {
     BigDecimal value = results.getBigDecimal(columnIndex);
-    columnWriter.setDecimal(value);
+    if (value != null) {
+      columnWriter.setDecimal(value);
+    }
   }
 }

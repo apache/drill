@@ -32,6 +32,8 @@ public class JdbcVarbinaryWriter extends JdbcColumnWriter {
   @Override
   public void load(ResultSet results) throws SQLException {
     byte[] value = results.getBytes(columnIndex);
-    columnWriter.setBytes(value, value.length);
+    if (value != null) {
+      columnWriter.setBytes(value, value.length);
+    }
   }
 }

@@ -33,6 +33,8 @@ public class JdbcTimeWriter extends JdbcColumnWriter {
   @Override
   public void load(ResultSet results) throws SQLException {
     Time value = results.getTime(columnIndex);
-    columnWriter.setTime(value.toLocalTime());
+    if (value != null) {
+      columnWriter.setTime(value.toLocalTime());
+    }
   }
 }
