@@ -235,8 +235,13 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
         .setPrecision(width)
         .build();
 
+
       jdbcColumns.add(new JdbcColumn(name, minorType));
-      builder.addNullable(name, minorType);
+      if (minorType == MinorType.VARDECIMAL) {
+        builder.addNullable(name, minorType, width, scale);
+      } else {
+        builder.addNullable(name, minorType);
+      }
     }
 
     return builder.buildSchema();

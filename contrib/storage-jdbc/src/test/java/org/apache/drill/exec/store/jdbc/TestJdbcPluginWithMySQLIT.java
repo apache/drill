@@ -339,34 +339,6 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   }
 
   @Test
-  public void testTest() throws Exception {
-    String sql = "select person_id, first_name, last_name from mysql.`drill_mysql_test`.person limit 100";
-    RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();
-
-    /*TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("TABLE_SCHEMA", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-      .add("TABLE_NAME", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-      .buildSchema();
-
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("splunk", "summary")
-      .addRow("splunk", "splunklogger")
-      .addRow("splunk", "_thefishbucket")
-      .addRow("splunk", "_audit")
-      .addRow("splunk", "_internal")
-      .addRow("splunk", "_introspection")
-      .addRow("splunk", "main")
-      .addRow("splunk", "history")
-      .addRow("splunk", "spl")
-      .addRow("splunk", "_telemetry")
-      .build();
-
-    RowSetUtilities.verify(expected, results);*/
-  }
-
-
-  @Test
   public void testInformationSchemaViews() throws Exception {
     String query = "select * from information_schema.`views`";
     run(query);
