@@ -28,6 +28,9 @@ import org.junit.experimental.categories.Category;
 import java.io.File;
 import java.nio.file.Path;
 
+import static org.apache.drill.test.TestBuilder.listOf;
+import static org.apache.drill.test.TestBuilder.mapOf;
+
 @Category({ParquetTest.class, UnlikelyTest.class})
 public class TestParquetScan extends BaseTestQuery {
   @Test
@@ -50,5 +53,44 @@ public class TestParquetScan extends BaseTestQuery {
         .baselineValues(25L)
         .build()
         .run();
+  }
+
+  // DRILL-7934: Fix NullPointerException error when reading parquet files
+  @Test
+  public void testTypeNull() throws Exception {
+    /* the `features` schema is:
+    optional group features {
+      required int32 type (INTEGER(8,true));
+      optional int32 size;
+      optional group indices (LIST) {
+        repeated group list {
+          required int32 element;
+        }
+      }
+      optional group values (LIST) {
+        repeated group list {
+          required double element;
+        }
+      }
+    }
+    */
+    String sql = "SELECT * FROM cp.`parquet/test_type_null.parquet`";
+    testBuilder()
+            .sqlQuery(sql)
+            .unOrdered()
+            .baselineColumns("label", "features")
+            .baselineValues(0.0d,
+                    mapOf("type", 1,
+                    "indices", listOf(),
+                    "values", listOf(112.0d, 213.0d, 213.0d)))
+            .baselineValues(0.0d,
+                    mapOf("type", 1,
+                    "indices", listOf(),
+                    "values", listOf(213.0d, 123.0d, 123.0d)))
+            .baselineValues(2.0d, mapOf(
+                    "type", 1,
+                    "indices", listOf(),
+                    "values", listOf(333.0d, 333.0d, 333.0d)))
+            .go();
   }
 }
