@@ -17,12 +17,14 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import org.apache.drill.categories.KafkaStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -71,6 +73,12 @@ public class KafkaQueriesTest extends KafkaTestBase {
     try {
       client.alterSession(ExecConstants.KAFKA_RECORD_READER,
           "org.apache.drill.exec.store.kafka.decoders.AvroMessageReader");
+
+      KafkaStoragePluginConfig config = (KafkaStoragePluginConfig) cluster.drillbit().getContext()
+              .getStorage().getStoredConfig(KafkaStoragePluginConfig.NAME);
+      config.getKafkaConsumerProps().put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+              KafkaAvroDeserializer.class.getName());
+
       String queryString = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.AVRO_TOPIC);
       runKafkaSQLVerifyCount(queryString, TestKafkaSuit.NUM_JSON_MSG);
     } finally {
