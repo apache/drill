@@ -321,6 +321,8 @@ public class NullableFixedByteAlignedReaders {
         case FIXED_LEN_BYTE_ARRAY:
         case BINARY:
           if (usingDictionary) {
+            recordsReadInThisIteration = Math.min(pageReader.currentPageCount
+                - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
             NullableVarDecimalVector.Mutator mutator = valueVec.getMutator();
             for (int i = 0; i < recordsReadInThisIteration; i++) {
               Binary currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
