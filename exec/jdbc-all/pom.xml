@@ -263,7 +263,7 @@
             -XX:+CMSClassUnloadingEnabled -ea</argLine>
           <additionalClasspathElements>
             <additionalClasspathElements>${settings.localRepository}/junit/junit/${junit.version}/junit-${junit.version}.jar</additionalClasspathElements>
-            <additionalClasspathElements>${settings.localRepository}/org/hamcrest/hamcrest-core/${hamcrest.core.version}/hamcrest-core-${hamcrest.core.version}.jar</additionalClasspathElements>
+            <additionalClasspathElements>${settings.localRepository}/org/hamcrest/hamcrest/${hamcrest.version}/hamcrest-${hamcrest.version}.jar</additionalClasspathElements>
             <additionalClasspathElements>${project.build.directory}/test-classes/</additionalClasspathElements>
           </additionalClasspathElements>
 

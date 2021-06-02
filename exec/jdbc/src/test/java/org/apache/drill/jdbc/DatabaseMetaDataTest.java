@@ -25,7 +25,7 @@ import static java.sql.Connection.TRANSACTION_SERIALIZABLE;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.calcite.avatica.util.Quoting;

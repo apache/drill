@@ -20,7 +20,7 @@ package org.apache.drill;
 import static java.lang.String.format;
 import static org.apache.drill.test.TestBuilder.listOf;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 import java.io.FileWriter;
