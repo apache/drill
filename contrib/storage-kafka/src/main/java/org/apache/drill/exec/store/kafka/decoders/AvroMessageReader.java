@@ -52,7 +52,7 @@ public class AvroMessageReader implements MessageReader {
   private KafkaAvroDeserializer deserializer;
   private ColumnConverter converter;
   private ResultSetLoader loader;
-  private Boolean keyConvert;
+  private boolean deserializeKey;
 
   @Override
   public void init(SchemaNegotiator negotiator, ReadOptions readOptions, KafkaStoragePlugin plugin) {
@@ -66,7 +66,7 @@ public class AvroMessageReader implements MessageReader {
     converter = factory.getRootConverter(providedSchema, new TupleSchema(), loader.writer());
 
     String keyDeserializer = kafkaConsumerProps.getProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG);
-    keyConvert = keyDeserializer != null && keyDeserializer.equals(KafkaAvroDeserializer.class.getName());
+    deserializeKey = keyDeserializer != null && keyDeserializer.equals(KafkaAvroDeserializer.class.getName());
   }
 
   @Override
@@ -95,9 +95,8 @@ public class AvroMessageReader implements MessageReader {
   }
 
   private Object getKeyValue(byte[] keyValue) {
-    if (keyConvert) {
-      GenericRecord genericRecord = (GenericRecord) deserializer.deserialize(null, keyValue);
-      return genericRecord.toString();
+    if (deserializeKey) {
+      return deserializer.deserialize(null, keyValue).toString();
     } else {
       return new String(keyValue);
     }
