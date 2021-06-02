@@ -67,7 +67,6 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
   private Connection connection;
   private PreparedStatement statement;
   private ResultSet resultSet;
-  private SchemaBuilder builder;
   private RowSetLoader rowWriter;
   private CustomErrorContext errorContext;
   private List<JdbcColumnWriter> columnWriters;
@@ -124,7 +123,6 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
       connection = source.getConnection();
       statement = connection.prepareStatement(sql);
       resultSet = statement.executeQuery();
-      builder = new SchemaBuilder();
 
       TupleMetadata drillSchema = buildSchema();
       negotiator.tableSchema(drillSchema, true);
@@ -184,6 +182,7 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
   }
 
   private TupleMetadata buildSchema() throws SQLException {
+    SchemaBuilder builder = new SchemaBuilder();
     ResultSetMetaData meta = resultSet.getMetaData();
     jdbcColumns = new ArrayList<>();
 
@@ -225,7 +224,7 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
         continue;
       }
 
-      jdbcColumns.add(new JdbcColumn(name, minorType));
+      jdbcColumns.add(new JdbcColumn(name, minorType, i));
       if (minorType == MinorType.VARDECIMAL) {
         builder.addNullable(name, minorType, width, scale);
       } else {
@@ -238,48 +237,45 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private void populateWriterArray() {
     columnWriters = new ArrayList<>();
-    int colPosition = 1;
 
     for (JdbcColumn col : jdbcColumns) {
       switch (col.type) {
         case VARCHAR:
-          columnWriters.add(new JdbcVarcharWriter(col.colName, rowWriter, colPosition));
+          columnWriters.add(new JdbcVarcharWriter(col.colName, rowWriter, col.colPosition));
           break;
         case FLOAT4:
-          columnWriters.add(new JdbcFloatWriter(col.colName, rowWriter, colPosition));
+          columnWriters.add(new JdbcFloatWriter(col.colName, rowWriter, col.colPosition));
           break;
         case FLOAT8:
-          columnWriters.add(new JdbcDoubleWriter(col.colName, rowWriter, colPosition));
+          columnWriters.add(new JdbcDoubleWriter(col.colName, rowWriter, col.colPosition));
           break;
         case INT:
-          columnWriters.add(new JdbcIntWriter(col.colName, rowWriter, colPosition));
+          columnWriters.add(new JdbcIntWriter(col.colName, rowWriter, col.colPosition));
           break;
         case BIGINT:
-          columnWriters.add(new JdbcBigintWriter(col.colName, rowWriter, colPosition));
+          columnWriters.add(new JdbcBigintWriter(col.colName, rowWriter, col.colPosition));
           break;
         case DATE:
-          columnWriters.add(new JdbcDateWriter(col.colName, rowWriter, colPosition));
+          columnWriters.add(new JdbcDateWriter(col.colName, rowWriter, col.colPosition));
           break;
         case TIME:
-          columnWriters.add(new JdbcTimeWriter(col.colName, rowWriter, colPosition));
+          columnWriters.add(new JdbcTimeWriter(col.colName, rowWriter, col.colPosition));
           break;
         case TIMESTAMP:
-          columnWriters.add(new JdbcTimestampWriter(col.colName, rowWriter, colPosition));
+          columnWriters.add(new JdbcTimestampWriter(col.colName, rowWriter, col.colPosition));
           break;
         case VARBINARY:
-          columnWriters.add(new JdbcVarbinaryWriter(col.colName, rowWriter, colPosition));
+          columnWriters.add(new JdbcVarbinaryWriter(col.colName, rowWriter, col.colPosition));
           break;
         case BIT:
-          columnWriters.add(new JdbcBitWriter(col.colName, rowWriter, colPosition));
+          columnWriters.add(new JdbcBitWriter(col.colName, rowWriter, col.colPosition));
           break;
         case VARDECIMAL:
-          columnWriters.add(new JdbcVardecimalWriter(col.colName, rowWriter, colPosition));
+          columnWriters.add(new JdbcVardecimalWriter(col.colName, rowWriter, col.colPosition));
           break;
         default:
           logger.warn("Unsupported data type {} found at column {}", col.type.getDescriptorForType(), col.colName);
       }
-
-      colPosition++;
     }
   }
 
@@ -302,10 +298,12 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
   public static class JdbcColumn {
     final String colName;
     final MinorType type;
+    final int colPosition;
 
-    public JdbcColumn (String colName, MinorType type) {
+    public JdbcColumn (String colName, MinorType type, int colPosition) {
       this.colName = colName;
       this.type = type;
+      this.colPosition = colPosition;
     }
   }
 }

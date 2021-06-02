@@ -28,7 +28,6 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.h2.tools.RunScript;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -38,6 +37,7 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -54,6 +54,10 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   @BeforeClass
   public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
+    // Force timezone to UTC for these tests.
+    System.setProperty("user.timezone", "UTC");
+    TimeZone.setDefault(null);
+    
     dirTestWatcher.copyResourceToRoot(Paths.get(TABLE_PATH));
     Class.forName("org.h2.Driver");
     String connString = "jdbc:h2:" + dirTestWatcher.getTmpDir().getCanonicalPath();
@@ -84,7 +88,6 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   }
 
   @Test
-  @Ignore("Ignore this test since h2 mangles dates and times due to improper timezone support.")
   public void validateResult() throws Exception {
     // Skip date, time, and timestamp types since h2 mangles these due to improper timezone support.
     testBuilder()

@@ -23,6 +23,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
+import org.apache.drill.exec.physical.impl.scan.framework.BasicScanFactory;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ReaderFactory;
@@ -33,7 +34,9 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class JdbcScanBatchCreator implements BatchCreator<JdbcSubScan> {
 
@@ -59,37 +62,13 @@ public class JdbcScanBatchCreator implements BatchCreator<JdbcSubScan> {
     ScanFrameworkBuilder builder = new ScanFrameworkBuilder();
     builder.projection(subScan.getColumns());
     builder.setUserName(subScan.getUserName());
+    JdbcStoragePlugin plugin = subScan.getPlugin();
+    List<ManagedReader<SchemaNegotiator>> readers =
+      Collections.singletonList(new JdbcBatchReader(plugin.getDataSource(), subScan.getSql(), subScan.getColumns()));
 
-    // Reader
-    ReaderFactory readerFactory = new JdbcReaderFactory(config, subScan);
+    ManagedScanFramework.ReaderFactory readerFactory = new BasicScanFactory(readers.iterator());
     builder.setReaderFactory(readerFactory);
     builder.nullType(Types.optional(MinorType.VARCHAR));
     return builder;
-  }
-
-  private static class JdbcReaderFactory implements ReaderFactory {
-
-    private final JdbcStorageConfig config;
-    private final JdbcSubScan subScan;
-    private int count;
-
-    public JdbcReaderFactory(JdbcStorageConfig config, JdbcSubScan subScan) {
-      this.config = config;
-      this.subScan = subScan;
-    }
-
-    @Override
-    public void bind(ManagedScanFramework framework) {
-    }
-
-    @Override
-    public ManagedReader<SchemaNegotiator> next() {
-      // Only a single scan (in a single thread)
-      JdbcStoragePlugin plugin = subScan.getPlugin();
-      if (count++ == 0) {
-        return new JdbcBatchReader(plugin.getDataSource(), subScan.getSql(), subScan.getColumns());
-      }
-      return null;
-    }
   }
 }
