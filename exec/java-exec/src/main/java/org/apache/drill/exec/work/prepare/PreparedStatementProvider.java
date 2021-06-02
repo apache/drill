@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.prepare;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 
 import io.netty.util.concurrent.Future;
@@ -79,7 +80,7 @@ public class PreparedStatementProvider {
 
   /**
    * Static list of mappings from {@link MinorType} to JDBC ResultSet class name
-   * (to be returned through {@link ResultSetMetaData#getColumnClassName(int)}.
+   * (to be returned through {@link java.sql.ResultSetMetaData#getColumnClassName(int)}.
    */
   private static final Map<MinorType, String> DRILL_TYPE_TO_JDBC_CLASSNAME = ImmutableMap.<MinorType, String>builder()
       .put(MinorType.INT, Integer.class.getName())
@@ -138,7 +139,9 @@ public class PreparedStatementProvider {
         final QueryId limit0QueryId = userWorker.submitWork(wrapper, limit0Query);
 
         final long timeoutMillis =
-            userWorker.getSystemOptions().getOption(CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS).num_val;
+            userWorker.getDrillbitContext().getConfig().getBoolean(ExecConstants.SEPARATE_WORKSPACE)
+          ? wrapper.getSession().getSystemOptions().getOption(CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS).num_val
+          : userWorker.getSystemOptions().getOption(CREATE_PREPARE_STATEMENT_TIMEOUT_MILLIS).num_val;
 
         try {
           if (!wrapper.await(timeoutMillis)) {

@@ -146,7 +146,7 @@ public class Foreman implements Runnable {
     // Apply AutoLimit on resultSet (Usually received via REST APIs)
     final int autoLimit = queryRequest.getAutolimitRowcount();
     if (autoLimit > 0) {
-      connection.getSession().getOptions().setLocalOption(ExecConstants.QUERY_MAX_ROWS, autoLimit);
+      connection.getSession().getSessionOptions().setLocalOption(ExecConstants.QUERY_MAX_ROWS, autoLimit);
     }
     this.queryContext = new QueryContext(connection.getSession(), drillbitContext, queryId);
     this.queryManager = new QueryManager(queryId, queryRequest, drillbitContext.getStoreProvider(),

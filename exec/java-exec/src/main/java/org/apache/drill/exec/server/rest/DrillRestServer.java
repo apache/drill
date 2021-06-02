@@ -94,6 +94,8 @@ public class DrillRestServer extends ResourceConfig {
 
     final boolean isAuthEnabled =
         workManager.getContext().getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
+    final boolean separateWorkspace =
+            workManager.getContext().getConfig().getBoolean(ExecConstants.SEPARATE_WORKSPACE);
 
     if (isAuthEnabled) {
       register(LogInLogOutResources.class);
@@ -130,7 +132,7 @@ public class DrillRestServer extends ResourceConfig {
         bind(context.getLpPersistence().getMapper()).to(ObjectMapper.class);
         bind(context.getStoreProvider()).to(PersistentStoreProvider.class);
         bind(context.getStorage()).to(StoragePluginRegistry.class);
-        bind(new UserAuthEnabled(isAuthEnabled)).to(UserAuthEnabled.class);
+        bind(new UserAuthEnabled(isAuthEnabled, separateWorkspace)).to(UserAuthEnabled.class);
         if (isAuthEnabled) {
           bindFactory(DrillUserPrincipalProvider.class).to(DrillUserPrincipal.class);
           bindFactory(AuthWebUserConnectionProvider.class).to(WebUserConnection.class);
@@ -199,7 +201,8 @@ public class DrillRestServer extends ResourceConfig {
                 .withCredentials(UserBitShared.UserCredentials.newBuilder()
                         .setUserName(sessionUserPrincipal.getName())
                         .build())
-                .withOptionManager(drillbitContext.getOptionManager())
+                .withOptionManagers(drillbitContext)
+                .withStorage(drillbitContext)
                 .setSupportComplexTypes(config.getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES))
                 .build();
 
@@ -269,7 +272,7 @@ public class DrillRestServer extends ResourceConfig {
               .withCredentials(UserBitShared.UserCredentials.newBuilder()
                       .setUserName(sessionUserPrincipal.getName())
                       .build())
-              .withOptionManager(drillbitContext.getOptionManager())
+              .withOptionManagers(drillbitContext)
               .setSupportComplexTypes(drillbitContext.getConfig().getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES))
               .build();
 
@@ -315,7 +318,7 @@ public class DrillRestServer extends ResourceConfig {
       if (WebServer.isOnlyImpersonationEnabled(config)) {
         final String userName = request.getHeader("User-Name");
         if (!Strings.isNullOrEmpty(userName)) {
-          return new DrillUserPrincipal(userName, true);
+          return new DrillUserPrincipal(userName, true, config.getBoolean(ExecConstants.SEPARATE_WORKSPACE));
         }
       }
       return new AnonDrillUserPrincipal();
@@ -358,13 +361,22 @@ public class DrillRestServer extends ResourceConfig {
   // Returns whether auth is enabled or not in config
   public static class UserAuthEnabled {
     private final boolean value;
+    private final boolean separateWorkspace;
 
-    public UserAuthEnabled(boolean value) {
+    public UserAuthEnabled(boolean value, boolean separateWorkspace) {
       this.value = value;
+      this.separateWorkspace = separateWorkspace;
     }
 
     public boolean get() {
       return value;
+    }
+
+    /**
+     * @return true, if auth is enabled and separate user workspaces used
+     */
+    public boolean separateWorkspace() {
+      return value && separateWorkspace;
     }
   }
 }

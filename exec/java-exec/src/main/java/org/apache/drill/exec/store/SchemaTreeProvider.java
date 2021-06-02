@@ -26,6 +26,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.calcite.jdbc.DynamicSchema;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -35,6 +36,8 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.drill.exec.ExecConstants.SEPARATE_WORKSPACE;
 
 /**
  * Creates new schema trees. It keeps track of newly created schema trees and
@@ -46,11 +49,13 @@ public class SchemaTreeProvider implements AutoCloseable {
   private final DrillbitContext dContext;
   private final List<SchemaPlus> schemaTreesToClose;
   private final boolean isImpersonationEnabled;
+  private final UserSession session;
 
-  public SchemaTreeProvider(final DrillbitContext dContext) {
+  public SchemaTreeProvider(final DrillbitContext dContext, UserSession session) {
     this.dContext = dContext;
     schemaTreesToClose = Lists.newArrayList();
     isImpersonationEnabled = dContext.getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
+    this.session = session;
   }
 
   /**
@@ -107,9 +112,12 @@ public class SchemaTreeProvider implements AutoCloseable {
    * @return
    */
   public SchemaPlus createRootSchema(SchemaConfig schemaConfig) {
-      final SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig);
-      schemaTreesToClose.add(rootSchema);
-      return rootSchema;
+    StoragePluginRegistry storage = dContext.getConfig().getBoolean(SEPARATE_WORKSPACE)
+      ? session.getStorage()
+      : dContext.getStorage();
+    final SchemaPlus rootSchema = DynamicSchema.createRootSchema(storage, schemaConfig);
+    schemaTreesToClose.add(rootSchema);
+    return rootSchema;
   }
 
   /**
@@ -132,7 +140,9 @@ public class SchemaTreeProvider implements AutoCloseable {
    */
   public SchemaPlus createFullRootSchema(SchemaConfig schemaConfig) {
     try {
-      final SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig);
+      StoragePluginRegistry storage = dContext.getConfig().getBoolean(SEPARATE_WORKSPACE)
+        ? session.getStorage() : dContext.getStorage();
+      final SchemaPlus rootSchema = DynamicSchema.createRootSchema(storage, schemaConfig);
       dContext.getSchemaFactory().registerSchemas(schemaConfig, rootSchema);
       schemaTreesToClose.add(rootSchema);
       return rootSchema;

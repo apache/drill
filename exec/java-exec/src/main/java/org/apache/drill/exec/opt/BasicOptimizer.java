@@ -204,7 +204,7 @@ public class BasicOptimizer extends Optimizer {
       try {
         final StoragePlugin storagePlugin = queryContext.getStorage().getPluginByConfig(config);
         final String user = userSession.getSession().getCredentials().getUserName();
-        return storagePlugin.getPhysicalScan(user, scan.getSelection(), userSession.getSession().getOptions());
+        return storagePlugin.getPhysicalScan(user, scan.getSelection(), userSession.getSession().getSessionOptions());
       } catch (IOException | PluginException e) {
         throw new OptimizerException("Failure while attempting to retrieve storage engine.", e);
       }

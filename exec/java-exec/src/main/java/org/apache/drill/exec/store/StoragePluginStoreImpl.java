@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.store;
 
+import static org.apache.drill.exec.store.StoragePluginRegistryImpl.STORAGE_PSTORE_NAME;
+import static org.apache.drill.exec.store.StoragePluginRegistryImpl.SYS_STORAGE_PSTORE_NAME;
+import static org.apache.drill.exec.store.sys.PersistentStore.USER_PSTORE_ROOT_NAME;
 import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
@@ -44,9 +47,14 @@ public class StoragePluginStoreImpl implements StoragePluginStore {
 
   private final PersistentStore<StoragePluginConfig> pluginSystemTable;
 
-  public StoragePluginStoreImpl(DrillbitContext context) {
-    this.pluginSystemTable = initPluginsSystemTable(context,
-        checkNotNull(context.getLpPersistence()));
+  public StoragePluginStoreImpl(DrillbitContext context, String userName) {
+    String pStoreName = userName == null
+            ? SYS_STORAGE_PSTORE_NAME
+            : String.join("/", USER_PSTORE_ROOT_NAME, userName, STORAGE_PSTORE_NAME);
+    this.pluginSystemTable = initPluginsSystemTable(context, checkNotNull(context.getLpPersistence()), pStoreName);
+    if (logger.isTraceEnabled() && userName != null) {
+      logger.trace("User StoragePluginStore for session user {} created", userName);
+    }
   }
 
   /**
@@ -62,16 +70,16 @@ public class StoragePluginStoreImpl implements StoragePluginStore {
    * @return persistent store for storage plugins
    */
   private PersistentStore<StoragePluginConfig> initPluginsSystemTable(
-      DrillbitContext context, LogicalPlanPersistence lpPersistence) {
+      DrillbitContext context, LogicalPlanPersistence lpPersistence, String psName) {
     try {
       PersistentStore<StoragePluginConfig> pluginSystemTable = context
           .getStoreProvider()
           .getOrCreateStore(PersistentStoreConfig
               .newJacksonBuilder(lpPersistence.getMapper(), StoragePluginConfig.class)
-              .name(StoragePluginRegistryImpl.PSTORE_NAME)
+              .name(psName)
               .build());
 
-      Iterator<Entry<String, StoragePluginConfig>> storedPlugins = pluginSystemTable.getAll();
+      Iterator<Entry<String, StoragePluginConfig>> storedPlugins = getPlugins(pluginSystemTable);
       while (storedPlugins.hasNext()) {
         Entry<String, StoragePluginConfig> entry = storedPlugins.next();
         String pluginName = entry.getKey();
@@ -83,7 +91,6 @@ public class StoragePluginStoreImpl implements StoragePluginStore {
           }
         }
       }
-
       return new CaseInsensitivePersistentStore<>(pluginSystemTable);
     } catch (StoreException e) {
       throw new DrillRuntimeException(
@@ -107,6 +114,11 @@ public class StoragePluginStoreImpl implements StoragePluginStore {
   }
 
   @Override
+  public Iterator<Entry<String, StoragePluginConfig>> getPlugins(PersistentStore<StoragePluginConfig> pluginsTable) {
+    return pluginsTable.getAll();
+  }
+
+  @Override
   public void put(String name, StoragePluginConfig config) {
     pluginSystemTable.put(name, config);
   }
@@ -118,7 +130,7 @@ public class StoragePluginStoreImpl implements StoragePluginStore {
 
   @Override
   public Iterator<Entry<String, StoragePluginConfig>> load() {
-     return pluginSystemTable.getAll();
+     return getPlugins(pluginSystemTable);
   }
 
   @Override
@@ -128,19 +140,13 @@ public class StoragePluginStoreImpl implements StoragePluginStore {
     }
   }
 
-  // TODO: Can this be removed? Avoid exposing implementation?
-  @Override
-  public PersistentStore<StoragePluginConfig> getStore() {
-    return pluginSystemTable;
-  }
-
   @Override
   public void close() {
     try {
       pluginSystemTable.close();
     } catch (Exception e) {
       logger.warn("Error closing the storage plugin store", e);
-      // Ignore since we're shutting down the Drillbit
+      // Ignore since we're shutting down the Drillbit or UserSession
     }
   }
 }

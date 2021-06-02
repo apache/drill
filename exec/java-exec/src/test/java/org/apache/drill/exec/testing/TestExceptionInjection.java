@@ -42,7 +42,7 @@ public class TestExceptionInjection extends BaseTestQuery {
   private static final UserSession session = UserSession.Builder.newBuilder()
       .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
       .withUserProperties(UserProperties.getDefaultInstance())
-      .withOptionManager(bits[0].getContext().getOptionManager())
+      .withOptionManagers(bits[0].getContext())
       .build();
 
   /**
@@ -233,7 +233,7 @@ public class TestExceptionInjection extends BaseTestQuery {
       final UserSession session = UserSession.Builder.newBuilder()
           .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
           .withUserProperties(UserProperties.getDefaultInstance())
-          .withOptionManager(drillbitContext1.getOptionManager())
+          .withOptionManagers(drillbitContext1)
           .build();
 
       final String passthroughDesc = "<<injected from descPassthrough>>";

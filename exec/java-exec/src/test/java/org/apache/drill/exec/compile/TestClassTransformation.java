@@ -56,9 +56,9 @@ public class TestClassTransformation extends BaseTestQuery {
     // configuration.
     System.setProperty(CodeCompiler.PREFER_POJ_CONFIG, "false");
     final UserSession userSession = UserSession.Builder.newBuilder()
-      .withOptionManager(getDrillbitContext().getOptionManager())
+      .withOptionManagers(getDrillbitContext())
       .build();
-    sessionOptions = userSession.getOptions();
+    sessionOptions = userSession.getSessionOptions();
   }
 
   @Test
@@ -232,7 +232,7 @@ public class TestClassTransformation extends BaseTestQuery {
 
   private <T, X extends T> CodeGenerator<T> newCodeGenerator(Class<T> iface, Class<X> impl) {
     final TemplateClassDefinition<T> template = new TemplateClassDefinition<>(iface, impl);
-    CodeGenerator<T> cg = CodeGenerator.get(template, getDrillbitContext().getOptionManager());
+    CodeGenerator<T> cg = CodeGenerator.get(template, getDrillbitContext().getSystemOptionManager());
     cg.plainJavaCapable(true);
 
     ClassGenerator<T> root = cg.getRoot();

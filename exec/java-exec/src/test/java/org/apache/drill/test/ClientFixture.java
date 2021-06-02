@@ -72,7 +72,6 @@ public class ClientFixture implements AutoCloseable {
      * @param value property value
      * @return this builder
      */
-
     public ClientBuilder property(String key, Object value) {
       if (clientProps == null) {
         clientProps = new Properties();

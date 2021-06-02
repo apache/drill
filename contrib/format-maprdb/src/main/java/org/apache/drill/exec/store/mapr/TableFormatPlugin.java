@@ -116,6 +116,7 @@ public abstract class TableFormatPlugin implements FormatPlugin {
     return name;
   }
 
+  // TODO: it can be deleted after modifying {@link MapRDBGroupScan#getStorageConfig()}. See more: DRILL-7961
   public synchronized AbstractStoragePlugin getStoragePlugin() {
     if (this.storagePlugin == null) {
       this.storagePlugin = context.getStorage().resolve(storageConfig,

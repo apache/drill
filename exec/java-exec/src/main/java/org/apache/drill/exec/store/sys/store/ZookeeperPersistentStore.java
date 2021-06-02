@@ -31,7 +31,6 @@ import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.coord.zk.PathUtils;
 import org.apache.drill.exec.coord.zk.ZookeeperClient;
-import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.serialization.InstanceSerializer;
 import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
@@ -40,7 +39,7 @@ import org.apache.drill.exec.store.sys.VersionedPersistentStore;
 import org.apache.zookeeper.CreateMode;
 
 /**
- * Zookeeper based implementation of {@link org.apache.drill.exec.store.sys.PersistentStore}.
+ * Drill Zookeeper client. Based implementation of {@link org.apache.drill.exec.store.sys.PersistentStore}.
  */
 public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> implements VersionedPersistentStore<V> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZookeeperPersistentStore.class);
@@ -48,7 +47,7 @@ public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> implemen
   private final PersistentStoreConfig<V> config;
   private final ZookeeperClient client;
 
-  public ZookeeperPersistentStore(final CuratorFramework framework, final PersistentStoreConfig<V> config) throws StoreException {
+  public ZookeeperPersistentStore(final CuratorFramework framework, final PersistentStoreConfig<V> config) {
     this.config = Preconditions.checkNotNull(config);
     this.client = new ZookeeperClient(framework, PathUtils.join("/", config.getName()), CreateMode.PERSISTENT);
   }

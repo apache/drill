@@ -385,7 +385,7 @@ public class ProfileResources {
   @GET
   @Path("/profiles/{queryid}")
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getProfile(@PathParam("queryid") String queryId){
+  public Viewable getProfile(@PathParam("queryid") String queryId) {
     try {
       ProfileWrapper wrapper = new ProfileWrapper(getQueryProfile(queryId), work.getContext().getConfig(), request);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/profile.ftl", sc, wrapper);
@@ -413,12 +413,12 @@ public class ProfileResources {
       final QueryInfo info = running.get(queryId);
       checkOrThrowQueryCancelAuthorization(info.getUser(), queryId);
       Ack a = work.getContext().getController().getTunnel(info.getForeman()).requestCancelQuery(id).checkedGet(2, TimeUnit.SECONDS);
-      if(a.getOk()){
+      if (a.getOk()) {
         return String.format("Query %s canceled on node %s.", queryId, info.getForeman().getAddress());
-      }else{
+      } else {
         return String.format("Attempted to cancel query %s on %s but the query is no longer active on that node.", queryId, info.getForeman().getAddress());
       }
-    }catch(Exception e){
+    } catch(Exception e) {
       logger.debug("Failure to find query as running profile.", e);
       return String.format
           ("Failure attempting to cancel query %s.  Unable to find information about where query is actively running.", queryId);

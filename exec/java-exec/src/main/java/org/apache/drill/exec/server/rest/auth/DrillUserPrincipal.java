@@ -45,12 +45,13 @@ public class DrillUserPrincipal implements Principal {
       ImmutableList.of(new RolePrincipal(AUTHENTICATED_ROLE));
 
   private final String userName;
-
   private final boolean isAdmin;
+  private final boolean separateWorkspace;
 
-  public DrillUserPrincipal(final String userName, final boolean isAdmin) {
+  public DrillUserPrincipal(final String userName, final boolean isAdmin, boolean separateWorkspace) {
     this.userName = userName;
     this.isAdmin = isAdmin;
+    this.separateWorkspace = separateWorkspace;
   }
 
   public boolean isAdminUser() { return isAdmin; }
@@ -67,7 +68,7 @@ public class DrillUserPrincipal implements Principal {
    * @return true/false
    */
   public boolean canManageProfileOf(final String profileOwner) {
-    return isAdmin || userName.equals(profileOwner);
+    return separateWorkspace ? userName.equals(profileOwner) : isAdmin || userName.equals(profileOwner);
   }
 
   /**
@@ -77,7 +78,7 @@ public class DrillUserPrincipal implements Principal {
    * @return true/false
    */
   public boolean canManageQueryOf(final String queryUser) {
-    return isAdmin || userName.equals(queryUser);
+    return separateWorkspace ? userName.equals(queryUser) : isAdmin || userName.equals(queryUser);
   }
 
   /**
@@ -85,8 +86,11 @@ public class DrillUserPrincipal implements Principal {
    */
   public static class AnonDrillUserPrincipal extends DrillUserPrincipal {
 
+    /**
+     * In anonymous (auth disabled) mode all users are admins, but they shouldn't see sessions of authorized users
+     */
     public AnonDrillUserPrincipal() {
-      super(ANONYMOUS_USER, true /* in anonymous (auth disabled) mode all users are admins */);
+      super(ANONYMOUS_USER, true, true);
     }
   }
 }

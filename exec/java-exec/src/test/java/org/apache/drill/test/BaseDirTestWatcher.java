@@ -23,7 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.junit.runner.Description;
 
@@ -109,7 +109,7 @@ public class BaseDirTestWatcher extends DirTestWatcher {
     spillDir = makeSubDir(Paths.get("spill"));
     rootDir = makeSubDir(Paths.get("root"));
     tmpDir = makeSubDir(Paths.get("tmp"));
-    storeDir = makeSubDir(Paths.get(StoragePluginRegistry.PSTORE_NAME));
+    storeDir = makeSubDir(Paths.get(StoragePluginRegistryImpl.SYS_STORAGE_PSTORE_NAME));
     dfsTestTmpParentDir = makeSubDir(Paths.get("dfsTestTmp"));
     homeDir = makeSubDir(Paths.get("home"));
 

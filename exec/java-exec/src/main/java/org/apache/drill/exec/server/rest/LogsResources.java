@@ -63,6 +63,7 @@ public class LogsResources {
   @Inject DrillRestServer.UserAuthEnabled authEnabled;
   @Inject SecurityContext sc;
   @Inject WorkManager work;
+  @Inject WebUserConnection webUserConnection;
 
   private static final FileFilter file_filter = new FileFilter() {
     @Override
@@ -113,9 +114,9 @@ public class LogsResources {
   @Produces(MediaType.APPLICATION_JSON)
   public LogContent getLogJSON(@PathParam("name") final String name) throws IOException {
     File file = getFileByName(getLogFolder(), name);
-
-    final int maxLines = work.getContext().getOptionManager().getOption(ExecConstants.WEB_LOGS_MAX_LINES).num_val.intValue();
-
+    final int maxLines = authEnabled.separateWorkspace()
+            ? webUserConnection.getSession().getSystemOptions().getOption(ExecConstants.WEB_LOGS_MAX_LINES).num_val.intValue()
+            : work.getContext().getSystemOptionManager().getOption(ExecConstants.WEB_LOGS_MAX_LINES).num_val.intValue();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       @SuppressWarnings("serial")
       Map<Integer, String> cache = new LinkedHashMap<Integer, String>(maxLines, .75f, true) {

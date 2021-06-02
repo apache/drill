@@ -183,10 +183,10 @@ public class DrillRoot {
     final DrillConfig config = dbContext.getConfig();
     final boolean userEncryptionEnabled =
             config.getBoolean(ExecConstants.USER_ENCRYPTION_SASL_ENABLED) ||
-                    config .getBoolean(ExecConstants.USER_SSL_ENABLED);
+                    config.getBoolean(ExecConstants.USER_SSL_ENABLED);
     final boolean bitEncryptionEnabled = config.getBoolean(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED);
 
-    OptionManager optionManager = work.getContext().getOptionManager();
+    OptionManager optionManager = work.getContext().getSystemOptionManager();
     final boolean isUserLoggedIn = AuthDynamicFeature.isUserLoggedIn(sc);
     final boolean shouldShowAdminInfo = isUserLoggedIn && ((DrillUserPrincipal)sc.getUserPrincipal()).isAdminUser();
 

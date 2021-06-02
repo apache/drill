@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
@@ -30,10 +30,9 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public interface StoragePluginRegistry extends Iterable<Map.Entry<String, StoragePlugin>>, AutoCloseable {
-  String PSTORE_NAME = "sys.storage_plugins";
 
   @SuppressWarnings("serial")
-  public static class PluginException extends Exception {
+  class PluginException extends Exception {
     public PluginException(String msg) {
       super(msg);
     }
@@ -52,7 +51,7 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
    * Indicates the requested plugin was not found.
    */
   @SuppressWarnings("serial")
-  public static class PluginNotFoundException extends PluginException {
+  class PluginNotFoundException extends PluginException {
     public PluginNotFoundException(String name) {
       super("No storage plugin exists with name: `" + name + "`");
     }
@@ -62,7 +61,7 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
    * Indicates an error when decoding a plugin from JSON.
    */
   @SuppressWarnings("serial")
-  public static class PluginEncodingException extends PluginException {
+  class PluginEncodingException extends PluginException {
     public PluginEncodingException(String msg, Exception e) {
       super(msg, e);
     }
@@ -120,9 +119,8 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
    *
    * @param name The name of the plugin
    * @return The StoragePlugin instance.
-   * @throws PluginException if plugin cannot be obtained
    */
-  StoragePlugin getPlugin(String name) throws PluginException, UserException;
+  StoragePlugin getPlugin(String name);
 
   /**
    * Get a plugin by configuration. If it doesn't exist, create it.
@@ -310,4 +308,12 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
   <T extends FormatPlugin> T resolveFormat(
       StoragePluginConfig storageConfig,
       FormatPluginConfig formatConfig, Class<T> desired);
+
+  /**
+   * Register schema for all plugins. See {@link SchemaFactory#registerSchemas(SchemaConfig, SchemaPlus) for details}
+   *
+   * @param schemaConfig Configuration for schema objects.
+   * @param parent Reference to parent schema.
+   */
+  void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent);
 }

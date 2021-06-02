@@ -20,10 +20,12 @@ package org.apache.drill.exec.server.options;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassCompilerSelector;
+import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
@@ -71,6 +73,87 @@ import java.util.stream.StreamSupport;
  */
 public class SystemOptionManager extends BaseOptionManager implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(SystemOptionManager.class);
+  public static final String OPTIONS_PSTORE_NAME = "options";
+  public static final String SYS_OPTIONS_PSTORE_NAME = "sys." + OPTIONS_PSTORE_NAME;
+
+  private final PersistentStoreConfig<PersistedOptionValue> config;
+  private final PersistentStoreProvider provider;
+  /**
+   * Persistent store for options that have been changed from default.
+   * NOTE: CRUD operations must use lowercase keys.
+   */
+  protected PersistentStore<PersistedOptionValue> options;
+  private final CaseInsensitiveMap<OptionDefinition> definitions;
+  private final CaseInsensitiveMap<OptionValue> defaults;
+
+  public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider,
+                             final DrillConfig bootConfig) {
+    this(lpPersistence, provider, bootConfig, SystemOptionManager.createDefaultOptionDefinitions());
+  }
+
+  public SystemOptionManager(final LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider,
+                             final DrillConfig bootConfig, final CaseInsensitiveMap<OptionDefinition> definitions) {
+    this(lpPersistence, provider, bootConfig, definitions, SYS_OPTIONS_PSTORE_NAME);
+  }
+
+  public SystemOptionManager(final LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider,
+                             final DrillConfig bootConfig, final CaseInsensitiveMap<OptionDefinition> definitions,
+                             final String path) {
+    this.provider = provider;
+    this.config = PersistentStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), PersistedOptionValue.class)
+            .name(path)
+            .build();
+    this.definitions = definitions;
+    this.defaults = populateDefaultValues(definitions, bootConfig);
+  }
+
+  /**
+   * Test-only, in-memory version of the system option manager.
+   *
+   * @param bootConfig Drill config
+   */
+  @VisibleForTesting
+  public SystemOptionManager(final DrillConfig bootConfig) {
+    this.provider = new InMemoryStoreProvider(100);
+    this.config = null;
+    this.definitions = SystemOptionManager.createDefaultOptionDefinitions();
+    this.defaults = populateDefaultValues(definitions, bootConfig);
+  }
+
+  /**
+   * Initializes this option manager.
+   *
+   * @return this option manager
+   */
+  public SystemOptionManager init() {
+    try {
+      options = provider.getOrCreateStore(config);
+    } catch (StoreException e) {
+      throw new DrillRuntimeException(
+              "Failure while reading and loading storage plugin configuration.");
+    }
+    // if necessary, deprecate and replace options from persistent store
+    for (final Entry<String, PersistedOptionValue> option : Lists.newArrayList(options.getAll())) {
+      final String name = option.getKey();
+      final OptionDefinition definition = definitions.get(name);
+      if (definition == null) {
+        // deprecated option, delete.
+        options.delete(name);
+        logger.warn("Deleting deprecated option `{}`", name);
+      } else {
+        OptionValidator validator = definition.getValidator();
+        final String canonicalName = validator.getOptionName().toLowerCase();
+        if (!name.equals(canonicalName)) {
+          // for backwards compatibility <= 1.1, rename to lower case.
+          logger.warn("Changing option name to lower case `{}`", name);
+          final PersistedOptionValue value = option.getValue();
+          options.delete(name);
+          options.put(canonicalName, value);
+        }
+      }
+    }
+    return this;
+  }
 
   /**
    * Creates the {@code OptionDefinitions} to be registered with the {@link SystemOptionManager}.
@@ -335,78 +418,6 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
     return map;
   }
 
-  private final PersistentStoreConfig<PersistedOptionValue> config;
-
-  private final PersistentStoreProvider provider;
-
-  /**
-   * Persistent store for options that have been changed from default.
-   * NOTE: CRUD operations must use lowercase keys.
-   */
-  private PersistentStore<PersistedOptionValue> options;
-  private final CaseInsensitiveMap<OptionDefinition> definitions;
-  private final CaseInsensitiveMap<OptionValue> defaults;
-
-  public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider,
-                             final DrillConfig bootConfig) {
-    this(lpPersistence, provider, bootConfig, SystemOptionManager.createDefaultOptionDefinitions());
-  }
-
-  public SystemOptionManager(final LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider,
-                             final DrillConfig bootConfig, final CaseInsensitiveMap<OptionDefinition> definitions) {
-    this.provider = provider;
-    this.config = PersistentStoreConfig.newJacksonBuilder(lpPersistence.getMapper(), PersistedOptionValue.class)
-          .name("sys.options")
-          .build();
-    this.definitions = definitions;
-    this.defaults = populateDefaultValues(definitions, bootConfig);
-  }
-
-  /**
-   * Test-only, in-memory version of the system option manager.
-   *
-   * @param bootConfig Drill config
-   */
-  @VisibleForTesting
-  public SystemOptionManager(final DrillConfig bootConfig) {
-    this.provider = new InMemoryStoreProvider(100);
-    this.config = null;
-    this.definitions = SystemOptionManager.createDefaultOptionDefinitions();
-    this.defaults = populateDefaultValues(definitions, bootConfig);
-  }
-
-  /**
-   * Initializes this option manager.
-   *
-   * @return this option manager
-   * @throws Exception if unable to initialize option manager
-   */
-  public SystemOptionManager init() throws Exception {
-    options = provider.getOrCreateStore(config);
-    // if necessary, deprecate and replace options from persistent store
-    for (final Entry<String, PersistedOptionValue> option : Lists.newArrayList(options.getAll())) {
-      final String name = option.getKey();
-      final OptionDefinition definition = definitions.get(name);
-      if (definition == null) {
-        // deprecated option, delete.
-        options.delete(name);
-        logger.warn("Deleting deprecated option `{}`", name);
-      } else {
-        OptionValidator validator = definition.getValidator();
-        final String canonicalName = validator.getOptionName().toLowerCase();
-        if (!name.equals(canonicalName)) {
-          // for backwards compatibility <= 1.1, rename to lower case.
-          logger.warn("Changing option name to lower case `{}`", name);
-          final PersistedOptionValue value = option.getValue();
-          options.delete(name);
-          options.put(canonicalName, value);
-        }
-      }
-    }
-
-    return this;
-  }
-
   @Override
   public Iterator<OptionValue> iterator() {
     final Map<String, OptionValue> buildList = CaseInsensitiveMap.newHashMap();
@@ -485,7 +496,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       .forEach(name -> options.delete(name)); // should be lowercase
   }
 
-  private CaseInsensitiveMap<OptionValue> populateDefaultValues(Map<String, OptionDefinition> definitions, DrillConfig bootConfig) {
+  private CaseInsensitiveMap<OptionValue> populateDefaultValues(Map<String, OptionDefinition> definitions,
+                                                                DrillConfig bootConfig) {
     // populate the options from the config
     final Map<String, OptionValue> defaults = new HashMap<>();
 
@@ -550,12 +562,17 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     // If the server exits very early, the options may not yet have
     // been created. Gracefully handle that case.
 
     if (options != null) {
-      options.close();
+      try {
+        options.close();
+      } catch (Exception e) {
+        logger.warn("Error closing the System Options persistent store", e);
+        // Ignore since we're shutting down the Drillbit or UserSession
+      }
     }
   }
 }

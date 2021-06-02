@@ -128,7 +128,7 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
     Prepare.PreparingTable table = super.getTable(names);
     DrillTable drillTable;
     if (table != null && (drillTable = table.unwrap(DrillTable.class)) != null) {
-      drillTable.setOptions(session.getOptions());
+      drillTable.setOptions(session.getSessionOptions());
       drillTable.setTableMetadataProviderManager(tableCache.getUnchecked(DrillTableKey.of(names, drillTable)));
     }
     return table;

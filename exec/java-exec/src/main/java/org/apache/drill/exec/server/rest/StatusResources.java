@@ -87,6 +87,9 @@ public class StatusResources {
   @Inject
   HttpServletRequest request;
 
+  @Inject
+  WebUserConnection webUserConnection;
+
   @GET
   @Path(StatusResources.PATH_STATUS_JSON)
   @Produces(MediaType.APPLICATION_JSON)
@@ -112,7 +115,9 @@ public class StatusResources {
   private List<OptionWrapper> getSystemOptionsJSONHelper(boolean internal)
   {
     List<OptionWrapper> options = new LinkedList<>();
-    OptionManager optionManager = work.getContext().getOptionManager();
+    OptionManager optionManager = authEnabled.separateWorkspace()
+      ? webUserConnection.getSession().getSystemOptions()
+      : work.getContext().getSystemOptionManager();
     OptionList optionList = internal ? optionManager.getInternalOptionList(): optionManager.getPublicOptionList();
 
     for (OptionValue option : optionList) {
@@ -183,9 +188,9 @@ public class StatusResources {
   public Viewable updateSystemOption(@FormParam("name") String name,
                                    @FormParam("value") String value,
                                    @FormParam("kind") String kind) {
-    SystemOptionManager optionManager = work.getContext()
-      .getOptionManager();
-
+    SystemOptionManager optionManager = authEnabled.separateWorkspace()
+      ? webUserConnection.getSession().getSystemOptions()
+      : work.getContext().getSystemOptionManager();
     try {
       optionManager.setLocalOption(OptionValue.Kind.valueOf(kind), name, value);
     } catch (Exception e) {

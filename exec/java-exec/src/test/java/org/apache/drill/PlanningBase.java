@@ -88,15 +88,15 @@ public class PlanningBase extends ExecTest {
     final LogicalPlanPersistence logicalPlanPersistence = new LogicalPlanPersistence(config, scanResult);
     final SystemOptionManager systemOptions = new SystemOptionManager(logicalPlanPersistence, provider, config);
     systemOptions.init();
-    final UserSession userSession = UserSession.Builder.newBuilder().withOptionManager(systemOptions).build();
-    final SessionOptionManager sessionOptions = userSession.getOptions();
+    final UserSession userSession = UserSession.Builder.newBuilder().withOptionManagers(dbContext).build();
+    final SessionOptionManager sessionOptions = userSession.getSessionOptions();
     final QueryOptionManager queryOptions = new QueryOptionManager(sessionOptions);
     final ExecutionControls executionControls = new ExecutionControls(queryOptions, DrillbitEndpoint.getDefaultInstance());
 
     when(dbContext.getMetrics()).thenReturn(new MetricRegistry());
     when(dbContext.getAllocator()).thenReturn(allocator);
     when(dbContext.getConfig()).thenReturn(config);
-    when(dbContext.getOptionManager()).thenReturn(systemOptions);
+    when(dbContext.getSystemOptionManager()).thenReturn(systemOptions);
     when(dbContext.getStoreProvider()).thenReturn(provider);
     when(dbContext.getClasspathScan()).thenReturn(scanResult);
     when(dbContext.getLpPersistence()).thenReturn(logicalPlanPersistence);
@@ -113,7 +113,7 @@ public class PlanningBase extends ExecTest {
     when(context.getStorage()).thenReturn(registry);
     when(context.getFunctionRegistry()).thenReturn(functionRegistry);
     when(context.getSession()).thenReturn(
-        UserSession.Builder.newBuilder().withOptionManager(sessionOptions).setSupportComplexTypes(true).build());
+        UserSession.Builder.newBuilder().withOptionManagers(dbContext).setSupportComplexTypes(true).build());
     when(context.getCurrentEndpoint()).thenReturn(DrillbitEndpoint.getDefaultInstance());
     when(context.getActiveEndpoints()).thenReturn(ImmutableList.of(DrillbitEndpoint.getDefaultInstance()));
     when(context.getPlannerSettings()).thenReturn(new PlannerSettings(queryOptions, functionRegistry));

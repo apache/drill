@@ -49,7 +49,7 @@ public class TestPauseInjection extends BaseTestQuery {
         .setUserName("foo")
         .build())
       .withUserProperties(UserProperties.getDefaultInstance())
-      .withOptionManager(bits[0].getContext().getOptionManager())
+      .withOptionManagers(bits[0].getContext())
       .build();
 
   /**
@@ -199,7 +199,7 @@ public class TestPauseInjection extends BaseTestQuery {
           .setUserName("foo")
           .build())
         .withUserProperties(UserProperties.getDefaultInstance())
-        .withOptionManager(drillbitContext1.getOptionManager())
+        .withOptionManagers(drillbitContext1)
         .build();
 
       final DrillbitEndpoint drillbitEndpoint1 = drillbitContext1.getEndpoint();
@@ -275,7 +275,7 @@ public class TestPauseInjection extends BaseTestQuery {
           .setUserName("foo")
           .build())
         .withUserProperties(UserProperties.getDefaultInstance())
-        .withOptionManager(drillbitContext1.getOptionManager())
+        .withOptionManagers(drillbitContext1)
         .build();
 
       final DrillbitEndpoint drillbitEndpoint1 = drillbitContext1.getEndpoint();

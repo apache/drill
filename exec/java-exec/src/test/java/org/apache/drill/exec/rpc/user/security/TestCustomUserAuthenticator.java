@@ -71,14 +71,14 @@ public class TestCustomUserAuthenticator extends ClusterTest {
     ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
         .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
         .configProperty(ExecConstants.INITIAL_USER_PORT, QueryTestUtil.getFreePortNumber(31170, 300))
-        .configProperty(ExecConstants.INITIAL_BIT_PORT, QueryTestUtil.getFreePortNumber(31180, 300));
+        .configProperty(ExecConstants.INITIAL_BIT_PORT, QueryTestUtil.getFreePortNumber(31180, 300))
+        // Setup specific auth settings
+        .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, false)
+        .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, "NonExistingImpl");
 
-    // Setup specific auth settings
-    ClusterFixture cluster = builder.configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, false)
-        .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, "NonExistingImpl")
-        .build();
-
-    runTest(TEST_USER_1, TEST_USER_1_PASSWORD, cluster);
+    try (ClusterFixture cluster = builder.build()) {
+      runTest(TEST_USER_1, TEST_USER_1_PASSWORD, cluster);
+    }
   }
 
   @Test

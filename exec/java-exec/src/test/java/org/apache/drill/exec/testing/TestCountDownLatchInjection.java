@@ -39,7 +39,7 @@ public class TestCountDownLatchInjection extends BaseTestQuery {
       .setUserName("foo")
       .build())
     .withUserProperties(UserProperties.getDefaultInstance())
-    .withOptionManager(bits[0].getContext().getOptionManager())
+    .withOptionManagers(bits[0].getContext())
     .build();
 
   /**

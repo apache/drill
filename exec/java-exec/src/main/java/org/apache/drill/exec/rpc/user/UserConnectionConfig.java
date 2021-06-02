@@ -35,6 +35,7 @@ class UserConnectionConfig extends AbstractConnectionConfig {
   private final boolean authEnabled;
   private final boolean sslEnabled;
   private final InboundImpersonationManager impersonationManager;
+  private final boolean isSeparateWorkspace;
 
   private final UserServerRequestHandler handler;
 
@@ -86,6 +87,7 @@ class UserConnectionConfig extends AbstractConnectionConfig {
       logger.warn("The server is configured to use both SSL and SASL encryption (only one should be configured).");
     }
 
+    isSeparateWorkspace = config.getBoolean(ExecConstants.SEPARATE_WORKSPACE);
   }
 
   @Override
@@ -99,6 +101,10 @@ class UserConnectionConfig extends AbstractConnectionConfig {
 
   boolean isSSLEnabled() {
     return sslEnabled;
+  }
+
+  boolean isSeparateWorkspace() {
+    return isSeparateWorkspace;
   }
 
   InboundImpersonationManager getImpersonationManager() {

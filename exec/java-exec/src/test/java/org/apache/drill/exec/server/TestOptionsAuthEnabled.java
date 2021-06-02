@@ -129,7 +129,7 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
 
     try (ClusterFixture cluster = ClusterFixture.standardCluster(dirTestWatcher);
          ClientFixture client = cluster.clientFixture()) {
-      OptionManager optionManager = cluster.drillbit().getContext().getOptionManager();
+      OptionManager optionManager = cluster.drillbit().getContext().getSystemOptionManager();
 
       // Admin Users Tests
       // config file should have the 'fake' default admin user and it should be returned

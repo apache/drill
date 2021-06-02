@@ -91,7 +91,7 @@ public class ExecTest extends DrillTest {
     when(context.getAllocator()).thenReturn(RootAllocatorFactory.newRoot(c));
     when(context.getOperatorCreatorRegistry()).thenReturn(new OperatorCreatorRegistry(ClassPathScanner.fromPrescan(c)));
     when(context.getConfig()).thenReturn(c);
-    when(context.getOptionManager()).thenReturn(optionManager);
+    when(context.getSystemOptionManager()).thenReturn(optionManager);
     when(context.getCompiler()).thenReturn(CodeCompilerTestFactory.getTestCompiler(c));
 
     return context;

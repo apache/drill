@@ -249,8 +249,9 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
           .withCredentials(UserCredentials.newBuilder()
               .setUserName(userName)
               .build())
-          .withOptionManager(userWorker.getSystemOptions())
+          .withOptionManagers(userWorker.getDrillbitContext())
           .withUserProperties(inbound.getProperties())
+          .withStorage(userWorker.getDrillbitContext())
           .setSupportComplexTypes(inbound.getSupportComplexTypes())
           .build();
 
@@ -499,6 +500,7 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
   public class BitToUserConnectionConfig {
     private final DateTime established;
     private final boolean isAuthEnabled;
+    private final boolean isSeparateWorkspace;
     private final boolean isEncryptionEnabled;
     private final boolean isSSLEnabled;
 
@@ -507,6 +509,7 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
       isAuthEnabled = config.isAuthEnabled();
       isEncryptionEnabled = config.isEncryptionEnabled();
       isSSLEnabled = config.isSSLEnabled();
+      isSeparateWorkspace = config.isSeparateWorkspace();
     }
 
     public boolean isAuthEnabled() {

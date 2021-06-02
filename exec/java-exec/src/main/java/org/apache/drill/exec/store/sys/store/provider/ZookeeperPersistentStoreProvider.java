@@ -66,7 +66,7 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
 
   @Override
   public <V> PersistentStore<V> getOrCreateStore(final PersistentStoreConfig<V> config) throws StoreException {
-    switch(config.getMode()){
+    switch(config.getMode()) {
     case BLOB_PERSISTENT:
       return new LocalPersistentStore<>(fs, blobRoot, config);
     case PERSISTENT:
@@ -74,7 +74,7 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
       try {
         store.start();
       } catch (Exception e) {
-        throw new StoreException("unable to start zookeeper store", e);
+        throw new StoreException("Unable to start zookeeper store", e);
       }
       return store;
     default:

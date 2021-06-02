@@ -207,7 +207,7 @@ public class DistributedQueryQueue implements QueryQueue {
 
   public DistributedQueryQueue(DrillbitContext context, StatusAdapter adapter) {
     statusAdapter = adapter;
-    optionManager = context.getOptionManager();
+    optionManager = context.getSystemOptionManager();
     clusterCoordinator = context.getClusterCoordinator();
   }
 

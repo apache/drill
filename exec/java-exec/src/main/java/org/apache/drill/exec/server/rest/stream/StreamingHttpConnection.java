@@ -229,7 +229,7 @@ public class StreamingHttpConnection extends BaseWebUserConnection {
     JsonOutput gen = writer.jsonOutput();
     if (batchCount == 0) {
       startHeader();
-      if (getSession().getOptions().getBoolean(ExecConstants.ENABLE_REST_VERBOSE_ERRORS_KEY)) {
+      if (getSession().getSessionOptions().getBoolean(ExecConstants.ENABLE_REST_VERBOSE_ERRORS_KEY)) {
         emitErrorInfo();
       }
     } else {

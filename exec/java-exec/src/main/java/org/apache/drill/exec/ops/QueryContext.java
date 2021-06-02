@@ -63,7 +63,7 @@ import io.netty.buffer.DrillBuf;
 // in fragment contexts
 public class QueryContext implements AutoCloseable, OptimizerRulesContext, SchemaConfigInfoProvider {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
-  public enum SqlStatementType {OTHER, ANALYZE, CTAS, EXPLAIN, DESCRIBE_TABLE, DESCRIBE_SCHEMA, REFRESH, SELECT, SETOPTION};
+  public enum SqlStatementType {OTHER, ANALYZE, CTAS, EXPLAIN, DESCRIBE_TABLE, DESCRIBE_SCHEMA, REFRESH, SELECT, SETOPTION}
 
   private final DrillbitContext drillbitContext;
   private final UserSession session;
@@ -95,17 +95,20 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     this.session = session;
     this.queryId = queryId;
     this.skipProfileWrite = false;
-    queryOptions = new QueryOptionManager(session.getOptions());
+    queryOptions = new QueryOptionManager(session.getSessionOptions());
     executionControls = new ExecutionControls(queryOptions, drillbitContext.getEndpoint());
     plannerSettings = new PlannerSettings(queryOptions, getFunctionRegistry());
     plannerSettings.setNumEndPoints(drillbitContext.getBits().size());
 
-    // If we do not need to support dynamic UDFs for this query, just use static operator table
-    // built at the startup. Else, build new operator table from latest version of function registry.
-    if (queryOptions.getOption(ExecConstants.USE_DYNAMIC_UDFS)) {
-      this.table = new DrillOperatorTable(drillbitContext.getFunctionImplementationRegistry(), drillbitContext.getOptionManager());
+    // If we do not need to support dynamic UDFs for this query or separate user workspace is disabled just use static
+    // operator table built at the startup. Else, build new operator table from latest version of function registry.
+    if (getConfig().getBoolean(ExecConstants.SEPARATE_WORKSPACE)) {
+      table = new DrillOperatorTable(drillbitContext.getFunctionImplementationRegistry(), session.getSystemOptions());
+    } else if (queryOptions.getOption(ExecConstants.USE_DYNAMIC_UDFS)) {
+      table = new DrillOperatorTable(drillbitContext.getFunctionImplementationRegistry(),
+              drillbitContext.getSystemOptionManager());
     } else {
-      this.table = drillbitContext.getOperatorTable();
+      table = drillbitContext.getOperatorTable();
     }
 
     // Checking for limit on ResultSet rowcount and if user attempting to override the system value
@@ -135,7 +138,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
         plannerSettings.getPlanningMemoryLimit());
     bufferManager = new BufferManagerImpl(this.allocator);
     viewExpansionContext = new ViewExpansionContext(this);
-    schemaTreeProvider = new SchemaTreeProvider(drillbitContext);
+    schemaTreeProvider = new SchemaTreeProvider(drillbitContext, session);
     constantValueHolderCache = Maps.newHashMap();
     stmtType = null;
   }
@@ -228,7 +231,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   }
 
   public StoragePluginRegistry getStorage() {
-    return drillbitContext.getStorage();
+    return session.getStorage() != null ? session.getStorage() : drillbitContext.getStorage();
   }
 
   public LogicalPlanPersistence getLpPersistence() {
@@ -290,7 +293,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     clearSQLStatementType();
     table = new DrillOperatorTable(
         drillbitContext.getFunctionImplementationRegistry(),
-        drillbitContext.getOptionManager());
+        session.getSystemOptions());
   }
 
   public QueryContextInformation getQueryContextInfo() {
