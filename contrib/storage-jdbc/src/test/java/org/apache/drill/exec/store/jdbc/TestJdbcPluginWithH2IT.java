@@ -57,7 +57,7 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
     // Force timezone to UTC for these tests.
     System.setProperty("user.timezone", "UTC");
     TimeZone.setDefault(null);
-    
+
     dirTestWatcher.copyResourceToRoot(Paths.get(TABLE_PATH));
     Class.forName("org.h2.Driver");
     String connString = "jdbc:h2:" + dirTestWatcher.getTmpDir().getCanonicalPath();

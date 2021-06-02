@@ -26,7 +26,6 @@ import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.scan.framework.BasicScanFactory;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ScanFrameworkBuilder;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
@@ -36,7 +35,6 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class JdbcScanBatchCreator implements BatchCreator<JdbcSubScan> {
 
