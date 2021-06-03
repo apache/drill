@@ -51,7 +51,7 @@ function copyFiles(){
 }
 
 function checkPassphrase(){
-    echo "1234" | gpg2 --batch --passphrase "${GPG_PASSPHRASE}" -o /dev/null -as -
+    echo "1234" | "$GPG" --batch --passphrase "${GPG_PASSPHRASE}" -o /dev/null -as -
     if [ $? -ne 0 ]; then
         echo "Invalid passphrase. Make sure the default key is set to the key you want to use (or make it the first key in the keyring)."
         exit 1
@@ -129,7 +129,10 @@ cloneRepo(){
 
 ###### BEGIN  #####
 # Location of checksum.sh
-export CHKSMDIR=`pwd`
+export CHKSMDIR="$( cd "$(dirname "$0")" && pwd)"
+
+# Default GPG command to use
+GPG="${GPG:-gpg}"
 
 readInputAndSetup
 checkPassphraseNoSpace
