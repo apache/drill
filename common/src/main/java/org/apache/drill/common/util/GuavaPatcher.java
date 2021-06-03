@@ -18,11 +18,10 @@
 package org.apache.drill.common.util;
 
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -31,8 +30,6 @@ import javassist.CtMethod;
 import javassist.CtNewMethod;
 import javassist.scopedpool.ScopedClassPoolRepository;
 import javassist.scopedpool.ScopedClassPoolRepositoryImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class GuavaPatcher {
   private static final Logger logger = LoggerFactory.getLogger(GuavaPatcher.class);
@@ -44,8 +41,14 @@ public class GuavaPatcher {
       patchingAttempted = true;
       patchStopwatch();
       patchCloseables();
-      patchPreconditions();
     }
+  }
+
+  private static boolean patchingSuccessful = true;
+
+  @VisibleForTesting
+  static boolean isPatchingSuccessful() {
+    return patchingAttempted && patchingSuccessful;
   }
 
   /**
@@ -78,6 +81,7 @@ public class GuavaPatcher {
   }
 
   private static void logUnableToPatchException(Exception e) {
+    patchingSuccessful = false;
     logger.warn("Unable to patch Guava classes: {}", e.getMessage());
     logger.debug("Exception:", e);
   }
@@ -97,104 +101,6 @@ public class GuavaPatcher {
       cc.toClass();
 
       logger.info("Google's Closeables patched for old HBase Guava version.");
-    } catch (Exception e) {
-      logUnableToPatchException(e);
-    }
-  }
-
-  /**
-   * Patches Guava Preconditions with missing methods, added for the Apache Iceberg.
-   */
-  private static void patchPreconditions() {
-    try {
-      ClassPool cp = getClassPool();
-      CtClass cc = cp.get("com.google.common.base.Preconditions");
-
-      // Javassist does not support varargs, generate methods with varying number of arguments
-      int startIndex = 1;
-      int endIndex = 5;
-
-      List<String> methodsWithVarargsTemplates = Arrays.asList(
-          "public static void checkArgument(boolean expression, String errorMessageTemplate, %s) {\n"
-              + "    if (!expression) {\n"
-              + "      throw new IllegalArgumentException(format(errorMessageTemplate, new Object[] { %s }));\n"
-              + "    }\n"
-              + "  }",
-
-          "public static Object checkNotNull(Object reference, String errorMessageTemplate, %s) {\n"
-              + "    if (reference == null) {\n"
-              + "      throw new NullPointerException(format(errorMessageTemplate, new Object[] { %s }));\n"
-              + "    } else {\n"
-              + "      return reference;\n"
-              + "    }\n"
-              + "  }",
-
-          "public static void checkState(boolean expression, String errorMessageTemplate, %s) {\n"
-              + "    if (!expression) {\n"
-              + "      throw new IllegalStateException(format(errorMessageTemplate, new Object[] { %s }));\n"
-              + "    }\n"
-              + "  }"
-      );
-
-      List<String> methodsWithPrimitives = Arrays.asList(
-          "public static void checkArgument(boolean expression, String errorMessageTemplate, int arg1) {\n"
-              + "    if (!expression) {\n"
-              + "      throw new IllegalArgumentException(format(errorMessageTemplate, new Object[] { new Integer(arg1) }));\n"
-              + "    }\n"
-              + "  }",
-          "public static void checkArgument(boolean expression, String errorMessageTemplate, long arg1) {\n"
-              + "    if (!expression) {\n"
-              + "      throw new IllegalArgumentException(format(errorMessageTemplate, new Object[] { new Long(arg1) }));\n"
-              + "    }\n"
-              + "  }",
-          "public static void checkArgument(boolean expression, String errorMessageTemplate, long arg1, long arg2) {\n"
-              + "    if (!expression) {\n"
-              + "      throw new IllegalArgumentException(format(errorMessageTemplate, new Object[] { new Long(arg1), new Long(arg2)}));\n"
-              + "    }\n"
-              + "  }",
-          "public static Object checkNotNull(Object reference, String errorMessageTemplate, int arg1) {\n"
-              + "    if (reference == null) {\n"
-              + "      throw new NullPointerException(format(errorMessageTemplate, new Object[] { new Integer(arg1) }));\n"
-              + "    } else {\n"
-              + "      return reference;\n"
-              + "    }\n"
-              + "  }",
-          "public static void checkState(boolean expression, String errorMessageTemplate, int arg1) {\n"
-              + "    if (!expression) {\n"
-              + "      throw new IllegalStateException(format(errorMessageTemplate, new Object[] { new Integer(arg1) }));\n"
-              + "    }\n"
-              + "  }"
-    );
-
-      List<String> newMethods = IntStream.rangeClosed(startIndex, endIndex)
-          .mapToObj(
-              i -> {
-                List<String> args = IntStream.rangeClosed(startIndex, i)
-                    .mapToObj(j -> "arg" + j)
-                    .collect(Collectors.toList());
-
-                String methodInput = args.stream()
-                    .map(arg -> "Object " + arg)
-                    .collect(Collectors.joining(", "));
-
-                String arrayInput = String.join(", ", args);
-
-                return methodsWithVarargsTemplates.stream()
-                    .map(method -> String.format(method, methodInput, arrayInput))
-                    .collect(Collectors.toList());
-              })
-          .flatMap(Collection::stream)
-          .collect(Collectors.toList());
-
-      newMethods.addAll(methodsWithPrimitives);
-
-      for (String method : newMethods) {
-        CtMethod newMethod = CtNewMethod.make(method, cc);
-        cc.addMethod(newMethod);
-      }
-
-      cc.toClass();
-      logger.info("Google's Preconditions were patched to hold new methods.");
     } catch (Exception e) {
       logUnableToPatchException(e);
     }
