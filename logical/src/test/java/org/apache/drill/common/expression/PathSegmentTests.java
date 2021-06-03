@@ -20,9 +20,9 @@ package org.apache.drill.common.expression;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.test.DrillTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class PathSegmentTests extends DrillTest {
+class PathSegmentTests extends DrillTest {
   protected PathSegment makeArraySegment(final int len, final PathSegment tail) {
     PathSegment node = tail;
     for (int i = 0; i < len; i++) {
@@ -32,7 +32,7 @@ public class PathSegmentTests extends DrillTest {
   }
 
   @Test
-  public void testIfMultiLevelCloneWorks() {
+  void testIfMultiLevelCloneWorks() {
     final int levels = 10;
     final PathSegment segment = new PathSegment.NameSegment("test", makeArraySegment(levels, null));
     final PathSegment clone = segment.clone();
