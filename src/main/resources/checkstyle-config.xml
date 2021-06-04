@@ -41,6 +41,7 @@
     <module name="EmptyStatement"/>
     <module name="NoWhitespaceBefore"/>
     <module name="OneStatementPerLine"/>
+    <module name="SuppressionCommentFilter"/>
 
   </module>
 
