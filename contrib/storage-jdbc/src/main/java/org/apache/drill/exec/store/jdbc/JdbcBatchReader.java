@@ -234,7 +234,6 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
       }
 
       jdbcColumns.add(new JdbcColumn(name, minorType, i));
-      
       // Precision and scale are passed for all readers whether they are needed or not.
       builder.addNullable(name, minorType, width, scale);
     }
