@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.GenericRecord;
@@ -67,6 +68,7 @@ public class KafkaMessageGenerator {
   }
 
   public void populateAvroMsgIntoKafka(String topic, int numMsg) {
+    producerProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
     try (KafkaProducer<Object, GenericRecord> producer = new KafkaProducer<>(producerProperties)) {
       Schema.Parser parser = new Schema.Parser();
       String userSchema = "{\"type\":\"record\"," +
@@ -79,28 +81,42 @@ public class KafkaMessageGenerator {
           "{\"name\":\"key6\",\"type\":{\"type\":\"record\",\"name\":\"myrecord6\",\"fields\":[" +
           "{\"name\":\"key61\",\"type\":\"double\"}," +
           "{\"name\":\"key62\",\"type\":\"double\"}]}}]}";
-      Schema schema = parser.parse(userSchema);
-      GenericRecordBuilder builder = new GenericRecordBuilder(schema);
+      Schema valueSchema = parser.parse(userSchema);
+      GenericRecordBuilder valueBuilder = new GenericRecordBuilder(valueSchema);
+
+      String key1Schema = "{\"type\":\"record\"," +
+              "\"name\":\"key1record\"," +
+              "\"fields\":[" +
+              "{\"name\":\"key1\",\"type\":\"string\"}]}\"";
+      Schema keySchema = parser.parse(key1Schema);
+      GenericRecordBuilder keyBuilder = new GenericRecordBuilder(keySchema);
+
       Random rand = new Random();
       for (int i = 0; i < numMsg; ++i) {
-        builder.set("key1", UUID.randomUUID().toString());
-        builder.set("key2", rand.nextInt());
-        builder.set("key3", rand.nextBoolean());
+        // value record
+        String key1 = UUID.randomUUID().toString();
+        valueBuilder.set("key1", key1);
+        valueBuilder.set("key2", rand.nextInt());
+        valueBuilder.set("key3", rand.nextBoolean());
 
         List<Integer> list = Lists.newArrayList();
         list.add(rand.nextInt(100));
         list.add(rand.nextInt(100));
         list.add(rand.nextInt(100));
-        builder.set("key5", list);
+        valueBuilder.set("key5", list);
 
-        GenericRecordBuilder innerBuilder = new GenericRecordBuilder(schema.getField("key6").schema());
+        GenericRecordBuilder innerBuilder = new GenericRecordBuilder(valueSchema.getField("key6").schema());
         innerBuilder.set("key61", rand.nextDouble());
         innerBuilder.set("key62", rand.nextDouble());
-        builder.set("key6", innerBuilder.build());
+        valueBuilder.set("key6", innerBuilder.build());
 
-        Record producerRecord = builder.build();
+        Record producerRecord = valueBuilder.build();
 
-        ProducerRecord<Object, GenericRecord> record = new ProducerRecord<>(topic, producerRecord);
+        // key record
+        keyBuilder.set("key1", key1);
+        Record keyRecord = keyBuilder.build();
+
+        ProducerRecord<Object, GenericRecord> record = new ProducerRecord<>(topic, keyRecord, producerRecord);
         producer.send(record);
       }
     }

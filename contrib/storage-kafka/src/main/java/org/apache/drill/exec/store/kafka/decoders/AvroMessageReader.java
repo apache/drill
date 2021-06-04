@@ -34,6 +34,7 @@ import org.apache.drill.exec.store.avro.AvroColumnConverterFactory;
 import org.apache.drill.exec.store.kafka.KafkaStoragePlugin;
 import org.apache.drill.exec.store.kafka.MetaDataField;
 import org.apache.drill.exec.store.kafka.ReadOptions;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -51,6 +52,7 @@ public class AvroMessageReader implements MessageReader {
   private KafkaAvroDeserializer deserializer;
   private ColumnConverter converter;
   private ResultSetLoader loader;
+  private boolean deserializeKey;
 
   @Override
   public void init(SchemaNegotiator negotiator, ReadOptions readOptions, KafkaStoragePlugin plugin) {
@@ -62,6 +64,9 @@ public class AvroMessageReader implements MessageReader {
     loader = negotiator.build();
     AvroColumnConverterFactory factory = new AvroColumnConverterFactory(providedSchema);
     converter = factory.getRootConverter(providedSchema, new TupleSchema(), loader.writer());
+
+    String keyDeserializer = kafkaConsumerProps.getProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG);
+    deserializeKey = keyDeserializer != null && keyDeserializer.equals(KafkaAvroDeserializer.class.getName());
   }
 
   @Override
@@ -85,8 +90,16 @@ public class AvroMessageReader implements MessageReader {
     writeValue(rowWriter, MetaDataField.KAFKA_PARTITION_ID, record.partition());
     writeValue(rowWriter, MetaDataField.KAFKA_OFFSET, record.offset());
     writeValue(rowWriter, MetaDataField.KAFKA_TIMESTAMP, record.timestamp());
-    writeValue(rowWriter, MetaDataField.KAFKA_MSG_KEY, record.key() != null ? record.key().toString() : null);
+    writeValue(rowWriter, MetaDataField.KAFKA_MSG_KEY, record.key() != null ? getKeyValue((byte[]) record.key()) : null);
     rowWriter.save();
+  }
+
+  private Object getKeyValue(byte[] keyValue) {
+    if (deserializeKey) {
+      return deserializer.deserialize(null, keyValue).toString();
+    } else {
+      return new String(keyValue);
+    }
   }
 
   private <T> void writeValue(RowSetLoader rowWriter, MetaDataField metaDataField, T value) {
