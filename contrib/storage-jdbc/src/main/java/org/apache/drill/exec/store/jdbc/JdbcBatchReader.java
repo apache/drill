@@ -79,6 +79,15 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
     this.columns = columns;
   }
 
+  /*
+   * This map maps JDBC data types to their Drill equivalents.  The basic strategy is that if there
+   * is a Drill equivalent, then do the mapping as expected.  All flavors of INT (SMALLINT, TINYINT etc)
+   * are mapped to INT in Drill, with the exception of BIGINT.
+   *
+   * All flavors of character fields are mapped to VARCHAR in Drill. All versions of binary fields are
+   * mapped to VARBINARY.
+   *
+   */
   static {
     JDBC_TYPE_MAPPINGS = ImmutableMap.<Integer, MinorType>builder()
       .put(java.sql.Types.DOUBLE, MinorType.FLOAT8)
@@ -225,11 +234,9 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
       }
 
       jdbcColumns.add(new JdbcColumn(name, minorType, i));
-      if (minorType == MinorType.VARDECIMAL) {
-        builder.addNullable(name, minorType, width, scale);
-      } else {
-        builder.addNullable(name, minorType);
-      }
+      
+      // Precision and scale are passed for all readers whether they are needed or not.
+      builder.addNullable(name, minorType, width, scale);
     }
 
     return builder.buildSchema();
