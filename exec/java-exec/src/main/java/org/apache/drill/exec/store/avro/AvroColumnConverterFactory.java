@@ -91,14 +91,15 @@ public class AvroColumnConverterFactory extends ColumnConverterFactory {
         });
       case VARDECIMAL:
         return new ColumnConverter.ScalarColumnConverter(value -> {
-          BigInteger bigInteger;
+          byte[] bytes;
           if (value instanceof ByteBuffer) {
             ByteBuffer decBuf = (ByteBuffer) value;
-            bigInteger = new BigInteger(decBuf.array());
+            bytes = decBuf.array();
           } else {
             GenericFixed genericFixed = (GenericFixed) value;
-            bigInteger = new BigInteger(genericFixed.bytes());
+            bytes = genericFixed.bytes();
           }
+          BigInteger bigInteger = bytes.length == 0 ? BigInteger.ZERO : new BigInteger(bytes);
           BigDecimal decimalValue = new BigDecimal(bigInteger, readerSchema.scale());
           writer.setDecimal(decimalValue);
         });

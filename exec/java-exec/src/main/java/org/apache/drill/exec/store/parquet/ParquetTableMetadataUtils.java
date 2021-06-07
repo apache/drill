@@ -360,7 +360,8 @@ public class ParquetTableMetadataUtils {
         case BINARY:
         case FIXED_LEN_BYTE_ARRAY:
           if (originalType == OriginalType.DECIMAL) {
-            return new BigInteger(getBytes(value));
+            byte[] bytes = getBytes(value);
+            return bytes.length == 0 ? BigInteger.ZERO : new BigInteger(bytes);
           } else if (originalType == OriginalType.INTERVAL) {
             return getBytes(value);
           } else {
@@ -402,9 +403,11 @@ public class ParquetTableMetadataUtils {
     } else if (value instanceof String) {
       return Integer.parseInt(value.toString());
     } else if (value instanceof byte[]) {
-      return new BigInteger((byte[]) value).intValue();
+      byte[] bytes = (byte[]) value;
+      return bytes.length == 0 ? 0 : new BigInteger(bytes).intValue();
     } else if (value instanceof Binary) {
-      return new BigInteger(((Binary) value).getBytes()).intValue();
+      byte[] bytes = ((Binary) value).getBytes();
+      return bytes.length == 0 ? 0 : new BigInteger(bytes).intValue();
     }
     throw new UnsupportedOperationException(String.format("Cannot obtain Integer using value %s", value));
   }
@@ -415,9 +418,11 @@ public class ParquetTableMetadataUtils {
     } else if (value instanceof String) {
       return Long.parseLong(value.toString());
     } else if (value instanceof byte[]) {
-      return new BigInteger((byte[]) value).longValue();
+      byte[] bytes = (byte[]) value;
+      return bytes.length == 0 ? 0L : new BigInteger(bytes).longValue();
     } else if (value instanceof Binary) {
-      return new BigInteger(((Binary) value).getBytes()).longValue();
+      byte[] bytes = ((Binary) value).getBytes();
+      return bytes.length == 0 ? 0L : new BigInteger(bytes).longValue();
     }
     throw new UnsupportedOperationException(String.format("Cannot obtain Integer using value %s", value));
   }
