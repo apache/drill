@@ -700,12 +700,22 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
   }
 
   @Test
-  public void testDecimalDictionaryEncoding() throws Exception {
+  public void testNullableDecimalDictionaryEncoding() throws Exception {
     testBuilder()
         .sqlQuery("select RegHrs from cp.`parquet/dict_dec.parquet`")
         .ordered()
         .baselineColumns("RegHrs")
         .baselineValues(new BigDecimal("8.000000"))
+        .go();
+  }
+
+  @Test
+  public void testRequiredDecimalDictionaryEncoding() throws Exception {
+    testBuilder()
+        .sqlQuery("select * from cp.`parquet/SingleRow_RequiredFixedLength_Decimal.parquet`")
+        .ordered()
+        .baselineColumns("Cost", "Sale")
+        .baselineValues(new BigDecimal("550.000000"), new BigDecimal("1050.000000"))
         .go();
   }
 }
