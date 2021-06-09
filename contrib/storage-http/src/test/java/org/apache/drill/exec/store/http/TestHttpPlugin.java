@@ -394,6 +394,32 @@ public class TestHttpPlugin extends ClusterTest {
     }
   }
 
+  @Test
+  public void testImplicitFieldsWithJSON() throws Exception {
+    String sql = "SELECT _response_code, _response_message, _response_protocol, _response_url FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE));
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      results.print();
+      /*TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("col1", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("col2", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("col3", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("1", "2", "3")
+        .addRow("4", "5", "6")
+        .build();
+
+      RowSetUtilities.verify(expected, results);*/
+    }
+  }
+
+
+
   private void doSimpleTestWithMockServer(String sql) throws Exception {
     try (MockWebServer server = startServer()) {
 

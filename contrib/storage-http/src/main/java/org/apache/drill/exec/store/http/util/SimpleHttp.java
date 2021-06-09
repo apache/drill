@@ -64,6 +64,10 @@ public class SimpleHttp {
   private final HttpProxyConfig proxyConfig;
   private final CustomErrorContext errorContext;
   private final HttpUrl url;
+  private String responseMessage;
+  private int responseCode;
+  private String responseProtocol;
+  private String responseURL;
 
   public SimpleHttp(HttpSubScan scanDefn, HttpUrl url, File tempDir,
       HttpProxyConfig proxyConfig, CustomErrorContext errorContext) {
@@ -171,6 +175,12 @@ public class SimpleHttp {
         .newCall(request)
         .execute();
 
+      // Preserve the response
+      responseMessage = response.message();
+      responseCode = response.code();
+      responseProtocol = response.protocol().toString();
+      responseURL = response.request().url().toString();
+
       // If the request is unsuccessful, throw a UserException
       if (!response.isSuccessful()) {
         throw UserException
@@ -182,7 +192,7 @@ public class SimpleHttp {
           .build(logger);
       }
       logger.debug("HTTP Request for {} successful.", url());
-      logger.debug("Response Headers: {} ", response.headers().toString());
+      logger.debug("Response Headers: {} ", response.headers());
 
       // Return the InputStream of the response
       return Objects.requireNonNull(response.body()).byteStream();
@@ -194,6 +204,42 @@ public class SimpleHttp {
         .addContext(errorContext)
         .build(logger);
     }
+  }
+
+  /**
+   * Gets the HTTP response code from the HTTP call.  Note that this value
+   * is only available after the getInputStream() method has been called.
+   * @return int value of the HTTP response code
+   */
+  public int getResponseCode() {
+    return responseCode;
+  }
+
+  /**
+   * Gets the HTTP response code from the HTTP call.  Note that this value
+   * is only available after the getInputStream() method has been called.
+   * @return int of HTTP response code
+   */
+  public String getResponseMessage() {
+    return responseMessage;
+  }
+
+  /**
+   * Gets the HTTP response code from the HTTP call.  Note that this value
+   * is only available after the getInputStream() method has been called.
+   * @return The HTTP response protocol
+   */
+  public String getResponseProtocol() {
+    return responseProtocol;
+  }
+
+  /**
+   * Gets the HTTP response code from the HTTP call.  Note that this value
+   * is only available after the getInputStream() method has been called.
+   * @return The HTTP response URL
+   */
+  public String getResponseURL() {
+    return responseURL;
   }
 
   /**

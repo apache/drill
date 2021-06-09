@@ -23,6 +23,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
@@ -146,6 +147,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     private Reader reader;
     private String dataPath;
     private MessageParser messageParser;
+    private Map<String, Object> implicitFields;
 
     public JsonLoaderBuilder resultSetLoader(ResultSetLoader rsLoader) {
       this.rsLoader = rsLoader;
@@ -164,6 +166,11 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
 
     public JsonLoaderBuilder options(JsonLoaderOptions options) {
       this.options = options;
+      return this;
+    }
+
+    public JsonLoaderBuilder implicitFields(Map<String, Object> metadata) {
+      this.implicitFields = metadata;
       return this;
     }
 
@@ -218,6 +225,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   private final CustomErrorContext errorContext;
   private final JsonStructureParser parser;
   private final FieldFactory fieldFactory;
+  private final Map<String, Object> implicitFields;
   private boolean eof;
 
   /**
@@ -235,7 +243,8 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   protected JsonLoaderImpl(JsonLoaderBuilder builder) {
     this.rsLoader = builder.rsLoader;
     this.options = builder.options;
-    this.errorContext = builder. errorContext;
+    this.errorContext = builder.errorContext;
+    this.implicitFields = builder.implicitFields;
     this.fieldFactory = buildFieldFactory(builder);
     this.parser = buildParser(builder);
   }
@@ -276,6 +285,8 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     RowSetLoader rowWriter = rsLoader.writer();
     while (rowWriter.start()) {
       if (parser.next()) {
+        // Add implicit fields
+        writeImplicitFields(rowWriter);
         rowWriter.save();
       } else {
         eof = true;
@@ -284,6 +295,18 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     }
     endBatch();
     return rsLoader.hasRows();
+  }
+
+  private void writeImplicitFields(RowSetLoader rowWriter) {
+    if (implicitFields == null || implicitFields.isEmpty()) {
+      return;
+    }
+
+    for (Map.Entry<String,Object> metadata : implicitFields.entrySet()) {
+      String fieldName = metadata.getKey();
+      Object value = metadata.getValue();
+
+    }
   }
 
   public void addNullMarker(JsonLoaderImpl.NullTypeMarker marker) {

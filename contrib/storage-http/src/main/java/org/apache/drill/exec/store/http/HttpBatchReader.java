@@ -24,9 +24,15 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
@@ -36,10 +42,15 @@ import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
+
+  private static final String[] STRING_METADATA_FIELDS = {"_response_message", "_response_protocol", "_response_url"};
+  private static final String RESPONSE_CODE_FIELD = "_response_code";
+
   private final HttpSubScan subScan;
   private final int maxRecords;
   private JsonLoader jsonLoader;
@@ -77,10 +88,16 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         errorContext);
 
     // JSON loader setup
+    ResultSetLoader loader = negotiator.build();
+    buildImplicitColumns(loader.writer());
+
     InputStream inStream = http.getInputStream();
+    Map<String, Object> httpMetadata = populateImplicitFieldMap(http);
+
     try {
       jsonLoader = new JsonLoaderBuilder()
-          .resultSetLoader(negotiator.build())
+          .implicitFields(httpMetadata)
+          .resultSetLoader(loader)
           .standardOptions(negotiator.queryOptions())
           .dataPath(subScan.tableSpec().connectionConfig().dataPath())
           .errorContext(errorContext)
@@ -97,6 +114,37 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     return true; // Please read the first batch
   }
 
+  /**
+   * This function should be called in the open method of the batch reader for each type of data that the
+   * http reader reads. This adds the implicit columns to the schema.
+   * @param rowWriter {@link org.apache.drill.exec.physical.resultSet.RowSetLoader} The RowSet loader for the resuls.
+   */
+  protected void buildImplicitColumns(RowSetLoader rowWriter) {
+    ColumnMetadata colSchema;
+
+    // Add String fields
+    for (String fieldName : STRING_METADATA_FIELDS) {
+      colSchema = MetadataUtils.newScalar(fieldName, MinorType.VARCHAR, DataMode.OPTIONAL);
+      colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+      rowWriter.addColumn(colSchema);
+    }
+
+    // Add int field
+    colSchema = MetadataUtils.newScalar(RESPONSE_CODE_FIELD, MinorType.INT, DataMode.OPTIONAL);
+    colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+    rowWriter.addColumn(colSchema);
+  }
+
+  protected Map<String, Object> populateImplicitFieldMap(SimpleHttp http) {
+    Map<String, Object> responseMetadata = new HashMap<>();
+    responseMetadata.put("responseCode", http.getResponseCode());
+    responseMetadata.put("responseMessage", http.getResponseMessage());
+    responseMetadata.put("responseProtocol", http.getResponseProtocol());
+    responseMetadata.put("responseUrl", http.getResponseURL());
+
+    return responseMetadata;
+  }
+  
   protected HttpUrl buildUrl() {
     HttpApiConfig apiConfig = subScan.tableSpec().connectionConfig();
     String baseUrl = apiConfig.url();
