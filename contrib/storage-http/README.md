@@ -555,3 +555,10 @@ If the query runs, but produces odd results, try a simple `SELECT *` query. This
 if there is unexpected message context in addition to the data. Use the `dataPath` property
 to ignore the extra content.
 
+## Implicit Fields
+The HTTP plugin includes four implicit fields which can be used for debugging.  These fields do not appear in star queries.  They are:
+
+* `_response_code`: The response code from the HTTP request.  This field is an `INT`.
+* `_response_message`:  The response message.
+* `_response_protocol`:  The response protocol.
+* `_response_url`:  The actual URL sent to the API. 
