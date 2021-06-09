@@ -32,6 +32,7 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
@@ -94,6 +95,11 @@ public class HttpCSVBatchReader extends HttpBatchReader {
     negotiator.tableSchema(drillSchema, true);
     ResultSetLoader resultLoader = negotiator.build();
 
+    // Add implicit columns
+    implicitColumns = new ImplicitColumns(resultLoader.writer());
+    buildImplicitColumns();
+    populateImplicitFieldMap(http);
+
     // Create ScalarWriters
     rowWriter = resultLoader.writer();
     populateWriterArray();
@@ -154,6 +160,7 @@ public class HttpCSVBatchReader extends HttpBatchReader {
     for (StringColumnWriter columnWriter : columnWriters) {
       columnWriter.load(nextRow);
     }
+    implicitColumns.writeImplicitColumns();
     rowWriter.save();
     return true;
   }

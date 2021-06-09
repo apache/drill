@@ -24,25 +24,21 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,6 +51,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   private final int maxRecords;
   private JsonLoader jsonLoader;
   private int recordCount;
+  protected ImplicitColumns implicitColumns;
 
   public HttpBatchReader(HttpSubScan subScan) {
     this.subScan = subScan;
@@ -89,14 +86,15 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
     // JSON loader setup
     ResultSetLoader loader = negotiator.build();
-    buildImplicitColumns(loader.writer());
+    implicitColumns = new ImplicitColumns(loader.writer());
+    buildImplicitColumns();
 
     InputStream inStream = http.getInputStream();
-    Map<String, Object> httpMetadata = populateImplicitFieldMap(http);
+    populateImplicitFieldMap(http);
 
     try {
       jsonLoader = new JsonLoaderBuilder()
-          .implicitFields(httpMetadata)
+          .implicitFields(implicitColumns)
           .resultSetLoader(loader)
           .standardOptions(negotiator.queryOptions())
           .dataPath(subScan.tableSpec().connectionConfig().dataPath())
@@ -114,37 +112,21 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     return true; // Please read the first batch
   }
 
-  /**
-   * This function should be called in the open method of the batch reader for each type of data that the
-   * http reader reads. This adds the implicit columns to the schema.
-   * @param rowWriter {@link org.apache.drill.exec.physical.resultSet.RowSetLoader} The RowSet loader for the resuls.
-   */
-  protected void buildImplicitColumns(RowSetLoader rowWriter) {
-    ColumnMetadata colSchema;
-
+  protected void buildImplicitColumns() {
     // Add String fields
     for (String fieldName : STRING_METADATA_FIELDS) {
-      colSchema = MetadataUtils.newScalar(fieldName, MinorType.VARCHAR, DataMode.OPTIONAL);
-      colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
-      rowWriter.addColumn(colSchema);
+      implicitColumns.addImplicitColumn(fieldName, MinorType.VARCHAR);
     }
-
-    // Add int field
-    colSchema = MetadataUtils.newScalar(RESPONSE_CODE_FIELD, MinorType.INT, DataMode.OPTIONAL);
-    colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
-    rowWriter.addColumn(colSchema);
+    implicitColumns.addImplicitColumn(RESPONSE_CODE_FIELD, MinorType.INT);
   }
 
-  protected Map<String, Object> populateImplicitFieldMap(SimpleHttp http) {
-    Map<String, Object> responseMetadata = new HashMap<>();
-    responseMetadata.put("responseCode", http.getResponseCode());
-    responseMetadata.put("responseMessage", http.getResponseMessage());
-    responseMetadata.put("responseProtocol", http.getResponseProtocol());
-    responseMetadata.put("responseUrl", http.getResponseURL());
-
-    return responseMetadata;
+  protected void populateImplicitFieldMap(SimpleHttp http) {
+    implicitColumns.getColumn("_response_message").setValue(http.getResponseMessage());
+    implicitColumns.getColumn("_response_protocol").setValue(http.getResponseProtocol());
+    implicitColumns.getColumn("_response_url").setValue(http.getResponseURL());
+    implicitColumns.getColumn("_response_code").setValue(http.getResponseCode());
   }
-  
+
   protected HttpUrl buildUrl() {
     HttpApiConfig apiConfig = subScan.tableSpec().connectionConfig();
     String baseUrl = apiConfig.url();

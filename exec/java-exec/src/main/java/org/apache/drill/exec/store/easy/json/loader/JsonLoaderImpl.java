@@ -23,7 +23,6 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
@@ -33,6 +32,7 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.options.OptionSet;
+import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.store.easy.json.extended.ExtendedTypeFieldFactory;
 import org.apache.drill.exec.store.easy.json.parser.ErrorFactory;
 import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser;
@@ -106,7 +106,7 @@ import com.fasterxml.jackson.core.JsonToken;
  * boolean flags as in the prior version.</li>
  * <li>Reports errors as {@link UserException} objects, complete with context
  * information, rather than as generic Java exception as in the prior version.</li>
- * <li>Moves parse options into a separate {@link JsonOptions} class.</li>
+ * <li>Moves parse options into a separate {@link JsonLoaderOptions} class.</li>
  * <li>Iteration protocol is simpler: simply call {@link #readBatch()} until it returns
  * {@code false}. Errors are reported out-of-band via an exception.</li>
  * <li>The result set loader abstraction is perfectly happy with an empty schema.
@@ -147,7 +147,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     private Reader reader;
     private String dataPath;
     private MessageParser messageParser;
-    private Map<String, Object> implicitFields;
+    private ImplicitColumns implicitFields;
 
     public JsonLoaderBuilder resultSetLoader(ResultSetLoader rsLoader) {
       this.rsLoader = rsLoader;
@@ -169,7 +169,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
       return this;
     }
 
-    public JsonLoaderBuilder implicitFields(Map<String, Object> metadata) {
+    public JsonLoaderBuilder implicitFields(ImplicitColumns metadata) {
       this.implicitFields = metadata;
       return this;
     }
@@ -225,7 +225,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   private final CustomErrorContext errorContext;
   private final JsonStructureParser parser;
   private final FieldFactory fieldFactory;
-  private final Map<String, Object> implicitFields;
+  private final ImplicitColumns implicitFields;
   private boolean eof;
 
   /**
@@ -286,7 +286,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     while (rowWriter.start()) {
       if (parser.next()) {
         // Add implicit fields
-        writeImplicitFields(rowWriter);
+        implicitFields.writeImplicitColumns();
         rowWriter.save();
       } else {
         eof = true;
@@ -295,18 +295,6 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     }
     endBatch();
     return rsLoader.hasRows();
-  }
-
-  private void writeImplicitFields(RowSetLoader rowWriter) {
-    if (implicitFields == null || implicitFields.isEmpty()) {
-      return;
-    }
-
-    for (Map.Entry<String,Object> metadata : implicitFields.entrySet()) {
-      String fieldName = metadata.getKey();
-      Object value = metadata.getValue();
-
-    }
   }
 
   public void addNullMarker(JsonLoaderImpl.NullTypeMarker marker) {

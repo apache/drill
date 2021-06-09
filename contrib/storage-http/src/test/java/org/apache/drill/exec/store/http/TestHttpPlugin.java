@@ -402,23 +402,71 @@ public class TestHttpPlugin extends ClusterTest {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE));
 
       RowSet results = client.queryBuilder().sql(sql).rowSet();
-      results.print();
-      /*TupleMetadata expectedSchema = new SchemaBuilder()
-        .add("col1", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-        .add("col2", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-        .add("col3", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_code", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_message", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_protocol", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow("1", "2", "3")
-        .addRow("4", "5", "6")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02")
         .build();
 
-      RowSetUtilities.verify(expected, results);*/
+      RowSetUtilities.verify(expected, results);
     }
   }
 
+  @Test
+  public void testImplicitFieldsWithCSV() throws Exception {
+    String sql = "SELECT _response_code, _response_message, _response_protocol, _response_url FROM local.mockcsv.`csv?arg1=4`";
+    try (MockWebServer server = startServer()) {
 
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_CSV_RESPONSE));
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_code", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_message", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_protocol", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/csvcsv?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/csvcsv?arg1=4")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void testImplicitFieldsWithXML() throws Exception {
+    String sql = "SELECT _response_code, _response_message, _response_protocol, _response_url FROM local.mockxml.`?arg1=4` LIMIT 5";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_XML_RESPONSE));
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_code", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_message", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_protocol", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
 
   private void doSimpleTestWithMockServer(String sql) throws Exception {
     try (MockWebServer server = startServer()) {
