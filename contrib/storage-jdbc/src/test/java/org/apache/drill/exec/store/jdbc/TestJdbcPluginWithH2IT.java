@@ -27,6 +27,7 @@ import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.h2.tools.RunScript;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -37,6 +38,7 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,10 +51,15 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
 
   private static final String TABLE_PATH = "jdbcmulti/";
   private static final String TABLE_NAME = String.format("%s.`%s`", StoragePluginTestUtils.DFS_PLUGIN_NAME, TABLE_PATH);
+  private static TimeZone defaultTimeZone;
 
   @BeforeClass
   public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
+    // Force timezone to UTC for these tests.
+    defaultTimeZone = TimeZone.getDefault();
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
     dirTestWatcher.copyResourceToRoot(Paths.get(TABLE_PATH));
     Class.forName("org.h2.Driver");
     String connString = "jdbc:h2:" + dirTestWatcher.getTmpDir().getCanonicalPath();
@@ -69,6 +76,11 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("h2", jdbcStorageConfig);
     cluster.defineStoragePlugin("h2o", jdbcStorageConfig);
+  }
+
+  @AfterClass
+  public static void cleanUp() {
+    TimeZone.setDefault(defaultTimeZone);
   }
 
   @Test
