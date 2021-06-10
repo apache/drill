@@ -286,7 +286,10 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     while (rowWriter.start()) {
       if (parser.next()) {
         // Add implicit fields
-        implicitFields.writeImplicitColumns();
+        if (implicitFields != null) {
+          implicitFields.writeImplicitColumns();
+        }
+        
         rowWriter.save();
       } else {
         eof = true;
