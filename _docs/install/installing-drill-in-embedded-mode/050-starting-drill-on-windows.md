@@ -7,20 +7,20 @@ Complete the following steps to launch the Drill:
 
 1. Open the Windows command prompt.  
 2. Navigate to the Drill installation folder, for example:  
-`cd \Users\user1\drill_repo\apache-drill-1.18.0` 
+`cd \Users\user1\drill_repo\apache-drill-1.19.0` 
 3. Go to the `bin` directory, for example:  
 `cd bin`
 4. Enter either of the following commands to start Drill:     
 	- `sqlline.bat -u "jdbc:drill:zk=local"`  
     - `drill-embedded.bat` (Supported in Drill 1.16 and later.)  
 
-			C:\Users\user1\drill_repo\apache-drill-1.18.0\bin>drill-embedded.bat
+			C:\Users\user1\drill_repo\apache-drill-1.19.0\bin>drill-embedded.bat
 		
 			DRILL_ARGS - " -u jdbc:drill:zk=local"
 			HADOOP_HOME not detected...
 			HBASE_HOME not detected...
 			Calculating Drill classpath...
-			Apache Drill 1.18.0-SNAPSHOT
+			Apache Drill 1.19.0-SNAPSHOT
 			"Drill never goes out of style."
 			apache drill>
 

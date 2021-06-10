@@ -10,6 +10,13 @@ applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments.   
 
+## What's New in Apache Drill 1.19
+* <a href='https://issues.apache.org/jira/browse/DRILL-92'>DRILL-92</a> - Cassandra Storage Plugin
+* <a href='https://issues.apache.org/jira/browse/DRILL-3637'>DRILL-3637</a> - Elasticsearch Storage Plugin
+* <a href='https://issues.apache.org/jira/browse/DRILL-5940'>DRILL-5940</a> - Avro with schema registry support for Kafka
+* <a href='https://issues.apache.org/jira/browse/DRILL-7855'>DRILL-7855</a> - Secure mechanism for specifying storage plugin credentials
+* <a href='https://issues.apache.org/jira/browse/DRILL-7921'>DRILL-7921</a> - Linux ARM64 based system support
+
 ## What's New in Apache Drill 1.18
 * <a href='https://issues.apache.org/jira/browse/DRILL-6552'>DRILL-6552</a> - Drill Metadata management "Drill Metastore"
 * <a href='https://issues.apache.org/jira/browse/DRILL-7233'>DRILL-7233</a> - Format Plugin for HDF5
