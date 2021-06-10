@@ -13,9 +13,19 @@ with existing Apache Hive and Apache HBase deployments.
 ## What's New in Apache Drill 1.19
 * <a href='https://issues.apache.org/jira/browse/DRILL-92'>DRILL-92</a> - Cassandra Storage Plugin
 * <a href='https://issues.apache.org/jira/browse/DRILL-3637'>DRILL-3637</a> - Elasticsearch Storage Plugin
+* <a href='https://issues.apache.org/jira/browse/DRILL-7823'>DRILL-7823</a> - XML Storage Plugin
+* <a href='https://issues.apache.org/jira/browse/DRILL-7751'>DRILL-7751</a> - Splunk Storage Plugin
 * <a href='https://issues.apache.org/jira/browse/DRILL-5940'>DRILL-5940</a> - Avro with schema registry support for Kafka
 * <a href='https://issues.apache.org/jira/browse/DRILL-7855'>DRILL-7855</a> - Secure mechanism for specifying storage plugin credentials
 * <a href='https://issues.apache.org/jira/browse/DRILL-7921'>DRILL-7921</a> - Linux ARM64 based system support
+* <a href='https://issues.apache.org/jira/browse/DRILL-6953'>DRILL-6953</a> - Rowset based JSON reader
+* <a href='https://issues.apache.org/jira/browse/DRILL-7733'>DRILL-7733</a> - Use streaming for REST JSON queries
+* Several plugins have been converted to the Enhanced Vector Framework (EVF)
+ - <a href='https://issues.apache.org/jira/browse/DRILL-7525'>DRILL-7525</a> - Convert SequenceFiles to EVF
+ - <a href='https://issues.apache.org/jira/browse/DRILL-7532'>DRILL-7532</a> - Convert SysLog to EVF
+ - <a href='https://issues.apache.org/jira/browse/DRILL-7533'>DRILL-7533</a> - Convert Pcapng to EVF
+ - <a href='https://issues.apache.org/jira/browse/DRILL-7534'>DRILL-7534</a> - Convert HTTPD format plugin to EVF
+ - <a href='https://issues.apache.org/jira/browse/DRILL-7536'>DRILL-7533</a> - Convert Image Format to EVF
 
 ## What's New in Apache Drill 1.18
 * <a href='https://issues.apache.org/jira/browse/DRILL-6552'>DRILL-6552</a> - Drill Metadata management "Drill Metastore"
