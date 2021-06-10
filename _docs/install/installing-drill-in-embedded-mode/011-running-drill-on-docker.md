@@ -36,12 +36,12 @@ Whether you run the Docker container in detached or foreground mode, you start D
 
 Open a terminal window (Command Prompt or PowerShell, but not PowerShell ISE) and then issue the following command and options to connect to SQLLine (the Drill shell):   
 ```sh
-docker run -i --name drill-1.18.0 -p 8047:8047 -t apache/drill:1.18.0 /bin/bash
+docker run -i --name drill-1.19.0 -p 8047:8047 -t apache/drill:1.19.0 /bin/bash
 ```
 
 When you issue the docker run command, the Drill process starts in a container. SQLLine prints a message, and the prompt appears:  
 
-       Apache Drill 1.18.0
+       Apache Drill 1.19.0
        "json ain't no thang"
        apache drill>
 
@@ -56,10 +56,10 @@ Open a terminal window (Command Prompt or PowerShell, but not PowerShell ISE) an
 
 **Note:** When you run the Drill Docker container in detached mode, you connect to SQLLine (the Drill shell) using drill-localhost.  
 ```sh
-$ docker run -i --name drill-1.18.0 -p 8047:8047 --detach -t apache/drill:1.18.0 /bin/bash
+$ docker run -i --name drill-1.19.0 -p 8047:8047 --detach -t apache/drill:1.19.0 /bin/bash
 <displays container ID>
 
-$ docker exec -it drill-1.18.0 bash
+$ docker exec -it drill-1.19.0 bash
 <connects to container>
 
 $ /opt/drill/bin/drill-localhost
@@ -67,7 +67,7 @@ $ /opt/drill/bin/drill-localhost
 
 After you issue the commands, the Drill process starts in a container. SQLLine prints a message, and the prompt appears:  
 
-       Apache Drill 1.18.0
+       Apache Drill 1.19.0
        "json ain't no thang"
        apache drill>
 
