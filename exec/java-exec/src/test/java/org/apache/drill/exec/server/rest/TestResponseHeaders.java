@@ -32,7 +32,7 @@ import static org.apache.drill.exec.ExecConstants.HTTP_ENABLE;
 import static org.apache.drill.exec.ExecConstants.HTTP_JETTY_SERVER_RESPONSE_HEADERS;
 import static org.apache.drill.exec.ExecConstants.HTTP_PORT_HUNT;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestResponseHeaders extends ClusterTest {
 

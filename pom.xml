@@ -71,7 +71,7 @@
     <netty.tcnative.classifier />
     <commons.io.version>2.7</commons.io.version>
     <commons.collections.version>4.4</commons.collections.version>
-    <hamcrest.core.version>1.3</hamcrest.core.version>
+    <hamcrest.version>2.2</hamcrest.version>
     <curator.version>5.1.0</curator.version>
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <jmockit.version>1.47</jmockit.version>
@@ -331,8 +331,8 @@
             </dependency>
             <additionalDependency>
               <groupId>org.hamcrest</groupId>
-              <artifactId>hamcrest-core</artifactId>
-              <version>${hamcrest.core.version}</version>
+              <artifactId>hamcrest</artifactId>
+              <version>${hamcrest.version}</version>
             </additionalDependency>
             <dependency>
               <groupId>org.mockito</groupId>
@@ -1278,8 +1278,8 @@
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest-core</artifactId>
-        <version>${hamcrest.core.version}</version>
+        <artifactId>hamcrest</artifactId>
+        <version>${hamcrest.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
