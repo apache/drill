@@ -67,7 +67,7 @@ public class DecimalUtility {
   public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
     byte[] value = new byte[length];
     bytebuf.getBytes(start, value, 0, length);
-    BigInteger unscaledValue = new BigInteger(value);
+    BigInteger unscaledValue = length == 0 ? BigInteger.ZERO : new BigInteger(value);
     return new BigDecimal(unscaledValue, scale);
   }
 
@@ -337,9 +337,9 @@ public class DecimalUtility {
    * @return 1 if left > right, 0 if left = right, -1 if left < right.  two values that are numerically equal, but with different
    * scales (e.g., 2.00 and 2), are considered equal.
    */
-  public static int compareVarLenBytes(DrillBuf left, int leftStart, int leftEnd, int leftScale, byte right[], int rightScale, boolean absCompare) {
+  public static int compareVarLenBytes(DrillBuf left, int leftStart, int leftEnd, int leftScale, byte[] right, int rightScale, boolean absCompare) {
     java.math.BigDecimal bdLeft = getBigDecimalFromDrillBuf(left, leftStart, leftEnd - leftStart, leftScale);
-    java.math.BigDecimal bdRight = new BigDecimal(new BigInteger(right), rightScale);
+    java.math.BigDecimal bdRight = new BigDecimal(right.length == 0 ? BigInteger.ZERO : new BigInteger(right), rightScale);
     if (absCompare) {
       bdLeft = bdLeft.abs();
       bdRight = bdRight.abs();
