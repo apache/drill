@@ -50,6 +50,10 @@
           <groupId>com.datastax.cassandra</groupId>
           <artifactId>cassandra-driver-core</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.apache.calcite.avatica</groupId>
+          <artifactId>avatica-core</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
