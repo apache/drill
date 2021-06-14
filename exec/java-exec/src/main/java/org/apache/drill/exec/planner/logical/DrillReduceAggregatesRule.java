@@ -298,7 +298,14 @@ public class DrillReduceAggregatesRule extends RelOptRule {
       for (int ordinal : ordinals) {
         oldArgTypes.add(inputExprs.get(ordinal).getType());
       }
-
+      //to solve AggregateCall returns true with equals method but has
+      // different RelDataTypes
+      if (aggCallMapping.containsKey(oldCall) && !aggCallMapping.get(oldCall)
+        .getType().equals(oldCall.getType())) {
+        int index = newCalls.size() + nGroups;
+        newCalls.add(oldCall);
+        return rexBuilder.makeInputRef(oldCall.getType(), index);
+      }
       return rexBuilder.addAggCall(
           oldCall,
           nGroups,

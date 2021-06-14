@@ -1239,4 +1239,18 @@ public class TestAggregateFunctions extends ClusterTest {
       client.resetSession(PlannerSettings.STREAMAGG.getOptionName());
     }
   }
+
+  @Test //DRILL-7931
+  public void testRowTypeMissMatch() throws Exception {
+    testBuilder()
+      .sqlQuery("select col1, stddev(col2) as g1, SUM(col2) as g2 FROM " +
+        "(values ('UA', 3), ('USA', 2), ('UA', 3), ('USA', 5), ('USA', 1), " +
+        "('UA', 9)) t(col1, col2) GROUP BY col1 order by col1")
+      .unOrdered()
+      .approximateEquality(0.000001)
+      .baselineColumns("col1", "g1", "g2")
+      .baselineValues("UA", 3.4641016151377544, 15L)
+      .baselineValues("USA", 2.0816659994661326, 8L)
+      .go();
+  }
 }
