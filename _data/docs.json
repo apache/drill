@@ -621,11 +621,28 @@
             "next_title": "Apache Drill 1.17.0 Release Notes",
             "next_url": "/docs/apache-drill-1-17-0-release-notes/",
             "parent": "Release Notes",
-            "previous_title": "Release Notes",
-            "previous_url": "/docs/release-notes/",
+            "previous_title": "Apache Drill 1.19.0 Release Notes",
+            "previous_url": "/docs/apache-drill-1-19-0-release-notes/",
             "relative_path": "_docs/rn/003-1.18.0-rn.md",
             "title": "Apache Drill 1.18.0 Release Notes",
             "url": "/docs/apache-drill-1-18-0-release-notes/"
+        },
+        "Apache Drill 1.19.0 Release Notes": {
+            "breadcrumbs": [
+                {
+                    "title": "Release Notes",
+                    "url": "/docs/release-notes/"
+                }
+            ],
+            "children": [],
+            "next_title": "Apache Drill 1.18.0 Release Notes",
+            "next_url": "/docs/apache-drill-1-18-0-release-notes/",
+            "parent": "Release Notes",
+            "previous_title": "Release Notes",
+            "previous_url": "/docs/release-notes/",
+            "relative_path": "_docs/rn/002-1.19.0-rn.md",
+            "title": "Apache Drill 1.19.0 Release Notes",
+            "url": "/docs/apache-drill-1-19-0-release-notes/"
         },
         "Apache Drill 1.2.0 Release Notes": {
             "breadcrumbs": [
@@ -5827,7 +5844,7 @@
             "title": "How to Partition Data",
             "url": "/docs/how-to-partition-data/"
         },
-        "IP Network functions": {
+        "IP Networking functions": {
             "breadcrumbs": [
                 {
                     "title": "SQL Functions",
@@ -5845,8 +5862,8 @@
             "previous_title": "Time Series Analysis Functions",
             "previous_url": "/docs/time-series-analysis-functions/",
             "relative_path": "_docs/sql-reference/sql-functions/100-ip-net-functions.md",
-            "title": "IP Network functions",
-            "url": "/docs/ip-network-functions/"
+            "title": "IP Networking functions",
+            "url": "/docs/ip-networking-functions/"
         },
         "Identifying Multiple Drill Versions in a Cluster": {
             "breadcrumbs": [
@@ -11285,11 +11302,28 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Apache Drill 1.17.0 Release Notes",
-                    "next_url": "/docs/apache-drill-1-17-0-release-notes/",
+                    "next_title": "Apache Drill 1.18.0 Release Notes",
+                    "next_url": "/docs/apache-drill-1-18-0-release-notes/",
                     "parent": "Release Notes",
                     "previous_title": "Release Notes",
                     "previous_url": "/docs/release-notes/",
+                    "relative_path": "_docs/rn/002-1.19.0-rn.md",
+                    "title": "Apache Drill 1.19.0 Release Notes",
+                    "url": "/docs/apache-drill-1-19-0-release-notes/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes",
+                            "url": "/docs/release-notes/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Apache Drill 1.17.0 Release Notes",
+                    "next_url": "/docs/apache-drill-1-17-0-release-notes/",
+                    "parent": "Release Notes",
+                    "previous_title": "Apache Drill 1.19.0 Release Notes",
+                    "previous_url": "/docs/apache-drill-1-19-0-release-notes/",
                     "relative_path": "_docs/rn/003-1.18.0-rn.md",
                     "title": "Apache Drill 1.18.0 Release Notes",
                     "url": "/docs/apache-drill-1-18-0-release-notes/"
@@ -11737,8 +11771,8 @@
                     "url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/"
                 }
             ],
-            "next_title": "Apache Drill 1.18.0 Release Notes",
-            "next_url": "/docs/apache-drill-1-18-0-release-notes/",
+            "next_title": "Apache Drill 1.19.0 Release Notes",
+            "next_url": "/docs/apache-drill-1-19-0-release-notes/",
             "parent": "",
             "previous_title": "Value Vectors",
             "previous_url": "/docs/value-vectors/",
@@ -13063,8 +13097,8 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "IP Network functions",
-                    "next_url": "/docs/ip-network-functions/",
+                    "next_title": "IP Networking functions",
+                    "next_url": "/docs/ip-networking-functions/",
                     "parent": "SQL Functions",
                     "previous_title": "GIS functions",
                     "previous_url": "/docs/gis-functions/",
@@ -13090,8 +13124,8 @@
                     "previous_title": "Time Series Analysis Functions",
                     "previous_url": "/docs/time-series-analysis-functions/",
                     "relative_path": "_docs/sql-reference/sql-functions/100-ip-net-functions.md",
-                    "title": "IP Network functions",
-                    "url": "/docs/ip-network-functions/"
+                    "title": "IP Networking functions",
+                    "url": "/docs/ip-networking-functions/"
                 }
             ],
             "next_title": "About SQL Function Examples",
@@ -13531,8 +13565,8 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "IP Network functions",
-                            "next_url": "/docs/ip-network-functions/",
+                            "next_title": "IP Networking functions",
+                            "next_url": "/docs/ip-networking-functions/",
                             "parent": "SQL Functions",
                             "previous_title": "GIS functions",
                             "previous_url": "/docs/gis-functions/",
@@ -13558,8 +13592,8 @@
                             "previous_title": "Time Series Analysis Functions",
                             "previous_url": "/docs/time-series-analysis-functions/",
                             "relative_path": "_docs/sql-reference/sql-functions/100-ip-net-functions.md",
-                            "title": "IP Network functions",
-                            "url": "/docs/ip-network-functions/"
+                            "title": "IP Networking functions",
+                            "url": "/docs/ip-networking-functions/"
                         }
                     ],
                     "next_title": "About SQL Function Examples",
@@ -13688,8 +13722,8 @@
                     "next_title": "SQL Window Functions Introduction",
                     "next_url": "/docs/sql-window-functions-introduction/",
                     "parent": "SQL Reference",
-                    "previous_title": "IP Network functions",
-                    "previous_url": "/docs/ip-network-functions/",
+                    "previous_title": "IP Networking functions",
+                    "previous_url": "/docs/ip-networking-functions/",
                     "relative_path": "_docs/sql-reference/055-sql-window-functions.md",
                     "title": "SQL Window Functions",
                     "url": "/docs/sql-window-functions/"
@@ -14783,8 +14817,8 @@
             "next_title": "SQL Window Functions Introduction",
             "next_url": "/docs/sql-window-functions-introduction/",
             "parent": "SQL Reference",
-            "previous_title": "IP Network functions",
-            "previous_url": "/docs/ip-network-functions/",
+            "previous_title": "IP Networking functions",
+            "previous_url": "/docs/ip-networking-functions/",
             "relative_path": "_docs/sql-reference/055-sql-window-functions.md",
             "title": "SQL Window Functions",
             "url": "/docs/sql-window-functions/"
@@ -15868,8 +15902,8 @@
                 }
             ],
             "children": [],
-            "next_title": "IP Network functions",
-            "next_url": "/docs/ip-network-functions/",
+            "next_title": "IP Networking functions",
+            "next_url": "/docs/ip-networking-functions/",
             "parent": "SQL Functions",
             "previous_title": "GIS functions",
             "previous_url": "/docs/gis-functions/",
@@ -21441,8 +21475,8 @@
                                 }
                             ],
                             "children": [],
-                            "next_title": "IP Network functions",
-                            "next_url": "/docs/ip-network-functions/",
+                            "next_title": "IP Networking functions",
+                            "next_url": "/docs/ip-networking-functions/",
                             "parent": "SQL Functions",
                             "previous_title": "GIS functions",
                             "previous_url": "/docs/gis-functions/",
@@ -21468,8 +21502,8 @@
                             "previous_title": "Time Series Analysis Functions",
                             "previous_url": "/docs/time-series-analysis-functions/",
                             "relative_path": "_docs/sql-reference/sql-functions/100-ip-net-functions.md",
-                            "title": "IP Network functions",
-                            "url": "/docs/ip-network-functions/"
+                            "title": "IP Networking functions",
+                            "url": "/docs/ip-networking-functions/"
                         }
                     ],
                     "next_title": "About SQL Function Examples",
@@ -21598,8 +21632,8 @@
                     "next_title": "SQL Window Functions Introduction",
                     "next_url": "/docs/sql-window-functions-introduction/",
                     "parent": "SQL Reference",
-                    "previous_title": "IP Network functions",
-                    "previous_url": "/docs/ip-network-functions/",
+                    "previous_title": "IP Networking functions",
+                    "previous_url": "/docs/ip-networking-functions/",
                     "relative_path": "_docs/sql-reference/055-sql-window-functions.md",
                     "title": "SQL Window Functions",
                     "url": "/docs/sql-window-functions/"
@@ -23438,11 +23472,28 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "Apache Drill 1.17.0 Release Notes",
-                    "next_url": "/docs/apache-drill-1-17-0-release-notes/",
+                    "next_title": "Apache Drill 1.18.0 Release Notes",
+                    "next_url": "/docs/apache-drill-1-18-0-release-notes/",
                     "parent": "Release Notes",
                     "previous_title": "Release Notes",
                     "previous_url": "/docs/release-notes/",
+                    "relative_path": "_docs/rn/002-1.19.0-rn.md",
+                    "title": "Apache Drill 1.19.0 Release Notes",
+                    "url": "/docs/apache-drill-1-19-0-release-notes/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Release Notes",
+                            "url": "/docs/release-notes/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "Apache Drill 1.17.0 Release Notes",
+                    "next_url": "/docs/apache-drill-1-17-0-release-notes/",
+                    "parent": "Release Notes",
+                    "previous_title": "Apache Drill 1.19.0 Release Notes",
+                    "previous_url": "/docs/apache-drill-1-19-0-release-notes/",
                     "relative_path": "_docs/rn/003-1.18.0-rn.md",
                     "title": "Apache Drill 1.18.0 Release Notes",
                     "url": "/docs/apache-drill-1-18-0-release-notes/"
@@ -23890,8 +23941,8 @@
                     "url": "/docs/apache-drill-m1-release-notes-apache-drill-alpha/"
                 }
             ],
-            "next_title": "Apache Drill 1.18.0 Release Notes",
-            "next_url": "/docs/apache-drill-1-18-0-release-notes/",
+            "next_title": "Apache Drill 1.19.0 Release Notes",
+            "next_url": "/docs/apache-drill-1-19-0-release-notes/",
             "parent": "",
             "previous_title": "Value Vectors",
             "previous_url": "/docs/value-vectors/",

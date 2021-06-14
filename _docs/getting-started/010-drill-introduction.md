@@ -21,11 +21,11 @@ with existing Apache Hive and Apache HBase deployments.
 * <a href='https://issues.apache.org/jira/browse/DRILL-6953'>DRILL-6953</a> - Rowset based JSON reader
 * <a href='https://issues.apache.org/jira/browse/DRILL-7733'>DRILL-7733</a> - Use streaming for REST JSON queries
 * Several plugins have been converted to the Enhanced Vector Framework (EVF)
- - <a href='https://issues.apache.org/jira/browse/DRILL-7525'>DRILL-7525</a> - Convert SequenceFiles to EVF
- - <a href='https://issues.apache.org/jira/browse/DRILL-7532'>DRILL-7532</a> - Convert SysLog to EVF
- - <a href='https://issues.apache.org/jira/browse/DRILL-7533'>DRILL-7533</a> - Convert Pcapng to EVF
- - <a href='https://issues.apache.org/jira/browse/DRILL-7534'>DRILL-7534</a> - Convert HTTPD format plugin to EVF
- - <a href='https://issues.apache.org/jira/browse/DRILL-7536'>DRILL-7533</a> - Convert Image Format to EVF
+  * <a href='https://issues.apache.org/jira/browse/DRILL-7525'>DRILL-7525</a> - Convert SequenceFiles to EVF
+  * <a href='https://issues.apache.org/jira/browse/DRILL-7532'>DRILL-7532</a> - Convert SysLog to EVF
+  * <a href='https://issues.apache.org/jira/browse/DRILL-7533'>DRILL-7533</a> - Convert Pcapng to EVF
+  * <a href='https://issues.apache.org/jira/browse/DRILL-7534'>DRILL-7534</a> - Convert HTTPD format plugin to EVF
+  * <a href='https://issues.apache.org/jira/browse/DRILL-7536'>DRILL-7533</a> - Convert Image Format to EVF
 
 ## What's New in Apache Drill 1.18
 * <a href='https://issues.apache.org/jira/browse/DRILL-6552'>DRILL-6552</a> - Drill Metadata management "Drill Metastore"
