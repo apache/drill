@@ -25,7 +25,6 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReade
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
@@ -59,19 +58,18 @@ public class PdfFormatPlugin extends EasyFormatPlugin<PdfFormatConfig> {
   }
 
   private static EasyFormatPlugin.EasyFormatConfig easyConfig(Configuration fsConf, PdfFormatConfig pluginConfig) {
-    EasyFormatConfig config = new EasyFormatConfig();
-    config.readable = true;
-    config.writable = false;
-    config.blockSplittable = false;
-    config.compressible = true;
-    config.supportsProjectPushdown = true;
-    config.extensions = pluginConfig.getExtensions();
-    config.fsConf = fsConf;
-    config.defaultName = DEFAULT_NAME;
-    config.readerOperatorType = UserBitShared.CoreOperatorType.EXCEL_SUB_SCAN_VALUE;  // TODO Fix this
-    config.useEnhancedScan = true;
-    config.supportsLimitPushdown = true;
-    return config;
+    return EasyFormatConfig.builder()
+      .readable(true)
+      .writable(false)
+      .blockSplittable(false)
+      .compressible(true)
+      .supportsProjectPushdown(true)
+      .extensions(pluginConfig.getExtensions())
+      .fsConf(fsConf)
+      .defaultName(DEFAULT_NAME)
+      .useEnhancedScan(true)
+      .supportsLimitPushdown(true)
+      .build();
   }
 
   @Override

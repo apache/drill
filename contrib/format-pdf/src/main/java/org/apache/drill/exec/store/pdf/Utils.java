@@ -1,6 +1,5 @@
 package org.apache.drill.exec.store.pdf;
 
-import org.apache.drill.common.AutoCloseables;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

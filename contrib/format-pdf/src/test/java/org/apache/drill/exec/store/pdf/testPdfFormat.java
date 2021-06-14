@@ -93,5 +93,4 @@ public class testPdfFormat extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
-
 }

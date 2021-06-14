@@ -20,13 +20,13 @@ import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import technology.tabula.RectangularTextContainer;
 import technology.tabula.Table;
 
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -251,7 +251,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       return;
     }
 
-    writers.get(index).getWriter().setTimestamp(new Instant(dateValue.getTimeInMillis()));
+    writers.get(index).getWriter().setTimestamp(Instant.ofEpochMilli(dateValue.getTimeInMillis()));
   }
 
   private void addUnknownColumnToSchemaAndCreateWriter (TupleWriter rowWriter, String name) {

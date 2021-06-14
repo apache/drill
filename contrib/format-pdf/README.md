@@ -3,7 +3,7 @@ One of the most annoying tasks is when you are working on a data science project
  PDF tables using Drill's SQL interface.  
 
 ## Data Model
-Since PDF files were not intended to be queried or read by machines, mapping the data to tables and rows is not a perfect process.
+Since PDF files generally are not intended to be queried or read by machines, mapping the data to tables and rows is not a perfect process.
 
 ## Accessing Document Metadata Fields
 PDF files have a considerable amount of metadata which can be useful for analysis.  Drill will extract the following fields from every PDF file.  Note that these fields are not
@@ -27,7 +27,7 @@ PDF files have a considerable amount of metadata which can be useful for analysi
 SELECT _page_count, _title, _author, _subject, 
 _keywords, _creator, _producer, _creation_date, 
 _modification_date, _trapped 
-FROM cp.`pdf/20.pdf`
+FROM dfs.`pdf/20.pdf`
 ```
  
  
