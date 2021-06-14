@@ -32,25 +32,31 @@
   "jaltekruse": {
     "name": "Jason Altekruse",
     "title": "PMC Member and Committer",
-     "org": "Apache Drill",
-     "email": "json@apache.org"
-   },
-   "bbevens": {
-     "name": "Bridget Bevens",
-     "title": "Committer",
-     "org": "MapR Technologies",
-     "email": "bbevens@mapr.com"
-   },
-   "agirish": {
-     "name": "Abhishek Girish",
-     "title": "Committer",
-     "org": "MapR Technologies",
-     "email": "agirish@mapr.com"
-   },
-   "jturton": {
-     "name": "James Turton",
-     "title": "Committer",
-     "org": "Apache Software Foundation",
-     "email": "dzamo@apache.org"
-   }
+    "org": "Apache Drill",
+    "email": "json@apache.org"
+  },
+  "bbevens": {
+    "name": "Bridget Bevens",
+    "title": "Committer",
+    "org": "MapR Technologies",
+    "email": "bbevens@mapr.com"
+  },
+  "agirish": {
+    "name": "Abhishek Girish",
+    "title": "Committer",
+    "org": "MapR Technologies",
+    "email": "agirish@mapr.com"
+  },
+  "jturton": {
+    "name": "James Turton",
+    "title": "Committer",
+    "org": "Apache Software Foundation",
+    "email": "dzamo@apache.org"
+  },
+  "laurent": {
+    "name": "Laurent Goujon",
+    "title": "Committer",
+    "org": "Apache Software Foundation",
+    "email": "laurent@apache.org"
   }
+}
