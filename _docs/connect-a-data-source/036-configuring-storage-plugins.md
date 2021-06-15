@@ -19,7 +19,7 @@ You can use the Drill Web UI to update or add a new storage plugin configuration
 To create a name and new configuration:
 
 1. [Start the Drill shell]({{site.baseurl}}/docs/starting-drill-on-linux-and-mac-os-x/).
-2. [Start the Web UI]({{site.baseurl}}/docs/starting-the-web-console/). The Storage tab appears in the Web UI if you are [authorized]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/) to view, update, or add storage plugins. 
+2. [Start the Web UI]({{site.baseurl}}/docs/starting-the-web-ui/). The Storage tab appears in the Web UI if you are [authorized]({{site.baseurl}}/docs/configuring-web-ui-and-rest-api-security/) to view, update, or add storage plugins. 
 3. On the Storage tab, enter a name in **New Storage Plugin**.
    Each configuration registered with Drill must have a distinct
 name. Names are case-sensitive.  
