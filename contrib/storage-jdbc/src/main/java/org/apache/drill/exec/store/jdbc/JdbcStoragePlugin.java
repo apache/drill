@@ -81,6 +81,11 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     return true;
   }
 
+  @Override
+  public boolean supportsWrite() {
+    return true;
+  }
+
   public DataSource getDataSource() {
     return dataSource;
   }
