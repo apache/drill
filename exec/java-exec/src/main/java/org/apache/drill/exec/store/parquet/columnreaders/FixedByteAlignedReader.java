@@ -202,12 +202,13 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
     void addNext(int start, int index) {
       if (usingDictionary) {
         byte[] input = pageReader.dictionaryValueReader.readBytes().getBytes();
-        valueVec.getMutator().setSafe(index * 12,
+        valueVec.getMutator().setSafe(index,
             ParquetReaderUtility.getIntFromLEBytes(input, 0),
             ParquetReaderUtility.getIntFromLEBytes(input, 4),
             ParquetReaderUtility.getIntFromLEBytes(input, 8));
+      } else {
+        valueVec.getMutator().setSafe(index, bytebuf.getInt(start), bytebuf.getInt(start + 4), bytebuf.getInt(start + 8));
       }
-      valueVec.getMutator().setSafe(index, bytebuf.getInt(start), bytebuf.getInt(start + 4), bytebuf.getInt(start + 8));
     }
   }
 }

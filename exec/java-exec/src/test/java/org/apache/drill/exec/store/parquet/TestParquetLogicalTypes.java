@@ -28,6 +28,7 @@ import java.util.Arrays;
 
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.BaseTestQuery;
 import org.joda.time.Period;
 import org.junit.Test;
@@ -716,6 +717,32 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
         .ordered()
         .baselineColumns("Cost", "Sale")
         .baselineValues(new BigDecimal("550.000000"), new BigDecimal("1050.000000"))
+        .go();
+  }
+
+  @Test
+  public void testRequiredIntervalDictionaryEncoding() throws Exception {
+    testBuilder()
+        .sqlQuery("select * from cp.`parquet/interval_dictionary.parquet`")
+        .unOrdered()
+        .baselineColumns("_INTERVAL_fixed_len_byte_array_12")
+        .baselineValues(Period.months(875770417).plusDays(943142453).plusMillis(1650536505))
+        .baselineValues(Period.months(16843009).plusDays(16843009).plusMillis(16843009))
+        .baselineValues(Period.seconds(0))
+        .go();
+  }
+
+  @Test
+  public void testNullableIntervalDictionaryEncoding() throws Exception {
+    alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
+    testBuilder()
+        .sqlQuery("select * from cp.`parquet/nullable_interval_dictionary.parquet`")
+        .unOrdered()
+        .baselineColumns("_INTERVAL_fixed_len_byte_array_12")
+        .baselineValues(Period.months(875770417).plusDays(943142453).plusMillis(1650536505))
+        .baselineValues(Period.months(16843009).plusDays(16843009).plusMillis(16843009))
+        .baselineValues(Period.seconds(0))
+        .baselineValues((Object) null)
         .go();
   }
 }

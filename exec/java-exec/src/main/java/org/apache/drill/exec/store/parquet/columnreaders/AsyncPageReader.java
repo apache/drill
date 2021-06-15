@@ -441,12 +441,24 @@ class AsyncPageReader extends PageReader {
         bytesRead = compressedSize;
 
         synchronized (parent) {
-          if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
-            readStatus.setIsDictionaryPage(true);
-            valuesRead += pageHeader.getDictionary_page_header().getNum_values();
-          } else {
-            valuesRead += pageHeader.getData_page_header().getNum_values();
-            parent.totalPageValuesRead += valuesRead;
+          PageType type = pageHeader.getType() == null ? PageType.DATA_PAGE : pageHeader.getType();
+          switch (type) {
+            case DICTIONARY_PAGE:
+              readStatus.setIsDictionaryPage(true);
+              valuesRead += pageHeader.getDictionary_page_header().getNum_values();
+              break;
+            case DATA_PAGE_V2:
+              valuesRead += pageHeader.getData_page_header_v2().getNum_values();
+              parent.totalPageValuesRead += valuesRead;
+              break;
+            case DATA_PAGE:
+              valuesRead += pageHeader.getData_page_header().getNum_values();
+              parent.totalPageValuesRead += valuesRead;
+              break;
+            default:
+              throw UserException.unsupportedError()
+                  .message("Page type is not supported yet: " + type)
+                  .build(logger);
           }
           long timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
           readStatus.setPageHeader(pageHeader);

@@ -25,6 +25,7 @@ import org.apache.parquet.example.data.GroupFactory;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
+import org.apache.parquet.hadoop.example.ExampleParquetWriter;
 import org.apache.parquet.hadoop.example.GroupWriteSupport;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.io.api.Binary;
@@ -46,8 +47,7 @@ import static org.apache.drill.exec.store.parquet.ParquetSimpleTestFileGenerator
  * that are supported by Drill. Embedded types specified in the Parquet specification are not covered by the
  * examples but can be added.
  * To create a new parquet file, define a schema, create a GroupWriter based on the schema, then add values
- * for individual records to the GroupWriter.<br>
- *     TODO: DRILL-7904. To run this tool please use 28.2-jre <guava.version> instead of 19.0 in main POM file
+ * for individual records to the GroupWriter.
  * @see  org.apache.drill.exec.store.parquet.TestFileGenerator TestFileGenerator
  * @see org.apache.parquet.hadoop.example.GroupWriteSupport GroupWriteSupport
  * @see org.apache.parquet.example.Paper Dremel Example
@@ -55,7 +55,7 @@ import static org.apache.drill.exec.store.parquet.ParquetSimpleTestFileGenerator
 public class ParquetSimpleTestFileGenerator {
 
   public enum EnumType {
-    RANDOM_VALUE, MAX_VALUE, MIN_VALUE;
+    RANDOM_VALUE, MAX_VALUE, MIN_VALUE
   }
 
   public static Path root = new Path("file:/tmp/parquet/");
@@ -221,20 +221,16 @@ public class ParquetSimpleTestFileGenerator {
 
     GroupWriteSupport.setSchema(schema, conf);
 
-    ParquetWriter<Group> writer =
-        new ParquetWriter<Group>(initFile(fileName),
-            ParquetFileWriter.Mode.OVERWRITE,
-            new GroupWriteSupport(),
-            CompressionCodecName.SNAPPY,
-            1024,
-            1024,
-            512,
-            dictEncoding, // enable dictionary encoding,
-            false,
-            ParquetProperties.WriterVersion.PARQUET_1_0, conf
-        );
-
-    return writer;
+    return ExampleParquetWriter.builder(initFile(fileName))
+        .withDictionaryEncoding(dictEncoding)
+        .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
+        .withCompressionCodec(CompressionCodecName.SNAPPY)
+        .withPageSize(1024)
+        .withDictionaryPageSize(512)
+        .withValidation(false)
+        .withWriterVersion(ParquetProperties.WriterVersion.PARQUET_1_0)
+        .withConf(conf)
+        .build();
   }
 
   public static void writeComplexValues(GroupFactory gf, ParquetWriter<Group> complexWriter, boolean writeNulls) throws IOException {
