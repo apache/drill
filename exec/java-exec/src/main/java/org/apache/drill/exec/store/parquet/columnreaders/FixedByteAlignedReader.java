@@ -17,14 +17,11 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
-import org.apache.drill.shaded.guava.com.google.common.primitives.Longs;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.IntervalVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarDecimalVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
@@ -195,30 +192,6 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
 
   }
 
-  public static class VarDecimalReader extends ConvertedReader<VarDecimalVector> {
-
-    VarDecimalReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-        boolean fixedLength, VarDecimalVector v, SchemaElement schemaElement) throws ExecutionSetupException {
-      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-    }
-
-    @Override
-    void addNext(int start, int index) {
-      switch (columnChunkMetaData.getType()) {
-        case INT32:
-          valueVec.getMutator().setSafe(index, Ints.toByteArray(bytebuf.getInt(start)), 0, dataTypeLengthInBytes);
-          break;
-        case INT64:
-          valueVec.getMutator().setSafe(index, Longs.toByteArray(bytebuf.getLong(start)), 0, dataTypeLengthInBytes);
-          break;
-        case FIXED_LEN_BYTE_ARRAY:
-        case BINARY:
-          valueVec.getMutator().setSafe(index, start, start + dataTypeLengthInBytes, bytebuf);
-          break;
-      }
-    }
-  }
-
   public static class IntervalReader extends ConvertedReader<IntervalVector> {
     IntervalReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                    boolean fixedLength, IntervalVector v, SchemaElement schemaElement) throws ExecutionSetupException {
@@ -229,12 +202,13 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
     void addNext(int start, int index) {
       if (usingDictionary) {
         byte[] input = pageReader.dictionaryValueReader.readBytes().getBytes();
-        valueVec.getMutator().setSafe(index * 12,
+        valueVec.getMutator().setSafe(index,
             ParquetReaderUtility.getIntFromLEBytes(input, 0),
             ParquetReaderUtility.getIntFromLEBytes(input, 4),
             ParquetReaderUtility.getIntFromLEBytes(input, 8));
+      } else {
+        valueVec.getMutator().setSafe(index, bytebuf.getInt(start), bytebuf.getInt(start + 4), bytebuf.getInt(start + 8));
       }
-      valueVec.getMutator().setSafe(index, bytebuf.getInt(start), bytebuf.getInt(start + 4), bytebuf.getInt(start + 8));
     }
   }
 }

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import io.netty.buffer.ByteBufUtil;
@@ -39,6 +40,8 @@ import org.apache.parquet.column.ValuesType;
 import org.apache.parquet.column.page.DictionaryPage;
 import org.apache.parquet.column.values.ValuesReader;
 import org.apache.parquet.column.values.dictionary.DictionaryValuesReader;
+import org.apache.parquet.format.DataPageHeader;
+import org.apache.parquet.format.DataPageHeaderV2;
 import org.apache.parquet.format.PageHeader;
 import org.apache.parquet.format.PageType;
 import org.apache.parquet.format.Util;
@@ -313,11 +316,12 @@ class PageReader {
     }
 
     timer.start();
-    currentPageCount = pageHeader.data_page_header.num_values;
+    PageHeaderInfoProvider pageHeaderInfoProvider = pageHeaderInfoProviderBuilder(pageHeader);
+    currentPageCount = pageHeaderInfoProvider.getNumValues();
 
-    final Encoding rlEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.repetition_level_encoding);
-    final Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.definition_level_encoding);
-    final Encoding valueEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.encoding);
+    final Encoding rlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfoProvider.getRepetitionLevelEncoding());
+    final Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfoProvider.getDefinitionLevelEncoding());
+    final Encoding valueEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfoProvider.getEncoding());
 
     byteLength = pageHeader.uncompressed_page_size;
 
@@ -453,8 +457,9 @@ class PageReader {
     Preconditions.checkState(parentColumnReader.columnDescriptor.getMaxDefinitionLevel() == 1);
     Preconditions.checkState(currentPageCount > 0);
 
-    final Encoding rlEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.repetition_level_encoding);
-    final Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeader.data_page_header.definition_level_encoding);
+    PageHeaderInfoProvider pageHeaderInfoProvider = pageHeaderInfoProviderBuilder(pageHeader);
+    final Encoding rlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfoProvider.getRepetitionLevelEncoding());
+    final Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfoProvider.getDefinitionLevelEncoding());
 
     final ByteBufferInputStream in = ByteBufferInputStream.wrap(pageData.nioBuffer(0, pageData.capacity()));
 
@@ -473,6 +478,86 @@ class PageReader {
     // Skip values if requested by caller
     for (int idx = 0; idx < skipCount; ++idx) {
       definitionLevels.skip();
+    }
+  }
+
+  /**
+   * Common interface for wrappers of {@link DataPageHeader} and {@link DataPageHeaderV2} classes.
+   */
+  private interface PageHeaderInfoProvider {
+    int getNumValues();
+
+    org.apache.parquet.format.Encoding getEncoding();
+
+    org.apache.parquet.format.Encoding getDefinitionLevelEncoding();
+
+    org.apache.parquet.format.Encoding getRepetitionLevelEncoding();
+  }
+
+  private static class DataPageHeaderV1InfoProvider implements PageHeaderInfoProvider {
+    private final DataPageHeader dataPageHeader;
+
+    private DataPageHeaderV1InfoProvider(DataPageHeader dataPageHeader) {
+      this.dataPageHeader = dataPageHeader;
+    }
+
+    @Override
+    public int getNumValues() {
+      return dataPageHeader.getNum_values();
+    }
+
+    @Override
+    public org.apache.parquet.format.Encoding getEncoding() {
+      return dataPageHeader.getEncoding();
+    }
+
+    @Override
+    public org.apache.parquet.format.Encoding getDefinitionLevelEncoding() {
+      return dataPageHeader.getDefinition_level_encoding();
+    }
+
+    @Override
+    public org.apache.parquet.format.Encoding getRepetitionLevelEncoding() {
+      return dataPageHeader.getRepetition_level_encoding();
+    }
+  }
+
+  private static class DataPageHeaderV2InfoProvider implements PageHeaderInfoProvider {
+    private final DataPageHeaderV2 dataPageHeader;
+
+    private DataPageHeaderV2InfoProvider(DataPageHeaderV2 dataPageHeader) {
+      this.dataPageHeader = dataPageHeader;
+    }
+
+    @Override
+    public int getNumValues() {
+      return dataPageHeader.getNum_values();
+    }
+
+    @Override
+    public org.apache.parquet.format.Encoding getEncoding() {
+      return dataPageHeader.getEncoding();
+    }
+
+    @Override
+    public org.apache.parquet.format.Encoding getDefinitionLevelEncoding() {
+      return org.apache.parquet.format.Encoding.PLAIN;
+    }
+
+    @Override
+    public org.apache.parquet.format.Encoding getRepetitionLevelEncoding() {
+      return org.apache.parquet.format.Encoding.PLAIN;
+    }
+  }
+
+  private static PageHeaderInfoProvider pageHeaderInfoProviderBuilder(PageHeader pageHeader) {
+    switch (pageHeader.getType()) {
+      case DATA_PAGE:
+        return new DataPageHeaderV1InfoProvider(pageHeader.getData_page_header());
+      case DATA_PAGE_V2:
+        return new DataPageHeaderV2InfoProvider(pageHeader.getData_page_header_v2());
+      default:
+        throw new DrillRuntimeException("Unsupported page header type:" + pageHeader.getType());
     }
   }
 }

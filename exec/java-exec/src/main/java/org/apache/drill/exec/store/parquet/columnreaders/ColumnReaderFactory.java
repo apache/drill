@@ -54,7 +54,6 @@ import org.apache.parquet.column.Encoding;
 import org.apache.parquet.format.ConvertedType;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
-import org.apache.parquet.schema.PrimitiveType;
 
 public class ColumnReaderFactory {
 
@@ -74,108 +73,7 @@ public class ColumnReaderFactory {
     // if the column is required, or repeated (in which case we just want to use this to generate our appropriate
     // ColumnReader for actually transferring data into the data vector inside of our repeated vector
     if (descriptor.getMaxDefinitionLevel() == 0 || descriptor.getMaxRepetitionLevel() > 0) {
-      if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
-        return new BitReader(recordReader, descriptor, columnChunkMetaData,
-            fixedLength, (BitVector) v, schemaElement);
-      } else if (!columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY) && (
-          columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY
-              || columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.INT96)) {
-        if (convertedType == null) {
-          return new FixedByteAlignedReader.FixedBinaryReader(recordReader, descriptor,
-              columnChunkMetaData, (VariableWidthVector) v, schemaElement);
-        }
-        switch (convertedType) {
-          case DECIMAL:
-            return new FixedByteAlignedReader.VarDecimalReader(recordReader, descriptor,
-                columnChunkMetaData, fixedLength, (VarDecimalVector) v, schemaElement);
-          case INTERVAL:
-            return new FixedByteAlignedReader.IntervalReader(recordReader, descriptor,
-                columnChunkMetaData, fixedLength, (IntervalVector) v, schemaElement);
-          default:
-            return new FixedByteAlignedReader.FixedBinaryReader(recordReader, descriptor,
-                columnChunkMetaData, (VariableWidthVector) v, schemaElement);
-        }
-      } else if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.INT32 && convertedType == ConvertedType.DATE){
-        switch(recordReader.getDateCorruptionStatus()) {
-          case META_SHOWS_CORRUPTION:
-            return new FixedByteAlignedReader.CorruptDateReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (DateVector) v, schemaElement);
-          case META_SHOWS_NO_CORRUPTION:
-            return new FixedByteAlignedReader.DateReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (DateVector) v, schemaElement);
-          case META_UNCLEAR_TEST_VALUES:
-            return new FixedByteAlignedReader.CorruptionDetectingDateReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (DateVector) v, schemaElement);
-          default:
-            throw new ExecutionSetupException(
-                String.format("Issue setting up parquet reader for date type, " +
-                        "unrecognized date corruption status %s. See DRILL-4203 for more info.",
-                recordReader.getDateCorruptionStatus()));
-        }
-      } else {
-        if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
-          switch (columnChunkMetaData.getType()) {
-            case INT32:
-              if (convertedType == null) {
-                return new ParquetFixedWidthDictionaryReaders.DictionaryIntReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (IntVector) v, schemaElement);
-              }
-              switch (convertedType) {
-                case DECIMAL:
-                  return new ParquetFixedWidthDictionaryReaders.DictionaryVarDecimalReader(recordReader,
-                      descriptor, columnChunkMetaData, fixedLength, (VarDecimalVector) v, schemaElement);
-                case TIME_MILLIS:
-                  return new ParquetFixedWidthDictionaryReaders.DictionaryTimeReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (TimeVector) v, schemaElement);
-                case INT_8:
-                case INT_16:
-                case INT_32:
-                  return new ParquetFixedWidthDictionaryReaders.DictionaryIntReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (IntVector) v, schemaElement);
-                case UINT_8:
-                case UINT_16:
-                case UINT_32:
-                  return new ParquetFixedWidthDictionaryReaders.DictionaryUInt4Reader(recordReader, descriptor, columnChunkMetaData, fixedLength, (UInt4Vector) v, schemaElement);
-                default:
-                  throw new ExecutionSetupException("Unsupported dictionary converted type " + convertedType + " for primitive type INT32");
-              }
-            case INT64:
-              if (convertedType == null) {
-                return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
-              }
-              switch (convertedType) {
-                // DRILL-6670: handle TIMESTAMP_MICROS as INT64 with no logical type
-                case INT_64:
-                case TIMESTAMP_MICROS:
-                  return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
-                case UINT_64:
-                  return new ParquetFixedWidthDictionaryReaders.DictionaryUInt8Reader(recordReader, descriptor, columnChunkMetaData, fixedLength, (UInt8Vector) v, schemaElement);
-                case DECIMAL:
-                  return new ParquetFixedWidthDictionaryReaders.DictionaryVarDecimalReader(recordReader,
-                      descriptor, columnChunkMetaData, fixedLength, (VarDecimalVector) v, schemaElement);
-                case TIMESTAMP_MILLIS:
-                  return new ParquetFixedWidthDictionaryReaders.DictionaryTimeStampReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (TimeStampVector) v, schemaElement);
-                default:
-                  throw new ExecutionSetupException("Unsupported dictionary converted type " + convertedType + " for primitive type INT64");
-              }
-            case FLOAT:
-              return new ParquetFixedWidthDictionaryReaders.DictionaryFloat4Reader(recordReader, descriptor, columnChunkMetaData, fixedLength, (Float4Vector) v, schemaElement);
-            case DOUBLE:
-              return new ParquetFixedWidthDictionaryReaders.DictionaryFloat8Reader(recordReader, descriptor, columnChunkMetaData, fixedLength, (Float8Vector) v, schemaElement);
-            case FIXED_LEN_BYTE_ARRAY:
-              return new ParquetFixedWidthDictionaryReaders.DictionaryFixedBinaryReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (VarBinaryVector) v, schemaElement);
-            case INT96:
-              if (recordReader.getFragmentContext().getOptions().getOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP).bool_val) {
-                return new ParquetFixedWidthDictionaryReaders.DictionaryBinaryAsTimeStampReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (TimeStampVector) v, schemaElement);
-              } else {
-                return new ParquetFixedWidthDictionaryReaders.DictionaryFixedBinaryReader(recordReader, descriptor, columnChunkMetaData, fixedLength, (VarBinaryVector) v, schemaElement);
-              }
-            default:
-              throw new ExecutionSetupException("Unsupported dictionary column type " + descriptor.getType().name() );
-          }
-
-        } else if (convertedType == ConvertedType.DECIMAL) {
-          return new FixedByteAlignedReader.VarDecimalReader(recordReader,
-            descriptor, columnChunkMetaData, fixedLength, (VarDecimalVector) v, schemaElement);
-        } else {
-          return new FixedByteAlignedReader<>(recordReader, descriptor, columnChunkMetaData,
-              fixedLength, v, schemaElement);
-        }
-      }
+      return getColumnReader(recordReader, fixedLength, descriptor, columnChunkMetaData, v, schemaElement, convertedType);
     } else { // if the column is nullable
       return getNullableColumnReader(recordReader, descriptor,
           columnChunkMetaData, fixedLength, v, schemaElement);
@@ -219,6 +117,114 @@ public class ColumnReaderFactory {
           default:
             return new VarLengthColumnReaders.NullableVarBinaryColumn(parentReader, descriptor, columnChunkMetaData, fixedLength, (NullableVarBinaryVector) v, schemaElement);
         }
+    }
+  }
+
+  private static ColumnReader<? extends ValueVector> getColumnReader(ParquetRecordReader recordReader,
+      boolean fixedLength, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData, ValueVector v,
+      SchemaElement schemaElement, ConvertedType convertedType) throws ExecutionSetupException {
+    switch (columnChunkMetaData.getPrimitiveType().getPrimitiveTypeName()) {
+      case BOOLEAN:
+        return new BitReader(recordReader, descriptor, columnChunkMetaData,
+            fixedLength, (BitVector) v, schemaElement);
+      case INT32:
+        if (convertedType == null) {
+          return new ParquetFixedWidthDictionaryReaders.DictionaryIntReader(recordReader, descriptor,
+              columnChunkMetaData, fixedLength, (IntVector) v, schemaElement);
+        }
+        switch (convertedType) {
+          case DATE:
+            switch(recordReader.getDateCorruptionStatus()) {
+              case META_SHOWS_CORRUPTION:
+                return new FixedByteAlignedReader.CorruptDateReader(recordReader, descriptor,
+                    columnChunkMetaData, fixedLength, (DateVector) v, schemaElement);
+              case META_SHOWS_NO_CORRUPTION:
+                return new FixedByteAlignedReader.DateReader(recordReader, descriptor, columnChunkMetaData,
+                    fixedLength, (DateVector) v, schemaElement);
+              case META_UNCLEAR_TEST_VALUES:
+                return new FixedByteAlignedReader.CorruptionDetectingDateReader(recordReader, descriptor,
+                    columnChunkMetaData, fixedLength, (DateVector) v, schemaElement);
+              default:
+                throw new ExecutionSetupException(
+                    String.format("Issue setting up parquet reader for date type, " +
+                            "unrecognized date corruption status %s. See DRILL-4203 for more info.",
+                        recordReader.getDateCorruptionStatus()));
+            }
+          case DECIMAL:
+            return new ParquetFixedWidthDictionaryReaders.DictionaryVarDecimalReader(recordReader,
+                descriptor, columnChunkMetaData, fixedLength, (VarDecimalVector) v, schemaElement);
+          case TIME_MILLIS:
+            return new ParquetFixedWidthDictionaryReaders.DictionaryTimeReader(recordReader, descriptor,
+                columnChunkMetaData, fixedLength, (TimeVector) v, schemaElement);
+          case INT_8:
+          case INT_16:
+          case INT_32:
+            return new ParquetFixedWidthDictionaryReaders.DictionaryIntReader(recordReader, descriptor,
+                columnChunkMetaData, fixedLength, (IntVector) v, schemaElement);
+          case UINT_8:
+          case UINT_16:
+          case UINT_32:
+            return new ParquetFixedWidthDictionaryReaders.DictionaryUInt4Reader(recordReader, descriptor,
+                columnChunkMetaData, fixedLength, (UInt4Vector) v, schemaElement);
+          default:
+            throw new ExecutionSetupException("Unsupported dictionary converted type " + convertedType + " for primitive type INT32");
+        }
+      case INT64:
+        if (convertedType == null) {
+          return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, descriptor,
+              columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
+        }
+        switch (convertedType) {
+          // DRILL-6670: handle TIMESTAMP_MICROS as INT64 with no logical type
+          case INT_64:
+          case TIMESTAMP_MICROS:
+            return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, descriptor,
+                columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
+          case UINT_64:
+            return new ParquetFixedWidthDictionaryReaders.DictionaryUInt8Reader(recordReader, descriptor,
+                columnChunkMetaData, fixedLength, (UInt8Vector) v, schemaElement);
+          case DECIMAL:
+            return new ParquetFixedWidthDictionaryReaders.DictionaryVarDecimalReader(recordReader,
+                descriptor, columnChunkMetaData, fixedLength, (VarDecimalVector) v, schemaElement);
+          case TIMESTAMP_MILLIS:
+            return new ParquetFixedWidthDictionaryReaders.DictionaryTimeStampReader(recordReader, descriptor,
+                columnChunkMetaData, fixedLength, (TimeStampVector) v, schemaElement);
+          default:
+            throw new ExecutionSetupException("Unsupported dictionary converted type " + convertedType + " for primitive type INT64");
+        }
+      case FLOAT:
+        return new ParquetFixedWidthDictionaryReaders.DictionaryFloat4Reader(recordReader, descriptor,
+            columnChunkMetaData, fixedLength, (Float4Vector) v, schemaElement);
+      case DOUBLE:
+        return new ParquetFixedWidthDictionaryReaders.DictionaryFloat8Reader(recordReader, descriptor,
+            columnChunkMetaData, fixedLength, (Float8Vector) v, schemaElement);
+      case FIXED_LEN_BYTE_ARRAY:
+        if (convertedType != null) {
+          switch (convertedType) {
+            case DECIMAL:
+              return new ParquetFixedWidthDictionaryReaders.DictionaryVarDecimalReader(recordReader,
+                  descriptor, columnChunkMetaData, fixedLength, (VarDecimalVector) v, schemaElement);
+            case INTERVAL:
+              return new FixedByteAlignedReader.IntervalReader(recordReader, descriptor,
+                  columnChunkMetaData, fixedLength, (IntervalVector) v, schemaElement);
+          }
+        }
+        if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
+          return new ParquetFixedWidthDictionaryReaders.DictionaryFixedBinaryReader(recordReader,
+              descriptor, columnChunkMetaData, fixedLength, (VarBinaryVector) v, schemaElement);
+        }
+        return new FixedByteAlignedReader.FixedBinaryReader(recordReader, descriptor,
+            columnChunkMetaData, (VariableWidthVector) v, schemaElement);
+      case INT96:
+        if (recordReader.getFragmentContext().getOptions().getOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP).bool_val) {
+          return new ParquetFixedWidthDictionaryReaders.DictionaryBinaryAsTimeStampReader(recordReader,
+              descriptor, columnChunkMetaData, fixedLength, (TimeStampVector) v, schemaElement);
+        } else {
+          return new ParquetFixedWidthDictionaryReaders.DictionaryFixedBinaryReader(recordReader,
+              descriptor, columnChunkMetaData, fixedLength, (VarBinaryVector) v, schemaElement);
+        }
+      default:
+        throw new ExecutionSetupException("Unsupported dictionary column type " + descriptor.getPrimitiveType().getPrimitiveTypeName().name());
     }
   }
 
@@ -315,15 +321,14 @@ public class ColumnReaderFactory {
             case INTERVAL:
               return new NullableFixedByteAlignedReaders.NullableIntervalReader(parentReader, columnDescriptor,
                   columnChunkMetaData, fixedLength, (NullableIntervalVector) valueVec, schemaElement);
-            default:
-              if (!columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
-                return new NullableFixedByteAlignedReaders.NullableFixedByteAlignedReader<>(parentReader,columnDescriptor,
-                    columnChunkMetaData, fixedLength, valueVec, schemaElement);
-              }
           }
         }
-        return new NullableFixedByteAlignedReaders.NullableFixedBinaryReader(parentReader, columnDescriptor,
-            columnChunkMetaData, fixedLength, (NullableVarBinaryVector) valueVec, schemaElement);
+        if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
+          return new NullableFixedByteAlignedReaders.NullableFixedBinaryReader(parentReader, columnDescriptor,
+              columnChunkMetaData, fixedLength, (NullableVarBinaryVector) valueVec, schemaElement);
+        }
+        return new NullableFixedByteAlignedReaders.NullableFixedByteAlignedReader<>(parentReader,columnDescriptor,
+            columnChunkMetaData, fixedLength, valueVec, schemaElement);
       default:
         throw new ExecutionSetupException("Unsupported nullable column type " + columnDescriptor.getPrimitiveType().getPrimitiveTypeName().name());
     }
