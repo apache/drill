@@ -492,7 +492,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
       MongoClient client = storagePlugin.getClient();
       MongoDatabase db = client.getDatabase(scanSpec.getDbName());
       MongoCollection<Document> collection = db.getCollection(scanSpec.getCollectionName());
-      long numDocs = collection.countDocuments();
+      long numDocs = collection.estimatedDocumentCount();
 
       if (maxRecords > 0 && numDocs > 0) {
         recordCount = Math.min(maxRecords, numDocs);
