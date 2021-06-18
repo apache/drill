@@ -3084,14 +3084,31 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "ODBC/JDBC Interfaces",
-                    "next_url": "/docs/odbc-jdbc-interfaces/",
+                    "next_title": "Splunk Plugin",
+                    "next_url": "/docs/splunk-plugin/",
                     "parent": "Connect a Data Source",
                     "previous_title": "HTTP Storage Plugin",
                     "previous_url": "/docs/http-storage-plugin/",
                     "relative_path": "_docs/connect-a-data-source/plugins/130-elasticsearch-plugin.md",
                     "title": "ElasticSearch Plugin",
                     "url": "/docs/elasticsearch-plugin/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source",
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "ODBC/JDBC Interfaces",
+                    "next_url": "/docs/odbc-jdbc-interfaces/",
+                    "parent": "Connect a Data Source",
+                    "previous_title": "ElasticSearch Plugin",
+                    "previous_url": "/docs/elasticsearch-plugin/",
+                    "relative_path": "_docs/connect-a-data-source/plugins/140-splunk-storage-plugin.md",
+                    "title": "Splunk Plugin",
+                    "url": "/docs/splunk-plugin/"
                 }
             ],
             "next_title": "Connect a Data Source Introduction",
@@ -5311,8 +5328,8 @@
                 }
             ],
             "children": [],
-            "next_title": "ODBC/JDBC Interfaces",
-            "next_url": "/docs/odbc-jdbc-interfaces/",
+            "next_title": "Splunk Plugin",
+            "next_url": "/docs/splunk-plugin/",
             "parent": "Connect a Data Source",
             "previous_title": "HTTP Storage Plugin",
             "previous_url": "/docs/http-storage-plugin/",
@@ -8300,8 +8317,8 @@
             "next_title": "Interfaces Introduction",
             "next_url": "/docs/interfaces-introduction/",
             "parent": "",
-            "previous_title": "ElasticSearch Plugin",
-            "previous_url": "/docs/elasticsearch-plugin/",
+            "previous_title": "Splunk Plugin",
+            "previous_url": "/docs/splunk-plugin/",
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md",
             "title": "ODBC/JDBC Interfaces",
             "url": "/docs/odbc-jdbc-interfaces/"
@@ -15430,6 +15447,23 @@
             "title": "Sort-Based and Hash-Based Memory-Constrained Operators",
             "url": "/docs/sort-based-and-hash-based-memory-constrained-operators/"
         },
+        "Splunk Plugin": {
+            "breadcrumbs": [
+                {
+                    "title": "Connect a Data Source",
+                    "url": "/docs/connect-a-data-source/"
+                }
+            ],
+            "children": [],
+            "next_title": "ODBC/JDBC Interfaces",
+            "next_url": "/docs/odbc-jdbc-interfaces/",
+            "parent": "Connect a Data Source",
+            "previous_title": "ElasticSearch Plugin",
+            "previous_url": "/docs/elasticsearch-plugin/",
+            "relative_path": "_docs/connect-a-data-source/plugins/140-splunk-storage-plugin.md",
+            "title": "Splunk Plugin",
+            "url": "/docs/splunk-plugin/"
+        },
         "Start-Up Options": {
             "breadcrumbs": [
                 {
@@ -19143,14 +19177,31 @@
                         }
                     ],
                     "children": [],
-                    "next_title": "ODBC/JDBC Interfaces",
-                    "next_url": "/docs/odbc-jdbc-interfaces/",
+                    "next_title": "Splunk Plugin",
+                    "next_url": "/docs/splunk-plugin/",
                     "parent": "Connect a Data Source",
                     "previous_title": "HTTP Storage Plugin",
                     "previous_url": "/docs/http-storage-plugin/",
                     "relative_path": "_docs/connect-a-data-source/plugins/130-elasticsearch-plugin.md",
                     "title": "ElasticSearch Plugin",
                     "url": "/docs/elasticsearch-plugin/"
+                },
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Connect a Data Source",
+                            "url": "/docs/connect-a-data-source/"
+                        }
+                    ],
+                    "children": [],
+                    "next_title": "ODBC/JDBC Interfaces",
+                    "next_url": "/docs/odbc-jdbc-interfaces/",
+                    "parent": "Connect a Data Source",
+                    "previous_title": "ElasticSearch Plugin",
+                    "previous_url": "/docs/elasticsearch-plugin/",
+                    "relative_path": "_docs/connect-a-data-source/plugins/140-splunk-storage-plugin.md",
+                    "title": "Splunk Plugin",
+                    "url": "/docs/splunk-plugin/"
                 }
             ],
             "next_title": "Connect a Data Source Introduction",
@@ -19775,8 +19826,8 @@
             "next_title": "Interfaces Introduction",
             "next_url": "/docs/interfaces-introduction/",
             "parent": "",
-            "previous_title": "ElasticSearch Plugin",
-            "previous_url": "/docs/elasticsearch-plugin/",
+            "previous_title": "Splunk Plugin",
+            "previous_url": "/docs/splunk-plugin/",
             "relative_path": "_docs/060-odbc-jdbc-interfaces.md",
             "title": "ODBC/JDBC Interfaces",
             "url": "/docs/odbc-jdbc-interfaces/"
