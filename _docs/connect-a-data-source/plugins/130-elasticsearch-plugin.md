@@ -1,12 +1,12 @@
 ---
-title: "ElasticSearch Plugin"
-slug: "ElasticSearch Plugin"
+title: "ElasticSearch Storage Plugin"
+slug: "ElasticSearch Storage Plugin"
 parent: "Connect a Data Source"
 ---
 
 **Introduced in release:** 1.19
 
-Drill ElasticSearch storage plugin allows you to perform SQL queries against ElasticSearch indices.
+Drill's ElasticSearch storage plugin allows you to perform SQL queries against ElasticSearch indices.
 This storage plugin implementation is based on [Apache Calcite adapter for ElasticSearch](https://calcite.apache.org/docs/elasticsearch_adapter.html).
 
 For more details about supported versions please refer to [Supported versions](https://calcite.apache.org/docs/elasticsearch_adapter.html#supported-versions) page.

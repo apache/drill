@@ -1,6 +1,6 @@
 ---
-title: "Splunk Plugin"
-slug: "Splunk Plugin"
+title: "Splunk Storage Plugin"
+slug: "Splunk Storage Plugin"
 parent: "Connect a Data Source"
 ---
 
