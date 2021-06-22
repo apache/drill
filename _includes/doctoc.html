@@ -5,7 +5,7 @@ Notes:
 * File names don't matter either, except the alphabetical order between them.
 {% endcomment %}
       
-{% assign page_data = site.data.docs.by_title[page.title] %}
+{% assign page_data = site.data.docs[site.active_lang].by_title[page.title] %}
 
 {% capture titles %} {{ page.title }}|{{ page_data.breadcrumbs[0].title}}|{{page_data.breadcrumbs[1].title}}{% endcapture %}
 {% capture titles_array %} {{ titles | split: "|" }} {% endcapture %}
@@ -13,7 +13,7 @@ Notes:
   <div class="docsidebar">
     <div class="docsidebarwrapper">
       <ul style="display: block;">
-      {% for doc0 in site.data.docs.hierarchy %}
+      {% for doc0 in site.data.docs[site.active_lang].hierarchy %}
         {% if doc0.children.size == 0 %}
           <li class="toctree-l1{% if page.title == doc0.title %} current{% endif %}"><a class="reference internal" href="{{ site.baseurl }}{{ doc0.url }}">{{ doc0.title }}</a></li>
         {% else %}
