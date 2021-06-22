@@ -14,13 +14,14 @@ additional process, such as the creation of a JIRA ticket.
 gem install bundler jekyll:3.9.0
 ```
 
-3. Install `jekyll-redirect-from` `v0.9.1`:
+3. Install Jekyll plugins.
 
 ```
 gem install jekyll-redirect-from:0.9.1
+gem install jekyll-polyglot
 ```
 
-4. Install Python 3
+5. Install Python 3
 
 Please make sure that specific versions of libraries are installed since building the site with other versions
 may cause some issues like including md document index into the references, etc.
@@ -125,6 +126,20 @@ redirect_to:
   - http://<new_url>
 ---
 ```
+# Multilingual
+
+Multilingual support was added to the docs section of the website in June 2021 using the polyglot Jekyll plugin.  The fallback language is set to English which means that when a translated page is not available the English version will be shown.
+
+## Add a new language
+
+1. Add the two-letter language code to the `languages` property in _config.yml.
+2. Add a subdirectory with name equal to the language code under _docs/.
+
+## Add translated documentation
+
+1. Incrementally add translated pages to the relevant language subdirectory under _docs/ by replicating the path structure under _docs/en.
+2. In the "front matter" at the top of each new page, translate both `title` and `parent` but leave the `slug` the same as the English page and set `lang` to the language code you are writing in.
+3. A language which is incompletely translated is still deployable with no adverse effects (see the remark concerning English fallback above).
 
 # Compiling the Website
 

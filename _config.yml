@@ -31,6 +31,38 @@ sass:
 
 plugins:
   - jekyll-redirect-from
+  - jekyll-polyglot
 
 include:
   - .asf.yaml
+
+exclude:
+  - .gitignore
+      
+languages: ["en", "zh"]
+default_lang: "en"
+exclude_from_localization:
+    - apidocs
+    - blog
+    - common
+    - contrib
+    - css
+    - _data
+    - distribution
+    - drill-yarn
+    - exec
+    - fonts
+    - images
+    - _includes
+    - js
+    - _layouts
+    - logical
+    - metastore
+    - protocol
+    - _sass
+    - _site
+    - static
+    - _tools
+    - tools
+parallel_localization: true
+lang_from_path: true

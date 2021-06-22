@@ -9,7 +9,17 @@
   <li class='expand-menu'>
   <a href="javascript:void(0);"><span class='menu-text'>Menu</span><span class='expand-icon'><i class="fa fa-bars"></i></span></a>
   </li>
-  <li class='clear-float'></li>
+  <li class="clear-float"></li>
+  <li class="nav">
+	<a>Language</a>
+	<ul>
+		{% for tongue in site.languages %}
+		<li>
+			<a {% if tongue == site.active_lang %}style="font-weight: bold;"{% endif %} {% static_href %}href="{% if tongue == site.default_lang %}{{site.baseurl}}{{page.url}}{% else %}{{site.baseurl}}/{{ tongue }}{{page.url}}{% endif %}"{% endstatic_href %} >{{ tongue }}</a>
+		</li>
+		{% endfor %}
+	</ul>
+  </li>
   <li class="apache-link">
     <a href="{{ site.baseurl }}/apacheASF/">Apache</a>
   </li>
@@ -19,7 +29,7 @@
   <li class="documentation-menu">
     <a href="{{ site.baseurl }}/docs/">Documentation</a>
     <ul>
-      {% for doc in site.data.docs.hierarchy %}
+      {% for doc in site.data.docs[site.active_lang].hierarchy %}
         <li><a href="{{ site.baseurl }}{{ doc.url }}">{{ doc.title }}</a></li>
       {% endfor %}
     </ul>
