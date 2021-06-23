@@ -55,6 +55,25 @@
       {inputType: "UInt8", outputType: "NullableUInt8", maxval: "Long"},
       {inputType: "NullableUInt8", outputType: "NullableUInt8", maxval: "Long"}
      ]
+   },
+   {className: "BitwiseXor", funcName: "bit_xor", aliasName: "", types: [
+     {inputType: "BigInt", outputType: "NullableBigInt", maxval: "Integer"},
+      {inputType: "NullableBigInt", outputType: "NullableBigInt", maxval: "Integer"},
+      {inputType: "Int", outputType: "NullableInt", maxval: "Integer"},
+      {inputType: "NullableInt", outputType: "NullableInt", maxval: "Integer"},
+      {inputType: "SmallInt", outputType: "NullableSmallInt", maxval: "Byte", extraCast: "short"},
+      {inputType: "NullableSmallInt", outputType: "NullableSmallInt", maxval: "Byte", extraCast: "short"},
+      {inputType: "TinyInt", outputType: "NullableTinyInt", maxval: "Byte", extraCast: "byte"},
+      {inputType: "NullableTinyInt", outputType: "NullableTinyInt", maxval: "Byte", extraCast: "byte"},
+      {inputType: "UInt1", outputType: "NullableInt", maxval: "Byte"},
+      {inputType: "NullableUInt1", outputType: "NullableInt", maxval: "Byte"},
+      {inputType: "UInt2", outputType: "NullableInt", maxval: "Character"},
+      {inputType: "NullableUInt2", outputType: "NullableInt", maxval: "Character"},
+      {inputType: "UInt4", outputType: "NullableInt", maxval: "Integer"},
+      {inputType: "NullableUInt4", outputType: "NullableInt", maxval: "Integer"},
+      {inputType: "UInt8", outputType: "NullableUInt8", maxval: "Long"},
+      {inputType: "NullableUInt8", outputType: "NullableUInt8", maxval: "Long"}
+     ]
    }
   ]
 }
