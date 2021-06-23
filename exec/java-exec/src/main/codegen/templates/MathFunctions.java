@@ -105,7 +105,11 @@ public class GMathFunctions{
   <#list mathFunc.binaryMathFunctions as func>
   <#list func.types as type>
 
+  <#if func.aliasName == "">
   @FunctionTemplate(name = "${func.funcName}", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  <#else>
+  @FunctionTemplate(names = {"${func.funcName}", "${func.aliasName}"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  </#if>
   public static class ${func.className}${type.input} implements DrillSimpleFunc {
 
     @Param ${type.input}Holder input1;
