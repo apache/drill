@@ -152,3 +152,22 @@ Starting in Drill 1.16, Drill uses a Value operator instead of a Scan operator t
  
 You can use [query directory functions]({{site.baseurl}}/docs/query-directory-functions/) to restrict a query to one of a number of subdirectories and to prevent Drill from scanning all data in directories.
 
+## Querying Multiple Directories in One Query by Wildcard Matching
+
+You can query multiple directories and multiple files in one query with the help of Wildcard Matching conveniently.
+
+1. Query a set of directories:
+   
+        SELECT * FROM dfs.`multilevel/parquet/{1994,1995}`;
+
+2. Query all files in a directory:
+
+        SELETCT * FROM dfs.`multilevel/parquet/1994/*`;
+
+3. Query multiple directories by single character wildcard matching:
+
+        SELECT * FROM dfs.`multilevel/parquet/199?/*`
+   
+4. Query multiple directories by single character range wildcard matching:
+
+        SELECT * FROM dfs.`multilevel/parquet/199[4-5]/*`
