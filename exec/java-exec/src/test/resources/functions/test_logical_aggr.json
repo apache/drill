@@ -62,9 +62,18 @@
       "expr" : "bit_or(`D`) "
     }, {
       "ref" : "`EXPR$6`",
-      "expr" : "bool_or(`C`) "
+      "expr" : "bit_xor(`A`) "
     }, {
       "ref" : "`EXPR$7`",
+      "expr" : "bit_xor(`B`) "
+    }, {
+      "ref" : "`EXPR$8`",
+      "expr" : "bit_xor(`D`) "
+    }, {
+      "ref" : "`EXPR$9`",
+      "expr" : "bool_or(`C`) "
+    }, {
+      "ref" : "`EXPR$10`",
       "expr" : "bool_and(`C`) "
     } ]
   }, {
