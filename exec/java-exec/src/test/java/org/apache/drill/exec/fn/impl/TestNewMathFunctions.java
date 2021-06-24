@@ -154,9 +154,9 @@ public class TestNewMathFunctions extends BaseTestQuery {
 
   @Test
   public void testBitTwiddlers() throws Throwable {
-	final Object [] expected = new Object[] { 3072, 3, 14 };
-	// Note bitwise AND and OR do not have Drill function implementations
-	runTest(expected, "functions/testBitTwiddlers.json");
+    final Object [] expected = new Object[] { 3072, 3, 14 };
+    // Note bitwise AND and OR do not have Drill function implementations
+    runTest(expected, "functions/testBitTwiddlers.json");
   }
 
   @Test
