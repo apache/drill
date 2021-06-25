@@ -25,7 +25,6 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.IntHolder;
 
 /**
  * Function templates for Bit/BOOLEAN functions other than comparison
@@ -71,22 +70,4 @@ public class BitFunctions {
     }
   }
 
-
-  @FunctionTemplate(names = {FunctionNames.XOR, "^"},
-                    scope = FunctionScope.SIMPLE,
-                    nulls = NullHandling.NULL_IF_NULL)
-  public static class IntXor implements DrillSimpleFunc {
-
-    @Param IntHolder left;
-    @Param IntHolder right;
-    @Output IntHolder out;
-
-    @Override
-    public void setup() {}
-
-    @Override
-    public void eval() {
-      out.value = left.value ^ right.value;
-    }
-  }
 }

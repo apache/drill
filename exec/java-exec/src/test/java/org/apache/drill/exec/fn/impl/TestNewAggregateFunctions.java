@@ -83,7 +83,7 @@ public class TestNewAggregateFunctions extends PopUnitTestBase {
   public void testBitwiseAggrFuncs() throws Exception {
     String physicalPlan = "/functions/test_logical_aggr.json";
     String inputDataFile = "/logical_aggr_input.json";
-    Object[] expected = {0L, 4L, 4L, 7L, -2L, 1L, true, false};
+    Object[] expected = {0L, 4L, 4L, 7L, -2L, 1L, 3L, 4L, 0L, true, false};
 
     runTest(physicalPlan, inputDataFile, expected);
 

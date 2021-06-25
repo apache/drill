@@ -85,6 +85,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     inter.value = ${type.maxval}.MAX_VALUE;
     <#elseif aggrtype.funcName == "bit_or">
     inter.value = 0;
+    <#elseif aggrtype.funcName == "bit_xor">
+    inter.value = 0;
   </#if>
   }
 
@@ -102,6 +104,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     inter.value = <#if type.extraCast ??>(${type.extraCast})</#if>(inter.value & in.value);
     <#elseif aggrtype.funcName == "bit_or">
     inter.value = <#if type.extraCast ??>(${type.extraCast})</#if>(inter.value | in.value);
+    <#elseif aggrtype.funcName == "bit_xor">
+    inter.value = <#if type.extraCast ??>(${type.extraCast})</#if>(inter.value ^ in.value);
   </#if>
 
     <#if type.inputType?starts_with("Nullable")>
@@ -117,6 +121,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
         out.value = inter.value;
         <#elseif aggrtype.funcName == "bit_or">
         out.value = inter.value;
+        <#elseif aggrtype.funcName == "bit_xor">
+        out.value = inter.value;
       </#if>
     } else {
       out.isSet = 0;
@@ -129,6 +135,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#if aggrtype.funcName == "bit_and">
       inter.value = ${type.maxval}.MAX_VALUE;
       <#elseif aggrtype.funcName == "bit_or">
+      inter.value = 0;
+      <#elseif aggrtype.funcName == "bit_xor">
       inter.value = 0;
     </#if>
   }

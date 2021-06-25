@@ -152,11 +152,18 @@ public class TestNewMathFunctions extends BaseTestQuery {
     runTest(expected, "functions/testDivModTruncFunctions.json");
   }
 
- @Test
- public void testIsNumeric() throws Throwable{
-   final Object [] expected = new Object[] {1, 1, 1, 0};
-   runTest(expected, "functions/testIsNumericFunction.json");
- }
+  @Test
+  public void testBitTwiddlers() throws Throwable {
+    final Object [] expected = new Object[] { 3072, 3, 14 };
+    // Note bitwise AND and OR do not have Drill function implementations
+    runTest(expected, "functions/testBitTwiddlers.json");
+  }
+
+  @Test
+  public void testIsNumeric() throws Throwable{
+    final Object [] expected = new Object[] {1, 1, 1, 0};
+    runTest(expected, "functions/testIsNumericFunction.json");
+  }
 
   @Test
   public void testLog10WithDouble() throws Throwable {

@@ -112,7 +112,7 @@ unaryMathFunctions : [
 	}
   ],  
   binaryMathFunctions : [
-    {className: "Div", funcName: "div", javaFunc : " / ", types: [
+    {className: "Div", funcName: "div", aliasName: "", javaFunc : " / ", types: [
       {input: "Int",  outputType: "Int", castType: "int"},
       {input: "BigInt",  outputType: "BigInt", castType: "long"},
       {input: "Float4", outputType: "Float4", castType: "float", roundingRequired: "true"},
@@ -125,7 +125,7 @@ unaryMathFunctions : [
       {input: "UInt8", outputType: "UInt8", castType: "long"}     
      ] 
     },
-    {className: "Mod", funcName: "mod", javaFunc : " % ", types: [
+    {className: "Mod", funcName: "mod", aliasName: "", javaFunc : " % ", types: [
       {input: "Int",  outputType: "Int", castType: "int"},
       {input: "BigInt",  outputType: "BigInt", castType: "long"},
       {input: "Float4", outputType: "Float4", castType: "float"},
@@ -138,7 +138,7 @@ unaryMathFunctions : [
       {input: "UInt8", outputType: "UInt8", castType: "long"}
      ] 
     },
-    {className: "LeftShift", funcName: "lshift", javaFunc: " << ", types: [
+    {className: "LeftShift", funcName: "lshift", aliasName: "", javaFunc: " << ", types: [
       {input: "Int", outputType: "Int", castType: "int"},
       {input: "BigInt", outputType: "BigInt", castType: "long"},
       {input: "SmallInt", outputType: "SmallInt", castType: "short"},
@@ -149,7 +149,18 @@ unaryMathFunctions : [
       {input: "UInt8", outputType: "UInt8", castType: "long"}
      ]
     },
-    {className: "RightShift", funcName: "rshift", javaFunc: " >> ", types: [
+    {className: "RightShift", funcName: "rshift", aliasName: "", javaFunc: " >> ", types: [
+      {input: "Int", outputType: "Int", castType: "int"},
+      {input: "BigInt", outputType: "BigInt", castType: "long"},
+      {input: "SmallInt", outputType: "SmallInt", castType: "short"},
+      {input: "TinyInt", outputType: "TinyInt", castType: "byte"},
+      {input: "UInt1", outputType: "UInt1", castType: "byte"},
+      {input: "UInt2", outputType: "UInt2", castType: "char"},
+      {input: "UInt4", outputType: "UInt4", castType: "int"},
+      {input: "UInt8", outputType: "UInt8", castType: "long"}
+     ]
+    },
+	{className: "Xor", funcName: "xor", aliasName: "^", javaFunc: " ^ ", types: [
       {input: "Int", outputType: "Int", castType: "int"},
       {input: "BigInt", outputType: "BigInt", castType: "long"},
       {input: "SmallInt", outputType: "SmallInt", castType: "short"},
