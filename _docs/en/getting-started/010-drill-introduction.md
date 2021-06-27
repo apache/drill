@@ -10,6 +10,25 @@ applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments.   
 
+## Apache Drill Key Features
+Key features of Apache Drill are:
+
+  * Low-latency SQL queries
+  * Dynamic queries on self-describing data in files (such as JSON, Parquet, text) and HBase tables, without requiring metadata definitions in the Hive metastore.
+  * ANSI SQL
+  * Nested data support
+  * Integration with Apache Hive (queries on Hive tables and views, support for all Hive file formats and Hive UDFs)
+  * BI/SQL tool integration using standard JDBC/ODBC drivers
+
+## Quick Links
+If you've never used Drill, visit these links to get a jump start:
+
+* [Drill in 10 Minutes]({{ site.baseurl }}/docs/drill-in-10-minutes/)
+* [Query Files]({{ site.baseurl }}/docs/querying-a-file-system)
+* [Query HBase]({{ site.baseurl }}/docs/querying-hbase)
+* [SQL Support]({{ site.baseurl }}/docs/sql-reference-introduction/)
+* [Drill Tutorials]({{ site.baseurl }}/docs/tutorials-introduction)
+
 ## What's New in Apache Drill 1.19
 * <a href='https://issues.apache.org/jira/browse/DRILL-92'>DRILL-92</a> - Cassandra Storage Plugin
 * <a href='https://issues.apache.org/jira/browse/DRILL-3637'>DRILL-3637</a> - Elasticsearch Storage Plugin
@@ -315,24 +334,4 @@ Apache Drill 1.0 offers the following new features:
 * Support for a new storage plugin input format: [Avro](http://avro.apache.org/docs/current/spec.html)
 
 In this release, Drill disables the DECIMAL data type, including casting to DECIMAL and reading DECIMAL types from Parquet and Hive. You can [enable the DECIMAL type](docs/supported-data-types/#enabling-the-decimal-type), but this is not recommended.
-
-## Apache Drill Key Features
-
-Key features of Apache Drill are:
-
-  * Low-latency SQL queries
-  * Dynamic queries on self-describing data in files (such as JSON, Parquet, text) and HBase tables, without requiring metadata definitions in the Hive metastore.
-  * ANSI SQL
-  * Nested data support
-  * Integration with Apache Hive (queries on Hive tables and views, support for all Hive file formats and Hive UDFs)
-  * BI/SQL tool integration using standard JDBC/ODBC drivers
-
-## Quick Links
-If you've never used Drill, visit these links to get a jump start:
-
-* [Drill in 10 Minutes]({{ site.baseurl }}/docs/drill-in-10-minutes/)
-* [Query Files]({{ site.baseurl }}/docs/querying-a-file-system)
-* [Query HBase]({{ site.baseurl }}/docs/querying-hbase)
-* [SQL Support]({{ site.baseurl }}/docs/sql-reference-introduction/)
-* [Drill Tutorials]({{ site.baseurl }}/docs/tutorials-introduction)
 
