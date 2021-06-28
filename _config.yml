@@ -43,7 +43,6 @@ languages: ["en", "zh"]
 default_lang: "en"
 exclude_from_localization:
     - apidocs
-    - blog
     - common
     - contrib
     - css
