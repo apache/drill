@@ -121,10 +121,10 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   }
 
   protected void populateImplicitFieldMap(SimpleHttp http) {
-    implicitColumns.getColumn("_response_message").setValue(http.getResponseMessage());
-    implicitColumns.getColumn("_response_protocol").setValue(http.getResponseProtocol());
-    implicitColumns.getColumn("_response_url").setValue(http.getResponseURL());
-    implicitColumns.getColumn("_response_code").setValue(http.getResponseCode());
+    implicitColumns.getColumn(STRING_METADATA_FIELDS[0]).setValue(http.getResponseMessage());
+    implicitColumns.getColumn(STRING_METADATA_FIELDS[1]).setValue(http.getResponseProtocol());
+    implicitColumns.getColumn(STRING_METADATA_FIELDS[2]).setValue(http.getResponseURL());
+    implicitColumns.getColumn(RESPONSE_CODE_FIELD).setValue(http.getResponseCode());
   }
 
   protected HttpUrl buildUrl() {

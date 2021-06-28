@@ -182,7 +182,7 @@ public class SimpleHttp {
       responseURL = response.request().url().toString();
 
       // If the request is unsuccessful, throw a UserException
-      if (!response.isSuccessful()) {
+      if (! isSuccessful(responseCode)) {
         throw UserException
           .dataReadError()
           .message("HTTP request failed")
@@ -203,6 +203,23 @@ public class SimpleHttp {
         .addContext("Error message", e.getMessage())
         .addContext(errorContext)
         .build(logger);
+    }
+  }
+
+  /**
+   * This function is a replacement for the isSuccessful() function which comes
+   * with okhttp3.  The issue is that in some cases, a user may not want Drill to throw
+   * errors on 400 response codes.  This function will return true/false depending on the
+   * configuration for the specific connection.
+   * @param responseCode An int of the connection code
+   * @return True if the response code is 200-299 and possibly 400-499, false if other
+   */
+  private boolean isSuccessful(int responseCode) {
+    if (scanDefn.tableSpec().connectionConfig().errorOn400()) {
+      return ((responseCode >= 200 && responseCode <=299) ||
+        (responseCode >= 400 && responseCode <=499));
+    } else {
+      return responseCode >= 200 && responseCode <=299;
     }
   }
 

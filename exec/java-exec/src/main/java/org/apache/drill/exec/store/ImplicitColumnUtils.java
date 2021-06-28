@@ -33,23 +33,47 @@ import java.util.Map;
 public class ImplicitColumnUtils {
   private static final Logger logger = LoggerFactory.getLogger(ImplicitColumnUtils.class);
 
+  /**
+   * This class represents an implicit column in a dataset.  These columns are typically used for metadata that is consistent
+   * across an entire dataset.  A filename for example, or HTTP response codes.  It is good practice to name
+   * implicit fields with an underscore so that these field names do not conflict with fields from the user's
+   * data.  For example _http_response_code.
+   *
+   * Implicit fields do not appear in star queries so a user must explicitly include them in queries for them to appear.
+   */
   public static class ImplicitColumns {
     private final Map<String, ImplicitColumn> implicitColumns;
     private final RowSetLoader rowWriter;
 
-    public ImplicitColumns (RowSetLoader rowWriter) {
+    public ImplicitColumns(RowSetLoader rowWriter) {
       this.implicitColumns = new HashMap<>();
       this.rowWriter = rowWriter;
     }
 
+    /**
+     * Adds an implicit column.  If there already is a column with the same name, the previous column
+     * will be overwritten.
+     * @param fieldName Name of the implicit column. Recommended that this start with an underscore.
+     * @param type The Drill MinorType of the implicit column.  Currently only supports simple types.
+     */
     public void addImplicitColumn(String fieldName, MinorType type) {
       implicitColumns.put(fieldName, new ImplicitColumn(fieldName, type, rowWriter));
     }
 
+    /**
+     * Returns a requested ImplicitColumn.  If the column cannot be found, will return null.
+     * @param fieldName The field name of the desired column
+     * @return The specific column requested, null if that column does not exist.
+     */
     public ImplicitColumn getColumn(String fieldName) {
       return implicitColumns.get(fieldName);
     }
 
+    /**
+     * This function writes the data to the implicit columns. This should be called in the next() method
+     * in a batch reader so that the columns get populated.  If there are no implicit columns, this function
+     * will do nothing, so null checks are not necessary.
+     */
     public void writeImplicitColumns() {
       ImplicitColumn column;
       ScalarWriter writer;

@@ -88,7 +88,7 @@ public class HttpXMLBatchReader extends HttpBatchReader {
 
       RowSetLoader rootRowWriter = resultLoader.writer();
       xmlReader.open(rootRowWriter, errorContext);
-      xmlReader.setMetadata(implicitColumns);
+      xmlReader.implicitFields(implicitColumns);
     } catch (XMLStreamException e) {
       throw UserException
         .dataReadError(e)

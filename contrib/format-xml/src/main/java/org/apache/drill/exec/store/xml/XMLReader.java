@@ -332,7 +332,7 @@ public class XMLReader {
     }
   }
 
-  public void setMetadata(ImplicitColumns metadata) {
+  public void implicitFields(ImplicitColumns metadata) {
     this.metadata = metadata;
   }
 

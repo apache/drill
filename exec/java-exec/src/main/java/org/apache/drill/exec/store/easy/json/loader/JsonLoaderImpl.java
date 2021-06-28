@@ -148,6 +148,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     private String dataPath;
     private MessageParser messageParser;
     private ImplicitColumns implicitFields;
+    private int maxRows;
 
     public JsonLoaderBuilder resultSetLoader(ResultSetLoader rsLoader) {
       this.rsLoader = rsLoader;
@@ -204,6 +205,11 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
       return this;
     }
 
+    public JsonLoaderBuilder maxRows(int maxRows) {
+      this.maxRows = maxRows;
+      return this;
+    }
+
     public JsonLoader build() {
       // Defaults, primarily for testing.
       if (options == null) {
@@ -226,6 +232,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   private final JsonStructureParser parser;
   private final FieldFactory fieldFactory;
   private final ImplicitColumns implicitFields;
+  private final int maxRows;
   private boolean eof;
 
   /**
@@ -245,6 +252,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     this.options = builder.options;
     this.errorContext = builder.errorContext;
     this.implicitFields = builder.implicitFields;
+    this.maxRows = builder.maxRows;
     this.fieldFactory = buildFieldFactory(builder);
     this.parser = buildParser(builder);
   }
