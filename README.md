@@ -128,21 +128,21 @@ redirect_to:
 ```
 # Multilingual
 
-Multilingual support was added to the docs section of the website in June 2021 using the polyglot Jekyll plugin.  The fallback language is set to English which means that when a translated page is not available the English version will be shown.   This means that a language which is incompletely translated is still deployable with no adverse effects.
+Multilingual support was added to the website in June 2021 using the polyglot Jekyll plugin.  The fallback language is set to English which means that when a translated page is not available the English version will be shown.   This means that a language which is incompletely translated is still deployable with no adverse effects.
 
 ## Add a new language
 
-1. Add the two-letter language code (*lang-code* forthwith) to the `languages` property in _config.yml.
-2. Add a /*lang-code* subdirectory to the root directory.
-3. Add a *lang-code* subdirectory to each collection that will be translated, e.g. _docs/*lang-code*.
+1. Add the two-letter language code (`lang-code` forthwith) to the `languages` property in _config.yml.
+2. Add a `lang-code/` subdirectory to the root directory.
+3. Add a `lang-code/` subdirectory to each collection that will be translated, e.g. `_docs/lang-code/`.
 
 ## Add translated site pages
 
-The English versions of "site" pages such as index.html are stored in the root directory.  Create corresponding translated pages under /*lang-code* in which you set `lang` in the front matter to *lang-code* and leave the `permalink` the same as the English page.
+The English versions of "site" pages such as index.html are stored in the root directory.  Create corresponding translated pages under `lang-code/` in which you set `lang` in the front matter to `lang-code` and leave the `permalink` the same as the English page.
 
 ## Add translated collection pages
 
-The English versions of "collection" pages such as the markdown under _docs/ are stored in an en/ subdirectory of the collection root.  Create corresponding translated pages in the collection under /*lang-code* in which you translate both `title` and `parent` in the front matter but leave the `slug` the same as the English page and set `lang` to *lang-code*.
+The English versions of "collection" pages such as the markdown under _docs/ are stored in an en/ subdirectory of the collection root.  Create corresponding translated pages in the collection under `lang-code/` in which you translate both `title` and `parent` in the front matter but leave the `slug` the same as the English page and set `lang` to `lang-code`.
 
 # Compiling the Website
 
