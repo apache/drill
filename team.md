@@ -1,6 +1,7 @@
 ---
 layout: page
 title: "Team"
+permalink: /team
 ---
 The Apache Drill developer community is growing rapidly and currently includes dozens of contributors employed by many organizations, such as MapR, Intuit, Hortonworks, Elastic, LinkedIn, Pentaho, Cisco and the University of Wisconsin-Madison.
 
