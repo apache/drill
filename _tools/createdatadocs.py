@@ -64,6 +64,7 @@ if __name__ == '__main__':
     for lang in langs:
         # the fallback language, en, ends up at _site/ rather than _site/en/
         input_path = f'_site/{lang if lang != "en" else "."}/data/index.html'
+        # input_path = f'_site/{lang}/data/index.html'
         output_path = '_data/docs.json'
 
         with open(input_path) as input_file:

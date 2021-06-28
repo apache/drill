@@ -1,6 +1,8 @@
-______________________________________________________________________
-
-## title: "Aggregate and Aggregate Statistical" slug: "Aggregate and Aggregate Statistical" parent: "SQL Functions"
+---
+title: "Aggregate and Aggregate Statistical"
+slug: "Aggregate and Aggregate Statistical"
+parent: "SQL Functions"
+---
 
 ## Aggregate Functions
 
@@ -254,7 +256,8 @@ SELECT COUNT(*) FROM . . .
   Returns the number of distinct values in the expression.
 - ALL expression\
   Returns the number of values of the specified expression.
-- - (asterisk) Returns the number of records in the table.
+- \* (asterisk)\
+-  Returns the number of records in the table.
 
 ### COUNT Examples
 

@@ -25094,7 +25094,7 @@
                 "next_title": "Architecture Introduction",
                 "next_url": "/docs/architecture-introduction/",
                 "parent": "",
-                "previous_title": "\u4e3a\u4ec0\u4e48\u94bb (Why Drill)",
+                "previous_title": "\u4e3a\u4ec0\u4e48\u9009\u62e9 Drill",
                 "previous_url": "/docs/why-drill/",
                 "relative_path": "_docs/en/020-architecture.md",
                 "title": "Architecture",
@@ -41289,86 +41289,86 @@
                 "title": "XML Format Plugin",
                 "url": "/docs/xml-format-plugin/"
             },
-            "\u4e3a\u4ec0\u4e48\u94bb (Why Drill)": {
+            "\u4e3a\u4ec0\u4e48\u9009\u62e9 Drill": {
                 "breadcrumbs": [
                     {
-                        "title": "\u5f00\u59cb (Getting Started)",
+                        "title": "\u65b0\u624b\u5f00\u59cb",
                         "url": "/docs/getting-started/"
                     }
                 ],
                 "children": [],
                 "next_title": "Architecture",
                 "next_url": "/docs/architecture/",
-                "parent": "\u5f00\u59cb (Getting Started)",
-                "previous_title": "\u94bb\u5934\u4ecb\u7ecd (Drill Introduction)",
+                "parent": "\u65b0\u624b\u5f00\u59cb",
+                "previous_title": "\u4ec0\u4e48\u662f Drill",
                 "previous_url": "/docs/drill-introduction/",
                 "relative_path": "_docs/zh/getting-started/020-why-drill.md",
-                "title": "\u4e3a\u4ec0\u4e48\u94bb (Why Drill)",
+                "title": "\u4e3a\u4ec0\u4e48\u9009\u62e9 Drill",
                 "url": "/docs/why-drill/"
             },
-            "\u5f00\u59cb (Getting Started)": {
+            "\u4ec0\u4e48\u662f Drill": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u65b0\u624b\u5f00\u59cb",
+                        "url": "/docs/getting-started/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u4e3a\u4ec0\u4e48\u9009\u62e9 Drill",
+                "next_url": "/docs/why-drill/",
+                "parent": "\u65b0\u624b\u5f00\u59cb",
+                "previous_title": "\u65b0\u624b\u5f00\u59cb",
+                "previous_url": "/docs/getting-started/",
+                "relative_path": "_docs/zh/getting-started/010-drill-introduction.md",
+                "title": "\u4ec0\u4e48\u662f Drill",
+                "url": "/docs/drill-introduction/"
+            },
+            "\u65b0\u624b\u5f00\u59cb": {
                 "breadcrumbs": [],
                 "children": [
                     {
                         "breadcrumbs": [
                             {
-                                "title": "\u5f00\u59cb (Getting Started)",
+                                "title": "\u65b0\u624b\u5f00\u59cb",
                                 "url": "/docs/getting-started/"
                             }
                         ],
                         "children": [],
-                        "next_title": "\u4e3a\u4ec0\u4e48\u94bb (Why Drill)",
+                        "next_title": "\u4e3a\u4ec0\u4e48\u9009\u62e9 Drill",
                         "next_url": "/docs/why-drill/",
-                        "parent": "\u5f00\u59cb (Getting Started)",
-                        "previous_title": "\u5f00\u59cb (Getting Started)",
+                        "parent": "\u65b0\u624b\u5f00\u59cb",
+                        "previous_title": "\u65b0\u624b\u5f00\u59cb",
                         "previous_url": "/docs/getting-started/",
                         "relative_path": "_docs/zh/getting-started/010-drill-introduction.md",
-                        "title": "\u94bb\u5934\u4ecb\u7ecd (Drill Introduction)",
+                        "title": "\u4ec0\u4e48\u662f Drill",
                         "url": "/docs/drill-introduction/"
                     },
                     {
                         "breadcrumbs": [
                             {
-                                "title": "\u5f00\u59cb (Getting Started)",
+                                "title": "\u65b0\u624b\u5f00\u59cb",
                                 "url": "/docs/getting-started/"
                             }
                         ],
                         "children": [],
                         "next_title": "Architecture",
                         "next_url": "/docs/architecture/",
-                        "parent": "\u5f00\u59cb (Getting Started)",
-                        "previous_title": "\u94bb\u5934\u4ecb\u7ecd (Drill Introduction)",
+                        "parent": "\u65b0\u624b\u5f00\u59cb",
+                        "previous_title": "\u4ec0\u4e48\u662f Drill",
                         "previous_url": "/docs/drill-introduction/",
                         "relative_path": "_docs/zh/getting-started/020-why-drill.md",
-                        "title": "\u4e3a\u4ec0\u4e48\u94bb (Why Drill)",
+                        "title": "\u4e3a\u4ec0\u4e48\u9009\u62e9 Drill",
                         "url": "/docs/why-drill/"
                     }
                 ],
-                "next_title": "\u94bb\u5934\u4ecb\u7ecd (Drill Introduction)",
+                "next_title": "\u4ec0\u4e48\u662f Drill",
                 "next_url": "/docs/drill-introduction/",
                 "parent": "",
                 "previous_title": "",
                 "previous_url": "",
                 "relative_path": "_docs/zh/010-getting-started.md",
-                "title": "\u5f00\u59cb (Getting Started)",
+                "title": "\u65b0\u624b\u5f00\u59cb",
                 "url": "/docs/getting-started/"
-            },
-            "\u94bb\u5934\u4ecb\u7ecd (Drill Introduction)": {
-                "breadcrumbs": [
-                    {
-                        "title": "\u5f00\u59cb (Getting Started)",
-                        "url": "/docs/getting-started/"
-                    }
-                ],
-                "children": [],
-                "next_title": "\u4e3a\u4ec0\u4e48\u94bb (Why Drill)",
-                "next_url": "/docs/why-drill/",
-                "parent": "\u5f00\u59cb (Getting Started)",
-                "previous_title": "\u5f00\u59cb (Getting Started)",
-                "previous_url": "/docs/getting-started/",
-                "relative_path": "_docs/zh/getting-started/010-drill-introduction.md",
-                "title": "\u94bb\u5934\u4ecb\u7ecd (Drill Introduction)",
-                "url": "/docs/drill-introduction/"
             }
         },
         "hierarchy": [
@@ -41378,45 +41378,45 @@
                     {
                         "breadcrumbs": [
                             {
-                                "title": "\u5f00\u59cb (Getting Started)",
+                                "title": "\u65b0\u624b\u5f00\u59cb",
                                 "url": "/docs/getting-started/"
                             }
                         ],
                         "children": [],
-                        "next_title": "\u4e3a\u4ec0\u4e48\u94bb (Why Drill)",
+                        "next_title": "\u4e3a\u4ec0\u4e48\u9009\u62e9 Drill",
                         "next_url": "/docs/why-drill/",
-                        "parent": "\u5f00\u59cb (Getting Started)",
-                        "previous_title": "\u5f00\u59cb (Getting Started)",
+                        "parent": "\u65b0\u624b\u5f00\u59cb",
+                        "previous_title": "\u65b0\u624b\u5f00\u59cb",
                         "previous_url": "/docs/getting-started/",
                         "relative_path": "_docs/zh/getting-started/010-drill-introduction.md",
-                        "title": "\u94bb\u5934\u4ecb\u7ecd (Drill Introduction)",
+                        "title": "\u4ec0\u4e48\u662f Drill",
                         "url": "/docs/drill-introduction/"
                     },
                     {
                         "breadcrumbs": [
                             {
-                                "title": "\u5f00\u59cb (Getting Started)",
+                                "title": "\u65b0\u624b\u5f00\u59cb",
                                 "url": "/docs/getting-started/"
                             }
                         ],
                         "children": [],
                         "next_title": "Architecture",
                         "next_url": "/docs/architecture/",
-                        "parent": "\u5f00\u59cb (Getting Started)",
-                        "previous_title": "\u94bb\u5934\u4ecb\u7ecd (Drill Introduction)",
+                        "parent": "\u65b0\u624b\u5f00\u59cb",
+                        "previous_title": "\u4ec0\u4e48\u662f Drill",
                         "previous_url": "/docs/drill-introduction/",
                         "relative_path": "_docs/zh/getting-started/020-why-drill.md",
-                        "title": "\u4e3a\u4ec0\u4e48\u94bb (Why Drill)",
+                        "title": "\u4e3a\u4ec0\u4e48\u9009\u62e9 Drill",
                         "url": "/docs/why-drill/"
                     }
                 ],
-                "next_title": "\u94bb\u5934\u4ecb\u7ecd (Drill Introduction)",
+                "next_title": "\u4ec0\u4e48\u662f Drill",
                 "next_url": "/docs/drill-introduction/",
                 "parent": "",
                 "previous_title": "",
                 "previous_url": "",
                 "relative_path": "_docs/zh/010-getting-started.md",
-                "title": "\u5f00\u59cb (Getting Started)",
+                "title": "\u65b0\u624b\u5f00\u59cb",
                 "url": "/docs/getting-started/"
             },
             {
@@ -41494,7 +41494,7 @@
                 "next_title": "Architecture Introduction",
                 "next_url": "/docs/architecture-introduction/",
                 "parent": "",
-                "previous_title": "\u4e3a\u4ec0\u4e48\u94bb (Why Drill)",
+                "previous_title": "\u4e3a\u4ec0\u4e48\u9009\u62e9 Drill",
                 "previous_url": "/docs/why-drill/",
                 "relative_path": "_docs/en/020-architecture.md",
                 "title": "Architecture",
