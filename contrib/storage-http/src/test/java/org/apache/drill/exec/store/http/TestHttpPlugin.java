@@ -89,12 +89,12 @@ public class TestHttpPlugin extends ClusterTest {
    */
   private static void makeLiveConfig() {
 
-    HttpApiConfig sunriseConfig = new HttpApiConfig("https://api.sunrise-sunset.org/json", "GET", null, null, null, null, null, null, null, null, null, 0);
+    HttpApiConfig sunriseConfig = new HttpApiConfig("https://api.sunrise-sunset.org/json", "GET", null, null, null, null, null, null, null, null, null, 0, false);
     HttpApiConfig sunriseWithParamsConfig = new HttpApiConfig("https://api.sunrise-sunset.org/json", "GET", null, null, null, null, null,
-        Arrays.asList("lat", "lng", "date"), "results", false, null, 0);
+        Arrays.asList("lat", "lng", "date"), "results", false, null, 0, false);
 
     HttpApiConfig stockConfig = new HttpApiConfig("https://api.worldtradingdata.com/api/v1/stock?symbol=SNAP,TWTR,VOD" +
-      ".L&api_token=zuHlu2vZaehdZN6GmJdTiVlp7xgZn6gl6sfgmI4G6TY4ej0NLOzvy0TUl4D4", "get", null, null, null, null, null, null, null, null, null, 0);
+      ".L&api_token=zuHlu2vZaehdZN6GmJdTiVlp7xgZn6gl6sfgmI4G6TY4ej0NLOzvy0TUl4D4", "get", null, null, null, null, null, null, null, null, null, 0, false);
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("stock", stockConfig);
@@ -122,7 +122,7 @@ public class TestHttpPlugin extends ClusterTest {
     // The connection acts like a schema.
     // Ignores the message body except for data.
     HttpApiConfig mockSchema = new HttpApiConfig("http://localhost:8091/json", "GET", headers,
-        "basic", "user", "pass", null, null, "results", null, null, 0);
+        "basic", "user", "pass", null, null, "results", null, null, 0, false);
 
     // Use the mock server with the HTTP parameters passed as WHERE
     // clause filters. The connection acts like a table.
@@ -130,15 +130,15 @@ public class TestHttpPlugin extends ClusterTest {
     // This is the preferred approach, the base URL contains as much info as possible;
     // all other parameters are specified in SQL. See README for an example.
     HttpApiConfig mockTable = new HttpApiConfig("http://localhost:8091/json", "GET", headers,
-        "basic", "user", "pass", null, Arrays.asList("lat", "lng", "date"), "results", false, null, 0);
+        "basic", "user", "pass", null, Arrays.asList("lat", "lng", "date"), "results", false, null, 0, false);
 
-    HttpApiConfig mockPostConfig = new HttpApiConfig("http://localhost:8091/", "POST", headers, null, null, null, "key1=value1\nkey2=value2", null, null, null, null, 0);
+    HttpApiConfig mockPostConfig = new HttpApiConfig("http://localhost:8091/", "POST", headers, null, null, null, "key1=value1\nkey2=value2", null, null, null, null, 0, false);
 
     HttpApiConfig mockCsvConfig = new HttpApiConfig("http://localhost:8091/csv", "GET", headers,
-      "basic", "user", "pass", null, null, "results", null, "csv", 0);
+      "basic", "user", "pass", null, null, "results", null, "csv", 0, false);
 
     HttpApiConfig mockXmlConfig = new HttpApiConfig("http://localhost:8091/xml", "GET", headers,
-      "basic", "user", "pass", null, null, "results", null, "xml", 2);
+      "basic", "user", "pass", null, null, "results", null, "xml", 2,false);
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("sunrise", mockSchema);
@@ -388,6 +388,80 @@ public class TestHttpPlugin extends ClusterTest {
         .addRow(mapArray(),"Marsh Marigold", "Caltha palustris", "4", "Mostly Sunny", "$6.81", "051799")
         .addRow(mapArray(), "Cowslip", "Caltha palustris", "4", "Mostly Shady", "$9.90", "030699")
         .addRow(mapArray(), "Dutchman's-Breeches", "Dicentra cucullaria", "3", "Mostly Shady", "$6.44", "012099")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void testImplicitFieldsWithJSON() throws Exception {
+    String sql = "SELECT _response_code, _response_message, _response_protocol, _response_url FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE));
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_code", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_message", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_protocol", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void testImplicitFieldsWithCSV() throws Exception {
+    String sql = "SELECT _response_code, _response_message, _response_protocol, _response_url FROM local.mockcsv.`csv?arg1=4`";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_CSV_RESPONSE));
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_code", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_message", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_protocol", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/csvcsv?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/csvcsv?arg1=4")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void testImplicitFieldsWithXML() throws Exception {
+    String sql = "SELECT _response_code, _response_message, _response_protocol, _response_url FROM local.mockxml.`?arg1=4` LIMIT 5";
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_XML_RESPONSE));
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_code", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_message", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_protocol", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
         .build();
 
       RowSetUtilities.verify(expected, results);

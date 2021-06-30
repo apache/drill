@@ -64,6 +64,10 @@ public class SimpleHttp {
   private final HttpProxyConfig proxyConfig;
   private final CustomErrorContext errorContext;
   private final HttpUrl url;
+  private String responseMessage;
+  private int responseCode;
+  private String responseProtocol;
+  private String responseURL;
 
   public SimpleHttp(HttpSubScan scanDefn, HttpUrl url, File tempDir,
       HttpProxyConfig proxyConfig, CustomErrorContext errorContext) {
@@ -171,8 +175,14 @@ public class SimpleHttp {
         .newCall(request)
         .execute();
 
+      // Preserve the response
+      responseMessage = response.message();
+      responseCode = response.code();
+      responseProtocol = response.protocol().toString();
+      responseURL = response.request().url().toString();
+
       // If the request is unsuccessful, throw a UserException
-      if (!response.isSuccessful()) {
+      if (! isSuccessful(responseCode)) {
         throw UserException
           .dataReadError()
           .message("HTTP request failed")
@@ -182,7 +192,7 @@ public class SimpleHttp {
           .build(logger);
       }
       logger.debug("HTTP Request for {} successful.", url());
-      logger.debug("Response Headers: {} ", response.headers().toString());
+      logger.debug("Response Headers: {} ", response.headers());
 
       // Return the InputStream of the response
       return Objects.requireNonNull(response.body()).byteStream();
@@ -194,6 +204,59 @@ public class SimpleHttp {
         .addContext(errorContext)
         .build(logger);
     }
+  }
+
+  /**
+   * This function is a replacement for the isSuccessful() function which comes
+   * with okhttp3.  The issue is that in some cases, a user may not want Drill to throw
+   * errors on 400 response codes.  This function will return true/false depending on the
+   * configuration for the specific connection.
+   * @param responseCode An int of the connection code
+   * @return True if the response code is 200-299 and possibly 400-499, false if other
+   */
+  private boolean isSuccessful(int responseCode) {
+    if (scanDefn.tableSpec().connectionConfig().errorOn400()) {
+      return ((responseCode >= 200 && responseCode <=299) ||
+        (responseCode >= 400 && responseCode <=499));
+    } else {
+      return responseCode >= 200 && responseCode <=299;
+    }
+  }
+
+  /**
+   * Gets the HTTP response code from the HTTP call.  Note that this value
+   * is only available after the getInputStream() method has been called.
+   * @return int value of the HTTP response code
+   */
+  public int getResponseCode() {
+    return responseCode;
+  }
+
+  /**
+   * Gets the HTTP response code from the HTTP call.  Note that this value
+   * is only available after the getInputStream() method has been called.
+   * @return int of HTTP response code
+   */
+  public String getResponseMessage() {
+    return responseMessage;
+  }
+
+  /**
+   * Gets the HTTP response code from the HTTP call.  Note that this value
+   * is only available after the getInputStream() method has been called.
+   * @return The HTTP response protocol
+   */
+  public String getResponseProtocol() {
+    return responseProtocol;
+  }
+
+  /**
+   * Gets the HTTP response code from the HTTP call.  Note that this value
+   * is only available after the getInputStream() method has been called.
+   * @return The HTTP response URL
+   */
+  public String getResponseURL() {
+    return responseURL;
   }
 
   /**

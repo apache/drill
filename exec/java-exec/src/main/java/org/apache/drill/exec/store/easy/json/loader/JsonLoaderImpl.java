@@ -32,6 +32,7 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.options.OptionSet;
+import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.store.easy.json.extended.ExtendedTypeFieldFactory;
 import org.apache.drill.exec.store.easy.json.parser.ErrorFactory;
 import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser;
@@ -105,7 +106,7 @@ import com.fasterxml.jackson.core.JsonToken;
  * boolean flags as in the prior version.</li>
  * <li>Reports errors as {@link UserException} objects, complete with context
  * information, rather than as generic Java exception as in the prior version.</li>
- * <li>Moves parse options into a separate {@link JsonOptions} class.</li>
+ * <li>Moves parse options into a separate {@link JsonLoaderOptions} class.</li>
  * <li>Iteration protocol is simpler: simply call {@link #readBatch()} until it returns
  * {@code false}. Errors are reported out-of-band via an exception.</li>
  * <li>The result set loader abstraction is perfectly happy with an empty schema.
@@ -146,6 +147,8 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     private Reader reader;
     private String dataPath;
     private MessageParser messageParser;
+    private ImplicitColumns implicitFields;
+    private int maxRows;
 
     public JsonLoaderBuilder resultSetLoader(ResultSetLoader rsLoader) {
       this.rsLoader = rsLoader;
@@ -164,6 +167,11 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
 
     public JsonLoaderBuilder options(JsonLoaderOptions options) {
       this.options = options;
+      return this;
+    }
+
+    public JsonLoaderBuilder implicitFields(ImplicitColumns metadata) {
+      this.implicitFields = metadata;
       return this;
     }
 
@@ -197,6 +205,11 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
       return this;
     }
 
+    public JsonLoaderBuilder maxRows(int maxRows) {
+      this.maxRows = maxRows;
+      return this;
+    }
+
     public JsonLoader build() {
       // Defaults, primarily for testing.
       if (options == null) {
@@ -218,6 +231,8 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   private final CustomErrorContext errorContext;
   private final JsonStructureParser parser;
   private final FieldFactory fieldFactory;
+  private final ImplicitColumns implicitFields;
+  private final int maxRows;
   private boolean eof;
 
   /**
@@ -235,7 +250,9 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   protected JsonLoaderImpl(JsonLoaderBuilder builder) {
     this.rsLoader = builder.rsLoader;
     this.options = builder.options;
-    this.errorContext = builder. errorContext;
+    this.errorContext = builder.errorContext;
+    this.implicitFields = builder.implicitFields;
+    this.maxRows = builder.maxRows;
     this.fieldFactory = buildFieldFactory(builder);
     this.parser = buildParser(builder);
   }
@@ -276,6 +293,10 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     RowSetLoader rowWriter = rsLoader.writer();
     while (rowWriter.start()) {
       if (parser.next()) {
+        // Add implicit fields
+        if (implicitFields != null) {
+          implicitFields.writeImplicitColumns();
+        }
         rowWriter.save();
       } else {
         eof = true;

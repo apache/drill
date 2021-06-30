@@ -24,15 +24,18 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 
 import java.io.File;
 import java.io.InputStream;
@@ -40,10 +43,15 @@ import java.util.List;
 import java.util.Map;
 
 public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
+
+  private static final String[] STRING_METADATA_FIELDS = {"_response_message", "_response_protocol", "_response_url"};
+  private static final String RESPONSE_CODE_FIELD = "_response_code";
+
   private final HttpSubScan subScan;
   private final int maxRecords;
   private JsonLoader jsonLoader;
   private int recordCount;
+  protected ImplicitColumns implicitColumns;
 
   public HttpBatchReader(HttpSubScan subScan) {
     this.subScan = subScan;
@@ -77,10 +85,17 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         errorContext);
 
     // JSON loader setup
+    ResultSetLoader loader = negotiator.build();
+    implicitColumns = new ImplicitColumns(loader.writer());
+    buildImplicitColumns();
+
     InputStream inStream = http.getInputStream();
+    populateImplicitFieldMap(http);
+
     try {
       jsonLoader = new JsonLoaderBuilder()
-          .resultSetLoader(negotiator.build())
+          .implicitFields(implicitColumns)
+          .resultSetLoader(loader)
           .standardOptions(negotiator.queryOptions())
           .dataPath(subScan.tableSpec().connectionConfig().dataPath())
           .errorContext(errorContext)
@@ -95,6 +110,21 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     }
 
     return true; // Please read the first batch
+  }
+
+  protected void buildImplicitColumns() {
+    // Add String fields
+    for (String fieldName : STRING_METADATA_FIELDS) {
+      implicitColumns.addImplicitColumn(fieldName, MinorType.VARCHAR);
+    }
+    implicitColumns.addImplicitColumn(RESPONSE_CODE_FIELD, MinorType.INT);
+  }
+
+  protected void populateImplicitFieldMap(SimpleHttp http) {
+    implicitColumns.getColumn(STRING_METADATA_FIELDS[0]).setValue(http.getResponseMessage());
+    implicitColumns.getColumn(STRING_METADATA_FIELDS[1]).setValue(http.getResponseProtocol());
+    implicitColumns.getColumn(STRING_METADATA_FIELDS[2]).setValue(http.getResponseURL());
+    implicitColumns.getColumn(RESPONSE_CODE_FIELD).setValue(http.getResponseCode());
   }
 
   protected HttpUrl buildUrl() {

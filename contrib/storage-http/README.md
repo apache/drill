@@ -215,7 +215,7 @@ At present, there is no provision to check the `status` code in a response such
 as that shown above. Drill assumes that the server will uses HTTP status codes to
 indicate a bad request or other error.
 
-### Input Type
+#### Input Type
 The REST plugin accepts three different types of input: `json`, `csv` and `xml`.  The default is `json`.  If you are using `XML` as a data type, there is an additional 
 configuration option called `xmlDataLevel` which reduces the level of unneeded nesting found in XML files.  You can find more information in the documentation for Drill's XML 
 format plugin. 
@@ -230,6 +230,11 @@ If the `authType` is set to `basic`, `username` and `password` must be set in th
 `username`: The username for basic authentication.
 
 `password`: The password for basic authentication.
+
+#### errorOn400
+When a user makes HTTP calls, the response code will be from 100-599.  400 series error codes can contain useful information and in some cases you would not want Drill to throw 
+errors on 400 series errors.  This option allows you to define Drill's behavior on 400 series error codes.  When set to `true`, Drill will throw an exception and halt execution 
+on 400 series errors, `false` will return an empty result set (with implicit fields populated).
 
 ## Usage
 
@@ -371,6 +376,7 @@ To query this API, set the configuration as follows:
       "password": null,
       "postBody": null, 
       "inputType": "json",
+       "errorOn400": true
     }
   }
 
@@ -416,7 +422,8 @@ body. Set the configuration as follows:
       "authType": "none",
       "userName": null,
       "password": null,
-      "postBody": null
+      "postBody": null, 
+       "errorOn400": true
     }
   }
 
@@ -555,3 +562,10 @@ If the query runs, but produces odd results, try a simple `SELECT *` query. This
 if there is unexpected message context in addition to the data. Use the `dataPath` property
 to ignore the extra content.
 
+## Implicit Fields
+The HTTP plugin includes four implicit fields which can be used for debugging.  These fields do not appear in star queries.  They are:
+
+* `_response_code`: The response code from the HTTP request.  This field is an `INT`.
+* `_response_message`:  The response message.
+* `_response_protocol`:  The response protocol.
+* `_response_url`:  The actual URL sent to the API. 

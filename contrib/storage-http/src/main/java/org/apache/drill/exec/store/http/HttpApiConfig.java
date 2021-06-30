@@ -73,6 +73,7 @@ public class HttpApiConfig {
   private final String password;
   private final String inputType;
   private final int xmlDataLevel;
+  private final boolean errorOn400;
 
 
   public enum HttpMethod {
@@ -97,7 +98,8 @@ public class HttpApiConfig {
                        @JsonProperty("dataPath") String dataPath,
                        @JsonProperty("requireTail") Boolean requireTail,
                        @JsonProperty("inputType") String inputType,
-                       @JsonProperty("xmlDataLevel") int xmlDataLevel) {
+                       @JsonProperty("xmlDataLevel") int xmlDataLevel,
+                       @JsonProperty("errorOn400") boolean errorOn400) {
 
     this.headers = headers;
     this.method = Strings.isNullOrEmpty(method)
@@ -139,6 +141,7 @@ public class HttpApiConfig {
       ? DEFAULT_INPUT_FORMAT : inputType.trim().toLowerCase();
 
     this.xmlDataLevel = Math.max(1, xmlDataLevel);
+    this.errorOn400 = errorOn400;
   }
 
   @JsonProperty("url")
@@ -182,10 +185,13 @@ public class HttpApiConfig {
   @JsonProperty("inputType")
   public String inputType() { return inputType; }
 
+  @JsonProperty("errorOn400")
+  public boolean errorOn400() { return errorOn400; }
+
   @Override
   public int hashCode() {
     return Objects.hash(url, method, requireTail, params, headers,
-        authType, userName, password, postBody, inputType, xmlDataLevel);
+        authType, userName, password, postBody, inputType, xmlDataLevel, errorOn400);
   }
 
   @Override
@@ -203,6 +209,7 @@ public class HttpApiConfig {
       .field("filterFields", params)
       .field("inputType", inputType)
       .field("xmlDataLevel", xmlDataLevel)
+      .field("errorOn400", errorOn400)
       .toString();
   }
 
@@ -226,6 +233,7 @@ public class HttpApiConfig {
       && Objects.equals(dataPath, other.dataPath)
       && Objects.equals(requireTail, other.requireTail)
       && Objects.equals(inputType, other.inputType)
-      && Objects.equals(xmlDataLevel, other.xmlDataLevel);
+      && Objects.equals(xmlDataLevel, other.xmlDataLevel)
+      && Objects.equals(errorOn400, other.errorOn400);
   }
 }

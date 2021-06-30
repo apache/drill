@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.slf4j.Logger;
@@ -70,6 +71,7 @@ public class XMLReader {
   private String fieldValue;
   private InputStream fsStream;
   private XMLEventReader reader;
+  private ImplicitColumns metadata;
 
   /**
    * This field indicates the various states in which the reader operates. The names should be self explanatory,
@@ -94,7 +96,6 @@ public class XMLReader {
     nestedMapCollection = new HashMap<>();
     this.dataLevel = dataLevel;
     this.maxRecords = maxRecords;
-
   }
 
   public void open(RowSetLoader rootRowWriter, CustomErrorContext errorContext ) {
@@ -331,6 +332,10 @@ public class XMLReader {
     }
   }
 
+  public void implicitFields(ImplicitColumns metadata) {
+    this.metadata = metadata;
+  }
+
   private TupleWriter startRow(RowSetLoader writer) {
     if (currentNestingLevel == dataLevel) {
       rootRowWriter.start();
@@ -350,6 +355,9 @@ public class XMLReader {
    */
   private TupleWriter endRow() {
     logger.debug("Ending row");
+    if (metadata != null) {
+      metadata.writeImplicitColumns();
+    }
     rootRowWriter.save();
     rowStarted = false;
     changeState(xmlState.ROW_ENDED);

@@ -28,6 +28,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.xml.XMLReader;
 import org.slf4j.Logger;
@@ -80,8 +81,14 @@ public class HttpXMLBatchReader extends HttpBatchReader {
     try {
       xmlReader = new XMLReader(inStream, dataLevel, maxRecords);
       ResultSetLoader resultLoader = negotiator.build();
+
+      implicitColumns = new ImplicitColumns(resultLoader.writer());
+      buildImplicitColumns();
+      populateImplicitFieldMap(http);
+
       RowSetLoader rootRowWriter = resultLoader.writer();
       xmlReader.open(rootRowWriter, errorContext);
+      xmlReader.implicitFields(implicitColumns);
     } catch (XMLStreamException e) {
       throw UserException
         .dataReadError(e)
