@@ -846,4 +846,24 @@ public class TestViewSupport extends TestBaseViewSupport {
       test("drop view if exists %s.`%s`", DFS_TMP_SCHEMA, viewName);
     }
   }
+
+  @Test // DRILL-7722
+  public void testViewContainingUnnest() throws Exception {
+    String viewSQL =
+        "SELECT customer.c_id as customer_id, orders.o_id as order_id " +
+        " FROM cp.`lateraljoin/nested-customer.parquet` customer, LATERAL " +
+        " (SELECT t.ord.o_id as o_id from UNNEST(customer.orders) t(ord)) orders " +
+        " ORDER BY `c_id`";
+    testViewHelper(
+        DFS_TMP_SCHEMA,
+        null,
+        viewSQL,
+        "SELECT * FROM TEST_SCHEMA.TEST_VIEW_NAME LIMIT 4",
+        baselineColumns("customer_id", "order_id"),
+        baselineRows(row(1.0,  1.0),
+                     row(1.0,  2.0),
+                     row(1.0,  3.0),
+                     row(2.0, 10.0))
+                   );
+  }
 }
