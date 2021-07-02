@@ -135,6 +135,8 @@ Multilingual support was added to the website in June 2021 using the polyglot Je
 1. Add the two-letter language code (`lang-code` forthwith) to the `languages` property in _config.yml.
 2. Add a `lang-code/` subdirectory to the root directory.
 3. Add a `lang-code/` subdirectory to each collection that will be translated, e.g. `_docs/lang-code/`.
+4. Check the `exclude_from_localization` list in _config.yml to ensure that the content you
+want to translate is not excluded from processing by the multlingual plugin.
 
 ## Add translated site pages
 

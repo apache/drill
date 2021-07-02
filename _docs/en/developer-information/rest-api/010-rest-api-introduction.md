@@ -66,15 +66,19 @@ Submit a query and return results.
 * `autoLimit`--Limits the number of rows returned from the result set. (Drill 1.16+)
 * `defaultSchema`--Sets the default schema for the query.  Equavalent to executing a `USE <schema>` prior to the query. (Drill 1.18+)
 
-For Drill 1.19+ Drill switched to a streaming HTTP connection for REST queries.  The result being that 
+In Drill 1.19+ Drill switched to a streaming HTTP connection for REST queries
+with the result that query result sets are no longer buffered in their entirety
+in heap memory before being returned to the HTTP requestor.
 
 **Request Body**
 
-        {
-          "queryType" : "SQL",
-          "query" : "<Drill query>",
-		  "autoLimit" : "<rows returned>"
-        }
+```json
+{
+  "queryType" : "SQL",
+  "query" : "<Drill query>",
+  "autoLimit" : "<rows returned>"
+}
+```
 
 **Example**
 
@@ -82,22 +86,25 @@ For Drill 1.19+ Drill switched to a streaming HTTP connection for REST queries. 
 
 **Response Body**
 
-     {
-       "columns" : [ "id", "type", "name", "ppu", "sales", "batters", "topping", "filling" ],
-       "rows" : [ {
-         "id" : "0001",
-         "sales" : "35",
-         "name" : "Cake",
-         "topping" : "[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5007\",\"type\":\"Powdered Sugar\"},{\"id\":\"5006\",\"type\":\"Chocolate with Sprinkles\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]",
-         "ppu" : "0.55",
-         "type" : "donut",
-         "batters" : "{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"},{\"id\":\"1002\",\"type\":\"Chocolate\"},{\"id\":\"1003\",\"type\":\"Blueberry\"},{\"id\":\"1004\",\"type\":\"Devil's Food\"}]}",
-         "filling" : "[]"
-       } ]
-     }
+```json
+{
+  "columns" : [ "id", "type", "name", "ppu", "sales", "batters", "topping", "filling" ],
+  "rows" : [ {
+    "id" : "0001",
+    "sales" : "35",
+    "name" : "Cake",
+    "topping" : "[{\"id\":\"5001\",\"type\":\"None\"},{\"id\":\"5002\",\"type\":\"Glazed\"},{\"id\":\"5005\",\"type\":\"Sugar\"},{\"id\":\"5007\",\"type\":\"Powdered Sugar\"},{\"id\":\"5006\",\"type\":\"Chocolate with Sprinkles\"},{\"id\":\"5003\",\"type\":\"Chocolate\"},{\"id\":\"5004\",\"type\":\"Maple\"}]",
+    "ppu" : "0.55",
+    "type" : "donut",
+    "batters" : "{\"batter\":[{\"id\":\"1001\",\"type\":\"Regular\"},{\"id\":\"1002\",\"type\":\"Chocolate\"},{\"id\":\"1003\",\"type\":\"Blueberry\"},{\"id\":\"1004\",\"type\":\"Devil's Food\"}]}",
+    "filling" : "[]"
+  } ]
+}
+```
 
 **Error Reporting**
-Drill 1.19 added a streaming REST interface with the goal of reducing the response times from REST calls. As of Drill 1.19, error reporting is no longer enabled by default and in the event of a failed query, you will just get results as shown below:
+
+Drill 1.19 added a streaming REST interface with the goal of reducing the response times from REST calls. As of Drill 1.19, error reporting is no longer enabled by default and in the event of a failed query, you will only get results as shown below.
 
 ```json
 {
