@@ -373,7 +373,7 @@ public class DrillRestServer extends ResourceConfig {
     }
 
     /**
-     * @return true, if auth is enabled and separate user workspaces used
+     * @return true, if auth is enabled and Separate User Workspaces used
      */
     public boolean separateWorkspace() {
       return value && separateWorkspace;

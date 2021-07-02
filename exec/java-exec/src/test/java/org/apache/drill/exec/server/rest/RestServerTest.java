@@ -19,6 +19,7 @@ package org.apache.drill.exec.server.rest;
 
 import io.netty.util.concurrent.Promise;
 import io.netty.channel.local.LocalAddress;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
@@ -50,13 +51,16 @@ public class RestServerTest extends ClusterTest {
   protected QueryResult runQuery(QueryWrapper q) throws Exception {
     DrillbitContext context = cluster.drillbit().getContext();
     SystemOptionManager systemOptions = context.getSystemOptionManager();
-    DrillUserPrincipal principal = new DrillUserPrincipal.AnonDrillUserPrincipal();
+//    DrillUserPrincipal principal = new DrillUserPrincipal.AnonDrillUserPrincipal();
+    DrillUserPrincipal principal = new DrillUserPrincipal(q.getUserName(), true,
+            cluster.drillbit().getContext().getConfig().getBoolean(ExecConstants.SEPARATE_WORKSPACE));
     WebSessionResources webSessionResources = new WebSessionResources(
       context.getAllocator(),
       new LocalAddress("test"),
       UserSession.Builder.newBuilder()
-        .withOptionManagers(context)
+//        .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName(q.userName).build())
         .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName(principal.getName()).build())
+        .withOptionManagers(context)
         .withStorage(context)
         .build(),
       Mockito.mock(Promise.class));

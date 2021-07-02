@@ -291,9 +291,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   public void reloadDrillOperatorTable() {
     // This is re-trying the query plan on failure so qualifies to reset the SQL statement.
     clearSQLStatementType();
-    table = new DrillOperatorTable(
-        drillbitContext.getFunctionImplementationRegistry(),
-        session.getSystemOptions());
+    table = new DrillOperatorTable(drillbitContext.getFunctionImplementationRegistry(),
+            session.getSystemOptions() != null ? session.getSystemOptions() : drillbitContext.getSystemOptionManager());
   }
 
   public QueryContextInformation getQueryContextInfo() {

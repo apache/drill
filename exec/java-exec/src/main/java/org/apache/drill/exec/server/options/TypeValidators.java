@@ -68,6 +68,8 @@ public class TypeValidators {
     }
   }
 
+  // TODO: add validator to check context.getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED for separate_workspace
+
   public static class PowerOfTwoLongValidator extends PositiveLongValidator {
 
     public PowerOfTwoLongValidator(String name, long max, OptionDescription description) {

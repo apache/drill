@@ -115,9 +115,7 @@ public class StatusResources {
   private List<OptionWrapper> getSystemOptionsJSONHelper(boolean internal)
   {
     List<OptionWrapper> options = new LinkedList<>();
-    OptionManager optionManager = authEnabled.separateWorkspace()
-      ? webUserConnection.getSession().getSystemOptions()
-      : work.getContext().getSystemOptionManager();
+    OptionManager optionManager = getSystemOptionManager();
     OptionList optionList = internal ? optionManager.getInternalOptionList(): optionManager.getPublicOptionList();
 
     for (OptionValue option : optionList) {
@@ -188,9 +186,7 @@ public class StatusResources {
   public Viewable updateSystemOption(@FormParam("name") String name,
                                    @FormParam("value") String value,
                                    @FormParam("kind") String kind) {
-    SystemOptionManager optionManager = authEnabled.separateWorkspace()
-      ? webUserConnection.getSession().getSystemOptions()
-      : work.getContext().getSystemOptionManager();
+    SystemOptionManager optionManager = getSystemOptionManager();
     try {
       optionManager.setLocalOption(OptionValue.Kind.valueOf(kind), name, value);
     } catch (Exception e) {
@@ -202,6 +198,12 @@ public class StatusResources {
     } else {
       return getSystemPublicOptions(null);
     }
+  }
+
+  private SystemOptionManager getSystemOptionManager() {
+    return authEnabled.separateWorkspace()
+      ? webUserConnection.getSession().getSystemOptions()
+      : work.getContext().getSystemOptionManager();
   }
 
   /**

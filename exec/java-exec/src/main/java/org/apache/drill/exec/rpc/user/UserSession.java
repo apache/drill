@@ -119,13 +119,22 @@ public class UserSession implements AutoCloseable {
       return this;
     }
 
+    /**
+     * Call {@link #withCredentials) at first, it is necessary to instantinate {@link UserSystemOptionManager}
+     *
+     * @param context Drillbit system context
+     * @return this session builde
+     */
     public Builder withOptionManagers(DrillbitContext context) {
-      userSession.userSystemOptions = context.getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)
-          && context.getConfig().getBoolean(ExecConstants.SEPARATE_WORKSPACE)
-        ? new UserSystemOptionManager(context.getSystemOptionManager(), context.getLpPersistence(),
-            context.getStoreProvider(), context.getConfig(), context.getDefinitions(), userSession)
-        : context.getSystemOptionManager();
-      userSession.sessionOptions = new SessionOptionManager(userSession.userSystemOptions, userSession);
+      if (context.getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)
+              && context.getConfig().getBoolean(ExecConstants.SEPARATE_WORKSPACE)) {
+        userSession.userSystemOptions =
+            new UserSystemOptionManager(context.getSystemOptionManager(), context.getLpPersistence(),
+              context.getStoreProvider(), context.getConfig(), context.getDefinitions(), userSession);
+        userSession.sessionOptions = new SessionOptionManager(userSession.userSystemOptions, userSession);
+      } else {
+        userSession.sessionOptions = new SessionOptionManager(context.getSystemOptionManager(), userSession);
+      }
       return this;
     }
 
@@ -134,6 +143,12 @@ public class UserSession implements AutoCloseable {
       return this;
     }
 
+    /**
+     * Call {@link #withCredentials) at first, it is necessary to instantinate {@link UserSystemOptionManager}
+     *
+     * @param context Drillbit system context
+     * @return this session builde
+     */
     public Builder withStorage(DrillbitContext context) {
       userSession.storagePlugins = context.getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)
           && context.getConfig().getBoolean(ExecConstants.SEPARATE_WORKSPACE)

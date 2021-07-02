@@ -88,10 +88,6 @@ public class PlanningBase extends ExecTest {
     final LogicalPlanPersistence logicalPlanPersistence = new LogicalPlanPersistence(config, scanResult);
     final SystemOptionManager systemOptions = new SystemOptionManager(logicalPlanPersistence, provider, config);
     systemOptions.init();
-    final UserSession userSession = UserSession.Builder.newBuilder().withOptionManagers(dbContext).build();
-    final SessionOptionManager sessionOptions = userSession.getSessionOptions();
-    final QueryOptionManager queryOptions = new QueryOptionManager(sessionOptions);
-    final ExecutionControls executionControls = new ExecutionControls(queryOptions, DrillbitEndpoint.getDefaultInstance());
 
     when(dbContext.getMetrics()).thenReturn(new MetricRegistry());
     when(dbContext.getAllocator()).thenReturn(allocator);
@@ -100,6 +96,11 @@ public class PlanningBase extends ExecTest {
     when(dbContext.getStoreProvider()).thenReturn(provider);
     when(dbContext.getClasspathScan()).thenReturn(scanResult);
     when(dbContext.getLpPersistence()).thenReturn(logicalPlanPersistence);
+
+    final UserSession userSession = UserSession.Builder.newBuilder().withOptionManagers(dbContext).build();
+    final SessionOptionManager sessionOptions = userSession.getSessionOptions();
+    final QueryOptionManager queryOptions = new QueryOptionManager(sessionOptions);
+    final ExecutionControls executionControls = new ExecutionControls(queryOptions, DrillbitEndpoint.getDefaultInstance());
 
     final StoragePluginRegistry registry = new StoragePluginRegistryImpl(dbContext);
     registry.init();
@@ -113,7 +114,7 @@ public class PlanningBase extends ExecTest {
     when(context.getStorage()).thenReturn(registry);
     when(context.getFunctionRegistry()).thenReturn(functionRegistry);
     when(context.getSession()).thenReturn(
-        UserSession.Builder.newBuilder().withOptionManagers(dbContext).setSupportComplexTypes(true).build());
+        UserSession.Builder.newBuilder().setSupportComplexTypes(true).build());
     when(context.getCurrentEndpoint()).thenReturn(DrillbitEndpoint.getDefaultInstance());
     when(context.getActiveEndpoints()).thenReturn(ImmutableList.of(DrillbitEndpoint.getDefaultInstance()));
     when(context.getPlannerSettings()).thenReturn(new PlannerSettings(queryOptions, functionRegistry));

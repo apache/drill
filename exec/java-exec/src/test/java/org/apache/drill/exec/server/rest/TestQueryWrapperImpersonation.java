@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
 import org.apache.drill.exec.server.rest.RestQueryRunner.QueryResult;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.test.ClusterFixture;
@@ -26,6 +28,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -38,7 +42,14 @@ public final class TestQueryWrapperImpersonation extends RestServerTest {
     startCluster(ClusterFixture.bareBuilder(dirTestWatcher)
       .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
       .configProperty(ExecConstants.IMPERSONATION_ENABLED, true)
-      .configProperty(ExecConstants.SEPARATE_WORKSPACE, true));
+      .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
+      .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
+      .configProperty(ExecConstants.SEPARATE_WORKSPACE, true)
+//      .configProperty(ExecConstants.ADMIN_USERS_KEY, "alfred")
+//      .configClientProperty(DrillProperties.USER, TEST_USER_1)
+      .configClientProperty(DrillProperties.USER, "alfred")
+      .configClientProperty(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD));
+//      .configClientProperty(ExecConstants.ADMIN_USERS_KEY, "alfred"));
   }
 
   @Test
@@ -47,6 +58,7 @@ public final class TestQueryWrapperImpersonation extends RestServerTest {
         "SELECT CATALOG_NAME, SCHEMA_NAME FROM information_schema.SCHEMATA", "alfred");
     UserBitShared.QueryProfile queryProfile = getQueryProfile(result);
     assertNotNull(queryProfile);
+//    client.alterSystem(ExecConstants.ADMIN_USERS_KEY, "alfred");
     assertEquals("alfred", queryProfile.getUser());
   }
 
@@ -81,7 +93,11 @@ public final class TestQueryWrapperImpersonation extends RestServerTest {
     startCluster(ClusterFixture.bareBuilder(dirTestWatcher)
             .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
             .configProperty(ExecConstants.IMPERSONATION_ENABLED, true)
-            .configProperty(ExecConstants.SEPARATE_WORKSPACE, false));
+            .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, false)
+            .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
+            .configProperty(ExecConstants.SEPARATE_WORKSPACE, false)
+            .configClientProperty(DrillProperties.USER, TEST_USER_1)
+            .configClientProperty(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD));
     QueryResult result3 = runQueryWithUsername(
             "SELECT CATALOG_NAME, SCHEMA_NAME FROM information_schema.SCHEMATA", "drilluser3");
     final DrillUserPrincipal drillUser1PrincipalCommonWorkspace = new DrillUserPrincipal("drilluser1", true,

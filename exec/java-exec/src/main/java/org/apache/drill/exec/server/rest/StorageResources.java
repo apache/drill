@@ -141,9 +141,7 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public PluginConfigWrapper getPluginConfig(@PathParam("name") String name) {
     try {
-      return authEnabled.separateWorkspace()
-          ? new PluginConfigWrapper(name, webUserConnection.getSession().getStorage().getStoredConfig(name))
-          : new PluginConfigWrapper(name, storage.getStoredConfig(name));
+      return new PluginConfigWrapper(name, getStorage().getStoredConfig(name));
     } catch (Exception e) {
       logger.error("Failure while trying to access storage config: {}", name, e);
     }
@@ -165,9 +163,7 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public JsonResult enablePlugin(@PathParam("name") String name, @PathParam("val") Boolean enable) {
     try {
-      StoragePluginRegistry storage = authEnabled.separateWorkspace()
-          ? webUserConnection.getSession().getStorage()
-          : this.storage;
+      StoragePluginRegistry storage = getStorage();
       storage.setEnabled(name, enable);
       return message("Success");
     } catch (PluginNotFoundException e) {
@@ -214,9 +210,7 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public JsonResult deletePlugin(@PathParam("name") String name) {
     try {
-      StoragePluginRegistry storage = authEnabled.separateWorkspace()
-              ? webUserConnection.getSession().getStorage()
-              : this.storage;
+      StoragePluginRegistry storage = getStorage();
       storage.remove(name);
       return message("Success");
     } catch (PluginException e) {
@@ -230,9 +224,7 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public JsonResult createOrUpdatePluginJSON(PluginConfigWrapper plugin) {
     try {
-      StoragePluginRegistry storage = authEnabled.separateWorkspace()
-              ? webUserConnection.getSession().getStorage()
-              : this.storage;
+      StoragePluginRegistry storage = getStorage();
       plugin.createOrUpdateInStorage(storage);
       return message("Success");
     } catch (PluginException e) {
@@ -256,9 +248,7 @@ public class StorageResources {
       return message("Error (a storage name cannot be empty)");
     }
     try {
-      StoragePluginRegistry storage = authEnabled.separateWorkspace()
-              ? webUserConnection.getSession().getStorage()
-              : this.storage;
+      StoragePluginRegistry storage = getStorage();
       storage.putJson(name, storagePluginConfig);
       return message("Success");
     } catch (PluginEncodingException e) {
@@ -312,9 +302,7 @@ public class StorageResources {
       return Collections.emptyList();
     }
     pluginGroup = StringUtils.isNotEmpty(pluginGroup) ? pluginGroup.replace("/", "") : ALL_PLUGINS;
-    StoragePluginRegistry storage = authEnabled.separateWorkspace()
-            ? webUserConnection.getSession().getStorage()
-            : this.storage;
+    StoragePluginRegistry storage = getStorage();
     return StreamSupport.stream(
         Spliterators.spliteratorUnknownSize(storage.storedConfigs(filter).entrySet().iterator(), Spliterator.ORDERED), false)
             .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue()))
@@ -343,6 +331,10 @@ public class StorageResources {
   @Deprecated
   public JsonResult deletePluginViaGet(@PathParam("name") String name) {
     return deletePlugin(name);
+  }
+
+  private StoragePluginRegistry getStorage() {
+    return authEnabled.separateWorkspace() ? webUserConnection.getSession().getStorage() : storage;
   }
 
   @XmlRootElement

@@ -23,6 +23,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
+import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.test.ClientFixture;
@@ -37,6 +38,7 @@ import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorT
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2_PASSWORD;
+import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ANONYMOUS_USER;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.CP_PLUGIN_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,7 +54,7 @@ public class TestUserPluginRegistry extends BasePluginRegistry {
     @Test
     public void testSeparatePluginsForUsers() throws Exception {
         ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
-                .clusterSize(1)
+                .clusterSize(3)
                 .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
                 .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
                 .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
@@ -67,13 +69,27 @@ public class TestUserPluginRegistry extends BasePluginRegistry {
                      .property(DrillProperties.USER, TEST_USER_2)
                      .property(DrillProperties.PASSWORD, TEST_USER_2_PASSWORD)
                      .build()) {
-
             Map<String, StoragePluginRegistry> userStorage = new HashMap<>();
-            for (Map.Entry<UserServer.BitToUserConnection, UserServer.BitToUserConnectionConfig> userConnection : cluster.drillbit().getContext().getUserConnections()) {
-                UserSession session = userConnection.getKey().getSession();
-                userStorage.put(session.getCredentials().getUserName(), session.getStorage());
+            // get all connections except anonymous (not clear who creates and connected anonymous users)
+            for (Drillbit drillbit : cluster.drillbits()) {
+                for (Map.Entry<UserServer.BitToUserConnection, UserServer.BitToUserConnectionConfig> userConnection : drillbit.getContext().getUserConnections()) {
+                    UserSession session = userConnection.getKey().getSession();
+                    String userName = session.getCredentials().getUserName();
+                    if (ANONYMOUS_USER.equals(userName)) {
+                        System.out.println(userName + " user is connected");
+                        break;
+                    }
+                    // this test pass locally, but fails on CI, so add logging to detect the reason
+                    System.out.println("This user is connected to Drillbit: " + userName);
+                    StoragePluginRegistry plugins = userStorage.get(userName);
+                    if(plugins != null) {
+                        // check the every drillbit has the same StoragePluginRegistry object
+                        assertEquals(session.getStorage(), plugins);
+                    } else {
+                        userStorage.put(userName, session.getStorage());
+                    }
+                }
             }
-
             // Check the separate UserStoragePluginRegistry is used for each user
             assertEquals(2, userStorage.size());
             assertEquals("It should be UserStoragePluginRegistry for separate user", UserStoragePluginRegistry.class,
