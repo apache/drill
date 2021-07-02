@@ -14,60 +14,59 @@ lang: zh
 
 <script type="text/javascript">
 
-$(document).ready(function() {
-  $(".various").fancybox({
-    fitToView: true,
-    autoSize: true,
-    beforeLoad: function(){
-      var url= $(this.element).attr("href");
-      url = url.replace(new RegExp("watch\\?v=", "i"), 'v/');
-      url += '?fs=1&autoplay=1';
-      this.href = url
-    }
-  });
+  $(document).ready(function() {
+    $(".various").fancybox({
+      fitToView: true,
+      autoSize: true,
+      beforeLoad: function(){
+        var url= $(this.element).attr("href");
+        url = url.replace(new RegExp("watch\\?v=", "i"), 'v/');
+        url += '?fs=1&autoplay=1';
+        this.href = url
+      }
+    });
 
-  $('div#video-slider').slick({
-    autoplay: true,
-    autoplaySpeed: 5000,
-    dots: true
+    $('div#video-slider').slick({
+      autoplay: true,
+      autoplaySpeed: 5000,
+      dots: true
+    });
   });
-});
 
 </script>
 
 <div id="header" class="mw">
 
-<div class="nav-circlepop">
-  <a class="aLeft prev"><span class="icon-wrap"></span></a>
-  <a class="aRight next"><span class="icon-wrap"></span></a>
-</div>
+  <div class="nav-circlepop">
+    <a class="aLeft prev"><span class="icon-wrap"></span></a>
+    <a class="aRight next"><span class="icon-wrap"></span></a>
+  </div>
 
-<div class="dots"></div>
-<div class="scroller">
-  <div class="item">
-    <div class="headlines tc">
-      <div id="video-slider" class="slider">
-        <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/UOmlhExchpk"><img src="{{ site.baseurl }}/images/thumbnail-0rurIzOkTIg.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">Overview of Apache Drill Query Execution</div></div>
-        <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/O6WeniFSa7c"><img src="{{ site.baseurl }}/images/thumbnail-lslA8kDr_jQ.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">SQL Queries on Parquet Data </div></div>
-        <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/EjxCy7RRUgM"><img src="{{ site.baseurl }}/images/thumbnail-65c42i7Xg7Q.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">The Rise of the Non-Relational Datastore</div></div>
-        <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/hv_hf_juEiQ"><img src="{{ site.baseurl }}/images/thumbnail-MYY51kiFPTk.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">Deployment Options and BI Tools</div></div>
-        <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/CGkCvgRwkbs"><img src="{{ site.baseurl }}/images/thumbnail-bhmNbH2yzhM.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">Connecting to Data Sources</div></div>
-        <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/evQwRwXZaVk"><img src="{{ site.baseurl }}/images/thumbnail-6pGeQOXDdD8.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">High Performance with a JSON Data Model</div></div>
+  <div class="dots"></div>
+  <div class="scroller">
+    <div class="item">
+      <div class="headlines tc">
+        <div id="video-slider" class="slider">
+          <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/UOmlhExchpk"><img src="{{ site.baseurl }}/images/thumbnail-0rurIzOkTIg.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">Overview of Apache Drill Query Execution</div></div>
+          <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/O6WeniFSa7c"><img src="{{ site.baseurl }}/images/thumbnail-lslA8kDr_jQ.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">SQL Queries on Parquet Data </div></div>
+          <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/EjxCy7RRUgM"><img src="{{ site.baseurl }}/images/thumbnail-65c42i7Xg7Q.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">The Rise of the Non-Relational Datastore</div></div>
+          <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/hv_hf_juEiQ"><img src="{{ site.baseurl }}/images/thumbnail-MYY51kiFPTk.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">Deployment Options and BI Tools</div></div>
+          <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/CGkCvgRwkbs"><img src="{{ site.baseurl }}/images/thumbnail-bhmNbH2yzhM.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">Connecting to Data Sources</div></div>
+          <div class="slide"><a class="various fancybox.iframe" href="https://www.youtube.com/embed/evQwRwXZaVk"><img src="{{ site.baseurl }}/images/thumbnail-6pGeQOXDdD8.jpg" class="thumbnail" /><img src="{{ site.baseurl }}/images/play-mq.png" class="play" /></a><div class="title">High Performance with a JSON Data Model</div></div>
+        </div>
+        <h1 class="main-headline">Apache Drill</h1>
+        <h2 id="sub-headline">Schema-free 类型的SQL引擎，<br class="mobile-break" />专为Hadoop，NoSQL和<br class="mobile-break" />云存储设计</h2>
+        <a href="{{ site.baseurl }}/download/" class="download-headline btn btn-1 btn-1c"><span>现在下载</span></a>
       </div>
-      <h1 class="main-headline">Apache Drill</h1>
-      <h2 id="sub-headline">Schema-free SQL Query Engine <br class="mobile-break" />for Hadoop, NoSQL and <br class="mobile-break" />Cloud Storage</h2>
-      <a href="{{ site.baseurl }}/download/" class="download-headline btn btn-1 btn-1c"><span>DOWNLOAD NOW</span></a>
     </div>
   </div>
-</div>
 
 </div><!-- header -->
 <div class="alertbar">
   <div class="bookRelease">
     <div><i class="fa fa-book fa-lg"></i>
-      <a href="https://urldefense.proofpoint.com/v2/url?u=https-3A__amzn.to_2N6FvPy&d=DwMFaQ&c=cskdkSMqhcnjZxdQVpwTXg&r=JHIio7I3eUbbe91YRxcNOw&m=FVOxmSwXwRbEACbYa-aH38YvJ5_op8yng62tr8g-dOQ&s=gKK9ct8VGg0pm2BRRpLzx2sXXxhW0r3i32wugQwJwdI&e=">&nbsp;Learning
-        Apache Drill</a>
-		</div>
+      <a href="http://product.dangdang.com/28546297.html">&nbsp;Apache Drill 学习手册</a>
+    </div>
   </div>
   <div class="news">News:
   </div>
@@ -79,20 +78,20 @@ $(document).ready(function() {
 <div class="mw introWrapper">
   <table class="intro" cellpadding="0" cellspacing="0" align="center">
     <tbody>
-      <tr>
-        <td class="ag">
-          <h1>敏捷</h1>
-          <p>Get faster insights without the overhead (data loading, schema creation and maintenance, transformations, etc.)</p>
-        </td>
-        <td class="fl">
-          <h1>Flexibility</h1>
-          <p>Analyze the multi-structured and nested data in non-relational datastores directly without transforming or restricting the data</p>
-        </td>
-        <td class="fam">
-          <h1>Familiarity</h1>
-          <p>Leverage your existing SQL skillsets and BI tools including Tableau, Qlikview, MicroStrategy, Spotfire, Excel and more</p>
-        </td>
-      </tr>
+    <tr>
+      <td class="ag">
+        <h1>敏捷性</h1>
+        <p>获得更快的洞察力又省去繁琐的前置处理（Schema创建和维护、数据加载、转换等ETL操作）</p>
+      </td>
+      <td class="fl">
+        <h1>灵活性</h1>
+        <p>直接分析NoSQL中的复杂结构和嵌套数据（无需转换和要求数据格式）</p>
+      </td>
+      <td class="fam">
+        <h1>易用性</h1>
+        <p>充分利用你已具备的SQL技术栈和BI工具，包括Tableau, Qlikview, MicroStrategy, Spotfire, Excel等等。</a></p>
+      </td>
+    </tr>
     </tbody>
   </table>
 </div>
@@ -100,18 +99,18 @@ $(document).ready(function() {
 <div class="home-row">
   <div class="big"><img src="{{ site.baseurl }}/images/home-any.png" style="width:300px" /></div>
   <div class="description">
-    <h1>Query any non-relational datastore (well, almost...)</h1>
-    <p>Drill supports a variety of NoSQL databases and file systems, including HBase, MongoDB, MapR-DB, HDFS, MapR-FS, Amazon S3, Azure Blob Storage, Google Cloud Storage, Swift, NAS and local files. A single query can join data from multiple datastores. For example, you can join a user profile collection in MongoDB with a directory of event logs in Hadoop.</p>
-    <p>Drill's datastore-aware optimizer automatically restructures a query plan to leverage the datastore's internal processing capabilities. In addition, Drill supports data locality, so it's a good idea to co-locate Drill and the datastore on the same nodes.</p>
+    <h1>无处不在：几乎可以查询任何类型的NoSQL数据库</h1>
+    <p>Drill支持多种类型的NoSQL数据库和文件系统, 包含 Hbase、MongoDB、ElasticSearch、Cassandra、Druid、Kudu、Kafka、OpenTSDB、HDFS、Amazon S3、Azure Blob Storage、Google Cloud Storage、Swift、NAS和本地文件。可以在单次查询中组合多个数据源（联邦查询）。</p>
+    <p>Drill的存储感知优化器会利用数据存储的内部处理能力来重构查询计划。Drill还支持数据本地性（Data Locality），所以将Drill和数据节点部署在一起可以充分优化性能。</p>
   </div>
   <div class="small"><img src="{{ site.baseurl }}/images/home-any.png" style="width:300px" /></div>
 </div>
 
 <div class="home-row">
   <div class="description">
-    <h1>Kiss the overhead goodbye and enjoy data agility</h1>
-    <p>Traditional query engines demand significant IT intervention before data can be queried. Drill gets rid of all that overhead so that users can just query the raw data in-situ. There's no need to load the data, create and maintain schemas, or transform the data before it can be processed. Instead, simply include the path to a Hadoop directory, MongoDB collection or S3 bucket in the SQL query.</p>
-    <p>Drill leverages advanced query compilation and re-compilation techniques to maximize performance without requiring up-front schema knowledge.</p>
+    <h1>告别繁冗：充分享受数据应用的敏捷性</h1>
+    <p>传统的查询引擎需要大量的IT交互才允许查询数据。Drill直接省去了这些冗余，可以快速原地查询这些原始数据。没有Schema创建和维护，也没有数据加载、转换和ETL操作。只需要在查询语句中指定数据的位置，如 Hadoop、S3或MongoDB。</p>
+    <p>Drill利用先进的查询编译和重编译，来优化查询性能，而不必对数据模式有预先了解。</p>
   </div>
   <div class="small big"><pre>SELECT * FROM <span class="code-underline">dfs.root.`/web/logs`</span>;
 
@@ -127,18 +126,18 @@ SELECT timestamp
 <div class="home-row">
   <div class="big"><img src="{{ site.baseurl }}/images/home-json.png" style="width:300px" /></div>
   <div class="description">
-    <h1>Treat your data like a table even when it's not</h1>
-    <p>Drill features a JSON data model that enables queries on complex/nested data as well as rapidly evolving structures commonly seen in modern applications and non-relational datastores. Drill also provides intuitive extensions to SQL so that you can easily query complex data.
-    <p>Drill is the only columnar query engine that supports complex data. It features an in-memory shredded columnar representation for complex data which allows Drill to achieve columnar speed with the flexibility of an internal JSON document model.</p>
+    <h1>化繁为简：将任何数据当表格形式一样使用</h1>
+    <p>Drill设计了专有的JSON数据模型，能够支持复杂/嵌套数据的查询，对现代应用程序以及NoSQL中快速衍化的数据结构进行分析。不仅于此，还提供了SQL的扩展性，轻松查询更复杂的数据结构。
+    <p>Drill是一款支持复杂数据的列式查询引擎。而且支持在内存中用列式表达复杂数据，所以查询JSON数据模型的速度可以媲美列式格式。</p>
   </div>
   <div class="small"><img src="{{ site.baseurl }}/images/home-json.png" style="width:300px" /></div>
 </div>
 
 <div class="home-row">
   <div class="description">
-    <h1>Keep using the BI tools you love</h1>
-    <p>Drill supports standard SQL. Business users, analysts and data scientists can use standard BI/analytics tools such as Tableau, Qlik, MicroStrategy, Spotfire, SAS and Excel to interact with non-relational datastores by leveraging Drill's JDBC and ODBC drivers. Developers can leverage Drill's simple REST API in their custom applications to create beautiful visualizations.</p>
-    <p>Drill's virtual datasets allow even the most complex, non-relational data to be mapped into BI-friendly structures which users can explore and visualize using their tool of choice.</p>
+    <h1>简单易用：继续使用你喜欢的BI工具</h1>
+    <p>Drill支持标准的 ANSI SQL。商务用户，分析师，数据科学家可以通过Drill的JDBC或者ODBC驱动在标准的BI和分析工具上运行，例如:Tableau, Qlik, MicroStrategy, Spotfire, SAS 和 Excel，开发者也可以在他们的应用中使用 RESTful API（支持流式响应）来定制数据可视化。</p>
+    <p>Drill的虚拟数据集可以将复杂的NoSQL数据结构对应到兼容BI的结构，帮助用户挖掘和可视化数据。</p>
   </div>
   <div class="small big"><img src="{{ site.baseurl }}/images/home-bi.png" style="width:300px" /></div>
 </div>
@@ -148,9 +147,9 @@ SELECT timestamp
 $ cd apache-drill-&lt;version&gt;
 $ bin/drill-embedded</pre></div>
   <div class="description">
-    <h1>Scale from one laptop to 1000s of servers</h1>
-    <p>We made it easy to download and run Drill on your laptop. It runs on Mac, Windows and Linux, and within a minute or two you'll be exploring your data. When you're ready for prime time, deploy Drill on a cluster of commodity servers and take advantage of the world's most scalable and high performance execution engine.
-    <p>Drill's symmetrical architecture (all nodes are the same) and simple installation make it easy to deploy and operate very large clusters.</p>
+    <h1>水平扩展：从一台主机到一千台服务器</h1>
+    <p>Drill开箱即用的特点可以支持在Mac、Windows和Linux上快速完成安装（分钟级）。针对大规模的数据集，也可以部署到商用服务器上，充分利用高性能引擎。</p>
+    <p>Drill的对称性架构（所有节点职责相同）和易于安装的特点，方便部署及运行在大规模集群上。</p>
   </div>
   <div class="small"><pre>$ curl &lt;url&gt; -o drill.tgz
   $ tar xzf drill.tgz
@@ -160,13 +159,13 @@ $ bin/drill-embedded</pre></div>
 
 <div class="home-row">
   <div class="description">
-    <h1>No more waiting for coffee</h1>
-    <p>Drill isn't the world's first query engine, but it's the first that combines both flexibility and speed. To achieve this, Drill features a radically different architecture that enables record-breaking performance without sacrificing the flexibility offered by the JSON document model. Drill's design includes:<ul>
-<li>Columnar execution engine (the first ever to support complex data!)</li>
-<li>Data-driven compilation and recompilation at execution time</li>
-<li>Specialized memory management that reduces memory footprint and eliminates garbage collections</li>
-<li>Locality-aware execution that reduces network traffic when Drill is co-located with the datastore</li>
-<li>Advanced cost-based optimizer that pushes processing into the datastore when possible</li></ul></p>
+    <h1>快速响应：不再需要等待你的咖啡</h1>
+    <p>Drill并不是世界上第一款查询引擎，却是第一个兼顾数据复杂性和查询速度的MPP引擎。Drill设计了与众不同的架构，不仅能够支持JSON数据模型，还做到了非凡的响应速度。<ul>
+    <li>列式执行引擎 (第一款支持复杂数据的列式执行引擎)</li>
+    <li>支持运行时期的 Data-driven 编译和重编译。</li>
+    <li>专有的内存管理技术以减少内存占用和避免频繁垃圾回收</li>
+    <li>通过将Drill和数据节点部署在一起来支持数据本地性（Data Locality）</li>
+    <li>利用查询优化器的CBO和RBO技术将查询尽可能下推到数据库</li></ul></p>
   </div>
   <div class="small big"><img src="{{ site.baseurl }}/images/home-coffee.jpg" style="width:300px" /></div>
 </div>
