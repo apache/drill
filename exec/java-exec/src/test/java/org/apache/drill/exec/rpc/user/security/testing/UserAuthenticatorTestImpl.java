@@ -35,9 +35,9 @@ import static org.apache.drill.exec.impersonation.TestInboundImpersonation.OWNER
 import static org.apache.drill.exec.impersonation.TestInboundImpersonation.OWNER_PASSWORD;
 
 /**
- * Implement {@link org.apache.drill.exec.rpc.user.security.UserAuthenticator} for testing:
- * + UserAuthenticator and authentication of users from Java client to Drillbit.
- * + {@link TestInboundImpersonation user delegation}.
+ * Implement {@link org.apache.drill.exec.rpc.user.security.UserAuthenticator} for testing:</br>
+ * UserAuthenticator and authentication of users from Java client to Drillbit.</br>
+ * {@link org.apache.drill.exec.impersonation.TestInboundImpersonation} user delegation.
  */
 @UserAuthenticatorTemplate(type = UserAuthenticatorTestImpl.TYPE)
 public class UserAuthenticatorTestImpl implements UserAuthenticator {
@@ -45,10 +45,12 @@ public class UserAuthenticatorTestImpl implements UserAuthenticator {
 
   public static final String TEST_USER_1 = "testUser1";
   public static final String TEST_USER_2 = "testUser2";
+  public static final String TEST_USER_3 = "testUser3";
   public static final String ADMIN_USER = "admin";
   public static final String PROCESS_USER = ImpersonationUtil.getProcessUserName();
   public static final String TEST_USER_1_PASSWORD = "testUser1Password";
   public static final String TEST_USER_2_PASSWORD = "testUser2Password";
+  public static final String TEST_USER_3_PASSWORD = "testUser3Password";
   public static final String ADMIN_USER_PASSWORD = "adminUserPw";
   public static final String PROCESS_USER_PASSWORD = "processUserPw";
 

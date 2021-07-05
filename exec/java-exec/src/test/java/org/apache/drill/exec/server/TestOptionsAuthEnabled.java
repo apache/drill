@@ -134,7 +134,7 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
       // Admin Users Tests
       // config file should have the 'fake' default admin user and it should be returned
       // by the option manager if the option has not been set by the user
-      String configAdminUser =  optionManager.getOption(ExecConstants.ADMIN_USERS_VALIDATOR);
+      String configAdminUser = optionManager.getOption(ExecConstants.ADMIN_USERS_VALIDATOR);
       assertEquals(configAdminUser, ExecConstants.ADMIN_USERS_VALIDATOR.DEFAULT_ADMIN_USERS);
 
       // Option accessor should never return the 'fake' default from the config

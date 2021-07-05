@@ -29,6 +29,7 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -52,27 +53,30 @@ import static org.junit.Assert.fail;
 public class TestUserPluginRegistry extends BasePluginRegistry {
 
     @Test
+    @Ignore
     public void testSeparatePluginsForUsers() throws Exception {
         ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
-                .clusterSize(3)
-                .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
-                .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
-                .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
-                .configProperty(ExecConstants.SEPARATE_WORKSPACE, true);
+            .clusterSize(1)
+            .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
+            .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
+            .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
+            .configProperty(ExecConstants.SEPARATE_WORKSPACE, true);
 
         try (ClusterFixture cluster = builder.build();
              ClientFixture client1 = cluster.clientBuilder()
-                     .property(DrillProperties.USER, TEST_USER_1)
-                     .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
-                     .build();
+                 .property(DrillProperties.USER, TEST_USER_1)
+                 .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
+                 .build();
              ClientFixture client2 = cluster.clientBuilder()
-                     .property(DrillProperties.USER, TEST_USER_2)
-                     .property(DrillProperties.PASSWORD, TEST_USER_2_PASSWORD)
-                     .build()) {
+                 .property(DrillProperties.USER, TEST_USER_2)
+                 .property(DrillProperties.PASSWORD, TEST_USER_2_PASSWORD)
+                 .build()) {
             Map<String, StoragePluginRegistry> userStorage = new HashMap<>();
             // get all connections except anonymous (not clear who creates and connected anonymous users)
-            for (Drillbit drillbit : cluster.drillbits()) {
-                for (Map.Entry<UserServer.BitToUserConnection, UserServer.BitToUserConnectionConfig> userConnection : drillbit.getContext().getUserConnections()) {
+            for (Map.Entry<String, Drillbit> drillbit : cluster.drillbitsWithNames().entrySet()) {
+                System.out.println("Drillbit: " + drillbit.getKey());
+                for (Map.Entry<UserServer.BitToUserConnection, UserServer.BitToUserConnectionConfig> userConnection
+                       : drillbit.getValue().getContext().getUserConnections()) {
                     UserSession session = userConnection.getKey().getSession();
                     String userName = session.getCredentials().getUserName();
                     if (ANONYMOUS_USER.equals(userName)) {
@@ -93,9 +97,9 @@ public class TestUserPluginRegistry extends BasePluginRegistry {
             // Check the separate UserStoragePluginRegistry is used for each user
             assertEquals(2, userStorage.size());
             assertEquals("It should be UserStoragePluginRegistry for separate user", UserStoragePluginRegistry.class,
-                    userStorage.get(TEST_USER_1).getClass());
+                userStorage.get(TEST_USER_1).getClass());
             assertEquals("It should be UserStoragePluginRegistry for separate user", UserStoragePluginRegistry.class,
-                    userStorage.get(TEST_USER_2).getClass());
+                userStorage.get(TEST_USER_2).getClass());
             assertNotSame(userStorage.get(TEST_USER_1), userStorage.get(TEST_USER_2));
 
             // Create a new plugin for TEST_USER_1
@@ -119,11 +123,11 @@ public class TestUserPluginRegistry extends BasePluginRegistry {
     @Test
     public void testLifecycleSeparateWorkspace() throws Exception {
         ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
-                .clusterSize(2)
-                .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
-                .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
-                .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
-                .configProperty(ExecConstants.SEPARATE_WORKSPACE, true);
+            .clusterSize(2)
+            .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
+            .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
+            .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
+            .configProperty(ExecConstants.SEPARATE_WORKSPACE, true);
         builder.configClientProperty(DrillProperties.USER, TEST_USER_1);
         builder.configClientProperty(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD);
 
