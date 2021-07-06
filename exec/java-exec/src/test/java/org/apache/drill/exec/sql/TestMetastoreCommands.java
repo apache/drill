@@ -3533,14 +3533,13 @@ public class TestMetastoreCommands extends ClusterTest {
 
   @Test
   public void testAnalyzeAllTypes7kRows() throws Exception {
-    // See DRILL-7968.  More rows are produced here to test an ANALYZE code path
-    // not exercised by the Parquet test files found above.
+    // DRILL-7968.
 
     // enable CROSS JOIN
     client.alterSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName(), false);
     String tableName = "alltypes_7k";
     // create a ~7k row table with the schema of alltypes_optional.parquet
-    run("create table dfs.tmp.%s as select a.* from dfs.tmp.`alltypes_optional.parquet` a cross join cp.`employee.json` e", tableName);
+    run("create table dfs.tmp.%s as select a.* from cp.`parquet/alltypes_optional.parquet` a cross join cp.`employee.json` e", tableName);
 
     try {
       testBuilder()
