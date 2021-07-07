@@ -273,6 +273,36 @@ public class SimpleHttp {
   }
 
   /**
+   * Returns true if the url has url parameters, as indicated by the presence of
+   * {param} in a url.
+   * @return True if there are URL params, false if not
+   */
+  public boolean hasURLParameters() {
+    Matcher matcher = URL_PARAM_REGEX.matcher(this.url.toString());
+    return matcher.find();
+  }
+
+  /**
+   * APIs sometimes are structured with parameters in the URL itself.  For instance, to request a list of
+   * an organization's repositories in github, the URL is: https://api.github.com/orgs/{org}/repos, where
+   * you can replace the org with the actual organization name.
+   * @return A list of URL parameters enclosed by curly braces.
+   */
+  public List<String> getURLParameters() {
+    List<String> parameters = new ArrayList<>();
+    Matcher matcher = URL_PARAM_REGEX.matcher(this.url.toString());
+    while (matcher.find()) {
+      parameters.add(matcher.group());
+    }
+    return parameters;
+  }
+
+  public void URLParameters(List<String> params) {
+    
+  }
+
+
+  /**
    * Configures response caching using a provided temp directory.
    *
    * @param builder Builder the Builder object to which the caching is to be
