@@ -86,6 +86,16 @@ public class SimpleHttp {
     this.client = setupHttpClient();
   }
 
+  // For Testing Only
+  public SimpleHttp(String url) {
+    this.url = HttpUrl.parse(url);
+    this.client = null;
+    this.scanDefn = null;
+    this.tempDir = null;
+    this.proxyConfig = null;
+    this.errorContext = null;
+  }
+
   /**
    * Configures the OkHTTP3 server object with configuration info from the user.
    *
@@ -149,6 +159,19 @@ public class SimpleHttp {
     return url.toString();
   }
 
+  /**
+   * Returns the URL-decoded URL
+   *
+   * @return Returns the URL-decoded URL
+   */
+  public String decodedURL() {
+    try {
+      return URLDecoder.decode(url.toString(), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      return url.toString();
+    }
+  }
+
   public InputStream getInputStream() {
 
     Request.Builder requestBuilder = new Request.Builder()
@@ -180,8 +203,8 @@ public class SimpleHttp {
     try {
       // Execute the request
       Response response = client
-        .newCall(request)
-        .execute();
+          .newCall(request)
+          .execute();
 
       // Preserve the response
       responseMessage = response.message();
@@ -192,12 +215,12 @@ public class SimpleHttp {
       // If the request is unsuccessful, throw a UserException
       if (!isSuccessful(responseCode)) {
         throw UserException
-          .dataReadError()
-          .message("HTTP request failed")
-          .addContext("Response code", response.code())
-          .addContext("Response message", response.message())
-          .addContext(errorContext)
-          .build(logger);
+            .dataReadError()
+            .message("HTTP request failed")
+            .addContext("Response code", response.code())
+            .addContext("Response message", response.message())
+            .addContext(errorContext)
+            .build(logger);
       }
       logger.debug("HTTP Request for {} successful.", url());
       logger.debug("Response Headers: {} ", response.headers());
@@ -206,11 +229,11 @@ public class SimpleHttp {
       return Objects.requireNonNull(response.body()).byteStream();
     } catch (IOException e) {
       throw UserException
-        .dataReadError(e)
-        .message("Failed to read the HTTP response body")
-        .addContext("Error message", e.getMessage())
-        .addContext(errorContext)
-        .build(logger);
+          .dataReadError(e)
+          .message("Failed to read the HTTP response body")
+          .addContext("Error message", e.getMessage())
+          .addContext(errorContext)
+          .build(logger);
     }
   }
 
@@ -275,6 +298,7 @@ public class SimpleHttp {
   /**
    * Returns true if the url has url parameters, as indicated by the presence of
    * {param} in a url.
+   *
    * @return True if there are URL params, false if not
    */
   public boolean hasURLParameters() {
@@ -286,21 +310,47 @@ public class SimpleHttp {
    * APIs sometimes are structured with parameters in the URL itself.  For instance, to request a list of
    * an organization's repositories in github, the URL is: https://api.github.com/orgs/{org}/repos, where
    * you can replace the org with the actual organization name.
+   *
    * @return A list of URL parameters enclosed by curly braces.
    */
   public List<String> getURLParameters() {
     List<String> parameters = new ArrayList<>();
-    Matcher matcher = URL_PARAM_REGEX.matcher(this.url.toString());
+    String decodedURL;
+    try {
+      decodedURL = URLDecoder.decode(this.url.toString(), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      return null;
+    }
+    Matcher matcher = URL_PARAM_REGEX.matcher(decodedURL);
+    String param;
     while (matcher.find()) {
-      parameters.add(matcher.group());
+      param = matcher.group();
+      param = param.replace("{", "");
+      param = param.replace("}", "");
+      parameters.add(param);
     }
     return parameters;
   }
 
-  public void URLParameters(List<String> params) {
-    
-  }
+  public String mapURLParameters(Map<String, String> filters) {
+    List<String> params = getURLParameters();
+    String tempUrl = decodedURL();
+    for (String param : params) {
+      String value = filters.get(param);
 
+      // If the param is not populated, throw an exception
+      if (Strings.isNullOrEmpty(value)) {
+        throw UserException
+            .parseError()
+            .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
+            .addContext(errorContext)
+            .build(logger);
+      } else {
+        tempUrl = tempUrl.replace("/{" + param + "}", "/" + value);
+      }
+    }
+    return tempUrl;
+  }
 
   /**
    * Configures response caching using a provided temp directory.
@@ -314,12 +364,12 @@ public class SimpleHttp {
     if (!cacheDirectory.exists()) {
       if (!cacheDirectory.mkdirs()) {
         throw UserException
-          .dataWriteError()
-          .message("Could not create the HTTP cache directory")
-          .addContext("Path", cacheDirectory.getAbsolutePath())
-          .addContext("Please check the temp directory or disable HTTP caching.")
-          .addContext(errorContext)
-          .build(logger);
+            .dataWriteError()
+            .message("Could not create the HTTP cache directory")
+            .addContext("Path", cacheDirectory.getAbsolutePath())
+            .addContext("Please check the temp directory or disable HTTP caching.")
+            .addContext(errorContext)
+            .build(logger);
       }
     }
 
@@ -329,11 +379,11 @@ public class SimpleHttp {
       builder.cache(cache);
     } catch (Exception e) {
       throw UserException.dataWriteError(e)
-        .message("Could not create the HTTP cache")
-        .addContext("Path", cacheDirectory.getAbsolutePath())
-        .addContext("Please check the temp directory or disable HTTP caching.")
-        .addContext(errorContext)
-        .build(logger);
+          .message("Could not create the HTTP cache")
+          .addContext("Path", cacheDirectory.getAbsolutePath())
+          .addContext("Please check the temp directory or disable HTTP caching.")
+          .addContext(errorContext)
+          .build(logger);
     }
   }
 
