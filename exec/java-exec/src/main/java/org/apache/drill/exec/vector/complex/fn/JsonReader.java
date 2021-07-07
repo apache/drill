@@ -360,7 +360,8 @@ public class JsonReader extends BaseJsonReader {
         break;
 
       case VALUE_NULL:
-        // do nothing as we don't have a type.
+        // since this method is only called for allTextMode, write nulls as varchar
+        map.varChar(fieldName);
         break;
 
       default:
