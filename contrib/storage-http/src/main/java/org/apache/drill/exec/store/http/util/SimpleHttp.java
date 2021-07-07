@@ -42,9 +42,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
@@ -55,6 +58,8 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 public class SimpleHttp {
+  private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
+  private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{([A-Za-z0-9_]+)\\}");
 
   private final OkHttpClient client;
   private final HttpSubScan scanDefn;
@@ -256,6 +261,36 @@ public class SimpleHttp {
   public String getResponseURL() {
     return responseURL;
   }
+
+  /**
+   * Returns true if the url has url parameters, as indicated by the presence of
+   * {param} in a url.
+   * @return True if there are URL params, false if not
+   */
+  public boolean hasURLParameters() {
+    Matcher matcher = URL_PARAM_REGEX.matcher(this.url.toString());
+    return matcher.find();
+  }
+
+  /**
+   * APIs sometimes are structured with parameters in the URL itself.  For instance, to request a list of
+   * an organization's repositories in github, the URL is: https://api.github.com/orgs/{org}/repos, where
+   * you can replace the org with the actual organization name.
+   * @return A list of URL parameters enclosed by curly braces.
+   */
+  public List<String> getURLParameters() {
+    List<String> parameters = new ArrayList<>();
+    Matcher matcher = URL_PARAM_REGEX.matcher(this.url.toString());
+    while (matcher.find()) {
+      parameters.add(matcher.group());
+    }
+    return parameters;
+  }
+
+  public void URLParameters(List<String> params) {
+    
+  }
+
 
   /**
    * Configures response caching using a provided temp directory.
