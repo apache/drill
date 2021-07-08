@@ -137,6 +137,10 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     if (subScan.tableSpec().tableName() != null) {
       baseUrl += subScan.tableSpec().tableName();
     }
+
+    // Add URL Parameters to baseURL
+    baseUrl = SimpleHttp.mapURLParameters(HttpUrl.parse(baseUrl), subScan.filters());
+
     HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder();
     if (apiConfig.params() != null && !apiConfig.params().isEmpty() &&
         subScan.filters() != null) {

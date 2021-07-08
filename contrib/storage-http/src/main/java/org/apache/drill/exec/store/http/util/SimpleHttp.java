@@ -158,18 +158,6 @@ public class SimpleHttp {
     return url.toString();
   }
 
-  /**
-   * Returns the URL-decoded URL
-   *
-   * @return Returns the URL-decoded URL
-   */
-  public String decodedURL() {
-    try {
-      return URLDecoder.decode(url.toString(), "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      return url.toString();
-    }
-  }
 
   public InputStream getInputStream() {
 
@@ -295,63 +283,6 @@ public class SimpleHttp {
   }
 
   /**
-   * Returns true if the url has url parameters, as indicated by the presence of
-   * {param} in a url.
-   *
-   * @return True if there are URL params, false if not
-   */
-  public boolean hasURLParameters() {
-    Matcher matcher = URL_PARAM_REGEX.matcher(this.url.toString());
-    return matcher.find();
-  }
-
-  /**
-   * APIs sometimes are structured with parameters in the URL itself.  For instance, to request a list of
-   * an organization's repositories in github, the URL is: https://api.github.com/orgs/{org}/repos, where
-   * you can replace the org with the actual organization name.
-   *
-   * @return A list of URL parameters enclosed by curly braces.
-   */
-  public List<String> getURLParameters() {
-    List<String> parameters = new ArrayList<>();
-    String decodedURL;
-    try {
-      decodedURL = URLDecoder.decode(this.url.toString(), "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      return null;
-    }
-    Matcher matcher = URL_PARAM_REGEX.matcher(decodedURL);
-    String param;
-    while (matcher.find()) {
-      param = matcher.group();
-      param = param.replace("{", "");
-      param = param.replace("}", "");
-      parameters.add(param);
-    }
-    return parameters;
-  }
-
-  public String mapURLParameters(Map<String, String> filters) {
-    List<String> params = getURLParameters();
-    String tempUrl = decodedURL();
-    for (String param : params) {
-      String value = filters.get(param);
-
-      // If the param is not populated, throw an exception
-      if (Strings.isNullOrEmpty(value)) {
-        throw UserException
-            .parseError()
-            .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
-            .addContext(errorContext)
-            .build(logger);
-      } else {
-        tempUrl = tempUrl.replace("/{" + param + "}", "/" + value);
-      }
-    }
-    return tempUrl;
-  }
-
-  /**
    * Configures response caching using a provided temp directory.
    *
    * @param builder Builder the Builder object to which the caching is to be
@@ -411,6 +342,81 @@ public class SimpleHttp {
       }
     }
     return formBodyBuilder;
+  }
+
+  /**
+   * Returns the URL-decoded URL
+   *
+   * @return Returns the URL-decoded URL
+   */
+  public static String decodedURL(HttpUrl url) {
+    try {
+      return URLDecoder.decode(url.toString(), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      return url.toString();
+    }
+  }
+
+  /**
+   * Returns true if the url has url parameters, as indicated by the presence of
+   * {param} in a url.
+   *
+   * @return True if there are URL params, false if not
+   */
+  public static boolean hasURLParameters(HttpUrl url) {
+    String decodedUrl = SimpleHttp.decodedURL(url);
+    Matcher matcher = URL_PARAM_REGEX.matcher(decodedUrl);
+    return matcher.find();
+  }
+
+  /**
+   * APIs sometimes are structured with parameters in the URL itself.  For instance, to request a list of
+   * an organization's repositories in github, the URL is: https://api.github.com/orgs/{org}/repos, where
+   * you can replace the org with the actual organization name.
+   *
+   * @return A list of URL parameters enclosed by curly braces.
+   */
+  public static List<String> getURLParameters(HttpUrl url) {
+    List<String> parameters = new ArrayList<>();
+    String decodedURL;
+    try {
+      decodedURL = URLDecoder.decode(url.toString(), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      return null;
+    }
+    Matcher matcher = URL_PARAM_REGEX.matcher(decodedURL);
+    String param;
+    while (matcher.find()) {
+      param = matcher.group();
+      param = param.replace("{", "");
+      param = param.replace("}", "");
+      parameters.add(param);
+    }
+    return parameters;
+  }
+
+  public static String mapURLParameters(HttpUrl url, Map<String, String> filters) {
+
+    if (! hasURLParameters(url)) {
+      return url.toString();
+    }
+
+    List<String> params = SimpleHttp.getURLParameters(url);
+    String tempUrl = SimpleHttp.decodedURL(url);
+    for (String param : params) {
+      String value = filters.get(param);
+
+      // If the param is not populated, throw an exception
+      if (Strings.isNullOrEmpty(value)) {
+        throw UserException
+          .parseError()
+          .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
+          .build(logger);
+      } else {
+        tempUrl = tempUrl.replace("/{" + param + "}", "/" + value);
+      }
+    }
+    return tempUrl;
   }
 
   /**
