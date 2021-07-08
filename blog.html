@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Blog
-permalink: /blog
+permalink: /blog/
 ---
 {% for post in site.categories.blog %}<!-- previously: site.posts -->
 <p><a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a><br/>

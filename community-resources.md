@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Community Resources"
-permalink: /community-resources
+permalink: /community-resources/
 ---
 
 ## User Resources

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Mailing Lists"
-permalink: /mailinglists
+permalink: /mailinglists/
 ---
 All communication related to the Apache Drill project happens on the mailing lists:
 
