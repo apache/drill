@@ -244,6 +244,17 @@ public class TestHttpPlugin extends ClusterTest {
     RowSetUtilities.verify(expected, results);
   }
 
+  @Test
+  public void testURLParameters() throws Exception {
+    String sql = "SELECT * FROM local.github WHERE org='apache'";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+
+    //String x = queryBuilder().sql(sql).explainJson();
+    //System.out.println(x);
+  }
+
+
   /**
    * Evaluates the HTTP plugin with the results from an API that returns the
    * sunrise/sunset times for a given lat/long and date. API documentation is
