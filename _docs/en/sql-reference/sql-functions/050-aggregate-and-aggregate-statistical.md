@@ -9,7 +9,6 @@ parent: "SQL Functions"
 The following table lists the aggregate functions that you can use in Drill
 queries.
 
-|\-------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
 
 | **Function**                                                 | **Argument Type**                                                                                                                         | **Return Type**                                                                                                                      |
 | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -21,7 +20,6 @@ queries.
 | COUNT(\[DISTINCT\] expression)                               | any                                                                                                                                       | BIGINT                                                                                                                               |
 | MAX(expression), MIN(expression)                             | BINARY, DECIMAL, VARCHAR, DATE, TIME, or TIMESTAMP                                                                                        | Same   as argument type                                                                                                              |
 | SUM(expression)                                              | SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, DECIMAL, INTERVAL                                                                               | DECIMAL for DECIMAL   argument,     BIGINT for any integer-type argument (including BIGINT), DOUBLE for   floating-point arguments   |
-| -------------------------------------------                  | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 
 - Drill 1.14 and later supports the ANY_VALUE function.
 - Starting in Drill 1.14, the DECIMAL data type is enabled by default.
