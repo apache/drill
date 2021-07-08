@@ -140,12 +140,17 @@ public class TestHttpPlugin extends ClusterTest {
     HttpApiConfig mockXmlConfig = new HttpApiConfig("http://localhost:8091/xml", "GET", headers,
       "basic", "user", "pass", null, null, "results", null, "xml", 2,false);
 
+    HttpApiConfig mockGithubWithParam = new HttpApiConfig("https://github.com/orgs/{org}/repos", "GET", headers,
+      "basic", "user", "pass", null, Arrays.asList("lat", "lng", "date"), "results", false, null, 0, false);
+
+
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("sunrise", mockSchema);
     configs.put("mocktable", mockTable);
     configs.put("mockpost", mockPostConfig);
     configs.put("mockcsv", mockCsvConfig);
     configs.put("mockxml", mockXmlConfig);
+    configs.put("github", mockGithubWithParam);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
@@ -179,6 +184,17 @@ public class TestHttpPlugin extends ClusterTest {
 
     RowSetUtilities.verify(expected, results);
   }
+
+  @Test
+  public void testURLParameters() throws Exception {
+    String sql = "SELECT * FROM local.github WHERE org='apache'";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+
+    //String x = queryBuilder().sql(sql).explainJson();
+    //System.out.println(x);
+  }
+
 
   /**
    * Evaluates the HTTP plugin with the results from an API that returns the

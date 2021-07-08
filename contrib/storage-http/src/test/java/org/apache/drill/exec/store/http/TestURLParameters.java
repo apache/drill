@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.http;
 
+import okhttp3.HttpUrl;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.junit.Test;
 
@@ -26,24 +27,31 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestSimpleHttpClient {
+public class TestURLParameters {
 
   @Test
   public void testUrlParameters() throws Exception {
     // Http client setup
-    SimpleHttp http = new SimpleHttp("https://github.com/orgs/{org}/repos");
+    HttpUrl githubSingleParam = HttpUrl.parse("https://github.com/orgs/{org}/repos");
     Map<String, String> filters = new HashMap<>();
     filters.put("org", "apache");
     filters.put("param1", "value1");
     filters.put("param2", "value2");
-    assertEquals(http.mapURLParameters(filters), "https://github.com/orgs/apache/repos");
+    assertEquals(SimpleHttp.mapURLParameters(githubSingleParam, filters), "https://github.com/orgs/apache/repos");
 
 
-    SimpleHttp http2 = new SimpleHttp("https://github.com/orgs/{org}/{repos}");
+    HttpUrl githubMultiParam = HttpUrl.parse("https://github.com/orgs/{org}/{repos}");
     Map<String, String> filters2 = new HashMap<>();
-    filters.put("org", "apache");
-    filters.put("param1", "value1");
-    filters.put("repos", "drill");
-    assertEquals(http2.mapURLParameters(filters), "https://github.com/orgs/apache/drill");
+    filters2.put("org", "apache");
+    filters2.put("param1", "value1");
+    filters2.put("repos", "drill");
+    assertEquals(SimpleHttp.mapURLParameters(githubMultiParam, filters2), "https://github.com/orgs/apache/drill");
+
+    HttpUrl githubNoParam = HttpUrl.parse("https://github.com/orgs/org/repos");
+    Map<String, String> filters3 = new HashMap<>();
+    filters3.put("org", "apache");
+    filters3.put("param1", "value1");
+    filters3.put("repos", "drill");
+    assertEquals(SimpleHttp.mapURLParameters(githubNoParam, filters3), "https://github.com/orgs/org/repos");
   }
 }
