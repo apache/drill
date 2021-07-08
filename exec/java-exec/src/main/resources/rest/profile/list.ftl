@@ -84,6 +84,14 @@
         $("#queryCancelModal").modal("show");
     }
 
+    //Trigger the click event of file input and submit the file selected to the server
+    function viewProfile() {
+        $("#view-profile-file").change(function() {
+            $("#view-profile").submit();
+            this.value = null;
+        });
+        $("#view-profile-file").trigger("click");
+    }
 </script>
 
 <!-- CSS to control DataTable Elements -->
@@ -172,6 +180,11 @@
         <form name="profileFetch" action="/profiles" onsubmit="return checkMaxFetch();" method="get"><span title="Max number of profiles to load">Loaded <b>${model.getFinishedQueries()?size}</b> profiles </span>
         <input id="fetchMax" type="text" size="5" name="max" value="" style="text-align: right" />
         <input type="submit" value="Reload"/>
+      </form></td>
+      <td align="right" width="1px">
+        <form id="view-profile" action="/profiles/view" enctype='multipart/form-data' method="post">
+        <input type="file" id="view-profile-file" name="profileData" style="display: none"/>
+        <input type="button" value="View" onclick = "viewProfile()"/>
       </form></td>
     </tr></table>
     <!-- Placed after textbox to allow for DOM to contain "fetchMax" element -->
