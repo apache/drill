@@ -395,8 +395,20 @@ public class SimpleHttp {
     return parameters;
   }
 
+  /**
+   * Used for APIs which have parameters in the URL.  This function maps the filters pushed down
+   * from the query into the URL.  For example the API: github.com/orgs/{org}/repos requires a user to
+   * specify an organization and replace {org} with an actual organization.  The filter is passed down from
+   * the query.
+   *
+   * Note that if a URL contains URL parameters and one is not provided in the filters, Drill will throw
+   * a UserException.
+   *
+   * @param url The HttpUrl containing URL Parameters
+   * @param filters:  A HashMap of filters
+   * @return A string of the URL with the URL parameters replaced by filter values
+   */
   public static String mapURLParameters(HttpUrl url, Map<String, String> filters) {
-
     if (! hasURLParameters(url)) {
       return url.toString();
     }
@@ -404,8 +416,14 @@ public class SimpleHttp {
     List<String> params = SimpleHttp.getURLParameters(url);
     String tempUrl = SimpleHttp.decodedURL(url);
     for (String param : params) {
-      String value = filters.get(param);
+      if (filters == null) {
+        throw UserException
+            .parseError()
+            .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
+            .build(logger);
+      }
 
+      String value = filters.get(param);
       // If the param is not populated, throw an exception
       if (Strings.isNullOrEmpty(value)) {
         throw UserException

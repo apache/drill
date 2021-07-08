@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.http;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -193,8 +194,9 @@ public class TestHttpPlugin extends ClusterTest {
       .xmlDataLevel(2)
       .build();
 
-    HttpApiConfig mockGithubWithParam = new HttpApiConfig("https://github.com/orgs/{org}/repos", "GET", headers,
-      "basic", "user", "pass", null, Arrays.asList("lat", "lng", "date"), "results", false, null, 0, false);
+    //"https://localhost:8091/orgs/{org}/repos"
+    HttpApiConfig mockGithubWithParam = new HttpApiConfig("http://localhost:8091/orgs/{org}/repos", "GET", headers,
+      "none", null, null, null, Arrays.asList("lat", "lng", "date"), "results", false, null, 0, false);
 
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
@@ -237,17 +239,6 @@ public class TestHttpPlugin extends ClusterTest {
 
     RowSetUtilities.verify(expected, results);
   }
-
-  @Test
-  public void testURLParameters() throws Exception {
-    String sql = "SELECT * FROM local.github WHERE org='apache'";
-    RowSet results = client.queryBuilder().sql(sql).rowSet();
-
-
-    //String x = queryBuilder().sql(sql).explainJson();
-    //System.out.println(x);
-  }
-
 
   /**
    * Evaluates the HTTP plugin with the results from an API that returns the
@@ -377,6 +368,56 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     RowSetUtilities.verify(expected, results);
+  }
+
+  @Test
+  public void simpleTestWithMockServerWithURLParams() throws Exception {
+    String sql = "SELECT _response_url FROM local.github\n" +
+        "WHERE `org` = 'apache'";
+
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(TEST_JSON_RESPONSE)
+      );
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+          .addRow("http://localhost:8091/orgs/apache/repos")
+          .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  /**
+   * When the user has configured an API connection with URL parameters,
+   * it is mandatory that those parameters are included in the WHERE clause. Drill
+   * will throw an exception if that parameter is not present.
+   * @throws Exception if anything goes wrong
+   */
+  @Test
+  public void testUrlParamError() throws Exception {
+    String sql = "SELECT _response_url FROM local.github\n";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(TEST_JSON_RESPONSE)
+      );
+      run(sql);
+      fail();
+    } catch (UserException e) {
+      assertTrue(e.getMessage().contains("API Query with URL Parameters must be populated."));
+    }
   }
 
   @Test
