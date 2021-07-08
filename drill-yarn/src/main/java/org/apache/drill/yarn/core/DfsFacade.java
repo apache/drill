@@ -76,7 +76,7 @@ public class DfsFacade {
 
   public void connect() throws DfsFacadeException {
     loadYarnConfig();
-    String dfsConnection = config.getString(DrillOnYarnConfig.DFS_CONNECTION);
+    String dfsConnection = FileSystem.getDefaultUri(yarnConf).toString();
     try {
       if (DoYUtil.isBlank(dfsConnection)) {
         fs = FileSystem.get(yarnConf);
