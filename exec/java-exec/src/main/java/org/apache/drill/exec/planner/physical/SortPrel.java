@@ -21,13 +21,13 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.exec.planner.common.DrillSortRelBase;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.ExternalSort;
-import org.apache.drill.exec.planner.common.OrderedRel;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
@@ -41,7 +41,7 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rex.RexNode;
 
-public class SortPrel extends org.apache.calcite.rel.core.Sort implements OrderedRel,Prel {
+public class SortPrel extends DrillSortRelBase implements Prel {
   private final boolean isRemovable;
 
   /** Creates a DrillSortRel. */
@@ -151,16 +151,6 @@ public class SortPrel extends org.apache.calcite.rel.core.Sort implements Ordere
                                     .replace(DRILL_PHYSICAL);
 
     return this.copy(traits, children.get(0), collationTrait, this.offset, this.fetch);
-  }
-
-  @Override
-  public RexNode getOffset() {
-    return offset;
-  }
-
-  @Override
-  public RexNode getFetch() {
-    return fetch;
   }
 
   @Override

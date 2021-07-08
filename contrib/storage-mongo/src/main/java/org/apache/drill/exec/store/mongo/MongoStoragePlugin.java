@@ -25,18 +25,23 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClients;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
+import org.apache.drill.exec.store.PluginRulesProviderImpl;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.apache.drill.exec.store.StoragePluginRulesSupplier;
+import org.apache.drill.exec.store.mongo.plan.MongoPluginImplementor;
 import org.apache.drill.exec.store.mongo.schema.MongoSchemaFactory;
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.store.plan.rel.PluginRel;
 import org.apache.drill.exec.store.security.HadoopCredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
@@ -45,13 +50,13 @@ import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
 import org.apache.drill.shaded.guava.com.google.common.cache.RemovalNotification;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -64,11 +69,12 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   private final MongoSchemaFactory schemaFactory;
   private final Cache<MongoCnxnKey, MongoClient> addressClientMap;
   private final ConnectionString clientURI;
+  private final StoragePluginRulesSupplier storagePluginRulesSupplier;
 
   public MongoStoragePlugin(
       MongoStoragePluginConfig mongoConfig,
       DrillbitContext context,
-      String name) throws ExecutionSetupException {
+      String name) {
     super(context, name);
     this.mongoConfig = mongoConfig;
     String connection = addCredentialsFromCredentialsProvider(this.mongoConfig.getConnection(), name);
@@ -78,6 +84,21 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
         .removalListener(new AddressCloser())
         .build();
     this.schemaFactory = new MongoSchemaFactory(this, name);
+    this.storagePluginRulesSupplier = storagePluginRulesSupplier(name, mongoConfig);
+  }
+
+  private static StoragePluginRulesSupplier storagePluginRulesSupplier(String name, MongoStoragePluginConfig mongoConfig) {
+    Convention convention = new Convention.Impl("MONGO." + name, PluginRel.class);
+    return StoragePluginRulesSupplier.builder()
+      .rulesProvider(new PluginRulesProviderImpl(convention, MongoPluginImplementor::new))
+      .supportsProjectPushdown(mongoConfig.getPluginOptimizations().isSupportsProjectPushdown())
+      .supportsSortPushdown(mongoConfig.getPluginOptimizations().isSupportsSortPushdown())
+      .supportsAggregatePushdown(mongoConfig.getPluginOptimizations().isSupportsAggregatePushdown())
+      .supportsFilterPushdown(mongoConfig.getPluginOptimizations().isSupportsFilterPushdown())
+      .supportsLimitPushdown(mongoConfig.getPluginOptimizations().isSupportsLimitPushdown())
+      .supportsUnionPushdown(mongoConfig.getPluginOptimizations().isSupportsUnionPushdown())
+      .convention(convention)
+      .build();
   }
 
   private String addCredentialsFromCredentialsProvider(String connection, String name) {
@@ -120,7 +141,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     schemaFactory.registerSchemas(schemaConfig, parent);
   }
 
@@ -133,14 +154,27 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
     MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<MongoScanSpec>() {
     });
-    return new MongoGroupScan(userName, this, mongoScanSpec, null, -1);
+    return new MongoGroupScan(userName, this, mongoScanSpec, null, false);
   }
 
   @Override
-  public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-    return ImmutableSet.of(MongoPushDownFilterForScan.INSTANCE);
+  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
+    switch (phase) {
+      case PHYSICAL:
+      case LOGICAL:
+        return storagePluginRulesSupplier.getOptimizerRules();
+      case LOGICAL_PRUNE_AND_JOIN:
+      case LOGICAL_PRUNE:
+      case PARTITION_PRUNING:
+      case JOIN_PLANNING:
+      default:
+        return Collections.emptySet();
+    }
   }
 
+  public Convention convention() {
+    return storagePluginRulesSupplier.convention();
+  }
 
   private static class AddressCloser implements
     RemovalListener<MongoCnxnKey, MongoClient> {

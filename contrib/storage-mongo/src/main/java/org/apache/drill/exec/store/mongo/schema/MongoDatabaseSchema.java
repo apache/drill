@@ -32,8 +32,7 @@ import org.apache.drill.exec.store.mongo.schema.MongoSchemaFactory.MongoSchema;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class MongoDatabaseSchema extends AbstractSchema {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(MongoDatabaseSchema.class);
+
   private final MongoSchema mongoSchema;
   private final Set<String> tableNames;
 

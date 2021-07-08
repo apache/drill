@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.mongodb.ConnectionString;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
@@ -38,12 +39,20 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
   @JsonIgnore
   private final ConnectionString clientURI;
 
+  private final MongoPluginOptimizations pluginOptimizations;
+
   @JsonCreator
   public MongoStoragePluginConfig(@JsonProperty("connection") String connection,
-      @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
+    @JsonProperty("pluginOptimizations") MongoPluginOptimizations pluginOptimizations,
+    @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
     super(getCredentialsProvider(credentialsProvider), credentialsProvider == null);
     this.connection = connection;
     this.clientURI = new ConnectionString(connection);
+    this.pluginOptimizations = ObjectUtils.defaultIfNull(pluginOptimizations, new MongoPluginOptimizations());
+  }
+
+  public MongoPluginOptimizations getPluginOptimizations() {
+    return pluginOptimizations;
   }
 
   @Override
@@ -74,5 +83,68 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
 
   private static CredentialsProvider getCredentialsProvider(CredentialsProvider credentialsProvider) {
     return credentialsProvider != null ? credentialsProvider : PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
+  }
+
+  public static class MongoPluginOptimizations {
+
+    private boolean supportsProjectPushdown = true;
+
+    private boolean supportsFilterPushdown = true;
+
+    private boolean supportsAggregatePushdown = true;
+
+    private boolean supportsSortPushdown = true;
+
+    private boolean supportsUnionPushdown = true;
+
+    private boolean supportsLimitPushdown = true;
+
+    public boolean isSupportsProjectPushdown() {
+      return supportsProjectPushdown;
+    }
+
+    public void setSupportsProjectPushdown(boolean supportsProjectPushdown) {
+      this.supportsProjectPushdown = supportsProjectPushdown;
+    }
+
+    public boolean isSupportsFilterPushdown() {
+      return supportsFilterPushdown;
+    }
+
+    public void setSupportsFilterPushdown(boolean supportsFilterPushdown) {
+      this.supportsFilterPushdown = supportsFilterPushdown;
+    }
+
+    public boolean isSupportsAggregatePushdown() {
+      return supportsAggregatePushdown;
+    }
+
+    public void setSupportsAggregatePushdown(boolean supportsAggregatePushdown) {
+      this.supportsAggregatePushdown = supportsAggregatePushdown;
+    }
+
+    public boolean isSupportsSortPushdown() {
+      return supportsSortPushdown;
+    }
+
+    public void setSupportsSortPushdown(boolean supportsSortPushdown) {
+      this.supportsSortPushdown = supportsSortPushdown;
+    }
+
+    public boolean isSupportsUnionPushdown() {
+      return supportsUnionPushdown;
+    }
+
+    public void setSupportsUnionPushdown(boolean supportsUnionPushdown) {
+      this.supportsUnionPushdown = supportsUnionPushdown;
+    }
+
+    public boolean isSupportsLimitPushdown() {
+      return supportsLimitPushdown;
+    }
+
+    public void setSupportsLimitPushdown(boolean supportsLimitPushdown) {
+      this.supportsLimitPushdown = supportsLimitPushdown;
+    }
   }
 }

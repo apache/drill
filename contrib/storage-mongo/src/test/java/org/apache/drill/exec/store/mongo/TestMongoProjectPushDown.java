@@ -23,20 +23,20 @@ import static org.apache.drill.test.TestBuilder.mapOf;
 import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Ignore("DRILL-3775")
 @Category({SlowTest.class, MongoStorageTest.class})
 public class TestMongoProjectPushDown extends MongoTestBase {
 
-  /**
-   *
-   * @throws Exception
-   */
   @Test
   public void testComplexProjectPushdown() throws Exception {
+
+    queryBuilder()
+      .sql("select t.field_4.inner_3 as col_1, t.field_4 as col_2 from mongo.employee.schema_change t")
+      .planMatcher()
+      .include("MongoGroupScan.*\"\\$project\": \\{\"col_1\": \"\\$field_4.inner_3\", \"col_2\": \"\\$field_4\"\\}")
+      .match();
 
     try {
       testBuilder()

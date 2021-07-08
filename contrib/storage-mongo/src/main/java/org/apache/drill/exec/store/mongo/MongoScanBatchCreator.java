@@ -42,22 +42,20 @@ public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
       List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = new LinkedList<>();
-    List<SchemaPath> columns = null;
-    for (MongoSubScan.MongoSubScanSpec scanSpec : subScan
-        .getChunkScanSpecList()) {
+    for (BaseMongoSubScanSpec scanSpec : subScan.getChunkScanSpecList()) {
       try {
-        if ((columns = subScan.getColumns()) == null) {
+        List<SchemaPath> columns = subScan.getColumns();
+        if (columns == null) {
           columns = GroupScan.ALL_COLUMNS;
         }
         readers.add(new MongoRecordReader(scanSpec, columns, context, subScan.getMongoStoragePlugin()));
       } catch (Exception e) {
-        logger.error("MongoRecordReader creation failed for subScan:  "
-            + subScan + ".");
+        logger.error("MongoRecordReader creation failed for subScan: {}.", subScan);
         logger.error(e.getMessage(), e);
         throw new ExecutionSetupException(e);
       }
     }
-    logger.info("Number of record readers initialized : " + readers.size());
+    logger.info("Number of record readers initialized : {}", readers.size());
     return new ScanBatch(subScan, context, readers);
   }
 

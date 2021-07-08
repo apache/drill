@@ -15,20 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.mongo.common;
+package org.apache.drill.exec.store.plan.rel;
 
-public enum MongoCompareOp {
-  EQUAL("$eq"), NOT_EQUAL("$ne"), GREATER_OR_EQUAL("$gte"), GREATER("$gt"), LESS_OR_EQUAL(
-      "$lte"), LESS("$lt"), IN("$in"), AND("$and"), OR("$or"), REGEX("$regex"), OPTIONS(
-      "$options"), PROJECT("$project"), COND("$cond"), IFNULL("$ifNull"), IFNOTNULL(
-      "$ifNotNull"), SUM("$sum"), GROUP_BY("$group"), EXISTS("$exists");
-  private String compareOp;
+import org.apache.calcite.rel.RelNode;
+import org.apache.drill.exec.store.plan.PluginImplementor;
 
-  MongoCompareOp(String compareOp) {
-    this.compareOp = compareOp;
-  }
+import java.io.IOException;
 
-  public String getCompareOp() {
-    return compareOp;
-  }
+/**
+ * Relational expression that uses specific plugin calling convention.
+ */
+public interface PluginRel extends RelNode {
+
+  void implement(PluginImplementor implementor) throws IOException;
+
+  boolean canImplement(PluginImplementor implementor);
 }

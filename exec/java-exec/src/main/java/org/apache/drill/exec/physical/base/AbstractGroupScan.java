@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.exec.metastore.analyze.AnalyzeInfoProvider;
 import org.apache.drill.metastore.metadata.TableMetadata;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
@@ -89,6 +90,11 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   public ScanStats getScanStats(PlannerSettings settings) {
+    return getScanStats();
+  }
+
+  @Override
+  public ScanStats getScanStats(RelMetadataQuery mq) {
     return getScanStats();
   }
 

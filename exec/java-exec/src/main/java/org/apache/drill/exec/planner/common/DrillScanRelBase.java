@@ -19,6 +19,8 @@ package org.apache.drill.exec.planner.common;
 
 import java.io.IOException;
 import java.util.List;
+
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -87,5 +89,5 @@ public abstract class DrillScanRelBase extends TableScan implements DrillRelNode
     return planner.getCostFactory().makeCost(dRows, dCpu, dIo);
   }
 
-  public abstract DrillScanRelBase copy(RelTraitSet traitSet, GroupScan scan);
+  public abstract DrillScanRelBase copy(RelTraitSet traitSet, GroupScan scan, RelDataType rowType);
 }

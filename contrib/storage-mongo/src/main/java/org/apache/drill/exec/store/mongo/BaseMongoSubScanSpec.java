@@ -17,53 +17,57 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import org.apache.drill.common.PlanStringBuilder;
-import org.bson.Document;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.bson.conversions.Bson;
+import org.apache.drill.common.PlanStringBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class MongoScanSpec {
-  private final String dbName;
-  private final String collectionName;
+public class BaseMongoSubScanSpec {
 
-  private Document filters;
+  protected String dbName;
 
-  private List<Bson> operations = new ArrayList<>();
+  protected String collectionName;
+
+  protected List<String> hosts;
 
   @JsonCreator
-  public MongoScanSpec(@JsonProperty("dbName") String dbName,
-      @JsonProperty("collectionName") String collectionName) {
+  public BaseMongoSubScanSpec(@JsonProperty("dbName") String dbName,
+      @JsonProperty("collectionName") String collectionName,
+      @JsonProperty("hosts") List<String> hosts) {
     this.dbName = dbName;
     this.collectionName = collectionName;
+    this.hosts = hosts;
   }
 
-  public MongoScanSpec(String dbName, String collectionName,
-      Document filters, List<Bson> operations) {
-    this.dbName = dbName;
-    this.collectionName = collectionName;
-    this.filters = filters;
-    this.operations = operations;
+  BaseMongoSubScanSpec() {
   }
 
   public String getDbName() {
     return dbName;
   }
 
+  public BaseMongoSubScanSpec setDbName(String dbName) {
+    this.dbName = dbName;
+    return this;
+  }
+
   public String getCollectionName() {
     return collectionName;
   }
 
-  public Document getFilters() {
-    return filters;
+  public BaseMongoSubScanSpec setCollectionName(String collectionName) {
+    this.collectionName = collectionName;
+    return this;
   }
 
-  public List<Bson> getOperations() {
-    return operations;
+  public List<String> getHosts() {
+    return hosts;
+  }
+
+  public BaseMongoSubScanSpec setHosts(List<String> hosts) {
+    this.hosts = hosts;
+    return this;
   }
 
   @Override
@@ -71,8 +75,8 @@ public class MongoScanSpec {
     return new PlanStringBuilder(this)
         .field("dbName", dbName)
         .field("collectionName", collectionName)
-        .field("filters", filters)
-        .field("operations", operations)
+        .field("hosts", hosts)
         .toString();
+
   }
 }

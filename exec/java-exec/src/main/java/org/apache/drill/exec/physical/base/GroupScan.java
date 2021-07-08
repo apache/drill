@@ -20,6 +20,8 @@ package org.apache.drill.exec.physical.base;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Collection;
 import java.util.List;
+
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -87,6 +89,9 @@ public interface GroupScan extends Scan, HasAffinity {
 
   @JsonIgnore
   ScanStats getScanStats(PlannerSettings settings);
+
+  @JsonIgnore
+  ScanStats getScanStats(RelMetadataQuery mq);
 
   /**
    * Returns a clone of GroupScan instance, except that the new GroupScan will use the provided list of columns .
