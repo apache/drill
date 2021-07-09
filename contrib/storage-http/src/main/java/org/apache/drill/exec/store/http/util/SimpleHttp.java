@@ -86,16 +86,6 @@ public class SimpleHttp {
     this.client = setupHttpClient();
   }
 
-  // For Testing Only
-  public SimpleHttp(String url) {
-    this.url = HttpUrl.parse(url);
-    this.client = null;
-    this.scanDefn = null;
-    this.tempDir = null;
-    this.proxyConfig = null;
-    this.errorContext = null;
-  }
-
   /**
    * Configures the OkHTTP3 server object with configuration info from the user.
    *
@@ -159,7 +149,6 @@ public class SimpleHttp {
     return url.toString();
   }
 
-
   public InputStream getInputStream() {
 
     Request.Builder requestBuilder = new Request.Builder()
@@ -191,8 +180,8 @@ public class SimpleHttp {
     try {
       // Execute the request
       Response response = client
-          .newCall(request)
-          .execute();
+        .newCall(request)
+        .execute();
 
       // Preserve the response
       responseMessage = response.message();
@@ -203,12 +192,12 @@ public class SimpleHttp {
       // If the request is unsuccessful, throw a UserException
       if (!isSuccessful(responseCode)) {
         throw UserException
-            .dataReadError()
-            .message("HTTP request failed")
-            .addContext("Response code", response.code())
-            .addContext("Response message", response.message())
-            .addContext(errorContext)
-            .build(logger);
+          .dataReadError()
+          .message("HTTP request failed")
+          .addContext("Response code", response.code())
+          .addContext("Response message", response.message())
+          .addContext(errorContext)
+          .build(logger);
       }
       logger.debug("HTTP Request for {} successful.", url());
       logger.debug("Response Headers: {} ", response.headers());
@@ -217,11 +206,11 @@ public class SimpleHttp {
       return Objects.requireNonNull(response.body()).byteStream();
     } catch (IOException e) {
       throw UserException
-          .dataReadError(e)
-          .message("Failed to read the HTTP response body")
-          .addContext("Error message", e.getMessage())
-          .addContext(errorContext)
-          .build(logger);
+        .dataReadError(e)
+        .message("Failed to read the HTTP response body")
+        .addContext("Error message", e.getMessage())
+        .addContext(errorContext)
+        .build(logger);
     }
   }
 
@@ -295,12 +284,12 @@ public class SimpleHttp {
     if (!cacheDirectory.exists()) {
       if (!cacheDirectory.mkdirs()) {
         throw UserException
-            .dataWriteError()
-            .message("Could not create the HTTP cache directory")
-            .addContext("Path", cacheDirectory.getAbsolutePath())
-            .addContext("Please check the temp directory or disable HTTP caching.")
-            .addContext(errorContext)
-            .build(logger);
+          .dataWriteError()
+          .message("Could not create the HTTP cache directory")
+          .addContext("Path", cacheDirectory.getAbsolutePath())
+          .addContext("Please check the temp directory or disable HTTP caching.")
+          .addContext(errorContext)
+          .build(logger);
       }
     }
 
@@ -310,11 +299,11 @@ public class SimpleHttp {
       builder.cache(cache);
     } catch (Exception e) {
       throw UserException.dataWriteError(e)
-          .message("Could not create the HTTP cache")
-          .addContext("Path", cacheDirectory.getAbsolutePath())
-          .addContext("Please check the temp directory or disable HTTP caching.")
-          .addContext(errorContext)
-          .build(logger);
+        .message("Could not create the HTTP cache")
+        .addContext("Path", cacheDirectory.getAbsolutePath())
+        .addContext("Please check the temp directory or disable HTTP caching.")
+        .addContext(errorContext)
+        .build(logger);
     }
   }
 
