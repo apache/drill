@@ -194,7 +194,6 @@ public class TestHttpPlugin extends ClusterTest {
       .xmlDataLevel(2)
       .build();
 
-    //"https://localhost:8091/orgs/{org}/repos"
     HttpApiConfig mockGithubWithParam = new HttpApiConfig("http://localhost:8091/orgs/{org}/repos", "GET", headers,
       "none", null, null, null, Arrays.asList("lat", "lng", "date"), "results", false, null, 0, false);
 
