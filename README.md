@@ -144,7 +144,7 @@ The English versions of "site" pages such as index.html are stored in the root d
 
 ## Add translated collection pages
 
-The English versions of "collection" pages such as the markdown under _docs/ are stored in an en/ subdirectory of the collection root.  Create corresponding translated pages in the collection under `lang-code/` in which you translate both `title` and `parent` in the front matter but leave the `slug` the same as the English page and set `lang` to `lang-code`.
+The English versions of "collection" pages such as the markdown under _docs/ are stored in an en/ subdirectory of the collection root.  Create corresponding translated pages in the collection under `lang-code/` in which you translate both `title` and `parent` in the front matter but leave the `slug` the same as the English page and set `lang` to `lang-code`.  Once you've translated the `title` of a parent page, you will need to provide files for each of its children (which can still contain the original English content) and in each set `parent` to the translated `title` of the parent.
 
 # Compiling the Website
 

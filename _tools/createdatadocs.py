@@ -82,7 +82,20 @@ if __name__ == '__main__':
             if doc['parent'] == '':
                 top_level_docs.append(doc)
             else:
-                docs_by_title[doc['parent']]['children'].append(doc)
+                try:
+                    docs_by_title[doc['parent']]['children'].append(doc)
+                except Exception as e:
+                    msg = f'Error processing "{doc["title"]}", which has parent ' \
+                        f'"{doc["parent"]}", for language {lang}.'
+
+                    if lang != 'en':
+                        msg += '  Once you\'ve given a translated _title_ to a parent page' \
+                            ' you must create translations of all of its child pages' \
+                            ' (which may be empty or contain the original English text)' \
+                            ' and set their _parent_ to the new _title_ on the parent page'
+
+                    logging.error(msg)
+                    raise e
 
         for doc in top_level_docs:
             add_docs(docs_in_order, doc)
