@@ -44,7 +44,8 @@
 
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
-    <junit.version>4.13.2</junit.version>
+    <junit.version>5.7.2</junit.version>
+    <junit4.version>4.13.2</junit4.version>
     <slf4j.version>1.7.26</slf4j.version>
     <shaded.guava.version>28.2-jre</shaded.guava.version>
     <guava.version>30.1.1-jre</guava.version>
@@ -858,7 +859,7 @@
           <dependencies>
             <dependency>
               <groupId>org.apache.maven.surefire</groupId>
-              <artifactId>surefire-junit47</artifactId>
+              <artifactId>surefire-junit-platform</artifactId>
               <version>${surefire.version}</version>
             </dependency>
           </dependencies>
@@ -1099,12 +1100,18 @@
       <version>${jmockit.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <!-- Mockito needs to be on the class path after JUnit (or Hamcrest) as
            long as Mockito _contains_ older Hamcrest classes.  See DRILL-2130. -->
@@ -1281,6 +1288,13 @@
         <artifactId>hamcrest</artifactId>
         <version>${hamcrest.version}</version>
         <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.freemarker</groupId>
@@ -2032,6 +2046,13 @@
             <artifactId>commons-logging</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit4.version}</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

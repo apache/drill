@@ -22,89 +22,88 @@ import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.parser.LogicalExpressionParser;
 import org.apache.drill.test.DrillTest;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class TreeTest extends DrillTest {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+class TreeTest extends DrillTest {
 
   @Test
-  public void escapeStringLiteral() {
+  void escapeStringLiteral() {
     String expr = "func(`identifier`, '\\\\d+', 0, 'fjds')";
     testExpressionParsing(expr, expr);
   }
 
   @Test
-  public void escapeQuotedIdentifier() {
+  void escapeQuotedIdentifier() {
     String expr = "`a\\\\b` + `c'd`";
     testExpressionParsing(expr, "add(`a\\\\b`, `c'd`)");
   }
 
   @Test
-  public void testIfWithCase() {
+  void testIfWithCase() {
     testExpressionParsing("if ($F1) then case when (_MAP.R_NAME = 'AFRICA') then 2 else 4 end else if(4==3) then 1 else if(x==3) then 7 else (if(2==1) then 6 else 4 end) end",
       "( if (equal(`x`, 3)  ) then (7 )  else ( ( if (equal(2, 1)  ) then (6 )  else (4 )  end  )  )  end  )");
   }
 
   @Test
-  public void testAdd() {
+  void testAdd() {
     testExpressionParsing("2+2", "add(2, 2)");
   }
 
   @Test
-  public void testIf() {
+  void testIf() {
     testExpressionParsing("if ('blue.red') then 'orange' else if (false) then 1 else 0 end",
       "( if (false ) then (1 )  else (0 )  end  )");
   }
 
   @Test
-  public void testQuotedIdentifier() {
+  void testQuotedIdentifier() {
     String expr = "`hello friend`.`goodbye`";
     testExpressionParsing(expr, expr);
   }
 
   @Test
-  public void testSpecialQuoted() {
+  void testSpecialQuoted() {
     testExpressionParsing("`*0` + `*` ", "add(`*0`, `*`)");
   }
 
   @Test
-  public void testQuotedIdentifier2() {
+  void testQuotedIdentifier2() {
     testExpressionParsing("`hello friend`.goodbye", "`hello friend`.`goodbye`");
   }
 
   @Test
-  public void testComplexIdentifier() {
+  void testComplexIdentifier() {
     testExpressionParsing("goodbye[4].`hello`", "`goodbye`[4].`hello`");
   }
 
   @Test // DRILL-2606
-  public void testCastToBooleanExpr() {
+  void testCastToBooleanExpr() {
     String expr = "cast( (cast( (`bool_col` ) as VARCHAR(100) ) ) as BIT )";
     testExpressionParsing(expr, expr);
   }
 
   @Test
-  public void testComments() {
+  void testComments() {
     testExpressionParsing("cast /* block comment */ ( // single comment\n" +
       "1 as int)", "cast( (1 ) as INT )");
   }
 
   @Test
-  public void testParsingException() {
-    thrown.expect(ExpressionParsingException.class);
-    thrown.expectMessage(containsString("mismatched input 'i' expecting"));
-    testExpressionParsing("cast(1 as i)", "");
+  void testParsingException() {
+
+    ExpressionParsingException exception = assertThrows(ExpressionParsingException.class, () ->
+      testExpressionParsing("cast(1 as i)", "")
+    );
+    assertThat(exception.getMessage(), containsString("mismatched input 'i' expecting"));
   }
 
   @Test
-  public void testFunctionCallWithoutParams() {
+  void testFunctionCallWithoutParams() {
     String expr = "now()";
     testExpressionParsing(expr, expr);
   }
