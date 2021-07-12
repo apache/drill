@@ -425,6 +425,7 @@ public class DateTypeFunctions {
         @Param TimeStampHolder left;
         @Param TimeStampHolder right;
         @Output IntervalHolder out;
+        @Inject ContextInformation contextInfo;
 
         @Override
         public void setup() {
@@ -432,36 +433,65 @@ public class DateTypeFunctions {
 
         @Override
         public void eval() {
-            long diff = left.value - right.value;
-            long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
-            out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+            java.time.OffsetDateTime from = java.time.Instant.ofEpochMilli(right.value).atOffset(java.time.ZoneOffset.UTC);
+            java.time.OffsetDateTime to = java.time.Instant.ofEpochMilli(left.value).atOffset(java.time.ZoneOffset.UTC);
+            java.time.Duration duration = java.time.Duration.between(from.toLocalTime(), to.toLocalTime());
+            java.time.Period period;
+
+            if (from.isAfter(to) && duration.compareTo(java.time.Duration.ZERO) > 0) {
+                // negative period and positive duration
+                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate().plusDays(1));
+                duration = duration.minusDays(1);
+            } else if (from.isBefore(to) && duration.compareTo(java.time.Duration.ZERO) < 0) {
+                // positive period and negative duration
+                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate().minusDays(1));
+                duration = duration.plusDays(1);
+            } else {
+                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate());
+            }
+
+            out.months = (int) period.toTotalMonths();
+            out.days = period.getDays();
+            out.milliseconds = (int) duration.toMillis();
         }
     }
 
     @FunctionTemplate(name = "age", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class AgeTimeStamp2Function implements DrillSimpleFunc {
         @Param TimeStampHolder right;
-        @Workspace long queryStartDate;
+        @Workspace java.time.OffsetDateTime queryStartDate;
         @Output IntervalHolder out;
         @Inject ContextInformation contextInfo;
 
         @Override
         public void setup() {
             int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
-            org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-            org.joda.time.DateTime now = new org.joda.time.DateTime(contextInfo.getQueryStartTime(), timeZone);
-            queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
+            java.time.ZoneId zoneId = java.time.ZoneId.of(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+            java.time.ZonedDateTime dt = java.time.Instant.ofEpochMilli(contextInfo.getQueryStartTime()).atZone(zoneId);
+            queryStartDate = java.time.OffsetDateTime.of(dt.toLocalDate(), java.time.LocalTime.MIDNIGHT, java.time.ZoneOffset.UTC);
         }
 
         @Override
         public void eval() {
-            long diff = queryStartDate - right.value;
-            long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
-            out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+            java.time.OffsetDateTime dt = java.time.Instant.ofEpochMilli(right.value).atOffset(java.time.ZoneOffset.UTC);
+            java.time.Duration duration = java.time.Duration.between(dt.toLocalTime(), queryStartDate.toLocalTime());
+            java.time.Period period;
+
+            if (dt.isAfter(queryStartDate) && duration.compareTo(java.time.Duration.ZERO) > 0) {
+                // negative period and positive duration
+                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate().plusDays(1));
+                duration = duration.minusDays(1);
+            } else if (dt.isBefore(queryStartDate) && duration.compareTo(java.time.Duration.ZERO) < 0) {
+                // positive period and negative duration
+                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate().minusDays(1));
+                duration = duration.plusDays(1);
+            } else {
+                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate());
+            }
+
+            out.months = (int) period.toTotalMonths();
+            out.days = period.getDays();
+            out.milliseconds = (int) duration.toMillis();
         }
     }
 
@@ -470,6 +500,7 @@ public class DateTypeFunctions {
         @Param DateHolder left;
         @Param DateHolder right;
         @Output IntervalHolder out;
+        @Inject ContextInformation contextInfo;
 
         @Override
         public void setup() {
@@ -477,36 +508,65 @@ public class DateTypeFunctions {
 
         @Override
         public void eval() {
-          long diff = left.value - right.value;
-          long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
-          out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-          out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-          out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+            java.time.OffsetDateTime from = java.time.Instant.ofEpochMilli(right.value).atOffset(java.time.ZoneOffset.UTC);
+            java.time.OffsetDateTime to = java.time.Instant.ofEpochMilli(left.value).atOffset(java.time.ZoneOffset.UTC);
+            java.time.Duration duration = java.time.Duration.between(from.toLocalTime(), to.toLocalTime());
+            java.time.Period period;
+
+            if (from.isAfter(to) && duration.compareTo(java.time.Duration.ZERO) > 0) {
+                // negative period and positive duration
+                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate().plusDays(1));
+                duration = duration.minusDays(1);
+            } else if (from.isBefore(to) && duration.compareTo(java.time.Duration.ZERO) < 0) {
+                // positive period and negative duration
+                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate().minusDays(1));
+                duration = duration.plusDays(1);
+            } else {
+                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate());
+            }
+
+            out.months = (int) period.toTotalMonths();
+            out.days = period.getDays();
+            out.milliseconds = (int) duration.toMillis();
         }
     }
 
     @FunctionTemplate(name = "age", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class AgeDate2Function implements DrillSimpleFunc {
         @Param DateHolder right;
-        @Workspace long queryStartDate;
+        @Workspace java.time.OffsetDateTime queryStartDate;
         @Output IntervalHolder out;
         @Inject ContextInformation contextInfo;
 
         @Override
         public void setup() {
             int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
-            org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-            org.joda.time.DateTime now = new org.joda.time.DateTime(contextInfo.getQueryStartTime(), timeZone);
-            queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
+            java.time.ZoneId zoneId = java.time.ZoneId.of(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+            java.time.ZonedDateTime dt = java.time.Instant.ofEpochMilli(contextInfo.getQueryStartTime()).atZone(zoneId);
+            queryStartDate = java.time.OffsetDateTime.of(dt.toLocalDate(), java.time.LocalTime.MIDNIGHT, java.time.ZoneOffset.UTC);
         }
 
         @Override
         public void eval() {
-            long diff = queryStartDate - right.value;
-            long days = diff / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
-            out.months = (int) (days / org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.days = (int) (days % org.apache.drill.exec.vector.DateUtilities.monthToStandardDays);
-            out.milliseconds = (int) (diff % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+            java.time.OffsetDateTime dt = java.time.Instant.ofEpochMilli(right.value).atOffset(java.time.ZoneOffset.UTC);
+            java.time.Duration duration = java.time.Duration.between(dt.toLocalTime(), queryStartDate.toLocalTime());
+            java.time.Period period;
+
+            if (dt.isAfter(queryStartDate) && duration.compareTo(java.time.Duration.ZERO) > 0) {
+                // negative period and positive duration
+                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate().plusDays(1));
+                duration = duration.minusDays(1);
+            } else if (dt.isBefore(queryStartDate) && duration.compareTo(java.time.Duration.ZERO) < 0) {
+                // positive period and negative duration
+                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate().minusDays(1));
+                duration = duration.plusDays(1);
+            } else {
+                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate());
+            }
+
+            out.months = (int) period.toTotalMonths();
+            out.days = period.getDays();
+            out.milliseconds = (int) duration.toMillis();
         }
     }
 

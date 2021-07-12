@@ -333,4 +333,15 @@ public class TestBugFixes extends BaseTestQuery {
         .build()
         .run();
   }
+
+  @Test
+  public void testDRILL7926() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT EXTRACT(YEAR FROM M.`YEARS`) `YEARS` FROM (SELECT AGE('2021-05-13', '2007-07-02') `YEARS`) M")
+        .ordered()
+        .baselineColumns("YEARS")
+        .baselineValues(13L)
+        .build()
+        .run();
+  }
 }
