@@ -35,6 +35,7 @@ import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.HttpSubScan;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,11 +43,16 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
@@ -57,6 +63,7 @@ import java.util.regex.Pattern;
  */
 public class SimpleHttp {
   private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
+  private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{([A-Za-z0-9_]+)\\}");
 
   private final OkHttpClient client;
   private final HttpSubScan scanDefn;
@@ -70,7 +77,7 @@ public class SimpleHttp {
   private String responseURL;
 
   public SimpleHttp(HttpSubScan scanDefn, HttpUrl url, File tempDir,
-      HttpProxyConfig proxyConfig, CustomErrorContext errorContext) {
+                    HttpProxyConfig proxyConfig, CustomErrorContext errorContext) {
     this.scanDefn = scanDefn;
     this.url = url;
     this.tempDir = tempDir;
@@ -126,7 +133,8 @@ public class SimpleHttp {
           new InetSocketAddress(proxyConfig.host, proxyConfig.port)));
       if (proxyConfig.username != null) {
         builder.proxyAuthenticator(new Authenticator() {
-          @Override public Request authenticate(Route route, Response response) {
+          @Override
+          public Request authenticate(Route route, Response response) {
             String credential = Credentials.basic(proxyConfig.username, proxyConfig.password);
             return response.request().newBuilder()
               .header("Proxy-Authorization", credential)
@@ -139,12 +147,14 @@ public class SimpleHttp {
     return builder.build();
   }
 
-  public String url() { return url.toString(); }
+  public String url() {
+    return url.toString();
+  }
 
   public InputStream getInputStream() {
 
     Request.Builder requestBuilder = new Request.Builder()
-        .url(url);
+      .url(url);
 
     // The configuration does not allow for any other request types other than POST and GET.
     HttpApiConfig apiConfig = scanDefn.tableSpec().connectionConfig();
@@ -182,7 +192,7 @@ public class SimpleHttp {
       responseURL = response.request().url().toString();
 
       // If the request is unsuccessful, throw a UserException
-      if (! isSuccessful(responseCode)) {
+      if (!isSuccessful(responseCode)) {
         throw UserException
           .dataReadError()
           .message("HTTP request failed")
@@ -211,21 +221,23 @@ public class SimpleHttp {
    * with okhttp3.  The issue is that in some cases, a user may not want Drill to throw
    * errors on 400 response codes.  This function will return true/false depending on the
    * configuration for the specific connection.
+   *
    * @param responseCode An int of the connection code
    * @return True if the response code is 200-299 and possibly 400-499, false if other
    */
   private boolean isSuccessful(int responseCode) {
     if (scanDefn.tableSpec().connectionConfig().errorOn400()) {
-      return ((responseCode >= 200 && responseCode <=299) ||
-        (responseCode >= 400 && responseCode <=499));
+      return ((responseCode >= 200 && responseCode <= 299) ||
+          (responseCode >= 400 && responseCode <= 499));
     } else {
-      return responseCode >= 200 && responseCode <=299;
+      return responseCode >= 200 && responseCode <= 299;
     }
   }
 
   /**
    * Gets the HTTP response code from the HTTP call.  Note that this value
    * is only available after the getInputStream() method has been called.
+   *
    * @return int value of the HTTP response code
    */
   public int getResponseCode() {
@@ -235,6 +247,7 @@ public class SimpleHttp {
   /**
    * Gets the HTTP response code from the HTTP call.  Note that this value
    * is only available after the getInputStream() method has been called.
+   *
    * @return int of HTTP response code
    */
   public String getResponseMessage() {
@@ -244,6 +257,7 @@ public class SimpleHttp {
   /**
    * Gets the HTTP response code from the HTTP call.  Note that this value
    * is only available after the getInputStream() method has been called.
+   *
    * @return The HTTP response protocol
    */
   public String getResponseProtocol() {
@@ -253,6 +267,7 @@ public class SimpleHttp {
   /**
    * Gets the HTTP response code from the HTTP call.  Note that this value
    * is only available after the getInputStream() method has been called.
+   *
    * @return The HTTP response URL
    */
   public String getResponseURL() {
@@ -262,9 +277,8 @@ public class SimpleHttp {
   /**
    * Configures response caching using a provided temp directory.
    *
-   * @param builder
-   *          Builder the Builder object to which the caching is to be
-   *          configured
+   * @param builder Builder the Builder object to which the caching is to be
+   *                configured
    */
   private void setupCache(Builder builder) {
     int cacheSize = 10 * 1024 * 1024;   // TODO Add cache size in MB to config
@@ -309,7 +323,7 @@ public class SimpleHttp {
 
     FormBody.Builder formBodyBuilder = new FormBody.Builder();
     String[] lines = postBody.split("\\r?\\n");
-    for(String line : lines) {
+    for (String line : lines) {
 
       // If the string is in the format key=value split it,
       // Otherwise ignore
@@ -320,6 +334,99 @@ public class SimpleHttp {
       }
     }
     return formBodyBuilder;
+  }
+
+  /**
+   * Returns the URL-decoded URL
+   *
+   * @return Returns the URL-decoded URL
+   */
+  public static String decodedURL(HttpUrl url) {
+    try {
+      return URLDecoder.decode(url.toString(), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      return url.toString();
+    }
+  }
+
+  /**
+   * Returns true if the url has url parameters, as indicated by the presence of
+   * {param} in a url.
+   *
+   * @return True if there are URL params, false if not
+   */
+  public static boolean hasURLParameters(HttpUrl url) {
+    String decodedUrl = SimpleHttp.decodedURL(url);
+    Matcher matcher = URL_PARAM_REGEX.matcher(decodedUrl);
+    return matcher.find();
+  }
+
+  /**
+   * APIs sometimes are structured with parameters in the URL itself.  For instance, to request a list of
+   * an organization's repositories in github, the URL is: https://api.github.com/orgs/{org}/repos, where
+   * you can replace the org with the actual organization name.
+   *
+   * @return A list of URL parameters enclosed by curly braces.
+   */
+  public static List<String> getURLParameters(HttpUrl url) {
+    List<String> parameters = new ArrayList<>();
+    String decodedURL;
+    try {
+      decodedURL = URLDecoder.decode(url.toString(), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      return null;
+    }
+    Matcher matcher = URL_PARAM_REGEX.matcher(decodedURL);
+    String param;
+    while (matcher.find()) {
+      param = matcher.group();
+      param = param.replace("{", "");
+      param = param.replace("}", "");
+      parameters.add(param);
+    }
+    return parameters;
+  }
+
+  /**
+   * Used for APIs which have parameters in the URL.  This function maps the filters pushed down
+   * from the query into the URL.  For example the API: github.com/orgs/{org}/repos requires a user to
+   * specify an organization and replace {org} with an actual organization.  The filter is passed down from
+   * the query.
+   *
+   * Note that if a URL contains URL parameters and one is not provided in the filters, Drill will throw
+   * a UserException.
+   *
+   * @param url The HttpUrl containing URL Parameters
+   * @param filters:  A HashMap of filters
+   * @return A string of the URL with the URL parameters replaced by filter values
+   */
+  public static String mapURLParameters(HttpUrl url, Map<String, String> filters) {
+    if (! hasURLParameters(url)) {
+      return url.toString();
+    }
+
+    List<String> params = SimpleHttp.getURLParameters(url);
+    String tempUrl = SimpleHttp.decodedURL(url);
+    for (String param : params) {
+      if (filters == null) {
+        throw UserException
+          .parseError()
+          .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
+          .build(logger);
+      }
+
+      String value = filters.get(param);
+      // If the param is not populated, throw an exception
+      if (Strings.isNullOrEmpty(value)) {
+        throw UserException
+          .parseError()
+          .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
+          .build(logger);
+      } else {
+        tempUrl = tempUrl.replace("/{" + param + "}", "/" + value);
+      }
+    }
+    return tempUrl;
   }
 
   /**
