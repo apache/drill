@@ -15,7 +15,7 @@ If you've never used Drill, use these tutorials to download, install, and start 
   Learn how to handle dynamic data without changing a schema or going through an ETL phase.
 * [Analyzing Social Media]({{site.baseurl}}/docs/analyzing-social-media)  
   Analyze Twitter data in its native JSON format using Drill.  
-* [Analyzing Data Using Window Functions]({{site.baseurl}}/docs/analyzing-data-using-window-functions)
+* [Analyzing Data Using Window Functions]({{site.baseurl}}/docs/analyzing-data-using-window-functions)  
   Learn how to use analytic/window functions. 
 * [Tableau Examples]({{site.baseurl}}/docs/tableau-examples)  
   Access Hive tables using Drill and Tableau.  
