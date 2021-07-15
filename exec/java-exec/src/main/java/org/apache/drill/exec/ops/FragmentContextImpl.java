@@ -67,8 +67,10 @@ import org.apache.drill.exec.server.QueryProfileStoreContext;
 import org.apache.drill.exec.server.options.FragmentOptionManager;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.SchemaTreeProvider;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
@@ -123,6 +125,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   private final DrillbitContext context;
   private final UserClientConnection connection; // is null if this context is for non-root fragment
   private final QueryContext queryContext; // is null if this context is for non-root fragment
+  private final SchemaTreeProvider schemaTreeProvider; // is null if this context is for root fragment
   private final FragmentStats stats;
   private final BufferAllocator allocator;
   private final PlanFragment fragment;
@@ -190,6 +193,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     super(funcRegistry);
     this.context = dbContext;
     this.queryContext = queryContext;
+    this.schemaTreeProvider = queryContext == null ? new SchemaTreeProvider(context) : null;
     this.connection = connection;
     this.accountingUserConnection = new AccountingUserConnection(connection, sendingAccountor, statusHandler);
     this.fragment = fragment;
@@ -291,13 +295,11 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
 
   @Override
   public SchemaPlus getFullRootSchema() {
-    if (queryContext == null) {
-      fail(new UnsupportedOperationException("Schema tree can only be created in root fragment. " +
-          "This is a non-root fragment."));
-      return null;
-    }
+    return queryContext != null ? getQueryContextRootSchema() : getFragmentContextRootSchema();
+  }
 
-    final boolean isImpersonationEnabled = isImpersonationEnabled();
+  private SchemaPlus getQueryContextRootSchema() {
+    boolean isImpersonationEnabled = isImpersonationEnabled();
     // If impersonation is enabled, we want to view the schema as query user and suppress authorization errors. As for
     // InfoSchema purpose we want to show tables the user has permissions to list or query. If  impersonation is
     // disabled view the schema as Drillbit process user and throw authorization errors to client.
@@ -309,6 +311,18 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
         .build();
 
     return queryContext.getFullRootSchema(schemaConfig);
+  }
+
+  private SchemaPlus getFragmentContextRootSchema() {
+    boolean isImpersonationEnabled = isImpersonationEnabled();
+    SchemaConfig schemaConfig = SchemaConfig
+        .newBuilder(
+            isImpersonationEnabled ? contextInformation.getQueryUser() : ImpersonationUtil.getProcessUserName(),
+            new FragmentSchemaConfigInfoProvider(fragmentOptions, contextInformation.getQueryUser(), context))
+        .setIgnoreAuthErrors(isImpersonationEnabled)
+        .build();
+
+    return schemaTreeProvider.createFullRootSchema(schemaConfig);
   }
 
   @Override
@@ -557,6 +571,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     }
     suppressingClose(bufferManager);
     suppressingClose(allocator);
+    suppressingClose(schemaTreeProvider);
   }
 
   private void suppressingClose(final AutoCloseable closeable) {
@@ -648,5 +663,44 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     // limit. Since this operation is purely optional, we leave
     // it as a stub for now. (No operator ever actually used the
     // old OUT_OF_MEMORY iterator status that this method replaces.)
+  }
+
+  private static class FragmentSchemaConfigInfoProvider implements SchemaConfig.SchemaConfigInfoProvider {
+
+    private final OptionManager optionManager;
+
+    private final String queryUser;
+
+    private final SchemaTreeProvider schemaTreeProvider;
+
+    private final ViewExpansionContext viewExpansionContext;
+
+    private FragmentSchemaConfigInfoProvider(OptionManager optionManager,
+        String queryUser, DrillbitContext context) {
+      this.optionManager = optionManager;
+      this.queryUser = queryUser;
+      this.schemaTreeProvider = new SchemaTreeProvider(context);
+      viewExpansionContext = new ViewExpansionContext(context.getConfig(), this);
+    }
+
+    @Override
+    public ViewExpansionContext getViewExpansionContext() {
+      return viewExpansionContext;
+    }
+
+    @Override
+    public SchemaPlus getRootSchema(String userName) {
+      return schemaTreeProvider.createFullRootSchema(userName, this);
+    }
+
+    @Override
+    public String getQueryUserName() {
+      return queryUser;
+    }
+
+    @Override
+    public OptionValue getOption(String optionKey) {
+      return optionManager.getOption(optionKey);
+    }
   }
 }
