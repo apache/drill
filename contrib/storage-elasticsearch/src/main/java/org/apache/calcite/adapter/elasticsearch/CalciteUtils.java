@@ -48,9 +48,9 @@ public class CalciteUtils {
   public static final VertexDrelConverterRule ELASTIC_DREL_CONVERTER_RULE =
       new VertexDrelConverterRule(ElasticsearchRel.CONVENTION);
 
-  public static final EnumerableIntermediatePrelConverterRule ENUMERABLE_INTERMEDIATE_PREL_CONVERTER_RULE =
+  public static final RelOptRule ENUMERABLE_INTERMEDIATE_PREL_CONVERTER_RULE =
       new EnumerableIntermediatePrelConverterRule(
-          new ElasticSearchEnumerablePrelContext(ElasticsearchStorageConfig.NAME));
+          new ElasticSearchEnumerablePrelContext(ElasticsearchStorageConfig.NAME), ElasticsearchRel.CONVENTION);
 
   public static Set<RelOptRule> elasticSearchRules() {
     // filters Calcite implementations of some rules and adds alternative versions specific for Drill
