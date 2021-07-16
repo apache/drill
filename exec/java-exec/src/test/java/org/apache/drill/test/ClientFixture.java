@@ -109,11 +109,8 @@ public class ClientFixture implements AutoCloseable {
     } else {
       client = new DrillClient(cluster.config(), cluster.serviceSet().getCoordinator());
     }
-    System.out.println("connecting client" );
     client.connect(builder.clientProps);
-    System.out.println("builder.clientProps.propertyNames(): " + builder.clientProps);
     cluster.clients.add(this);
-    System.out.println("cluster.clients.size() " + cluster.clients.size());
   }
 
   public DrillClient client() { return client; }

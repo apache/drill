@@ -205,7 +205,7 @@ public class ClusterFixtureBuilder {
    * @param bitNames array of (unique) Drillbit names
    * @return this builder
    */
-  public ClusterFixtureBuilder withBits(String...bitNames) {
+  public ClusterFixtureBuilder withBits(String... bitNames) {
     this.bitNames = bitNames;
     bitCount = bitNames.length;
     return this;

@@ -29,7 +29,6 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -53,10 +52,9 @@ import static org.junit.Assert.fail;
 public class TestUserPluginRegistry extends BasePluginRegistry {
 
     @Test
-    @Ignore
     public void testSeparatePluginsForUsers() throws Exception {
         ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
-            .clusterSize(1)
+            .withBits("separateWorkspaceDrillbit1", "separateWorkspaceDrillbit2")
             .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
             .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
             .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
@@ -73,33 +71,28 @@ public class TestUserPluginRegistry extends BasePluginRegistry {
                  .build()) {
             Map<String, StoragePluginRegistry> userStorage = new HashMap<>();
             // get all connections except anonymous (not clear who creates and connected anonymous users)
-            for (Map.Entry<String, Drillbit> drillbit : cluster.drillbitsWithNames().entrySet()) {
-                System.out.println("Drillbit: " + drillbit.getKey());
+            for (Drillbit drillbit : cluster.drillbitsWithNames().values()) {
                 for (Map.Entry<UserServer.BitToUserConnection, UserServer.BitToUserConnectionConfig> userConnection
-                       : drillbit.getValue().getContext().getUserConnections()) {
+                       : drillbit.getContext().getUserConnections()) {
                     UserSession session = userConnection.getKey().getSession();
                     String userName = session.getCredentials().getUserName();
-                    if (ANONYMOUS_USER.equals(userName)) {
-                        System.out.println(userName + " user is connected");
-                        break;
-                    }
-                    // this test pass locally, but fails on CI, so add logging to detect the reason
-                    System.out.println("This user is connected to Drillbit: " + userName);
-                    StoragePluginRegistry plugins = userStorage.get(userName);
-                    if(plugins != null) {
-                        // check the every drillbit has the same StoragePluginRegistry object
-                        assertEquals(session.getStorage(), plugins);
-                    } else {
-                        userStorage.put(userName, session.getStorage());
+                    if (!ANONYMOUS_USER.equals(userName)) { // this user can be created in parallel thread with mvn build
+                        StoragePluginRegistry plugins = userStorage.get(userName);
+                        if (plugins != null) {
+                            // check the every drillbit has the same StoragePluginRegistry object
+                            assertEquals(session.getStorage(), plugins);
+                        } else {
+                            userStorage.put(userName, session.getStorage());
+                        }
                     }
                 }
             }
             // Check the separate UserStoragePluginRegistry is used for each user
             assertEquals(2, userStorage.size());
             assertEquals("It should be UserStoragePluginRegistry for separate user", UserStoragePluginRegistry.class,
-                userStorage.get(TEST_USER_1).getClass());
+                    userStorage.get(TEST_USER_1).getClass());
             assertEquals("It should be UserStoragePluginRegistry for separate user", UserStoragePluginRegistry.class,
-                userStorage.get(TEST_USER_2).getClass());
+                    userStorage.get(TEST_USER_2).getClass());
             assertNotSame(userStorage.get(TEST_USER_1), userStorage.get(TEST_USER_2));
 
             // Create a new plugin for TEST_USER_1
@@ -134,7 +127,8 @@ public class TestUserPluginRegistry extends BasePluginRegistry {
         try (ClusterFixture cluster = builder.build();
              ClientFixture client = cluster.clientBuilder().build()) {
             Map<String, StoragePluginRegistry> userStorage = new HashMap<>();
-            for (Map.Entry<UserServer.BitToUserConnection, UserServer.BitToUserConnectionConfig> userConnection : cluster.drillbit().getContext().getUserConnections()) {
+            for (Map.Entry<UserServer.BitToUserConnection, UserServer.BitToUserConnectionConfig> userConnection
+                    : cluster.drillbit().getContext().getUserConnections()) {
                 UserSession session = userConnection.getKey().getSession();
                 userStorage.put(session.getCredentials().getUserName(), session.getStorage());
             }
