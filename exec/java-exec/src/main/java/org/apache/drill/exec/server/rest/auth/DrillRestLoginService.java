@@ -80,14 +80,15 @@ public class DrillRestLoginService implements LoginService {
 
       logger.info("WebUser {} logged in from {}:{}", username, request.getRemoteHost(), request.getRemotePort());
 
-      final SystemOptionManager sysOptions = drillbitContext.getOptionManager();
+      final SystemOptionManager sysOptions = drillbitContext.getSystemOptionManager();
 
       final boolean isAdmin = ImpersonationUtil.hasAdminPrivileges(username,
               ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(sysOptions),
               ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(sysOptions));
 
       // Create the UserPrincipal corresponding to logged in user.
-      final Principal userPrincipal = new DrillUserPrincipal(username, isAdmin);
+      final Principal userPrincipal = new DrillUserPrincipal(username, isAdmin,
+              drillbitContext.getConfig().getBoolean(ExecConstants.SEPARATE_WORKSPACE));
 
       final Subject subject = new Subject();
       subject.getPrincipals().add(userPrincipal);

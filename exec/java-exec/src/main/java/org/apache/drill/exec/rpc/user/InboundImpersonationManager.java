@@ -164,7 +164,7 @@ public class InboundImpersonationManager {
    * @param session    user session
    */
   public void replaceUserOnSession(final String targetName, final UserSession session) {
-    final String policiesString = session.getOptions()
+    final String policiesString = session.getSessionOptions()
         .getOption(ExecConstants.IMPERSONATION_POLICY_VALIDATOR);
     if (!policiesString.equals(this.policiesString)) {
       try {

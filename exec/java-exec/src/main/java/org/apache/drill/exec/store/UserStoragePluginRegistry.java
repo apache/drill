@@ -17,24 +17,17 @@
  */
 package org.apache.drill.exec.store;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
-
-import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.planner.logical.StoragePlugins;
-import org.apache.drill.exec.store.sys.PersistentStore;
+import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.server.DrillbitContext;
 
 /**
- * Interface to the storage mechanism used to store storage plugin
- * configurations, typically in JSON format.
+ * It is the same as {@link StoragePluginRegistryImpl}, but created for every {@link UserSession} in case
+ * {@link org.apache.drill.exec.ExecConstants#SEPARATE_WORKSPACE} enabled
  */
-public interface StoragePluginStore {
-  boolean isInitialized();
-  void delete(String name);
-  Iterator<Entry<String, StoragePluginConfig>> load();
-  void put(String name, StoragePluginConfig config);
-  void putAll(StoragePlugins plugins);
-  StoragePluginConfig get(String name);
-  Iterator<Entry<String, StoragePluginConfig>> getPlugins(PersistentStore<StoragePluginConfig> pluginsTable);
-  void close();
+public class UserStoragePluginRegistry extends StoragePluginRegistryImpl {
+
+  public UserStoragePluginRegistry(DrillbitContext context, UserSession session) {
+    super(context, session.getCredentials().getUserName());
+    init();
+  }
 }

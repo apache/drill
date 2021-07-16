@@ -29,7 +29,7 @@ public class QueryOptionManager extends InMemoryOptionManager {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryOptionManager.class);
 
   public QueryOptionManager(OptionManager sessionOptions) {
-    super(sessionOptions, CaseInsensitiveMap.<OptionValue>newHashMap());
+    super(sessionOptions, CaseInsensitiveMap.newHashMap());
   }
 
   @Override

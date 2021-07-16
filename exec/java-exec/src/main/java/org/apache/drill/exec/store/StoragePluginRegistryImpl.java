@@ -108,7 +108,7 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
  * make sure that the cache ends up agreeing with the persistent store
  * as it was at some point in time.
  * <p>
- * The {@link PluginsMap} class provides in-memory synchronization of the
+ * The {@link StoragePluginMap} class provides in-memory synchronization of the
  * name and config maps. Careful coding is needed when handling refresh
  * since another thread could make the same changes.
  * <p>
@@ -142,7 +142,7 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
  * <h4>Caveats</h4>
  *
  * The main problem with synchronization at present is that plugins
- * provide a {@link close()} method that, if used, could render the
+ * provide a {@link StoragePlugin#close()} method that, if used, could render the
  * plugin unusable. Suppose a Cassandra plugin, say, maintains a connection
  * to a server used across multiple queries and threads. Any change to
  * the config immediately calls {@code close()} on the plugin, even though
@@ -164,9 +164,10 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
  */
 public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   private static final Logger logger = LoggerFactory.getLogger(StoragePluginRegistryImpl.class);
+  public static final String STORAGE_PSTORE_NAME = "storage_plugins";
+  public static final String SYS_STORAGE_PSTORE_NAME = "sys." + STORAGE_PSTORE_NAME;
 
   private final PluginRegistryContext context;
-
   /**
    * Cache of enabled, stored plugins, as well as system and ad-hoc
    * plugins. Plugins live in the cache until Drillbit exit, or
@@ -196,12 +197,16 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
       new IdentityHashMap<>();
 
   public StoragePluginRegistryImpl(DrillbitContext context) {
+    this(context, null);
+  }
+
+  public StoragePluginRegistryImpl(DrillbitContext context, String userName) {
     this.context = new DrillbitPluginRegistryContext(context);
     this.pluginCache = new StoragePluginMap();
     this.schemaFactory = new DrillSchemaFactory(null, this);
     locators.add(new ClassicConnectorLocator(this.context));
     locators.add(new SystemPluginLocator(this.context));
-    this.pluginStore = new StoragePluginStoreImpl(context);
+    this.pluginStore = new StoragePluginStoreImpl(context, userName);
     this.ephemeralPlugins = CacheBuilder.newBuilder()
         .expireAfterAccess(24, TimeUnit.HOURS)
         .maximumSize(250)
@@ -209,7 +214,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
             (RemovalListener<StoragePluginConfig, PluginHandle>) notification -> notification.getValue().close())
         .build(new CacheLoader<StoragePluginConfig, PluginHandle>() {
           @Override
-          public PluginHandle load(StoragePluginConfig config) throws Exception {
+          public PluginHandle load(StoragePluginConfig config) {
             return createPluginEntry("$$ephemeral$$", config, PluginType.EPHEMERAL);
           }
         });
@@ -300,7 +305,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
           "Failure initializing the plugin store. Drillbit exiting.", e);
     }
     pluginStore.putAll(bootstrapPlugins);
-    locators.stream().forEach(loc -> loc.onUpgrade());
+    locators.forEach(ConnectorLocator::onUpgrade);
   }
 
   /**
@@ -550,7 +555,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
   // Gets a plugin with the named configuration
   @Override
-  public StoragePlugin getPlugin(String name) throws PluginException {
+  public StoragePlugin getPlugin(String name) {
     try {
       name = validateName(name);
     } catch (PluginException e) {
@@ -877,7 +882,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     ephemeralPlugins.invalidateAll();
     pluginCache.close();
     pluginStore.close();
-    locators.stream().forEach(loc -> loc.close());
+    locators.forEach(ConnectorLocator::close);
   }
 
   /**
@@ -908,7 +913,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   }
 
   // TODO: Replace this. Inefficient to obtain schemas we don't need.
-  protected void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     // Refresh against the persistent store.
     // TODO: This will hammer the system if queries come in rapidly.
     // Need some better solution: grace period, alert from ZK that there

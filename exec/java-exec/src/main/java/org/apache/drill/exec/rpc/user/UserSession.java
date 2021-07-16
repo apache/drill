@@ -25,6 +25,12 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.QueryProfileStoreContext;
+import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.exec.server.options.UserSystemOptionManager;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.UserStoragePluginRegistry;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 
@@ -39,7 +45,6 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -52,6 +57,9 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * User Session parameters holder. Note: all parameters are Nullable
+ */
 public class UserSession implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(UserSession.class);
 
@@ -59,6 +67,9 @@ public class UserSession implements AutoCloseable {
   private UserCredentials credentials;
   private DrillProperties properties;
   private SessionOptionManager sessionOptions;
+  private SystemOptionManager userSystemOptions;
+  private StoragePluginRegistry storagePlugins;
+  private QueryProfileStoreContext profileStoreContext;
   private final AtomicInteger queryCount;
   private final String sessionId;
 
@@ -84,6 +95,7 @@ public class UserSession implements AutoCloseable {
       }
     }
     temporaryLocations.clear();
+    userSystemOptions.close();
   }
 
   /**
@@ -107,13 +119,41 @@ public class UserSession implements AutoCloseable {
       return this;
     }
 
-    public Builder withOptionManager(OptionManager systemOptions) {
-      userSession.sessionOptions = new SessionOptionManager(systemOptions, userSession);
+    /**
+     * Call {@link #withCredentials) at first, it is necessary to instantinate {@link UserSystemOptionManager}
+     *
+     * @param context Drillbit system context
+     * @return this session builde
+     */
+    public Builder withOptionManagers(DrillbitContext context) {
+      if (context.getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)
+              && context.getConfig().getBoolean(ExecConstants.SEPARATE_WORKSPACE)) {
+        userSession.userSystemOptions =
+            new UserSystemOptionManager(context.getSystemOptionManager(), context.getLpPersistence(),
+              context.getStoreProvider(), context.getConfig(), context.getDefinitions(), userSession);
+        userSession.sessionOptions = new SessionOptionManager(userSession.userSystemOptions, userSession);
+      } else {
+        userSession.sessionOptions = new SessionOptionManager(context.getSystemOptionManager(), userSession);
+      }
       return this;
     }
 
     public Builder withUserProperties(UserProperties properties) {
       userSession.properties = DrillProperties.createFromProperties(properties, false);
+      return this;
+    }
+
+    /**
+     * Call {@link #withCredentials) at first, it is necessary to instantinate {@link UserSystemOptionManager}
+     *
+     * @param context Drillbit system context
+     * @return this session builde
+     */
+    public Builder withStorage(DrillbitContext context) {
+      userSession.storagePlugins = context.getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED)
+          && context.getConfig().getBoolean(ExecConstants.SEPARATE_WORKSPACE)
+        ? new UserStoragePluginRegistry(context, userSession)
+        : context.getStorage();
       return this;
     }
 
@@ -174,12 +214,20 @@ public class UserSession implements AutoCloseable {
     return supportComplexTypes;
   }
 
-  public SessionOptionManager getOptions() {
+  public SessionOptionManager getSessionOptions() {
     return sessionOptions;
+  }
+
+  public SystemOptionManager getSystemOptions() {
+    return userSystemOptions;
   }
 
   public UserCredentials getCredentials() {
     return credentials;
+  }
+
+  public StoragePluginRegistry getStorage() {
+    return storagePlugins;
   }
 
   /**

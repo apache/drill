@@ -125,12 +125,13 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
           logger.info("WebUser {} logged in from {}:{}", userShortName, request.getRemoteHost(),
             request.getRemotePort());
           logger.debug("Client Name: {}, realm: {} and shortName: {}", clientName, realm, userShortName);
-          final SystemOptionManager sysOptions = drillContext.getOptionManager();
+          final SystemOptionManager sysOptions = drillContext.getSystemOptionManager();
           final boolean isAdmin = ImpersonationUtil.hasAdminPrivileges(userShortName,
               ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(sysOptions),
               ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(sysOptions));
 
-          final Principal user = new DrillUserPrincipal(userShortName, isAdmin);
+          final Principal user = new DrillUserPrincipal(userShortName, isAdmin,
+                  drillContext.getConfig().getBoolean(ExecConstants.SEPARATE_WORKSPACE));
           final Subject subject = new Subject();
           subject.getPrincipals().add(user);
 

@@ -296,6 +296,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   public Drillbit drillbit() { return defaultDrillbit; }
   public Drillbit drillbit(String name) { return bits.get(name); }
   public Collection<Drillbit> drillbits() { return bits.values(); }
+  public Map<String, Drillbit> drillbitsWithNames() { return bits; }
   public RemoteServiceSet serviceSet() { return serviceSet; }
 
   public ClientFixture.ClientBuilder clientBuilder() {

@@ -92,7 +92,7 @@ public class WebUserConnection extends BaseWebUserConnection {
   }
 
   private void addResults(int rows, VectorAccessible batch) {
-    ValueVectorElementFormatter formatter = new ValueVectorElementFormatter(webSessionResources.getSession().getOptions());
+    ValueVectorElementFormatter formatter = new ValueVectorElementFormatter(webSessionResources.getSession().getSessionOptions());
     if (autoLimitRowCount > 0) {
       rows = Math.max(0, Math.min(rows, autoLimitRowCount - rowCount));
     }

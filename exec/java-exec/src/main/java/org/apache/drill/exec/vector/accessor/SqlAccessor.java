@@ -65,7 +65,7 @@ public interface SqlAccessor {
   /**
    * Reports the class returned by getObject() of this accessor.
    * <p>
-   *  (Is for {@link ResultSetMetaData#getColumnClassName(...)}.)
+   *  (Is for {@link java.sql.ResultSetMetaData#getColumnClassName(int)})
    * </p>
    */
   Class<?> getObjectClass();

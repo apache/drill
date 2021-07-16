@@ -35,6 +35,7 @@ import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.rpc.user.UserSession.QueryCountIncrementer;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
@@ -44,7 +45,7 @@ import org.apache.drill.exec.work.prepare.PreparedStatementProvider.PreparedStat
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class UserWorker{
+public class UserWorker {
   static final Logger logger = LoggerFactory.getLogger(UserWorker.class);
 
   private final WorkerBee bee;
@@ -96,7 +97,11 @@ public class UserWorker{
   }
 
   public OptionManager getSystemOptions() {
-    return bee.getContext().getOptionManager();
+    return bee.getContext().getSystemOptionManager();
+  }
+
+  public DrillbitContext getDrillbitContext() {
+    return bee.getContext();
   }
 
   public QueryPlanFragments getQueryPlan(UserClientConnection connection,

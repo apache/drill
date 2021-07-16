@@ -69,7 +69,7 @@ public class ControlsInjectionUtil {
   public static void setControls(final UserSession session, final String controls) {
     validateControlsString(controls);
 
-    final SessionOptionManager options = session.getOptions();
+    final SessionOptionManager options = session.getSessionOptions();
     try {
       options.setLocalOption(DRILLBIT_CONTROL_INJECTIONS, controls);
     } catch (final Exception e) {

@@ -36,7 +36,6 @@ import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StoragePlugin;
-import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
@@ -86,14 +85,10 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
 
     AbstractSchema drillSchema = SchemaUtilites.unwrapAsDrillSchemaInstance(schemaPlus);
     StoragePlugin storagePlugin;
-    try {
-      storagePlugin = context.getStorage().getPlugin(drillSchema.getSchemaPath().get(0));
-      if (storagePlugin == null) {
-        throw new DrillRuntimeException(String.format("Unable to find storage plugin with the following name [%s].",
-          drillSchema.getSchemaPath().get(0)));
-      }
-    } catch (PluginException e) {
-      throw new DrillRuntimeException("Failure while retrieving storage plugin", e);
+    storagePlugin = context.getStorage().getPlugin(drillSchema.getSchemaPath().get(0));
+    if (storagePlugin == null) {
+      throw new DrillRuntimeException(String.format("Unable to find storage plugin with the following name [%s].",
+        drillSchema.getSchemaPath().get(0)));
     }
 
     try {

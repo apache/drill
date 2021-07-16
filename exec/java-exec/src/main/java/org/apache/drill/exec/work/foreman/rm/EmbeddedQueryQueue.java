@@ -104,7 +104,7 @@ public class EmbeddedQueryQueue implements QueryQueue {
     queueTimeoutMs = config.getInt(TIMEOUT_MS);
     queueSize = config.getInt(QUEUE_SIZE);
     semaphore = new Semaphore(queueSize, true);
-    minimumOperatorMemory = context.getOptionManager()
+    minimumOperatorMemory = context.getSystemOptionManager()
         .getOption(ExecConstants.MIN_MEMORY_PER_BUFFERED_OP);
   }
 

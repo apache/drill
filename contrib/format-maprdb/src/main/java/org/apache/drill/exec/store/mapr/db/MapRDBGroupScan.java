@@ -275,6 +275,8 @@ public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
 
   @JsonProperty("storage")
   public StoragePluginConfig getStorageConfig() {
+    // TODO: similar to other plugins, this line can be replaced with "return formatPlugin.getStorageConfig()".
+    //  But it requires verifying: checking JSON Group Scan for MapR-DB. See more: DRILL-7961
     return storagePlugin.getConfig();
   }
 

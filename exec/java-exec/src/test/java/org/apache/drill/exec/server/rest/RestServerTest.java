@@ -23,14 +23,15 @@ import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserSession;
-import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.QueryWrapper.RestQueryBuilder;
 import org.apache.drill.exec.server.rest.RestQueryRunner.QueryResult;
-import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.test.ClusterTest;
 import org.mockito.Mockito;
+
+import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.PROCESS_USER;
 
 public class RestServerTest extends ClusterTest {
 
@@ -47,14 +48,14 @@ public class RestServerTest extends ClusterTest {
   }
 
   protected QueryResult runQuery(QueryWrapper q) throws Exception {
-    SystemOptionManager systemOptions = cluster.drillbit().getContext().getOptionManager();
-    DrillUserPrincipal principal = new DrillUserPrincipal.AnonDrillUserPrincipal();
+    DrillbitContext context = cluster.drillbit().getContext();
     WebSessionResources webSessionResources = new WebSessionResources(
-      cluster.drillbit().getContext().getAllocator(),
+      context.getAllocator(),
       new LocalAddress("test"),
       UserSession.Builder.newBuilder()
-        .withOptionManager(systemOptions)
-        .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName(principal.getName()).build())
+        .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName(PROCESS_USER).build())
+        .withOptionManagers(context)
+        .withStorage(context)
         .build(),
       Mockito.mock(Promise.class));
     WebUserConnection connection = new WebUserConnection.AnonWebUserConnection(webSessionResources);

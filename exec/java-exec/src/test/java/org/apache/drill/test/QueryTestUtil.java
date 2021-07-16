@@ -277,7 +277,7 @@ public class QueryTestUtil {
       final Drillbit drillbit, final ClassTransformer.ScalarReplacementOption srOption) {
     // set the system option
     final DrillbitContext drillbitContext = drillbit.getContext();
-    final SystemOptionManager optionManager = drillbitContext.getOptionManager();
+    final SystemOptionManager optionManager = drillbitContext.getSystemOptionManager();
     final OptionValue originalOptionValue = optionManager.getOption(ExecConstants.SCALAR_REPLACEMENT_OPTION);
     optionManager.setLocalOption(ExecConstants.SCALAR_REPLACEMENT_OPTION, srOption.name().toLowerCase());
 
@@ -298,7 +298,7 @@ public class QueryTestUtil {
    */
   public static void restoreScalarReplacementOption(final Drillbit drillbit, final String srOption) {
     final DrillbitContext drillbitContext = drillbit.getContext();
-    final OptionManager optionManager = drillbitContext.getOptionManager();
+    final OptionManager optionManager = drillbitContext.getSystemOptionManager();
     optionManager.setLocalOption(ExecConstants.SCALAR_REPLACEMENT_OPTION, srOption);
 
     // flush the code cache

@@ -42,7 +42,7 @@ public class CachingPersistentStoreProvider extends BasePersistentStoreProvider 
 
   @Override
   @SuppressWarnings("unchecked")
-  public <V> PersistentStore<V> getOrCreateStore(final PersistentStoreConfig<V> config) throws StoreException {
+  public <V> PersistentStore<V> getOrCreateStore(final PersistentStoreConfig<V> config) {
     CheckedFunction<PersistentStoreConfig<?>, PersistentStore<?>, StoreException> function = provider::getOrCreateStore;
     return (PersistentStore<V>) storeCache.computeIfAbsent(config, function);
   }

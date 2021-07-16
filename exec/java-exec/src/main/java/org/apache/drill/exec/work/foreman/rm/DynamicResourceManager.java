@@ -79,7 +79,7 @@ public class DynamicResourceManager implements ResourceManager {
       return;
     }
     nextUpdateTime = now + recheckDelayMs;
-    SystemOptionManager systemOptions = context.getOptionManager();
+    SystemOptionManager systemOptions = context.getSystemOptionManager();
     if (systemOptions.getOption(ExecConstants.ENABLE_QUEUE)) {
       if (queueingRm == null) {
         StatusAdapter statusAdapter = new StatusAdapter() {

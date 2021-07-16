@@ -297,7 +297,7 @@ public class TestSpnegoAuthentication extends BaseTest {
 
     final DrillbitContext drillbitContext = Mockito.mock(DrillbitContext.class);
     Mockito.when(drillbitContext.getConfig()).thenReturn(newConfig);
-    Mockito.when(drillbitContext.getOptionManager()).thenReturn(optionManager);
+    Mockito.when(drillbitContext.getSystemOptionManager()).thenReturn(optionManager);
 
     final DrillSpnegoLoginService loginService = new DrillSpnegoLoginService(drillbitContext);
 

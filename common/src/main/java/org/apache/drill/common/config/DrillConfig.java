@@ -87,7 +87,7 @@ public class DrillConfig extends NestedConfig {
       }
       Constructor<?> constructor = clazz.getConstructor(argClasses);
       return (T) constructor.newInstance(constructorArgs);
-    }catch(Exception e){
+    } catch (Exception e) {
       throw UserException.unsupportedError(e)
           .message("Failure while attempting to load instance of the class of type %s requested at path %s.",
               iface.getName(), path).build(logger);

@@ -288,7 +288,7 @@ public class TestUserBitSaslCompatibility extends BaseTestQuery {
    * @throws Exception
    */
   @Test
-  public void testDisableDrillbitClientAuth() throws Exception {
+  public void testDisableDrillbitClientAuth() {
     final DrillConfig newConfig = new DrillConfig(DrillConfig.create(cloneDefaultTestConfigProperties())
         .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
             ConfigValueFactory.fromAnyRef(false)));

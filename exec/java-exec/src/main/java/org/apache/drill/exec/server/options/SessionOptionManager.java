@@ -48,7 +48,7 @@ public class SessionOptionManager extends InMemoryOptionManager {
     CaseInsensitiveMap.newConcurrentMap();
 
   public SessionOptionManager(final OptionManager systemOptions, final UserSession session) {
-    super(systemOptions, CaseInsensitiveMap.<OptionValue>newConcurrentMap());
+    super(systemOptions, CaseInsensitiveMap.newConcurrentMap());
     this.session = session;
   }
 

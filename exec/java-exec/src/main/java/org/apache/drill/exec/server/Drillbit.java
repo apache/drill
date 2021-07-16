@@ -228,7 +228,7 @@ public class Drillbit implements AutoCloseable {
     final DrillbitContext drillbitContext = manager.getContext();
     storageRegistry = drillbitContext.getStorage();
     storageRegistry.init();
-    drillbitContext.getOptionManager().init();
+    drillbitContext.getSystemOptionManager().init();
     javaPropertiesToSystemOptions();
     manager.getContext().getRemoteFunctionRegistry().init(context.getConfig(), storeProvider, coord);
     webServer.start();
@@ -346,7 +346,7 @@ public class Drillbit implements AutoCloseable {
       return;
     }
 
-    final SystemOptionManager optionManager = getContext().getOptionManager();
+    final SystemOptionManager optionManager = getContext().getSystemOptionManager();
 
     // parse out the properties, validate, and then set them
     final String[] systemProps = allSystemProps.split(",");

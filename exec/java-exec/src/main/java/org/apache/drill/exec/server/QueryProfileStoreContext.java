@@ -30,6 +30,9 @@ import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 
+/**
+ * Profile data within {@link PersistentStore}
+ */
 public class QueryProfileStoreContext {
 
   private static final String PROFILES = "profiles";

@@ -412,7 +412,7 @@ public class WebServer implements AutoCloseable {
    */
   private void generateOptionsDescriptionJSFile() throws IOException {
     // Obtain list of Options & their descriptions
-    OptionManager optionManager = this.drillbit.getContext().getOptionManager();
+    OptionManager optionManager = this.drillbit.getContext().getSystemOptionManager();
     OptionList publicOptions = optionManager.getPublicOptionList();
     List<OptionValue> options = new ArrayList<>(publicOptions);
     // Add internal options

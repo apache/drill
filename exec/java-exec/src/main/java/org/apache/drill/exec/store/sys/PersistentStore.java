@@ -26,6 +26,7 @@ import java.util.Map;
  * @param <V>  value type
  */
 public interface PersistentStore<V> extends Store<V> {
+  String USER_PSTORE_ROOT_NAME = "users";
 
   /**
    * Checks if lookup key is present in store.

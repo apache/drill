@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -30,15 +29,15 @@ import org.slf4j.LoggerFactory;
 public class DrillSchemaFactory extends AbstractSchemaFactory {
   private static final Logger logger = LoggerFactory.getLogger(DrillSchemaFactory.class);
 
-  private final StoragePluginRegistryImpl registry;
+  private final StoragePluginRegistry registry;
 
-  public DrillSchemaFactory(String name, StoragePluginRegistryImpl registry) {
+  public DrillSchemaFactory(String name, StoragePluginRegistry registry) {
     super(name);
     this.registry = registry;
   }
 
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     Stopwatch watch = Stopwatch.createStarted();
     registry.registerSchemas(schemaConfig, parent);
 

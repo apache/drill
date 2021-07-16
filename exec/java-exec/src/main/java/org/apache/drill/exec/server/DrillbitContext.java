@@ -21,6 +21,7 @@ import com.codahale.metrics.MetricRegistry;
 import io.netty.channel.EventLoopGroup;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.CodeCompiler;
@@ -40,6 +41,7 @@ import org.apache.drill.exec.rpc.security.AuthenticatorProvider;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnection;
 import org.apache.drill.exec.rpc.user.UserServer.BitToUserConnectionConfig;
+import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -157,7 +159,7 @@ public class DrillbitContext implements AutoCloseable {
    * @return the system options manager. It is important to note that this manager only contains options at the
    * "system" level and not "session" level.
    */
-  public SystemOptionManager getOptionManager() {
+  public SystemOptionManager getSystemOptionManager() {
     return systemOptions;
   }
 
@@ -259,6 +261,9 @@ public class DrillbitContext implements AutoCloseable {
   public ExecutorService getScanDecodeExecutor() {
     return context.getScanDecodeExecutor();
   }
+  public CaseInsensitiveMap<OptionDefinition> getDefinitions() {
+    return context.getDefinitions();
+  }
 
   public LogicalPlanPersistence getLpPersistence() {
     return lpPersistence;
@@ -299,7 +304,7 @@ public class DrillbitContext implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    getOptionManager().close();
+    getSystemOptionManager().close();
     getFunctionImplementationRegistry().close();
     getRemoteFunctionRegistry().close();
     getCompiler().close();

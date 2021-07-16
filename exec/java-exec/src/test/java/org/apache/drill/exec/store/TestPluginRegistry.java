@@ -28,11 +28,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -43,13 +41,8 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
-import org.apache.drill.common.logical.security.PlainCredentialsProvider;
-import org.apache.drill.test.BaseDirTestWatcher;
-import org.apache.drill.test.BaseTest;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
-import org.junit.After;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -63,42 +56,7 @@ import org.junit.Test;
  * This is several big tests because of the setup cost of
  * starting the Drillbits in the needed config.
  */
-public class TestPluginRegistry extends BaseTest {
-
-  @ClassRule
-  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
-
-  private static final String SYS_PLUGIN_NAME = "sys";
-  private static final String S3_PLUGIN_NAME = "s3";
-
-  // Mixed-case name used to verify that names are forced to lower case.
-  private static final String MY_PLUGIN_NAME = "myPlugin";
-
-  // Lower-case form after insertion into the registry.
-  private static final String MY_PLUGIN_KEY = MY_PLUGIN_NAME.toLowerCase();
-
-  @After
-  public void cleanup() throws Exception {
-    FileUtils.cleanDirectory(dirTestWatcher.getStoreDir());
-  }
-
-  private FileSystemConfig myConfig1() {
-    FileSystemConfig config = new FileSystemConfig("myConn",
-        new HashMap<>(), new HashMap<>(), new HashMap<>(),
-        PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
-    config.setEnabled(true);
-    return config;
-  }
-
-  private FileSystemConfig myConfig2() {
-    Map<String, String> props = new HashMap<>();
-    props.put("foo", "bar");
-    FileSystemConfig config = new FileSystemConfig("myConn",
-        props, new HashMap<>(), new HashMap<>(),
-        PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
-    config.setEnabled(true);
-    return config;
-  }
+public class TestPluginRegistry extends BasePluginRegistry {
 
   @Test
   public void testLifecycle() throws Exception {

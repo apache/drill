@@ -66,7 +66,7 @@ public class TestMemoryCalculator extends PlanTestBase {
       .setUserName("foo")
       .build())
     .withUserProperties(UserProtos.UserProperties.getDefaultInstance())
-    .withOptionManager(bits[0].getContext().getOptionManager())
+    .withOptionManagers(bits[0].getContext())
     .build();
 
   private static final DrillbitEndpoint N1_EP1 = newDrillbitEndpoint("node1", 30010);

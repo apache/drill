@@ -31,6 +31,7 @@ import org.apache.drill.exec.proto.UserProtos.QueryResultsMode;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.SchemaTreeProvider;
@@ -52,7 +53,7 @@ public abstract class BaseQueryRunner {
   public BaseQueryRunner(final WorkManager workManager, final WebUserConnection webUserConnection) {
     this.workManager = workManager;
     this.webUserConnection = webUserConnection;
-    this.options = webUserConnection.getSession().getOptions();
+    this.options = webUserConnection.getSession().getSessionOptions();
     this.maxRows = options.getInt(ExecConstants.QUERY_MAX_ROWS);
   }
 
@@ -84,7 +85,7 @@ public abstract class BaseQueryRunner {
 
   protected void applyOptions(Map<String, String> options) {
      if (options != null) {
-      SessionOptionManager sessionOptionManager = webUserConnection.getSession().getOptions();
+      SessionOptionManager sessionOptionManager = webUserConnection.getSession().getSessionOptions();
       for (Map.Entry<String, String> entry : options.entrySet()) {
         sessionOptionManager.setLocalOption(entry.getKey(), entry.getValue());
       }
@@ -93,11 +94,12 @@ public abstract class BaseQueryRunner {
 
   protected void applyDefaultSchema(String defaultSchema) throws ValidationException {
     if (!Strings.isNullOrEmpty(defaultSchema)) {
-      SessionOptionManager options = webUserConnection.getSession().getOptions();
+      UserSession session = webUserConnection.getSession();
+      SessionOptionManager options = session.getSessionOptions();
       @SuppressWarnings("resource")
-      SchemaTreeProvider schemaTreeProvider = new SchemaTreeProvider(workManager.getContext());
+      SchemaTreeProvider schemaTreeProvider = new SchemaTreeProvider(workManager.getContext(), session);
       SchemaPlus rootSchema = schemaTreeProvider.createRootSchema(options);
-      webUserConnection.getSession().setDefaultSchemaPath(defaultSchema, rootSchema);
+      session.setDefaultSchemaPath(defaultSchema, rootSchema);
     }
   }
 

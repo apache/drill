@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
@@ -78,7 +77,7 @@ public class HBasePersistentStoreProvider extends BasePersistentStoreProvider {
 
 
   @Override
-  public <V> PersistentStore<V> getOrCreateStore(PersistentStoreConfig<V> config) throws StoreException {
+  public <V> PersistentStore<V> getOrCreateStore(PersistentStoreConfig<V> config) {
     switch(config.getMode()){
     case BLOB_PERSISTENT:
     case PERSISTENT:

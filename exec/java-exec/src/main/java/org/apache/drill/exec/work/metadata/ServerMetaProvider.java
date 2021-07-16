@@ -122,7 +122,7 @@ public class ServerMetaProvider {
       final GetServerMetaResp.Builder respBuilder = GetServerMetaResp.newBuilder();
       try {
         final ServerMeta.Builder metaBuilder = ServerMeta.newBuilder(DEFAULT);
-        PlannerSettings plannerSettings = new PlannerSettings(session.getOptions(), context.getFunctionImplementationRegistry());
+        PlannerSettings plannerSettings = new PlannerSettings(session.getSessionOptions(), context.getFunctionImplementationRegistry());
 
         DrillParserConfig config = new DrillParserConfig(plannerSettings);
 

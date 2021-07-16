@@ -142,7 +142,7 @@ public class MetadataProvider {
 
     @Override
     public void run() {
-      try(SchemaTreeProvider schemaTreeProvider = new SchemaTreeProvider(dContext)) {
+      try(SchemaTreeProvider schemaTreeProvider = new SchemaTreeProvider(dContext, session)) {
         responseSender.send(runInternal(session, schemaTreeProvider));
       } catch (final Throwable error) {
         logger.error("Unhandled metadata provider error", error);
@@ -570,7 +570,7 @@ public class MetadataProvider {
       final SchemaTreeProvider provider, final UserSession userSession, final MetastoreRegistry metastoreRegistry) {
     final SchemaPlus rootSchema =
         provider.createFullRootSchema(userSession.getCredentials().getUserName(), newSchemaConfigInfoProvider(config, userSession, provider));
-    return tableType.getRecordReader(rootSchema, filter, userSession.getOptions(), metastoreRegistry);
+    return tableType.getRecordReader(rootSchema, filter, userSession.getSessionOptions(), metastoreRegistry);
   }
 
   /**
@@ -595,7 +595,7 @@ public class MetadataProvider {
 
       @Override
       public OptionValue getOption(String optionKey) {
-        return session.getOptions().getOption(optionKey);
+        return session.getSessionOptions().getOption(optionKey);
       }
 
       @Override
