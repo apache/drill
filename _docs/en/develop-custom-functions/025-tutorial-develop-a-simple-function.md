@@ -222,7 +222,13 @@ Add the JAR files to Drill, by copying them to the following location:
 
 `<Drill installation directory>/jars/3rdparty`  
 
-**Note:** This tutorial shows the manual method for adding JAR files to Drill, however as of Drill 1.9, the Dynamic UDF feature provides a new method for users.
+**Note 1:** This tutorial shows the manual method for adding JAR files to Drill, however as of Drill 1.9, the Dynamic UDF feature provides a new method for users.
+
+**Note 2:** When your drill instance is attached to a docker and runs within a container, you need to copy the two maven generated JAR files using docker's cp command.
+
+            The syntax for the same is: docker cp SRC_PATH CONTAINER:<Drill installation directory>/jars/3rdparty
+            
+            Example: docker cp C:Users\apacheUser\xyz.jar cfd0a7cf635b:/opt/drill/jars/3rdparty
 
 ## Test the New Function
 
