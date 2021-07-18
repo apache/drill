@@ -28,7 +28,9 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -57,11 +59,14 @@ import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 
 @Path("/")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
@@ -244,6 +249,9 @@ public class ProfileResources {
   //max Param to cap listing of profiles
   private static final String MAX_QPROFILES_PARAM = "max";
 
+  private static final Cache<String, String> PROFILE_CACHE = CacheBuilder
+    .newBuilder().expireAfterAccess(1, TimeUnit.MINUTES).build();
+
   @GET
   @Path("/profiles.json")
   @Produces(MediaType.APPLICATION_JSON)
@@ -375,7 +383,14 @@ public class ProfileResources {
   @Produces(MediaType.APPLICATION_JSON)
   public String getProfileJSON(@PathParam("queryid") String queryId) {
     try {
-      return new String(work.getContext().getProfileStoreContext().getProfileStoreConfig().getSerializer().serialize(getQueryProfile(queryId)));
+      String profileData = PROFILE_CACHE.getIfPresent(queryId);
+      if (profileData == null) {
+        return new String(work.getContext().getProfileStoreContext()
+          .getProfileStoreConfig().getSerializer().serialize(getQueryProfile(queryId)));
+      } else {
+        PROFILE_CACHE.invalidate(queryId);
+        return profileData;
+      }
     } catch (Exception e) {
       logger.debug("Failed to serialize profile for: " + queryId);
       return ("{ 'message' : 'error (unable to serialize profile)' }");
@@ -392,6 +407,27 @@ public class ProfileResources {
     } catch (Exception | Error e) {
       logger.error("Exception was thrown when fetching profile {} :\n{}", queryId, e);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/errorMessage.ftl", sc, e);
+    }
+  }
+
+  @POST
+  @Path("/profiles/view")
+  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  @Produces(MediaType.TEXT_HTML)
+  public Viewable viewProfile(@FormDataParam("profileData") String content) {
+    try {
+      QueryProfile profile = work.getContext().getProfileStoreContext()
+        .getProfileStoreConfig().getSerializer().deserialize(content.getBytes());
+      PROFILE_CACHE.put(profile.getQueryId(), content);
+      ProfileWrapper wrapper = new ProfileWrapper(profile,
+        work.getContext().getConfig(), request);
+      return ViewableWithPermissions.create(authEnabled.get(),
+        "/rest/profile/profile.ftl", sc, wrapper);
+    } catch (Exception | Error e) {
+      logger.error("Exception was thrown when parsing profile {} :\n{}",
+        content, e);
+      return ViewableWithPermissions.create(authEnabled.get(),
+        "/rest/errorMessage.ftl", sc, e);
     }
   }
 
