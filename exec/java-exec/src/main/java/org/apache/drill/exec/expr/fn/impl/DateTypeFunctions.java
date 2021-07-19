@@ -425,7 +425,6 @@ public class DateTypeFunctions {
         @Param TimeStampHolder left;
         @Param TimeStampHolder right;
         @Output IntervalHolder out;
-        @Inject ContextInformation contextInfo;
 
         @Override
         public void setup() {
@@ -435,24 +434,16 @@ public class DateTypeFunctions {
         public void eval() {
             java.time.OffsetDateTime from = java.time.Instant.ofEpochMilli(right.value).atOffset(java.time.ZoneOffset.UTC);
             java.time.OffsetDateTime to = java.time.Instant.ofEpochMilli(left.value).atOffset(java.time.ZoneOffset.UTC);
-            java.time.Duration duration = java.time.Duration.between(from.toLocalTime(), to.toLocalTime());
-            java.time.Period period;
 
-            if (from.isAfter(to) && duration.compareTo(java.time.Duration.ZERO) > 0) {
-                // negative period and positive duration
-                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate().plusDays(1));
-                duration = duration.minusDays(1);
-            } else if (from.isBefore(to) && duration.compareTo(java.time.Duration.ZERO) < 0) {
-                // positive period and negative duration
-                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate().minusDays(1));
-                duration = duration.plusDays(1);
-            } else {
-                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate());
-            }
+            long months = from.until(to, java.time.temporal.ChronoUnit.MONTHS);
+            from = from.plusMonths(months);
+            long days = from.until(to, java.time.temporal.ChronoUnit.DAYS);
+            from = from.plusDays(days);
+            long millis = from.until(to, java.time.temporal.ChronoUnit.MILLIS);
 
-            out.months = (int) period.toTotalMonths();
-            out.days = period.getDays();
-            out.milliseconds = (int) duration.toMillis();
+            out.months = (int) months;
+            out.days = (int) days;
+            out.milliseconds = (int) millis;
         }
     }
 
@@ -465,33 +456,23 @@ public class DateTypeFunctions {
 
         @Override
         public void setup() {
-            int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
-            java.time.ZoneId zoneId = java.time.ZoneId.of(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-            java.time.ZonedDateTime dt = java.time.Instant.ofEpochMilli(contextInfo.getQueryStartTime()).atZone(zoneId);
+            java.time.OffsetDateTime dt = java.time.Instant.ofEpochMilli(contextInfo.getQueryStartTime()).atOffset(java.time.ZoneOffset.UTC);
             queryStartDate = java.time.OffsetDateTime.of(dt.toLocalDate(), java.time.LocalTime.MIDNIGHT, java.time.ZoneOffset.UTC);
         }
 
         @Override
         public void eval() {
             java.time.OffsetDateTime dt = java.time.Instant.ofEpochMilli(right.value).atOffset(java.time.ZoneOffset.UTC);
-            java.time.Duration duration = java.time.Duration.between(dt.toLocalTime(), queryStartDate.toLocalTime());
-            java.time.Period period;
 
-            if (dt.isAfter(queryStartDate) && duration.compareTo(java.time.Duration.ZERO) > 0) {
-                // negative period and positive duration
-                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate().plusDays(1));
-                duration = duration.minusDays(1);
-            } else if (dt.isBefore(queryStartDate) && duration.compareTo(java.time.Duration.ZERO) < 0) {
-                // positive period and negative duration
-                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate().minusDays(1));
-                duration = duration.plusDays(1);
-            } else {
-                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate());
-            }
+            long months = dt.until(queryStartDate, java.time.temporal.ChronoUnit.MONTHS);
+            dt = dt.plusMonths(months);
+            long days = dt.until(queryStartDate, java.time.temporal.ChronoUnit.DAYS);
+            dt = dt.plusDays(days);
+            long millis = dt.until(queryStartDate, java.time.temporal.ChronoUnit.MILLIS);
 
-            out.months = (int) period.toTotalMonths();
-            out.days = period.getDays();
-            out.milliseconds = (int) duration.toMillis();
+            out.months = (int) months;
+            out.days = (int) days;
+            out.milliseconds = (int) millis;
         }
     }
 
@@ -510,24 +491,16 @@ public class DateTypeFunctions {
         public void eval() {
             java.time.OffsetDateTime from = java.time.Instant.ofEpochMilli(right.value).atOffset(java.time.ZoneOffset.UTC);
             java.time.OffsetDateTime to = java.time.Instant.ofEpochMilli(left.value).atOffset(java.time.ZoneOffset.UTC);
-            java.time.Duration duration = java.time.Duration.between(from.toLocalTime(), to.toLocalTime());
-            java.time.Period period;
 
-            if (from.isAfter(to) && duration.compareTo(java.time.Duration.ZERO) > 0) {
-                // negative period and positive duration
-                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate().plusDays(1));
-                duration = duration.minusDays(1);
-            } else if (from.isBefore(to) && duration.compareTo(java.time.Duration.ZERO) < 0) {
-                // positive period and negative duration
-                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate().minusDays(1));
-                duration = duration.plusDays(1);
-            } else {
-                period = java.time.Period.between(from.toLocalDate(), to.toLocalDate());
-            }
+            long months = from.until(to, java.time.temporal.ChronoUnit.MONTHS);
+            from = from.plusMonths(months);
+            long days = from.until(to, java.time.temporal.ChronoUnit.DAYS);
+            from = from.plusDays(days);
+            long millis = from.until(to, java.time.temporal.ChronoUnit.MILLIS);
 
-            out.months = (int) period.toTotalMonths();
-            out.days = period.getDays();
-            out.milliseconds = (int) duration.toMillis();
+            out.months = (int) months;
+            out.days = (int) days;
+            out.milliseconds = (int) millis;
         }
     }
 
@@ -540,33 +513,23 @@ public class DateTypeFunctions {
 
         @Override
         public void setup() {
-            int timeZoneIndex = contextInfo.getRootFragmentTimeZone();
-            java.time.ZoneId zoneId = java.time.ZoneId.of(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
-            java.time.ZonedDateTime dt = java.time.Instant.ofEpochMilli(contextInfo.getQueryStartTime()).atZone(zoneId);
+            java.time.OffsetDateTime dt = java.time.Instant.ofEpochMilli(contextInfo.getQueryStartTime()).atOffset(java.time.ZoneOffset.UTC);
             queryStartDate = java.time.OffsetDateTime.of(dt.toLocalDate(), java.time.LocalTime.MIDNIGHT, java.time.ZoneOffset.UTC);
         }
 
         @Override
         public void eval() {
             java.time.OffsetDateTime dt = java.time.Instant.ofEpochMilli(right.value).atOffset(java.time.ZoneOffset.UTC);
-            java.time.Duration duration = java.time.Duration.between(dt.toLocalTime(), queryStartDate.toLocalTime());
-            java.time.Period period;
 
-            if (dt.isAfter(queryStartDate) && duration.compareTo(java.time.Duration.ZERO) > 0) {
-                // negative period and positive duration
-                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate().plusDays(1));
-                duration = duration.minusDays(1);
-            } else if (dt.isBefore(queryStartDate) && duration.compareTo(java.time.Duration.ZERO) < 0) {
-                // positive period and negative duration
-                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate().minusDays(1));
-                duration = duration.plusDays(1);
-            } else {
-                period = java.time.Period.between(dt.toLocalDate(), queryStartDate.toLocalDate());
-            }
+            long months = dt.until(queryStartDate, java.time.temporal.ChronoUnit.MONTHS);
+            dt = dt.plusMonths(months);
+            long days = dt.until(queryStartDate, java.time.temporal.ChronoUnit.DAYS);
+            dt = dt.plusDays(days);
+            long millis = dt.until(queryStartDate, java.time.temporal.ChronoUnit.MILLIS);
 
-            out.months = (int) period.toTotalMonths();
-            out.days = period.getDays();
-            out.milliseconds = (int) duration.toMillis();
+            out.months = (int) months;
+            out.days = (int) days;
+            out.milliseconds = (int) millis;
         }
     }
 
