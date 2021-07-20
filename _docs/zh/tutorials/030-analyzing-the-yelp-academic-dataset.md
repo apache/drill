@@ -4,41 +4,33 @@ slug: "Analyzing the Yelp Academic Dataset"
 parent: "教程"
 lang: "zh"
 ---
-Apache Drill is one of the fastest growing open source projects, with the community making rapid progress with monthly releases. The key difference is Drill’s agility and flexibility.
-Along with meeting the table stakes for SQL-on-Hadoop, which is to achieve low
-latency performance at scale, Drill allows users to analyze the data without
-any ETL or up-front schema definitions. The data can be in any file format
-such as text, JSON, or Parquet. Data can have simple types such as strings,
-integers, dates, or more complex multi-structured data, such as nested maps and
-arrays. Data can exist in any file system, local or distributed, such as HDFS or S3. Drill, has a “no schema” approach, which enables you to get
-value from your data in just a few minutes.
 
-Let’s quickly walk through the steps required to install Drill and run it
-against the Yelp data set. The publicly available data set used for this
-example is downloadable from [Yelp](http://www.yelp.com/dataset_challenge)
-(business reviews) and is in JSON format.
+Drill 的与众不同之处在于敏捷性和灵活性。
+为了满足 SQL 查询 Hadoop，并规模化减少延迟，Drill 允许用户不必进行 ETL 流程或者 预先定义 schema。文件可以是任意格式，比如：纯文本，JSON 或者 Parquet。
+数据可以是简单的字符串，整数，日期，也可以是更复杂的多结构数据，比如嵌套Map和数组。数据可以保存在任意文件系统，本地或者分布式，比如 HDFS 或者 S3。Drill 具备 “no schema” 方法，
+使你可以在几分钟内从你的数据中得到数值。
+
+让我们一起快速的安装 Drill 并加载 Yelp 数据集的步骤。示例中所用的公开数据集下载自[Yelp](http://www.yelp.com/dataset_challenge)（商家回顾），数据格式为 JSON。
 
 ----------
 
-## Installing and Starting Drill
+## 安装并运行 Drill
 
-### Download Apache Drill onto your local machine
+### 下载 Drill 到你的电脑中
 
-To experiment with Drill locally, follow the installation instructions in [Drill in 10 Minutes]({{site.baseurl}}/docs/drill-in-10-minutes/).
+本地试用 Drill，请遵循此安装指南[10分钟了解 Drill]({{site.baseurl}}/docs/drill-in-10-minutes/)。
 
-Alternatively, you can [install Drill in distributed mode]({{ site.baseurl }}/docs/installing-drill-in-distributed-mode) if you
-want to scale your environment.
+另一种方案，如果你想扩展你的环境，你可以[分布式安装 Drill]({{site.baseurl}}/docs/installing-drill-in-distributed-mode)。
 
-Let’s try out some SQL examples to understand how Drill makes the raw data
-analysis extremely easy.
+我们一起尝试一些 SQL 示例来了解 Drill 如何将原始数据分析变得如此简单。
 
-{% include startnote.html %}You need to substitute your local path to the Yelp data set in the angle-bracketed portion of the FROM clause of each query you run.{% include endnote.html %}
+{% include startnote.html %}你需要将每次查询语句中 FROM 部分尖括号中的内容替换成你本地存储 Yelp 数据的路径。{% include endnote.html %}
 
 ----------
 
-## Querying Data with Drill   
-   
-### 1\. View the contents of the Yelp business data
+## 通过 Drill 查询数据
+
+### 1\. 查看 Yelp 商家数据的内容 
 
     0: jdbc:drill:zk=local> !set maxwidth 10000
 
@@ -52,13 +44,13 @@ analysis extremely easy.
     | vcNAWiLM4dR7D2nwwJ7nCA | 4840 E Indian School Rd Ste 101, Phoenix, AZ 85018 | fill in{"Tuesday":{"close":"17:00","open":"08:00"},"Friday":{"close":"17:00","open":"08:00"},"Monday":{"close":"17:00","open":"08:00"},"Wednesday":{"close":"17:00","open":"08:00"},"Thursday":{"close":"17:00","open":"08:00"},"Sunday":{},"Saturday":{}} | true | ["Doctors","Health & Medical"] | Phoenix | 7            | Eric Goldberg, MD | -111.983758 | AZ    | 3.5   | 33.499313 | {"By Appointment Only":true,"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}} | business | []            |
     |------------------------|----------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------|--------------------------------|---------|--------------|-------------------|-------------|-------|-------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|---------------|
 
-{% include startnote.html %}This document aligns Drill output for example purposes. Drill output is not aligned in this case.{% include endnote.html %}
+{% include startnote.html %}本文档为了展示目的对齐了 Drill 的输出。实际上 Drill 的输出不会这样对齐。{% include endnote.html %}
 
-You can directly query self-describing files such as JSON, Parquet, and text. There is no need to create metadata definitions in the Hive metastore.
+你可以直接查询自我描述的文件格式，如 JSON，Parquet，和纯文本。不必为 Hive 元存储创建元数据。
 
-### 2\. Explore the business data set further
+### 2\. 更进一步探索商家数据集
 
-#### Total reviews in the data set
+#### 数据集中的总评价数
 
     0: jdbc:drill:zk=local> select sum(review_count) as totalreviews 
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json`;
@@ -69,7 +61,7 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     | 1236445      |
     |--------------|
 
-#### Top states and cities in total number of reviews
+#### 评论数最高的州和城市
 
     0: jdbc:drill:zk=local> select state, city, count(*) totalreviews 
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` 
@@ -90,7 +82,7 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     | AZ         | Glendale   | 1196         |
     |------------|------------|--------------|
 
-#### Average number of reviews per business star rating
+#### 每个评分星级下的平均评论数
 
     0: jdbc:drill:zk=local> select stars,trunc(avg(review_count)) reviewsavg 
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json`
@@ -110,7 +102,7 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     | 1.0        | 4.0        |
     |------------|------------|
 
-#### Top businesses with high review counts (> 1000)
+#### 评论数最多的商家 (> 1000)
 
     0: jdbc:drill:zk=local> select name, state, city, `review_count` from
     dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json`
@@ -131,7 +123,7 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     | Aria Hotel & Casino           | NV          | Las Vegas  | 2224          |
     |-------------------------------|-------------|----------------------------|
 
-#### Saturday open and close times for a few businesses
+#### 一些商家周六的营业时间
 
     0: jdbc:drill:zk=local> select b.name, b.hours.Saturday.`open`,
     b.hours.Saturday.`close`  
@@ -154,17 +146,14 @@ You can directly query self-describing files such as JSON, Parquet, and text. Th
     | Spartan Animal Hospital    | 07:30      | 18:00      |
     |----------------------------|------------|------------|
 
-Note how Drill can traverse and refer through multiple levels of nesting.
+请注意 Drill 如何遍历和引用多层级的嵌套数据。
 
-### 3\. Get the amenities of each business in the data set
 
-Note that the attributes column in the Yelp business data set has a different
-element for every row, representing that businesses can have separate
-amenities. Drill makes it easy to quickly access data sets with changing
-schemas.
+### 3\. 从数据集中得到每个商家的便利设施情况
 
-First, change Drill to work in all text mode (so we can take a look at all of
-the data).
+请注意 Yelp 商家数据集中，属性列的每一行都有不同的元素，代表商家有不同的便利设施。Drill 通过改变 schema 更简单的快速访问数据集。
+
+首先，更改配置使 Drill 可以识别所有的文本格式（我们便可查看所有的数据）。
 
     0: jdbc:drill:zk=local> alter system set `store.json.all_text_mode` = true;
     |------------|-----------------------------------|
@@ -173,7 +162,7 @@ the data).
     | true       | store.json.all_text_mode updated. |
     |------------|-----------------------------------|
 
-Then, query the attribute’s data.
+接下来，查询 "attribute" 所对应的数据。
 
     0: jdbc:drill:zk=local> select attributes from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` limit 10;
 
@@ -192,10 +181,9 @@ Then, query the attribute’s data.
     | {"Good For":{},"Ambience":{},"Parking":{},"Music":{},"Hair Types Specialized In":{},"Payment Types":{},"Dietary Restrictions":{}}                                                 |
     |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
-{% include startnote.html %}This document aligns Drill output for example purposes. Drill output is not aligned in this case.{% include endnote.html %}
+{% include startnote.html %}本文档为了展示目的对齐了 Drill 的输出。实际上 Drill 的输出不会这样对齐。{% include endnote.html %}
 
-Turn off the all text mode so we can continue to perform arithmetic operations
-on data.
+关闭所有的文本格式，我们可以继续对数据进行算数操作。
 
     0: jdbc:drill:zk=local> alter system set `store.json.all_text_mode` = false;
     |-------|------------------------------------|
@@ -204,9 +192,9 @@ on data.
     | true  | store.json.all_text_mode updated.  |
     |-------|------------------------------------|
 
-### 4\. Explore the restaurant businesses in the data set
+### 4\. 探索数据集中所有的餐饮商家
 
-#### Number of restaurants in the data set
+#### 数据集中所有的餐厅
 
     0: jdbc:drill:zk=local> select count(*) as TotalRestaurants from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants');
     |------------------|
@@ -215,7 +203,7 @@ on data.
     | 14303            |
     |------------------|
 
-#### Top restaurants in number of reviews
+#### 评论最多的餐厅
 
     0: jdbc:drill:zk=local> select name,state,city,`review_count` from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants') order by `review_count` desc limit 10;
 
@@ -234,7 +222,7 @@ on data.
     | Mesa Grill             | NV    | Las Vegas | 2004         |
     |------------------------|-------|-----------|--------------|
 
-#### Top restaurants in number of listed categories
+#### 商品种类最多的餐厅
 
     0: jdbc:drill:zk=local> select name,repeated_count(categories) as categorycount, categories from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` where true=repeated_contains(categories,'Restaurants') order by repeated_count(categories) desc limit 10;
 
@@ -253,9 +241,9 @@ on data.
     | House of Blues                  | 8             | ["Arts & Entertainment","Music Venues","Restaurants","Hotels","Event Planning & Services","Hotels & Travel","American (New)","Nightlife"]         |
     |---------------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
 
-{% include startnote.html %}This document aligns Drill output for example purposes. Drill output is not aligned in this case.{% include endnote.html %}
+{% include startnote.html %}本文档为了展示目的对齐了 Drill 的输出。实际上 Drill 的输出不会这样对齐。{% include endnote.html %}
 
-#### Top first categories in number of review counts
+#### 评论最多的商品种类
 
     0: jdbc:drill:zk=local> select categories[0], count(categories[0]) as categorycount 
     from dfs.`/<path-to-yelp-dataset>/yelp_academic_dataset_business.json` 
@@ -277,9 +265,9 @@ on data.
     | Hair Salons          | 901           |
     |----------------------|---------------|
 
-### 5\. Explore the Yelp reviews dataset and combine with the businesses.
+### 5\. 探索 Yelp 评论数据集和商家信息。
 
-#### Take a look at the contents of the Yelp reviews dataset.
+#### 查看 Yelp 评论数据集。
 
     0: jdbc:drill:zk=local> select * 
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_review.json` limit 1;
@@ -289,11 +277,9 @@ on data.
     | {"funny":0,"useful":2,"cool":1} | Xqd0DzHaiyRqVH3WRG7hzg | 15SdjuK7DmYqUAj6rjGowg | 5     | 2007-05-17 | dr. goldberg offers everything i look for in a general practitioner. | review | vcNAWiLM4dR7D2nwwJ7nCA |
     |---------------------------------|------------------------|------------------------|-------|------------|----------------------------------------------------------------------|--------|------------------------|
 
-#### Top businesses with cool rated reviews
+#### 拥有最多好评的商家
 
-Note that we are combining the Yelp business data set that has the overall
-review_count to the Yelp review data, which holds additional details on each
-of the reviews themselves.
+注意，我们连接了 Yelp 商户数据集和评论数据集，所以具有了 Yelp 评论数据的整体评论数，使每一个评论具有了更详细的信息。
 
     0: jdbc:drill:zk=local> Select b.name 
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json` b 
@@ -310,13 +296,11 @@ of the reviews themselves.
     | Wicked Spoon                  |
     |-------------------------------|
 
-#### Create a view with the combined business and reviews data sets
+#### 创建了连接商户和评论数据集后的视图
 
-Note that Drill views are lightweight, and can just be created in the local
-file system. Drill in standalone mode comes with a dfs.tmp workspace, which we
-can use to create views (or you can can define your own workspaces on a local
-or distributed file system). If you want to persist the data physically
-instead of in a logical view, you can use CREATE TABLE AS syntax.
+Drill 的视图是轻量级的，且只是创建在本地文件系统。
+Drill 在独立模式运行下，会有一个 dfs.tmp 工作空间，我们会用来创建视图（或者你可以在本地文件系统或者分布式文件系统上自定义工作空间）。
+如果你想保存这些视图，可以使用 CREATE TABLE AS 语法。
 
     0: jdbc:drill:zk=local> create or replace view dfs.tmp.businessreviews as 
     Select b.name,b.stars,b.state,b.city,r.votes.funny,r.votes.useful,r.votes.cool, r.`date` 
@@ -328,7 +312,7 @@ instead of in a logical view, you can use CREATE TABLE AS syntax.
     | true       | View 'businessreviews' created successfully in 'dfs.tmp' schema |
     |------------|-----------------------------------------------------------------|
 
-Let’s get the total number of records from the view.
+我们得到视图中的总记录数
 
     0: jdbc:drill:zk=local> select count(*) as Total from dfs.tmp.businessreviews;
     |------------|
@@ -337,21 +321,16 @@ Let’s get the total number of records from the view.
     | 1125458    |
     |------------|
 
-In addition to these queries, you can get many deep insights using
-Drill’s [SQL functionality]({{ site.baseurl }}/docs/sql-reference). If you are not comfortable with writing queries manually, you
-can use a BI/Analytics tools such as Tableau/MicroStrategy to query raw
-files/Hive/HBase data or Drill-created views directly using Drill [ODBC/JDBC
-drivers]({{ site.baseurl }}/docs/odbc-jdbc-interfaces).
+在这些查询之外，你可以利用 Drill 的 [SQL 函数]({{ site.baseurl }}/docs/sql-reference) 进行更深入的分析。
+如果你不习惯手写查询，你可以利用商务智能分析工具如 Tableau/MicroStrategy 来查询原始 文件/Hive/HBase 数据，或者通过[ODBC/JDBC
+drivers]({{ site.baseurl }}/docs/odbc-jdbc-interfaces)直接创建 Drill 视图。
 
-The goal of Apache Drill is to provide the freedom and flexibility in
-exploring data in ways we have never seen before with SQL technologies. The
-community is working on more exciting features around nested data and
-supporting data with changing schemas in upcoming releases.
+Apache Drill 的目标在于通过 SQL 技术自由和灵活的探索数据。社区正在围绕嵌套数据努力提供更多令人兴奋的特性，
+并在接下来的版本中支持更改数据的 schema。
 
-The FLATTEN function can be used to dynamically rationalize semi-structured
-data so you can apply even deeper SQL functionality. Here is a sample query:
+FLATTEN 函数可以动态的合理化半结构数据，可以帮助你应用于更复杂的 SQL 函数。参考下列示例：
 
-#### Get a flattened list of categories for each business
+#### 得到每个商户的平面化商品种类列表
 
     0: jdbc:drill:zk=local> select name, flatten(categories) as category 
     from dfs.`/<path-to-yelp-dataset>/yelp/yelp_academic_dataset_business.json`  limit 20;
@@ -380,7 +359,7 @@ data so you can apply even deeper SQL functionality. Here is a sample query:
     | Spartan Animal Hospital     | Veterinarians                   |
     |-----------------------------|---------------------------------|
 
-#### Top categories used in business reviews
+#### 商户评论中提到最多的商品种类
 
     0: jdbc:drill:zk=local> select celltbl.catl, count(celltbl.catl) categorycnt 
     from (select flatten(categories) catl from dfs.`/yelp_academic_dataset_business.json` ) celltbl 
@@ -401,12 +380,12 @@ data so you can apply even deeper SQL functionality. Here is a sample query:
     | Fashion          | 1897        |
     |------------------|-------------|
 
-Stay tuned for more features and upcoming activities in the Drill community.
+与 Drill 社区保持密切联系来获得更多的特性以及了解即将到来的活动。
 
-To learn more about Drill, please refer to the following resources:
+想更多了解 Drill，请参考如下资源：
 
-  * Download Drill here: <http://getdrill.org/drill/download>
-  * [10 reasons we think Drill is cool]({{site.baseurl}}/docs/why-drill)
-  * [A simple 10-minute tutorial]({{ site.baseurl }}/docs/drill-in-10-minutes>)
-  * [More tutorials]({{ site.baseurl }}/docs/tutorials-introduction/)
+  * 下载 Drill: ({{ site.baseurl }}/download/)
+  * [选择 Drill 的十个原因]({{site.baseurl}}/docs/why-drill)
+  * [简单的10分钟教程]({{ site.baseurl }}/docs/drill-in-10-minutes>)
+  * [更多教程]({{ site.baseurl }}/docs/tutorials-introduction/)
 
