@@ -28,7 +28,9 @@ public class SystemTablePluginConfig extends StoragePluginConfig {
 
   public static final SystemTablePluginConfig INSTANCE = new SystemTablePluginConfig();
 
-  private SystemTablePluginConfig() { }
+  private SystemTablePluginConfig() {
+    super(DISABLED_RECONNECT_RETRIES);
+  }
 
   @Override
   public boolean equals(Object o) {

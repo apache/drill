@@ -42,7 +42,7 @@ public class DruidStoragePluginConfig extends StoragePluginConfig {
     @JsonProperty("brokerAddress") String brokerAddress,
     @JsonProperty("coordinatorAddress") String coordinatorAddress,
     @JsonProperty("averageRowSizeBytes") Integer averageRowSizeBytes) {
-
+    super(DISABLED_RECONNECT_RETRIES);
     this.brokerAddress = brokerAddress;
     this.coordinatorAddress = coordinatorAddress;
     this.averageRowSizeBytes =

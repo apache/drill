@@ -41,11 +41,14 @@ public class SplunkConnection {
   private final String hostname;
   private final int port;
   private Service service;
+  private Integer reconnectRetries;
+  private int counter;
 
   public SplunkConnection(SplunkPluginConfig config) {
     this.credentials = config.getUsernamePasswordCredentials();
     this.hostname = config.getHostname();
     this.port = config.getPort();
+    this.reconnectRetries = config.getReconnectRetries();
     service = connect();
     ConfCollection confs = service.getConfs();
   }
@@ -71,10 +74,13 @@ public class SplunkConnection {
     loginArgs.setPort(port);
     loginArgs.setPassword(credentials.getPassword());
     loginArgs.setUsername(credentials.getUsername());
-
     try {
+      counter++;
       service = Service.connect(loginArgs);
     } catch (Exception e) {
+      if(counter < reconnectRetries) {
+        return connect();
+      }
       throw UserException
         .connectionError()
         .message("Unable to connect to Splunk at %s:%s", hostname, port)

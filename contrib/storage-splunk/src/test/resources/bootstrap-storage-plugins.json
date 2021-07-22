@@ -3,10 +3,10 @@
     "splunk" : {
       "type":"splunk",
       "username": "admin",
-      "password": "changeme",
+      "password": "password",
       "hostname": "localhost",
       "port": 8089,
-      "earliestTime": "-14d",
+      "earliestTime": "1",
       "latestTime": "now",
       "enabled": false,
       "reconnectRetries": 2

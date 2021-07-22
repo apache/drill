@@ -50,6 +50,7 @@ public class HBaseStoragePluginConfig extends StoragePluginConfig implements Dri
 
   @JsonCreator
   public HBaseStoragePluginConfig(@JsonProperty("config") Map<String, String> props, @JsonProperty("size.calculator.enabled") Boolean sizeCalculatorEnabled) {
+    super(DISABLED_RECONNECT_RETRIES);
     this.config = props;
     if (config == null) {
       config = Maps.newHashMap();

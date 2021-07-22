@@ -88,6 +88,7 @@ public class BasePluginRegistryTest extends BaseTest {
 
     @JsonCreator
     public StoragePluginFixtureConfig(@JsonProperty("mode") String mode) {
+      super(DISABLED_RECONNECT_RETRIES);
       this.mode = mode;
     }
 

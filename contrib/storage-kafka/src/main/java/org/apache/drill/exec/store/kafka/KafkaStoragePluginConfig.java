@@ -40,6 +40,7 @@ public class KafkaStoragePluginConfig extends StoragePluginConfig {
 
   @JsonCreator
   public KafkaStoragePluginConfig(@JsonProperty("kafkaConsumerProps") Map<String, String> kafkaConsumerProps) {
+    super(DISABLED_RECONNECT_RETRIES);
     this.kafkaConsumerProps = new Properties();
     this.kafkaConsumerProps.putAll(kafkaConsumerProps);
     logger.debug("Kafka Consumer Props {}", this.kafkaConsumerProps);

@@ -32,6 +32,7 @@ public class KuduStoragePluginConfig extends StoragePluginConfig {
 
   @JsonCreator
   public KuduStoragePluginConfig(@JsonProperty("masterAddresses") String masterAddresses) {
+    super(DISABLED_RECONNECT_RETRIES);
     this.masterAddresses = masterAddresses;
   }
 

@@ -38,6 +38,7 @@ public class OpenTSDBStoragePluginConfig extends StoragePluginConfig {
 
   @JsonCreator
   public OpenTSDBStoragePluginConfig(@JsonProperty("connection") String connection) {
+    super(DISABLED_RECONNECT_RETRIES);
     if (connection == null || connection.isEmpty()) {
       throw UserException.validationError()
               .message("Connection property must not be null. Check plugin configuration.")

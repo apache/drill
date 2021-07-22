@@ -32,6 +32,7 @@ public class MockStorageEngineConfig extends StoragePluginConfig {
 
   @JsonCreator
   public MockStorageEngineConfig(@JsonProperty("url") String url) {
+    super(DISABLED_RECONNECT_RETRIES);
     this.url = url;
   }
 
