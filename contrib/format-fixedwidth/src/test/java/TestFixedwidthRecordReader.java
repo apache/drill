@@ -36,7 +36,11 @@ public class TestFixedwidthRecordReader extends ClusterTest {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
     FixedwidthFormatConfig formatConfig = new FixedwidthFormatConfig(Lists.newArrayList("fwf")
-            , Lists.newArrayList());
+            , Lists.newArrayList(
+            new FixedwidthFieldConfig(TypeProtos.MinorType.INT, "Number", "", 1, 5),
+            new FixedwidthFieldConfig(TypeProtos.MinorType.VARCHAR, "Letter", "",6, 5),
+            new FixedwidthFieldConfig(TypeProtos.MinorType.INT, "Address","",11,3)
+    ));
     cluster.defineFormat("cp", "fwf", formatConfig);
     //cluster.defineFormat("dfs", "xml", formatConfig);
 
@@ -79,7 +83,47 @@ public class TestFixedwidthRecordReader extends ClusterTest {
 
     String sql = "SELECT * FROM cp.`fwf/test.fwf`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+            .addNullable("Number", TypeProtos.MinorType.INT)
+            .addNullable("Letter", TypeProtos.MinorType.VARCHAR)
+            .addNullable("Address", TypeProtos.MinorType.INT)
+            .buildSchema();
+
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+            .addRow(47, "abd", 34)
+            .build();
+
+    assertEquals(1, results.rowCount());
+
+    System.out.println(results.batchSchema());
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+    System.out.println("Test complete.");
+    client.close();
   }
 
 
 }
+
+/*
+BatchSchema [
+fields=[
+  [`Number` (INT:OPTIONAL),
+      children=([`$bits$` (UINT1:REQUIRED)],
+                [`Number` (INT:OPTIONAL)])],
+  [`Letter` (VARCHAR:OPTIONAL),
+      children=([`$bits$` (UINT1:REQUIRED)],
+                [`Letter` (VARCHAR:OPTIONAL),
+                      children=([`$offsets$` (UINT4:REQUIRED)])
+                ]
+               )
+  ],
+  [`Address` (INT:OPTIONAL),
+      children=([`$bits$` (UINT1:REQUIRED)],
+                [`Address` (INT:OPTIONAL)])
+  ]
+],
+selectionVector=NONE]
+*/

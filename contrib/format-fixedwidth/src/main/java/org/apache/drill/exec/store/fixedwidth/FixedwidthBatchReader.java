@@ -22,6 +22,8 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.hadoop.mapred.FileSplit;
@@ -44,6 +46,8 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
 
   private InputStream fsStream;
 
+  private ResultSetLoader loader;
+
   public FixedwidthBatchReader(FixedwidthFormatConfig config, int maxRecords) {
     this.config = config;
     this.maxRecords = maxRecords;
@@ -56,7 +60,7 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
     try {
       fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
       negotiator.tableSchema(buildSchema(),true);
-      negotiator.build();
+      loader = negotiator.build();
     } catch (Exception e) {
       throw UserException
               .dataReadError(e)
@@ -69,13 +73,22 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
   }
 
   @Override
-  public boolean next() {
+  public boolean next() { // Use loader to read data from file to turn into Drill rows
     byte[] byteArray = new byte[10000];
     int bytesRead;
 
     try {
       bytesRead = fsStream.read(byteArray);
       System.out.println(new String(byteArray));
+      RowSetLoader writer = loader.writer();
+      //while (! writer.isFull()) {
+        writer.start();
+        writer.scalar(0).setInt(47);
+        writer.scalar(1).setString("abd");
+        writer.scalar(2).setInt(34);
+        writer.save();
+
+    //}
     } catch (Exception e) {
       throw UserException
               .dataReadError(e)
@@ -91,6 +104,7 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
   public void close() {
     try {
       fsStream.close();
+      loader.close();
     } catch (Exception e) {
       throw UserException
               .dataReadError(e)
