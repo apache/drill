@@ -41,14 +41,13 @@ public class SplunkConnection {
   private final String hostname;
   private final int port;
   private Service service;
-  private Integer reconnectRetries;
-  private int counter;
+  private int connectionAttempts;
 
   public SplunkConnection(SplunkPluginConfig config) {
     this.credentials = config.getUsernamePasswordCredentials();
     this.hostname = config.getHostname();
     this.port = config.getPort();
-    this.reconnectRetries = config.getReconnectRetries();
+    this.connectionAttempts = config.getReconnectRetries();
     service = connect();
     ConfCollection confs = service.getConfs();
   }
@@ -75,10 +74,10 @@ public class SplunkConnection {
     loginArgs.setPassword(credentials.getPassword());
     loginArgs.setUsername(credentials.getUsername());
     try {
-      counter++;
+      connectionAttempts--;
       service = Service.connect(loginArgs);
     } catch (Exception e) {
-      if(counter < reconnectRetries) {
+      if(connectionAttempts > 0) {
         return connect();
       }
       throw UserException
