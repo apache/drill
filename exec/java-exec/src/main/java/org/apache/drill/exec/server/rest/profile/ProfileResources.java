@@ -68,6 +68,8 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 
+import static org.owasp.encoder.Encode.forHtml;
+
 @Path("/")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
 public class ProfileResources {
@@ -438,9 +440,12 @@ public class ProfileResources {
 
     QueryId id = QueryIdHelper.getQueryIdFromString(queryId);
 
+    // Prevent XSS
+    String encodedQueryID = forHtml(queryId);
+
     // first check local running
     if (work.getBee().cancelForeman(id, principal)) {
-      return String.format("Cancelled query %s on locally running node.", queryId);
+      return String.format("Cancelled query %s on locally running node.", encodedQueryID);
     }
 
     // then check remote running
@@ -450,14 +455,14 @@ public class ProfileResources {
       checkOrThrowQueryCancelAuthorization(info.getUser(), queryId);
       Ack a = work.getContext().getController().getTunnel(info.getForeman()).requestCancelQuery(id).checkedGet(2, TimeUnit.SECONDS);
       if(a.getOk()){
-        return String.format("Query %s canceled on node %s.", queryId, info.getForeman().getAddress());
+        return String.format("Query %s canceled on node %s.", encodedQueryID, info.getForeman().getAddress());
       }else{
-        return String.format("Attempted to cancel query %s on %s but the query is no longer active on that node.", queryId, info.getForeman().getAddress());
+        return String.format("Attempted to cancel query %s on %s but the query is no longer active on that node.", encodedQueryID, info.getForeman().getAddress());
       }
     }catch(Exception e){
       logger.debug("Failure to find query as running profile.", e);
       return String.format
-          ("Failure attempting to cancel query %s.  Unable to find information about where query is actively running.", queryId);
+          ("Failure attempting to cancel query %s.  Unable to find information about where query is actively running.", encodedQueryID);
     }
   }
 
