@@ -23,6 +23,7 @@ import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
+import org.apache.drill.exec.store.enumerable.plan.EnumMockPlugin;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -76,6 +77,10 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("h2", jdbcStorageConfig);
     cluster.defineStoragePlugin("h2o", jdbcStorageConfig);
+
+    EnumMockPlugin.EnumMockStoragePluginConfig config = new EnumMockPlugin.EnumMockStoragePluginConfig();
+    config.setEnabled(true);
+    cluster.defineStoragePlugin("mocked_enum", config);
   }
 
   @AfterClass
@@ -285,5 +290,17 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
         .baselineColumns("table_type")
         .baselineValuesForSingleColumn("SYSTEM TABLE", "TABLE")
         .go();
+  }
+
+  @Test // DRILL-7972
+  public void testJdbcIntermConvRuleConvention() throws Exception {
+    String query = "select t1.person_ID from h2.tmp.drill_h2_test.person t1 " +
+        "join mocked_enum.mock_enum_table t2 on t1.person_ID = t2.a";
+
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("mocked_enum")
+        .match();
   }
 }
