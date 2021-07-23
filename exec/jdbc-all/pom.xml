@@ -176,6 +176,10 @@
           <groupId>org.honton.chas.hocon</groupId>
           <artifactId>jackson-dataformat-hocon</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.owasp.encoder</groupId>
+          <artifactId>encoder</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
