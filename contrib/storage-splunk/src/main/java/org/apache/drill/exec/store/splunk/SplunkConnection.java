@@ -30,6 +30,8 @@ import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * This class wraps the functionality of the Splunk connection for Drill.
  */
@@ -78,6 +80,11 @@ public class SplunkConnection {
       service = Service.connect(loginArgs);
     } catch (Exception e) {
       if(connectionAttempts > 0) {
+        try {
+          TimeUnit.SECONDS.sleep(2);
+        } catch (InterruptedException interruptedException) {
+          logger.error("Unable to wait 2 secs before next connection trey to Splunk");
+        }
         return connect();
       }
       throw UserException

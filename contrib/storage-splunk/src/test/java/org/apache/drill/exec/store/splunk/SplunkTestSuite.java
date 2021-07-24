@@ -18,11 +18,8 @@
 
 package org.apache.drill.exec.store.splunk;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.AfterClass;
@@ -36,9 +33,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -60,8 +54,6 @@ public class SplunkTestSuite extends ClusterTest {
   public static final String SPLUNK_LOGIN = "admin";
   public static final String SPLUNK_PASS = "password";
 
-  private static final ObjectMapper mapper = new ObjectMapper();
-
   private static volatile boolean runningSuite = true;
   private static AtomicInteger initCount = new AtomicInteger(0);
   @ClassRule
@@ -79,9 +71,8 @@ public class SplunkTestSuite extends ClusterTest {
         String hostname = splunk.getHost();
         Integer port = splunk.getFirstMappedPort();
         StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
-        JsonNode storagePluginJson = mapper.readTree(new File(Resources.getResource("bootstrap-storage-plugins.json").toURI()));
-        SPLUNK_STORAGE_PLUGIN_CONFIG = mapper.treeToValue(storagePluginJson.get("storage").get("splunk"), SplunkPluginConfig.class);
-        setPort(SPLUNK_STORAGE_PLUGIN_CONFIG, port);
+        SPLUNK_STORAGE_PLUGIN_CONFIG = new SplunkPluginConfig(SPLUNK_LOGIN, SPLUNK_PASS, hostname, port, "1", "now",
+                null, 4);
         SPLUNK_STORAGE_PLUGIN_CONFIG.setEnabled(true);
         pluginRegistry.put(SplunkPluginConfig.NAME, SPLUNK_STORAGE_PLUGIN_CONFIG);
         runningSuite = true;
@@ -105,23 +96,5 @@ public class SplunkTestSuite extends ClusterTest {
 
   public static boolean isRunningSuite() {
     return runningSuite;
-  }
-
-  /**
-   * This is needed, because Plugin configs are immutable, but we don't know Splunk container port before tests run
-   *
-   * @param conf Splunk config deserialized from json
-   * @param newPort actual port of Splunk container
-   * @throws ReflectiveOperationException
-   */
-  private static void setPort(SplunkPluginConfig conf, Integer newPort) throws ReflectiveOperationException {
-    Field field = SplunkPluginConfig.class.getDeclaredField("port");
-    field.setAccessible(true);
-
-    Field modifiers = Field.class.getDeclaredField("modifiers");
-    modifiers.setAccessible(true);
-    modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-
-    field.set(conf, newPort);
   }
 }

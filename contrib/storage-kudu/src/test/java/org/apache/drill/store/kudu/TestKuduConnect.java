@@ -40,7 +40,7 @@ import org.apache.kudu.client.RowResultIterator;
 import org.apache.kudu.client.SessionConfiguration;
 import org.junit.experimental.categories.Category;
 
-@Ignore("requires remote kudu server")
+@Ignore("requires remote kudu server") // TODO: can be rewritten by leveraging kudu docker container: DRILL-7977
 @Category(KuduStorageTest.class)
 public class TestKuduConnect extends BaseTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestKuduConnect.class);

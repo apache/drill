@@ -38,7 +38,6 @@ public class HiveStoragePluginConfig extends StoragePluginConfig {
                                  // previously two names were allowed due to incorrectly written ser / der logic
                                  // allowing to use both during deserialization for backward compatibility
                                  @JsonAlias("config") Map<String, String> configProps) {
-    super(DISABLED_RECONNECT_RETRIES);
     this.configProps = configProps;
   }
 

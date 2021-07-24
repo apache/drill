@@ -24,10 +24,6 @@ public class InfoSchemaConfig extends StoragePluginConfig {
   public static final String NAME = "ischema";
   public static final InfoSchemaConfig INSTANCE = new InfoSchemaConfig();
 
-  private InfoSchemaConfig() {
-    super(DISABLED_RECONNECT_RETRIES);
-  }
-
   @Override
   public int hashCode(){
     return 1;

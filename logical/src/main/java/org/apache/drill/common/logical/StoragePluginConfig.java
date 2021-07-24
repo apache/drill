@@ -18,10 +18,8 @@
 package org.apache.drill.common.logical;
 
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -31,13 +29,6 @@ public abstract class StoragePluginConfig {
   // DO NOT include enabled status in equality and hash
   // comparisons; doing so will break the plugin registry.
   private Boolean enabled;
-  protected final Integer reconnectRetries;
-  public static final int DISABLED_RECONNECT_RETRIES = 1;
-
-  @JsonCreator
-  public StoragePluginConfig(@JsonProperty("reconnectRetries") Integer reconnectRetries) {
-    this.reconnectRetries = reconnectRetries;
-  }
 
   /**
    * Check for enabled status of the plugin
@@ -70,10 +61,5 @@ public abstract class StoragePluginConfig {
 
   public String getValue(String key) {
     return null;
-  }
-
-  @JsonProperty("reconnectRetries")
-  public int getReconnectRetries() {
-    return reconnectRetries != null ? reconnectRetries : DISABLED_RECONNECT_RETRIES;
   }
 }

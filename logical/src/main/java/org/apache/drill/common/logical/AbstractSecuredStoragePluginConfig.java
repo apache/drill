@@ -30,7 +30,6 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
   }
 
   public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean directCredentials) {
-    super(DISABLED_RECONNECT_RETRIES);
     this.credentialsProvider = credentialsProvider;
     this.directCredentials = directCredentials;
   }
