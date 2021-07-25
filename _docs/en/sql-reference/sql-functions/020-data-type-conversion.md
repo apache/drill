@@ -963,11 +963,11 @@ Drill does not support conversion of a date, time, or timestamp from one time zo
 
         SELECT TIMEOFDAY() FROM (VALUES(1));
 
-        |----------------------------------------------|
-        |                    EXPR$0                    |
-        |----------------------------------------------|
-        | 2015-05-17 22:37:57.082 America/Los_Angeles  |
-        |----------------------------------------------|
+        |-----------------------------|
+        |            EXPR$0           |
+        |-----------------------------|
+        | 2015-05-17 14:37:57.082 UTC |
+        |-----------------------------|
         1 row selected (0.087 seconds)
 
 You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make sure the timestamp has the timezone in it. Also, use the ‘z’ option to identify the time zone in a timestamp using the TO_CHAR function. For example:

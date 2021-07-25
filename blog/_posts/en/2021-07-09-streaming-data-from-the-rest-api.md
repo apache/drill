@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Streaming data from Drill REST API"
+title: "Streaming data from the Drill REST API"
 code: streaming-data-from-the-drill-rest-api
 excerpt: The release of Apache Drill 1.19 saw a major change under the hood of Drill's REST API with the introduction of a streaming data path for query results moving from Drill and over the network to the initiating client.  The result is better memory utilisation, less blocking and a more reliable API.
 
@@ -9,7 +9,7 @@ authors: ["jturton"]
 
 Anyone who's used a UNIX pipe, or even just watched something on Netflix, is at least a little familiar with the idea of processing data in a streaming fashion.  While your data are small in size compared to available memory and I/O speeds, streaming is something you can afford to dispense with.  But when you cannot fit an entire dataset in RAM, or when you have to download an entire 4K movie before you can start playing it, then streaming data processing can make a game changing difference.
 
-With the release of version 1.19, Drill will stream JSON query result data over an HTTP response to the client that initiated the query using the REST API.  And if anything can easily get big compared to your available RAM or network speed, it's query results coming back from Drill.  It's important to note here that JSON over HTTP is never going to be the most _efficient_ way to move big data around[^1].  JDBC, ODBC and [innovations around them](https://uwekorn.com/2019/11/17/fast-jdbc-access-in-python-using-pyarrow-jvm.html) will always win a speed race, and simply network mounting or copying CTASed Parquet files out of your big data storage pool (be that HDFS, S3, or something else) is probably going to beat everything else you try once you've got really big data volumes.
+With the release of version 1.19, Drill will stream JSON query result data over an HTTP response to the client that initiated the query using the REST API.  And if anything can easily get big compared to your available RAM or network speed, it's query results coming back from Drill.  It's important to note here that JSON over HTTP is never going to be the most _efficient_ way to move big data around[^1].  JDBC, ODBC and [innovations around them](https://uwekorn.com/2019/11/17/fast-jdbc-access-in-python-using-pyarrow-jvm.html) will always win a speed race over JSON/HTTP, and simply network mounting or copying Parquet files out of your big data storage pool (be that HDFS, S3, or something else) is probably going to beat everything else you try once you've got really big data volumes.
 
 Where JSON and HTTP _do_ win is universality: today it's hard to imagine a client hardware and software stack that doesn't provide JSON and HTTP out of the box with minimal effort.  So it's important that they work as well as is possible, in spite of the alternatives that exist.  The new streaming query results delivery on the server side means that Drill's heap memory isn't pressurised by having to buffer entire result sets before it starts to transmit them over the network.  Even existing REST API clients that do no stream processing of their own will benefit from better reliability because of this.
 
