@@ -22,7 +22,6 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.store.cassandra.CassandraStorageConfig;
@@ -40,9 +39,9 @@ public class CalciteUtils {
   private static final VertexDrelConverterRule VERTEX_DREL_CONVERTER_RULE =
       new VertexDrelConverterRule(CassandraRel.CONVENTION);
 
-  private static final ConverterRule ENUMERABLE_INTERMEDIATE_PREL_CONVERTER_RULE =
+  private static final RelOptRule ENUMERABLE_INTERMEDIATE_PREL_CONVERTER_RULE =
       new EnumerableIntermediatePrelConverterRule(
-          new CassandraEnumerablePrelContext(CassandraStorageConfig.NAME));
+          new CassandraEnumerablePrelContext(CassandraStorageConfig.NAME), CassandraRel.CONVENTION);
 
   public static CassandraTableScan tableScanCreator(RelOptCluster cluster, RelTraitSet traitSet,
       RelOptTable table, CassandraTable cassandraTable,

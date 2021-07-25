@@ -60,7 +60,7 @@ class DrillJdbcConvention extends JdbcConvention {
         .collect(Collectors.toList());
     this.rules = ImmutableSet.<RelOptRule>builder()
         .addAll(calciteJdbcRules)
-        .add(JdbcIntermediatePrelConverterRule.INSTANCE)
+        .add(new JdbcIntermediatePrelConverterRule(this))
         .add(new VertexDrelConverterRule(this))
         .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(Convention.NONE, this))
         .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(DrillRel.DRILL_LOGICAL, this))
