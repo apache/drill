@@ -201,6 +201,7 @@ public class Foreman implements Runnable {
    * Query execution will be canceled once possible.
    */
   public void cancel() {
+    logger.debug("Cancel Foreman");
     queryStateProcessor.cancel();
   }
 

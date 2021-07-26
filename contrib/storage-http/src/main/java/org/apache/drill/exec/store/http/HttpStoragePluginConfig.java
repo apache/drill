@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 
 @JsonTypeName(HttpStoragePluginConfig.NAME)
@@ -47,9 +48,9 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
   public final int proxyPort;
   public final String proxyType;
   /**
-   * Timeout in seconds.
+   * Timeout in {@link TimeUnit#SECONDS}.
    */
-  public int timeout;
+  public final int timeout;
 
   @JsonCreator
   public HttpStoragePluginConfig(@JsonProperty("cacheResults") Boolean cacheResults,

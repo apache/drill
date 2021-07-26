@@ -282,7 +282,7 @@ public class WorkManager implements AutoCloseable {
         final String originalName = currentThread.getName();
         try {
           currentThread.setName(queryIdString + ":foreman:cancel");
-          logger.debug("Canceling foreman");
+          logger.debug("Canceling foreman. Thread: {}", originalName);
           foreman.cancel();
         } catch (Throwable t) {
           logger.warn("Exception while canceling foreman", t);

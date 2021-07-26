@@ -641,7 +641,7 @@ public class TestParquetWriter extends BaseTestQuery {
  * have written the correct type. For every CTAS operation we use both the readers to verify results.
  */
   @Test
-  public void testCTASWithIntervalTypes() throws Exception {
+  public void testCTASWithIntervalTypes() throws Exception { // TODO: investigate NPE errors during the test execution
     test("use dfs.tmp");
 
     String tableName = "drill_1980_t1";

@@ -57,7 +57,7 @@ public class ControlsInjectionUtil {
         data.release();
       }
     } catch (final RpcException e) {
-      fail("Could not set option: " + e.toString());
+      fail("Could not set option: " + e);
     }
   }
 

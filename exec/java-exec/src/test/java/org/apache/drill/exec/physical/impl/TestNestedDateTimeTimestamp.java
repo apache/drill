@@ -29,16 +29,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.drill.categories.FlakyTest;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * For DRILL-6242, output for Date, Time, Timestamp should use different classes
  */
+@Category(FlakyTest.class)
 public class TestNestedDateTimeTimestamp extends BaseTestQuery {
   private static final String              DATAFILE       = "cp.`datetime.parquet`";
   private static final Map<String, Object> expectedRecord = new TreeMap<String, Object>();

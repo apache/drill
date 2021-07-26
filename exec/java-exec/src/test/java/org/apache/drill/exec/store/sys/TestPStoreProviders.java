@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.sys;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.drill.categories.FlakyTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -45,7 +46,7 @@ import java.io.File;
 
 import static org.junit.Assert.assertTrue;
 
-@Category({SlowTest.class})
+@Category({SlowTest.class, FlakyTest.class})
 public class TestPStoreProviders extends TestWithZookeeper {
   @Rule
   public BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();

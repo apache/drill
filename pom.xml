@@ -98,7 +98,7 @@
     <javax.validation.api>2.0.1.Final</javax.validation.api>
     <asm.version>7.3.1</asm.version>
     <excludedGroups />
-    <memoryMb>4000</memoryMb>
+    <memoryMb>1800</memoryMb>
     <directMemoryMb>3000</directMemoryMb>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>
