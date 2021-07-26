@@ -6,6 +6,7 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.fixedwidth.FixedwidthBatchReader;
 import org.apache.drill.exec.store.fixedwidth.FixedwidthFieldConfig;
 import org.apache.drill.exec.store.fixedwidth.FixedwidthFormatConfig;
 import org.apache.drill.test.ClusterFixture;
@@ -37,9 +38,9 @@ public class TestFixedwidthRecordReader extends ClusterTest {
 
     FixedwidthFormatConfig formatConfig = new FixedwidthFormatConfig(Lists.newArrayList("fwf")
             , Lists.newArrayList(
-            new FixedwidthFieldConfig(TypeProtos.MinorType.INT, "Number", "", 1, 5),
-            new FixedwidthFieldConfig(TypeProtos.MinorType.VARCHAR, "Letter", "",6, 5),
-            new FixedwidthFieldConfig(TypeProtos.MinorType.INT, "Address","",11,3)
+            new FixedwidthFieldConfig(TypeProtos.MinorType.INT, "Number", "", 1, 4),
+            new FixedwidthFieldConfig(TypeProtos.MinorType.VARCHAR, "Letter", "", 6, 4),
+            new FixedwidthFieldConfig(TypeProtos.MinorType.INT, "Address", "", 11, 3)
     ));
     cluster.defineFormat("cp", "fwf", formatConfig);
     //cluster.defineFormat("dfs", "xml", formatConfig);
@@ -74,7 +75,7 @@ public class TestFixedwidthRecordReader extends ClusterTest {
 
   @Test
   public void testBatchReader() throws Exception {
-    FixedwidthFieldConfig testField = new FixedwidthFieldConfig(TypeProtos.MinorType.FLOAT8,"date","MM/DD/YYYY",1,10);
+    FixedwidthFieldConfig testField = new FixedwidthFieldConfig(TypeProtos.MinorType.FLOAT8, "date", "MM/DD/YYYY", 1, 10);
     System.out.println(testField.getFieldName());
     System.out.println(testField.getStartIndex());
     System.out.println(testField.getFieldWidth());
@@ -92,7 +93,7 @@ public class TestFixedwidthRecordReader extends ClusterTest {
 
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-            .addRow(47, "abd", 34)
+            .addRow(1234, "test", 567)
             .build();
 
     assertEquals(1, results.rowCount());
@@ -105,7 +106,7 @@ public class TestFixedwidthRecordReader extends ClusterTest {
   }
 
 
-}
+
 
 /*
 BatchSchema [
@@ -127,3 +128,5 @@ fields=[
 ],
 selectionVector=NONE]
 */
+
+}
