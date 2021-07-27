@@ -25,14 +25,13 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
   protected final CredentialsProvider credentialsProvider;
   protected boolean directCredentials;
 
+  public AbstractSecuredStoragePluginConfig() {
+    this(PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,  true);
+  }
+
   public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean directCredentials) {
     this.credentialsProvider = credentialsProvider;
     this.directCredentials = directCredentials;
-  }
-
-  public AbstractSecuredStoragePluginConfig() {
-    this.credentialsProvider = PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
-    this.directCredentials = true;
   }
 
   public CredentialsProvider getCredentialsProvider() {

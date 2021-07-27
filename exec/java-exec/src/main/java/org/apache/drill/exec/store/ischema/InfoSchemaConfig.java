@@ -22,7 +22,6 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 public class InfoSchemaConfig extends StoragePluginConfig {
 
   public static final String NAME = "ischema";
-
   public static final InfoSchemaConfig INSTANCE = new InfoSchemaConfig();
 
   @Override

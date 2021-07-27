@@ -34,12 +34,14 @@ import java.util.Objects;
 public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
 
   public static final String NAME = "splunk";
+  public static final int DISABLED_RECONNECT_RETRIES = 1;
 
   private final String hostname;
   private final String earliestTime;
   private final String latestTime;
 
   private final int port;
+  private final Integer reconnectRetries;
 
   @JsonCreator
   public SplunkPluginConfig(@JsonProperty("username") String username,
@@ -48,13 +50,15 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
                             @JsonProperty("port") int port,
                             @JsonProperty("earliestTime") String earliestTime,
                             @JsonProperty("latestTime") String latestTime,
-                            @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
+                            @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
+                            @JsonProperty("reconnectRetries") Integer reconnectRetries) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
         credentialsProvider == null);
     this.hostname = hostname;
     this.port = port;
     this.earliestTime = earliestTime;
     this.latestTime = latestTime == null ? "now" : latestTime;
+    this.reconnectRetries = reconnectRetries;
   }
 
   @JsonIgnore
@@ -98,6 +102,10 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
     return latestTime;
   }
 
+  @JsonProperty("reconnectRetries")
+  public int getReconnectRetries() {
+    return reconnectRetries != null ? reconnectRetries : DISABLED_RECONNECT_RETRIES;
+  }
 
   @Override
   public boolean equals(Object that) {

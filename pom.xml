@@ -77,7 +77,7 @@
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <jmockit.version>1.47</jmockit.version>
     <logback.version>1.2.3</logback.version>
-    <mockito.version>3.11.0</mockito.version>
+    <mockito.version>3.11.2</mockito.version>
     <!--
       Currently Hive storage plugin only supports Apache Hive 3.1.2 or vendor specific variants of the
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated,
@@ -1117,7 +1117,13 @@
            long as Mockito _contains_ older Hamcrest classes.  See DRILL-2130. -->
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>2.23.4</version>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
