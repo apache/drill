@@ -24112,6 +24112,23 @@
     },
     "zh": {
         "by_title": {
+            "10\u5206\u949f\u4e86\u89e3 Drill": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u5206\u6790 Yelp \u5b66\u672f\u6570\u636e\u96c6",
+                "next_url": "/docs/analyzing-the-yelp-academic-dataset/",
+                "parent": "\u6559\u7a0b",
+                "previous_title": "\u6559\u7a0b\u4ecb\u7ecd",
+                "previous_url": "/docs/tutorials-introduction/",
+                "relative_path": "_docs/zh/tutorials/020-drill-in-10-minutes.md",
+                "title": "10\u5206\u949f\u4e86\u89e3 Drill",
+                "url": "/docs/drill-in-10-minutes/"
+            },
             "ALTER SYSTEM": {
                 "breadcrumbs": [
                     {
@@ -24195,27 +24212,6 @@
                 "relative_path": "_docs/en/sql-reference/sql-functions/005-about-sql-function-examples.md",
                 "title": "About SQL Function Examples",
                 "url": "/docs/about-sql-function-examples/"
-            },
-            "About the MapR Sandbox": {
-                "breadcrumbs": [
-                    {
-                        "title": "Learn Drill with the MapR Sandbox",
-                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                    },
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Installing the Apache Drill Sandbox",
-                "next_url": "/docs/installing-the-apache-drill-sandbox/",
-                "parent": "Learn Drill with the MapR Sandbox",
-                "previous_title": "Learn Drill with the MapR Sandbox",
-                "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/",
-                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/005-about-the-mapr-sandbox.md",
-                "title": "About the MapR Sandbox",
-                "url": "/docs/about-the-mapr-sandbox/"
             },
             "Adding Custom Functions to Drill": {
                 "breadcrumbs": [
@@ -24381,74 +24377,6 @@
                 "relative_path": "_docs/en/sql-reference/sql-functions/050-aggregate-and-aggregate-statistical.md",
                 "title": "Aggregate and Aggregate Statistical",
                 "url": "/docs/aggregate-and-aggregate-statistical/"
-            },
-            "Analyzing Data Using Window Functions": {
-                "breadcrumbs": [
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Drill-on-YARN",
-                "next_url": "/docs/drill-on-yarn/",
-                "parent": "Tutorials",
-                "previous_title": "Analyzing Social Media",
-                "previous_url": "/docs/analyzing-social-media/",
-                "relative_path": "_docs/en/tutorials/070-analyzing-data-using-window-functions.md",
-                "title": "Analyzing Data Using Window Functions",
-                "url": "/docs/analyzing-data-using-window-functions/"
-            },
-            "Analyzing Highly Dynamic Datasets": {
-                "breadcrumbs": [
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Analyzing Social Media",
-                "next_url": "/docs/analyzing-social-media/",
-                "parent": "Tutorials",
-                "previous_title": "Summary",
-                "previous_url": "/docs/summary/",
-                "relative_path": "_docs/en/tutorials/050-analyzing-highly-dynamic-datasets.md",
-                "title": "Analyzing Highly Dynamic Datasets",
-                "url": "/docs/analyzing-highly-dynamic-datasets/"
-            },
-            "Analyzing Social Media": {
-                "breadcrumbs": [
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Analyzing Data Using Window Functions",
-                "next_url": "/docs/analyzing-data-using-window-functions/",
-                "parent": "Tutorials",
-                "previous_title": "Analyzing Highly Dynamic Datasets",
-                "previous_url": "/docs/analyzing-highly-dynamic-datasets/",
-                "relative_path": "_docs/en/tutorials/060-analyzing-social-media.md",
-                "title": "Analyzing Social Media",
-                "url": "/docs/analyzing-social-media/"
-            },
-            "Analyzing the Yelp Academic Dataset": {
-                "breadcrumbs": [
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Learn Drill with the MapR Sandbox",
-                "next_url": "/docs/learn-drill-with-the-mapr-sandbox/",
-                "parent": "Tutorials",
-                "previous_title": "Drill in 10 Minutes",
-                "previous_url": "/docs/drill-in-10-minutes/",
-                "relative_path": "_docs/en/tutorials/030-analyzing-the-yelp-academic-dataset.md",
-                "title": "Analyzing the Yelp Academic Dataset",
-                "url": "/docs/analyzing-the-yelp-academic-dataset/"
             },
             "Apache Drill 0.4.0 Release Notes": {
                 "breadcrumbs": [
@@ -25081,7 +25009,7 @@
                             }
                         ],
                         "children": [],
-                        "next_title": "Tutorials",
+                        "next_title": "\u6559\u7a0b",
                         "next_url": "/docs/tutorials/",
                         "parent": "Architecture",
                         "previous_title": "Core Modules",
@@ -29075,23 +29003,6 @@
                 "title": "Drill Query Execution",
                 "url": "/docs/drill-query-execution/"
             },
-            "Drill in 10 Minutes": {
-                "breadcrumbs": [
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Analyzing the Yelp Academic Dataset",
-                "next_url": "/docs/analyzing-the-yelp-academic-dataset/",
-                "parent": "Tutorials",
-                "previous_title": "Tutorials Introduction",
-                "previous_url": "/docs/tutorials-introduction/",
-                "relative_path": "_docs/en/tutorials/020-drill-in-10-minutes.md",
-                "title": "Drill in 10 Minutes",
-                "url": "/docs/drill-in-10-minutes/"
-            },
             "Drill-on-YARN": {
                 "breadcrumbs": [],
                 "children": [
@@ -29303,7 +29214,7 @@
                 "next_title": "Drill-on-YARN Introduction",
                 "next_url": "/docs/drill-on-yarn-introduction/",
                 "parent": "",
-                "previous_title": "Analyzing Data Using Window Functions",
+                "previous_title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
                 "previous_url": "/docs/analyzing-data-using-window-functions/",
                 "relative_path": "_docs/en/031-drill-on-yarn.md",
                 "title": "Drill-on-YARN",
@@ -29697,27 +29608,6 @@
                 "relative_path": "_docs/en/sql-reference/sql-commands/082-group-by-clause.md",
                 "title": "GROUP BY Clause",
                 "url": "/docs/group-by-clause/"
-            },
-            "Getting to Know the Drill Sandbox": {
-                "breadcrumbs": [
-                    {
-                        "title": "Learn Drill with the MapR Sandbox",
-                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                    },
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Lesson 1: Learn about the Data Set",
-                "next_url": "/docs/lesson-1-learn-about-the-data-set/",
-                "parent": "Learn Drill with the MapR Sandbox",
-                "previous_title": "Installing the Apache Drill Sandbox",
-                "previous_url": "/docs/installing-the-apache-drill-sandbox/",
-                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md",
-                "title": "Getting to Know the Drill Sandbox",
-                "url": "/docs/getting-to-know-the-drill-sandbox/"
             },
             "Global Query List": {
                 "breadcrumbs": [
@@ -30707,27 +30597,6 @@
                 "title": "Installing Drill on the Cluster",
                 "url": "/docs/installing-drill-on-the-cluster/"
             },
-            "Installing the Apache Drill Sandbox": {
-                "breadcrumbs": [
-                    {
-                        "title": "Learn Drill with the MapR Sandbox",
-                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                    },
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Getting to Know the Drill Sandbox",
-                "next_url": "/docs/getting-to-know-the-drill-sandbox/",
-                "parent": "Learn Drill with the MapR Sandbox",
-                "previous_title": "About the MapR Sandbox",
-                "previous_url": "/docs/about-the-mapr-sandbox/",
-                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md",
-                "title": "Installing the Apache Drill Sandbox",
-                "url": "/docs/installing-the-apache-drill-sandbox/"
-            },
             "Installing the Driver on Linux": {
                 "breadcrumbs": [
                     {
@@ -31040,234 +30909,6 @@
                 "relative_path": "_docs/en/drill-on-yarn/030-launch-drill-under-yarn.md",
                 "title": "Launch Drill Under YARN",
                 "url": "/docs/launch-drill-under-yarn/"
-            },
-            "Learn Drill with the MapR Sandbox": {
-                "breadcrumbs": [
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Learn Drill with the MapR Sandbox",
-                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                            },
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Installing the Apache Drill Sandbox",
-                        "next_url": "/docs/installing-the-apache-drill-sandbox/",
-                        "parent": "Learn Drill with the MapR Sandbox",
-                        "previous_title": "Learn Drill with the MapR Sandbox",
-                        "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/",
-                        "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/005-about-the-mapr-sandbox.md",
-                        "title": "About the MapR Sandbox",
-                        "url": "/docs/about-the-mapr-sandbox/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Learn Drill with the MapR Sandbox",
-                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                            },
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Getting to Know the Drill Sandbox",
-                        "next_url": "/docs/getting-to-know-the-drill-sandbox/",
-                        "parent": "Learn Drill with the MapR Sandbox",
-                        "previous_title": "About the MapR Sandbox",
-                        "previous_url": "/docs/about-the-mapr-sandbox/",
-                        "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md",
-                        "title": "Installing the Apache Drill Sandbox",
-                        "url": "/docs/installing-the-apache-drill-sandbox/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Learn Drill with the MapR Sandbox",
-                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                            },
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Lesson 1: Learn about the Data Set",
-                        "next_url": "/docs/lesson-1-learn-about-the-data-set/",
-                        "parent": "Learn Drill with the MapR Sandbox",
-                        "previous_title": "Installing the Apache Drill Sandbox",
-                        "previous_url": "/docs/installing-the-apache-drill-sandbox/",
-                        "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md",
-                        "title": "Getting to Know the Drill Sandbox",
-                        "url": "/docs/getting-to-know-the-drill-sandbox/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Learn Drill with the MapR Sandbox",
-                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                            },
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Lesson 2: Run Queries with ANSI SQL",
-                        "next_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
-                        "parent": "Learn Drill with the MapR Sandbox",
-                        "previous_title": "Getting to Know the Drill Sandbox",
-                        "previous_url": "/docs/getting-to-know-the-drill-sandbox/",
-                        "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md",
-                        "title": "Lesson 1: Learn about the Data Set",
-                        "url": "/docs/lesson-1-learn-about-the-data-set/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Learn Drill with the MapR Sandbox",
-                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                            },
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Lesson 3: Run Queries on Complex Data Types",
-                        "next_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
-                        "parent": "Learn Drill with the MapR Sandbox",
-                        "previous_title": "Lesson 1: Learn about the Data Set",
-                        "previous_url": "/docs/lesson-1-learn-about-the-data-set/",
-                        "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md",
-                        "title": "Lesson 2: Run Queries with ANSI SQL",
-                        "url": "/docs/lesson-2-run-queries-with-ansi-sql/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Learn Drill with the MapR Sandbox",
-                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                            },
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Summary",
-                        "next_url": "/docs/summary/",
-                        "parent": "Learn Drill with the MapR Sandbox",
-                        "previous_title": "Lesson 2: Run Queries with ANSI SQL",
-                        "previous_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
-                        "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md",
-                        "title": "Lesson 3: Run Queries on Complex Data Types",
-                        "url": "/docs/lesson-3-run-queries-on-complex-data-types/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Learn Drill with the MapR Sandbox",
-                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                            },
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Analyzing Highly Dynamic Datasets",
-                        "next_url": "/docs/analyzing-highly-dynamic-datasets/",
-                        "parent": "Learn Drill with the MapR Sandbox",
-                        "previous_title": "Lesson 3: Run Queries on Complex Data Types",
-                        "previous_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
-                        "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md",
-                        "title": "Summary",
-                        "url": "/docs/summary/"
-                    }
-                ],
-                "next_title": "About the MapR Sandbox",
-                "next_url": "/docs/about-the-mapr-sandbox/",
-                "parent": "Tutorials",
-                "previous_title": "Analyzing the Yelp Academic Dataset",
-                "previous_url": "/docs/analyzing-the-yelp-academic-dataset/",
-                "relative_path": "_docs/en/tutorials/040-learn-drill-with-the-mapr-sandbox.md",
-                "title": "Learn Drill with the MapR Sandbox",
-                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-            },
-            "Lesson 1: Learn about the Data Set": {
-                "breadcrumbs": [
-                    {
-                        "title": "Learn Drill with the MapR Sandbox",
-                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                    },
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Lesson 2: Run Queries with ANSI SQL",
-                "next_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
-                "parent": "Learn Drill with the MapR Sandbox",
-                "previous_title": "Getting to Know the Drill Sandbox",
-                "previous_url": "/docs/getting-to-know-the-drill-sandbox/",
-                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md",
-                "title": "Lesson 1: Learn about the Data Set",
-                "url": "/docs/lesson-1-learn-about-the-data-set/"
-            },
-            "Lesson 2: Run Queries with ANSI SQL": {
-                "breadcrumbs": [
-                    {
-                        "title": "Learn Drill with the MapR Sandbox",
-                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                    },
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Lesson 3: Run Queries on Complex Data Types",
-                "next_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
-                "parent": "Learn Drill with the MapR Sandbox",
-                "previous_title": "Lesson 1: Learn about the Data Set",
-                "previous_url": "/docs/lesson-1-learn-about-the-data-set/",
-                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md",
-                "title": "Lesson 2: Run Queries with ANSI SQL",
-                "url": "/docs/lesson-2-run-queries-with-ansi-sql/"
-            },
-            "Lesson 3: Run Queries on Complex Data Types": {
-                "breadcrumbs": [
-                    {
-                        "title": "Learn Drill with the MapR Sandbox",
-                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                    },
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Summary",
-                "next_url": "/docs/summary/",
-                "parent": "Learn Drill with the MapR Sandbox",
-                "previous_title": "Lesson 2: Run Queries with ANSI SQL",
-                "previous_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
-                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md",
-                "title": "Lesson 3: Run Queries on Complex Data Types",
-                "url": "/docs/lesson-3-run-queries-on-complex-data-types/"
             },
             "Lexical Structure": {
                 "breadcrumbs": [
@@ -32642,7 +32283,7 @@
                     }
                 ],
                 "children": [],
-                "next_title": "Tutorials",
+                "next_title": "\u6559\u7a0b",
                 "next_url": "/docs/tutorials/",
                 "parent": "Architecture",
                 "previous_title": "Core Modules",
@@ -39829,27 +39470,6 @@
                 "title": "Submitting Queries from the REST API when Impersonation is Enabled and Authentication is Disabled",
                 "url": "/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/"
             },
-            "Summary": {
-                "breadcrumbs": [
-                    {
-                        "title": "Learn Drill with the MapR Sandbox",
-                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                    },
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Analyzing Highly Dynamic Datasets",
-                "next_url": "/docs/analyzing-highly-dynamic-datasets/",
-                "parent": "Learn Drill with the MapR Sandbox",
-                "previous_title": "Lesson 3: Run Queries on Complex Data Types",
-                "previous_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
-                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md",
-                "title": "Summary",
-                "url": "/docs/summary/"
-            },
             "Supported Data Types": {
                 "breadcrumbs": [
                     {
@@ -40038,303 +39658,6 @@
                 "relative_path": "_docs/en/develop-custom-functions/025-tutorial-develop-a-simple-function.md",
                 "title": "Tutorial: Develop a Simple Function",
                 "url": "/docs/tutorial-develop-a-simple-function/"
-            },
-            "Tutorials": {
-                "breadcrumbs": [],
-                "children": [
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Drill in 10 Minutes",
-                        "next_url": "/docs/drill-in-10-minutes/",
-                        "parent": "Tutorials",
-                        "previous_title": "Tutorials",
-                        "previous_url": "/docs/tutorials/",
-                        "relative_path": "_docs/en/tutorials/010-tutorials-introduction.md",
-                        "title": "Tutorials Introduction",
-                        "url": "/docs/tutorials-introduction/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Analyzing the Yelp Academic Dataset",
-                        "next_url": "/docs/analyzing-the-yelp-academic-dataset/",
-                        "parent": "Tutorials",
-                        "previous_title": "Tutorials Introduction",
-                        "previous_url": "/docs/tutorials-introduction/",
-                        "relative_path": "_docs/en/tutorials/020-drill-in-10-minutes.md",
-                        "title": "Drill in 10 Minutes",
-                        "url": "/docs/drill-in-10-minutes/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Learn Drill with the MapR Sandbox",
-                        "next_url": "/docs/learn-drill-with-the-mapr-sandbox/",
-                        "parent": "Tutorials",
-                        "previous_title": "Drill in 10 Minutes",
-                        "previous_url": "/docs/drill-in-10-minutes/",
-                        "relative_path": "_docs/en/tutorials/030-analyzing-the-yelp-academic-dataset.md",
-                        "title": "Analyzing the Yelp Academic Dataset",
-                        "url": "/docs/analyzing-the-yelp-academic-dataset/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [
-                            {
-                                "breadcrumbs": [
-                                    {
-                                        "title": "Learn Drill with the MapR Sandbox",
-                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                                    },
-                                    {
-                                        "title": "Tutorials",
-                                        "url": "/docs/tutorials/"
-                                    }
-                                ],
-                                "children": [],
-                                "next_title": "Installing the Apache Drill Sandbox",
-                                "next_url": "/docs/installing-the-apache-drill-sandbox/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Learn Drill with the MapR Sandbox",
-                                "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/005-about-the-mapr-sandbox.md",
-                                "title": "About the MapR Sandbox",
-                                "url": "/docs/about-the-mapr-sandbox/"
-                            },
-                            {
-                                "breadcrumbs": [
-                                    {
-                                        "title": "Learn Drill with the MapR Sandbox",
-                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                                    },
-                                    {
-                                        "title": "Tutorials",
-                                        "url": "/docs/tutorials/"
-                                    }
-                                ],
-                                "children": [],
-                                "next_title": "Getting to Know the Drill Sandbox",
-                                "next_url": "/docs/getting-to-know-the-drill-sandbox/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "About the MapR Sandbox",
-                                "previous_url": "/docs/about-the-mapr-sandbox/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md",
-                                "title": "Installing the Apache Drill Sandbox",
-                                "url": "/docs/installing-the-apache-drill-sandbox/"
-                            },
-                            {
-                                "breadcrumbs": [
-                                    {
-                                        "title": "Learn Drill with the MapR Sandbox",
-                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                                    },
-                                    {
-                                        "title": "Tutorials",
-                                        "url": "/docs/tutorials/"
-                                    }
-                                ],
-                                "children": [],
-                                "next_title": "Lesson 1: Learn about the Data Set",
-                                "next_url": "/docs/lesson-1-learn-about-the-data-set/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Installing the Apache Drill Sandbox",
-                                "previous_url": "/docs/installing-the-apache-drill-sandbox/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md",
-                                "title": "Getting to Know the Drill Sandbox",
-                                "url": "/docs/getting-to-know-the-drill-sandbox/"
-                            },
-                            {
-                                "breadcrumbs": [
-                                    {
-                                        "title": "Learn Drill with the MapR Sandbox",
-                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                                    },
-                                    {
-                                        "title": "Tutorials",
-                                        "url": "/docs/tutorials/"
-                                    }
-                                ],
-                                "children": [],
-                                "next_title": "Lesson 2: Run Queries with ANSI SQL",
-                                "next_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Getting to Know the Drill Sandbox",
-                                "previous_url": "/docs/getting-to-know-the-drill-sandbox/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md",
-                                "title": "Lesson 1: Learn about the Data Set",
-                                "url": "/docs/lesson-1-learn-about-the-data-set/"
-                            },
-                            {
-                                "breadcrumbs": [
-                                    {
-                                        "title": "Learn Drill with the MapR Sandbox",
-                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                                    },
-                                    {
-                                        "title": "Tutorials",
-                                        "url": "/docs/tutorials/"
-                                    }
-                                ],
-                                "children": [],
-                                "next_title": "Lesson 3: Run Queries on Complex Data Types",
-                                "next_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Lesson 1: Learn about the Data Set",
-                                "previous_url": "/docs/lesson-1-learn-about-the-data-set/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md",
-                                "title": "Lesson 2: Run Queries with ANSI SQL",
-                                "url": "/docs/lesson-2-run-queries-with-ansi-sql/"
-                            },
-                            {
-                                "breadcrumbs": [
-                                    {
-                                        "title": "Learn Drill with the MapR Sandbox",
-                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                                    },
-                                    {
-                                        "title": "Tutorials",
-                                        "url": "/docs/tutorials/"
-                                    }
-                                ],
-                                "children": [],
-                                "next_title": "Summary",
-                                "next_url": "/docs/summary/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Lesson 2: Run Queries with ANSI SQL",
-                                "previous_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md",
-                                "title": "Lesson 3: Run Queries on Complex Data Types",
-                                "url": "/docs/lesson-3-run-queries-on-complex-data-types/"
-                            },
-                            {
-                                "breadcrumbs": [
-                                    {
-                                        "title": "Learn Drill with the MapR Sandbox",
-                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                                    },
-                                    {
-                                        "title": "Tutorials",
-                                        "url": "/docs/tutorials/"
-                                    }
-                                ],
-                                "children": [],
-                                "next_title": "Analyzing Highly Dynamic Datasets",
-                                "next_url": "/docs/analyzing-highly-dynamic-datasets/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Lesson 3: Run Queries on Complex Data Types",
-                                "previous_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md",
-                                "title": "Summary",
-                                "url": "/docs/summary/"
-                            }
-                        ],
-                        "next_title": "About the MapR Sandbox",
-                        "next_url": "/docs/about-the-mapr-sandbox/",
-                        "parent": "Tutorials",
-                        "previous_title": "Analyzing the Yelp Academic Dataset",
-                        "previous_url": "/docs/analyzing-the-yelp-academic-dataset/",
-                        "relative_path": "_docs/en/tutorials/040-learn-drill-with-the-mapr-sandbox.md",
-                        "title": "Learn Drill with the MapR Sandbox",
-                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Analyzing Social Media",
-                        "next_url": "/docs/analyzing-social-media/",
-                        "parent": "Tutorials",
-                        "previous_title": "Summary",
-                        "previous_url": "/docs/summary/",
-                        "relative_path": "_docs/en/tutorials/050-analyzing-highly-dynamic-datasets.md",
-                        "title": "Analyzing Highly Dynamic Datasets",
-                        "url": "/docs/analyzing-highly-dynamic-datasets/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Analyzing Data Using Window Functions",
-                        "next_url": "/docs/analyzing-data-using-window-functions/",
-                        "parent": "Tutorials",
-                        "previous_title": "Analyzing Highly Dynamic Datasets",
-                        "previous_url": "/docs/analyzing-highly-dynamic-datasets/",
-                        "relative_path": "_docs/en/tutorials/060-analyzing-social-media.md",
-                        "title": "Analyzing Social Media",
-                        "url": "/docs/analyzing-social-media/"
-                    },
-                    {
-                        "breadcrumbs": [
-                            {
-                                "title": "Tutorials",
-                                "url": "/docs/tutorials/"
-                            }
-                        ],
-                        "children": [],
-                        "next_title": "Drill-on-YARN",
-                        "next_url": "/docs/drill-on-yarn/",
-                        "parent": "Tutorials",
-                        "previous_title": "Analyzing Social Media",
-                        "previous_url": "/docs/analyzing-social-media/",
-                        "relative_path": "_docs/en/tutorials/070-analyzing-data-using-window-functions.md",
-                        "title": "Analyzing Data Using Window Functions",
-                        "url": "/docs/analyzing-data-using-window-functions/"
-                    }
-                ],
-                "next_title": "Tutorials Introduction",
-                "next_url": "/docs/tutorials-introduction/",
-                "parent": "",
-                "previous_title": "Performance",
-                "previous_url": "/docs/performance/",
-                "relative_path": "_docs/en/030-tutorials.md",
-                "title": "Tutorials",
-                "url": "/docs/tutorials/"
-            },
-            "Tutorials Introduction": {
-                "breadcrumbs": [
-                    {
-                        "title": "Tutorials",
-                        "url": "/docs/tutorials/"
-                    }
-                ],
-                "children": [],
-                "next_title": "Drill in 10 Minutes",
-                "next_url": "/docs/drill-in-10-minutes/",
-                "parent": "Tutorials",
-                "previous_title": "Tutorials",
-                "previous_url": "/docs/tutorials/",
-                "relative_path": "_docs/en/tutorials/010-tutorials-introduction.md",
-                "title": "Tutorials Introduction",
-                "url": "/docs/tutorials-introduction/"
             },
             "Types of Indexes": {
                 "breadcrumbs": [
@@ -41306,6 +40629,27 @@
                 "title": "\u4e3a\u4ec0\u4e48\u9009\u62e9 Drill",
                 "url": "/docs/why-drill/"
             },
+            "\u4e86\u89e3 Drill Sandbox": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                    },
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
+                "next_url": "/docs/lesson-1-learn-about-the-data-set/",
+                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                "previous_title": "\u5b89\u88c5 Apache Drill SandBox",
+                "previous_url": "/docs/installing-the-apache-drill-sandbox/",
+                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md",
+                "title": "\u4e86\u89e3 Drill Sandbox",
+                "url": "/docs/getting-to-know-the-drill-sandbox/"
+            },
             "\u4ec0\u4e48\u662f Drill": {
                 "breadcrumbs": [
                     {
@@ -41322,6 +40666,582 @@
                 "relative_path": "_docs/zh/getting-started/010-drill-introduction.md",
                 "title": "\u4ec0\u4e48\u662f Drill",
                 "url": "/docs/drill-introduction/"
+            },
+            "\u5173\u4e8e MapR \u6c99\u76d2": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                    },
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u5b89\u88c5 Apache Drill SandBox",
+                "next_url": "/docs/installing-the-apache-drill-sandbox/",
+                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                "previous_title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/",
+                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/005-about-the-mapr-sandbox.md",
+                "title": "\u5173\u4e8e MapR \u6c99\u76d2",
+                "url": "/docs/about-the-mapr-sandbox/"
+            },
+            "\u5206\u6790 Yelp \u5b66\u672f\u6570\u636e\u96c6": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                "next_url": "/docs/learn-drill-with-the-mapr-sandbox/",
+                "parent": "\u6559\u7a0b",
+                "previous_title": "10\u5206\u949f\u4e86\u89e3 Drill",
+                "previous_url": "/docs/drill-in-10-minutes/",
+                "relative_path": "_docs/zh/tutorials/030-analyzing-the-yelp-academic-dataset.md",
+                "title": "\u5206\u6790 Yelp \u5b66\u672f\u6570\u636e\u96c6",
+                "url": "/docs/analyzing-the-yelp-academic-dataset/"
+            },
+            "\u5206\u6790\u793e\u4ea4\u5a92\u4f53": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
+                "next_url": "/docs/analyzing-data-using-window-functions/",
+                "parent": "\u6559\u7a0b",
+                "previous_title": "\u5206\u6790\u9ad8\u52a8\u6001\u6570\u636e\u96c6",
+                "previous_url": "/docs/analyzing-highly-dynamic-datasets/",
+                "relative_path": "_docs/zh/tutorials/060-analyzing-social-media.md",
+                "title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
+                "url": "/docs/analyzing-social-media/"
+            },
+            "\u5206\u6790\u9ad8\u52a8\u6001\u6570\u636e\u96c6": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
+                "next_url": "/docs/analyzing-social-media/",
+                "parent": "\u6559\u7a0b",
+                "previous_title": "\u603b\u7ed3",
+                "previous_url": "/docs/summary/",
+                "relative_path": "_docs/zh/tutorials/050-analyzing-highly-dynamic-datasets.md",
+                "title": "\u5206\u6790\u9ad8\u52a8\u6001\u6570\u636e\u96c6",
+                "url": "/docs/analyzing-highly-dynamic-datasets/"
+            },
+            "\u5b89\u88c5 Apache Drill SandBox": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                    },
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u4e86\u89e3 Drill Sandbox",
+                "next_url": "/docs/getting-to-know-the-drill-sandbox/",
+                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                "previous_title": "\u5173\u4e8e MapR \u6c99\u76d2",
+                "previous_url": "/docs/about-the-mapr-sandbox/",
+                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md",
+                "title": "\u5b89\u88c5 Apache Drill SandBox",
+                "url": "/docs/installing-the-apache-drill-sandbox/"
+            },
+            "\u603b\u7ed3": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                    },
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u5206\u6790\u9ad8\u52a8\u6001\u6570\u636e\u96c6",
+                "next_url": "/docs/analyzing-highly-dynamic-datasets/",
+                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                "previous_title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
+                "previous_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
+                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md",
+                "title": "\u603b\u7ed3",
+                "url": "/docs/summary/"
+            },
+            "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                            },
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "\u5b89\u88c5 Apache Drill SandBox",
+                        "next_url": "/docs/installing-the-apache-drill-sandbox/",
+                        "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "previous_title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/",
+                        "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/005-about-the-mapr-sandbox.md",
+                        "title": "\u5173\u4e8e MapR \u6c99\u76d2",
+                        "url": "/docs/about-the-mapr-sandbox/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                            },
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "\u4e86\u89e3 Drill Sandbox",
+                        "next_url": "/docs/getting-to-know-the-drill-sandbox/",
+                        "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "previous_title": "\u5173\u4e8e MapR \u6c99\u76d2",
+                        "previous_url": "/docs/about-the-mapr-sandbox/",
+                        "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md",
+                        "title": "\u5b89\u88c5 Apache Drill SandBox",
+                        "url": "/docs/installing-the-apache-drill-sandbox/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                            },
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
+                        "next_url": "/docs/lesson-1-learn-about-the-data-set/",
+                        "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "previous_title": "\u5b89\u88c5 Apache Drill SandBox",
+                        "previous_url": "/docs/installing-the-apache-drill-sandbox/",
+                        "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md",
+                        "title": "\u4e86\u89e3 Drill Sandbox",
+                        "url": "/docs/getting-to-know-the-drill-sandbox/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                            },
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
+                        "next_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
+                        "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "previous_title": "\u4e86\u89e3 Drill Sandbox",
+                        "previous_url": "/docs/getting-to-know-the-drill-sandbox/",
+                        "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md",
+                        "title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
+                        "url": "/docs/lesson-1-learn-about-the-data-set/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                            },
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
+                        "next_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
+                        "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "previous_title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
+                        "previous_url": "/docs/lesson-1-learn-about-the-data-set/",
+                        "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md",
+                        "title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
+                        "url": "/docs/lesson-2-run-queries-with-ansi-sql/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                            },
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "\u603b\u7ed3",
+                        "next_url": "/docs/summary/",
+                        "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "previous_title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
+                        "previous_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
+                        "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md",
+                        "title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
+                        "url": "/docs/lesson-3-run-queries-on-complex-data-types/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                            },
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "\u5206\u6790\u9ad8\u52a8\u6001\u6570\u636e\u96c6",
+                        "next_url": "/docs/analyzing-highly-dynamic-datasets/",
+                        "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "previous_title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
+                        "previous_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
+                        "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md",
+                        "title": "\u603b\u7ed3",
+                        "url": "/docs/summary/"
+                    }
+                ],
+                "next_title": "\u5173\u4e8e MapR \u6c99\u76d2",
+                "next_url": "/docs/about-the-mapr-sandbox/",
+                "parent": "\u6559\u7a0b",
+                "previous_title": "\u5206\u6790 Yelp \u5b66\u672f\u6570\u636e\u96c6",
+                "previous_url": "/docs/analyzing-the-yelp-academic-dataset/",
+                "relative_path": "_docs/zh/tutorials/040-learn-drill-with-the-mapr-sandbox.md",
+                "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+            },
+            "\u6559\u7a0b": {
+                "breadcrumbs": [],
+                "children": [
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "10\u5206\u949f\u4e86\u89e3 Drill",
+                        "next_url": "/docs/drill-in-10-minutes/",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u6559\u7a0b",
+                        "previous_url": "/docs/tutorials/",
+                        "relative_path": "_docs/zh/tutorials/010-tutorials-introduction.md",
+                        "title": "\u6559\u7a0b\u4ecb\u7ecd",
+                        "url": "/docs/tutorials-introduction/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "\u5206\u6790 Yelp \u5b66\u672f\u6570\u636e\u96c6",
+                        "next_url": "/docs/analyzing-the-yelp-academic-dataset/",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u6559\u7a0b\u4ecb\u7ecd",
+                        "previous_url": "/docs/tutorials-introduction/",
+                        "relative_path": "_docs/zh/tutorials/020-drill-in-10-minutes.md",
+                        "title": "10\u5206\u949f\u4e86\u89e3 Drill",
+                        "url": "/docs/drill-in-10-minutes/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "next_url": "/docs/learn-drill-with-the-mapr-sandbox/",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "10\u5206\u949f\u4e86\u89e3 Drill",
+                        "previous_url": "/docs/drill-in-10-minutes/",
+                        "relative_path": "_docs/zh/tutorials/030-analyzing-the-yelp-academic-dataset.md",
+                        "title": "\u5206\u6790 Yelp \u5b66\u672f\u6570\u636e\u96c6",
+                        "url": "/docs/analyzing-the-yelp-academic-dataset/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [
+                            {
+                                "breadcrumbs": [
+                                    {
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                    },
+                                    {
+                                        "title": "\u6559\u7a0b",
+                                        "url": "/docs/tutorials/"
+                                    }
+                                ],
+                                "children": [],
+                                "next_title": "\u5b89\u88c5 Apache Drill SandBox",
+                                "next_url": "/docs/installing-the-apache-drill-sandbox/",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/005-about-the-mapr-sandbox.md",
+                                "title": "\u5173\u4e8e MapR \u6c99\u76d2",
+                                "url": "/docs/about-the-mapr-sandbox/"
+                            },
+                            {
+                                "breadcrumbs": [
+                                    {
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                    },
+                                    {
+                                        "title": "\u6559\u7a0b",
+                                        "url": "/docs/tutorials/"
+                                    }
+                                ],
+                                "children": [],
+                                "next_title": "\u4e86\u89e3 Drill Sandbox",
+                                "next_url": "/docs/getting-to-know-the-drill-sandbox/",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u5173\u4e8e MapR \u6c99\u76d2",
+                                "previous_url": "/docs/about-the-mapr-sandbox/",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md",
+                                "title": "\u5b89\u88c5 Apache Drill SandBox",
+                                "url": "/docs/installing-the-apache-drill-sandbox/"
+                            },
+                            {
+                                "breadcrumbs": [
+                                    {
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                    },
+                                    {
+                                        "title": "\u6559\u7a0b",
+                                        "url": "/docs/tutorials/"
+                                    }
+                                ],
+                                "children": [],
+                                "next_title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
+                                "next_url": "/docs/lesson-1-learn-about-the-data-set/",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u5b89\u88c5 Apache Drill SandBox",
+                                "previous_url": "/docs/installing-the-apache-drill-sandbox/",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md",
+                                "title": "\u4e86\u89e3 Drill Sandbox",
+                                "url": "/docs/getting-to-know-the-drill-sandbox/"
+                            },
+                            {
+                                "breadcrumbs": [
+                                    {
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                    },
+                                    {
+                                        "title": "\u6559\u7a0b",
+                                        "url": "/docs/tutorials/"
+                                    }
+                                ],
+                                "children": [],
+                                "next_title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
+                                "next_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u4e86\u89e3 Drill Sandbox",
+                                "previous_url": "/docs/getting-to-know-the-drill-sandbox/",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md",
+                                "title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
+                                "url": "/docs/lesson-1-learn-about-the-data-set/"
+                            },
+                            {
+                                "breadcrumbs": [
+                                    {
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                    },
+                                    {
+                                        "title": "\u6559\u7a0b",
+                                        "url": "/docs/tutorials/"
+                                    }
+                                ],
+                                "children": [],
+                                "next_title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
+                                "next_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
+                                "previous_url": "/docs/lesson-1-learn-about-the-data-set/",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md",
+                                "title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
+                                "url": "/docs/lesson-2-run-queries-with-ansi-sql/"
+                            },
+                            {
+                                "breadcrumbs": [
+                                    {
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                    },
+                                    {
+                                        "title": "\u6559\u7a0b",
+                                        "url": "/docs/tutorials/"
+                                    }
+                                ],
+                                "children": [],
+                                "next_title": "\u603b\u7ed3",
+                                "next_url": "/docs/summary/",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
+                                "previous_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md",
+                                "title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
+                                "url": "/docs/lesson-3-run-queries-on-complex-data-types/"
+                            },
+                            {
+                                "breadcrumbs": [
+                                    {
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                                    },
+                                    {
+                                        "title": "\u6559\u7a0b",
+                                        "url": "/docs/tutorials/"
+                                    }
+                                ],
+                                "children": [],
+                                "next_title": "\u5206\u6790\u9ad8\u52a8\u6001\u6570\u636e\u96c6",
+                                "next_url": "/docs/analyzing-highly-dynamic-datasets/",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
+                                "previous_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md",
+                                "title": "\u603b\u7ed3",
+                                "url": "/docs/summary/"
+                            }
+                        ],
+                        "next_title": "\u5173\u4e8e MapR \u6c99\u76d2",
+                        "next_url": "/docs/about-the-mapr-sandbox/",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u5206\u6790 Yelp \u5b66\u672f\u6570\u636e\u96c6",
+                        "previous_url": "/docs/analyzing-the-yelp-academic-dataset/",
+                        "relative_path": "_docs/zh/tutorials/040-learn-drill-with-the-mapr-sandbox.md",
+                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
+                        "next_url": "/docs/analyzing-social-media/",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u603b\u7ed3",
+                        "previous_url": "/docs/summary/",
+                        "relative_path": "_docs/zh/tutorials/050-analyzing-highly-dynamic-datasets.md",
+                        "title": "\u5206\u6790\u9ad8\u52a8\u6001\u6570\u636e\u96c6",
+                        "url": "/docs/analyzing-highly-dynamic-datasets/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
+                        "next_url": "/docs/analyzing-data-using-window-functions/",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u5206\u6790\u9ad8\u52a8\u6001\u6570\u636e\u96c6",
+                        "previous_url": "/docs/analyzing-highly-dynamic-datasets/",
+                        "relative_path": "_docs/zh/tutorials/060-analyzing-social-media.md",
+                        "title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
+                        "url": "/docs/analyzing-social-media/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "Drill-on-YARN",
+                        "next_url": "/docs/drill-on-yarn/",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
+                        "previous_url": "/docs/analyzing-social-media/",
+                        "relative_path": "_docs/zh/tutorials/070-analyzing-data-using-window-functions.md",
+                        "title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
+                        "url": "/docs/analyzing-data-using-window-functions/"
+                    }
+                ],
+                "next_title": "\u6559\u7a0b\u4ecb\u7ecd",
+                "next_url": "/docs/tutorials-introduction/",
+                "parent": "",
+                "previous_title": "Performance",
+                "previous_url": "/docs/performance/",
+                "relative_path": "_docs/zh/030-tutorials.md",
+                "title": "\u6559\u7a0b",
+                "url": "/docs/tutorials/"
+            },
+            "\u6559\u7a0b\u4ecb\u7ecd": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "10\u5206\u949f\u4e86\u89e3 Drill",
+                "next_url": "/docs/drill-in-10-minutes/",
+                "parent": "\u6559\u7a0b",
+                "previous_title": "\u6559\u7a0b",
+                "previous_url": "/docs/tutorials/",
+                "relative_path": "_docs/zh/tutorials/010-tutorials-introduction.md",
+                "title": "\u6559\u7a0b\u4ecb\u7ecd",
+                "url": "/docs/tutorials-introduction/"
             },
             "\u65b0\u624b\u5f00\u59cb": {
                 "breadcrumbs": [],
@@ -41369,6 +41289,86 @@
                 "relative_path": "_docs/zh/010-getting-started.md",
                 "title": "\u65b0\u624b\u5f00\u59cb",
                 "url": "/docs/getting-started/"
+            },
+            "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                    },
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
+                "next_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
+                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                "previous_title": "\u4e86\u89e3 Drill Sandbox",
+                "previous_url": "/docs/getting-to-know-the-drill-sandbox/",
+                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md",
+                "title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
+                "url": "/docs/lesson-1-learn-about-the-data-set/"
+            },
+            "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                    },
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u603b\u7ed3",
+                "next_url": "/docs/summary/",
+                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                "previous_title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
+                "previous_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
+                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md",
+                "title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
+                "url": "/docs/lesson-3-run-queries-on-complex-data-types/"
+            },
+            "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                        "url": "/docs/learn-drill-with-the-mapr-sandbox/"
+                    },
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
+                "next_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
+                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                "previous_title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
+                "previous_url": "/docs/lesson-1-learn-about-the-data-set/",
+                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md",
+                "title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
+                "url": "/docs/lesson-2-run-queries-with-ansi-sql/"
+            },
+            "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "Drill-on-YARN",
+                "next_url": "/docs/drill-on-yarn/",
+                "parent": "\u6559\u7a0b",
+                "previous_title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
+                "previous_url": "/docs/analyzing-social-media/",
+                "relative_path": "_docs/zh/tutorials/070-analyzing-data-using-window-functions.md",
+                "title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
+                "url": "/docs/analyzing-data-using-window-functions/"
             }
         },
         "hierarchy": [
@@ -41481,7 +41481,7 @@
                             }
                         ],
                         "children": [],
-                        "next_title": "Tutorials",
+                        "next_title": "\u6559\u7a0b",
                         "next_url": "/docs/tutorials/",
                         "parent": "Architecture",
                         "previous_title": "Core Modules",
@@ -41506,58 +41506,58 @@
                     {
                         "breadcrumbs": [
                             {
-                                "title": "Tutorials",
+                                "title": "\u6559\u7a0b",
                                 "url": "/docs/tutorials/"
                             }
                         ],
                         "children": [],
-                        "next_title": "Drill in 10 Minutes",
+                        "next_title": "10\u5206\u949f\u4e86\u89e3 Drill",
                         "next_url": "/docs/drill-in-10-minutes/",
-                        "parent": "Tutorials",
-                        "previous_title": "Tutorials",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u6559\u7a0b",
                         "previous_url": "/docs/tutorials/",
-                        "relative_path": "_docs/en/tutorials/010-tutorials-introduction.md",
-                        "title": "Tutorials Introduction",
+                        "relative_path": "_docs/zh/tutorials/010-tutorials-introduction.md",
+                        "title": "\u6559\u7a0b\u4ecb\u7ecd",
                         "url": "/docs/tutorials-introduction/"
                     },
                     {
                         "breadcrumbs": [
                             {
-                                "title": "Tutorials",
+                                "title": "\u6559\u7a0b",
                                 "url": "/docs/tutorials/"
                             }
                         ],
                         "children": [],
-                        "next_title": "Analyzing the Yelp Academic Dataset",
+                        "next_title": "\u5206\u6790 Yelp \u5b66\u672f\u6570\u636e\u96c6",
                         "next_url": "/docs/analyzing-the-yelp-academic-dataset/",
-                        "parent": "Tutorials",
-                        "previous_title": "Tutorials Introduction",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u6559\u7a0b\u4ecb\u7ecd",
                         "previous_url": "/docs/tutorials-introduction/",
-                        "relative_path": "_docs/en/tutorials/020-drill-in-10-minutes.md",
-                        "title": "Drill in 10 Minutes",
+                        "relative_path": "_docs/zh/tutorials/020-drill-in-10-minutes.md",
+                        "title": "10\u5206\u949f\u4e86\u89e3 Drill",
                         "url": "/docs/drill-in-10-minutes/"
                     },
                     {
                         "breadcrumbs": [
                             {
-                                "title": "Tutorials",
+                                "title": "\u6559\u7a0b",
                                 "url": "/docs/tutorials/"
                             }
                         ],
                         "children": [],
-                        "next_title": "Learn Drill with the MapR Sandbox",
+                        "next_title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
                         "next_url": "/docs/learn-drill-with-the-mapr-sandbox/",
-                        "parent": "Tutorials",
-                        "previous_title": "Drill in 10 Minutes",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "10\u5206\u949f\u4e86\u89e3 Drill",
                         "previous_url": "/docs/drill-in-10-minutes/",
-                        "relative_path": "_docs/en/tutorials/030-analyzing-the-yelp-academic-dataset.md",
-                        "title": "Analyzing the Yelp Academic Dataset",
+                        "relative_path": "_docs/zh/tutorials/030-analyzing-the-yelp-academic-dataset.md",
+                        "title": "\u5206\u6790 Yelp \u5b66\u672f\u6570\u636e\u96c6",
                         "url": "/docs/analyzing-the-yelp-academic-dataset/"
                     },
                     {
                         "breadcrumbs": [
                             {
-                                "title": "Tutorials",
+                                "title": "\u6559\u7a0b",
                                 "url": "/docs/tutorials/"
                             }
                         ],
@@ -41565,219 +41565,219 @@
                             {
                                 "breadcrumbs": [
                                     {
-                                        "title": "Learn Drill with the MapR Sandbox",
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
                                         "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                                     },
                                     {
-                                        "title": "Tutorials",
+                                        "title": "\u6559\u7a0b",
                                         "url": "/docs/tutorials/"
                                     }
                                 ],
                                 "children": [],
-                                "next_title": "Installing the Apache Drill Sandbox",
+                                "next_title": "\u5b89\u88c5 Apache Drill SandBox",
                                 "next_url": "/docs/installing-the-apache-drill-sandbox/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Learn Drill with the MapR Sandbox",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
                                 "previous_url": "/docs/learn-drill-with-the-mapr-sandbox/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/005-about-the-mapr-sandbox.md",
-                                "title": "About the MapR Sandbox",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/005-about-the-mapr-sandbox.md",
+                                "title": "\u5173\u4e8e MapR \u6c99\u76d2",
                                 "url": "/docs/about-the-mapr-sandbox/"
                             },
                             {
                                 "breadcrumbs": [
                                     {
-                                        "title": "Learn Drill with the MapR Sandbox",
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
                                         "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                                     },
                                     {
-                                        "title": "Tutorials",
+                                        "title": "\u6559\u7a0b",
                                         "url": "/docs/tutorials/"
                                     }
                                 ],
                                 "children": [],
-                                "next_title": "Getting to Know the Drill Sandbox",
+                                "next_title": "\u4e86\u89e3 Drill Sandbox",
                                 "next_url": "/docs/getting-to-know-the-drill-sandbox/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "About the MapR Sandbox",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u5173\u4e8e MapR \u6c99\u76d2",
                                 "previous_url": "/docs/about-the-mapr-sandbox/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md",
-                                "title": "Installing the Apache Drill Sandbox",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/010-installing-the-apache-drill-sandbox.md",
+                                "title": "\u5b89\u88c5 Apache Drill SandBox",
                                 "url": "/docs/installing-the-apache-drill-sandbox/"
                             },
                             {
                                 "breadcrumbs": [
                                     {
-                                        "title": "Learn Drill with the MapR Sandbox",
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
                                         "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                                     },
                                     {
-                                        "title": "Tutorials",
+                                        "title": "\u6559\u7a0b",
                                         "url": "/docs/tutorials/"
                                     }
                                 ],
                                 "children": [],
-                                "next_title": "Lesson 1: Learn about the Data Set",
+                                "next_title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
                                 "next_url": "/docs/lesson-1-learn-about-the-data-set/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Installing the Apache Drill Sandbox",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u5b89\u88c5 Apache Drill SandBox",
                                 "previous_url": "/docs/installing-the-apache-drill-sandbox/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md",
-                                "title": "Getting to Know the Drill Sandbox",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/020-getting-to-know-the-drill-sandbox.md",
+                                "title": "\u4e86\u89e3 Drill Sandbox",
                                 "url": "/docs/getting-to-know-the-drill-sandbox/"
                             },
                             {
                                 "breadcrumbs": [
                                     {
-                                        "title": "Learn Drill with the MapR Sandbox",
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
                                         "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                                     },
                                     {
-                                        "title": "Tutorials",
+                                        "title": "\u6559\u7a0b",
                                         "url": "/docs/tutorials/"
                                     }
                                 ],
                                 "children": [],
-                                "next_title": "Lesson 2: Run Queries with ANSI SQL",
+                                "next_title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
                                 "next_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Getting to Know the Drill Sandbox",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u4e86\u89e3 Drill Sandbox",
                                 "previous_url": "/docs/getting-to-know-the-drill-sandbox/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md",
-                                "title": "Lesson 1: Learn about the Data Set",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/030-lesson-1-learn-about-the-data-set.md",
+                                "title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
                                 "url": "/docs/lesson-1-learn-about-the-data-set/"
                             },
                             {
                                 "breadcrumbs": [
                                     {
-                                        "title": "Learn Drill with the MapR Sandbox",
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
                                         "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                                     },
                                     {
-                                        "title": "Tutorials",
+                                        "title": "\u6559\u7a0b",
                                         "url": "/docs/tutorials/"
                                     }
                                 ],
                                 "children": [],
-                                "next_title": "Lesson 3: Run Queries on Complex Data Types",
+                                "next_title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
                                 "next_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Lesson 1: Learn about the Data Set",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u7b2c\u4e00\u8bfe: \u5b66\u4e60\u6570\u636e\u96c6",
                                 "previous_url": "/docs/lesson-1-learn-about-the-data-set/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md",
-                                "title": "Lesson 2: Run Queries with ANSI SQL",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/040-lesson-2-run-queries-with-ansi-sql.md",
+                                "title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
                                 "url": "/docs/lesson-2-run-queries-with-ansi-sql/"
                             },
                             {
                                 "breadcrumbs": [
                                     {
-                                        "title": "Learn Drill with the MapR Sandbox",
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
                                         "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                                     },
                                     {
-                                        "title": "Tutorials",
+                                        "title": "\u6559\u7a0b",
                                         "url": "/docs/tutorials/"
                                     }
                                 ],
                                 "children": [],
-                                "next_title": "Summary",
+                                "next_title": "\u603b\u7ed3",
                                 "next_url": "/docs/summary/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Lesson 2: Run Queries with ANSI SQL",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u7b2c\u4e8c\u8bfe: \u4f7f\u7528 ANSI SQL \u67e5\u8be2",
                                 "previous_url": "/docs/lesson-2-run-queries-with-ansi-sql/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md",
-                                "title": "Lesson 3: Run Queries on Complex Data Types",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/050-lesson-3-run-queries-on-complex-data-types.md",
+                                "title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
                                 "url": "/docs/lesson-3-run-queries-on-complex-data-types/"
                             },
                             {
                                 "breadcrumbs": [
                                     {
-                                        "title": "Learn Drill with the MapR Sandbox",
+                                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
                                         "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                                     },
                                     {
-                                        "title": "Tutorials",
+                                        "title": "\u6559\u7a0b",
                                         "url": "/docs/tutorials/"
                                     }
                                 ],
                                 "children": [],
-                                "next_title": "Analyzing Highly Dynamic Datasets",
+                                "next_title": "\u5206\u6790\u9ad8\u52a8\u6001\u6570\u636e\u96c6",
                                 "next_url": "/docs/analyzing-highly-dynamic-datasets/",
-                                "parent": "Learn Drill with the MapR Sandbox",
-                                "previous_title": "Lesson 3: Run Queries on Complex Data Types",
+                                "parent": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
+                                "previous_title": "\u7b2c\u4e09\u8bfe: \u67e5\u8be2\u590d\u6742\u6570\u636e\u7c7b\u578b",
                                 "previous_url": "/docs/lesson-3-run-queries-on-complex-data-types/",
-                                "relative_path": "_docs/en/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md",
-                                "title": "Summary",
+                                "relative_path": "_docs/zh/tutorials/learn-drill-with-the-mapr-sandbox/060-summary.md",
+                                "title": "\u603b\u7ed3",
                                 "url": "/docs/summary/"
                             }
                         ],
-                        "next_title": "About the MapR Sandbox",
+                        "next_title": "\u5173\u4e8e MapR \u6c99\u76d2",
                         "next_url": "/docs/about-the-mapr-sandbox/",
-                        "parent": "Tutorials",
-                        "previous_title": "Analyzing the Yelp Academic Dataset",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u5206\u6790 Yelp \u5b66\u672f\u6570\u636e\u96c6",
                         "previous_url": "/docs/analyzing-the-yelp-academic-dataset/",
-                        "relative_path": "_docs/en/tutorials/040-learn-drill-with-the-mapr-sandbox.md",
-                        "title": "Learn Drill with the MapR Sandbox",
+                        "relative_path": "_docs/zh/tutorials/040-learn-drill-with-the-mapr-sandbox.md",
+                        "title": "\u642d\u914d MapR Sandbox \u5b66\u4e60 Drill",
                         "url": "/docs/learn-drill-with-the-mapr-sandbox/"
                     },
                     {
                         "breadcrumbs": [
                             {
-                                "title": "Tutorials",
+                                "title": "\u6559\u7a0b",
                                 "url": "/docs/tutorials/"
                             }
                         ],
                         "children": [],
-                        "next_title": "Analyzing Social Media",
+                        "next_title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
                         "next_url": "/docs/analyzing-social-media/",
-                        "parent": "Tutorials",
-                        "previous_title": "Summary",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u603b\u7ed3",
                         "previous_url": "/docs/summary/",
-                        "relative_path": "_docs/en/tutorials/050-analyzing-highly-dynamic-datasets.md",
-                        "title": "Analyzing Highly Dynamic Datasets",
+                        "relative_path": "_docs/zh/tutorials/050-analyzing-highly-dynamic-datasets.md",
+                        "title": "\u5206\u6790\u9ad8\u52a8\u6001\u6570\u636e\u96c6",
                         "url": "/docs/analyzing-highly-dynamic-datasets/"
                     },
                     {
                         "breadcrumbs": [
                             {
-                                "title": "Tutorials",
+                                "title": "\u6559\u7a0b",
                                 "url": "/docs/tutorials/"
                             }
                         ],
                         "children": [],
-                        "next_title": "Analyzing Data Using Window Functions",
+                        "next_title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
                         "next_url": "/docs/analyzing-data-using-window-functions/",
-                        "parent": "Tutorials",
-                        "previous_title": "Analyzing Highly Dynamic Datasets",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u5206\u6790\u9ad8\u52a8\u6001\u6570\u636e\u96c6",
                         "previous_url": "/docs/analyzing-highly-dynamic-datasets/",
-                        "relative_path": "_docs/en/tutorials/060-analyzing-social-media.md",
-                        "title": "Analyzing Social Media",
+                        "relative_path": "_docs/zh/tutorials/060-analyzing-social-media.md",
+                        "title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
                         "url": "/docs/analyzing-social-media/"
                     },
                     {
                         "breadcrumbs": [
                             {
-                                "title": "Tutorials",
+                                "title": "\u6559\u7a0b",
                                 "url": "/docs/tutorials/"
                             }
                         ],
                         "children": [],
                         "next_title": "Drill-on-YARN",
                         "next_url": "/docs/drill-on-yarn/",
-                        "parent": "Tutorials",
-                        "previous_title": "Analyzing Social Media",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
                         "previous_url": "/docs/analyzing-social-media/",
-                        "relative_path": "_docs/en/tutorials/070-analyzing-data-using-window-functions.md",
-                        "title": "Analyzing Data Using Window Functions",
+                        "relative_path": "_docs/zh/tutorials/070-analyzing-data-using-window-functions.md",
+                        "title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
                         "url": "/docs/analyzing-data-using-window-functions/"
                     }
                 ],
-                "next_title": "Tutorials Introduction",
+                "next_title": "\u6559\u7a0b\u4ecb\u7ecd",
                 "next_url": "/docs/tutorials-introduction/",
                 "parent": "",
                 "previous_title": "Performance",
                 "previous_url": "/docs/performance/",
-                "relative_path": "_docs/en/030-tutorials.md",
-                "title": "Tutorials",
+                "relative_path": "_docs/zh/030-tutorials.md",
+                "title": "\u6559\u7a0b",
                 "url": "/docs/tutorials/"
             },
             {
@@ -41991,7 +41991,7 @@
                 "next_title": "Drill-on-YARN Introduction",
                 "next_url": "/docs/drill-on-yarn-introduction/",
                 "parent": "",
-                "previous_title": "Analyzing Data Using Window Functions",
+                "previous_title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
                 "previous_url": "/docs/analyzing-data-using-window-functions/",
                 "relative_path": "_docs/en/031-drill-on-yarn.md",
                 "title": "Drill-on-YARN",

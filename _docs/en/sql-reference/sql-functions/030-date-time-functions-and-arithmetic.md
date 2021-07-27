@@ -33,6 +33,8 @@ This section covers the Drill [time zone limitation]({{site.baseurl}}/docs/data-
 **Supported in Drill 1.16 and later.
 
 ## AGE
+{% include startimportant.html %} DRILL-7926: this function is buggy in the current release.  Please make use of alternative date functions until the mentioned issue is resolved. {% include endimportant.html %}
+
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
 
 ### AGE Syntax
