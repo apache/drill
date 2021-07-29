@@ -160,7 +160,7 @@ public class HttpPushDownListener implements FilterPushDownListener {
      */
     @Override
     public Pair<GroupScan, List<RexNode>> transform(AndNode andNode) {
-      Map<String, String> filters = new HashMap<>();
+      Map<String, String> filters = CaseInsensitiveMap.newHashMap();
       double selectivity = 1;
       for (ExprNode expr : andNode.children) {
         ColRelOpConstNode relOp = (ColRelOpConstNode) expr;
