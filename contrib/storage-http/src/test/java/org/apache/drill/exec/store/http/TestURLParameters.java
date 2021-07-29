@@ -19,10 +19,10 @@
 package org.apache.drill.exec.store.http;
 
 import okhttp3.HttpUrl;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.junit.Test;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -30,10 +30,10 @@ import static org.junit.Assert.assertEquals;
 public class TestURLParameters {
 
   @Test
-  public void testUrlParameters() throws Exception {
+  public void testUrlParameters() {
     // Http client setup
     HttpUrl githubSingleParam = HttpUrl.parse("https://github.com/orgs/{org}/repos");
-    Map<String, String> filters = new HashMap<>();
+    Map<String, String> filters = new CaseInsensitiveMap<>();
     filters.put("org", "apache");
     filters.put("param1", "value1");
     filters.put("param2", "value2");
@@ -41,17 +41,38 @@ public class TestURLParameters {
 
 
     HttpUrl githubMultiParam = HttpUrl.parse("https://github.com/orgs/{org}/{repos}");
-    Map<String, String> filters2 = new HashMap<>();
+    Map<String, String> filters2 = new CaseInsensitiveMap<>();
     filters2.put("org", "apache");
     filters2.put("param1", "value1");
     filters2.put("repos", "drill");
     assertEquals(SimpleHttp.mapURLParameters(githubMultiParam, filters2), "https://github.com/orgs/apache/drill");
 
     HttpUrl githubNoParam = HttpUrl.parse("https://github.com/orgs/org/repos");
-    Map<String, String> filters3 = new HashMap<>();
+    Map<String, String> filters3 = new CaseInsensitiveMap<>();
     filters3.put("org", "apache");
     filters3.put("param1", "value1");
     filters3.put("repos", "drill");
     assertEquals(SimpleHttp.mapURLParameters(githubNoParam, filters3), "https://github.com/orgs/org/repos");
+  }
+
+  @Test
+  public void testParamAtEnd() {
+    HttpUrl pokemonUrl = HttpUrl.parse("https://pokeapi.co/api/v2/pokemon/{pokemon_name}");
+    Map<String, String> filters = new CaseInsensitiveMap<>();
+    filters.put("pokemon_name", "Misty");
+    filters.put("param1", "value1");
+    filters.put("repos", "drill");
+    assertEquals(SimpleHttp.mapURLParameters(pokemonUrl, filters), "https://pokeapi.co/api/v2/pokemon/Misty");
+  }
+
+  @Test
+  public void testUpperCase() {
+    HttpUrl githubSingleParam = HttpUrl.parse("https://github.com/orgs/{ORG}/repos");
+    Map<String, String> filters = new CaseInsensitiveMap<>();
+    filters.put("org", "apache");
+    filters.put("param1", "value1");
+    filters.put("param2", "value2");
+    assertEquals(SimpleHttp.mapURLParameters(githubSingleParam, filters), "https://github.com/orgs/apache/repos");
+
   }
 }

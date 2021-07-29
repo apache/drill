@@ -60,7 +60,13 @@ FROM api.github
 WHERE org = 'apache'
 ```
 
-This query would replace the `org`in the URL with the value from the `WHERE` clause, in this case `apache`. 
+This query would replace the `org`in the URL with the value from the `WHERE` clause, in this case `apache`.
+
+#### Limitations on URL Parameters
+* Drill does not support combinations of parameters in queries.  For instance, for the above example, you could not include `WHERE org='apache' OR org='linux'`
+* All URL parameter clauses must be equality only. 
+* 
+
 
 `requireTail`: Set to `true` if the query must contain an additional part of the service
 URL as a table name, `false` if the URL needs no additional suffix other than that

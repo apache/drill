@@ -47,7 +47,10 @@ import java.util.Set;
  * <li>An AND'ed set of such expressions,</li>
  * <li>If the value is one with an unambiguous conversion to
  * a string. (That is, not dates, binary, maps, etc.)</li>
- * <li>A field from the URL.  For instance in some APIs you have parameters that are part of the path.</li>
+ * <li>  A field from the URL.  For instance in some APIs you have parameters that are part of the path.
+ * For example, https://github.com/orgs/{org}/repos.  In this instance, the query must contain
+ * a parameter called org.
+ * </li>
  * </ul>
  */
 public class HttpPushDownListener implements FilterPushDownListener {
@@ -94,7 +97,6 @@ public class HttpPushDownListener implements FilterPushDownListener {
       HttpUrl url = HttpUrl.parse(groupScan.getHttpConfig().url());
       if (url != null) {
         List<String> urlParams = SimpleHttp.getURLParameters(url);
-        assert urlParams != null;
         for (String urlField : urlParams) {
           filterParams.put(urlField, urlField);
         }

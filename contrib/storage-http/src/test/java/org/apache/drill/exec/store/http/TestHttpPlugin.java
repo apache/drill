@@ -111,10 +111,13 @@ public class TestHttpPlugin extends ClusterTest {
       .method("get")
       .build();
 
+    HttpApiConfig pokemonConfig = new HttpApiConfig("https://pokeapi.co/api/v2/pokemon/ditto", "get", null, "none", null, null, null, null, null, false, "json", 1, false);
+
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("stock", stockConfig);
     configs.put("sunrise", sunriseConfig);
     configs.put("sunrise2", sunriseWithParamsConfig);
+    configs.put("pokemon", pokemonConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 10, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
@@ -368,6 +371,14 @@ public class TestHttpPlugin extends ClusterTest {
 
     RowSetUtilities.verify(expected, results);
   }
+
+  @Test
+  public void liveTestWithURLParameters() throws Exception {
+    String sql = "SELECT * FROM live.pokemon WHERE pokemon_name = 'ditto'";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();
+  }
+
 
   @Test
   public void simpleTestWithMockServerWithURLParams() throws Exception {

@@ -249,6 +249,7 @@ public class HttpGroupScan extends AbstractGroupScan {
 
   @JsonIgnore
   public boolean hasFilters() {
+    // TODO Add filters from URL here?
     return filters != null;
   }
 

@@ -28,6 +28,7 @@ import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.http.HttpApiConfig;
@@ -61,7 +62,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class SimpleHttp {
   private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
-  private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{([A-Za-z0-9_]+)\\}");
+  private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)\\}");
 
   private final OkHttpClient client;
   private final HttpSubScan scanDefn;
@@ -366,14 +367,9 @@ public class SimpleHttp {
    * @return A list of URL parameters enclosed by curly braces.
    */
   public static List<String> getURLParameters(HttpUrl url) {
-    List<String> parameters = new ArrayList<>();
-    String decodedURL;
-    try {
-      decodedURL = URLDecoder.decode(url.toString(), "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      return null;
-    }
+    String decodedURL = decodedURL(url);
     Matcher matcher = URL_PARAM_REGEX.matcher(decodedURL);
+    List<String> parameters = new ArrayList<>();
     String param;
     while (matcher.find()) {
       param = matcher.group();
@@ -394,7 +390,7 @@ public class SimpleHttp {
    * a UserException.
    *
    * @param url The HttpUrl containing URL Parameters
-   * @param filters:  A HashMap of filters
+   * @param filters:  A CaseInsensitiveMap of filters
    * @return A string of the URL with the URL parameters replaced by filter values
    */
   public static String mapURLParameters(HttpUrl url, Map<String, String> filters) {
@@ -402,17 +398,19 @@ public class SimpleHttp {
       return url.toString();
     }
 
+    CaseInsensitiveMap<String,String> caseInsensitiveFilterMap = (CaseInsensitiveMap<String, String>)filters;
+
     List<String> params = SimpleHttp.getURLParameters(url);
     String tempUrl = SimpleHttp.decodedURL(url);
     for (String param : params) {
-      if (filters == null) {
+      if (caseInsensitiveFilterMap == null) {
         throw UserException
           .parseError()
           .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
           .build(logger);
       }
 
-      String value = filters.get(param);
+      String value = caseInsensitiveFilterMap.get(param);
       // If the param is not populated, throw an exception
       if (Strings.isNullOrEmpty(value)) {
         throw UserException
