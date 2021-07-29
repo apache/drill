@@ -97,7 +97,6 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
 
     try {
       line = reader.readLine();
-      System.out.println(line);
       RowSetLoader writer = loader.writer();
 
       while (!writer.isFull() && line != null) {
@@ -153,9 +152,9 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
     for (FixedwidthFieldConfig field : config.getFields()) {
       value = line.substring(field.getStartIndex() - 1, field.getStartIndex() + field.getFieldWidth() - 1);
 
-      // Convert String to data type in field
       dataType = field.getDataType();
       dateTimeFormat = field.getDateTimeFormat();
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateTimeFormat, Locale.ENGLISH);
 
       switch (dataType) {
         case INT:
@@ -165,24 +164,18 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
           writer.scalar(i).setString(value);
           break;
         case DATE:
-          DateTimeFormatter formatDate = DateTimeFormatter.ofPattern(dateTimeFormat, Locale.ENGLISH);
-          LocalDate date = LocalDate.parse(value, formatDate);
-
+          LocalDate date = LocalDate.parse(value, formatter);
           writer.scalar(i).setDate(date);
           break;
         case TIME:
-          DateTimeFormatter formatTime = DateTimeFormatter.ofPattern(dateTimeFormat, Locale.ENGLISH);
-          LocalTime time = LocalTime.parse(value, formatTime);
-
+          LocalTime time = LocalTime.parse(value, formatter);
           writer.scalar(i).setTime(time);
           break;
         case TIMESTAMP:
-          DateTimeFormatter formatTS = DateTimeFormatter.ofPattern(dateTimeFormat,Locale.ENGLISH);
-          LocalDateTime ldt = LocalDateTime.parse(value,formatTS);
+          LocalDateTime ldt = LocalDateTime.parse(value,formatter);
           ZoneId z = ZoneId.of( "America/Toronto" );
           ZonedDateTime zdt = ldt.atZone( z );
           Instant timeStamp = zdt.toInstant();
-
           writer.scalar(i).setTimestamp(timeStamp);
           break;
         default:
