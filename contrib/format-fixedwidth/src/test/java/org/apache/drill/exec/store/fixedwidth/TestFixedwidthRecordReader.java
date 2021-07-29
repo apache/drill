@@ -1,14 +1,12 @@
+package org.apache.drill.exec.store.fixedwidth;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.store.fixedwidth.FixedwidthBatchReader;
-import org.apache.drill.exec.store.fixedwidth.FixedwidthFieldConfig;
-import org.apache.drill.exec.store.fixedwidth.FixedwidthFormatConfig;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
@@ -20,7 +18,6 @@ import org.junit.experimental.categories.Category;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static org.junit.Assert.assertEquals;
@@ -28,27 +25,19 @@ import static org.junit.Assert.assertEquals;
 @Category(RowSetTests.class)
 public class TestFixedwidthRecordReader extends ClusterTest {
 
-//  @BeforeClass
-//  public static void setup() throws Exception {
-//    ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
-//
-//    // Needed for compressed file unit test
-//    //dirTestWatcher.copyResourceToRoot(Paths.get("spss/"));
-//  }
-
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    FixedwidthFormatConfig formatConfig = new FixedwidthFormatConfig(Lists.newArrayList("fwf")
-            , Lists.newArrayList(
+    FixedwidthFormatConfig formatConfig = new FixedwidthFormatConfig(Lists.newArrayList("fwf"),
+            Lists.newArrayList(
             new FixedwidthFieldConfig(TypeProtos.MinorType.INT, "Number", "", 1, 4),
             new FixedwidthFieldConfig(TypeProtos.MinorType.VARCHAR, "Letter", "", 6, 4),
             new FixedwidthFieldConfig(TypeProtos.MinorType.INT,"Address","",11,3),
             new FixedwidthFieldConfig(TypeProtos.MinorType.DATE,"Date","MM-dd-yyyy",15,10),
             new FixedwidthFieldConfig(TypeProtos.MinorType.TIME,"Time","HH:mm:ss",26,8),
             new FixedwidthFieldConfig(TypeProtos.MinorType.TIMESTAMP,"DateTime","MM-dd-yyyy'T'HH:mm:ss.SSX",35,23)
-     ));
+    ));
     cluster.defineFormat("cp", "fwf", formatConfig);
 
     // Needed for compressed file unit test
@@ -133,29 +122,5 @@ public class TestFixedwidthRecordReader extends ClusterTest {
     System.out.println("Test complete.");
     client.close();
   }
-
-
-
-
-/*
-BatchSchema [
-fields=[
-  [`Number` (INT:OPTIONAL),
-      children=([`$bits$` (UINT1:REQUIRED)],
-                [`Number` (INT:OPTIONAL)])],
-  [`Letter` (VARCHAR:OPTIONAL),
-      children=([`$bits$` (UINT1:REQUIRED)],
-                [`Letter` (VARCHAR:OPTIONAL),
-                      children=([`$offsets$` (UINT4:REQUIRED)])
-                ]
-               )
-  ],
-  [`Address` (INT:OPTIONAL),
-      children=([`$bits$` (UINT1:REQUIRED)],
-                [`Address` (INT:OPTIONAL)])
-  ]
-],
-selectionVector=NONE]
-*/
 
 }

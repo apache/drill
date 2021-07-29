@@ -179,8 +179,8 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
         case TIMESTAMP:
           DateTimeFormatter formatTS = DateTimeFormatter.ofPattern(dateTimeFormat,Locale.ENGLISH);
           LocalDateTime ldt = LocalDateTime.parse(value,formatTS);
-          ZoneId z = ZoneId.of( "America/Toronto" ) ;
-          ZonedDateTime zdt = ldt.atZone( z ) ;
+          ZoneId z = ZoneId.of( "America/Toronto" );
+          ZonedDateTime zdt = ldt.atZone( z );
           Instant timeStamp = zdt.toInstant();
 
           writer.scalar(i).setTimestamp(timeStamp);
