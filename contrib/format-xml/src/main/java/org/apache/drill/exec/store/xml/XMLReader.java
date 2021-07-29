@@ -438,6 +438,7 @@ public class XMLReader {
       // Add map to map collection for future use
       nestedMapCollection.put(tempFieldName, new XMLMap(mapName, rowWriter.tuple(index)));
     }
+    logger.debug("Index: {}, Fieldname: {}", index, mapName);
     return rowWriter.tuple(index);
   }
 

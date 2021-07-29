@@ -543,4 +543,12 @@ public class TestXMLReader extends ClusterTest {
       .include("Limit", "maxRecords=2")
       .match();
   }
+
+  @Test
+  public void testMapError() throws Exception {
+    String sql = "SELECT * FROM cp.`xml/servicenow.xml`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();
+  }
+
 }
