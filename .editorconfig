@@ -1,0 +1,27 @@
+# https://editorconfig.org/
+
+# top-most EditorConfig file
+root = true
+
+# Default, notably applicable to Java, XML, JavaScript and Shell
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+indent_style = space
+indent_size = 2
+
+# C and C++
+[*.{c, cpp}]
+indent_size = 4
+
+# Ignore third party JS
+[**/static/js**]
+indent_style = ignore
+indent_size = ignore
+
+# Ignore minified JS
+[**.min.js]
+indent_style = ignore
+indent_size = ignore
+
