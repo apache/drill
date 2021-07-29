@@ -35,6 +35,14 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator>{
 
@@ -94,17 +102,8 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
 
       while (!writer.isFull() && line != null) {
 
-        Object[] row = parseLine(line);
-
         writer.start();
-
-        for (int i = 0; i < row.length; i++) {
-          if (row[i] instanceof Integer) {
-            writer.scalar(i).setInt((Integer) row[i]);
-          } else if (row[i] instanceof String) {
-            writer.scalar(i).setString((String) row[i]);
-          }
-        }
+        parseLine(line, writer);
         writer.save();
 
         line = reader.readLine();
@@ -145,31 +144,57 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
       return builder.buildSchema();
   }
 
-  private Object[] parseLine(String line){
-    Object[] row = new Object[config.getFields().size()];
+  private void parseLine(String line, RowSetLoader writer) {
     int i = 0;
     TypeProtos.MinorType dataType;
     String dateTimeFormat;
+    String value;
 
-    for (FixedwidthFieldConfig field : config.getFields()){
-      row[i] = line.substring(field.getStartIndex()-1,field.getStartIndex()+field.getFieldWidth()-1);
+    for (FixedwidthFieldConfig field : config.getFields()) {
+      value = line.substring(field.getStartIndex() - 1, field.getStartIndex() + field.getFieldWidth() - 1);
 
       // Convert String to data type in field
       dataType = field.getDataType();
       dateTimeFormat = field.getDateTimeFormat();
 
-      if (dataType == TypeProtos.MinorType.INT){
-        row[i] = Integer.parseInt((String) row[i]);
-      } else if (dataType == TypeProtos.MinorType.VARCHAR){
-      } else if (dataType == TypeProtos.MinorType.DATE || dataType == TypeProtos.MinorType.TIME){
-        // Check to ensure date time format matches input date?
-      } else{
+      switch (dataType) {
+        case INT:
+          writer.scalar(i).setInt(Integer.parseInt(value));
+          break;
+        case VARCHAR:
+          writer.scalar(i).setString(value);
+          break;
+        case DATE:
+          DateTimeFormatter formatDate = DateTimeFormatter.ofPattern(dateTimeFormat, Locale.ENGLISH);
+          LocalDate date = LocalDate.parse(value, formatDate);
+
+          writer.scalar(i).setDate(date);
+          break;
+        case TIME:
+          DateTimeFormatter formatTime = DateTimeFormatter.ofPattern(dateTimeFormat, Locale.ENGLISH);
+          LocalTime time = LocalTime.parse(value, formatTime);
+
+          writer.scalar(i).setTime(time);
+          break;
+        case TIMESTAMP:
+          DateTimeFormatter formatTS = DateTimeFormatter.ofPattern(dateTimeFormat,Locale.ENGLISH);
+          LocalDateTime ldt = LocalDateTime.parse(value,formatTS);
+          ZoneId z = ZoneId.of( "America/Toronto" ) ;
+          ZonedDateTime zdt = ldt.atZone( z ) ;
+          Instant timeStamp = zdt.toInstant();
+
+          writer.scalar(i).setTimestamp(timeStamp);
+          break;
+        default:
+          throw new RuntimeException("Unknown data type specified in fixed width. Found data type " + dataType);
+
+
+
 
       }
 
       i++;
     }
-      return row;
   }
 
 }
