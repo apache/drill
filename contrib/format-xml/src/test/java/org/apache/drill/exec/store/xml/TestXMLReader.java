@@ -546,9 +546,8 @@ public class TestXMLReader extends ClusterTest {
 
   @Test
   public void testMapError() throws Exception {
-    String sql = "SELECT * FROM cp.`xml/servicenow.xml`";
+    String sql = "SELECT * FROM cp.`xml/schemaChange.xml`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     results.print();
   }
-
 }

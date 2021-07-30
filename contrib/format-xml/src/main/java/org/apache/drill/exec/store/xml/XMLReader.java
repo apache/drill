@@ -155,15 +155,32 @@ public class XMLReader {
       return false;
     }
 
+    int lineNumber;
+    int characterOffset;
+    int columnNumber;
+
     // Iterate over XML events
     while (reader.hasNext()) {
       // get the current event
       try {
         nextEvent = reader.nextEvent();
 
-        // If the next event is whitespace, newlines, or other cruft that we don't need
-        // ignore and move to the next event
+        // If the next event is whitespace, newlines, or other cruft that we don't need,
+        // ignore the event and move to the next event
         if (XMLUtils.isEmptyWhiteSpace(nextEvent)) {
+          continue;
+        }
+
+        lineNumber = nextEvent.getLocation().getLineNumber();
+        characterOffset = nextEvent.getLocation().getCharacterOffset();
+        columnNumber = nextEvent.getLocation().getColumnNumber();
+
+        logger.debug("Event Info: {} {} {} {}", nextEvent, lineNumber, characterOffset, columnNumber);
+        if (isSelfClosingEvent(currentEvent, nextEvent)) {
+          logger.debug("Found self closing event!!");
+
+
+          currentEvent = nextEvent;
           continue;
         }
 
@@ -182,6 +199,16 @@ public class XMLReader {
       }
     }
     return true;
+  }
+
+  private boolean isSelfClosingEvent(XMLEvent e1, XMLEvent e2) {
+    if (e1 == null || e2 == null) {
+      return false;
+    }
+
+    return (e1.getLocation().getCharacterOffset() == e2.getLocation().getCharacterOffset()) &&
+      (e1.getLocation().getColumnNumber() == e2.getLocation().getColumnNumber()) &&
+      e1.isStartElement() && e2.isEndElement();
   }
 
   /**
@@ -240,7 +267,6 @@ public class XMLReader {
              * start a map.  If not... ignore it all.
              */
             changeState(xmlState.POSSIBLE_MAP);
-
             rowWriterStack.push(currentTupleWriter);
           }
 
