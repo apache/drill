@@ -72,9 +72,10 @@ public class XMLReader {
   private InputStream fsStream;
   private XMLEventReader reader;
   private ImplicitColumns metadata;
+  private boolean isSelfClosingEvent;
 
   /**
-   * This field indicates the various states in which the reader operates. The names should be self explanatory,
+   * This field indicates the various states in which the reader operates. The names should be self-explanatory,
    * but they are used as the reader iterates over the XML tags to know what to do.
    */
   private enum xmlState {
@@ -96,6 +97,7 @@ public class XMLReader {
     nestedMapCollection = new HashMap<>();
     this.dataLevel = dataLevel;
     this.maxRecords = maxRecords;
+    isSelfClosingEvent = false;
   }
 
   public void open(RowSetLoader rootRowWriter, CustomErrorContext errorContext ) {
@@ -155,10 +157,6 @@ public class XMLReader {
       return false;
     }
 
-    int lineNumber;
-    int characterOffset;
-    int columnNumber;
-
     // Iterate over XML events
     while (reader.hasNext()) {
       // get the current event
@@ -171,17 +169,9 @@ public class XMLReader {
           continue;
         }
 
-        lineNumber = nextEvent.getLocation().getLineNumber();
-        characterOffset = nextEvent.getLocation().getCharacterOffset();
-        columnNumber = nextEvent.getLocation().getColumnNumber();
-
-        logger.debug("Event Info: {} {} {} {}", nextEvent, lineNumber, characterOffset, columnNumber);
         if (isSelfClosingEvent(currentEvent, nextEvent)) {
           logger.debug("Found self closing event!!");
-
-
-          currentEvent = nextEvent;
-          continue;
+          isSelfClosingEvent = true;
         }
 
         // Capture the previous and current event
@@ -201,7 +191,24 @@ public class XMLReader {
     return true;
   }
 
+  /**
+   * One of the challenges with XML parsing are self-closing events. The streaming XML parser
+   * treats self-closing events as two events: a start event and an ending event.  The issue is that
+   * the self-closing events can cause schema issues with Drill specifically, if a self-closing event
+   * is detected prior to a non-self-closing event, and that populated event contains a map or other nested data
+   * Drill will throw a schema change exception.
+   *
+   * Since Drill uses Java's streaming XML parser, unfortunately, it does not provide a means of identifying
+   * self-closing tags.  This function does that by comparing the event with the previous event and looking for
+   * a condition where one event is a start and the other is an ending event.  Additionally, the column number and
+   * character offsets must be the same, indicating that the two events are the same.
+   *
+   * @param e1 The first XMLEvent
+   * @param e2 The second XMLEvent
+   * @return True if the events represent a self-closing event, false if not.
+   */
   private boolean isSelfClosingEvent(XMLEvent e1, XMLEvent e2) {
+    // If either event is null return false.
     if (e1 == null || e2 == null) {
       return false;
     }
@@ -318,6 +325,12 @@ public class XMLReader {
       case XMLStreamConstants.END_ELEMENT:
         currentNestingLevel--;
 
+        if (isSelfClosingEvent) {
+          isSelfClosingEvent = false;
+          attributePrefix = XMLUtils.removeField(attributePrefix,fieldName);
+          break;
+        }
+
         if (currentNestingLevel < dataLevel - 1) {
           break;
         } else if (currentEvent.asEndElement().getName().toString().compareTo(rootDataFieldName) == 0) {
@@ -342,7 +355,7 @@ public class XMLReader {
 
           attributePrefix = XMLUtils.removeField(attributePrefix,fieldName);
 
-        } else if (currentState != xmlState.ROW_ENDED){
+        } else if (currentState != xmlState.ROW_ENDED) {
           writeFieldData(fieldName, fieldValue, currentTupleWriter);
           // Clear out field name and value
           attributePrefix = XMLUtils.removeField(attributePrefix, fieldName);

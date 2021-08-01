@@ -87,6 +87,7 @@ public class TestXMLReader extends ClusterTest {
   public void testSelfClosingTags() throws Exception {
     String sql = "SELECT * FROM cp.`xml/weather.xml`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();
     assertEquals(1, results.rowCount());
 
       TupleMetadata expectedSchema = new SchemaBuilder()
@@ -548,6 +549,21 @@ public class TestXMLReader extends ClusterTest {
   public void testMapError() throws Exception {
     String sql = "SELECT * FROM cp.`xml/schemaChange.xml`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addMap("attributes")
+      .resumeSchema()
+      .addMap("parent")
+        .addNullable("link", MinorType.VARCHAR)
+        .addNullable("value", MinorType.VARCHAR)
+      .resumeSchema()
+      .build();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow(mapArray(), mapArray(null, null))
+      .addRow(mapArray(), strArray("https://dev57595.service-now.com/api/now/table/task/46eaa7c9a9fe198100bbe282da0d4b7d", "46eaa7c9a9fe198100bbe282da0d4b7d"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 }
