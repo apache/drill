@@ -5,9 +5,9 @@ parent: "教程"
 lang: "zh"
 ---
 
-Today’s data is dynamic and application-driven. The growth of a new era of business applications driven by industry trends such as web, social, mobile, and Internet of Things are generating datasets with new data types and new data models. These applications are iterative, and the associated data models typically are semi-structured, schema-less and constantly evolving. Semi-structured data models can be complex/nested, schema-less, and capable of having varying fields in every single row and of constantly evolving as fields get added and removed frequently to meet business requirements. 
+大数据是动态的并由应用驱动。互联网时代的商业软件的发展由不同的产业端所驱动，如网页端，媒体端，移动端，物联网。他们所生成的数据集，包含了新的数据类型和模型。这些应用都是交互式的，他们所关联的数据模型一般都是半结构化，schema-less，以及持续变化的。半结构化数据模型可以是复杂/嵌套或 schema-less，并且能够在每一行中包含不同的字段，为满足业务需求，字段会频繁修改。
 
-This tutorial shows you how to natively query dynamic datasets, such as JSON, and derive insights from any type of data in minutes. The dataset used in the example is from the Yelp check-ins dataset, which has the following structure:
+本教程将向你展示如何查询动态的原生数据集，例如 JSON，并在几分钟内从任意类型的数据中获得有效信息。示例中使用的数据集来自 Yelp 签到数据集，其结构如下：
 
     check-in
     {
@@ -23,32 +23,32 @@ This tutorial shows you how to natively query dynamic datasets, such as JSON, an
         }, # if there was no checkin for a hour-day block it will not be in the dataset
     }
 
-It is worth repeating the comment at the bottom of this snippet:
+请特别注意此段代码底部的注释：
 
        If there was no checkin for a hour-day block it will not be in the dataset. 
 
-The element names that you see in the `checkin_info` are unknown upfront and can vary for every row. The data, although simple, is highly dynamic data. To analyze the data there is no need to first represent this dataset in a flattened relational structure, as you would using any other SQL on Hadoop technology.
+你在 `checkin_info` 中看到的元素名称事先是未知的，并且每行都可能不同。数据虽然简单，但却是高度动态的数据。想要分析数据，无需在 Hadoop 平台上那样，需要先以扁平结构表示数据集，然后才能使用 SQL 类工具。
 
 ----------
 
-Step 1: First download Drill, if you have not yet done so, onto your machine
+第 1 步：首先将 Drill（如果你还没有安装 Drill）下载到你的主机
 
     http://drill.apache.org/download/
     tar -xvf apache-drill-1.19.0.tar
 
-Install Drill locally on your desktop (embedded mode). You don’t need Hadoop.
+本地安装 Drill（嵌入式模式）。并不需要安装 Hadoop。
 
 ----------
 
-Step 2: Start the Drill shell.
+第 2 步：嵌入式启动 Drill 。
 
     bin/drill-embedded
 
 ----------
 
-Step 3: Start analyzing the data using SQL
+第 3 步：开始使用 SQL 分析数据
 
-First, let’s take a look at the dataset:
+首先，让我们查看一下数据集：
 
     0: jdbc:drill:zk=local> SELECT * FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` limit 2;
     |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|------------------------|
@@ -58,13 +58,13 @@ First, let’s take a look at the dataset:
     | {"6-6":2,"6-5":1,"7-6":1,"7-5":1,"8-5":2,"10-5":1,"9-3":1,"12-5":1,"15-3":1,"15-5":1,"15-6":1,"16-3":1,"10-0":1,"15-4":1,"10-4":1,"8-2":1}                                                                                               | checkin    | uGykseHzyS5xAMWoN6YUqA |
     |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|------------------------|
 
-{% include startnote.html %}This document aligns Drill output for example purposes. Drill output is not aligned in this case.{% include endnote.html %}
+{% include startnote.html %}本文档为了展示方便对齐了 Drill 的输出。实际上 Drill 的输出不会这样对齐。{% include endnote.html %}
 
-You query the data in JSON files directly. Schema definitions in Hive store are not necessary. The names of the elements within the `checkin_info` column are different between the first and second row.
+你可以直接查询 JSON 文件中的数据。 不必给 Hive 中的数据定义 schema。`checkin_info` 列中，第一行和第二行之间的元素名称是不同的。
 
-Drill provides a function called KVGEN (Key Value Generator) which is useful when working with complex data that contains arbitrary maps consisting of dynamic and unknown element names such as checkin_info. KVGEN turns the dynamic map into an array of key-value pairs where keys represent the dynamic element names.
+Drill 提供了一个名为 KVGEN（键值生成器）的函数，该函数在处理由动态和未知元素名称（例如 checkin_info）组成的任意映射的复杂数据时非常有用。 KVGEN 将动态映射转换为键值对数组，其中键表示动态元素名称。
 
-Let’s apply KVGEN on the `checkin_info` element to generate key-value pairs.
+让我们在 `checkin_info` 元素上利用 KVGEN 来生成键值对。
 
     0: jdbc:drill:zk=local> SELECT KVGEN(checkin_info) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` LIMIT 2;
     |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -74,7 +74,7 @@ Let’s apply KVGEN on the `checkin_info` element to generate key-value pairs.
     | [{"key":"6-6","value":2},{"key":"6-5","value":1},{"key":"7-6","value":1},{"key":"7-5","value":1},{"key":"8-5","value":2},{"key":"10-5","value":1},{"key":"9-3","value":1},{"key":"12-5","value":1},{"key":"15-3","value":1},{"key":"15-5","value":1},{"key":"15-6","value":1},{"key":"16-3","value":1},{"key":"10-0","value":1},{"key":"15-4","value":1},{"key":"10-4","value":1},{"key":"8-2","value":1}]                                                                                                                                                                                                                                                                               |
     |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
-Drill provides another function to operate on complex data called ‘Flatten’ to break the list of key-value pairs resulting from ‘KVGen’ into separate rows to further apply analytic functions on it.
+Drill 提供了另一个称为 Flatten 函数来处理复杂数据，可以将 KVGen 函数产生的键值对列表分解为单独的行，以进一步对其使用分析函数。
 
     0: jdbc:drill:zk=local> SELECT FLATTEN(KVGEN(checkin_info)) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` LIMIT 20;
     |--------------------------|
@@ -102,11 +102,12 @@ Drill provides another function to operate on complex data called ‘Flatten’ 
     | {"key":"7-6","value":1}  |
     |--------------------------|
 
-You can get value from the data quickly by applying both KVGEN and FLATTEN functions on the datasets on the fly--no need for time-consuming schema definitions and data storage in intermediate formats.
+你可以对数据集使用 KVGEN 和 FLATTEN 函数，来快速从数据中获得有价值的信息——并且无需耗时在 schema 定义和数据存储格式。
 
-On the output of flattened data, you use standard SQL functionality such as filters , aggregates, and sort. Let’s see a few examples.
+在扁平化数据的输出中，你可以使用标准的 SQL 功能，例如过滤器、聚合和排序。让我们看几个例子。
 
-**Get the total number of check-ins recorded in the Yelp dataset**
+
+**获取 Yelp 数据集中签到记录的总数**
 
     0: jdbc:drill:zk=local> SELECT SUM(checkintbl.checkins.`value`) AS TotalCheckins FROM (
     . . . . . . . . . . . >  SELECT FLATTEN(KVGEN(checkin_info)) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` ) checkintbl
@@ -117,7 +118,7 @@ On the output of flattened data, you use standard SQL functionality such as filt
     | 4713811       |
     |---------------|
 
-**Get the number of check-ins specifically for Sunday midnights**
+**获取周日午夜的签到次数**
 
     0: jdbc:drill:zk=local> SELECT SUM(checkintbl.checkins.`value`) AS SundayMidnightCheckins FROM (
     . . . . . . . . . . . >  SELECT FLATTEN(KVGEN(checkin_info)) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` ) checkintbl WHERE checkintbl.checkins.key='23-0';
@@ -127,7 +128,7 @@ On the output of flattened data, you use standard SQL functionality such as filt
     | 8575                   |
     |------------------------|
   
-**Get the number of check-ins per day of the week**  
+**获取一周内每天的签到次数**  
 
     0: jdbc:drill:zk=local> SELECT `right`(checkintbl.checkins.key,1) WeekDay,sum(checkintbl.checkins.`value`) TotalCheckins from (
     . . . . . . . . . . . >  select flatten(kvgen(checkin_info)) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json`  ) checkintbl GROUP BY `right`(checkintbl.checkins.key,1) ORDER BY TotalCheckins;
@@ -143,7 +144,7 @@ On the output of flattened data, you use standard SQL functionality such as filt
     | 5       | 937201        |
     |---------|---------------|
 
-**Get the number of check-ins per hour of the day**
+**获取一天中每小时的签到次数**
 
     0: jdbc:drill:zk=local> SELECT SUBSTR(checkintbl.checkins.key,1,strpos(checkintbl.checkins.key,'-')-1) AS HourOfTheDay ,SUM(checkintbl.checkins.`value`) TotalCheckins FROM (
     . . . . . . . . . . . >  SELECT FLATTEN(KVGEN(checkin_info)) checkins FROM dfs.`/users/nrentachintala/Downloads/yelp/yelp_academic_dataset_checkin.json` ) checkintbl GROUP BY SUBSTR(checkintbl.checkins.key,1,strpos(checkintbl.checkins.key,'-')-1) ORDER BY TotalCheckins;
@@ -178,5 +179,5 @@ On the output of flattened data, you use standard SQL functionality such as filt
 
 ----------
 
-## Summary
-In this tutorial, you surf both structured and semi-structured data without any upfront schema management or ETL.
+## 小结
+在本教程中，学习了如何处理结构化和半结构化数据，而无需定义 schema 或进行 ETL 预处理。
