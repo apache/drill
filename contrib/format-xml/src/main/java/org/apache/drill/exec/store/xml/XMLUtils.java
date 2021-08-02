@@ -84,11 +84,9 @@ public class XMLUtils {
     int index = prefix.lastIndexOf(fieldName);
     if (index <= 0) {
       return "";
-    } else if (index < 0) {
-      return prefix;
+    } else {
+      return prefix.substring(0, index - 1);
     }
-
-    return prefix.substring(0, index-1);
   }
 
   /**
