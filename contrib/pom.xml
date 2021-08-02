@@ -53,6 +53,7 @@
     <module>format-xml</module>
     <module>format-image</module>
     <module>format-pcapng</module>
+    <module>format-regex</module>
     <module>storage-hive</module>
     <module>storage-mongo</module>
     <module>storage-jdbc</module>
