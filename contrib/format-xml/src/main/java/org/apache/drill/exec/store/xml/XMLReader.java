@@ -169,9 +169,10 @@ public class XMLReader {
           continue;
         }
 
-        if (isSelfClosingEvent(currentEvent, nextEvent)) {
+        // Reset the self-closing tag flag.
+        isSelfClosingEvent = isSelfClosingEvent(currentEvent, nextEvent);
+        if (isSelfClosingEvent) {
           logger.debug("Found self closing event!!");
-          isSelfClosingEvent = true;
         }
 
         // Capture the previous and current event
@@ -210,6 +211,8 @@ public class XMLReader {
   private boolean isSelfClosingEvent(XMLEvent e1, XMLEvent e2) {
     // If either event is null return false.
     if (e1 == null || e2 == null) {
+      return false;
+    } else if (XMLUtils.hasAttributes(e1) || XMLUtils.hasAttributes(e2)) {
       return false;
     }
 
@@ -267,7 +270,7 @@ public class XMLReader {
         if (!rowStarted) {
           currentTupleWriter = startRow(rootRowWriter);
         } else {
-          if (lastEvent!= null &&
+          if (lastEvent != null &&
             lastEvent.getEventType() == XMLStreamConstants.START_ELEMENT) {
             /*
              * Check the flag in the next section.  If the next element is a character AND the flag is set,
@@ -326,6 +329,7 @@ public class XMLReader {
         currentNestingLevel--;
 
         if (isSelfClosingEvent) {
+          logger.debug("Closing self-closing event {}. ", fieldName);
           isSelfClosingEvent = false;
           attributePrefix = XMLUtils.removeField(attributePrefix,fieldName);
           break;
@@ -356,7 +360,9 @@ public class XMLReader {
           attributePrefix = XMLUtils.removeField(attributePrefix,fieldName);
 
         } else if (currentState != xmlState.ROW_ENDED) {
-          writeFieldData(fieldName, fieldValue, currentTupleWriter);
+          if ( !isSelfClosingEvent) {
+            writeFieldData(fieldName, fieldValue, currentTupleWriter);
+          }
           // Clear out field name and value
           attributePrefix = XMLUtils.removeField(attributePrefix, fieldName);
 

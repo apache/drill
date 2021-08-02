@@ -87,7 +87,6 @@ public class TestXMLReader extends ClusterTest {
   public void testSelfClosingTags() throws Exception {
     String sql = "SELECT * FROM cp.`xml/weather.xml`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();
     assertEquals(1, results.rowCount());
 
       TupleMetadata expectedSchema = new SchemaBuilder()
