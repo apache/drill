@@ -30,6 +30,8 @@ import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * This class wraps the functionality of the Splunk connection for Drill.
  */
@@ -41,11 +43,13 @@ public class SplunkConnection {
   private final String hostname;
   private final int port;
   private Service service;
+  private int connectionAttempts;
 
   public SplunkConnection(SplunkPluginConfig config) {
     this.credentials = config.getUsernamePasswordCredentials();
     this.hostname = config.getHostname();
     this.port = config.getPort();
+    this.connectionAttempts = config.getReconnectRetries();
     service = connect();
     ConfCollection confs = service.getConfs();
   }
@@ -71,10 +75,18 @@ public class SplunkConnection {
     loginArgs.setPort(port);
     loginArgs.setPassword(credentials.getPassword());
     loginArgs.setUsername(credentials.getUsername());
-
     try {
+      connectionAttempts--;
       service = Service.connect(loginArgs);
     } catch (Exception e) {
+      if(connectionAttempts > 0) {
+        try {
+          TimeUnit.SECONDS.sleep(2);
+        } catch (InterruptedException interruptedException) {
+          logger.error("Unable to wait 2 secs before next connection trey to Splunk");
+        }
+        return connect();
+      }
       throw UserException
         .connectionError()
         .message("Unable to connect to Splunk at %s:%s", hostname, port)

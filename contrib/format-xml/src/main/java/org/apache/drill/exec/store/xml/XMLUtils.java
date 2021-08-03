@@ -82,12 +82,25 @@ public class XMLUtils {
     }
 
     int index = prefix.lastIndexOf(fieldName);
-    if (index == 0) {
+    if (index <= 0) {
       return "";
-    } else if (index < 0) {
-      return prefix;
+    } else {
+      return prefix.substring(0, index - 1);
     }
+  }
 
-    return prefix.substring(0, index-1);
+  /**
+   * Returns true if a given XMLEvent has attributes, false if not. Since only
+   * start elements can by definition have attributes, returns false if the event
+   * is not a start element.
+   * @param event The XMLEvent in question
+   * @return True if the XMLEvent has attributes, false if not.
+   */
+  public static boolean hasAttributes(XMLEvent event) {
+    if (! event.isStartElement()) {
+      return false;
+    } else {
+      return event.asStartElement().getAttributes().hasNext();
+    }
   }
 }

@@ -17,29 +17,44 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
-import java.util.function.Predicate;
-
+import org.apache.calcite.adapter.jdbc.JdbcConvention;
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.store.enumerable.plan.VertexDrel;
 
-final class JdbcIntermediatePrelConverterRule extends ConverterRule {
+class JdbcIntermediatePrelConverterRule extends RelOptRule {
 
-  static final JdbcIntermediatePrelConverterRule INSTANCE = new JdbcIntermediatePrelConverterRule();
+  private final RelTrait inTrait;
+  private final RelTrait outTrait;
 
-  private JdbcIntermediatePrelConverterRule() {
-    super(VertexDrel.class, (Predicate<RelNode>) input -> true, DrillRel.DRILL_LOGICAL,
-        Prel.DRILL_PHYSICAL, DrillRelFactories.LOGICAL_BUILDER, "JDBC_PREL_Converter");
+  public JdbcIntermediatePrelConverterRule(JdbcConvention jdbcConvention) {
+    super(
+        RelOptHelper.some(VertexDrel.class, DrillRel.DRILL_LOGICAL,
+            RelOptHelper.any(RelNode.class, jdbcConvention)),
+        DrillRelFactories.LOGICAL_BUILDER, "JDBC_PREL_Converter" + jdbcConvention);
+
+    this.inTrait = DrillRel.DRILL_LOGICAL;
+    this.outTrait = Prel.DRILL_PHYSICAL;
   }
 
   @Override
-  public RelNode convert(RelNode in) {
-    return new JdbcIntermediatePrel(
+  public void onMatch(RelOptRuleCall call) {
+    VertexDrel in = call.rel(0);
+    RelNode jdbcIntermediatePrel = new JdbcIntermediatePrel(
         in.getCluster(),
-        in.getTraitSet().replace(getOutTrait()),
+        in.getTraitSet().replace(outTrait),
         in.getInput(0));
+    call.transformTo(jdbcIntermediatePrel);
+  }
+
+  @Override
+  public boolean matches(RelOptRuleCall call) {
+    return super.matches(call) && call.rel(0).getTraitSet().contains(inTrait);
   }
 }

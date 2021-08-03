@@ -35,7 +35,7 @@ public class TestXMLUtils {
 
     // Test with missing field
     String test3 = "field_1_field_2_field_3";
-    assertEquals(XMLUtils.removeField(test3, "field_4"), "field_1_field_2_field_3");
+    assertEquals(XMLUtils.removeField(test3, "field_4"), "");
 
     // Test with empty string
     String test4 = "";

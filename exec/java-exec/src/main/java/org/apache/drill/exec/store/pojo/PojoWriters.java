@@ -28,10 +28,12 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.BitVector;
+import org.apache.drill.exec.vector.Float4Vector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableBitVector;
+import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
@@ -59,6 +61,8 @@ public class PojoWriters {
       return new NBigIntWriter(fieldName);
     } else if (type == Boolean.class) {
       return new NBooleanWriter(fieldName);
+    } else if (type == Float.class) {
+      return new NFloatWriter(fieldName);
     } else if (type == Double.class) {
       return new NDoubleWriter(fieldName);
     } else if (type.isEnum()) {
@@ -72,6 +76,8 @@ public class PojoWriters {
       // primitives
     } else if (type == int.class) {
       return new IntWriter(fieldName);
+    } else if (type == float.class) {
+      return new FloatWriter(fieldName);
     } else if (type == double.class) {
       return new DoubleWriter(fieldName);
     } else if (type == boolean.class) {
@@ -130,6 +136,21 @@ public class PojoWriters {
 
   }
 
+  /**
+   * Pojo writer for float. Does not expect to write null value.
+   */
+  public static class FloatWriter extends AbstractPojoWriter<Float4Vector> {
+
+    public FloatWriter(String fieldName) {
+      super(fieldName, Types.required(MinorType.FLOAT4));
+    }
+
+    @Override
+    public void writeField(Object value, int outboundIndex) {
+      vector.getMutator().setSafe(outboundIndex, (float) value);
+    }
+
+  }
   /**
    * Pojo writer for double. Does not expect to write null value.
    */
@@ -276,6 +297,24 @@ public class PojoWriters {
     public void writeField(Object value, int outboundIndex) {
       if (value != null) {
         vector.getMutator().setSafe(outboundIndex, (Boolean) value ? 1 : 0);
+      }
+    }
+
+  }
+
+  /**
+   * Pojo writer for Float. If null is encountered does not write it.
+   */
+  public static class NFloatWriter extends AbstractPojoWriter<NullableFloat4Vector> {
+
+    public NFloatWriter(String fieldName) {
+      super(fieldName, Types.optional(MinorType.FLOAT4));
+    }
+
+    @Override
+    public void writeField(Object value, int outboundIndex) {
+      if (value != null) {
+        vector.getMutator().setSafe(outboundIndex, (Float) value);
       }
     }
 

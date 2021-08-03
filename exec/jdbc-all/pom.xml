@@ -176,6 +176,10 @@
           <groupId>org.honton.chas.hocon</groupId>
           <artifactId>jackson-dataformat-hocon</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.owasp.encoder</groupId>
+          <artifactId>encoder</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -262,7 +266,7 @@
             -XX:MaxDirectMemorySize=3072M
             -XX:+CMSClassUnloadingEnabled -ea</argLine>
           <additionalClasspathElements>
-            <additionalClasspathElements>${settings.localRepository}/junit/junit/${junit.version}/junit-${junit.version}.jar</additionalClasspathElements>
+            <additionalClasspathElements>${settings.localRepository}/org/junit/vintage/junit-vintage-engine/${junit.version}/junit-vintage-engine-${junit.version}.jar</additionalClasspathElements>
             <additionalClasspathElements>${settings.localRepository}/org/hamcrest/hamcrest/${hamcrest.version}/hamcrest-${hamcrest.version}.jar</additionalClasspathElements>
             <additionalClasspathElements>${project.build.directory}/test-classes/</additionalClasspathElements>
           </additionalClasspathElements>

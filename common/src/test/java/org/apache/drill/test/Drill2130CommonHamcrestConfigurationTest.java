@@ -17,20 +17,20 @@
  */
 package org.apache.drill.test;
 
-import org.junit.Test;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
-public class Drill2130CommonHamcrestConfigurationTest extends BaseTest {
+import org.junit.jupiter.api.Test;
+
+class Drill2130CommonHamcrestConfigurationTest extends BaseTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drill2130CommonHamcrestConfigurationTest.class);
 
   @SuppressWarnings("unused")
   private org.hamcrest.MatcherAssert forCompileTimeCheckForNewEnoughHamcrest;
 
   @Test
-  public void testJUnitHamcrestMatcherFailureWorks() {
+  void testJUnitHamcrestMatcherFailureWorks() {
     try {
       assertThat( 1, equalTo( 2 ) );
     }

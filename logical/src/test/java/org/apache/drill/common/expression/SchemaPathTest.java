@@ -18,43 +18,43 @@
 package org.apache.drill.common.expression;
 
 import org.apache.drill.test.BaseTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class SchemaPathTest extends BaseTest {
+class SchemaPathTest extends BaseTest {
 
   @Test
-  public void testUnIndexedWithOutArray() {
+  void testUnIndexedWithOutArray() {
     SchemaPath oneElementSchema = SchemaPath.parseFromString("`a`");
-    assertEquals("Schema path should match", oneElementSchema, oneElementSchema.getUnIndexed());
+    assertEquals(oneElementSchema, oneElementSchema.getUnIndexed(), "Schema path should match");
 
     SchemaPath severalElementsSchema = SchemaPath.parseFromString("`a`.`b`.`c`");
-    assertEquals("Schema path should match", severalElementsSchema, severalElementsSchema.getUnIndexed());
+    assertEquals(severalElementsSchema, severalElementsSchema.getUnIndexed(), "Schema path should match");
   }
 
   @Test
-  public void testUnIndexedEndingWithArray() {
+  void testUnIndexedEndingWithArray() {
     SchemaPath schemaPath = SchemaPath.parseFromString("`a`.`b`[0]");
-    assertEquals("Schema path should match", SchemaPath.parseFromString("`a`.`b`"), schemaPath.getUnIndexed());
+    assertEquals(SchemaPath.parseFromString("`a`.`b`"), schemaPath.getUnIndexed(), "Schema path should match");
   }
 
   @Test
-  public void testUnIndexedArrayInTheMiddle() {
+  void testUnIndexedArrayInTheMiddle() {
     SchemaPath schemaPath = SchemaPath.parseFromString("`a`.`b`[0].`c`.`d`");
-    assertEquals("Schema path should match", SchemaPath.parseFromString("`a`.`b`.`c`.`d`"), schemaPath.getUnIndexed());
+    assertEquals(SchemaPath.parseFromString("`a`.`b`.`c`.`d`"), schemaPath.getUnIndexed(), "Schema path should match");
   }
 
   @Test
-  public void testUnIndexedMultipleArrays() {
+  void testUnIndexedMultipleArrays() {
     SchemaPath schemaPath = SchemaPath.parseFromString("`a`.`b`[0][1].`c`.`d`[2][0]");
-    assertEquals("Schema path should match", SchemaPath.parseFromString("`a`.`b`.`c`.`d`"), schemaPath.getUnIndexed());
+    assertEquals(SchemaPath.parseFromString("`a`.`b`.`c`.`d`"), schemaPath.getUnIndexed(), "Schema path should match");
   }
 
   @Test
-  public void testCompoundPathN() {
+  void testCompoundPathN() {
     SchemaPath schemaPath = SchemaPath.getCompoundPath(3, "a", "b", "c", "d", "e");
-    assertEquals("Schema path should match", SchemaPath.getCompoundPath("a", "b", "c"), schemaPath);
+    assertEquals(SchemaPath.getCompoundPath("a", "b", "c"), schemaPath, "Schema path should match");
   }
 }
 

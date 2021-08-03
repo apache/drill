@@ -67,7 +67,7 @@ public class ShowTablesHandler extends DefaultSqlHandler {
 
       if (schemaPlus == null) {
         throw UserException.validationError()
-            .message(String.format("Invalid schema name [%s]", SchemaUtilites.getSchemaPath(schemaNames)))
+            .message("Invalid schema name [%s]", SchemaUtilites.getSchemaPath(schemaNames))
             .build(logger);
       }
 

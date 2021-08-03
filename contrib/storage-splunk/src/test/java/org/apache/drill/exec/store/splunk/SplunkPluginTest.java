@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.splunk;
 
+import com.splunk.Service;
+import com.splunk.ServiceArgs;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
@@ -30,10 +32,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
+import static org.apache.drill.exec.store.splunk.SplunkTestSuite.SPLUNK_STORAGE_PLUGIN_CONFIG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.times;
 
 @FixMethodOrder(MethodSorters.JVM)
 @Category({SlowTest.class})
@@ -289,5 +295,26 @@ public class SplunkPluginTest extends SplunkBaseTest {
     String plan = queryBuilder().sql(sql).explainJson();
     int cnt = queryBuilder().physical(plan).singletonInt();
     assertEquals("Counts should match", 1, cnt);
+  }
+
+  @Test
+  public void testReconnectRetries() {
+    try (MockedStatic<Service> splunk = Mockito.mockStatic(Service.class)) {
+      ServiceArgs loginArgs = new ServiceArgs();
+      loginArgs.setHost(SPLUNK_STORAGE_PLUGIN_CONFIG.getHostname());
+      loginArgs.setPort(SPLUNK_STORAGE_PLUGIN_CONFIG.getPort());
+      loginArgs.setPassword(SPLUNK_STORAGE_PLUGIN_CONFIG.getPassword());
+      loginArgs.setUsername(SPLUNK_STORAGE_PLUGIN_CONFIG.getUsername());
+      splunk.when(() -> Service.connect(loginArgs))
+          .thenThrow(new RuntimeException("Fail first connection to Splunk"))
+          .thenThrow(new RuntimeException("Fail second connection to Splunk"))
+          .thenThrow(new RuntimeException("Fail third connection to Splunk"))
+          .thenReturn(new Service(loginArgs)); // fourth connection is successful
+      new SplunkConnection(SPLUNK_STORAGE_PLUGIN_CONFIG); // it will fail, in case "reconnectRetries": 1 is specified in configs
+      splunk.verify(
+          () -> Service.connect(loginArgs),
+          times(4)
+      );
+    }
   }
 }

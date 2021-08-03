@@ -3531,6 +3531,39 @@ public class TestMetastoreCommands extends ClusterTest {
     run("analyze table dfs.%s.%s refresh metadata", workspaceName, tableName);
   }
 
+  @Test
+  public void testAnalyzeAllTypes7kRows() throws Exception {
+    // DRILL-7968.
+
+    // enable CROSS JOIN
+    client.alterSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName(), false);
+    String tableName = "alltypes_7k";
+    // create a ~7k row table with the schema of alltypes_optional.parquet
+    run("create table dfs.tmp.%s as select a.* from cp.`parquet/alltypes_optional.parquet` a cross join cp.`employee.json` e", tableName);
+
+    try {
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
+
+      String query = "select * from dfs.tmp.`%s`";
+
+      queryBuilder()
+          .sql(query, tableName)
+          .planMatcher()
+          .include("usedMetastore=true")
+          .match();
+
+    } finally {
+      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
+      run("drop table if exists dfs.tmp.`%s`", tableName);
+      client.resetSession(PlannerSettings.NLJOIN_FOR_SCALAR.getOptionName());
+    }
+  }
+
   public static <T> ColumnStatistics<T> getColumnStatistics(T minValue, T maxValue,
       long rowCount, TypeProtos.MinorType minorType) {
     return new ColumnStatistics<>(
