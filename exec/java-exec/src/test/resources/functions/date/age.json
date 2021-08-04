@@ -42,7 +42,24 @@
     }, {
       "ref" : "TS4",
       "expr" : "age(cast('1997-12-17 17:17:27' as timestamp), cast('2001-03-20 23:37:54' as timestamp))"
-    } ]
+    }, {
+      "ref" : "TS5",
+      "expr" : "select age(timestamp '2021-02-01 00:29:00', timestamp '2021-01-31 23:30:00')"
+    }, {
+      "ref" : "UD1",
+      "expr" : "age(current_date)"
+    }, {
+      "ref" : "UTS1",
+      "expr" : "age(cast(current_date as timestamp))"
+    }, {
+      "ref" : "UD2",
+      "expr" : "age(current_date + 3)"
+    }, {
+      "ref" : "UTS2",
+      "expr" : "select age(current_date - interval '3' day + interval '1' hour - interval '30' minute)"
+    }
+
+    ]
   }, {
     "@id" : 3,
     "child" : 2,
