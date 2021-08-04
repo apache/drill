@@ -20,9 +20,6 @@ package org.apache.drill.exec.vector;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.time.ZoneId;
 
 import org.joda.time.Period;
 
@@ -216,27 +213,11 @@ public class DateUtilities {
     return LocalDate.ofEpochDay(value / daysToStandardMillis);
   }
 
-  /**
-   * Convert to seconds since the _local_ Unix epoch, midnight 1970-01-01
-   * in the configured time zone.
-   * @param instant an Instant representing a moment in time.
-   * @param zoneId Drill's configured time zone.
-   * @return the Drill timestamp value corresponding to instant.
-   */
-  public static long toDrillTimestamp(Instant instant, ZoneId zoneId) {
-    LocalDateTime ldt = instant.atZone(zoneId).toLocalDateTime();
-    return ldt.atZone(ZoneId.of("UTC")).toEpochSecond()*1000;
+  public static long toDrillTimestamp(Instant instant) {
+    return instant.toEpochMilli();
   }
 
-  /**
-   * Convert from seconds since the _local_ Unix epoch, midnight 1970-01-01
-   * in the configured time zone.
-   * @param value a Drill timestamp in milliseconds
-   * @param zoneId Drill's configured time zone.
-   * @return an Instant corresponding to the the Drill timestamp in value.
-   */
-  public static Instant fromDrillTimestamp(long value, ZoneId zoneId) {
-     ZonedDateTime zdt = Instant.ofEpochMilli(value).atZone(ZoneId.of("UTC"));
-     return zdt.toLocalDateTime().atZone(zoneId).toInstant();
+  public static Instant fromDrillTimestamp(long value) {
+    return Instant.ofEpochMilli(value);
   }
 }
