@@ -180,6 +180,10 @@
           <groupId>org.owasp.encoder</groupId>
           <artifactId>encoder</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-compress</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
