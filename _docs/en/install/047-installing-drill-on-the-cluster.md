@@ -16,7 +16,7 @@ You install Drill on nodes in the cluster, configure a cluster ID, and add Zooke
 
 ### (Optional) Create the site directory
 
-The site directory contains your site-specific files for Drill.  Putting these in a separate directory to the Drill installation means that upgrading Drill will not clobber your configuration and custom code.  It is possible to skip this step, meaning that your configuration and custom code will live in the `$DRILL_HOME/conf` and `$DRILL_HOME/jars/3rdparty` subdirectories respectively.
+The site directory contains your site-specific files for Drill.  Putting these in a separate directory to the Drill installation means that upgrading Drill will not overwrite your configuration and custom code.  It is possible to skip this step, meaning that your configuration and custom code will live in the `$DRILL_HOME/conf` and `$DRILL_HOME/jars/3rdparty` subdirectories respectively.
 
 Create the site directory in a suitable location, e.g.
 
