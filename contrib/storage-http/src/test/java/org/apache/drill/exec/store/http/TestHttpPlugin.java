@@ -113,10 +113,6 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig pokemonConfig = new HttpApiConfig("https://pokeapi.co/api/v2/pokemon/{pokemon_name}", "get", null, "none", null, null, null, null, null, false, "json", 1, false);
-    HttpApiConfig pokemonConfigWithParams = new HttpApiConfig("https://pokeapi.co/api/v2/pokemon/{pokemon_name}", "get", null, "none", null, null, null, Collections.emptyList(),
-      null,
-      false, "json", 1,
-      false);
 
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
@@ -124,7 +120,6 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("sunrise", sunriseConfig);
     configs.put("sunrise2", sunriseWithParamsConfig);
     configs.put("pokemon", pokemonConfig);
-    configs.put("pokemon2", pokemonConfigWithParams);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 10, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
@@ -313,7 +308,7 @@ public class TestHttpPlugin extends ClusterTest {
    * As above, but we return only the contents of {@code results}, and use
    * filter push-down for the arguments.
    *
-   * @throws Exception
+   * @throws Exception if anything goes wrong
    */
   @Test
   @Ignore("Requires Remote Server")
@@ -380,16 +375,14 @@ public class TestHttpPlugin extends ClusterTest {
   }
 
   @Test
+  @Ignore("Requires Remote Server")
   public void liveTestWithURLParameters() throws Exception {
-    String sql = "SELECT * FROM live.pokemon2 WHERE pokemon_name = 'ditto'";
-    RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();
-
-    //#: `abilities` ARRAY<STRUCT<`ability` STRUCT<`name` VARCHAR, `url` VARCHAR>, `is_hidden` BOOLEAN, `slot` BIGINT>>, `base_experience` BIGINT, `forms` ARRAY<STRUCT<`name`
-    // VARCHAR, `url` VARCHAR>>, `game_indices` ARRAY<STRUCT<`game_index` BIGINT, `version` STRUCT<`name` VARCHAR, `url` VARCHAR>>>, `height` BIGINT, `held_items` ARRAY<STRUCT<`item` STRUCT<`name` VARCHAR, `url` VARCHAR>, `version_details` ARRAY<STRUCT<`rarity` BIGINT, `version` STRUCT<`name` VARCHAR, `url` VARCHAR>>>>>, `id` BIGINT, `is_default` BOOLEAN, `location_area_encounters` VARCHAR, `moves` ARRAY<STRUCT<`move` STRUCT<`name` VARCHAR, `url` VARCHAR>, `version_group_details` ARRAY<STRUCT<`level_learned_at` BIGINT, `move_learn_method` STRUCT<`name` VARCHAR, `url` VARCHAR>, `version_group` STRUCT<`name` VARCHAR, `url` VARCHAR>>>>>, `name` VARCHAR, `order` BIGINT, `species` STRUCT<`name` VARCHAR, `url` VARCHAR>, `sprites` STRUCT<`back_default` VARCHAR, `back_shiny` VARCHAR, `front_default` VARCHAR, `front_shiny` VARCHAR, `other` STRUCT<`dream_world` STRUCT<`front_default` VARCHAR, `front_female` VARCHAR>, `official-artwork` STRUCT<`front_default` VARCHAR>>, `versions` STRUCT<`generation-i` STRUCT<`red-blue` STRUCT<`back_default` VARCHAR, `back_gray` VARCHAR, `front_default` VARCHAR, `front_gray` VARCHAR>, `yellow` STRUCT<`back_default` VARCHAR, `back_gray` VARCHAR, `front_default` VARCHAR, `front_gray` VARCHAR>>, `generation-ii` STRUCT<`crystal` STRUCT<`back_default` VARCHAR, `back_shiny` VARCHAR, `front_default` VARCHAR, `front_shiny` VARCHAR>, `gold` STRUCT<`back_default` VARCHAR, `back_shiny` VARCHAR, `front_default` VARCHAR, `front_shiny` VARCHAR>, `silver` STRUCT<`back_default` VARCHAR, `back_shiny` VARCHAR, `front_default` VARCHAR, `front_shiny` VARCHAR>>, `generation-iii` STRUCT<`emerald` STRUCT<`front_default` VARCHAR, `front_shiny` VARCHAR>, `firered-leafgreen` STRUCT<`back_default` VARCHAR, `back_shiny` VARCHAR, `front_default` VARCHAR, `front_shiny` VARCHAR>, `ruby-sapphire` STRUCT<`back_default` VARCHAR, `back_shiny` VARCHAR, `front_default` VARCHAR, `front_shiny` VARCHAR>>, `generation-iv` STRUCT<`diamond-pearl` STRUCT<`back_default` VARCHAR, `back_shiny` VARCHAR, `front_default` VARCHAR, `front_shiny` VARCHAR, `back_female` VARCHAR, `back_shiny_female` VARCHAR, `front_female` VARCHAR, `front_shiny_female` VARCHAR>, `heartgold-soulsilver` STRUCT<`back_default` VARCHAR, `back_shiny` VARCHAR, `front_default` VARCHAR, `front_shiny` VARCHAR, `back_female` VARCHAR, `back_shiny_female` VARCHAR, `front_female` VARCHAR, `front_shiny_female` VARCHAR>, `platinum` STRUCT<`back_default` VARCHAR, `back_shiny` VARCHAR, `front_default` VARCHAR, `front_shiny` VARCHAR, `back_female` VARCHAR, `back_shiny_female` VARCHAR, `front_female` VARCHAR, `front_shiny_female` VARCHAR>>, `generation-v` STRUCT<`black-white` STRUCT<`animated` STRUCT<`back_default` VARCHAR, `back_shiny` VARCHAR, `front_default` VARCHAR, `front_shiny` VARCHAR, `back_female` VARCHAR, `back_shiny_female` VARCHAR, `front_female` VARCHAR, `front_shiny_female` VARCHAR>, `back_default` VARCHAR, `back_shiny` VARCHAR, `front_default` VARCHAR, `front_shiny` VARCHAR, `back_female` VARCHAR, `back_shiny_female` VARCHAR, `front_female` VARCHAR, `front_shiny_female` VARCHAR>>, `generation-vi` STRUCT<`omegaruby-alphasapphire` STRUCT<`front_default` VARCHAR, `front_shiny` VARCHAR, `front_female` VARCHAR, `front_shiny_female` VARCHAR>, `x-y` STRUCT<`front_default` VARCHAR, `front_shiny` VARCHAR, `front_female` VARCHAR, `front_shiny_female` VARCHAR>>, `generation-vii` STRUCT<`icons` STRUCT<`front_default` VARCHAR, `front_female` VARCHAR>, `ultra-sun-ultra-moon` STRUCT<`front_default` VARCHAR, `front_shiny` VARCHAR, `front_female` VARCHAR, `front_shiny_female` VARCHAR>>, `generation-viii` STRUCT<`icons` STRUCT<`front_default` VARCHAR, `front_female` VARCHAR>>>, `back_female` VARCHAR, `back_shiny_female` VARCHAR, `front_female` VARCHAR, `front_shiny_female` VARCHAR>, `stats` ARRAY<STRUCT<`base_stat` BIGINT, `effort` BIGINT, `stat` STRUCT<`name` VARCHAR, `url` VARCHAR>>>, `types` ARRAY<STRUCT<`slot` BIGINT, `type` STRUCT<`name` VARCHAR, `url` VARCHAR>>>, `weight` BIGINT, `past_types` ARRAY<VARCHAR>
-
+    String sql = "SELECT * FROM live.pokemon WHERE pokemon_name = 'ditto'";
+    client.testBuilder()
+      .sqlQuery(sql)
+      .expectsNumRecords(1)
+      .go();
   }
-
 
   @Test
   public void simpleTestWithMockServerWithURLParams() throws Exception {
