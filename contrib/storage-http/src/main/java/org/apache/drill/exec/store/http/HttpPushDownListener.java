@@ -34,7 +34,6 @@ import org.apache.drill.exec.store.base.filter.FilterPushDownStrategy;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
