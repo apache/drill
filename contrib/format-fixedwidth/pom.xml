@@ -19,66 +19,63 @@
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>drill-contrib-parent</artifactId>
+    <groupId>org.apache.drill.contrib</groupId>
+    <version>1.20.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>drill-format-fixedwidth</artifactId>
+  <name>Drill : Contrib : Format : Fixedwidth</name>
 
-    <parent>
-        <artifactId>drill-contrib-parent</artifactId>
-        <groupId>org.apache.drill.contrib</groupId>
-        <version>1.20.0-SNAPSHOT</version>
-    </parent>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+        <artifactId>drill-java-exec</artifactId>
+        <version>${project.version}</version>
+    </dependency>
 
-    <artifactId>drill-format-fixedwidth</artifactId>
-    <name>Drill : Contrib : Format : Fixedwidth</name>
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-java-exec</artifactId>
+      <classifier>tests</classifier>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-common</artifactId>
+      <classifier>tests</classifier>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-java-sources</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/org/apache/drill/exec/store/fixedwidth
+              </outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/java/org/apache/drill/exec/store/fixedwidth</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.drill.exec</groupId>
-            <artifactId>drill-java-exec</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.apache.drill.exec</groupId>
-            <artifactId>drill-java-exec</artifactId>
-            <classifier>tests</classifier>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.drill</groupId>
-            <artifactId>drill-common</artifactId>
-            <classifier>tests</classifier>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-java-sources</id>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${basedir}/target/classes/org/apache/drill/exec/store/fixedwidth
-                            </outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/main/java/org/apache/drill/exec/store/fixedwidth</directory>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

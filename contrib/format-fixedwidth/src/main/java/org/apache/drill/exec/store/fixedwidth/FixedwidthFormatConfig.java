@@ -39,9 +39,9 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
   @JsonCreator
   public FixedwidthFormatConfig(@JsonProperty("extensions") List<String> extensions,
                                 @JsonProperty("fields") List<FixedwidthFieldConfig> fields) {
-    this.extensions = extensions == null ? Collections.singletonList("sav") : ImmutableList.copyOf(extensions);
+    this.extensions = extensions == null ? Collections.singletonList("fwf") : ImmutableList.copyOf(extensions);
     this.fields = fields;
-  } //Change this
+  }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
   public List<String> getExtensions() {
@@ -51,10 +51,6 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
   public List<FixedwidthFieldConfig> getFields() {
     return fields;
   }
-
-//  public FixedwidthReaderConfig getReaderConfig(FixedwidthFormatPlugin plugin) {
-//    return new FixedwidthReaderConfig(plugin);
-//  }
 
   @Override
   public int hashCode() {
