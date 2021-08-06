@@ -484,10 +484,9 @@
           <groupId>org.apache.hbase</groupId>
           <artifactId>hbase-protocol</artifactId>
         </dependency>
-
         <dependency>
           <groupId>org.apache.drill.contrib</groupId>
-          <artifactId>drill-format-regex</artifactId>
+          <artifactId>drill-format-msaccess</artifactId>
           <version>${project.version}</version>
         </dependency>
       </dependencies>
