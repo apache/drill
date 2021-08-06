@@ -120,7 +120,6 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("sunrise", sunriseConfig);
     configs.put("sunrise2", sunriseWithParamsConfig);
     configs.put("pokemon", pokemonConfig);
-    configs.put("pokemon2", pokemonConfigWithParams);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 10, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
