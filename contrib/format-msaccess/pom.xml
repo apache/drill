@@ -37,10 +37,11 @@
       <version>${project.version}</version>
     </dependency>
 
+    <!-- https://mvnrepository.com/artifact/com.healthmarketscience.jackcess/jackcess -->
     <dependency>
-      <groupId>net.sf.ucanaccess</groupId>
-      <artifactId>ucanaccess</artifactId>
-      <version>4.0.4</version>
+      <groupId>com.healthmarketscience.jackcess</groupId>
+      <artifactId>jackcess</artifactId>
+      <version>4.0.1</version>
     </dependency>
 
     <!-- Test dependencies -->

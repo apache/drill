@@ -27,7 +27,6 @@
   import org.apache.drill.common.logical.FormatPluginConfig;
   import org.apache.drill.common.types.TypeProtos;
   import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-  import org.apache.drill.exec.store.msaccess.MsaccessBatchReader.MsaccessReaderConfig;
 
   import java.util.Collections;
   import java.util.List;
@@ -62,6 +61,14 @@
       this.currencyFormat = currencyFormat;
 
     }
+    public MsaccessFormatConfig(@JsonProperty("extensions") List<String> extensions) {
+      this.extensions = extensions == null ? Collections.singletonList("accdb") : ImmutableList.copyOf(extensions);
+      this.tableNames = null;
+      this.dataType = null;
+      this.headerName = null;
+      this.dateTimeFormat = null;
+      this.currencyFormat = null;
+    }
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     //accessor method for each column header
@@ -89,8 +96,8 @@
       return currencyFormat;
     }
 
-    public MsaccessReaderConfig getReaderConfig(MsaccessFormatPlugin plugin) {
-      MsaccessReaderConfig readerConfig = new MsaccessReaderConfig(plugin);
+    public MsaccessBatchReader.MsaccessReaderConfig getReaderConfig(MsaccessFormatPlugin plugin) {
+      MsaccessBatchReader.MsaccessReaderConfig readerConfig = new MsaccessBatchReader.MsaccessReaderConfig(plugin);
       return readerConfig;
     }
 
