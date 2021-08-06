@@ -89,8 +89,10 @@ public class HttpPushDownListener implements FilterPushDownListener {
     HttpScanPushDownListener(HttpGroupScan groupScan) {
       this.groupScan = groupScan;
       // Add fields from config
-      for (String field : groupScan.getHttpConfig().params()) {
-        filterParams.put(field, field);
+      if (groupScan.getHttpConfig().params() != null) {
+        for (String field : groupScan.getHttpConfig().params()) {
+          filterParams.put(field, field);
+        }
       }
 
       // Add fields from the URL path as denoted by {}

@@ -28,7 +28,7 @@ import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.http.HttpApiConfig;
@@ -394,11 +394,11 @@ public class SimpleHttp {
    * @return A string of the URL with the URL parameters replaced by filter values
    */
   public static String mapURLParameters(HttpUrl url, Map<String, String> filters) {
-    if (! hasURLParameters(url)) {
+    if (!hasURLParameters(url)) {
       return url.toString();
     }
 
-    CaseInsensitiveMap<String,String> caseInsensitiveFilterMap = (CaseInsensitiveMap<String, String>)filters;
+    CaseInsensitiveMap<String>caseInsensitiveFilterMap = (CaseInsensitiveMap<String>)filters;
 
     List<String> params = SimpleHttp.getURLParameters(url);
     String tempUrl = SimpleHttp.decodedURL(url);

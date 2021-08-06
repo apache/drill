@@ -139,7 +139,8 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     }
 
     // Add URL Parameters to baseURL
-    baseUrl = SimpleHttp.mapURLParameters(HttpUrl.parse(baseUrl), subScan.filters());
+    HttpUrl parsedURL = HttpUrl.parse(baseUrl);
+    baseUrl = SimpleHttp.mapURLParameters(parsedURL, subScan.filters());
 
     HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder();
     if (apiConfig.params() != null && !apiConfig.params().isEmpty() &&
