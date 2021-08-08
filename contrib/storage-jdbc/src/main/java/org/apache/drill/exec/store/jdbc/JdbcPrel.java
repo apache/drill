@@ -39,6 +39,8 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.store.SubsetRemover;
+import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseConstant;
+import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseJdbcImplementor;
 
 /**
  * Represents a JDBC Plan once the children nodes have been rewritten into SQL.
@@ -56,9 +58,15 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
 
     // generate sql for tree.
     final SqlDialect dialect = convention.getPlugin().getDialect();
-    final JdbcImplementor jdbcImplementor = new JdbcImplementor(
-        dialect,
+    final JdbcImplementor jdbcImplementor;
+    if (convention.getPlugin().getConfig().getUrl().toLowerCase()
+      .startsWith(ClickhouseConstant.JDBC_CLICKHOUSE_PREFIX)) {
+      jdbcImplementor = new ClickhouseJdbcImplementor(dialect,
         (JavaTypeFactory) getCluster().getTypeFactory());
+    } else {
+      jdbcImplementor = new JdbcImplementor(dialect,
+        (JavaTypeFactory) getCluster().getTypeFactory());
+    }
     final JdbcImplementor.Result result =
         jdbcImplementor.visitChild(0, input.accept(SubsetRemover.INSTANCE));
     sql = result.asStatement().toSqlString(dialect).getSql();

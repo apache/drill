@@ -33,6 +33,7 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
+import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseConstant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,11 +54,12 @@ class JdbcCatalogSchema extends AbstractSchema {
     try (Connection con = source.getConnection();
          ResultSet set = con.getMetaData().getCatalogs()) {
       connectionSchemaName = con.getSchema();
-      while (set.next()) {
-        final String catalogName = set.getString(1);
-        CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(
-            getSchemaPath(), catalogName, source, dialect, convention, catalogName, null, caseSensitive);
-        schemaMap.put(schema.getName(), schema);
+      if (!ClickhouseConstant.PRODUCT_NAME.equals(con.getMetaData().getDatabaseProductName())) {
+        while (set.next()) {
+          final String catalogName = set.getString(1);
+          CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(getSchemaPath(), catalogName, source, dialect, convention, catalogName, null, caseSensitive);
+          schemaMap.put(schema.getName(), schema);
+        }
       }
     } catch (SQLException e) {
       logger.warn("Failure while attempting to load JDBC schema.", e);
@@ -67,7 +69,8 @@ class JdbcCatalogSchema extends AbstractSchema {
     if (schemaMap.isEmpty()) {
 
       // try to add a list of schemas to the schema map.
-      boolean schemasAdded = addSchemas(source, dialect, convention, caseSensitive);
+      boolean schemasAdded = addSchemas(source, dialect, convention,
+        caseSensitive, true);
 
       if (!schemasAdded) {
         // there were no schemas, just create a default one (the jdbc system doesn't support catalogs/schemas).
@@ -75,7 +78,7 @@ class JdbcCatalogSchema extends AbstractSchema {
       }
     } else {
       // We already have catalogs. Add schemas in this context of their catalogs.
-      addSchemas(source, dialect, convention, caseSensitive);
+      addSchemas(source, dialect, convention, caseSensitive, false);
     }
 
     defaultSchema = determineDefaultSchema(connectionSchemaName);
@@ -98,7 +101,9 @@ class JdbcCatalogSchema extends AbstractSchema {
     }
   }
 
-  private boolean addSchemas(DataSource source, SqlDialect dialect, DrillJdbcConvention convention, boolean caseSensitive) {
+  private boolean addSchemas(DataSource source, SqlDialect dialect,
+                             DrillJdbcConvention convention,
+                             boolean caseSensitive, boolean isFirstLevel) {
     boolean added = false;
     try (Connection con = source.getConnection();
          ResultSet set = con.getMetaData().getSchemas()) {
@@ -108,7 +113,7 @@ class JdbcCatalogSchema extends AbstractSchema {
 
         String parentKey = StringUtils.lowerCase(catalogName);
         CapitalizingJdbcSchema parentSchema = schemaMap.get(parentKey);
-        if (parentSchema == null) {
+        if (parentSchema == null || isFirstLevel) {
           CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(getSchemaPath(), schemaName, source, dialect,
               convention, catalogName, schemaName, caseSensitive);
 
