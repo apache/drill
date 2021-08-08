@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.test.BaseTest;
 import org.junit.AfterClass;
@@ -25,8 +28,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.testcontainers.containers.CassandraContainer;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Category(SlowTest.class)
 @RunWith(Suite.class)
@@ -65,7 +66,10 @@ public class TestCassandraSuit extends BaseTest {
 
   private static void startCassandra() {
     cassandra = new CassandraContainer<>("cassandra")
-        .withInitScript("queries.cql");
+      .withInitScript("queries.cql")
+      .withStartupTimeout(Duration.ofMinutes(2))
+      .withEnv("CASSANDRA_SNITCH", "GossipingPropertyFileSnitch") // Tune Cassandra options for faster startup
+      .withEnv("JVM_OPTS", "-Dcassandra.skip_wait_for_gossip_to_settle=0 -Dcassandra.initial_token=0");
     cassandra.start();
   }
 }
