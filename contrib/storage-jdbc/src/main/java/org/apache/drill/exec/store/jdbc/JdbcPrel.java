@@ -40,6 +40,7 @@ import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.store.SubsetRemover;
 import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseConstant;
+import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseDialect;
 import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseJdbcImplementor;
 
 /**
@@ -57,13 +58,15 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
     convention = (DrillJdbcConvention) input.getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
 
     // generate sql for tree.
-    final SqlDialect dialect = convention.getPlugin().getDialect();
+    final SqlDialect dialect;
     final JdbcImplementor jdbcImplementor;
     if (convention.getPlugin().getConfig().getUrl().toLowerCase()
       .startsWith(ClickhouseConstant.JDBC_CLICKHOUSE_PREFIX)) {
+      dialect = ClickhouseDialect.DEFAULT;
       jdbcImplementor = new ClickhouseJdbcImplementor(dialect,
         (JavaTypeFactory) getCluster().getTypeFactory());
     } else {
+      dialect = convention.getPlugin().getDialect();
       jdbcImplementor = new JdbcImplementor(dialect,
         (JavaTypeFactory) getCluster().getTypeFactory());
     }
