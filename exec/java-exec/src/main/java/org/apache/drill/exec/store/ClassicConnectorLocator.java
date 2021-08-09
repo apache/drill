@@ -234,7 +234,6 @@ public class ClassicConnectorLocator implements ConnectorLocator {
    * {@link ExecConstants#BOOTSTRAP_FORMAT_PLUGINS_FILE} files for the first
    * fresh install of Drill.
    *
-   * @param lpPersistence deserialization mapper provider
    * @return bootstrap storage plugins
    * @throws IOException if a read error occurs
    */

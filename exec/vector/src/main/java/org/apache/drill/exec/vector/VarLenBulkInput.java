@@ -33,7 +33,6 @@ public interface VarLenBulkInput<T extends VarLenBulkEntry> extends Iterator<T> 
    * Indicates we're done processing (processor might stop processing when memory buffers
    * are depleted); this allows caller to re-submit any unprocessed data.
    *
-   * @param numCommitted number of processed entries
    */
   void done();
 

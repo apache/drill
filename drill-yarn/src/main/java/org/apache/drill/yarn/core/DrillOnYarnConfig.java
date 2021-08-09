@@ -786,7 +786,6 @@ public class DrillOnYarnConfig {
    * root and/or cluster ID (just not the same combination), so the file name
    * contains both parts.
    *
-   * @param clusterId
    * @return
    */
 

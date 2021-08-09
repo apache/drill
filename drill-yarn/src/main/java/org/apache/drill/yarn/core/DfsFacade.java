@@ -291,12 +291,12 @@ public class DfsFacade {
    * <p>
    * Resources are made public.
    *
-   * @param conf
-   *          Configuration created from the Hadoop config files, in this case,
-   *          identifies the target file system.
-   * @param resourcePath
+   * @param dfsPath
    *          the path (relative or absolute) to the file on the configured file
    *          system (usually HDFS).
+   * @param dfsFileStatus
+   * @param type
+   * @param visibility
    * @return a YARN local resource records that contains information about path,
    *         size, type, resource and so on that YARN requires.
    * @throws IOException

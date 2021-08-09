@@ -123,7 +123,7 @@ public class ColumnBuilder {
    * and manages the column.
    *
    * @param parent schema of the new primitive column
-   * @param colProj implied projection type for the column
+   * @param columnSchema implied projection type for the column
    * @return column state for the new column
    */
   private ColumnState buildPrimitive(ContainerState parent, ColumnMetadata columnSchema) {
@@ -189,7 +189,7 @@ public class ColumnBuilder {
    * map vector (or vector container) until harvest time.
    *
    * @param parent description of the map column
-   * @param colProj implied projection type for the column
+   * @param columnSchema implied projection type for the column
    * @return column state for the map column
    */
   private ColumnState buildMap(ContainerState parent, ColumnMetadata columnSchema) {
@@ -310,7 +310,7 @@ public class ColumnBuilder {
    * does so. Unions are fully tested in the row set writer mechanism.
    *
    * @param parent container
-   * @param colProj column schema
+   * @param columnSchema column schema
    * @return column
    */
   private ColumnState buildUnion(ContainerState parent, ColumnMetadata columnSchema) {
@@ -368,7 +368,7 @@ public class ColumnBuilder {
    * not support the {@code ListVector</tt> type.
    *
    * @param parent the parent (tuple, union or list) that holds this list
-   * @param colProj metadata description of the list which must contain
+   * @param columnSchema metadata description of the list which must contain
    * exactly one subtype
    * @return the column state for the list
    */
@@ -418,7 +418,7 @@ public class ColumnBuilder {
    * not support the {@code ListVector} type.
    *
    * @param parent the parent (tuple, union or list) that holds this list
-   * @param colProj metadata description of the list (must be empty of
+   * @param columnSchema description of the list (must be empty of
    * subtypes)
    * @return the column state for the list
    */

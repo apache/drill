@@ -128,7 +128,7 @@ public class FooterGatherer {
   /**
    * An updated footer reader that tries to read the entire footer without knowing the length.
    * This should reduce the amount of seek/read roundtrips in most workloads.
-   * @param fs
+   * @param config
    * @param status
    * @return
    * @throws IOException

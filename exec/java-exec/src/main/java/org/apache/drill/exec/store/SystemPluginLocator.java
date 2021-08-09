@@ -55,10 +55,6 @@ public class SystemPluginLocator implements ConnectorLocator {
    * Will skip plugin initialization if no matching constructor, incorrect
    * class implementation, name absence are detected.
    *
-   * @param classpathScan
-   *          classpath scan result
-   * @param context
-   *          drillbit context
    * @return map with system plugins stored by name
    */
   @Override

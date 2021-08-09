@@ -101,7 +101,6 @@ public class JSONRecordReader extends AbstractRecordReader {
   /**
    * Create a JSON Record Reader that uses an InputStream directly
    * @param fragmentContext The Drill Fragmement
-   * @param inputStream The inputStream from which data will be received
    * @param columns  pathnames of columns/subfields to read
    * @throws OutOfMemoryException
    */

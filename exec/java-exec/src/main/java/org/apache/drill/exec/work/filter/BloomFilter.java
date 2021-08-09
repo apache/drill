@@ -156,8 +156,8 @@ public class BloomFilter {
    * Calculate optimal size according to the number of distinct values and false positive probability.
    * See http://en.wikipedia.org/wiki/Bloom_filter#Probability_of_false_positives for the formula.
    *
-   * @param ndv: The number of distinct values.
-   * @param fpp: The false positive probability.
+   * @param ndv The number of distinct values.
+   * @param fpp The false positive probability.
    * @return optimal number of bytes of given ndv and fpp.
    */
   public static int optimalNumOfBytes(long ndv, double fpp) {

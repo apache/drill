@@ -296,7 +296,8 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
    * A child column of a map is not projected. Recurse to determine the full
    * set of nullable child columns.
    *
-   * @param projectedColumn the map column which was projected
+   * @param outputTuple
+   * @param col the map column which was projected
    * @return a list of null markers for the requested children
    */
 

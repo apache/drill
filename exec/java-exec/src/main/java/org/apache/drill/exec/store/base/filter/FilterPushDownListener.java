@@ -43,7 +43,7 @@ import org.apache.drill.exec.store.base.filter.ExprNode.AndNode;
  * <dl>
  * <p>
  * In both cases, the conditions are in the form of a
- * {@link ColRelOpConst} in which one side refers to a column in the scan
+ * {@link  } in which one side refers to a column in the scan
  * and the other is a constant expression. The "driver" will ensure
  * the rel op is of the correct form; this class ensures that the
  * column is valid for the scan and the type of the value matches the
@@ -100,10 +100,6 @@ public interface FilterPushDownListener {
      * If so, return an equivalent RelOp with the value normalized to what
      * the plugin needs. The returned value may be the same as the original
      * one if the value is already normalized.
-     *
-     * @param groupScan the scan element. Use {@code scan.getGroupScan()}
-     * to get the group scan
-     * @param relOp the description of the relational operator expression
      * @return a normalized RelOp if this relop can be transformed into a filter
      * push-down, @{code null} if not and thus the relop should remain in
      * the Drill plan
@@ -126,13 +122,7 @@ public interface FilterPushDownListener {
      * to leave in the query. Those terms can be the ones passed in, or
      * new terms to handle special needs.
      *
-     * @param groupScan the scan node
-     * @param andTerms a list of the CNF (AND) terms, in which each is given
-     * by the Calcite AND node and the derived RelOp expression.
-     * @param orTerm the DNF (OR) term, if any, that includes the Calcite
-     * node for that term and the set of OR terms. Only provided if the OR
-     * term represents a simple list of values (all OR clauses are on the
-     * same column). The OR term itself is AND'ed with the CNF terms.
+     * @param expr
      * @return a pair of elements: a new scan (that represents the pushed filters),
      * and the original or new expression to appear in the WHERE clause
      * joined by AND with any non-candidate expressions. That is, if analysis

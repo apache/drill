@@ -97,7 +97,6 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
    * Sets up projection that will transfer all of the columns in batch, and also setup
    * the partition column based on which partition a record falls into
    *
-   * @param batch
    * @throws SchemaChangeException
    * @return True if the new schema differs from old schema, False otherwise
    */

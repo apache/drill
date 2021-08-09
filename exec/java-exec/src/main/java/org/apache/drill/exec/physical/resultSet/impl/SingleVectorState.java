@@ -258,10 +258,12 @@ public abstract class SingleVectorState implements VectorState {
    * row, or for some previous row, depending on exactly when and where the
    * overflow occurs.
    *
-   * @param sourceStartIndex the index of the row that caused the overflow, the
+   * sourceStartIndex: the index of the row that caused the overflow, the
    * values of which should be copied to a new "look-ahead" vector. If the
    * vector is an array, then the overflowIndex is the position of the first
    * element to be moved, and multiple elements may need to move
+   *
+   * @param cardinality
    */
 
   @Override

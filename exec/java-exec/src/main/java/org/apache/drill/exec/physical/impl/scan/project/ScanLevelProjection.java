@@ -233,7 +233,7 @@ public class ScanLevelProjection {
      * comes from the query planner, assumes that the planner has checked
      * the list for syntax and uniqueness.
      *
-     * @param queryCols list of columns in the SELECT list in SELECT list order
+     * @param projectionList list of columns in the SELECT list in SELECT list order
      * @return this builder
      */
     public Builder projection(List<SchemaPath> projectionList) {
