@@ -159,8 +159,8 @@ public abstract class ColumnReader<V extends ValueVector> {
     try {
       readField(recordsToRead);
 
-      valuesReadInCurrentPass += recordsReadInThisIteration;
-      pageReader.valuesRead += recordsReadInThisIteration;
+      valuesReadInCurrentPass += (int)recordsReadInThisIteration;
+      pageReader.valuesRead += (int)recordsReadInThisIteration;
       pageReader.readPosInBytes = readStartInBytes + readLength;
     } catch (Exception e) {
       UserException ex = UserException.dataReadError(e)
@@ -181,7 +181,6 @@ public abstract class ColumnReader<V extends ValueVector> {
    * Return value indicates if we have finished a row group and should stop reading
    *
    * @param recordsReadInCurrentPass
-   * @param lengthVarFieldsInCurrentRecord
    * @return - true if we should stop reading
    * @throws IOException
    */

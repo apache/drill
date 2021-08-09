@@ -51,7 +51,8 @@ public interface IndexGroupScan extends GroupScan {
 
   /**
    * Get the row count after applying the {@link RexNode} condition
-   * @param condition, filter to apply
+   * @param condition filter to apply
+   * @param scanRel
    * @return row count post filtering
    */
   @JsonIgnore

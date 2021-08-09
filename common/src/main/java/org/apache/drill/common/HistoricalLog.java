@@ -119,16 +119,10 @@ public class HistoricalLog {
    * events with their stack traces.
    *
    * @param sb {@link StringBuilder} to write to
-   * @param additional an extra string that will be written between the identifying
-   *     information and the history; often used for a current piece of state
-   */
-
-  /**
-   *
-   * @param sb
-   * @param indexLevel
+   * @param indent
    * @param includeStackTrace
    */
+
   public synchronized void buildHistory(final StringBuilder sb, int indent, boolean includeStackTrace) {
     final char[] indentation = new char[indent];
     final char[] innerIndentation = new char[indent + 2];

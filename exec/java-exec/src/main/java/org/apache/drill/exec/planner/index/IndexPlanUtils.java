@@ -73,7 +73,7 @@ public class IndexPlanUtils {
   /**
    * Check if any of the fields of the index are present in a list of LogicalExpressions supplied
    * as part of IndexableExprMarker
-   * @param exprMarker, the marker that has analyzed original index condition on top of original scan
+   * @param exprMarker the marker that has analyzed original index condition on top of original scan
    * @param indexDesc
    * @return ConditionIndexed.FULL, PARTIAL or NONE depending on whether all, some or no columns
    * of the indexDesc are present in the list of LogicalExpressions supplied as part of exprMarker
