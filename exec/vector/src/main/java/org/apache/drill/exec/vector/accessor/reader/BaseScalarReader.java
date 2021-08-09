@@ -73,26 +73,20 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
    */
   public interface BufferAccessor {
     DrillBuf buffer();
-    void rebind();
   }
 
   private static class SingleVectorBufferAccessor implements BufferAccessor {
     private final VectorAccessor va;
-    private DrillBuf buffer;
 
     public SingleVectorBufferAccessor(VectorAccessor va) {
       this.va = va;
-      rebind();
     }
 
     @Override
-    public void rebind() {
+    public DrillBuf buffer() {
       BaseDataValueVector vector = va.vector();
-      buffer = vector.getBuffer();
+      return vector.getBuffer();
     }
-
-    @Override
-    public DrillBuf buffer() { return buffer; }
   }
 
   private static class HyperVectorBufferAccessor implements BufferAccessor {
@@ -107,9 +101,6 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
       BaseDataValueVector vector = vectorAccessor.vector();
       return vector.getBuffer();
     }
-
-    @Override
-    public void rebind() { }
   }
 
   protected ColumnMetadata schema;
@@ -168,7 +159,6 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
 
   @Override
   public void bindBuffer() {
-    bufferAccessor.rebind();
     nullStateReader.bindBuffer();
   }
 
