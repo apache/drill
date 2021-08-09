@@ -31,8 +31,9 @@ public class JdbcDoubleWriter extends JdbcColumnWriter {
 
   @Override
   public void load(ResultSet results) throws SQLException {
+    // clickhouse requires getting the column before checking nullability
+    double value = results.getDouble(columnIndex);
     if (!results.wasNull()) {
-      double value = results.getDouble(columnIndex);
       columnWriter.setDouble(value);
     }
   }

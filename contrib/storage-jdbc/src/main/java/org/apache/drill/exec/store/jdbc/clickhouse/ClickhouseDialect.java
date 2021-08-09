@@ -2,13 +2,11 @@ package org.apache.drill.exec.store.jdbc.clickhouse;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlBasicTypeNameSpec;
-import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlUserDefinedTypeNameSpec;
 import org.apache.calcite.sql.SqlWriter;
-import org.apache.calcite.sql.fun.SqlRandFunction;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.BasicSqlType;
 
@@ -29,17 +27,8 @@ public class ClickhouseDialect extends SqlDialect {
   }
 
   @Override
-  public boolean supportsOffsetFetch() {
-    return false;
-  }
-
-  @Override
-  public void unparseCall(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
-    if (call.getOperator() instanceof SqlRandFunction) {
-      writer.print(" rand() ");
-    } else {
-      super.unparseCall(writer, call, leftPrec, rightPrec);
-    }
+  public void unparseOffsetFetch(SqlWriter writer, SqlNode offset, SqlNode fetch) {
+    unparseFetchUsingLimit(writer, offset, fetch);
   }
 
   @Override

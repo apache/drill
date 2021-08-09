@@ -31,8 +31,9 @@ public class JdbcBitWriter extends JdbcColumnWriter {
 
   @Override
   public void load(ResultSet results) throws SQLException {
-    if (! results.wasNull()) {
-      boolean value = results.getBoolean(columnIndex);
+    // clickhouse requires getting the column before checking nullability
+    boolean value = results.getBoolean(columnIndex);
+    if (!results.wasNull()) {
       columnWriter.setBoolean(value);
     }
   }
