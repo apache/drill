@@ -48,7 +48,6 @@ public interface QueryResourceAllocator {
    * Provide the manager with the physical plan and node assignments
    * for the query to be run. This class will plan memory for the query.
    *
-   * @param plan
    * @param work
    */
 

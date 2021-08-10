@@ -185,7 +185,7 @@ public class DrillControllerFactory implements ControllerFactory {
    * This class is very Linux-specific. The usual adjustments must be made to
    * adapt it to Windows.
    *
-   * @param config
+   * @param resources
    * @return
    * @throws DoyConfigException
    */

@@ -42,8 +42,6 @@ public interface QueryQueue {
     /**
      * Release a query lease obtained from {@link #queue(QueryId, double))}.
      * Should be called by the per-query resource manager.
-     *
-     * @param lease the lease to be released.
      */
 
     void release();
