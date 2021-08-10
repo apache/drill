@@ -232,7 +232,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
    * The corresponding metadata must already have been added to the schema.
    * Called by the shim's <tt>addMember</tt> to do writer-level tasks.
    *
-   * @param colWriter the column writer to add
+   * @param writer the column writer to add
    */
 
   protected void addMember(AbstractObjectWriter writer) {

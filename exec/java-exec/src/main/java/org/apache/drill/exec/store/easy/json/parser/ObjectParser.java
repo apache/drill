@@ -158,7 +158,8 @@ public abstract class ObjectParser extends AbstractElementParser {
    * <li>{@code foo: []}</li>
    * </ul>
    *
-   * @param field description of the field, including the field name
+   * @param key
+   * @param tokenizer
    * @return a parser for the newly-created field
    */
   protected abstract ElementParser onField(String key, TokenIterator tokenizer);

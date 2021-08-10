@@ -69,8 +69,7 @@ public class GraphAlgos {
      *
      * @param graph
      *          The adjacency list for the DAG.
-     * @param sourceNodes
-     *          List of nodes that
+     * @param reverse
      * @return
      */
     static <V extends GraphValue<V>> List<AdjacencyList<V>.Node> sortInternal(AdjacencyList<V> graph, boolean reverse) {

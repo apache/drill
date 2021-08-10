@@ -141,8 +141,6 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
    * both the table and scan operator. Returns the result set loader to be used
    * by the reader to write to the table's value vectors.
    *
-   * @param schemaNegotiator builder given to the reader to provide it's
-   * schema information
    * @return the result set loader to be used by the reader
    */
   @Override
