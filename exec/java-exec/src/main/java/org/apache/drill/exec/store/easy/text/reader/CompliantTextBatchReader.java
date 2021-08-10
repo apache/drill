@@ -86,8 +86,7 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
    * Performs the initial setup required for the record reader.
    * Initializes the input stream, handling of the output record batch
    * and the actual reader to be used.
-   * @param errorContext  operator context from which buffer's will be allocated and managed
-   * @param outputMutator  Used to create the schema in the output record batch
+   * @param schemaNegotiator Used to create the schema in the output record batch
    */
   @Override
   public boolean open(ColumnsSchemaNegotiator schemaNegotiator) {
@@ -128,7 +127,6 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
    * Extract header and use that to define the reader schema.
    *
    * @param schemaNegotiator used to define the reader schema
-   * @param providedHeaders "artificial" headers created from a
    * provided schema, if any. Used when using a provided schema
    * with a text file that contains no headers; ignored for
    * text file with headers

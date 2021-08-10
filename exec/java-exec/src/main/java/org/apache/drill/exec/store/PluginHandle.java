@@ -129,7 +129,6 @@ public class PluginHandle {
    * time if the plugin creates a connection to another system, especially if that system
    * suffers timeouts.
    *
-   * @param context the context to use for creating a new instance, if needed
    * @return the initialized storage plugin
    * @throws UserException if the storage plugin creation failed due to class errors
    * (unlikely) or external system errors (more likely)
