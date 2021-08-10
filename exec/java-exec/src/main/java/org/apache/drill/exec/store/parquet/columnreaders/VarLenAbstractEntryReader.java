@@ -35,9 +35,8 @@ abstract class VarLenAbstractEntryReader {
   /**
    * CTOR.
    * @param buffer byte buffer for data buffering (within CPU cache)
-   * @param pageInfo page being processed information
-   * @param columnPrecInfo column precision information
    * @param entry reusable bulk entry object
+   * @param containerCallback
    */
   VarLenAbstractEntryReader(ByteBuffer buffer,
     VarLenColumnBulkEntry entry,
@@ -49,7 +48,7 @@ abstract class VarLenAbstractEntryReader {
   }
 
   /**
-   * @param valuesToRead maximum values to read within the current page
+   * @param valsToReadWithinPage maximum values to read within the current page
    * @return a bulk entry object
    */
   abstract VarLenColumnBulkEntry getEntry(int valsToReadWithinPage);

@@ -49,7 +49,8 @@ public final class RecordBatchStats {
     private final String contextOperatorId;
 
     /**
-     * @param options options manager
+     * @param context
+     * @param oContext
      */
     public RecordBatchStatsContext(FragmentContext context, OperatorContext oContext) {
       final boolean operatorEnabledForStatsLogging = isBatchStatsEnabledForOperator(context, oContext);
@@ -300,7 +301,7 @@ public final class RecordBatchStats {
   /**
    * Constructs record batch statistics for the input record batch
    *
-   * @param stats instance identifier
+   * @param statsId instance identifier
    * @param ioType whether a record batch is an input or/and output
    * @param sourceId optional source identifier for scanners
    * @param batchSizer contains batch sizing information

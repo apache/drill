@@ -91,9 +91,9 @@ public final class BatchSizingMemoryUtil {
   /**
    * Load memory usage information for a variable length value vector
    *
-   * @param vector source value vector
+   * @param sourceVector source value vector
    * @param currValueCount current value count
-   * @param vectorMemory result object which contains source vector memory usage information
+   * @param vectorMemoryUsage result object which contains source vector memory usage information
    */
   public static void getMemoryUsage(ValueVector sourceVector,
     int currValueCount,
@@ -223,7 +223,7 @@ public final class BatchSizingMemoryUtil {
   }
 
   /**
-   * @param fixed column's metadata
+   * @param column column's metadata
    * @param valueCount number of column values
    * @return memory size required to store "valueCount" within a value vector
    */
@@ -243,7 +243,7 @@ public final class BatchSizingMemoryUtil {
   }
 
   /**
-   * @param variable length column's metadata
+   * @param column length column's metadata
    * @param averagePrecision VL column average precision
    * @param valueCount number of column values
    * @return memory size required to store "valueCount" within a value vector

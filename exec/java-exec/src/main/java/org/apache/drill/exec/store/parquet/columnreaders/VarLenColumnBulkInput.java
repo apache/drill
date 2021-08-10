@@ -75,7 +75,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
    * CTOR.
    * @param parentInst parent object instance
    * @param recordsToRead number of records to read
-   * @param columnPrecInfo column precision information
+   * @param bulkReaderState
    * @throws IOException runtime exception in case of processing error
    */
   VarLenColumnBulkInput(VarLengthValuesColumn<V> parentInst,
@@ -720,8 +720,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
     /**
      * Set the {@link PageReader#dictionaryValueReader} object; if a null value is passed, then it is understood
      * the current page doesn't use dictionary encoding
-     * @param valuesReader {@link ValuesReader} object
-     * @param numValues total number of values that can be read from the stream
+     * @param _rawReader {@link ValuesReader} object
      */
     void set(ValuesReader _rawReader) {
       this.valuesReader    = _rawReader;

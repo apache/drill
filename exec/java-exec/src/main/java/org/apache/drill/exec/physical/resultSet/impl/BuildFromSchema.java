@@ -264,7 +264,7 @@ public class BuildFromSchema {
    * it may have may layers of other repeated lists before we get to the element
    * (inner-most) array.
    *
-   * @param writer tuple writer for the tuple that holds the array
+   * @param parent tuple writer for the tuple that holds the array
    * @param colSchema schema definition of the array
    */
 
