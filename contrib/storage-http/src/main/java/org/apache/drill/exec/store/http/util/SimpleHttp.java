@@ -370,11 +370,8 @@ public class SimpleHttp {
     String decodedURL = decodedURL(url);
     Matcher matcher = URL_PARAM_REGEX.matcher(decodedURL);
     List<String> parameters = new ArrayList<>();
-    String param;
     while (matcher.find()) {
-      param = matcher.group();
-      param = param.replace("{", "");
-      param = param.replace("}", "");
+      String param = matcher.group(1);
       parameters.add(param);
     }
     return parameters;
