@@ -44,6 +44,13 @@ public class ${className} {
 <#list dateIntervalFunc.dates as fromUnit>
 <#list dateIntervalFunc.dates as toUnit>
 
+  /**
+   * Binary form, returns the interval between `right` and `left`.
+   * Note that this function does not count calendar boundary crossings,
+   * e.g. between yesterday 23:00 and today 01:00 is two hours, not one day.
+   * Modeled on the AGE function in PostgreSQL, see
+   * https://www.postgresql.org/docs/current/functions-datetime.html.
+   */
   @FunctionTemplate(name = "age",
                     scope = FunctionTemplate.FunctionScope.SIMPLE,
                     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
@@ -72,6 +79,14 @@ public class ${className} {
     }
   }
 </#list>
+  /**
+   * Unary form, subtracts `right` from midnight so equivalent to
+   * `select age(current_date, right)`.
+   * Note that this function does not count calendar boundary crossings,
+   * e.g. between yesterday 23:00 and today 01:00 is two hours, not one day.
+   * Modeled on the AGE function in PostgreSQL, see
+   * https://www.postgresql.org/docs/current/functions-datetime.html.
+   */
   @FunctionTemplate(name = "age",
                     scope = FunctionTemplate.FunctionScope.SIMPLE,
                     nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
