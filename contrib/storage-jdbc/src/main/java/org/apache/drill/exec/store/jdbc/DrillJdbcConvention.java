@@ -41,7 +41,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 /**
  * Convention with set of rules to register for jdbc plugin
  */
-class DrillJdbcConvention extends JdbcConvention {
+public class DrillJdbcConvention extends JdbcConvention {
 
   /**
    * Unwanted Calcite's JdbcRules are filtered out using this set

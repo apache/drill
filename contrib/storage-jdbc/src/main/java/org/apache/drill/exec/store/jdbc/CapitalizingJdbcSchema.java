@@ -35,7 +35,7 @@ import org.apache.drill.exec.store.AbstractSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class CapitalizingJdbcSchema extends AbstractSchema {
+public class CapitalizingJdbcSchema extends AbstractSchema {
 
   private static final Logger logger = LoggerFactory.getLogger(CapitalizingJdbcSchema.class);
 
@@ -43,7 +43,8 @@ class CapitalizingJdbcSchema extends AbstractSchema {
   private final JdbcSchema inner;
   private final boolean caseSensitive;
 
-  CapitalizingJdbcSchema(List<String> parentSchemaPath, String name, DataSource dataSource,
+  public CapitalizingJdbcSchema(List<String> parentSchemaPath, String name,
+                          DataSource dataSource,
                          SqlDialect dialect, JdbcConvention convention, String catalog, String schema, boolean caseSensitive) {
     super(parentSchemaPath, name);
     this.schemaMap = new HashMap<>();

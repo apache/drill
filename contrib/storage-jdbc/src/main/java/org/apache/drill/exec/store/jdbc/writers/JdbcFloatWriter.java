@@ -31,7 +31,7 @@ public class JdbcFloatWriter extends JdbcColumnWriter {
 
   @Override
   public void load(ResultSet results) throws SQLException {
-    // clickhouse requires getting the column before checking nullability
+    // JDBC reports nullability only after getting the column value.
     float value = results.getFloat(columnIndex);
     if (!results.wasNull()) {
       columnWriter.setFloat(value);
