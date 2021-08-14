@@ -72,25 +72,11 @@ public class ${className} {
     <#elseif unit == "Week">
       out.value = (right.value - left.value) / 604800000; // 7 * 24 * 60 * 60 * 1000
     <#elseif unit == "Month" || unit == "Quarter" || unit == "Year">
-      long timeMilliseconds = left.value % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis
-          - right.value % org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
 
-      java.time.Period between = java.time.Period.between(
-          java.time.Instant.ofEpochMilli(left.value).atZone(java.time.ZoneOffset.UTC).toLocalDate(),
-          java.time.Instant.ofEpochMilli(right.value).atZone(java.time.ZoneOffset.UTC).toLocalDate());
-      int days = between.getDays();
-      if (timeMilliseconds < 0 && days > 0) {
-        // in the case of negative time value increases left operand days value
-        between = java.time.Period.between(
-            java.time.Instant.ofEpochMilli(left.value + org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis).atZone(java.time.ZoneOffset.UTC).toLocalDate(),
-            java.time.Instant.ofEpochMilli(right.value).atZone(java.time.ZoneOffset.UTC).toLocalDate());
-      } else if (timeMilliseconds > 0 && days < 0) {
-        // in the case of negative days value decreases it for the right operand
-        between = java.time.Period.between(
-            java.time.Instant.ofEpochMilli(left.value - org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis).atZone(java.time.ZoneOffset.UTC).toLocalDate(),
-            java.time.Instant.ofEpochMilli(right.value).atZone(java.time.ZoneOffset.UTC).toLocalDate());
-      }
-      int months = between.getMonths() + between.getYears() * org.apache.drill.exec.vector.DateUtilities.yearsToMonths;
+      java.time.LocalDateTime from = java.time.Instant.ofEpochMilli(left.value).atZone(java.time.ZoneOffset.UTC).toLocalDateTime();
+      java.time.LocalDateTime to = java.time.Instant.ofEpochMilli(right.value).atZone(java.time.ZoneOffset.UTC).toLocalDateTime();
+
+      int months = (int) from.until(to, java.time.temporal.ChronoUnit.MONTHS);
 
         <#if unit == "Month">
       out.value = months;

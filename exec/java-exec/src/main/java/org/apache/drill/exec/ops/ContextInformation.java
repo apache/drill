@@ -19,6 +19,9 @@ package org.apache.drill.exec.ops;
 
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
+import java.time.Instant;
+import java.time.ZoneId;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
 /**
  * Provides query context information (such as query start time, query user, default schema etc.) for UDFs.
@@ -53,17 +56,25 @@ public class ContextInformation {
   }
 
   /**
-   * @return Query start time in milliseconds
+   * @return Query start time in Unix time (ms)
    */
   public long getQueryStartTime() {
     return queryStartTime;
   }
 
   /**
-   * @return Time zone.
+   * @return Query start time as an Instant
    */
-  public int getRootFragmentTimeZone() {
-    return rootFragmentTimeZone;
+  public Instant getQueryStartInstant() {
+    return Instant.ofEpochMilli(queryStartTime);
+  }
+
+  /**
+   * @return Query time zone as a ZoneId
+   */
+  public ZoneId getRootFragmentTimeZone() {
+    String zoneId = DateUtility.getTimeZone(rootFragmentTimeZone);
+    return ZoneId.of(zoneId);
   }
 
   /**
