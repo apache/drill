@@ -27,10 +27,6 @@ import org.apache.calcite.sql.SqlIdentifier;
 
 import java.util.Iterator;
 
-/**
- * @author feiteng.wtf
- * @date 2021-07-26
- */
 public class ClickhouseJdbcImplementor extends JdbcImplementor {
   public ClickhouseJdbcImplementor(SqlDialect dialect,
                                    JavaTypeFactory typeFactory) {

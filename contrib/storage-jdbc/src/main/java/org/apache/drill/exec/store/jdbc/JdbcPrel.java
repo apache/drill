@@ -17,13 +17,6 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-
-import java.util.List;
-import org.apache.calcite.adapter.java.JavaTypeFactory;
-import org.apache.calcite.adapter.jdbc.JdbcImplementor;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
@@ -31,17 +24,17 @@ import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.store.SubsetRemover;
-import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseConstant;
-import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseDialect;
-import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseJdbcImplementor;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Represents a JDBC Plan once the children nodes have been rewritten into SQL.
@@ -56,23 +49,7 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
     final RelNode input = prel.getInput();
     rows = input.estimateRowCount(cluster.getMetadataQuery());
     convention = (DrillJdbcConvention) input.getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
-
-    // generate sql for tree.
-    final SqlDialect dialect;
-    final JdbcImplementor jdbcImplementor;
-    if (convention.getPlugin().getConfig().getUrl().toLowerCase()
-      .startsWith(ClickhouseConstant.JDBC_CLICKHOUSE_PREFIX)) {
-      dialect = ClickhouseDialect.DEFAULT;
-      jdbcImplementor = new ClickhouseJdbcImplementor(dialect,
-        (JavaTypeFactory) getCluster().getTypeFactory());
-    } else {
-      dialect = convention.getPlugin().getDialect();
-      jdbcImplementor = new JdbcImplementor(dialect,
-        (JavaTypeFactory) getCluster().getTypeFactory());
-    }
-    final JdbcImplementor.Result result =
-        jdbcImplementor.visitChild(0, input.accept(SubsetRemover.INSTANCE));
-    sql = result.asStatement().toSqlString(dialect).getSql();
+    sql = JdbcSqlGenerator.generateSql(convention.getPlugin(), getCluster(), input);
     rowType = input.getRowType();
   }
 
