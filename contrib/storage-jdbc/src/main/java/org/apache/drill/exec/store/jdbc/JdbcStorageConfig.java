@@ -96,6 +96,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
     return new UsernamePasswordCredentials(credentialsProvider);
   }
 
+  @JsonIgnore
   public boolean isClickhouse() {
     return url.startsWith(JDBC_CLICKHOUSE_PREFIX);
   }
