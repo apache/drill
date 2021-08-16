@@ -5,25 +5,25 @@ parent: "教程"
 lang: "zh"
 ---
 
-This tutorial briefly introduces the analytics in Drill 1.2, namely ANSI SQL-compliant analytic and window functions. Drill supports the following SQL window functions:
+本教程简要介绍了 Drill 1.2 中的分析工具，也就是符合 ANSI 标准的 SQL 分析工具和窗口函数。Drill 支持以下 SQL 窗口函数：
 
-* PARTITION BY and OVER clauses
-* A variety of aggregated window functions for Sum, Max, Min, Count, Avg
-* Analytic functions such as First_Value, Last_Value, Lead, Lag, NTile, Row_Number, and Rank
+* PARTITION BY 和 OVER 字句
+* 针对 Sum, Max, Min, Count, Avg 的多种聚合窗口函数 
+* 分析函数如 First_Value, Last_Value, Lead, Lag, NTile, Row_Number 和 Rank
 
-Window functions are highly versatile. You can reduce the joins, subqueries, and explicit cursors that you need to write. Window functions solve a variety of use cases with minimal coding effort.
+窗口函数是高度通用的。你可以避免很多连接、子查询和显式游标的查询。窗口函数以最少的代码量解决了多种问题。
 
-This tutorial builds on previous tutorials, [Analyzing the Yelp Academic Dataset]({{site.baseurl}}/docs/analyzing-the-yelp-academic-dataset/) and [Analyzing Highly Dynamic Datasets]({{site.baseurl}}/docs/analyzing-highly-dynamic-datasets/), and uses the same Yelp dataset. 
+本教程建立在之前教程的基础上，[分析 Yelp 学术数据集]({{site.baseurl}}/docs/analyzing-the-yelp-academic-dataset/) 和 [分析高动态数据集]({{site.baseurl}}/docs/analyzing-highly-dynamic-datasets/)， 使用了相同的 Yelp 数据集。 
 
 ----------
 
-## Getting Started
+## 准备开始
 
-1. To get started, download the [Yelp](http://www.yelp.com/dataset_challenge) (business reviews) now. 
+1. 下载 Yelp 商家评价数据集 [Yelp](http://www.yelp.com/dataset_challenge)。 
 
-2. [Install and start Drill]({{site.baseurl}}/docs/analyzing-the-yelp-academic-dataset/#installing-and-starting-drill). 
+2. [安装并启动 Drill]({{site.baseurl}}/docs/analyzing-the-yelp-academic-dataset/#installing-and-starting-drill). 
 
-3. List the available schemas in Drill.
+3. 列出 Drill 中可用的 schema。
 
         SHOW schemas;
         |---------------------|
@@ -40,7 +40,7 @@ This tutorial builds on previous tutorials, [Analyzing the Yelp Academic Dataset
 
         7 rows selected (1.755 seconds)
 
-4. Switch to using the workspace in which Yelp data is loaded.
+4. 切换到加载 Yelp 数据的工作区。
 
         USE dfs.yelp;
 
@@ -52,7 +52,7 @@ This tutorial builds on previous tutorials, [Analyzing the Yelp Academic Dataset
 
         1 row selected (0.129 seconds)
 
-5. Start with exploring one of the datasets available in Yelp dataset - the business information.
+5. 首先分析 Yelp 数据集中的可用数据集的 - 业务信息。
 
         SELECT * FROM `business.json` LIMIT 1;
 
@@ -65,9 +65,9 @@ This tutorial builds on previous tutorials, [Analyzing the Yelp Academic Dataset
 
 ----------
 
-## Use Window Functions for Simple Queries
+## 使用窗口函数来简单查询
 
-1. Get the top Yelp businesses based on the number reviews in each city and the row number of the business.
+1. 根据每个城市的评论数量和商家的行号，获取排名靠前的 Yelp 商家
 
         SELECT name, city, review_count, row_number()
         OVER (PARTITION BY city ORDER BY review_count DESC) AS rownum 
@@ -94,7 +94,7 @@ This tutorial builds on previous tutorials, [Analyzing the Yelp Academic Dataset
         |----------------------------------------|------------|---------------|---------|
         15 rows selected (0.67 seconds)
 
-2. Check the number reviews for each business compared to the average number of reviews across all business in the city.
+2. 对比每个商家的评论数量与所在城市中所有商家的平均评论数量。
 
         SELECT name, city,review_count,
         Avg(review_count) OVER (PARTITION BY City) AS city_reviews_avg
@@ -121,7 +121,7 @@ This tutorial builds on previous tutorials, [Analyzing the Yelp Academic Dataset
         |----------------------------------------|------------|---------------|---------------------|
         15 rows selected (0.395 seconds)
 
-3. Check how the number of reviews for each business contribute to the total number of reviews for all businesses in the city.
+3. 对比每个商家的评论数量与所在城市中所有商家的评论总数。
 
         SELECT name, city,review_count,
         Sum(review_count) OVER (PARTITION BY City) AS city_reviews_sum
@@ -151,9 +151,9 @@ This tutorial builds on previous tutorials, [Analyzing the Yelp Academic Dataset
 
 ----------
 
-## Use Window Functions for Complex Queries
+## 对复杂查询使用窗口函数
 
-1. List Top 10 cities and their highest ranked businesses in terms of number of reviews. Use Drill window functions such as rank, dense_rank in these queries.
+1. 列出评论数排名前 10 的城市以及该城市中排名最高的商家。在这些查询中使用 Drill 窗口函数，例如 rank、dense_rank。
 
         WITH X
         AS
@@ -182,7 +182,7 @@ This tutorial builds on previous tutorials, [Analyzing the Yelp Academic Dataset
         |-------------------------------------------|-------------|---------------|
         10 rows selected (0.49 seconds)
 
-2. Compare the number of reviews for each business with the top and bottom review counts in the city.
+2. 将每个商家的评论数与所在城市的最高和最低的评论数进行比较。
 
         SELECT name, city, review_count,
         FIRST_VALUE(review_count)
@@ -213,7 +213,7 @@ This tutorial builds on previous tutorials, [Analyzing the Yelp Academic Dataset
         15 rows selected (0.516 seconds)
 
 
-3. Compare the number of reviews with the number of reviews for the previous and following businesses.
+3. 将商家评论数量与其在评论数排名中的前一位和后一位的商家评论数量进行比较。
 
         SELECT city, review_count, name,
         LAG(review_count, 1) OVER(PARTITION BY city ORDER BY review_count DESC) 
