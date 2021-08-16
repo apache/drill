@@ -24,7 +24,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.store.SubsetRemover;
 import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseJdbcImplementor;
-import ru.yandex.clickhouse.ClickhouseJdbcUrlParser;
 
 public class JdbcSqlGenerator {
   /**
@@ -34,7 +33,7 @@ public class JdbcSqlGenerator {
                                    RelOptCluster cluster, RelNode input) {
     final SqlDialect dialect = plugin.getDialect();
     final JdbcImplementor jdbcImplementor;
-    if (plugin.getConfig().getUrl().startsWith(ClickhouseJdbcUrlParser.JDBC_CLICKHOUSE_PREFIX)) {
+    if (plugin.getConfig().isClickhouse()) {
       jdbcImplementor = new ClickhouseJdbcImplementor(dialect,
         (JavaTypeFactory) cluster.getTypeFactory());
     } else {

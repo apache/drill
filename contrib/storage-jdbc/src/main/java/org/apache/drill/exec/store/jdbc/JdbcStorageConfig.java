@@ -37,6 +37,7 @@ import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
 
   public static final String NAME = "jdbc";
+  public static final String JDBC_CLICKHOUSE_PREFIX = "jdbc:clickhouse:";
 
   private final String driver;
   private final String url;
@@ -93,6 +94,10 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   @JsonIgnore
   public UsernamePasswordCredentials getUsernamePasswordCredentials() {
     return new UsernamePasswordCredentials(credentialsProvider);
+  }
+
+  public boolean isClickhouse() {
+    return url.startsWith(JDBC_CLICKHOUSE_PREFIX);
   }
 
   @Override

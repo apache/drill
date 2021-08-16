@@ -20,8 +20,6 @@ package org.apache.drill.exec.store.jdbc;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseCatalogSchema;
-import ru.yandex.clickhouse.ClickhouseJdbcUrlParser;
-
 
 public class JdbcSchemaFactory {
   private final JdbcStoragePlugin plugin;
@@ -31,7 +29,7 @@ public class JdbcSchemaFactory {
   }
 
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
-    if (plugin.getConfig().getUrl().startsWith(ClickhouseJdbcUrlParser.JDBC_CLICKHOUSE_PREFIX)) {
+    if (plugin.getConfig().isClickhouse()) {
       ClickhouseCatalogSchema schema = new ClickhouseCatalogSchema(plugin.getName(),
         plugin.getDataSource(), plugin.getDialect(), plugin.getConvention());
       SchemaPlus holder = parent.add(plugin.getName(), schema);
