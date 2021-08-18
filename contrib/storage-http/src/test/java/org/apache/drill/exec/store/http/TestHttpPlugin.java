@@ -201,6 +201,10 @@ public class TestHttpPlugin extends ClusterTest {
     HttpApiConfig mockGithubWithParam = new HttpApiConfig("http://localhost:8091/orgs/{org}/repos", "GET", headers,
       "none", null, null, null, Arrays.asList("lat", "lng", "date"), "results", false, null, 0, false);
 
+    HttpApiConfig mockGithubWithDuplicateParam = new HttpApiConfig("http://localhost:8091/orgs/{org}/repos", "GET", headers,
+      "none", null, null, null, Arrays.asList("org", "lng", "date"), "results", false, null, 0, false);
+
+
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("sunrise", mockSchema);
@@ -209,6 +213,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("mockcsv", mockCsvConfig);
     configs.put("mockxml", mockXmlConfig);
     configs.put("github", mockGithubWithParam);
+    configs.put("github2", mockGithubWithDuplicateParam);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
@@ -409,6 +414,110 @@ public class TestHttpPlugin extends ClusterTest {
     }
   }
 
+  @Test
+  public void simpleTestWithMockServerWithURLParamsOfBooleanType() throws Exception {
+    String sql = "SELECT _response_url FROM local.github\n" +
+      "WHERE `org` = true";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("http://localhost:8091/orgs/true/repos")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void simpleTestWithMockServerWithURLParamsOfIntType() throws Exception {
+    String sql = "SELECT _response_url FROM local.github\n" +
+      "WHERE `org` = 1234";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("http://localhost:8091/orgs/1234/repos")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  @Ignore("Requires Remote Server")
+  public void simpleTestWithUrlParamsInSubquery() throws Exception {
+    String sql = "select pokemon_data.data.game_index AS game_index, pokemon_data.data.version.name AS name " +
+      "from (select flatten(game_indices) as data " +
+      "from live.pokemon " +
+      "where pokemon_name='ditto' " +
+      ") as pokemon_data WHERE pokemon_data.data.game_index=76";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("game_index", MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+      .add("name", MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(76, "red")
+      .addRow(76, "blue")
+      .addRow(76, "yellow")
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+  }
+
+  @Test
+  public void simpleTestWithMockServerWithDuplicateURLParams() throws Exception {
+    String sql = "SELECT _response_url FROM local.github2\n" +
+      "WHERE `org` = 'apache'";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("http://localhost:8091/orgs/apache/repos?org=apache")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+
   /**
    * When the user has configured an API connection with URL parameters,
    * it is mandatory that those parameters are included in the WHERE clause. Drill
@@ -431,6 +540,8 @@ public class TestHttpPlugin extends ClusterTest {
       assertTrue(e.getMessage().contains("API Query with URL Parameters must be populated."));
     }
   }
+
+  // TODO Write tests for default URL parameters:  Star query w/o filter(s), Query to overwrite the default, Other datatypes for default
 
   @Test
    public void testSerDe() throws Exception {

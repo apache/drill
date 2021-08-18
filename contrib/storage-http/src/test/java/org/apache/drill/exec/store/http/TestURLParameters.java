@@ -35,7 +35,7 @@ public class TestURLParameters {
     filters.put("org", "apache");
     filters.put("param1", "value1");
     filters.put("param2", "value2");
-    assertEquals(SimpleHttp.mapURLParameters(githubSingleParam, filters), "https://github.com/orgs/apache/repos");
+    assertEquals("https://github.com/orgs/apache/repos", SimpleHttp.mapURLParameters(githubSingleParam, filters));
 
 
     HttpUrl githubMultiParam = HttpUrl.parse("https://github.com/orgs/{org}/{repos}");
@@ -43,7 +43,7 @@ public class TestURLParameters {
     filters2.put("org", "apache");
     filters2.put("param1", "value1");
     filters2.put("repos", "drill");
-    assertEquals(SimpleHttp.mapURLParameters(githubMultiParam, filters2), "https://github.com/orgs/apache/drill");
+    assertEquals("https://github.com/orgs/apache/drill", SimpleHttp.mapURLParameters(githubMultiParam, filters2));
 
     HttpUrl githubNoParam = HttpUrl.parse("https://github.com/orgs/org/repos");
     CaseInsensitiveMap<String> filters3 = CaseInsensitiveMap.newHashMap();
@@ -51,7 +51,7 @@ public class TestURLParameters {
     filters3.put("org", "apache");
     filters3.put("param1", "value1");
     filters3.put("repos", "drill");
-    assertEquals(SimpleHttp.mapURLParameters(githubNoParam, filters3), "https://github.com/orgs/org/repos");
+    assertEquals("https://github.com/orgs/org/repos", SimpleHttp.mapURLParameters(githubNoParam, filters3));
   }
 
   @Test
@@ -61,7 +61,7 @@ public class TestURLParameters {
     filters.put("pokemon_name", "Misty");
     filters.put("param1", "value1");
     filters.put("repos", "drill");
-    assertEquals(SimpleHttp.mapURLParameters(pokemonUrl, filters), "https://pokeapi.co/api/v2/pokemon/Misty");
+    assertEquals("https://pokeapi.co/api/v2/pokemon/Misty", SimpleHttp.mapURLParameters(pokemonUrl, filters));
   }
 
   @Test
@@ -71,7 +71,16 @@ public class TestURLParameters {
     filters.put("org", "apache");
     filters.put("param1", "value1");
     filters.put("param2", "value2");
-    assertEquals(SimpleHttp.mapURLParameters(githubSingleParam, filters), "https://github.com/orgs/apache/repos");
+    assertEquals("https://github.com/orgs/apache/repos", SimpleHttp.mapURLParameters(githubSingleParam, filters));
+  }
+
+  @Test
+  public void testURLDefaultParameters() {
+    HttpUrl githubSingleParam = HttpUrl.parse("https://github.com/orgs/{org=apache}/repos");
+    CaseInsensitiveMap<String> filters = CaseInsensitiveMap.newHashMap();
+    filters.put("param1", "value1");
+    filters.put("param2", "value2");
+    assertEquals("https://github.com/orgs/apache/repos", SimpleHttp.mapURLParameters(githubSingleParam, filters));
   }
 
   @Test
@@ -94,5 +103,19 @@ public class TestURLParameters {
     filters.put("param1", "value1");
     filters.put("repos", "drill");
     assertEquals("https://pokeapi.co/api/Misty/pokemon/Misty", SimpleHttp.mapURLParameters(pokemonUrl, filters));
+  }
+
+  @Test
+  public void testDefaultParametersWithDifferentDatatypes() {
+    HttpUrl pokemonUrl = HttpUrl.parse("https://pokeapi.co/api/{boolean=true}/{int=1234}");
+    CaseInsensitiveMap<String> filters = CaseInsensitiveMap.newHashMap();
+    assertEquals("https://pokeapi.co/api/true/1234", SimpleHttp.mapURLParameters(pokemonUrl,filters));
+  }
+
+  @Test
+  public void testDefaultParameterExtractor() {
+    HttpUrl pokemonUrl = HttpUrl.parse("https://pokeapi.co/api/{pokemon_name=Misty}");
+    String defaultValue = SimpleHttp.getDefaultParameterValue(pokemonUrl, "pokemon_name");
+    assertEquals("Misty", defaultValue);
   }
 }

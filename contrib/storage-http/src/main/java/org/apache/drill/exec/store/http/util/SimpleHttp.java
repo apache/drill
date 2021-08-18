@@ -62,7 +62,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class SimpleHttp {
   private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
-  private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)\\}");
+  private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)=?(\\w*)\\}");
 
   private final OkHttpClient client;
   private final HttpSubScan scanDefn;
@@ -335,7 +335,7 @@ public class SimpleHttp {
   }
 
   /**
-   * Returns the URL-decoded URL
+   * Returns the URL-decoded URL. If the URL is invalid, return the original URL.
    *
    * @return Returns the URL-decoded URL
    */
@@ -360,7 +360,7 @@ public class SimpleHttp {
   }
 
   /**
-   * APIs sometimes are structured with parameters in the URL itself.  For instance, to request a list of
+   * APIs are sometimes structured with parameters in the URL itself.  For instance, to request a list of
    * an organization's repositories in github, the URL is: https://api.github.com/orgs/{org}/repos, where
    * you can replace the org with the actual organization name.
    *
@@ -375,6 +375,25 @@ public class SimpleHttp {
       parameters.add(param);
     }
     return parameters;
+  }
+
+  /**
+   * This function is used to extract the default parameter supplied in a URL. For instance,
+   * if the supplied URL is http://someapi.com/path/{p1=foo}, the function will return foo. If there
+   * is not a matching parameter or no default value, the function will return null.
+   * @param url The URL containing a default parameter
+   * @param parameter The parameter for which you need the value
+   * @return The value for the supplied parameter
+   */
+  public static String getDefaultParameterValue (HttpUrl url, String parameter) {
+    String decodedURL = decodedURL(url);
+    Pattern paramRegex = Pattern.compile("\\{" + parameter + "=(\\w+?)\\}");
+    Matcher paramMatcher = paramRegex.matcher(decodedURL);
+    if (paramMatcher.find()) {
+      return paramMatcher.group(1);
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -408,6 +427,7 @@ public class SimpleHttp {
       //     necessary as I don't think Calcite or Drill will push down an empty filter, but for the sake
       //     of providing helpful errors in strange cases, it is there.
       if (caseInsensitiveFilterMap == null) {
+        // TODO Move this to outside the loop... it is not needed here.
         throw UserException
           .parseError()
           .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
@@ -415,11 +435,18 @@ public class SimpleHttp {
       }
 
       String value = caseInsensitiveFilterMap.get(param);
+
+      // Check and see if there is a default for this parameter. If not throw an error.
       if (Strings.isNullOrEmpty(value)) {
-        throw UserException
-          .parseError()
-          .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
-          .build(logger);
+        String defaultValue = getDefaultParameterValue(url, param);
+        if (! Strings.isNullOrEmpty(defaultValue)) {
+          tempUrl = tempUrl.replace("/{" + param + "=" + defaultValue + "}", "/" + defaultValue);
+        } else {
+          throw UserException
+            .parseError()
+            .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
+            .build(logger);
+        }
       } else {
         // Note that if the user has a URL with duplicate parameters, both will be replaced.  IE:
         // someapi.com/{p1}/{p1}/something   In this case, both p1 parameters will be replaced with
