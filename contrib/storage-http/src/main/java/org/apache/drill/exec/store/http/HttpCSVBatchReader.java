@@ -81,7 +81,13 @@ public class HttpCSVBatchReader extends HttpBatchReader {
     negotiator.setErrorContext(errorContext);
 
     // Http client setup
-    SimpleHttp http = new SimpleHttp(subScan, url, new File(tempDirPath), proxySettings(negotiator.drillConfig(), url), errorContext);
+    SimpleHttp http = SimpleHttp.builder()
+      .scanDefn(subScan)
+      .url(url)
+      .tempDir(new File(tempDirPath))
+      .proxyConfig(proxySettings(negotiator.drillConfig(), url))
+      .errorContext(errorContext)
+      .build();
 
     // CSV loader setup
     inStream = http.getInputStream();

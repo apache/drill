@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.http;
 
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ChildErrorContext;
@@ -31,21 +32,18 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.xml.XMLReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.InputStream;
 
+@Slf4j
 public class HttpXMLBatchReader extends HttpBatchReader {
-  private static final Logger logger = LoggerFactory.getLogger(HttpXMLBatchReader.class);
   private final HttpSubScan subScan;
   private final int maxRecords;
   private final int dataLevel;
   private InputStream inStream;
   private XMLReader xmlReader;
-  private CustomErrorContext errorContext;
 
   public HttpXMLBatchReader(HttpSubScan subScan) {
     super(subScan);
@@ -63,7 +61,7 @@ public class HttpXMLBatchReader extends HttpBatchReader {
     String tempDirPath = negotiator.drillConfig().getString(ExecConstants.DRILL_TMP_DIR);
 
     // Create user-friendly error context
-    errorContext = new ChildErrorContext(negotiator.parentErrorContext()) {
+    CustomErrorContext errorContext = new ChildErrorContext(negotiator.parentErrorContext()) {
       @Override
       public void addContext(UserException.Builder builder) {
         super.addContext(builder);
@@ -73,7 +71,13 @@ public class HttpXMLBatchReader extends HttpBatchReader {
     negotiator.setErrorContext(errorContext);
 
     // Http client setup
-    SimpleHttp http = new SimpleHttp(subScan, url, new File(tempDirPath), proxySettings(negotiator.drillConfig(), url), errorContext);
+    SimpleHttp http = SimpleHttp.builder()
+      .scanDefn(subScan)
+      .url(url)
+      .tempDir(new File(tempDirPath))
+      .proxyConfig(proxySettings(negotiator.drillConfig(), url))
+      .errorContext(errorContext)
+      .build();
 
     // Get the input stream
     inStream = http.getInputStream();
