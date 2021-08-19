@@ -299,6 +299,11 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
         }
         rowWriter.save();
       } else {
+        // Special case for empty data sets to still record implicit columns
+        if (implicitFields != null) {
+          implicitFields.writeImplicitColumns();
+          rowWriter.save();
+        }
         eof = true;
         break;
       }

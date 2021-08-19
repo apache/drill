@@ -204,6 +204,8 @@ public class TestHttpPlugin extends ClusterTest {
     HttpApiConfig mockGithubWithDuplicateParam = new HttpApiConfig("http://localhost:8091/orgs/{org}/repos", "GET", headers,
       "none", null, null, null, Arrays.asList("org", "lng", "date"), "results", false, null, 0, false);
 
+    HttpApiConfig mockGithubWithParamInQuery = new HttpApiConfig("http://localhost:8091/orgs/{org}/repos?p1={p1}", "GET", headers,
+      "none", null, null, null, Arrays.asList("p2", "p3"), "results", false, null, 0, false);
 
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
@@ -214,6 +216,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("mockxml", mockXmlConfig);
     configs.put("github", mockGithubWithParam);
     configs.put("github2", mockGithubWithDuplicateParam);
+    configs.put("github3", mockGithubWithParamInQuery);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
@@ -517,6 +520,31 @@ public class TestHttpPlugin extends ClusterTest {
     }
   }
 
+  @Test
+  public void testUrlParamsInQueryString() throws Exception {
+    String sql = "SELECT _response_url FROM local.github3\n" +
+      "WHERE `org` = 'apache' AND p1='param1' AND p2='param2'";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("http://localhost:8091/orgs/apache/repos?p1=param1&p2=param2")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
 
   /**
    * When the user has configured an API connection with URL parameters,
@@ -942,6 +970,34 @@ public class TestHttpPlugin extends ClusterTest {
         assertTrue(msg.contains("Connection: sunrise"));
         assertTrue(msg.contains("Plugin: local"));
       }
+    }
+  }
+
+  @Test
+  public void testNoErrorOn404() throws Exception {
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(404)
+          .setBody("{}")
+      );
+
+      String sql = "SELECT _response_code, _response_message, _response_protocol, _response_url FROM local.mocktable";
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_code", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_message", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_protocol", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(404, "Client Error", "http/1.1", "http://localhost:8091/json")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
     }
   }
 

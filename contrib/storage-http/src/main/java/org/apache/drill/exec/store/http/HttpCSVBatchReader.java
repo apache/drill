@@ -102,9 +102,11 @@ public class HttpCSVBatchReader extends HttpBatchReader {
     ResultSetLoader resultLoader = negotiator.build();
 
     // Add implicit columns
-    implicitColumns = new ImplicitColumns(resultLoader.writer());
-    buildImplicitColumns();
-    populateImplicitFieldMap(http);
+    if (implicitColumnsAreProjected()) {
+      implicitColumns = new ImplicitColumns(resultLoader.writer());
+      buildImplicitColumns();
+      populateImplicitFieldMap(http);
+    }
 
     // Create ScalarWriters
     rowWriter = resultLoader.writer();
@@ -166,7 +168,11 @@ public class HttpCSVBatchReader extends HttpBatchReader {
     for (StringColumnWriter columnWriter : columnWriters) {
       columnWriter.load(nextRow);
     }
-    implicitColumns.writeImplicitColumns();
+
+    if (implicitColumnsAreProjected()) {
+      implicitColumns.writeImplicitColumns();
+    }
+
     rowWriter.save();
     return true;
   }

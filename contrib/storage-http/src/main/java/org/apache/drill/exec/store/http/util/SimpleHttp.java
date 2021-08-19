@@ -225,10 +225,10 @@ public class SimpleHttp {
    */
   private boolean isSuccessful(int responseCode) {
     if (scanDefn.tableSpec().connectionConfig().errorOn400()) {
-      return ((responseCode >= 200 && responseCode <= 299) ||
-          (responseCode >= 400 && responseCode <= 499));
-    } else {
       return responseCode >= 200 && responseCode <= 299;
+    } else {
+      return ((responseCode >= 200 && responseCode <= 299) ||
+        (responseCode >= 400 && responseCode <= 499));
     }
   }
 
@@ -414,25 +414,25 @@ public class SimpleHttp {
       return url.toString();
     }
 
+    if (filters == null) {
+      throw UserException
+        .parseError()
+        .message("API Query with URL Parameters must be populated.")
+        .build(logger);
+    }
     CaseInsensitiveMap<String>caseInsensitiveFilterMap = (CaseInsensitiveMap<String>)filters;
 
     List<String> params = SimpleHttp.getURLParameters(url);
     String tempUrl = SimpleHttp.decodedURL(url);
     for (String param : params) {
 
-      // The null checks here verify that IF the user has configured the API with URL Parameters that:
+      // The null check here verify that IF the user has configured the API with URL Parameters that:
       // 1.  The filter was pushed down IE: The user put something in the WHERE clause that corresponds to the
       //     parameter
       // 2.  There is a value associated with that parameter.  Strictly speaking, the second check is not
       //     necessary as I don't think Calcite or Drill will push down an empty filter, but for the sake
       //     of providing helpful errors in strange cases, it is there.
-      if (caseInsensitiveFilterMap == null) {
-        // TODO Move this to outside the loop... it is not needed here.
-        throw UserException
-          .parseError()
-          .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
-          .build(logger);
-      }
+
 
       String value = caseInsensitiveFilterMap.get(param);
 
@@ -451,7 +451,7 @@ public class SimpleHttp {
         // Note that if the user has a URL with duplicate parameters, both will be replaced.  IE:
         // someapi.com/{p1}/{p1}/something   In this case, both p1 parameters will be replaced with
         // the value.
-        tempUrl = tempUrl.replace("/{" + param + "}", "/" + value);
+        tempUrl = tempUrl.replace("{" + param + "}", value);
       }
     }
     return tempUrl;
