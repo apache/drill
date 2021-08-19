@@ -60,7 +60,8 @@ FROM api.github
 WHERE org = 'apache'
 ```
 
-This query would replace the `org`in the URL with the value from the `WHERE` clause, in this case `apache`.
+This query would replace the `org`in the URL with the value from the `WHERE` clause, in this case `apache`.  You can specify a default value as follows:  `https://someapi.com/
+{param1}/{param2=default}`.  In this case, the default would be used if and only if there isn't a parameter supplied in the query. 
 
 #### Limitations on URL Parameters
 * Drill does not support combinations of parameters in queries.  For instance, for the above example, you could not include `WHERE org='apache' OR org='linux'`
