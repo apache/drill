@@ -30,6 +30,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.HttpUrl;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
@@ -175,6 +176,11 @@ public class HttpApiConfig {
       return getUsernamePasswordCredentials().getPassword();
     }
     return null;
+  }
+
+  @JsonIgnore
+  public HttpUrl getHttpUrl() {
+    return HttpUrl.parse(this.url);
   }
 
   @JsonIgnore

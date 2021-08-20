@@ -28,6 +28,7 @@ import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -61,7 +62,6 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 public class SimpleHttp {
-  private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
   private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?\\}");
 
   private final OkHttpClient client;
@@ -440,9 +440,9 @@ public class SimpleHttp {
       String value = caseInsensitiveFilterMap.get(param);
 
       // Check and see if there is a default for this parameter. If not throw an error.
-      if (Strings.isNullOrEmpty(value)) {
+      if (StringUtils.isEmpty(value)) {
         String defaultValue = getDefaultParameterValue(url, param);
-        if (! Strings.isNullOrEmpty(defaultValue)) {
+        if (! StringUtils.isEmpty(defaultValue)) {
           tempUrl = tempUrl.replace("/{" + param + "=" + defaultValue + "}", "/" + defaultValue);
         } else {
           throw UserException

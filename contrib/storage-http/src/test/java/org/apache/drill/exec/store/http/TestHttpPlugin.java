@@ -111,8 +111,12 @@ public class TestHttpPlugin extends ClusterTest {
       .method("get")
       .build();
 
-    HttpApiConfig pokemonConfig = new HttpApiConfig("https://pokeapi.co/api/v2/pokemon/{pokemon_name}", "get", null, "none", null, null, null, null, null, false, "json", 1, false);
-
+    HttpApiConfig pokemonConfig = HttpApiConfig.builder()
+      .url("https://pokeapi.co/api/v2/pokemon/{pokemon_name}")
+      .method("get")
+      .inputType("json")
+      .requireTail(false)
+      .build();
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("stock", stockConfig);
@@ -149,6 +153,7 @@ public class TestHttpPlugin extends ClusterTest {
         UsernamePasswordCredentials.USERNAME, "user",
         UsernamePasswordCredentials.PASSWORD, "pass")))
       .dataPath("results")
+      .errorOn400(true)
       .build();
 
     // Use the mock server with the HTTP parameters passed as WHERE
@@ -198,14 +203,32 @@ public class TestHttpPlugin extends ClusterTest {
       .xmlDataLevel(2)
       .build();
 
-    HttpApiConfig mockGithubWithParam = new HttpApiConfig("http://localhost:8091/orgs/{org}/repos", "GET", headers,
-      "none", null, null, null, Arrays.asList("lat", "lng", "date"), "results", false, null, 0, false);
+    HttpApiConfig mockGithubWithParam = HttpApiConfig.builder()
+      .url("http://localhost:8091/orgs/{org}/repos")
+      .method("GET")
+      .headers(headers)
+      .params(Arrays.asList("lat", "lng", "date"))
+      .dataPath("results")
+      .requireTail(false)
+      .build();
 
-    HttpApiConfig mockGithubWithDuplicateParam = new HttpApiConfig("http://localhost:8091/orgs/{org}/repos", "GET", headers,
-      "none", null, null, null, Arrays.asList("org", "lng", "date"), "results", false, null, 0, false);
+    HttpApiConfig mockGithubWithDuplicateParam = HttpApiConfig.builder()
+      .url("http://localhost:8091/orgs/{org}/repos")
+      .method("GET")
+      .headers(headers)
+      .params(Arrays.asList("org", "lng", "date"))
+      .dataPath("results")
+      .requireTail(false)
+      .build();
 
-    HttpApiConfig mockGithubWithParamInQuery = new HttpApiConfig("http://localhost:8091/orgs/{org}/repos?p1={p1}", "GET", headers,
-      "none", null, null, null, Arrays.asList("p2", "p3"), "results", false, null, 0, false);
+    HttpApiConfig mockGithubWithParamInQuery = HttpApiConfig.builder()
+      .url("http://localhost:8091/orgs/{org}/repos?p1={p1}")
+      .method("GET")
+      .headers(headers)
+      .params(Arrays.asList("p2", "p3"))
+      .dataPath("results")
+      .requireTail(false)
+      .build();
 
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
@@ -303,9 +326,8 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57",
-                       "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM",
-                       "4:48:07 AM", "7:25:45 PM"), "OK")
+      .addRow(mapValue("6:12:17 AM", "6:01:54 PM", "12:07:06 PM", "11:49:37",
+        "5:47:49 AM", "6:26:22 PM", "5:17:51 AM", "6:56:21 PM", "4:47:41 AM", "7:26:31 PM"), "OK")
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -340,8 +362,8 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM",
-              "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM")
+      .addRow("6:12:17 AM", "6:01:54 PM", "12:07:06 PM", "11:49:37", "5:47:49 AM",
+        "6:26:22 PM", "5:17:51 AM", "6:56:21 PM", "4:47:41 AM", "7:26:31 PM")
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -375,7 +397,7 @@ public class TestHttpPlugin extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("6:13:58 AM", "5:59:55 PM")
+      .addRow("6:12:17 AM", "6:01:54 PM")
       .build();
 
     RowSetUtilities.verify(expected, results);
