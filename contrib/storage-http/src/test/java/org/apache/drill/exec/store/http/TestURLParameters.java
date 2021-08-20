@@ -19,11 +19,14 @@
 package org.apache.drill.exec.store.http;
 
 import okhttp3.HttpUrl;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class TestURLParameters {
 
@@ -117,5 +120,16 @@ public class TestURLParameters {
     HttpUrl pokemonUrl = HttpUrl.parse("https://pokeapi.co/api/{pokemon_name=Misty}");
     String defaultValue = SimpleHttp.getDefaultParameterValue(pokemonUrl, "pokemon_name");
     assertEquals("Misty", defaultValue);
+  }
+
+  @Test
+  public void testDefaultParameterExtractorWithBlankDefault() {
+    HttpUrl pokemonUrl = HttpUrl.parse("https://pokeapi.co/api/{pokemon_name=}");
+    try {
+      SimpleHttp.getDefaultParameterValue(pokemonUrl, "pokemon_name");
+      fail();
+    } catch (UserException e) {
+      assertTrue(e.getMessage().contains("Default URL parameters must have a value."));
+    }
   }
 }

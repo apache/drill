@@ -569,8 +569,6 @@ public class TestHttpPlugin extends ClusterTest {
     }
   }
 
-  // TODO Write tests for default URL parameters:  Star query w/o filter(s), Query to overwrite the default, Other datatypes for default
-
   @Test
    public void testSerDe() throws Exception {
     try (MockWebServer server = startServer()) {

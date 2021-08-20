@@ -392,7 +392,10 @@ public class SimpleHttp {
     if (paramMatcher.find()) {
       return paramMatcher.group(1);
     } else {
-      return null;
+      throw UserException
+        .validationError()
+        .message("Default URL parameters must have a value. The parameter " + parameter + " is not defined in the configuration.")
+        .build(logger);
     }
   }
 
