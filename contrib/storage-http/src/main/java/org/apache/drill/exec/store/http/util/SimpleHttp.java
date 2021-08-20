@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.http.util;
 
-import okhttp3.Authenticator;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Cache;
 import okhttp3.Credentials;
 import okhttp3.FormBody;
@@ -27,7 +27,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.Route;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -35,9 +34,8 @@ import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.HttpSubScan;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,8 +53,8 @@ import java.util.regex.Pattern;
  * method is the getInputStream() method which accepts a url and opens an
  * InputStream with that URL's contents.
  */
+@Slf4j
 public class SimpleHttp {
-  private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
 
   private final OkHttpClient client;
   private final HttpSubScan scanDefn;
@@ -69,8 +67,9 @@ public class SimpleHttp {
   private String responseProtocol;
   private String responseURL;
 
+  @lombok.Builder
   public SimpleHttp(HttpSubScan scanDefn, HttpUrl url, File tempDir,
-      HttpProxyConfig proxyConfig, CustomErrorContext errorContext) {
+    HttpProxyConfig proxyConfig, CustomErrorContext errorContext) {
     this.scanDefn = scanDefn;
     this.url = url;
     this.tempDir = tempDir;
@@ -97,9 +96,10 @@ public class SimpleHttp {
 
     // If the API uses basic authentication add the authentication code.
     HttpApiConfig apiConfig = scanDefn.tableSpec().connectionConfig();
-    if (apiConfig.authType().toLowerCase().equals("basic")) {
+    if (apiConfig.authType().equalsIgnoreCase("basic")) {
       logger.debug("Adding Interceptor");
-      builder.addInterceptor(new BasicAuthInterceptor(apiConfig.userName(), apiConfig.password()));
+      UsernamePasswordCredentials credentials = apiConfig.getUsernamePasswordCredentials();
+      builder.addInterceptor(new BasicAuthInterceptor(credentials.getUsername(), credentials.getPassword()));
     }
 
     // Set timeouts
@@ -123,15 +123,13 @@ public class SimpleHttp {
     }
     if (proxyType != Proxy.Type.DIRECT) {
       builder.proxy(new Proxy(proxyType,
-          new InetSocketAddress(proxyConfig.host, proxyConfig.port)));
+        new InetSocketAddress(proxyConfig.host, proxyConfig.port)));
       if (proxyConfig.username != null) {
-        builder.proxyAuthenticator(new Authenticator() {
-          @Override public Request authenticate(Route route, Response response) {
-            String credential = Credentials.basic(proxyConfig.username, proxyConfig.password);
-            return response.request().newBuilder()
-              .header("Proxy-Authorization", credential)
-              .build();
-          }
+        builder.proxyAuthenticator((route, response) -> {
+          String credential = Credentials.basic(proxyConfig.username, proxyConfig.password);
+          return response.request().newBuilder()
+            .header("Proxy-Authorization", credential)
+            .build();
         });
       }
     }
@@ -144,7 +142,7 @@ public class SimpleHttp {
   public InputStream getInputStream() {
 
     Request.Builder requestBuilder = new Request.Builder()
-        .url(url);
+      .url(url);
 
     // The configuration does not allow for any other request types other than POST and GET.
     HttpApiConfig apiConfig = scanDefn.tableSpec().connectionConfig();
@@ -156,8 +154,8 @@ public class SimpleHttp {
 
     // Log the URL and method to aid in debugging user issues.
     logger.info("Connection: {}, Method {}, URL: {}",
-        scanDefn.tableSpec().connection(),
-        apiConfig.getMethodType().name(), url());
+      scanDefn.tableSpec().connection(),
+      apiConfig.getMethodType().name(), url());
 
     // Add headers to request
     if (apiConfig.headers() != null) {

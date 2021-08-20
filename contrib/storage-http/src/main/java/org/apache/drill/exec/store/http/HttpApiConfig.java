@@ -18,26 +18,44 @@
 package org.apache.drill.exec.store.http;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.apache.drill.common.PlanStringBuilder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.store.security.CredentialProviderUtils;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.parquet.Strings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
+@Slf4j
+@Builder
+@Getter
+@Accessors(fluent = true)
+@EqualsAndHashCode
+@ToString
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+@JsonDeserialize(builder = HttpApiConfig.HttpApiConfigBuilder.class)
 public class HttpApiConfig {
-  private static final Logger logger = LoggerFactory.getLogger(HttpApiConfig.class);
 
   protected static final String DEFAULT_INPUT_FORMAT = "json";
   protected static final String CSV_INPUT_FORMAT = "csv";
   protected static final String XML_INPUT_FORMAT = "xml";
 
+  @JsonProperty
   private final String url;
 
   /**
@@ -46,18 +64,23 @@ public class HttpApiConfig {
    * API represents a table (the URL is complete except for
    * parameters specified in the WHERE clause.)
    */
+  @JsonProperty
   private final boolean requireTail;
 
-  private final HttpMethod method;
+  @JsonProperty
+  private final String method;
 
+  @JsonProperty
   private final String postBody;
 
+  @JsonProperty
   private final Map<String, String> headers;
 
   /**
    * List of query parameters which can be used in the SQL WHERE clause
    * to push filters to the REST request as HTTP query parameters.
    */
+  @JsonProperty
   private final List<String> params;
 
   /**
@@ -66,15 +89,21 @@ public class HttpApiConfig {
    * skip over "overhead" such as status codes. Must be a slash-delimited
    * set of JSON field names.
    */
+  @JsonProperty
   private final String dataPath;
 
+  @JsonProperty
   private final String authType;
-  private final String userName;
-  private final String password;
+  @JsonProperty
   private final String inputType;
+  @JsonProperty
   private final int xmlDataLevel;
+  @JsonProperty
   private final boolean errorOn400;
-
+  @JsonProperty
+  private final CredentialsProvider credentialsProvider;
+  @Getter(AccessLevel.NONE)
+  protected boolean directCredentials;
 
   public enum HttpMethod {
     /**
@@ -84,30 +113,18 @@ public class HttpApiConfig {
     /**
      * Value for HTTP POST method
      */
-    POST;
+    POST
   }
 
-  public HttpApiConfig(@JsonProperty("url") String url,
-                       @JsonProperty("method") String method,
-                       @JsonProperty("headers") Map<String, String> headers,
-                       @JsonProperty("authType") String authType,
-                       @JsonProperty("userName") String userName,
-                       @JsonProperty("password") String password,
-                       @JsonProperty("postBody") String postBody,
-                       @JsonProperty("params") List<String> params,
-                       @JsonProperty("dataPath") String dataPath,
-                       @JsonProperty("requireTail") Boolean requireTail,
-                       @JsonProperty("inputType") String inputType,
-                       @JsonProperty("xmlDataLevel") int xmlDataLevel,
-                       @JsonProperty("errorOn400") boolean errorOn400) {
+  private HttpApiConfig(HttpApiConfig.HttpApiConfigBuilder builder) {
+    this.headers = builder.headers;
+    this.method = StringUtils.isEmpty(builder.method)
+        ? HttpMethod.GET.toString() : builder.method.trim().toUpperCase();
+    this.url = builder.url;
 
-    this.headers = headers;
-    this.method = Strings.isNullOrEmpty(method)
-        ? HttpMethod.GET : HttpMethod.valueOf(method.trim().toUpperCase());
-    this.url = url;
-
+    HttpMethod httpMethod = HttpMethod.valueOf(this.method);
     // Get the request method.  Only accept GET and POST requests.  Anything else will default to GET.
-    switch (this.method) {
+    switch (httpMethod) {
       case GET:
       case POST:
         break;
@@ -117,7 +134,7 @@ public class HttpApiConfig {
           .message("Invalid HTTP method: %s.  Drill supports 'GET' and , 'POST'.", method)
           .build(logger);
     }
-    if (Strings.isNullOrEmpty(url)) {
+    if (StringUtils.isEmpty(url)) {
       throw UserException
         .validationError()
         .message("URL is required for the HTTP storage plugin.")
@@ -126,114 +143,71 @@ public class HttpApiConfig {
 
     // Get the authentication method. Future functionality will include OAUTH2 authentication but for now
     // Accept either basic or none.  The default is none.
-    this.authType = Strings.isNullOrEmpty(authType) ? "none" : authType;
-    this.userName = userName;
-    this.password = password;
-    this.postBody = postBody;
-    this.params = params == null || params.isEmpty() ? null :
-      ImmutableList.copyOf(params);
-    this.dataPath = Strings.isNullOrEmpty(dataPath) ? null : dataPath;
+    this.authType = StringUtils.defaultIfEmpty(builder.authType, "none");
+    this.postBody = builder.postBody;
+    this.params = CollectionUtils.isEmpty(builder.params) ? null :
+      ImmutableList.copyOf(builder.params);
+    this.dataPath = StringUtils.defaultIfEmpty(builder.dataPath, null);
 
     // Default to true for backward compatibility with first PR.
-    this.requireTail = requireTail == null ? true : requireTail;
+    this.requireTail = builder.requireTail == null || builder.requireTail;
 
-    this.inputType = inputType == null
-      ? DEFAULT_INPUT_FORMAT : inputType.trim().toLowerCase();
+    this.inputType = builder.inputType == null
+      ? DEFAULT_INPUT_FORMAT : builder.inputType.trim().toLowerCase();
 
-    this.xmlDataLevel = Math.max(1, xmlDataLevel);
-    this.errorOn400 = errorOn400;
+    this.xmlDataLevel = Math.max(1, builder.xmlDataLevel);
+    this.errorOn400 = builder.errorOn400;
+    this.credentialsProvider = CredentialProviderUtils.getCredentialsProvider(builder.userName, builder.password, builder.credentialsProvider);
+    this.directCredentials = builder.credentialsProvider == null;
   }
 
-  @JsonProperty("url")
-  public String url() { return url; }
+  public String userName() {
+    if (directCredentials) {
+      return getUsernamePasswordCredentials().getUsername();
+    }
+    return null;
+  }
 
-  @JsonProperty("method")
-  public String method() { return method.toString(); }
-
-  @JsonProperty("headers")
-  public Map<String, String> headers() { return headers; }
-
-  @JsonProperty("authType")
-  public String authType() { return authType; }
-
-  @JsonProperty("userName")
-  public String userName() { return userName; }
-
-  @JsonProperty("password")
-  public String password() { return password; }
-
-  @JsonProperty("postBody")
-  public String postBody() { return postBody; }
-
-  @JsonProperty("params")
-  public List<String> params() { return params; }
-
-  @JsonProperty("dataPath")
-  public String dataPath() { return dataPath; }
-
-  @JsonProperty("xmlDataLevel")
-  public int xmlDataLevel() { return xmlDataLevel; }
-
-  @JsonProperty("requireTail")
-  public boolean requireTail() { return requireTail; }
+  public String password() {
+    if (directCredentials) {
+      return getUsernamePasswordCredentials().getPassword();
+    }
+    return null;
+  }
 
   @JsonIgnore
   public HttpMethod getMethodType() {
-    return HttpMethod.valueOf(this.method());
+    return HttpMethod.valueOf(this.method);
   }
 
-  @JsonProperty("inputType")
-  public String inputType() { return inputType; }
-
-  @JsonProperty("errorOn400")
-  public boolean errorOn400() { return errorOn400; }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(url, method, requireTail, params, headers,
-        authType, userName, password, postBody, inputType, xmlDataLevel, errorOn400);
+  @JsonIgnore
+  public UsernamePasswordCredentials getUsernamePasswordCredentials() {
+    return new UsernamePasswordCredentials(credentialsProvider);
   }
 
-  @Override
-  public String toString() {
-    return new PlanStringBuilder(this)
-      .field("url", url)
-      .field("require tail", requireTail)
-      .field("method", method)
-      .field("dataPath", dataPath)
-      .field("headers", headers)
-      .field("authType", authType)
-      .field("username", userName)
-      .maskedField("password", password)
-      .field("postBody", postBody)
-      .field("filterFields", params)
-      .field("inputType", inputType)
-      .field("xmlDataLevel", xmlDataLevel)
-      .field("errorOn400", errorOn400)
-      .toString();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
+  public CredentialsProvider credentialsProvider() {
+    if (directCredentials) {
+      return null;
     }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
+    return credentialsProvider;
+  }
+
+  @JsonPOJOBuilder(withPrefix = "")
+  public static class HttpApiConfigBuilder {
+    @Getter
+    @Setter
+    private String userName;
+
+    @Getter
+    @Setter
+    private String password;
+
+    @Getter
+    @Setter
+    private Boolean requireTail;
+
+    public HttpApiConfig build() {
+      return new HttpApiConfig(this);
     }
-    HttpApiConfig other = (HttpApiConfig) obj;
-    return Objects.equals(url, other.url)
-      && Objects.equals(method, other.method)
-      && Objects.equals(headers, other.headers)
-      && Objects.equals(authType, other.authType)
-      && Objects.equals(userName, other.userName)
-      && Objects.equals(password, other.password)
-      && Objects.equals(postBody, other.postBody)
-      && Objects.equals(params, other.params)
-      && Objects.equals(dataPath, other.dataPath)
-      && Objects.equals(requireTail, other.requireTail)
-      && Objects.equals(inputType, other.inputType)
-      && Objects.equals(xmlDataLevel, other.xmlDataLevel)
-      && Objects.equals(errorOn400, other.errorOn400);
   }
 }

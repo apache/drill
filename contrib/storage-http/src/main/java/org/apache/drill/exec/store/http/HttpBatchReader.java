@@ -78,11 +78,13 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     negotiator.setErrorContext(errorContext);
 
     // Http client setup
-    SimpleHttp http = new SimpleHttp(
-        subScan, url,
-        new File(tempDirPath),
-        proxySettings(negotiator.drillConfig(), url),
-        errorContext);
+    SimpleHttp http = SimpleHttp.builder()
+      .scanDefn(subScan)
+      .url(url)
+      .tempDir(new File(tempDirPath))
+      .proxyConfig(proxySettings(negotiator.drillConfig(), url))
+      .errorContext(errorContext)
+      .build();
 
     // JSON loader setup
     ResultSetLoader loader = negotiator.build();

@@ -29,7 +29,9 @@ import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -89,12 +91,24 @@ public class TestHttpPlugin extends ClusterTest {
    */
   private static void makeLiveConfig() {
 
-    HttpApiConfig sunriseConfig = new HttpApiConfig("https://api.sunrise-sunset.org/json", "GET", null, null, null, null, null, null, null, null, null, 0, false);
-    HttpApiConfig sunriseWithParamsConfig = new HttpApiConfig("https://api.sunrise-sunset.org/json", "GET", null, null, null, null, null,
-        Arrays.asList("lat", "lng", "date"), "results", false, null, 0, false);
+    HttpApiConfig sunriseConfig = HttpApiConfig.builder()
+      .url("https://api.sunrise-sunset.org/json")
+      .method("GET")
+      .build();
 
-    HttpApiConfig stockConfig = new HttpApiConfig("https://api.worldtradingdata.com/api/v1/stock?symbol=SNAP,TWTR,VOD" +
-      ".L&api_token=zuHlu2vZaehdZN6GmJdTiVlp7xgZn6gl6sfgmI4G6TY4ej0NLOzvy0TUl4D4", "get", null, null, null, null, null, null, null, null, null, 0, false);
+    HttpApiConfig sunriseWithParamsConfig = HttpApiConfig.builder()
+      .url("https://api.sunrise-sunset.org/json")
+      .method("GET")
+      .params(Arrays.asList("lat", "lng", "date"))
+      .dataPath("results")
+      .requireTail(false)
+      .build();
+
+    HttpApiConfig stockConfig = HttpApiConfig.builder()
+      .url("https://api.worldtradingdata.com/api/v1/stock?symbol=SNAP,TWTR,VOD" +
+        ".L&api_token=zuHlu2vZaehdZN6GmJdTiVlp7xgZn6gl6sfgmI4G6TY4ej0NLOzvy0TUl4D4")
+      .method("get")
+      .build();
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("stock", stockConfig);
@@ -121,24 +135,63 @@ public class TestHttpPlugin extends ClusterTest {
     // Use the mock server with HTTP parameters passed as table name.
     // The connection acts like a schema.
     // Ignores the message body except for data.
-    HttpApiConfig mockSchema = new HttpApiConfig("http://localhost:8091/json", "GET", headers,
-        "basic", "user", "pass", null, null, "results", null, null, 0, false);
+    HttpApiConfig mockSchema = HttpApiConfig.builder()
+      .url("http://localhost:8091/json")
+      .method("GET")
+      .headers(headers)
+      .authType("basic")
+      .credentialsProvider(new PlainCredentialsProvider(ImmutableMap.of(
+        UsernamePasswordCredentials.USERNAME, "user",
+        UsernamePasswordCredentials.PASSWORD, "pass")))
+      .dataPath("results")
+      .build();
 
     // Use the mock server with the HTTP parameters passed as WHERE
     // clause filters. The connection acts like a table.
     // Ignores the message body except for data.
     // This is the preferred approach, the base URL contains as much info as possible;
     // all other parameters are specified in SQL. See README for an example.
-    HttpApiConfig mockTable = new HttpApiConfig("http://localhost:8091/json", "GET", headers,
-        "basic", "user", "pass", null, Arrays.asList("lat", "lng", "date"), "results", false, null, 0, false);
+    HttpApiConfig mockTable = HttpApiConfig.builder()
+      .url("http://localhost:8091/json")
+      .method("GET")
+      .headers(headers)
+      .authType("basic")
+      .userName("user")
+      .password("pass")
+      .params(Arrays.asList("lat", "lng", "date"))
+      .dataPath("results")
+      .requireTail(false)
+      .build();
 
-    HttpApiConfig mockPostConfig = new HttpApiConfig("http://localhost:8091/", "POST", headers, null, null, null, "key1=value1\nkey2=value2", null, null, null, null, 0, false);
+    HttpApiConfig mockPostConfig = HttpApiConfig.builder()
+      .url("http://localhost:8091/")
+      .method("POST")
+      .headers(headers)
+      .postBody("key1=value1\nkey2=value2")
+      .build();
 
-    HttpApiConfig mockCsvConfig = new HttpApiConfig("http://localhost:8091/csv", "GET", headers,
-      "basic", "user", "pass", null, null, "results", null, "csv", 0, false);
+    HttpApiConfig mockCsvConfig = HttpApiConfig.builder()
+      .url("http://localhost:8091/csv")
+      .method("GET")
+      .headers(headers)
+      .authType("basic")
+      .userName("user")
+      .password("pass")
+      .dataPath("results")
+      .inputType("csv")
+      .build();
 
-    HttpApiConfig mockXmlConfig = new HttpApiConfig("http://localhost:8091/xml", "GET", headers,
-      "basic", "user", "pass", null, null, "results", null, "xml", 2,false);
+    HttpApiConfig mockXmlConfig = HttpApiConfig.builder()
+      .url("http://localhost:8091/xml")
+      .method("GET")
+      .headers(headers)
+      .authType("basic")
+      .userName("user")
+      .password("pass")
+      .dataPath("results")
+      .inputType("xml")
+      .xmlDataLevel(2)
+      .build();
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("sunrise", mockSchema);
