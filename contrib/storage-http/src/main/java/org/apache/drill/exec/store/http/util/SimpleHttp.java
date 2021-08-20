@@ -62,7 +62,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class SimpleHttp {
   private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
-  private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)=?(\\w*)\\}");
+  private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?\\}");
 
   private final OkHttpClient client;
   private final HttpSubScan scanDefn;
