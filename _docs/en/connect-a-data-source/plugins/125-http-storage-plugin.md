@@ -526,7 +526,7 @@ ORDER BY issue_count DESC
 
 2. At this time, the plugin does not support any authentication other than basic authentication.
 
-3. This plugin does not implement join filter pushdowns (only constant plushdowns are
+3. This plugin does not implement join filter pushdowns (only constant pushdowns are
    supported). Join pushdown has the potential to improve performance if you use the HTTP service
    joined to another table.
 
