@@ -18,7 +18,9 @@
 package org.apache.drill.exec.vector.complex.fn;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
@@ -35,6 +37,7 @@ import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.store.easy.json.values.TimestampValueListener;
 import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
@@ -248,9 +251,12 @@ abstract class VectorOutput {
           ts.writeTimeStamp(dt.getMillis());
           break;
         case VALUE_STRING:
-          OffsetDateTime originalDateTime = OffsetDateTime.parse(parser.getValueAsString(), DateUtility.isoFormatTimeStamp);
-          OffsetDateTime utcDateTime = OffsetDateTime.of(originalDateTime.toLocalDateTime(), ZoneOffset.UTC);   // strips the time zone from the original
-          ts.writeTimeStamp(utcDateTime.toInstant().toEpochMilli());
+          // Note mongo use the UTC format to specify the date value by default.
+          // See the mongo specs and the Drill handler (in new JSON loader) :
+          // 1. https://docs.mongodb.com/manual/reference/mongodb-extended-json
+          // 2. org.apache.drill.exec.store.easy.json.values.TimestampValueListener
+          LocalDateTime localDateTime = LocalDateTime.parse(parser.getValueAsString(), DateUtility.UTC_FORMATTER);
+          ts.writeTimeStamp(Duration.between(TimestampValueListener.LOCAL_EPOCH, localDateTime).toMillis());
           break;
         default:
           throw UserException.unsupportedError()
@@ -351,9 +357,12 @@ abstract class VectorOutput {
           ts.writeTimeStamp(dt.getMillis());
           break;
         case VALUE_STRING:
-          OffsetDateTime originalDateTime = OffsetDateTime.parse(parser.getValueAsString(), DateUtility.isoFormatTimeStamp);
-          OffsetDateTime utcDateTime = OffsetDateTime.of(originalDateTime.toLocalDateTime(), ZoneOffset.UTC);   // strips the time zone from the original
-          ts.writeTimeStamp(utcDateTime.toInstant().toEpochMilli());
+          // Note mongo use the UTC format to specify the date value by default.
+          // See the mongo specs and the Drill handler (in new JSON loader) :
+          // 1. https://docs.mongodb.com/manual/reference/mongodb-extended-json
+          // 2. org.apache.drill.exec.store.easy.json.values.TimestampValueListener
+          LocalDateTime localDateTime = LocalDateTime.parse(parser.getValueAsString(), DateUtility.UTC_FORMATTER);
+          ts.writeTimeStamp(Duration.between(TimestampValueListener.LOCAL_EPOCH, localDateTime).toMillis());
           break;
         default:
           throw UserException.unsupportedError()
