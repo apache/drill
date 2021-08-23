@@ -1,10 +1,10 @@
 ---
 title: "Orchestrating queries with Airflow"
 slug: "Orchestrating queries with Airflow"
-parent: "Tutorials"
+parent: "教程"
 ---
 
-This tutorial walks through the development of an Apache Airflow DAG that implements a basic ETL process using Apache Drill.  We'll install Airflow into a Python virtualenv using pip before writing and testing our new DAG.  Consult the [Airflow installation documentation](https://airflow.apache.org/docs/apache-airflow/stable/installation.html) for more information about installing Airflow.
+This tutorial walks through the development of Apache Airflow DAG that implements a basic ETL process using Apache Drill.  We'll install Airflow into a Python virtualenv using pip before writing and testing our new DAG.  Consult the [Airflow installation documentation](https://airflow.apache.org/docs/apache-airflow/stable/installation.html) for more information about installing Airflow.
 
 I'll be issuing commands using a shell on a Debian Linux machine in this tutorial but it should be possible with a little translation to follow along on other platforms.
 
@@ -24,12 +24,12 @@ virtualenv -p /usr/bin/python3 $VIRT_ENV_HOME/airflow
 
 ## Install Airflow
 
-If you've read their installation guide, you'll have seen that the Airflow project provides constraints files that pin its Python package dependencies to known-good versions.  In many cases things work fine without constraints but, for the sake of reproducibility, we'll apply the constraints file applicable to our Python version using the script they provide for the purpose.
+If you've read their installation guide you'll have seen that the Airflow project provides constraints files the pin the versions of its Python package dependencies to known-good versions.  In many cases things work fine without constraints but, for the sake of reproducibility, we'll apply the constraints file applicable to our Python version using the script 0they provide for the purpose.
 ```sh
 AIRFLOW_VERSION=2.1.2
 PYTHON_VERSION="$(python --version | cut -d " " -f 2 | cut -d "." -f 1-2)"
 CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
-pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
+pip install "apache-0airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
 pip install apache-airflow-providers-apache-drill
 ```
 
@@ -38,8 +38,8 @@ pip install apache-airflow-providers-apache-drill
 We're just experimenting here so we'll have Airflow set up a local SQLite database and add an admin user for ourselves.
 ```sh
 # Optional: change Airflow's data dir from the default of ~/airflow
-export AIRFLOW_HOME=~/Development/airflow
-mkdir -p ~/Development/airflow
+export0 AIRFLOW_HOME=~/Development/airflow
+mkdir -p ~/Development/airflow/
 
 # Create a new SQLite database for Airflow
 airflow db init
@@ -56,7 +56,7 @@ airflow users create \
 
 ## Configure a Drill connection
 
-At this point we should have a working Airflow installation. Fire up the web UI with `airflow webserver` and browse to http://localhost:8080.  Click on Admin -> Connections and add a new Drill connection called `drill_tutorial`, setting configuration according to your Drill environment.  If you're using embedded mode Drill locally like I am, then you'll want the following config.
+At this point we should have a working Airflow installation. Fire up the web UI with `airflow webserver` and browse to http://localhost:8080.  Click on Admin -> Connections.  Add a new Drill connection called `drill_tutorial`, setting configuration according to your Drill environment.  If you're using embedded mode Drill locally like I am then you'll want the following config.
 
 | Setting   | Value                                                        |
 | --------- | ------------------------------------------------------------ |
@@ -72,17 +72,17 @@ After you've saved the new connection you can shut the Airflow web UI down with 
 
 ## Explore the source data
 
-If you've developed ETLs before you know that you can't build anything until you've come to grips with the source data.  Let's obtain a sample of the first 1m rows from the source take a look.
+If you've built ETLs before you know that you can't build anything until you've come to grips with the source data.  Let's obtain a sample of the first 1m rows from the source take a look.
 
 ```sh
 curl -s https://data.cdc.gov/api/views/vbim-akqf/rows.csv\?accessType\=DOWNLOAD | pv -lSs 1000000 > /tmp/cdc_covid_cases.csvh
 ```
 
-You can replace `pv -lSs 1000000` above with `head -n1000000`, or just drop it if you don't mind fetching the whole file.  Downloading the CSV file with a web browser will also get the job done.  Note that for a default Drill installation, saving with the file extension `.csvh` does matter for what follows because it will set the option `extractHeader = true` when this CSV file is queried, something that the SQL code to come relies on.
+You can replace `pv -lSs 1000000` above with `head -n1000000` or just drop it if you don't mind fetching the whole file.  Downloading it with a web browser will also work fine.  Note that for a default Drill installation, saving with the file extension `.csvh` does matter for what follows because it will set `extractHeader = true` when this CSV file is queried, and this file does include a header.
 
-It's time to break out Drill.  Instead of dumping my entire interactive SQL session here, I'll just list relevant queries that I ran and the corresponding observations that I made.
+It's time to break out Drill.  Instead of dumping my entire interactive SQL session here, I'll just list queries that I ran and the corresponding observations that I made.
 ```sql
-select * from dfs.tmp.`cdc_covid_case.csvh`;
+select * from dfs.tmp.`cdc_covid_case.csvh`
 -- 1. In date fields, the empty string '' can be converted to SQL NULL
 -- 2. Age groups can be split into two numerical fields, with the final
 --    group being unbounded above.
@@ -101,7 +101,7 @@ select hosp_yn, count() from dfs.tmp.`cdc_covid_case.csvh` group by hosp_yn;
 --    so they cannot be transformed to nullable booleans
 ```
 
-So... this is what it feels like to be a data scientist 😆!  Jokes aside, we learned a lot of neccesary stuff pretty quickly there and it's easy to see that we could have carried on for a long way, testing ranges, casts and regexps and even creating reports if we didn't reign ourselves in.  Let's skip forward to the ETL statement I ended up creating after exploring.
+So... this is what it feels like to be a data scientist 😆.  Jokes aside, we learned a lot of neccesary stuff pretty quickly there and it's easy to see that we could have carried on for a long way, testing ranges, casts and regexps and even creating reports if we didn't reign ourselves in.  Let's skip forward to the ETL statement I ended up creating after exploring.
 
 ## Develop a CTAS (Create Table As Select) ETL
 
@@ -163,14 +163,14 @@ To complete this step, save the CTAS script above into a new file at `$AIRFLOW_H
 
 ## Develop an Airflow DAG
 
-The definition of our DAG will reside in a single Python script.  The complete listing of that script follows immediately, with my commentary continuing as inline source code comments.  You should save this script to a new file at `$AIRFLOW_HOME/dags/drill-tutorial.py`.
+The definition of our DAG will reside in a single Python script.  The complete listing of that script follows immediately, with my commentary continuing as inline source code comments.  You should save this script to a new file at `$AIRFLOW_HOME/dags/drill_tutorial.py`.
 
 ```python
 '''
 Uses the Apache Drill provider to transform, load and report from COVID case
 data downloaded from the website of the CDC.
 
-Data source citation.
+Data source citatation.
 
 Centers for Disease Control and Prevention, COVID-19 Response. COVID-19 Case
 Surveillance Public Data Access, Summary, and Limitations.

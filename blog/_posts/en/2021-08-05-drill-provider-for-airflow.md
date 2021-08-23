@@ -25,4 +25,4 @@ In contrast Airflow is, unless you're doing it wrong, used only to instruct othe
 
 The exciting news for Drill users is that [a new provider package adding support for Drill](https://pypi.org/project/apache-airflow-providers-apache-drill/) was added to Airflow this month.  This provider is based on the [sqlalchemy-drill package](https://pypi.org/project/sqlalchemy-drill/) which provides Drill connectivity for Python programs.  This means that you can add tasks which execute queries on Drill to your Airflow DAGs without any hacky intermediate shell scripts, or build new Airflow operators that use the Drill hook.
 
-A new tutorial that walks through the development of a simple Airflow DAG that uses the Drill provider [is available here]({{site.baseurl}}/docs/tutorials/orchestrating-queries-with-airflow).
+A new tutorial that walks through the development of a simple Airflow DAG that uses the Drill provider [is available here]({{site.baseurl}}/docs/orchestrating-queries-with-airflow/).

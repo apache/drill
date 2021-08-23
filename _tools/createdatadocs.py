@@ -94,8 +94,7 @@ if __name__ == '__main__':
                             ' (which may be empty or contain the original English text)' \
                             ' and set their _parent_ to the new _title_ on the parent page'
 
-                    logging.error(msg)
-                    raise e
+                    logging.warn(msg)
 
         for doc in top_level_docs:
             add_docs(docs_in_order, doc)

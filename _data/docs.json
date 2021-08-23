@@ -279,8 +279,8 @@
                     }
                 ],
                 "children": [],
-                "next_title": "Drill-on-YARN",
-                "next_url": "/docs/drill-on-yarn/",
+                "next_title": "Orchestrating queries with Airflow",
+                "next_url": "/docs/orchestrating-queries-with-airflow/",
                 "parent": "Tutorials",
                 "previous_title": "Analyzing Social Media",
                 "previous_url": "/docs/analyzing-social-media/",
@@ -5209,8 +5209,8 @@
                 "next_title": "Drill-on-YARN Introduction",
                 "next_url": "/docs/drill-on-yarn-introduction/",
                 "parent": "",
-                "previous_title": "Analyzing Data Using Window Functions",
-                "previous_url": "/docs/analyzing-data-using-window-functions/",
+                "previous_title": "Orchestrating queries with Airflow",
+                "previous_url": "/docs/orchestrating-queries-with-airflow/",
                 "relative_path": "_docs/en/031-drill-on-yarn.md",
                 "title": "Drill-on-YARN",
                 "url": "/docs/drill-on-yarn/"
@@ -8450,6 +8450,23 @@
                 "relative_path": "_docs/en/performance-tuning/025-optimizing-parquet-reading.md",
                 "title": "Optimizing Parquet Metadata Reading",
                 "url": "/docs/optimizing-parquet-metadata-reading/"
+            },
+            "Orchestrating queries with Airflow": {
+                "breadcrumbs": [
+                    {
+                        "title": "Tutorials",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "Drill-on-YARN",
+                "next_url": "/docs/drill-on-yarn/",
+                "parent": "Tutorials",
+                "previous_title": "Analyzing Data Using Window Functions",
+                "previous_url": "/docs/analyzing-data-using-window-functions/",
+                "relative_path": "_docs/en/tutorials/080-orchestrating-queries-with-airflow.md",
+                "title": "Orchestrating queries with Airflow",
+                "url": "/docs/orchestrating-queries-with-airflow/"
             },
             "PARTITION BY Clause": {
                 "breadcrumbs": [
@@ -16253,14 +16270,31 @@
                             }
                         ],
                         "children": [],
-                        "next_title": "Drill-on-YARN",
-                        "next_url": "/docs/drill-on-yarn/",
+                        "next_title": "Orchestrating queries with Airflow",
+                        "next_url": "/docs/orchestrating-queries-with-airflow/",
                         "parent": "Tutorials",
                         "previous_title": "Analyzing Social Media",
                         "previous_url": "/docs/analyzing-social-media/",
                         "relative_path": "_docs/en/tutorials/070-analyzing-data-using-window-functions.md",
                         "title": "Analyzing Data Using Window Functions",
                         "url": "/docs/analyzing-data-using-window-functions/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "Tutorials",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "Drill-on-YARN",
+                        "next_url": "/docs/drill-on-yarn/",
+                        "parent": "Tutorials",
+                        "previous_title": "Analyzing Data Using Window Functions",
+                        "previous_url": "/docs/analyzing-data-using-window-functions/",
+                        "relative_path": "_docs/en/tutorials/080-orchestrating-queries-with-airflow.md",
+                        "title": "Orchestrating queries with Airflow",
+                        "url": "/docs/orchestrating-queries-with-airflow/"
                     }
                 ],
                 "next_title": "Tutorials Introduction",
@@ -17650,14 +17684,31 @@
                             }
                         ],
                         "children": [],
-                        "next_title": "Drill-on-YARN",
-                        "next_url": "/docs/drill-on-yarn/",
+                        "next_title": "Orchestrating queries with Airflow",
+                        "next_url": "/docs/orchestrating-queries-with-airflow/",
                         "parent": "Tutorials",
                         "previous_title": "Analyzing Social Media",
                         "previous_url": "/docs/analyzing-social-media/",
                         "relative_path": "_docs/en/tutorials/070-analyzing-data-using-window-functions.md",
                         "title": "Analyzing Data Using Window Functions",
                         "url": "/docs/analyzing-data-using-window-functions/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "Tutorials",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "Drill-on-YARN",
+                        "next_url": "/docs/drill-on-yarn/",
+                        "parent": "Tutorials",
+                        "previous_title": "Analyzing Data Using Window Functions",
+                        "previous_url": "/docs/analyzing-data-using-window-functions/",
+                        "relative_path": "_docs/en/tutorials/080-orchestrating-queries-with-airflow.md",
+                        "title": "Orchestrating queries with Airflow",
+                        "url": "/docs/orchestrating-queries-with-airflow/"
                     }
                 ],
                 "next_title": "Tutorials Introduction",
@@ -17880,8 +17931,8 @@
                 "next_title": "Drill-on-YARN Introduction",
                 "next_url": "/docs/drill-on-yarn-introduction/",
                 "parent": "",
-                "previous_title": "Analyzing Data Using Window Functions",
-                "previous_url": "/docs/analyzing-data-using-window-functions/",
+                "previous_title": "Orchestrating queries with Airflow",
+                "previous_url": "/docs/orchestrating-queries-with-airflow/",
                 "relative_path": "_docs/en/031-drill-on-yarn.md",
                 "title": "Drill-on-YARN",
                 "url": "/docs/drill-on-yarn/"
@@ -29214,8 +29265,8 @@
                 "next_title": "Drill-on-YARN Introduction",
                 "next_url": "/docs/drill-on-yarn-introduction/",
                 "parent": "",
-                "previous_title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
-                "previous_url": "/docs/analyzing-data-using-window-functions/",
+                "previous_title": "Orchestrating queries with Airflow",
+                "previous_url": "/docs/orchestrating-queries-with-airflow/",
                 "relative_path": "_docs/en/031-drill-on-yarn.md",
                 "title": "Drill-on-YARN",
                 "url": "/docs/drill-on-yarn/"
@@ -32138,6 +32189,23 @@
                 "relative_path": "_docs/en/performance-tuning/025-optimizing-parquet-reading.md",
                 "title": "Optimizing Parquet Metadata Reading",
                 "url": "/docs/optimizing-parquet-metadata-reading/"
+            },
+            "Orchestrating queries with Airflow": {
+                "breadcrumbs": [
+                    {
+                        "title": "\u6559\u7a0b",
+                        "url": "/docs/tutorials/"
+                    }
+                ],
+                "children": [],
+                "next_title": "Drill-on-YARN",
+                "next_url": "/docs/drill-on-yarn/",
+                "parent": "\u6559\u7a0b",
+                "previous_title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
+                "previous_url": "/docs/analyzing-data-using-window-functions/",
+                "relative_path": "_docs/zh/tutorials/080-orchestrating-queries-with-airflow.md",
+                "title": "Orchestrating queries with Airflow",
+                "url": "/docs/orchestrating-queries-with-airflow/"
             },
             "PARTITION BY Clause": {
                 "breadcrumbs": [
@@ -41207,14 +41275,31 @@
                             }
                         ],
                         "children": [],
-                        "next_title": "Drill-on-YARN",
-                        "next_url": "/docs/drill-on-yarn/",
+                        "next_title": "Orchestrating queries with Airflow",
+                        "next_url": "/docs/orchestrating-queries-with-airflow/",
                         "parent": "\u6559\u7a0b",
                         "previous_title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
                         "previous_url": "/docs/analyzing-social-media/",
                         "relative_path": "_docs/zh/tutorials/070-analyzing-data-using-window-functions.md",
                         "title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
                         "url": "/docs/analyzing-data-using-window-functions/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "Drill-on-YARN",
+                        "next_url": "/docs/drill-on-yarn/",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
+                        "previous_url": "/docs/analyzing-data-using-window-functions/",
+                        "relative_path": "_docs/zh/tutorials/080-orchestrating-queries-with-airflow.md",
+                        "title": "Orchestrating queries with Airflow",
+                        "url": "/docs/orchestrating-queries-with-airflow/"
                     }
                 ],
                 "next_title": "\u6559\u7a0b\u4ecb\u7ecd",
@@ -41361,8 +41446,8 @@
                     }
                 ],
                 "children": [],
-                "next_title": "Drill-on-YARN",
-                "next_url": "/docs/drill-on-yarn/",
+                "next_title": "Orchestrating queries with Airflow",
+                "next_url": "/docs/orchestrating-queries-with-airflow/",
                 "parent": "\u6559\u7a0b",
                 "previous_title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
                 "previous_url": "/docs/analyzing-social-media/",
@@ -41761,14 +41846,31 @@
                             }
                         ],
                         "children": [],
-                        "next_title": "Drill-on-YARN",
-                        "next_url": "/docs/drill-on-yarn/",
+                        "next_title": "Orchestrating queries with Airflow",
+                        "next_url": "/docs/orchestrating-queries-with-airflow/",
                         "parent": "\u6559\u7a0b",
                         "previous_title": "\u5206\u6790\u793e\u4ea4\u5a92\u4f53",
                         "previous_url": "/docs/analyzing-social-media/",
                         "relative_path": "_docs/zh/tutorials/070-analyzing-data-using-window-functions.md",
                         "title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
                         "url": "/docs/analyzing-data-using-window-functions/"
+                    },
+                    {
+                        "breadcrumbs": [
+                            {
+                                "title": "\u6559\u7a0b",
+                                "url": "/docs/tutorials/"
+                            }
+                        ],
+                        "children": [],
+                        "next_title": "Drill-on-YARN",
+                        "next_url": "/docs/drill-on-yarn/",
+                        "parent": "\u6559\u7a0b",
+                        "previous_title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
+                        "previous_url": "/docs/analyzing-data-using-window-functions/",
+                        "relative_path": "_docs/zh/tutorials/080-orchestrating-queries-with-airflow.md",
+                        "title": "Orchestrating queries with Airflow",
+                        "url": "/docs/orchestrating-queries-with-airflow/"
                     }
                 ],
                 "next_title": "\u6559\u7a0b\u4ecb\u7ecd",
@@ -41991,8 +42093,8 @@
                 "next_title": "Drill-on-YARN Introduction",
                 "next_url": "/docs/drill-on-yarn-introduction/",
                 "parent": "",
-                "previous_title": "\u901a\u8fc7\u7a97\u53e3\u51fd\u6570\u5206\u6790\u6570\u636e\u96c6",
-                "previous_url": "/docs/analyzing-data-using-window-functions/",
+                "previous_title": "Orchestrating queries with Airflow",
+                "previous_url": "/docs/orchestrating-queries-with-airflow/",
                 "relative_path": "_docs/en/031-drill-on-yarn.md",
                 "title": "Drill-on-YARN",
                 "url": "/docs/drill-on-yarn/"
