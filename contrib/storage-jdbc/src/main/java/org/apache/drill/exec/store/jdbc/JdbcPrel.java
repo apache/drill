@@ -49,7 +49,7 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
     final RelNode input = prel.getInput();
     rows = input.estimateRowCount(cluster.getMetadataQuery());
     convention = (DrillJdbcConvention) input.getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
-    sql = JdbcSqlGenerator.generateSql(convention.getPlugin(), getCluster(), input);
+    sql = convention.getPlugin().getJdbcDialect().generateSql(getCluster(), input);
     rowType = input.getRowType();
   }
 
