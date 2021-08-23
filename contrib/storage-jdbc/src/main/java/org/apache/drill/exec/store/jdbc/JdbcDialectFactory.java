@@ -20,13 +20,13 @@ package org.apache.drill.exec.store.jdbc;
 import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseJdbcDialect;
 
 public class JdbcDialectFactory {
-  public static final String JDBC_CLICKHOUSE_PREFIX = "jdbc:clickhouse:";
+  public static final String JDBC_CLICKHOUSE_PREFIX = "jdbc:clickhouse";
 
   public static JdbcDialect getJdbcDialect(JdbcStoragePlugin plugin, String url) {
     if (url.startsWith(JDBC_CLICKHOUSE_PREFIX)) {
       return new ClickhouseJdbcDialect(plugin);
     } else {
-      return new JdbcDialect(plugin);
+      return new DefaultJdbcDialect(plugin);
     }
   }
 }

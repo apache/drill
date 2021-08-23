@@ -1,35 +1,30 @@
 package org.apache.drill.exec.store.jdbc;
 
-import org.apache.calcite.adapter.java.JavaTypeFactory;
-import org.apache.calcite.adapter.jdbc.JdbcImplementor;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.SubsetRemover;
 
-public class JdbcDialect {
-  protected final JdbcStoragePlugin plugin;
+/**
+ * Interface for different implementations of databases connected using the
+ * JdbcStoragePlugin.
+ */
+public interface JdbcDialect {
 
-  public JdbcDialect(JdbcStoragePlugin plugin) {
-    this.plugin = plugin;
-  }
+  /**
+   * Register the schemas provided by this JdbcDialect implementation under the
+   * given parent schema.
+   *
+   * @param config Configuration for schema objects.
+   * @param parent Reference to parent schema.
+   */
+  void registerSchemas(SchemaConfig config, SchemaPlus parent);
 
-  public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
-      JdbcCatalogSchema schema = new JdbcCatalogSchema(plugin.getName(),
-        plugin.getDataSource(), plugin.getDialect(), plugin.getConvention(),
-        !plugin.getConfig().areTableNamesCaseInsensitive());
-      SchemaPlus holder = parent.add(plugin.getName(), schema);
-      schema.setHolder(holder);
-  }
-
-  public String generateSql(RelOptCluster cluster, RelNode input) {
-    final SqlDialect dialect = plugin.getDialect();
-    final JdbcImplementor jdbcImplementor = new JdbcImplementor(dialect,
-        (JavaTypeFactory) cluster.getTypeFactory());
-    final JdbcImplementor.Result result = jdbcImplementor.visitChild(0,
-      input.accept(SubsetRemover.INSTANCE));
-    return result.asStatement().toSqlString(dialect).getSql();
-  }
+  /**
+   * Generate sql from relational expressions.
+   *
+   * @param cluster An environment for related relational expressions.
+   * @param input Relational expressions.
+   */
+  String generateSql(RelOptCluster cluster, RelNode input);
 }
