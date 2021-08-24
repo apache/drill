@@ -19,11 +19,9 @@ package org.apache.drill.common.logical;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public abstract class StoragePluginConfig {
 
   // DO NOT include enabled status in equality and hash
