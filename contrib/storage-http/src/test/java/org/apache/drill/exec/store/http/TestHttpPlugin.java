@@ -380,6 +380,17 @@ public class TestHttpPlugin extends ClusterTest {
   }
 
   @Test
+  public void testApiConfigRequiresTailSerDe() throws Exception {
+    String sql = "SELECT * FROM local.mocktable";
+
+    queryBuilder()
+      .sql(sql)
+      .detailedPlanMatcher()
+      .include("requireTail=false")
+      .match();
+  }
+
+  @Test
   public void simpleTestWithMockServer() throws Exception {
     String sql = "SELECT * FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
     doSimpleTestWithMockServer(sql);

@@ -64,6 +64,7 @@ public class HttpApiConfig {
    * API represents a table (the URL is complete except for
    * parameters specified in the WHERE clause.)
    */
+  @JsonInclude
   @JsonProperty
   private final boolean requireTail;
 
@@ -100,7 +101,7 @@ public class HttpApiConfig {
   private final int xmlDataLevel;
   @JsonProperty
   private final boolean errorOn400;
-  @JsonProperty
+  @Getter(AccessLevel.NONE)
   private final CredentialsProvider credentialsProvider;
   @Getter(AccessLevel.NONE)
   protected boolean directCredentials;
@@ -150,10 +151,9 @@ public class HttpApiConfig {
     this.dataPath = StringUtils.defaultIfEmpty(builder.dataPath, null);
 
     // Default to true for backward compatibility with first PR.
-    this.requireTail = builder.requireTail == null || builder.requireTail;
+    this.requireTail = builder.requireTail;
 
-    this.inputType = builder.inputType == null
-      ? DEFAULT_INPUT_FORMAT : builder.inputType.trim().toLowerCase();
+    this.inputType = builder.inputType.trim().toLowerCase();
 
     this.xmlDataLevel = Math.max(1, builder.xmlDataLevel);
     this.errorOn400 = builder.errorOn400;
@@ -161,6 +161,7 @@ public class HttpApiConfig {
     this.directCredentials = builder.credentialsProvider == null;
   }
 
+  @JsonProperty
   public String userName() {
     if (directCredentials) {
       return getUsernamePasswordCredentials().getUsername();
@@ -168,6 +169,7 @@ public class HttpApiConfig {
     return null;
   }
 
+  @JsonProperty
   public String password() {
     if (directCredentials) {
       return getUsernamePasswordCredentials().getPassword();
@@ -185,6 +187,7 @@ public class HttpApiConfig {
     return new UsernamePasswordCredentials(credentialsProvider);
   }
 
+  @JsonProperty
   public CredentialsProvider credentialsProvider() {
     if (directCredentials) {
       return null;
@@ -204,7 +207,11 @@ public class HttpApiConfig {
 
     @Getter
     @Setter
-    private Boolean requireTail;
+    private boolean requireTail = true;
+
+    @Getter
+    @Setter
+    private String inputType = DEFAULT_INPUT_FORMAT;
 
     public HttpApiConfig build() {
       return new HttpApiConfig(this);
