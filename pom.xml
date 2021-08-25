@@ -94,7 +94,8 @@
     <avro.version>1.9.1</avro.version>
     <metrics.version>4.0.2</metrics.version>
     <jetty.version>9.4.41.v20210516</jetty.version>
-    <jersey.version>2.25.1</jersey.version>
+    <jersey.version>2.34</jersey.version>
+    <javax.validation.api>2.0.1.Final</javax.validation.api>
     <asm.version>7.3.1</asm.version>
     <excludedGroups />
     <memoryMb>4000</memoryMb>
@@ -2931,6 +2932,11 @@
           <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
             <version>${jersey.version}</version>
           </dependency>
           <!--/GlassFish Jersey dependecies-->

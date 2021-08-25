@@ -130,4 +130,47 @@
     </property>
     -->
 
+    <!--
+      HDFS Connector for Object Storage:
+      https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/hdfsconnector.htm
+    -->
+    <!--
+    <property>
+      <name>fs.oci.client.hostname</name>
+      <value>https://objectstorage.us-ashburn-1.oraclecloud.com</value>
+      <description>
+        The URL of the host endpoint. For example, https://www.example.com.
+      </description>
+    </property>
+    <property>
+      <name>fs.oci.client.auth.tenantId</name>
+      <value>ocid1.tenancy.oc1..exampleuniqueID</value>
+      <description>
+        The OCID of your tenancy. To get the value, see Required Keys and OCIDs:
+        https://docs.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm
+      </description>
+    </property>
+    <property>
+      <name>fs.oci.client.auth.userId</name>
+      <value>ocid1.user.oc1..exampleuniqueID</value>
+      <description>
+        The OCID of the user calling the API. To get the value, see Required Keys and OCIDs.
+      </description>
+    </property>
+    <property>
+      <name>fs.oci.client.auth.fingerprint</name>
+      <value>20:3b:97:13:55:1c:5b:0d:d3:37:d8:50:4e:c5:3a:34</value>
+      <description>
+        The fingerprint for the key pair being used. To get the value, see Required Keys and OCIDs.
+      </description>
+    </property>
+    <property>
+      <name>fs.oci.client.auth.pemfilepath</name>
+      <value>/opt/drill/conf/oci_api_key.pem</value>
+      <description>
+        The full path and file name of the private key used for authentication. The file should be on the local file system.
+      </description>
+    </property>
+    -->
+
 </configuration>

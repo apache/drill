@@ -31,8 +31,9 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 /**
  * Contains context information about view expansion(s) in a query. Part of {@link org.apache.drill.exec.ops
  * .QueryContext}. Before expanding a view into its definition, as part of the
- * {@link org.apache.drill.exec.planner.logical.DrillViewTable#toRel(ToRelContext, RelOptTable)}, first a
- * {@link ViewExpansionToken} is requested from ViewExpansionContext through {@link #reserveViewExpansionToken(String)}.
+ * {@link org.apache.drill.exec.planner.logical.DrillViewTable#toRel(org.apache.calcite.plan.RelOptTable.ToRelContext,
+ * org.apache.calcite.plan.RelOptTable)}, first a {@link ViewExpansionToken} is requested from ViewExpansionContext
+ * through {@link #reserveViewExpansionToken(String)}.
  * Once view expansion is complete, a token is released through {@link ViewExpansionToken#release()}. A view definition
  * itself may contain zero or more views for expanding those nested views also a token is obtained.
  *
