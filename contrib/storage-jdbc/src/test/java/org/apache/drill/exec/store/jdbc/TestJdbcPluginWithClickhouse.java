@@ -45,7 +45,7 @@ import static org.junit.Assert.assertEquals;
 @Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithClickhouse extends ClusterTest {
 
-  private static final String DOCKER_IMAGE_Clickhouse = "yandex/clickhouse" +
+  private static final String DOCKER_IMAGE_CLICKHOUSE = "yandex/clickhouse" +
     "-server:21.8.4.51";
   private static JdbcDatabaseContainer<?> jdbcContainer;
 
@@ -53,7 +53,7 @@ public class TestJdbcPluginWithClickhouse extends ClusterTest {
   public static void initClickhouse() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
     jdbcContainer =
-      new ClickHouseContainer(DockerImageName.parse(DOCKER_IMAGE_Clickhouse))
+      new ClickHouseContainer(DockerImageName.parse(DOCKER_IMAGE_CLICKHOUSE))
         .withInitScript("clickhouse-test-data.sql");
     jdbcContainer.start();
 
