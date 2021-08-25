@@ -173,4 +173,8 @@ public class CaseInsensitiveMap<VALUE> implements Map<String, VALUE> {
     return Objects.equals(underlyingMap, that.underlyingMap);
   }
 
+  @Override
+  public String toString() {
+    return underlyingMap.toString();
+  }
 }
