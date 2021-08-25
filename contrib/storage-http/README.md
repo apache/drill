@@ -45,6 +45,30 @@ The `connection` property can accept the following options.
 
 `url`: The base URL which Drill will query.
 
+##### Parameters in the URL
+Many APIs require parameters to be passed directly in the URL instead of as query arguments.  For example, github's API allows you to query an organization's repositories with the following
+URL:  https://github.com/orgs/{org}/repos
+
+As of Drill 1.20.0, you can simply set the URL in the connection using the curly braces.  If your API includes URL parameters you must include them in the `WHERE` clause in your 
+query, or specify a default value in the configuration.
+
+As an example, the API above, you would have to query as shown below:
+
+```sql
+SELECT * 
+FROM api.github
+WHERE org = 'apache'
+```
+
+This query would replace the `org`in the URL with the value from the `WHERE` clause, in this case `apache`.  You can specify a default value as follows:  `https://someapi.com/
+{param1}/{param2=default}`.  In this case, the default would be used if and only if there isn't a parameter supplied in the query. 
+
+#### Limitations on URL Parameters
+* Drill does not support boolean expressions of URL parameters in queries.  For instance, for the above example, if you were to include `WHERE org='apache' OR org='linux'`, 
+  these parameters could not be pushed down in the current state. 
+* All URL parameter clauses must be equality only.
+
+### Passing Parameters in the Query
 `requireTail`: Set to `true` if the query must contain an additional part of the service
 URL as a table name, `false` if the URL needs no additional suffix other than that
 provided by `WHERE` clause filters. (See below.)

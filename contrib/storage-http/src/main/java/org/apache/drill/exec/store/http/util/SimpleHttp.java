@@ -28,6 +28,8 @@ import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.http.HttpApiConfig;
@@ -40,11 +42,16 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
@@ -55,6 +62,7 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 public class SimpleHttp {
+  private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?\\}");
 
   private final OkHttpClient client;
   private final HttpSubScan scanDefn;
@@ -137,7 +145,9 @@ public class SimpleHttp {
     return builder.build();
   }
 
-  public String url() { return url.toString(); }
+  public String url() {
+    return url.toString();
+  }
 
   public InputStream getInputStream() {
 
@@ -180,7 +190,7 @@ public class SimpleHttp {
       responseURL = response.request().url().toString();
 
       // If the request is unsuccessful, throw a UserException
-      if (! isSuccessful(responseCode)) {
+      if (!isSuccessful(responseCode)) {
         throw UserException
           .dataReadError()
           .message("HTTP request failed")
@@ -209,21 +219,23 @@ public class SimpleHttp {
    * with okhttp3.  The issue is that in some cases, a user may not want Drill to throw
    * errors on 400 response codes.  This function will return true/false depending on the
    * configuration for the specific connection.
+   *
    * @param responseCode An int of the connection code
    * @return True if the response code is 200-299 and possibly 400-499, false if other
    */
   private boolean isSuccessful(int responseCode) {
     if (scanDefn.tableSpec().connectionConfig().errorOn400()) {
-      return ((responseCode >= 200 && responseCode <=299) ||
-        (responseCode >= 400 && responseCode <=499));
+      return responseCode >= 200 && responseCode <= 299;
     } else {
-      return responseCode >= 200 && responseCode <=299;
+      return ((responseCode >= 200 && responseCode <= 299) ||
+        (responseCode >= 400 && responseCode <= 499));
     }
   }
 
   /**
    * Gets the HTTP response code from the HTTP call.  Note that this value
    * is only available after the getInputStream() method has been called.
+   *
    * @return int value of the HTTP response code
    */
   public int getResponseCode() {
@@ -233,6 +245,7 @@ public class SimpleHttp {
   /**
    * Gets the HTTP response code from the HTTP call.  Note that this value
    * is only available after the getInputStream() method has been called.
+   *
    * @return int of HTTP response code
    */
   public String getResponseMessage() {
@@ -242,6 +255,7 @@ public class SimpleHttp {
   /**
    * Gets the HTTP response code from the HTTP call.  Note that this value
    * is only available after the getInputStream() method has been called.
+   *
    * @return The HTTP response protocol
    */
   public String getResponseProtocol() {
@@ -251,6 +265,7 @@ public class SimpleHttp {
   /**
    * Gets the HTTP response code from the HTTP call.  Note that this value
    * is only available after the getInputStream() method has been called.
+   *
    * @return The HTTP response URL
    */
   public String getResponseURL() {
@@ -260,9 +275,8 @@ public class SimpleHttp {
   /**
    * Configures response caching using a provided temp directory.
    *
-   * @param builder
-   *          Builder the Builder object to which the caching is to be
-   *          configured
+   * @param builder Builder the Builder object to which the caching is to be
+   *                configured
    */
   private void setupCache(Builder builder) {
     int cacheSize = 10 * 1024 * 1024;   // TODO Add cache size in MB to config
@@ -307,7 +321,7 @@ public class SimpleHttp {
 
     FormBody.Builder formBodyBuilder = new FormBody.Builder();
     String[] lines = postBody.split("\\r?\\n");
-    for(String line : lines) {
+    for (String line : lines) {
 
       // If the string is in the format key=value split it,
       // Otherwise ignore
@@ -318,6 +332,132 @@ public class SimpleHttp {
       }
     }
     return formBodyBuilder;
+  }
+
+  /**
+   * Returns the URL-decoded URL. If the URL is invalid, return the original URL.
+   *
+   * @return Returns the URL-decoded URL
+   */
+  public static String decodedURL(HttpUrl url) {
+    try {
+      return URLDecoder.decode(url.toString(), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      return url.toString();
+    }
+  }
+
+  /**
+   * Returns true if the url has url parameters, as indicated by the presence of
+   * {param} in a url.
+   *
+   * @return True if there are URL params, false if not
+   */
+  public static boolean hasURLParameters(HttpUrl url) {
+    String decodedUrl = SimpleHttp.decodedURL(url);
+    Matcher matcher = URL_PARAM_REGEX.matcher(decodedUrl);
+    return matcher.find();
+  }
+
+  /**
+   * APIs are sometimes structured with parameters in the URL itself.  For instance, to request a list of
+   * an organization's repositories in github, the URL is: https://api.github.com/orgs/{org}/repos, where
+   * you can replace the org with the actual organization name.
+   *
+   * @return A list of URL parameters enclosed by curly braces.
+   */
+  public static List<String> getURLParameters(HttpUrl url) {
+    String decodedURL = decodedURL(url);
+    Matcher matcher = URL_PARAM_REGEX.matcher(decodedURL);
+    List<String> parameters = new ArrayList<>();
+    while (matcher.find()) {
+      String param = matcher.group(1);
+      parameters.add(param);
+    }
+    return parameters;
+  }
+
+  /**
+   * This function is used to extract the default parameter supplied in a URL. For instance,
+   * if the supplied URL is http://someapi.com/path/{p1=foo}, the function will return foo. If there
+   * is not a matching parameter or no default value, the function will return null.
+   * @param url The URL containing a default parameter
+   * @param parameter The parameter for which you need the value
+   * @return The value for the supplied parameter
+   */
+  public static String getDefaultParameterValue (HttpUrl url, String parameter) {
+    String decodedURL = decodedURL(url);
+    Pattern paramRegex = Pattern.compile("\\{" + parameter + "=(\\w+?)\\}");
+    Matcher paramMatcher = paramRegex.matcher(decodedURL);
+    if (paramMatcher.find()) {
+      return paramMatcher.group(1);
+    } else {
+      throw UserException
+        .validationError()
+        .message("Default URL parameters must have a value. The parameter " + parameter + " is not defined in the configuration.")
+        .build(logger);
+    }
+  }
+
+  /**
+   * Used for APIs which have parameters in the URL.  This function maps the filters pushed down
+   * from the query into the URL.  For example the API: github.com/orgs/{org}/repos requires a user to
+   * specify an organization and replace {org} with an actual organization.  The filter is passed down from
+   * the query.
+   *
+   * Note that if a URL contains URL parameters and one is not provided in the filters, Drill will throw
+   * a UserException.
+   *
+   * @param url The HttpUrl containing URL Parameters
+   * @param filters  A CaseInsensitiveMap of filters
+   * @return A string of the URL with the URL parameters replaced by filter values
+   */
+  public static String mapURLParameters(HttpUrl url, Map<String, String> filters) {
+    if (!hasURLParameters(url)) {
+      return url.toString();
+    }
+
+    if (filters == null) {
+      throw UserException
+        .parseError()
+        .message("API Query with URL Parameters must be populated.")
+        .build(logger);
+    }
+    CaseInsensitiveMap<String>caseInsensitiveFilterMap = (CaseInsensitiveMap<String>)filters;
+
+    List<String> params = SimpleHttp.getURLParameters(url);
+    String tempUrl = SimpleHttp.decodedURL(url);
+    for (String param : params) {
+
+      // The null check here verify that IF the user has configured the API with URL Parameters that:
+      // 1.  The filter was pushed down IE: The user put something in the WHERE clause that corresponds to the
+      //     parameter
+      // 2.  There is a value associated with that parameter.  Strictly speaking, the second check is not
+      //     necessary as I don't think Calcite or Drill will push down an empty filter, but for the sake
+      //     of providing helpful errors in strange cases, it is there.
+
+
+      String value = caseInsensitiveFilterMap.get(param);
+
+      // Check and see if there is a default for this parameter. If not throw an error.
+      if (StringUtils.isEmpty(value)) {
+        String defaultValue = getDefaultParameterValue(url, param);
+        if (! StringUtils.isEmpty(defaultValue)) {
+          tempUrl = tempUrl.replace("/{" + param + "=" + defaultValue + "}", "/" + defaultValue);
+        } else {
+          throw UserException
+            .parseError()
+            .message("API Query with URL Parameters must be populated. Parameter " + param + " must be included in WHERE clause.")
+            .build(logger);
+        }
+      } else {
+        // Note that if the user has a URL with duplicate parameters, both will be replaced.  IE:
+        // someapi.com/{p1}/{p1}/something   In this case, both p1 parameters will be replaced with
+        // the value.
+        tempUrl = tempUrl.replace("{" + param + "}", value);
+      }
+    }
+    return tempUrl;
   }
 
   /**

@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.http;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -110,10 +111,18 @@ public class TestHttpPlugin extends ClusterTest {
       .method("get")
       .build();
 
+    HttpApiConfig pokemonConfig = HttpApiConfig.builder()
+      .url("https://pokeapi.co/api/v2/pokemon/{pokemon_name}")
+      .method("get")
+      .inputType("json")
+      .requireTail(false)
+      .build();
+
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("stock", stockConfig);
     configs.put("sunrise", sunriseConfig);
     configs.put("sunrise2", sunriseWithParamsConfig);
+    configs.put("pokemon", pokemonConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 10, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
@@ -144,6 +153,7 @@ public class TestHttpPlugin extends ClusterTest {
         UsernamePasswordCredentials.USERNAME, "user",
         UsernamePasswordCredentials.PASSWORD, "pass")))
       .dataPath("results")
+      .errorOn400(true)
       .build();
 
     // Use the mock server with the HTTP parameters passed as WHERE
@@ -193,12 +203,43 @@ public class TestHttpPlugin extends ClusterTest {
       .xmlDataLevel(2)
       .build();
 
+    HttpApiConfig mockGithubWithParam = HttpApiConfig.builder()
+      .url("http://localhost:8091/orgs/{org}/repos")
+      .method("GET")
+      .headers(headers)
+      .params(Arrays.asList("lat", "lng", "date"))
+      .dataPath("results")
+      .requireTail(false)
+      .build();
+
+    HttpApiConfig mockGithubWithDuplicateParam = HttpApiConfig.builder()
+      .url("http://localhost:8091/orgs/{org}/repos")
+      .method("GET")
+      .headers(headers)
+      .params(Arrays.asList("org", "lng", "date"))
+      .dataPath("results")
+      .requireTail(false)
+      .build();
+
+    HttpApiConfig mockGithubWithParamInQuery = HttpApiConfig.builder()
+      .url("http://localhost:8091/orgs/{org}/repos?p1={p1}")
+      .method("GET")
+      .headers(headers)
+      .params(Arrays.asList("p2", "p3"))
+      .dataPath("results")
+      .requireTail(false)
+      .build();
+
+
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("sunrise", mockSchema);
     configs.put("mocktable", mockTable);
     configs.put("mockpost", mockPostConfig);
     configs.put("mockcsv", mockCsvConfig);
     configs.put("mockxml", mockXmlConfig);
+    configs.put("github", mockGithubWithParam);
+    configs.put("github2", mockGithubWithDuplicateParam);
+    configs.put("github3", mockGithubWithParamInQuery);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
@@ -285,9 +326,8 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57",
-                       "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM",
-                       "4:48:07 AM", "7:25:45 PM"), "OK")
+      .addRow(mapValue("6:12:17 AM", "6:01:54 PM", "12:07:06 PM", "11:49:37",
+        "5:47:49 AM", "6:26:22 PM", "5:17:51 AM", "6:56:21 PM", "4:47:41 AM", "7:26:31 PM"), "OK")
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -297,7 +337,7 @@ public class TestHttpPlugin extends ClusterTest {
    * As above, but we return only the contents of {@code results}, and use
    * filter push-down for the arguments.
    *
-   * @throws Exception
+   * @throws Exception if anything goes wrong
    */
   @Test
   @Ignore("Requires Remote Server")
@@ -322,8 +362,8 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM",
-              "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM")
+      .addRow("6:12:17 AM", "6:01:54 PM", "12:07:06 PM", "11:49:37", "5:47:49 AM",
+        "6:26:22 PM", "5:17:51 AM", "6:56:21 PM", "4:47:41 AM", "7:26:31 PM")
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -357,10 +397,198 @@ public class TestHttpPlugin extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("6:13:58 AM", "5:59:55 PM")
+      .addRow("6:12:17 AM", "6:01:54 PM")
       .build();
 
     RowSetUtilities.verify(expected, results);
+  }
+
+  @Test
+  @Ignore("Requires Remote Server")
+  public void liveTestWithURLParameters() throws Exception {
+    String sql = "SELECT * FROM live.pokemon WHERE pokemon_name = 'ditto'";
+    client.testBuilder()
+      .sqlQuery(sql)
+      .expectsNumRecords(1)
+      .go();
+  }
+
+  @Test
+  public void simpleTestWithMockServerWithURLParams() throws Exception {
+    String sql = "SELECT _response_url FROM local.github\n" +
+        "WHERE `org` = 'apache'";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(TEST_JSON_RESPONSE)
+      );
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+          .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+          .addRow("http://localhost:8091/orgs/apache/repos")
+          .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void simpleTestWithMockServerWithURLParamsOfBooleanType() throws Exception {
+    String sql = "SELECT _response_url FROM local.github\n" +
+      "WHERE `org` = true";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("http://localhost:8091/orgs/true/repos")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void simpleTestWithMockServerWithURLParamsOfIntType() throws Exception {
+    String sql = "SELECT _response_url FROM local.github\n" +
+      "WHERE `org` = 1234";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("http://localhost:8091/orgs/1234/repos")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  @Ignore("Requires Remote Server")
+  public void simpleTestWithUrlParamsInSubquery() throws Exception {
+    String sql = "select pokemon_data.data.game_index AS game_index, pokemon_data.data.version.name AS name " +
+      "from (select flatten(game_indices) as data " +
+      "from live.pokemon " +
+      "where pokemon_name='ditto' " +
+      ") as pokemon_data WHERE pokemon_data.data.game_index=76";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("game_index", MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+      .add("name", MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(76, "red")
+      .addRow(76, "blue")
+      .addRow(76, "yellow")
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+  }
+
+  @Test
+  public void simpleTestWithMockServerWithDuplicateURLParams() throws Exception {
+    String sql = "SELECT _response_url FROM local.github2\n" +
+      "WHERE `org` = 'apache'";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("http://localhost:8091/orgs/apache/repos?org=apache")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void testUrlParamsInQueryString() throws Exception {
+    String sql = "SELECT _response_url FROM local.github3\n" +
+      "WHERE `org` = 'apache' AND p1='param1' AND p2='param2'";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("http://localhost:8091/orgs/apache/repos?p1=param1&p2=param2")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  /**
+   * When the user has configured an API connection with URL parameters,
+   * it is mandatory that those parameters are included in the WHERE clause. Drill
+   * will throw an exception if that parameter is not present.
+   * @throws Exception if anything goes wrong
+   */
+  @Test
+  public void testUrlParamError() throws Exception {
+    String sql = "SELECT _response_url FROM local.github\n";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(TEST_JSON_RESPONSE)
+      );
+      run(sql);
+      fail();
+    } catch (UserException e) {
+      assertTrue(e.getMessage().contains("API Query with URL Parameters must be populated."));
+    }
   }
 
   @Test
@@ -762,6 +990,34 @@ public class TestHttpPlugin extends ClusterTest {
         assertTrue(msg.contains("Connection: sunrise"));
         assertTrue(msg.contains("Plugin: local"));
       }
+    }
+  }
+
+  @Test
+  public void testNoErrorOn404() throws Exception {
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(404)
+          .setBody("{}")
+      );
+
+      String sql = "SELECT _response_code, _response_message, _response_protocol, _response_url FROM local.mocktable";
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("_response_code", TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_message", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_protocol", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("_response_url", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(404, "Client Error", "http/1.1", "http://localhost:8091/json")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
     }
   }
 

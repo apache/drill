@@ -35,6 +35,7 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
@@ -288,7 +289,8 @@ public class HttpGroupScan extends AbstractGroupScan {
 
   @JsonIgnore
   public boolean allowsFilters() {
-    return getHttpConfig().params() != null;
+    // Return true if the query has either parameters specified in the URL or URL params.
+    return (getHttpConfig().params() != null) || SimpleHttp.hasURLParameters(getHttpConfig().getHttpUrl());
   }
 
   @Override

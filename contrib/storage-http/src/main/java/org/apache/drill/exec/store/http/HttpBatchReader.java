@@ -24,6 +24,7 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
@@ -88,8 +89,12 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
     // JSON loader setup
     ResultSetLoader loader = negotiator.build();
-    implicitColumns = new ImplicitColumns(loader.writer());
-    buildImplicitColumns();
+
+
+    if (implicitColumnsAreProjected()) {
+      implicitColumns = new ImplicitColumns(loader.writer());
+      buildImplicitColumns();
+    }
 
     InputStream inStream = http.getInputStream();
     populateImplicitFieldMap(http);
@@ -123,10 +128,28 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   }
 
   protected void populateImplicitFieldMap(SimpleHttp http) {
+    // If the implicit fields are not projected, skip this step
+    if (! implicitColumnsAreProjected()) {
+      return;
+    }
+
     implicitColumns.getColumn(STRING_METADATA_FIELDS[0]).setValue(http.getResponseMessage());
     implicitColumns.getColumn(STRING_METADATA_FIELDS[1]).setValue(http.getResponseProtocol());
     implicitColumns.getColumn(STRING_METADATA_FIELDS[2]).setValue(http.getResponseURL());
     implicitColumns.getColumn(RESPONSE_CODE_FIELD).setValue(http.getResponseCode());
+  }
+
+  protected boolean implicitColumnsAreProjected() {
+    List<SchemaPath> columns = subScan.columns();
+    for (SchemaPath path : columns) {
+      if (path.nameEquals(STRING_METADATA_FIELDS[0]) ||
+        path.nameEquals(STRING_METADATA_FIELDS[1]) ||
+        path.nameEquals(STRING_METADATA_FIELDS[2]) ||
+        path.nameEquals(RESPONSE_CODE_FIELD)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   protected HttpUrl buildUrl() {
@@ -137,6 +160,11 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     if (subScan.tableSpec().tableName() != null) {
       baseUrl += subScan.tableSpec().tableName();
     }
+
+    // Add URL Parameters to baseURL
+    HttpUrl parsedURL = HttpUrl.parse(baseUrl);
+    baseUrl = SimpleHttp.mapURLParameters(parsedURL, subScan.filters());
+
     HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder();
     if (apiConfig.params() != null && !apiConfig.params().isEmpty() &&
         subScan.filters() != null) {

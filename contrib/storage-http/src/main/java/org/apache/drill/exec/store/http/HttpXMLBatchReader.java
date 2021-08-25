@@ -86,9 +86,11 @@ public class HttpXMLBatchReader extends HttpBatchReader {
       xmlReader = new XMLReader(inStream, dataLevel, maxRecords);
       ResultSetLoader resultLoader = negotiator.build();
 
-      implicitColumns = new ImplicitColumns(resultLoader.writer());
-      buildImplicitColumns();
-      populateImplicitFieldMap(http);
+      if (implicitColumnsAreProjected()) {
+        implicitColumns = new ImplicitColumns(resultLoader.writer());
+        buildImplicitColumns();
+        populateImplicitFieldMap(http);
+      }
 
       RowSetLoader rootRowWriter = resultLoader.writer();
       xmlReader.open(rootRowWriter, errorContext);

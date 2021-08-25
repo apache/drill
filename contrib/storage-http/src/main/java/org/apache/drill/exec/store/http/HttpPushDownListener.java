@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.http;
 
+import okhttp3.HttpUrl;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.common.map.CaseInsensitiveMap;
@@ -30,9 +31,9 @@ import org.apache.drill.exec.store.base.filter.ExprNode.ColRelOpConstNode;
 import org.apache.drill.exec.store.base.filter.ExprNode.OrNode;
 import org.apache.drill.exec.store.base.filter.FilterPushDownListener;
 import org.apache.drill.exec.store.base.filter.FilterPushDownStrategy;
+import org.apache.drill.exec.store.http.util.SimpleHttp;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +46,10 @@ import java.util.Set;
  * <li>An AND'ed set of such expressions,</li>
  * <li>If the value is one with an unambiguous conversion to
  * a string. (That is, not dates, binary, maps, etc.)</li>
+ * <li>  A field from the URL.  For instance in some APIs you have parameters that are part of the path.
+ * For example, https://github.com/orgs/{org}/repos.  In this instance, the query must contain
+ * a parameter called org.
+ * </li>
  * </ul>
  */
 public class HttpPushDownListener implements FilterPushDownListener {
@@ -82,8 +87,20 @@ public class HttpPushDownListener implements FilterPushDownListener {
 
     HttpScanPushDownListener(HttpGroupScan groupScan) {
       this.groupScan = groupScan;
-      for (String field : groupScan.getHttpConfig().params()) {
-        filterParams.put(field, field);
+      // Add fields from config
+      if (groupScan.getHttpConfig().params() != null) {
+        for (String field : groupScan.getHttpConfig().params()) {
+          filterParams.put(field, field);
+        }
+      }
+
+      // Add fields from the URL path as denoted by {}
+      HttpUrl url = HttpUrl.parse(groupScan.getHttpConfig().url());
+      if (url != null) {
+        List<String> urlParams = SimpleHttp.getURLParameters(url);
+        for (String urlField : urlParams) {
+          filterParams.put(urlField, urlField);
+        }
       }
     }
 
@@ -144,7 +161,7 @@ public class HttpPushDownListener implements FilterPushDownListener {
      */
     @Override
     public Pair<GroupScan, List<RexNode>> transform(AndNode andNode) {
-      Map<String, String> filters = new HashMap<>();
+      Map<String, String> filters = CaseInsensitiveMap.newHashMap();
       double selectivity = 1;
       for (ExprNode expr : andNode.children) {
         ColRelOpConstNode relOp = (ColRelOpConstNode) expr;
