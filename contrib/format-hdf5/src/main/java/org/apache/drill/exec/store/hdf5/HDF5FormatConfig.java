@@ -36,15 +36,18 @@ public class HDF5FormatConfig implements FormatPluginConfig {
 
   private final List<String> extensions;
   private final String defaultPath;
+  private final boolean showPreview;
 
   @JsonCreator
   public HDF5FormatConfig(
       @JsonProperty("extensions") List<String> extensions,
-      @JsonProperty("defaultPath") String defaultPath) {
+      @JsonProperty("defaultPath") String defaultPath,
+      @JsonProperty("showPreview") boolean showPreview) {
     this.extensions = extensions == null
         ? Collections.singletonList("h5")
         : ImmutableList.copyOf(extensions);
     this.defaultPath = defaultPath;
+    this.showPreview = showPreview;
   }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -56,6 +59,8 @@ public class HDF5FormatConfig implements FormatPluginConfig {
     return defaultPath;
   }
 
+  public boolean showPreview() { return showPreview; }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -66,19 +71,21 @@ public class HDF5FormatConfig implements FormatPluginConfig {
     }
     HDF5FormatConfig other = (HDF5FormatConfig) obj;
     return Objects.equals(extensions, other.getExtensions()) &&
-           Objects.equals(defaultPath, other.defaultPath);
+      Objects.equals(defaultPath, other.defaultPath) &&
+      Objects.equals(showPreview, other.showPreview);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(extensions, defaultPath);
+    return Objects.hash(extensions, defaultPath, showPreview);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
-        .field("extensions", extensions)
-        .field("default path", defaultPath)
-        .toString();
+      .field("extensions", extensions)
+      .field("default path", defaultPath)
+      .field("show preview", showPreview)
+      .toString();
   }
 }
