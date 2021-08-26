@@ -46,7 +46,7 @@ before_install:
   - export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-arm64"
   - export PATH="$JAVA_HOME/bin:$PATH"
   - java -version
-  - mvn -version
+  - mvn -T 1C -version
   - git fetch --unshallow
   # Install libraries required for protobuf generation
   - |
@@ -71,12 +71,12 @@ install:
   # For protobuf phase: builds Drill project, performs license checkstyle goal and regenerates Java and C++ Protobuf files
   - |
     if [ $PHASE = "tests" ]; then \
-      mvn install --batch-mode --no-transfer-progress \
+      mvn -T 1C install --batch-mode --no-transfer-progress \
         -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest,org.apache.drill.categories.SecurityTest" \
         -DmemoryMb=1300 -DdirectMemoryMb=3000; \
     elif [ $PHASE = "build_checkstyle_protobuf" ]; then \
-      MAVEN_OPTS="-Xms1G -Xmx1G" mvn install --no-transfer-progress -Drat.skip=false -Dlicense.skip=false --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true && \
-      pushd protocol && mvn process-sources -P proto-compile && popd && \
+      MAVEN_OPTS="-Xms1G -Xmx1G" mvn -T 1C install --no-transfer-progress -Drat.skip=false -Dlicense.skip=false --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true && \
+      pushd protocol && mvn -T 1C process-sources -P proto-compile && popd && \
       mkdir contrib/native/client/build && pushd contrib/native/client/build && /usr/bin/cmake -G "Unix Makefiles" .. && make cpProtobufs && popd; \
     fi
 script:
