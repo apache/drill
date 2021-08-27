@@ -153,6 +153,8 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private CustomErrorContext errorContext;
 
+  private boolean showMetadataPreview;
+
   private int[] dimensions;
 
   public static class HDF5ReaderConfig {
@@ -173,6 +175,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     this.readerConfig = readerConfig;
     this.maxRecords = maxRecords;
     dataWriters = new ArrayList<>();
+    this.showMetadataPreview = readerConfig.formatConfig.showPreview();
   }
 
   @Override
@@ -434,7 +437,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
       dimensionsWriter.setString(Arrays.toString(dataset.getDimensions()));
 
       // Do not project links
-      if (! metadataRow.isLink()) {
+      if (! metadataRow.isLink() && showMetadataPreview) {
         projectDataset(rowWriter, metadataRow.getPath());
       }
     }

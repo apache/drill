@@ -112,6 +112,29 @@ public class TestHDF5Format extends ClusterTest {
   }
 
   @Test
+  public void testStarQueryWithoutPreview() throws Exception {
+    String sql = "SELECT * FROM table(dfs.`hdf5/dset.h5` (type => 'hdf5', showPreview => false))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("path", MinorType.VARCHAR, DataMode.OPTIONAL)
+      .add("data_type", MinorType.VARCHAR, DataMode.OPTIONAL)
+      .add("file_name", MinorType.VARCHAR, DataMode.OPTIONAL)
+      .add("data_size", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("is_link", MinorType.BIT, DataMode.OPTIONAL)
+      .add("element_count", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("dataset_data_type", MinorType.VARCHAR, DataMode.OPTIONAL)
+      .add("dimensions", MinorType.VARCHAR, DataMode.OPTIONAL)
+      .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("/dset", "DATASET", "dset.h5", 96, false, 24, "int", "[4, 6]")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testFlattenColumnQuery() throws RpcException {
     String sql = "SELECT data[0] AS col1,\n" +
             "data[1] as col2,\n" +

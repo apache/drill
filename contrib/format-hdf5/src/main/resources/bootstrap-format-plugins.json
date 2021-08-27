@@ -7,7 +7,8 @@
           "type": "hdf5",
           "extensions": [
             "h5"
-          ]
+          ],
+          "showPreview": true
         }
       }
     },
@@ -18,7 +19,8 @@
           "type": "hdf5",
           "extensions": [
             "h5"
-          ]
+          ],
+          "showPreview": true
         }
       }
     },
@@ -29,7 +31,8 @@
           "type": "hdf5",
           "extensions": [
             "h5"
-          ]
+          ],
+          "showPreview": true
         }
       }
     }

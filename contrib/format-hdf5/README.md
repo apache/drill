@@ -10,6 +10,8 @@ There are three configuration variables in this plugin:
 * `type`: This should be set to `hdf5`.
 * `extensions`: This is a list of the file extensions used to identify HDF5 files. Typically HDF5 uses `.h5` or `.hdf5` as file extensions. This defaults to `.h5`.
 * `defaultPath`: The default path defines which path Drill will query for data. Typically this should be left as `null` in the configuration file. Its usage is explained below.
+* `showPreview`: Set to `true` if you want Drill to render a preview of datasets in the metadata view, `false` if not.  Defaults to `true` however for large files or very
+    complex data, you should set to `false` for better performance.
 
 ### Example Configuration
 For most uses, the configuration below will suffice to enable Drill to query HDF5 files.
@@ -19,7 +21,8 @@ For most uses, the configuration below will suffice to enable Drill to query HDF
       "extensions": [
         "h5"
       ],
-      "defaultPath": null
+      "defaultPath": null,
+      "showPreview": true
     }
 ```
 ## Usage
@@ -136,4 +139,3 @@ There are several limitations with the HDF5 format plugin in Drill.
  
  [1]: https://en.wikipedia.org/wiki/Hierarchical_Data_Format
  [2]: https://www.hdfgroup.org
- 
