@@ -197,6 +197,30 @@ feature if the API is strict about parameter ordering.
 At present Drill does not enforce that parameters are provided in the query: Drill
 assumes parameters are optional.
 
+#### API connection credentials provider
+
+Starting from Drill 1.20.0, it is possible to use [Credentials Provider](https://github.com/apache/drill/blob/master/docs/dev/PluginCredentialsProvider.md#plugin-credentials-provider) for specifying
+API connection credentials.
+
+`credentialsProvider` property should be used to configure credentials provider, similar to the way
+how it is used for storage plugins:
+
+```json
+{
+   "credentialsProvider": {
+      "credentialsProviderType": "PlainCredentialsProvider",
+      "credentials": {
+         "username": "user1",
+         "password": "user1Pass"
+      }
+   }
+}
+```
+
+It is possible to use any available credential provider type for API connections, including custom implementations.
+Please refer to [Developer notes](https://github.com/apache/drill/blob/master/docs/dev/PluginCredentialsProvider.md#developer-notes)
+for more details for creating custom credential provider implementations without changing Drill's code.
+
 ### Data Path
 
 REST responses often have structure beyond the data you want to query. For example:
