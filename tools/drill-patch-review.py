@@ -65,6 +65,7 @@ def main():
   p.close()
 
   rb_command="post-review --publish --tracking-branch " + opt.branch + " --target-groups=drill-git --bugs-closed=" + opt.jira
+  rb_command_for_debug=rb_command + " --username " + opt.reviewboard_user + " --password XXXX"
   rb_command=rb_command + " --username " + opt.reviewboard_user + " --password " + opt.reviewboard_password
 
   if opt.debug:
@@ -80,7 +81,7 @@ def main():
   if opt.testing:
     rb_command=rb_command + " --testing-done=" + opt.testing
   if opt.debug:
-    print(rb_command)
+    print(rb_command_for_debug)
   p=os.popen(rb_command)
   rb_url=""
   for line in p:
