@@ -111,7 +111,7 @@
       },
       "enabled" : false
     },
-    "os" : {
+    "oci" : {
       "type" : "file",
       "connection": "oci://{bucket_name}@{namespace_name}",
       "config" : {
