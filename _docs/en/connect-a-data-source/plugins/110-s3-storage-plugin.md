@@ -14,7 +14,7 @@ To connect Drill to S3:
 
 For additional information, refer to the [HDFS S3 documentation](https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/index.html).   
 
-**Note:** Drill does not use HDFS 3.x, therefore Drill does not support AWS temporary credentials, as described in the s3a documentation.
+**Note:** Drill started using HDFS 3.0, but support of AWS temporary credentials (as described in the s3a documentation) wasn't verified yet.
 
 
 ## Providing AWS Credentials  
