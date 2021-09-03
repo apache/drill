@@ -366,7 +366,7 @@
     <dependency>
       <groupId>com.tdunning</groupId>
       <artifactId>t-digest</artifactId>
-      <version>3.2</version>
+      <version>3.3</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
