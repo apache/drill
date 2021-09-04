@@ -58,8 +58,8 @@ public class TestJdbcPluginWithClickhouse extends ClusterTest {
     jdbcContainer.start();
 
     JdbcStorageConfig jdbcStorageConfig =
-      new JdbcStorageConfig("ru.yandex.clickhouse.ClickHouseDriver", jdbcContainer.getJdbcUrl(),
-            jdbcContainer.getUsername(), jdbcContainer.getPassword(),
+      new JdbcStorageConfig("ru.yandex.clickhouse.ClickHouseDriver",
+        jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), null,
         true, null, null);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("clickhouse", jdbcStorageConfig);
