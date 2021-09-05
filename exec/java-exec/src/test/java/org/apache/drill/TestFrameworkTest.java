@@ -212,6 +212,7 @@ public class TestFrameworkTest extends BaseTestQuery {
     LocalDateTime localDT = LocalDateTime.of(2019, 9, 30, 20, 47, 43, 123);
     Instant instant = localDT.atZone(ZoneId.systemDefault()).toInstant();
     long ts = instant.toEpochMilli() + instant.getNano();
+    ts = ts + ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000;
     testBuilder()
         .sqlQuery("select * from cp.`jsoninput/input2.json` limit 1")
         .ordered()
