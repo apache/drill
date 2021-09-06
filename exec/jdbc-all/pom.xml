@@ -81,6 +81,10 @@
           <artifactId>commons-codec</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.glassfish.jersey.core</groupId>
+          <artifactId>jersey-common</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.glassfish.jersey.containers</groupId>
           <artifactId>jersey-container-jetty-servlet</artifactId>
         </exclusion>
@@ -544,7 +548,7 @@
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                   </message>
-                  <maxsize>46900000</maxsize>
+                  <maxsize>46600000</maxsize>
                   <minsize>15000000</minsize>
                   <files>
                    <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
