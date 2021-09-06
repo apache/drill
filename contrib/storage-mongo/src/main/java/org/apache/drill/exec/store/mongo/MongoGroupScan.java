@@ -38,6 +38,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.mongodb.client.MongoClient;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -50,6 +51,7 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.mongo.MongoSubScan.MongoSubScanSpec;
 import org.apache.drill.exec.store.mongo.MongoSubScan.ShardedMongoSubScanSpec;
 import org.apache.drill.exec.store.mongo.common.ChunkInfo;
 import org.bson.Document;
@@ -58,8 +60,6 @@ import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
@@ -75,13 +75,12 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 
+@Slf4j
 @JsonTypeName("mongo-scan")
 public class MongoGroupScan extends AbstractGroupScan implements
     DrillMongoConstants {
 
   private static final int SELECT = 1;
-
-  private static final Logger logger = LoggerFactory.getLogger(MongoGroupScan.class);
 
   private static final Comparator<List<BaseMongoSubScanSpec>> LIST_SIZE_COMPARATOR = Comparator.comparingInt(List::size);
 
@@ -450,19 +449,21 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   private BaseMongoSubScanSpec buildSubScanSpecAndGet(ChunkInfo chunkInfo) {
     if (useAggregate) {
-      return new MongoSubScan.MongoSubScanSpec()
+      return MongoSubScanSpec.builder()
           .setOperations(scanSpec.getOperations())
           .setDbName(scanSpec.getDbName())
           .setCollectionName(scanSpec.getCollectionName())
-          .setHosts(chunkInfo.getChunkLocList());
+          .setHosts(chunkInfo.getChunkLocList())
+          .build();
     }
-    return new ShardedMongoSubScanSpec()
+    return ShardedMongoSubScanSpec.builder()
         .setMinFilters(chunkInfo.getMinFilters())
         .setMaxFilters(chunkInfo.getMaxFilters())
         .setFilter(scanSpec.getFilters())
         .setDbName(scanSpec.getDbName())
         .setCollectionName(scanSpec.getCollectionName())
-        .setHosts(chunkInfo.getChunkLocList());
+        .setHosts(chunkInfo.getChunkLocList())
+        .build();
   }
 
   @Override

@@ -23,7 +23,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.common.PlanStringBuilder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -123,104 +126,32 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   }
 
   @JsonTypeName("ShardedMongoSubScanSpec")
+  @Getter
+  @ToString
+  @SuperBuilder(setterPrefix = "set")
+  @JsonDeserialize(builder = ShardedMongoSubScanSpec.ShardedMongoSubScanSpecBuilder.class)
   public static class ShardedMongoSubScanSpec extends BaseMongoSubScanSpec {
 
-    protected Map<String, Object> minFilters;
-    protected Map<String, Object> maxFilters;
-    protected Document filter;
+    @JsonProperty
+    private final Map<String, Object> minFilters;
 
-    @JsonCreator
-    public ShardedMongoSubScanSpec(@JsonProperty("dbName") String dbName,
-        @JsonProperty("collectionName") String collectionName,
-        @JsonProperty("hosts") List<String> hosts,
-        @JsonProperty("minFilters") Map<String, Object> minFilters,
-        @JsonProperty("maxFilters") Map<String, Object> maxFilters,
-        @JsonProperty("filters") Document filters) {
-      super(dbName, collectionName, hosts);
-      this.minFilters = minFilters;
-      this.maxFilters = maxFilters;
-      this.filter = filters;
-    }
+    @JsonProperty
+    private final Map<String, Object> maxFilters;
 
-    ShardedMongoSubScanSpec() {
-    }
-
-    public Map<String, Object> getMinFilters() {
-      return minFilters;
-    }
-
-    public ShardedMongoSubScanSpec setMinFilters(Map<String, Object> minFilters) {
-      this.minFilters = minFilters;
-      return this;
-    }
-
-    public Map<String, Object> getMaxFilters() {
-      return maxFilters;
-    }
-
-    public ShardedMongoSubScanSpec setMaxFilters(Map<String, Object> maxFilters) {
-      this.maxFilters = maxFilters;
-      return this;
-    }
-
-    public Document getFilter() {
-      return filter;
-    }
-
-    public ShardedMongoSubScanSpec setFilter(Document filter) {
-      this.filter = filter;
-      return this;
-    }
-
-    @Override
-    public String toString() {
-      return new PlanStringBuilder(this)
-        .field("dbName", dbName)
-        .field("collectionName", collectionName)
-        .field("hosts", hosts)
-        .field("minFilters", minFilters)
-        .field("maxFilters", maxFilters)
-        .field("filter", filter)
-        .toString();
-    }
+    @JsonProperty
+    private final Document filter;
 
   }
 
   @JsonTypeName("MongoSubScanSpec")
+  @Getter
+  @ToString
+  @SuperBuilder(setterPrefix = "set")
+  @JsonDeserialize(builder = MongoSubScanSpec.MongoSubScanSpecBuilder.class)
   public static class MongoSubScanSpec extends BaseMongoSubScanSpec {
 
-    protected List<Bson> operations;
-
-    @JsonCreator
-    public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
-        @JsonProperty("collectionName") String collectionName,
-        @JsonProperty("hosts") List<String> hosts,
-        @JsonProperty("operations") List<Bson> operations) {
-      super(dbName, collectionName, hosts);
-      this.operations = operations;
-    }
-
-    MongoSubScanSpec() {
-    }
-
-    public List<Bson> getOperations() {
-      return operations;
-    }
-
-    public MongoSubScanSpec setOperations(List<Bson> operations) {
-      this.operations = operations;
-      return this;
-    }
-
-    @Override
-    public String toString() {
-      return new PlanStringBuilder(this)
-          .field("dbName", dbName)
-          .field("collectionName", collectionName)
-          .field("hosts", hosts)
-          .field("operations", operations)
-          .toString();
-    }
+    @JsonProperty
+    private final List<Bson> operations;
 
   }
 

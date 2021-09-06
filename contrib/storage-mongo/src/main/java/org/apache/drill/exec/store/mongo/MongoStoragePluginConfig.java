@@ -24,12 +24,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.mongodb.ConnectionString;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 
 @JsonTypeName(MongoStoragePluginConfig.NAME)
+@EqualsAndHashCode(of = "connection", callSuper = false)
 public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig {
 
   public static final String NAME = "mongo";
@@ -41,35 +45,22 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
 
   private final MongoPluginOptimizations pluginOptimizations;
 
+  private final int batchSize;
+
   @JsonCreator
   public MongoStoragePluginConfig(@JsonProperty("connection") String connection,
     @JsonProperty("pluginOptimizations") MongoPluginOptimizations pluginOptimizations,
+    @JsonProperty("batchSize") Integer batchSize,
     @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
     super(getCredentialsProvider(credentialsProvider), credentialsProvider == null);
     this.connection = connection;
     this.clientURI = new ConnectionString(connection);
     this.pluginOptimizations = ObjectUtils.defaultIfNull(pluginOptimizations, new MongoPluginOptimizations());
+    this.batchSize = batchSize != null ? batchSize : 100;
   }
 
   public MongoPluginOptimizations getPluginOptimizations() {
     return pluginOptimizations;
-  }
-
-  @Override
-  public boolean equals(Object that) {
-    if (this == that) {
-      return true;
-    } else if (that == null || getClass() != that.getClass()) {
-      return false;
-    }
-    MongoStoragePluginConfig thatConfig = (MongoStoragePluginConfig) that;
-    return this.connection.equals(thatConfig.connection);
-
-  }
-
-  @Override
-  public int hashCode() {
-    return this.connection != null ? this.connection.hashCode() : 0;
   }
 
   @JsonIgnore
@@ -81,10 +72,16 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
     return connection;
   }
 
+  public int getBatchSize() {
+    return batchSize;
+  }
+
   private static CredentialsProvider getCredentialsProvider(CredentialsProvider credentialsProvider) {
     return credentialsProvider != null ? credentialsProvider : PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
   }
 
+  @Getter
+  @Setter
   public static class MongoPluginOptimizations {
 
     private boolean supportsProjectPushdown = true;
@@ -98,53 +95,5 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
     private boolean supportsUnionPushdown = true;
 
     private boolean supportsLimitPushdown = true;
-
-    public boolean isSupportsProjectPushdown() {
-      return supportsProjectPushdown;
-    }
-
-    public void setSupportsProjectPushdown(boolean supportsProjectPushdown) {
-      this.supportsProjectPushdown = supportsProjectPushdown;
-    }
-
-    public boolean isSupportsFilterPushdown() {
-      return supportsFilterPushdown;
-    }
-
-    public void setSupportsFilterPushdown(boolean supportsFilterPushdown) {
-      this.supportsFilterPushdown = supportsFilterPushdown;
-    }
-
-    public boolean isSupportsAggregatePushdown() {
-      return supportsAggregatePushdown;
-    }
-
-    public void setSupportsAggregatePushdown(boolean supportsAggregatePushdown) {
-      this.supportsAggregatePushdown = supportsAggregatePushdown;
-    }
-
-    public boolean isSupportsSortPushdown() {
-      return supportsSortPushdown;
-    }
-
-    public void setSupportsSortPushdown(boolean supportsSortPushdown) {
-      this.supportsSortPushdown = supportsSortPushdown;
-    }
-
-    public boolean isSupportsUnionPushdown() {
-      return supportsUnionPushdown;
-    }
-
-    public void setSupportsUnionPushdown(boolean supportsUnionPushdown) {
-      this.supportsUnionPushdown = supportsUnionPushdown;
-    }
-
-    public boolean isSupportsLimitPushdown() {
-      return supportsLimitPushdown;
-    }
-
-    public void setSupportsLimitPushdown(boolean supportsLimitPushdown) {
-      this.supportsLimitPushdown = supportsLimitPushdown;
-    }
   }
 }

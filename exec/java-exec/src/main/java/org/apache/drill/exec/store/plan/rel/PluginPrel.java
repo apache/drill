@@ -58,7 +58,7 @@ public class PluginPrel extends AbstractRelNode implements Prel {
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) {
-    return groupScan;
+    return creator.addMetadata(this, groupScan);
   }
 
   @Override

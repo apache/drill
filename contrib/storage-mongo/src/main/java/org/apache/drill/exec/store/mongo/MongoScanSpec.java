@@ -17,16 +17,21 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import org.apache.drill.common.PlanStringBuilder;
-import org.bson.Document;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
+import org.bson.Document;
+
 import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@AllArgsConstructor
+@Getter
+@ToString
 public class MongoScanSpec {
   private final String dbName;
   private final String collectionName;
@@ -40,39 +45,5 @@ public class MongoScanSpec {
       @JsonProperty("collectionName") String collectionName) {
     this.dbName = dbName;
     this.collectionName = collectionName;
-  }
-
-  public MongoScanSpec(String dbName, String collectionName,
-      Document filters, List<Bson> operations) {
-    this.dbName = dbName;
-    this.collectionName = collectionName;
-    this.filters = filters;
-    this.operations = operations;
-  }
-
-  public String getDbName() {
-    return dbName;
-  }
-
-  public String getCollectionName() {
-    return collectionName;
-  }
-
-  public Document getFilters() {
-    return filters;
-  }
-
-  public List<Bson> getOperations() {
-    return operations;
-  }
-
-  @Override
-  public String toString() {
-    return new PlanStringBuilder(this)
-        .field("dbName", dbName)
-        .field("collectionName", collectionName)
-        .field("filters", filters)
-        .field("operations", operations)
-        .toString();
   }
 }

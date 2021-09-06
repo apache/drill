@@ -193,7 +193,7 @@ public class MongoRecordReader extends AbstractRecordReader {
       } else {
         projection = collection.find(filters).projection(fields);
       }
-      cursor = projection.batchSize(100).iterator();
+      cursor = projection.batchSize(plugin.getConfig().getBatchSize()).iterator();
     }
 
     writer.allocate();

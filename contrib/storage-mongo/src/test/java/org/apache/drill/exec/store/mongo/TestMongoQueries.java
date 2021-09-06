@@ -23,6 +23,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import static org.junit.Assert.assertEquals;
+
 @Category({SlowTest.class, MongoStorageTest.class})
 public class TestMongoQueries extends MongoTestBase {
 
@@ -39,6 +41,15 @@ public class TestMongoQueries extends MongoTestBase {
         .unOrdered()
         .expectsNumRecords(8)
         .go();
+  }
+
+  @Test
+  public void testSerDe() throws Exception {
+    String plan = queryBuilder()
+      .sql(String.format(TEST_BOOLEAN_FILTER_QUERY_TEMPLATE1, EMPLOYEE_DB, EMPINFO_COLLECTION))
+      .explainJson();
+
+    assertEquals(queryBuilder().physical(plan).run().recordCount(), 11);
   }
 
   @Test
