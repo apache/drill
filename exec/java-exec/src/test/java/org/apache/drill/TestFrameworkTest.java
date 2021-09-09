@@ -24,6 +24,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -206,10 +209,14 @@ public class TestFrameworkTest extends BaseTestQuery {
 
   @Test
   public void testBaselineValsVerificationWithComplexAndNulls() throws Exception {
+    LocalDateTime localDT = LocalDateTime.of(2019, 9, 30, 20, 47, 43, 123);
+    Instant instant = localDT.atZone(ZoneId.systemDefault()).toInstant();
+    long ts = instant.toEpochMilli() + instant.getNano();
+    ts = ts + ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000;
     testBuilder()
         .sqlQuery("select * from cp.`jsoninput/input2.json` limit 1")
         .ordered()
-        .baselineColumns("integer", "float", "x", "z", "l", "rl")
+        .baselineColumns("integer", "float", "x", "z", "l", "rl", "`date`")
         .baselineValues(2010l,
                         17.4,
                         mapOf("y", "kevin",
@@ -219,7 +226,8 @@ public class TestFrameworkTest extends BaseTestQuery {
                             mapOf("pink", "purple")),
                         listOf(4l, 2l),
                         listOf(listOf(2l, 1l),
-                            listOf(4l, 6l)))
+                            listOf(4l, 6l)),
+                        LocalDateTime.ofInstant(Instant.ofEpochMilli(ts), ZoneId.systemDefault()))
         .build().run();
   }
 

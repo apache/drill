@@ -44,6 +44,11 @@ public class TestJsonRecordReader extends BaseTestQuery {
   }
 
   @Test
+  public void testDateJsonInput() throws Exception {
+    test("select `date`, AGE(`date`, CAST('2019-09-30 20:47:43' as timestamp)) from cp.`jsoninput/input2.json` limit 10 ");
+  }
+
+  @Test
   public void testContainingArray() throws Exception {
     test("select * from cp.`store/json/listdoc.json`");
   }
