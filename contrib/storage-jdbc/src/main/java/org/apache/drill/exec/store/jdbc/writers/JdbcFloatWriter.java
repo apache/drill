@@ -31,8 +31,9 @@ public class JdbcFloatWriter extends JdbcColumnWriter {
 
   @Override
   public void load(ResultSet results) throws SQLException {
+    // JDBC reports nullability only after getting the column value.
+    float value = results.getFloat(columnIndex);
     if (!results.wasNull()) {
-      float value = results.getFloat(columnIndex);
       columnWriter.setFloat(value);
     }
   }

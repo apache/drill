@@ -31,8 +31,9 @@ public class JdbcBitWriter extends JdbcColumnWriter {
 
   @Override
   public void load(ResultSet results) throws SQLException {
-    if (! results.wasNull()) {
-      boolean value = results.getBoolean(columnIndex);
+    // JDBC reports nullability only after getting the column value.
+    boolean value = results.getBoolean(columnIndex);
+    if (!results.wasNull()) {
       columnWriter.setBoolean(value);
     }
   }

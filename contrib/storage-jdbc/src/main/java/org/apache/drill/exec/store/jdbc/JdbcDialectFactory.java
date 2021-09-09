@@ -15,26 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.drill.exec.store.jdbc;
 
-package org.apache.drill.exec.store.jdbc.writers;
+import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseJdbcDialect;
 
-import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+public class JdbcDialectFactory {
+  public static final String JDBC_CLICKHOUSE_PREFIX = "jdbc:clickhouse";
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-public class JdbcBigintWriter extends JdbcColumnWriter {
-
-  public JdbcBigintWriter(String colName, RowSetLoader rowWriter, int columnIndex) {
-    super(colName, rowWriter, columnIndex);
-  }
-
-  @Override
-  public void load(ResultSet results) throws SQLException {
-    // JDBC reports nullability only after getting the column value.
-    long value = results.getLong(columnIndex);
-    if (!results.wasNull()) {
-      columnWriter.setLong(value);
+  public static JdbcDialect getJdbcDialect(JdbcStoragePlugin plugin, String url) {
+    if (url.startsWith(JDBC_CLICKHOUSE_PREFIX)) {
+      return new ClickhouseJdbcDialect(plugin);
+    } else {
+      return new DefaultJdbcDialect(plugin);
     }
   }
 }

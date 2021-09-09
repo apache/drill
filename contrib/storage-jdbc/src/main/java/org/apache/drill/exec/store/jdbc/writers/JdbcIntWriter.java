@@ -31,8 +31,9 @@ public class JdbcIntWriter extends JdbcColumnWriter {
 
   @Override
   public void load(ResultSet results) throws SQLException {
+    // JDBC reports nullability only after getting the column value.
+    int value = results.getInt(columnIndex);
     if (!results.wasNull()) {
-      int value = results.getInt(columnIndex);
       columnWriter.setInt(value);
     }
   }

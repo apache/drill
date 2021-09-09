@@ -47,6 +47,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private final HikariDataSource dataSource;
   private final SqlDialect dialect;
   private final DrillJdbcConvention convention;
+  private final JdbcDialect jdbcDialect;
 
   public JdbcStoragePlugin(JdbcStorageConfig config, DrillbitContext context, String name) {
     super(context, name);
@@ -54,14 +55,20 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     this.dataSource = initDataSource(config);
     this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, dataSource);
     this.convention = new DrillJdbcConvention(dialect, name, this);
+    this.jdbcDialect = JdbcDialectFactory.getJdbcDialect(this, config.getUrl());
   }
 
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
-    JdbcCatalogSchema schema = new JdbcCatalogSchema(getName(), dataSource, dialect, convention,
-        !this.config.areTableNamesCaseInsensitive());
-    SchemaPlus holder = parent.add(getName(), schema);
-    schema.setHolder(holder);
+    this.jdbcDialect.registerSchemas(config, parent);
+  }
+
+  public JdbcDialect getJdbcDialect() {
+    return jdbcDialect;
+  }
+
+  public DrillJdbcConvention getConvention() {
+    return convention;
   }
 
   @Override
