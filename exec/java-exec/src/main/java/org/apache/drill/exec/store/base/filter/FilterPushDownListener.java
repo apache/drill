@@ -43,7 +43,7 @@ import org.apache.drill.exec.store.base.filter.ExprNode.AndNode;
  * <dl>
  * <p>
  * In both cases, the conditions are in the form of a
- * {@link  } in which one side refers to a column in the scan
+ * {@link ExprNode.ColRelOpConstNode} in which one side refers to a column in the scan
  * and the other is a constant expression. The "driver" will ensure
  * the rel op is of the correct form; this class ensures that the
  * column is valid for the scan and the type of the value matches the
@@ -67,6 +67,7 @@ public interface FilterPushDownListener {
    *   return scan.getGroupScan() instanceof MyGroupScan;
    * }
    * </pre></code>
+   * @param groupScan the scan node
    * @return true if the given group scan is one this listener can
    * handle, false otherwise
    */
@@ -100,6 +101,7 @@ public interface FilterPushDownListener {
      * If so, return an equivalent RelOp with the value normalized to what
      * the plugin needs. The returned value may be the same as the original
      * one if the value is already normalized.
+     * @param conjunct condensed form of a Drill WHERE clause expression node
      * @return a normalized RelOp if this relop can be transformed into a filter
      * push-down, @{code null} if not and thus the relop should remain in
      * the Drill plan
@@ -122,7 +124,7 @@ public interface FilterPushDownListener {
      * to leave in the query. Those terms can be the ones passed in, or
      * new terms to handle special needs.
      *
-     * @param expr
+     * @param expr a set of AND'ed expressions in Conjunctive Normal Form (CNF)
      * @return a pair of elements: a new scan (that represents the pushed filters),
      * and the original or new expression to appear in the WHERE clause
      * joined by AND with any non-candidate expressions. That is, if analysis

@@ -42,7 +42,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * the selectivity that Calcite attaches to the node. Any
  * expressions pushed to a scan must reduce the scan
  * cost by the amount of the selectivity, else Calcite will
- * conclude that the orginal plan (without push-down) is
+ * conclude that the original plan (without push-down) is
  * cheaper.
  */
 public abstract class ExprNode {

@@ -108,6 +108,7 @@ public class HistoricalLog {
    * events with their stack traces.
    *
    * @param sb {@link StringBuilder} to write to
+   * @param includeStackTrace true if history includes stack trace, otherwise false
    */
   public void buildHistory(final StringBuilder sb, boolean includeStackTrace) {
     buildHistory(sb, 0, includeStackTrace);
@@ -119,10 +120,9 @@ public class HistoricalLog {
    * events with their stack traces.
    *
    * @param sb {@link StringBuilder} to write to
-   * @param indent
-   * @param includeStackTrace
+   * @param indent size of indent
+   * @param includeStackTrace true if history includes stack trace, otherwise false
    */
-
   public synchronized void buildHistory(final StringBuilder sb, int indent, boolean includeStackTrace) {
     final char[] indentation = new char[indent];
     final char[] innerIndentation = new char[indent + 2];

@@ -377,11 +377,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
     int totalColNum = STAR_COLS;
     PluginCost pluginCostModel = formatPlugin.getPluginCostModel();
     final int avgColumnSize = pluginCostModel.getAverageColumnSize(this);
-    boolean filterPushed;
-    if (scanSpec == null) {
-      filterPushed=false;
-    }
-    filterPushed = (scanSpec.getSerializedFilter() != null);
+    boolean filterPushed = (scanSpec.getSerializedFilter() != null);
     if (scanSpec != null && scanSpec.getIndexDesc() != null) {
       totalColNum = scanSpec.getIndexDesc().getIncludedFields().size()
           + scanSpec.getIndexDesc().getIndexedFields().size() + 1;
@@ -530,7 +526,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
    * Call the stats API instead which modifies the counts based on preference options.
    * @param condition filter to apply
    * @param index to use for generating the estimate
-   * @param scanRel
+   * @param scanRel the current scan rel
    * @return row count post filtering
    */
   public MapRDBStatisticsPayload getFirstKeyEstimatedStats(QueryCondition condition, IndexDescriptor index, RelNode scanRel) {
@@ -545,7 +541,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
    * Get the estimated statistics after applying the {@link QueryCondition} condition
    * @param condition filter to apply
    * @param index to use for generating the estimate
-   * @param scanRel
+   * @param scanRel the current scan rel
    * @return {@link MapRDBStatisticsPayload} statistics
    */
   private MapRDBStatisticsPayload getFirstKeyEstimatedStatsInternal(QueryCondition condition, IndexDesc index, RelNode scanRel) {
@@ -617,9 +613,9 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
   /**
    * Set the row count resulting from applying the {@link RexNode} condition. Forced row counts will take
    * precedence over stats row counts
-   * @param condition
-   * @param count
-   * @param capRowCount
+   * @param condition filter to apply
+   * @param count row count
+   * @param capRowCount row count limit
    */
   @Override
   @JsonIgnore
@@ -637,7 +633,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
   /**
    * Get the row count after applying the {@link RexNode} condition
    * @param condition filter to apply
-   * @param scanRel
+   * @param scanRel the current scan rel
    * @return row count post filtering
    */
   @Override
