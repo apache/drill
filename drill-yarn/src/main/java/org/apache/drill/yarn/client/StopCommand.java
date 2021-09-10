@@ -174,7 +174,7 @@ public class StopCommand extends ClientCommand {
    * Include the master key with the request to differentiate this request from
    * accidental uses of the stop REST API.
    *
-   * @param baseUrl
+   * @param baseUrl base url to be posted with the shutdown
    * @return
    */
 

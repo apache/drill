@@ -42,9 +42,9 @@ public interface IndexGroupScan extends GroupScan {
   /**
    * Set the artificial row count after applying the {@link RexNode} condition
    * Mainly used for debugging
-   * @param condition
-   * @param count
-   * @param capRowCount
+   * @param condition filter to apply
+   * @param count right index row count
+   * @param capRowCount row count limit
    */
   @JsonIgnore
   void setRowCount(RexNode condition, double count, double capRowCount);
@@ -52,7 +52,7 @@ public interface IndexGroupScan extends GroupScan {
   /**
    * Get the row count after applying the {@link RexNode} condition
    * @param condition filter to apply
-   * @param scanRel
+   * @param scanRel the current scan rel
    * @return row count post filtering
    */
   @JsonIgnore

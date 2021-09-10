@@ -349,7 +349,7 @@ public class DrillOnYarnConfig {
    * immutable, so it is not possible for unit tests to change the actual
    * environment.)
    *
-   * @param key
+   * @param key key to allow unit tests to replace this function
    * @return
    */
 
