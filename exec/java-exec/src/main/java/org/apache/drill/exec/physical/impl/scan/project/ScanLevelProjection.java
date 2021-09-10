@@ -132,7 +132,7 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
  * output schema, the reader, or  as nulls.</li>
  * </ul>
  * <p>
- * @see {@link ImplicitColumnExplorer}, the class from which this class
+ * @see {@link org.apache.drill.exec.store.ColumnExplorer}, the class from which this class
  * evolved
  */
 public class ScanLevelProjection {
@@ -183,11 +183,10 @@ public class ScanLevelProjection {
     SCHEMA_WILDCARD,
 
     /**
-     * Wldcard query expanded using an output schema in "strict" mode.
-     * Only columns from the output schema will be projected. Unlike the
-     * {@link SCHEMA_WILDCARD} mode, if a reader offers columns not in the
-     * output schema, they will be ignored. That is, a SELECT * query expands
-     * to exactly the columns in the schema.
+     * Wildcard query expanded using an output schema in "strict" mode.
+     * Only columns from the output schema will be projected. If a reader
+     * offers columns not in the output schema, they will be ignored. That
+     * is, a SELECT * query expands to exactly the columns in the schema.
      * <p>
      * TODO: Provide a strict column mode that will fail the query if a projected
      * column is required, has no default, and is not provided by the reader. In
