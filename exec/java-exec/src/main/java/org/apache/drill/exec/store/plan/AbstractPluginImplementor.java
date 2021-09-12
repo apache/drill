@@ -128,7 +128,7 @@ public abstract class AbstractPluginImplementor implements PluginImplementor {
 
   private UserException getUnsupported(String rel) {
     return UserException.unsupportedError()
-        .message("Plugin implementor doesn't support push down for %", rel)
+        .message("Plugin implementor doesn't support push down for %s", rel)
         .build(logger);
   }
 }
