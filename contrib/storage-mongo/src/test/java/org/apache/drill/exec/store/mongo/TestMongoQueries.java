@@ -282,4 +282,26 @@ public class TestMongoQueries extends MongoTestBase {
         .baselineValues(490000, "Apple Fritter")
         .go();
   }
+
+  @Test
+  public void testProjectPushDownWithCase() throws Exception {
+    String query = "select case when t.sales >= 700 then 2 when t.sales > 145 then 1 else 0 end as c, t.name from mongo.%s.`%s` t";
+
+    queryBuilder()
+      .sql(query, DONUTS_DB, DONUTS_COLLECTION)
+      .planMatcher()
+      .include("MongoGroupScan.*project.*cond.*\\$gt")
+      .match();
+
+    testBuilder()
+      .sqlQuery(query, DONUTS_DB, DONUTS_COLLECTION)
+      .unOrdered()
+      .baselineColumns("c", "name")
+      .baselineValues(0, "Filled")
+      .baselineValues(0, "Cake")
+      .baselineValues(0, "Raised")
+      .baselineValues(1, "Old Fashioned")
+      .baselineValues(2, "Apple Fritter")
+      .go();
+  }
 }

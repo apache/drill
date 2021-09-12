@@ -116,9 +116,9 @@ class RexToMongoTranslator extends RexVisitorImpl<BsonValue> {
     if (literal.getValue() == null) {
       return BsonNull.VALUE;
     }
-    return new BsonDocument("$literal", new BsonString(
+    return BsonDocument.parse(String.format("{$literal: %s}",
         RexToLixTranslator.translateLiteral(literal, literal.getType(),
-            typeFactory, RexImpTable.NullAs.NOT_POSSIBLE).toString()));
+            typeFactory, RexImpTable.NullAs.NOT_POSSIBLE)));
   }
 
   @Override
@@ -173,7 +173,9 @@ class RexToMongoTranslator extends RexVisitorImpl<BsonValue> {
           break;
         }
         BsonArray innerArgs = new BsonArray();
-        args.add(innerArgs);
+        BsonDocument innerDocument = new BsonDocument();
+        innerDocument.put("$cond", innerArgs);
+        args.add(innerDocument);
         args = innerArgs;
       }
       return result;
