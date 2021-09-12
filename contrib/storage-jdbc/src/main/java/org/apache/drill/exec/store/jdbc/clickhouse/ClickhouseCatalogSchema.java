@@ -54,7 +54,7 @@ public class ClickhouseCatalogSchema extends AbstractSchema {
         final String schemaName = set.getString(1);
         final String catalogName = set.getString(2);
         schemaMap.put(schemaName, new CapitalizingJdbcSchema(getSchemaPath(), schemaName, source, dialect,
-          convention, catalogName, schemaName, false));
+          convention, catalogName, schemaName, false, convention.getPlugin()));
       }
     } catch (SQLException e) {
       logger.error("Failure while attempting to load clickhouse schema.", e);

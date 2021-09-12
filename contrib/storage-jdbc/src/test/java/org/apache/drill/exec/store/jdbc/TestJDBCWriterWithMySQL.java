@@ -104,5 +104,4 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
       jdbcContainer.stop();
     }
   }
-
 }
