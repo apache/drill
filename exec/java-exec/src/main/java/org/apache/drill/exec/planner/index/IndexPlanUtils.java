@@ -74,7 +74,7 @@ public class IndexPlanUtils {
    * Check if any of the fields of the index are present in a list of LogicalExpressions supplied
    * as part of IndexableExprMarker
    * @param exprMarker the marker that has analyzed original index condition on top of original scan
-   * @param indexDesc
+   * @param indexDesc the index definition plus functions to access materialized index
    * @return ConditionIndexed.FULL, PARTIAL or NONE depending on whether all, some or no columns
    * of the indexDesc are present in the list of LogicalExpressions supplied as part of exprMarker
    *
@@ -96,8 +96,8 @@ public class IndexPlanUtils {
    * check if we want to apply index rules on this scan,
    * if group scan is not instance of DbGroupScan, or this DbGroupScan instance does not support secondary index, or
    *    this scan is already an index scan or Restricted Scan, do not apply index plan rules on it.
-   * @param scanRel
-   * @return
+   * @param scanRel the current scan rel
+   * @return true to indicate that we want to apply index rules on this scan, otherwise false
    */
   static public boolean checkScan(DrillScanRel scanRel) {
     GroupScan groupScan = scanRel.getGroupScan();
@@ -112,7 +112,7 @@ public class IndexPlanUtils {
 
   /**
    * For a particular table scan for table T1 and an index on that table, find out if it is a covering index
-   * @return
+   * @return true if it is a covering index, otherwise false
    */
   static public boolean isCoveringIndex(IndexCallContext indexContext, FunctionalIndexInfo functionInfo) {
     if (functionInfo.hasFunctional()) {
@@ -134,8 +134,8 @@ public class IndexPlanUtils {
    * is an indexed field named '$0'. In this case, by looking at Scan, we see only 'a.b' which is not in index. We have to
    * look into Project, and if we see 'a.b' is only used in functional index expression cast(a.b as INT), then we know
    * this Project+Scan is covered.
-   * @param indexContext
-   * @param functionInfo
+   * @param indexContext the index call context
+   * @param functionInfo functional index information that may impact rewrite
    * @return false if the query could not be covered by the index (should not create covering index plan)
    */
   static private boolean queryCoveredByIndex(IndexCallContext indexContext,
@@ -235,9 +235,9 @@ public class IndexPlanUtils {
 
   /**
    * Build collation property for the 'lower' project, the one closer to the Scan
-   * @param projectRexs
-   * @param input
-   * @param indexInfo
+   * @param projectRexs list of row expressions
+   * @param input input as a relational expression
+   * @param indexInfo collects functional index information
    * @return the output RelCollation
    */
   public static RelCollation buildCollationLowerProject(List<RexNode> projectRexs, RelNode input, FunctionalIndexInfo indexInfo) {
@@ -273,10 +273,10 @@ public class IndexPlanUtils {
 
   /**
    * Build collation property for the 'upper' project, the one above the filter
-   * @param projectRexs
-   * @param inputCollation
-   * @param indexInfo
-   * @param collationFilterMap
+   * @param projectRexs list of row expressions
+   * @param inputCollation the input collation
+   * @param indexInfo collects functional index information
+   * @param collationFilterMap map for collation filter
    * @return the output RelCollation
    */
   public static RelCollation buildCollationUpperProject(List<RexNode> projectRexs,
@@ -365,7 +365,8 @@ public class IndexPlanUtils {
 
   /**
    * generate logical expressions for sort rexNodes in SortRel, the result is store to IndexPlanCallContext
-   * @param indexContext
+   * @param indexContext the index call context
+   * @param coll list of field collations
    */
   public static void updateSortExpression(IndexCallContext indexContext, List<RelFieldCollation> coll) {
 
@@ -406,7 +407,8 @@ public class IndexPlanUtils {
 
   /**
    * generate logical expressions for sort rexNodes in SortRel, the result is store to IndexPlanCallContext
-   * @param indexContext
+   * @param indexContext the index call context
+   * @param coll list of field collations
    */
   public static void updateSortExpression(IndexPhysicalPlanCallContext indexContext, List<RelFieldCollation> coll) {
 
@@ -447,8 +449,8 @@ public class IndexPlanUtils {
 
   /**
    *
-   * @param expr
-   * @param context
+   * @param expr the input expression
+   * @param context the index call context
    * @return if there is filter and expr is only in equality condition of the filter, return true
    */
   private static boolean exprOnlyInEquality(LogicalExpression expr, IndexCallContext context) {
@@ -464,7 +466,7 @@ public class IndexPlanUtils {
    * Build collation property for project, the one closer to the Scan
    * @param projectRexs the expressions to project
    * @param project the project between projectRexs and input, it could be null if no such intermediate project(lower project)
-   * @param input  the input RelNode to the project, usually it is the scan operator.
+   * @param input the input RelNode to the project, usually it is the scan operator.
    * @param indexInfo the index for which we are building index plan
    * @param context the context of this index planning process
    * @return the output RelCollation
@@ -692,9 +694,10 @@ public class IndexPlanUtils {
    * For IndexGroupScan, if a column is only appeared in the should-be-renamed function,
    * this column is to-be-replaced column, we replace that column(schemaPath) from 'a.b'
    * to '$1' in the list of SchemaPath.
-   * @param paths
+   * @param paths list of paths
    * @param functionInfo functional index information that may impact rewrite
-   * @return
+   * @param addedPaths list of paths added
+   * @return list of new paths
    */
   public static List<SchemaPath> rewriteFunctionColumn(List<SchemaPath> paths,
                                                        FunctionalIndexInfo functionInfo,
@@ -739,13 +742,14 @@ public class IndexPlanUtils {
    * then collect the schema paths in the indexed expression but found out of the indexed expression -- node (5),
    * and other regular schema paths (3) (4)
    *
-   * @param parseContext
-   * @param project
-   * @param scan
-   * @param toRewriteRex  the RexNode to be converted if it contain a functional index expression.
-   * @param newRowType
-   * @param functionInfo
-   * @return
+   * @param indexContext the index call context
+   * @param parseContext the drill parse context
+   * @param project the drill base class for logical and physical projects
+   * @param scan a rel node scan
+   * @param toRewriteRex the RexNode to be converted if it contains a functional index expression
+   * @param newRowType data type for new row
+   * @param functionInfo functional index information that may impact rewrite
+   * @return rewritten functional row expression
    */
   public static RexNode rewriteFunctionalRex(IndexCallContext indexContext,
                                        DrillParseContext parseContext,

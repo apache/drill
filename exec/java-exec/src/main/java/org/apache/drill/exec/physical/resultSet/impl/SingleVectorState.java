@@ -263,7 +263,7 @@ public abstract class SingleVectorState implements VectorState {
    * vector is an array, then the overflowIndex is the position of the first
    * element to be moved, and multiple elements may need to move
    *
-   * @param cardinality
+   * @param cardinality the number of unique columns in the row
    */
 
   @Override

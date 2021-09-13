@@ -163,7 +163,7 @@ public class DfsFacade {
      * only retrieve the status once. Cache it here so that the client
      * doen't have to do the caching.
      *
-     * @return
+     * @return file status
      * @throws DfsFacadeException
      */
 

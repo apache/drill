@@ -175,7 +175,7 @@ public class StopCommand extends ClientCommand {
    * accidental uses of the stop REST API.
    *
    * @param baseUrl base url to be posted with the shutdown
-   * @return
+   * @return true if stops gracefully, otherwise false
    */
 
   private boolean gracefulStop(String baseUrl) {

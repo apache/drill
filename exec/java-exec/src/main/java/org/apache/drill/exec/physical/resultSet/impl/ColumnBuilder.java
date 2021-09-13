@@ -94,7 +94,7 @@ public class ColumnBuilder {
    * Implementation of the work to add a new column to this tuple given a
    * schema description of the column.
    *
-   * @param parent container
+   * @param parent container of vectors
    * @param columnSchema schema of the column as provided by the client
    * using the result set loader. This is the schema of the data to be
    * loaded
@@ -309,8 +309,8 @@ public class ColumnBuilder {
    * in a join column, say.) Still, Drill supports unions, so the code here
    * does so. Unions are fully tested in the row set writer mechanism.
    *
-   * @param parent container
-   * @param columnSchema column schema
+   * @param parent container of vectors
+   * @param columnSchema implied projection type for the column
    * @return column
    */
   private ColumnState buildUnion(ContainerState parent, ColumnMetadata columnSchema) {
