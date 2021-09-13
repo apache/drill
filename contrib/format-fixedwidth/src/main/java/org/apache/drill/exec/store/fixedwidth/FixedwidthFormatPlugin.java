@@ -64,7 +64,7 @@ public class FixedwidthFormatPlugin extends EasyFormatPlugin<FixedwidthFormatCon
     return EasyFormatConfig.builder()
       .readable(true)
       .writable(false)
-      .blockSplittable(false)
+      .blockSplittable(false) // Change to true
       .compressible(true)
       .supportsProjectPushdown(true)
       .extensions(pluginConfig.getExtensions())
