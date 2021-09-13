@@ -27,3 +27,4 @@ exec/jdbc-all/dependency-reduced-pom.xml
 .*.html
 venv/
 tools/venv/
+contrib/storage-jdbc/src/test/resources/logback-test.xml

@@ -92,7 +92,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
 
   @Test
   public void testBasicCTAS() throws Exception {
-    String query = "CREATE TABLE  mysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT 1, 'bob' FROM (VALUES(1))";
+    String query = "CREATE TABLE mysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT 1, 2 FROM (VALUES(1))";
 
     DirectRowSet results = queryBuilder().sql(query).rowSet();
     results.print();

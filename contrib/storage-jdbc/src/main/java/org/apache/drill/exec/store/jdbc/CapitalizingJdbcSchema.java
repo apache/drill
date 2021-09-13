@@ -106,7 +106,6 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
   }
 
 
-  // TODO Start here...
   @Override
   public CreateTableEntry createNewTable(final String tableName, List<String> partitionColumns, StorageStrategy strategy) {
     return new CreateTableEntry() {
@@ -125,6 +124,7 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
   @Override
   public void dropTable(String tableName) {
+    // TODO Test this
     String dropTableQuery = String.format("DROP TABLE %s", tableName);
     try {
       Connection conn = inner.getDataSource().getConnection();
