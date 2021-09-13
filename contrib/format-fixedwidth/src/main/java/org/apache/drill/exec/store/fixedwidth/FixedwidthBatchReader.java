@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.fixedwidth;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
@@ -36,6 +37,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -62,6 +64,7 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
     this.config = config;
     this.maxRecords = maxRecords;
   }
+
 
   @Override
   public boolean open(FileSchemaNegotiator negotiator) {
@@ -112,23 +115,21 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
 
   @Override
   public void close() {
-    try {
-      fsStream.close();
-      loader.close();
-    } catch (Exception e) {
-      throw UserException
-        .dataReadError(e)
-        .message("Failed to close input file: {}", split.getPath().toString())
-        .addContext(errorContext)
-        .addContext(e.getMessage())
-        .build(logger);
+    if (fsStream != null){
+      AutoCloseables.closeSilently(fsStream);
+      fsStream = null;
     }
   }
 
   private TupleMetadata buildSchema() {
     SchemaBuilder builder = new SchemaBuilder();
     for (FixedwidthFieldConfig field : config.getFields()) {
-      builder.addNullable(field.getFieldName(), field.getDataType());
+      if (field.getType() == TypeProtos.MinorType.VARDECIMAL){
+        builder.addNullable(field.getName(), TypeProtos.MinorType.VARDECIMAL,38,4);
+        //revisit this
+      } else {
+        builder.addNullable(field.getName(), field.getType());
+      }
     }
     return builder.buildSchema();
   }
@@ -140,8 +141,8 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
     String dateTimeFormat;
     String value;
     for (FixedwidthFieldConfig field : config.getFields()) {
-      value = line.substring(field.getStartIndex() - 1, field.getStartIndex() + field.getFieldWidth() - 1);
-      dataType = field.getDataType();
+      value = line.substring(field.getIndex() - 1, field.getIndex() + field.getWidth() - 1);
+      dataType = field.getType();
       dateTimeFormat = field.getDateTimeFormat();
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateTimeFormat, Locale.ENGLISH);
       try {
@@ -172,6 +173,13 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
             break;
           case FLOAT8:
             writer.scalar(i).setDouble(Double.parseDouble(value));
+            break;
+          case BIGINT:
+            writer.scalar(i).setLong(Long.parseLong(value));
+            break;
+          case VARDECIMAL:
+            BigDecimal bigDecimal = new BigDecimal(value);
+            writer.scalar(i).setDecimal(bigDecimal);
             break;
           default:
             throw new RuntimeException("Unknown data type specified in fixed width. Found data type " + dataType);
