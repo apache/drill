@@ -44,17 +44,26 @@ import static org.junit.Assert.assertEquals;
  */
 @Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithClickhouse extends ClusterTest {
-
-  private static final String DOCKER_IMAGE_CLICKHOUSE = "yandex/clickhouse" +
-    "-server:21.8.4.51";
+  private static final String DOCKER_IMAGE_CLICKHOUSE_X86 = "yandex" +
+    "/clickhouse-server:21.8.4.51";
+  private static final String DOCKER_IMAGE_CLICKHOUSE_ARM = "lunalabsltd" +
+    "/clickhouse-server:21.7.2.7-arm";
   private static JdbcDatabaseContainer<?> jdbcContainer;
 
   @BeforeClass
   public static void initClickhouse() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
-    jdbcContainer =
-      new ClickHouseContainer(DockerImageName.parse(DOCKER_IMAGE_CLICKHOUSE))
-        .withInitScript("clickhouse-test-data.sql");
+    String osName = System.getProperty("os.name").toLowerCase();
+    DockerImageName imageName;
+    if (osName.startsWith("linux") && "aarch64".equals(System.getProperty("os.arch"))) {
+      imageName = DockerImageName.parse(DOCKER_IMAGE_CLICKHOUSE_ARM)
+        .asCompatibleSubstituteFor("yandex/clickhouse-server");
+    } else {
+      imageName = DockerImageName.parse(DOCKER_IMAGE_CLICKHOUSE_X86);
+    }
+
+    jdbcContainer = new ClickHouseContainer(imageName)
+      .withInitScript("clickhouse-test-data.sql");
     jdbcContainer.start();
 
     JdbcStorageConfig jdbcStorageConfig =
