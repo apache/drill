@@ -33,6 +33,7 @@ public class JdbcWriterBatchCreator implements BatchCreator<JdbcWriter> {
     throws ExecutionSetupException {
     assert children != null && children.size() == 1;
 
-    return new WriterRecordBatch(config, children.iterator().next(), context, new JdbcRecordWriter (config.getPlugin().getDataSource(), null, config.getName()));
+    return new WriterRecordBatch(config, children.iterator().next(), context,
+      new JdbcRecordWriter (config.getPlugin().getDataSource(), null, config.getName(), config));
   }
 }

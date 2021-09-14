@@ -18,19 +18,22 @@
 
 package org.apache.drill.exec.store.jdbc;
 
+import org.apache.calcite.sql.SqlDialect.DatabaseProduct;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.store.jdbc.utils.JdbcQueryBuilder;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 public class TestJdbcQueryBuilder {
 
   @Test
-  public void TestJdbcQueryBuilderWithOneTable() {
-    JdbcQueryBuilder builder = new JdbcQueryBuilder("t1");
+  public void TestJdbcQueryBuilderWithTwoTables() {
+
+    JdbcQueryBuilder builder = new JdbcQueryBuilder("t1", DatabaseProduct.MYSQL.getDialect());
     builder.addColumn("col1", MinorType.INT, false);
     builder.addColumn("col2", MinorType.VARCHAR, true);
 
-    System.out.println(builder.getCreateTableQuery());
+    assertEquals("CREATE TABLE t1 (col1 INTEGER NOT NULL,\n" + "col2 VARCHAR\n" + ")", builder.getCreateTableQuery());
   }
-
 }

@@ -18,6 +18,12 @@
 
 package org.apache.drill.exec.store.jdbc.utils;
 
+import org.apache.calcite.config.Lex;
+import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.calcite.sql.parser.SqlParser.Config;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.store.jdbc.JdbcRecordWriter;
 import org.apache.parquet.Strings;
@@ -26,19 +32,27 @@ import java.sql.JDBCType;
 
 public class JdbcQueryBuilder {
 
+  private static final Config DEFAULT_CONFIGURATION = SqlParser.configBuilder()
+    .setCaseSensitive(true)
+    .setLex(Lex.MYSQL)
+    .build();
+
   private static final String CREATE_TABLE_QUERY = "CREATE TABLE %s (";
   private final StringBuilder createTableQuery;
+  private SqlDialect dialect;
   private String columns;
 
-  public JdbcQueryBuilder(String tableName) {
+  public JdbcQueryBuilder(String tableName, SqlDialect dialect) {
     if (Strings.isNullOrEmpty(tableName)) {
       throw new UnsupportedOperationException("Table name cannot be empty");
     }
-
+    this.dialect = dialect;
     createTableQuery = new StringBuilder();
     createTableQuery.append(String.format(CREATE_TABLE_QUERY, tableName));
     columns = "";
   }
+
+  // TODO Add Precision/Scale?
 
   /**
    * Adds a column to the CREATE TABLE statement
@@ -61,13 +75,36 @@ public class JdbcQueryBuilder {
     columns += queryText;
   }
 
+  /**
+   * Generates the CREATE TABLE query.
+   * @return The create table query.
+   */
   public String getCreateTableQuery() {
-    if (Strings.isNullOrEmpty(columns)) {
-      throw new UnsupportedOperationException("Create Table queries must have at least one table.");
-    }
     createTableQuery.append(columns);
     createTableQuery.append("\n)");
     return createTableQuery.toString();
   }
 
+  @Override
+  public String toString() {
+    return getCreateTableQuery();
+  }
+
+  /**
+   * Converts a given SQL query from the generic dialect to the destination system dialect.  Returns
+   * null if the original query is not valid.
+   *
+   * @param sql An ANSI SQL statement
+   * @param dialect The destination system dialect
+   * @return A representation of the original query in the destination dialect
+   */
+  public static String convertToDestinationDialect(String sql, SqlDialect dialect) {
+    try {
+      SqlNode node = SqlParser.create(sql, DEFAULT_CONFIGURATION).parseQuery();
+      return node.toSqlString(dialect).getSql();
+    } catch (SqlParseException e) {
+      // Do nothing...
+    }
+    return null;
+  }
 }

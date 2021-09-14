@@ -18,9 +18,12 @@
 
 package org.apache.drill.exec.store.jdbc;
 
+import org.apache.calcite.sql.SqlDialect;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.NullableIntHolder;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema;
@@ -39,16 +42,28 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class JdbcRecordWriter extends AbstractRecordWriter {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcRecordWriter.class);
   public static final ImmutableMap<MinorType, Integer> JDBC_TYPE_MAPPINGS;
+  private static final String INSERT_QUERY_TEMPLATE = "INSERT INTO %s VALUES\n%s";
   private final DataSource source;
-  private final String name;
+  private final String tableName;
   private final Connection connection;
+  private final JdbcWriter config;
+  private final SqlDialect dialect;
+  private String rowString;
+  private List<Object> rowList;
+  private List<String> insertRows;
+
+
+  // TODO Wrap inserts in transaction?
+  // TODO Config option for CREATE or CREATE IF NOT EXISTS
 
   /*
    * This map maps JDBC data types to their Drill equivalents.  The basic strategy is that if there
@@ -62,7 +77,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   static {
     JDBC_TYPE_MAPPINGS = ImmutableMap.<MinorType, Integer>builder()
       .put(MinorType.FLOAT8, java.sql.Types.DOUBLE)
-      .put(MinorType.FLOAT4 ,java.sql.Types.FLOAT)
+      .put(MinorType.FLOAT4, java.sql.Types.FLOAT)
       .put(MinorType.TINYINT, java.sql.Types.TINYINT)
       .put(MinorType.SMALLINT, java.sql.Types.SMALLINT)
       .put(MinorType.INT, java.sql.Types.INTEGER)
@@ -81,9 +96,14 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       .build();
   }
 
-  public JdbcRecordWriter(DataSource source, OperatorContext context, String name) {
+  public JdbcRecordWriter(DataSource source, OperatorContext context, String name, JdbcWriter config) {
     this.source = source;
-    this.name = name;
+    this.tableName = name;
+    this.config = config;
+    this.dialect = config.getPlugin().getDialect();
+    this.rowList = new ArrayList<>();
+    this.insertRows = new ArrayList<>();
+
     try {
       this.connection = source.getConnection();
     } catch (SQLException e) {
@@ -107,7 +127,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     String sql;
     Statement statement;
     boolean nullable = false;
-    JdbcQueryBuilder queryBuilder = new JdbcQueryBuilder(name);
+    JdbcQueryBuilder queryBuilder = new JdbcQueryBuilder(tableName, dialect);
 
     for (Iterator<MaterializedField> it = schema.iterator(); it.hasNext(); ) {
       MaterializedField field = it.next();
@@ -137,43 +157,110 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public void startRecord() throws IOException {
-
+    rowString = "(";
+    logger.debug("Start record");
   }
 
   @Override
   public void endRecord() throws IOException {
+    // Add values to rowString
+    for (int i = 0; i < this.rowList.size(); i++) {
+      if (i > 0) {
+        rowString += ", ";
+      }
+      rowString += this.rowList.get(i);
+    }
 
+    rowString += ")";
+    logger.debug("End record: {}", rowString);
+    this.rowList.clear();
+    insertRows.add(rowString);
   }
 
   @Override
   public void abort() throws IOException {
-
+    logger.debug("Abort record");
   }
 
   @Override
   public void cleanup() throws IOException {
+    logger.debug("Cleanup record");
+    // Execute query
+    String insertQuery = buildInsertQuery();
+
     try {
-      connection.close();
+      logger.debug("Executing insert query: {}", insertQuery);
+      Statement stmt = connection.createStatement();
+      stmt.execute(insertQuery);
+
+      // Close connection
+      AutoCloseables.closeSilently(stmt, connection);
+
     } catch (SQLException e) {
       throw new IOException();
     }
   }
 
+
+  private String buildInsertQuery() {
+    StringBuilder values = new StringBuilder();
+    for (int i = 0; i < insertRows.size(); i++) {
+      if (i > 0) {
+        values.append(",\n");
+      }
+      values.append(insertRows.get(i));
+    }
+
+    String sql = String.format(INSERT_QUERY_TEMPLATE, tableName, values);
+    return JdbcQueryBuilder.convertToDestinationDialect(sql, dialect);
+  }
+
+
   @Override
-  public FieldConverter getNewIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableIntJDBCConverter(fieldId, fieldName, reader);
+  public FieldConverter getNewNullableIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new NullableIntJDBCConverter(fieldId, fieldName, reader, this.rowList);
   }
 
   public static class NullableIntJDBCConverter extends FieldConverter {
     private final NullableIntHolder holder = new NullableIntHolder();
+    private final List<Object> rowList;
 
-    public NullableIntJDBCConverter(int fieldID, String fieldName, FieldReader reader) {
+    public NullableIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
       super(fieldID, fieldName, reader);
+      this.rowList = rowList;
     }
 
     @Override
     public void writeField() {
+      if (!reader.isSet()) {
+        this.rowList.add("null");
+      }
       reader.read(holder);
+      this.rowList.add(holder.value);
+    }
+  }
+
+  @Override
+  public FieldConverter getNewIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new IntJDBCConverter(fieldId, fieldName, reader, this.rowList);
+  }
+
+  public static class IntJDBCConverter extends FieldConverter {
+    private final IntHolder holder = new IntHolder();
+    private final List<Object> rowList;
+
+    public IntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+      super(fieldID, fieldName, reader);
+      this.rowList = rowList;
+    }
+
+    @Override
+    public void writeField() {
+      if (!reader.isSet()) {
+        this.rowList.add("null");
+      }
+      reader.read(holder);
+      this.rowList.add(holder.value);
     }
   }
 }

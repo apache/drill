@@ -32,8 +32,6 @@ import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.utility.DockerImageName;
 
-import static org.apache.drill.test.BaseTestQuery.test;
-
 /**
  * JDBC storage plugin tests against MySQL.
  * Note: it requires libaio1.so library on Linux
