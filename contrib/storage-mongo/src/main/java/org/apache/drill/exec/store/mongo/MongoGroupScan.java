@@ -38,6 +38,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.mongodb.client.MongoClient;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -51,6 +52,7 @@ import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.mongo.MongoSubScan.MongoSubScanSpec;
+import org.apache.drill.exec.store.mongo.MongoSubScan.ShardedMongoSubScanSpec;
 import org.apache.drill.exec.store.mongo.common.ChunkInfo;
 import org.bson.Document;
 import org.bson.codecs.BsonTypeClassMap;
@@ -58,8 +60,6 @@ import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
@@ -75,17 +75,16 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 
+@Slf4j
 @JsonTypeName("mongo-scan")
 public class MongoGroupScan extends AbstractGroupScan implements
     DrillMongoConstants {
 
-  private static final Integer select = 1;
+  private static final int SELECT = 1;
 
-  private static final Logger logger = LoggerFactory.getLogger(MongoGroupScan.class);
+  private static final Comparator<List<BaseMongoSubScanSpec>> LIST_SIZE_COMPARATOR = Comparator.comparingInt(List::size);
 
-  private static final Comparator<List<MongoSubScanSpec>> LIST_SIZE_COMPARATOR = Comparator.comparingInt(List::size);
-
-  private static final Comparator<List<MongoSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
+  private static final Comparator<List<BaseMongoSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
 
   private MongoStoragePlugin storagePlugin;
 
@@ -95,9 +94,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   private List<SchemaPath> columns;
 
-  private int maxRecords;
-
-  private Map<Integer, List<MongoSubScanSpec>> endpointFragmentMapping;
+  private Map<Integer, List<BaseMongoSubScanSpec>> endpointFragmentMapping;
 
   // Sharding with replica sets contains all the replica server addresses for
   // each chunk.
@@ -107,7 +104,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   private final Stopwatch watch = Stopwatch.createUnstarted();
 
-  private boolean filterPushedDown = false;
+  private boolean useAggregate;
 
   @JsonCreator
   public MongoGroupScan(
@@ -115,21 +112,21 @@ public class MongoGroupScan extends AbstractGroupScan implements
       @JsonProperty("mongoScanSpec") MongoScanSpec scanSpec,
       @JsonProperty("storage") MongoStoragePluginConfig storagePluginConfig,
       @JsonProperty("columns") List<SchemaPath> columns,
-      @JacksonInject StoragePluginRegistry pluginRegistry,
-      @JsonProperty("maxRecords") int maxRecords) throws IOException {
+      @JsonProperty("useAggregate") boolean useAggregate,
+      @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException {
     this(userName,
         pluginRegistry.resolve(storagePluginConfig, MongoStoragePlugin.class),
-        scanSpec, columns, maxRecords);
+        scanSpec, columns, useAggregate);
   }
 
   public MongoGroupScan(String userName, MongoStoragePlugin storagePlugin,
-      MongoScanSpec scanSpec, List<SchemaPath> columns, int maxRecords) throws IOException {
+      MongoScanSpec scanSpec, List<SchemaPath> columns, boolean useAggregate) throws IOException {
     super(userName);
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
     this.scanSpec = scanSpec;
     this.columns = columns;
-    this.maxRecords = maxRecords;
+    this.useAggregate = useAggregate;
     init();
   }
 
@@ -148,18 +145,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
     this.chunksMapping = that.chunksMapping;
     this.chunksInverseMapping = that.chunksInverseMapping;
     this.endpointFragmentMapping = that.endpointFragmentMapping;
-    this.filterPushedDown = that.filterPushedDown;
-    this.maxRecords = that.maxRecords;
-  }
-
-  @JsonIgnore
-  public boolean isFilterPushedDown() {
-    return filterPushedDown;
-  }
-
-  @JsonIgnore
-  public void setFilterPushedDown(boolean filterPushedDown) {
-    this.filterPushedDown = filterPushedDown;
+    this.useAggregate = that.useAggregate;
   }
 
   private boolean isShardedCluster(MongoClient client) {
@@ -179,7 +165,9 @@ public class MongoGroupScan extends AbstractGroupScan implements
     MongoClient client = storagePlugin.getClient();
     chunksMapping = Maps.newHashMap();
     chunksInverseMapping = Maps.newLinkedHashMap();
-    if (isShardedCluster(client)) {
+    if (useAggregate && isShardedCluster(client)) {
+      handleUnshardedCollection(getPrimaryShardInfo());
+    } else if (isShardedCluster(client)) {
       MongoDatabase db = client.getDatabase(CONFIG);
       MongoCollection<Document> chunksCollection = db.getCollection(CHUNKS);
       Document filter = new Document();
@@ -190,9 +178,9 @@ public class MongoGroupScan extends AbstractGroupScan implements
                   + this.scanSpec.getCollectionName());
 
       Document projection = new Document();
-      projection.put(SHARD, select);
-      projection.put(MIN, select);
-      projection.put(MAX, select);
+      projection.put(SHARD, SELECT);
+      projection.put(MIN, SELECT);
+      projection.put(MAX, SELECT);
 
       FindIterable<Document> chunkCursor = chunksCollection.find(filter).projection(projection);
       MongoCursor<Document> iterator = chunkCursor.iterator();
@@ -200,7 +188,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
       MongoCollection<Document> shardsCollection = db.getCollection(SHARDS);
 
       projection = new Document();
-      projection.put(HOST, select);
+      projection.put(HOST, SELECT);
 
       boolean hasChunks = false;
       while (iterator.hasNext()) {
@@ -292,7 +280,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
     //Identify the primary shard of the queried database.
     MongoCollection<Document> collection = database.getCollection(DATABASES);
     Bson filter = new Document(ID, this.scanSpec.getDbName());
-    Bson projection = new Document(PRIMARY, select);
+    Bson projection = new Document(PRIMARY, SELECT);
     Document document = Objects.requireNonNull(collection.find(filter).projection(projection).first());
     String shardName = document.getString(PRIMARY);
     Preconditions.checkNotNull(shardName);
@@ -300,7 +288,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
     //Identify the host(s) on which this shard resides.
     MongoCollection<Document> shardsCol = database.getCollection(SHARDS);
     filter = new Document(ID, shardName);
-    projection = new Document(HOST, select);
+    projection = new Document(HOST, SELECT);
     Document hostInfo = Objects.requireNonNull(shardsCol.find(filter).projection(projection).first());
     String hostEntry = hostInfo.getString(HOST);
     Preconditions.checkNotNull(hostEntry);
@@ -361,7 +349,8 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   public GroupScan clone(int maxRecords) {
     MongoGroupScan clone = new MongoGroupScan(this);
-    clone.maxRecords = maxRecords;
+    clone.useAggregate = true;
+    clone.getScanSpec().getOperations().add(new Document("$limit", maxRecords));
     return clone;
   }
 
@@ -409,7 +398,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
       if (slots != null) {
         for (ChunkInfo chunkInfo : chunkEntry.getValue()) {
           Integer slotIndex = slots.poll();
-          List<MongoSubScanSpec> subScanSpecList = endpointFragmentMapping
+          List<BaseMongoSubScanSpec> subScanSpecList = endpointFragmentMapping
               .get(slotIndex);
           subScanSpecList.add(buildSubScanSpecAndGet(chunkInfo));
           slots.offer(slotIndex);
@@ -418,11 +407,11 @@ public class MongoGroupScan extends AbstractGroupScan implements
       }
     }
 
-    PriorityQueue<List<MongoSubScanSpec>> minHeap = new PriorityQueue<>(
+    PriorityQueue<List<BaseMongoSubScanSpec>> minHeap = new PriorityQueue<>(
         numSlots, LIST_SIZE_COMPARATOR);
-    PriorityQueue<List<MongoSubScanSpec>> maxHeap = new PriorityQueue<>(
+    PriorityQueue<List<BaseMongoSubScanSpec>> maxHeap = new PriorityQueue<>(
         numSlots, LIST_SIZE_COMPARATOR_REV);
-    for (List<MongoSubScanSpec> listOfScan : endpointFragmentMapping.values()) {
+    for (List<BaseMongoSubScanSpec> listOfScan : endpointFragmentMapping.values()) {
       if (listOfScan.size() < minPerEndpointSlot) {
         minHeap.offer(listOfScan);
       } else if (listOfScan.size() > minPerEndpointSlot) {
@@ -433,7 +422,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
     if (chunksToAssignSet.size() > 0) {
       for (Entry<String, List<ChunkInfo>> chunkEntry : chunksToAssignSet) {
         for (ChunkInfo chunkInfo : chunkEntry.getValue()) {
-          List<MongoSubScanSpec> smallestList = minHeap.poll();
+          List<BaseMongoSubScanSpec> smallestList = minHeap.poll();
           smallestList.add(buildSubScanSpecAndGet(chunkInfo));
           minHeap.offer(smallestList);
         }
@@ -441,8 +430,8 @@ public class MongoGroupScan extends AbstractGroupScan implements
     }
 
     while (minHeap.peek() != null && minHeap.peek().size() < minPerEndpointSlot) {
-      List<MongoSubScanSpec> smallestList = minHeap.poll();
-      List<MongoSubScanSpec> largestList = maxHeap.poll();
+      List<BaseMongoSubScanSpec> smallestList = minHeap.poll();
+      List<BaseMongoSubScanSpec> largestList = maxHeap.poll();
       smallestList.add(largestList.remove(largestList.size() - 1));
       if (largestList.size() > minPerEndpointSlot) {
         maxHeap.offer(largestList);
@@ -458,15 +447,23 @@ public class MongoGroupScan extends AbstractGroupScan implements
         endpointFragmentMapping.toString());
   }
 
-  private MongoSubScanSpec buildSubScanSpecAndGet(ChunkInfo chunkInfo) {
-    return new MongoSubScanSpec()
+  private BaseMongoSubScanSpec buildSubScanSpecAndGet(ChunkInfo chunkInfo) {
+    if (useAggregate) {
+      return MongoSubScanSpec.builder()
+          .setOperations(scanSpec.getOperations())
+          .setDbName(scanSpec.getDbName())
+          .setCollectionName(scanSpec.getCollectionName())
+          .setHosts(chunkInfo.getChunkLocList())
+          .build();
+    }
+    return ShardedMongoSubScanSpec.builder()
+        .setMinFilters(chunkInfo.getMinFilters())
+        .setMaxFilters(chunkInfo.getMaxFilters())
+        .setFilter(scanSpec.getFilters())
         .setDbName(scanSpec.getDbName())
         .setCollectionName(scanSpec.getCollectionName())
         .setHosts(chunkInfo.getChunkLocList())
-        .setMinFilters(chunkInfo.getMinFilters())
-        .setMaxFilters(chunkInfo.getMaxFilters())
-        .setMaxRecords(maxRecords)
-        .setFilter(scanSpec.getFilters());
+        .build();
   }
 
   @Override
@@ -487,18 +484,11 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   @Override
   public ScanStats getScanStats() {
-    long recordCount;
     try{
       MongoClient client = storagePlugin.getClient();
       MongoDatabase db = client.getDatabase(scanSpec.getDbName());
       MongoCollection<Document> collection = db.getCollection(scanSpec.getCollectionName());
-      long numDocs = collection.estimatedDocumentCount();
-
-      if (maxRecords > 0 && numDocs > 0) {
-        recordCount = Math.min(maxRecords, numDocs);
-      } else {
-        recordCount = numDocs;
-      }
+      long recordCount = collection.estimatedDocumentCount();
 
       float approxDiskCost = 0;
       if (recordCount != 0) {
@@ -563,9 +553,6 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   @Override
   public GroupScan applyLimit(int maxRecords) {
-    if (maxRecords == this.maxRecords) {
-      return null;
-    }
     return clone(maxRecords);
   }
 
@@ -585,12 +572,19 @@ public class MongoGroupScan extends AbstractGroupScan implements
     return storagePluginConfig;
   }
 
-  @JsonProperty("maxRecords")
-  public int getMaxRecords() { return maxRecords; }
-
   @JsonIgnore
   public MongoStoragePlugin getStoragePlugin() {
     return storagePlugin;
+  }
+
+  @JsonProperty("useAggregate")
+  public void setUseAggregate(boolean useAggregate) {
+    this.useAggregate = useAggregate;
+  }
+
+  @JsonProperty("useAggregate")
+  public boolean isUseAggregate() {
+    return useAggregate;
   }
 
   @Override
@@ -598,13 +592,13 @@ public class MongoGroupScan extends AbstractGroupScan implements
     return new PlanStringBuilder(this)
       .field("MongoScanSpec", scanSpec)
       .field("columns", columns)
-      .field("maxRecords", maxRecords)
+      .field("useAggregate", useAggregate)
       .toString();
   }
 
   @VisibleForTesting
   MongoGroupScan() {
-    super((String)null);
+    super((String) null);
   }
 
   @JsonIgnore
@@ -621,7 +615,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   @JsonIgnore
   @VisibleForTesting
-  void setInverseChunsMapping(Map<String, List<ChunkInfo>> chunksInverseMapping) {
+  void setInverseChunksMapping(Map<String, List<ChunkInfo>> chunksInverseMapping) {
     this.chunksInverseMapping = chunksInverseMapping;
   }
 }

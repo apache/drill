@@ -17,66 +17,52 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import java.io.IOException;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.exec.store.mongo.common.MongoCompareOp;
+import org.apache.drill.exec.store.mongo.common.MongoOp;
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class MongoFilterBuilder extends
-    AbstractExprVisitor<MongoScanSpec, Void, RuntimeException> implements
+    AbstractExprVisitor<Document, Void, RuntimeException> implements
     DrillMongoConstants {
-  private static final Logger logger = LoggerFactory
-      .getLogger(MongoFilterBuilder.class);
-  final MongoGroupScan groupScan;
-  final LogicalExpression le;
+
+  private final LogicalExpression le;
   private boolean allExpressionsConverted = true;
 
-  public MongoFilterBuilder(MongoGroupScan groupScan,
-      LogicalExpression conditionExp) {
-    this.groupScan = groupScan;
+  public MongoFilterBuilder(LogicalExpression conditionExp) {
     this.le = conditionExp;
   }
 
-  public MongoScanSpec parseTree() {
-    MongoScanSpec parsedSpec = le.accept(this, null);
-    if (parsedSpec != null) {
-      parsedSpec = mergeScanSpecs(FunctionNames.AND, this.groupScan.getScanSpec(),
-          parsedSpec);
-    }
-    return parsedSpec;
+  public Document parseTree() {
+    return le.accept(this, null);
   }
 
-  private MongoScanSpec mergeScanSpecs(String functionName,
-      MongoScanSpec leftScanSpec, MongoScanSpec rightScanSpec) {
+  private Document mergeFilters(String functionName,
+      Document left, Document right) {
     Document newFilter = new Document();
 
     switch (functionName) {
     case FunctionNames.AND:
-      if (leftScanSpec.getFilters() != null
-          && rightScanSpec.getFilters() != null) {
-        newFilter = MongoUtils.andFilterAtIndex(leftScanSpec.getFilters(),
-            rightScanSpec.getFilters());
-      } else if (leftScanSpec.getFilters() != null) {
-        newFilter = leftScanSpec.getFilters();
+      if (left != null && right != null) {
+        newFilter = MongoUtils.andFilterAtIndex(left, right);
+      } else if (left != null) {
+        newFilter = left;
       } else {
-        newFilter = rightScanSpec.getFilters();
+        newFilter = right;
       }
       break;
     case FunctionNames.OR:
-      newFilter = MongoUtils.orFilterAtIndex(leftScanSpec.getFilters(),
-          rightScanSpec.getFilters());
+      newFilter = MongoUtils.orFilterAtIndex(left, right);
     }
-    return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan
-        .getScanSpec().getCollectionName(), newFilter);
+    return newFilter;
   }
 
   public boolean isAllExpressionsConverted() {
@@ -84,41 +70,41 @@ public class MongoFilterBuilder extends
   }
 
   @Override
-  public MongoScanSpec visitUnknown(LogicalExpression e, Void value)
+  public Document visitUnknown(LogicalExpression e, Void value)
       throws RuntimeException {
     allExpressionsConverted = false;
     return null;
   }
 
   @Override
-  public MongoScanSpec visitBooleanOperator(BooleanOperator op, Void value) {
+  public Document visitBooleanOperator(BooleanOperator op, Void value) {
     List<LogicalExpression> args = op.args();
-    MongoScanSpec nodeScanSpec = null;
+    Document condition = null;
     String functionName = op.getName();
-    for (int i = 0; i < args.size(); ++i) {
+    for (LogicalExpression arg : args) {
       switch (functionName) {
-      case FunctionNames.AND:
-      case FunctionNames.OR:
-        if (nodeScanSpec == null) {
-          nodeScanSpec = args.get(i).accept(this, null);
-        } else {
-          MongoScanSpec scanSpec = args.get(i).accept(this, null);
-          if (scanSpec != null) {
-            nodeScanSpec = mergeScanSpecs(functionName, nodeScanSpec, scanSpec);
+        case FunctionNames.AND:
+        case FunctionNames.OR:
+          if (condition == null) {
+            condition = arg.accept(this, null);
           } else {
-            allExpressionsConverted = false;
+            Document scanSpec = arg.accept(this, null);
+            if (scanSpec != null) {
+              condition = mergeFilters(functionName, condition, scanSpec);
+            } else {
+              allExpressionsConverted = false;
+            }
           }
-        }
-        break;
+          break;
       }
     }
-    return nodeScanSpec;
+    return condition;
   }
 
   @Override
-  public MongoScanSpec visitFunctionCall(FunctionCall call, Void value)
+  public Document visitFunctionCall(FunctionCall call, Void value)
       throws RuntimeException {
-    MongoScanSpec nodeScanSpec = null;
+    Document functionCall = null;
     String functionName = call.getName();
     List<LogicalExpression> args = call.args();
 
@@ -127,7 +113,7 @@ public class MongoFilterBuilder extends
           .process(call);
       if (processor.isSuccess()) {
         try {
-          nodeScanSpec = createMongoScanSpec(processor.getFunctionName(),
+          functionCall = createFunctionCall(processor.getFunctionName(),
               processor.getPath(), processor.getValue());
         } catch (Exception e) {
           logger.error(" Failed to creare Filter ", e);
@@ -138,79 +124,76 @@ public class MongoFilterBuilder extends
       switch (functionName) {
       case FunctionNames.AND:
       case FunctionNames.OR:
-        MongoScanSpec leftScanSpec = args.get(0).accept(this, null);
-        MongoScanSpec rightScanSpec = args.get(1).accept(this, null);
-        if (leftScanSpec != null && rightScanSpec != null) {
-          nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec,
-              rightScanSpec);
+        Document left = args.get(0).accept(this, null);
+        Document right = args.get(1).accept(this, null);
+        if (left != null && right != null) {
+          functionCall = mergeFilters(functionName, left, right);
         } else {
           allExpressionsConverted = false;
           if (FunctionNames.AND.equals(functionName)) {
-            nodeScanSpec = leftScanSpec == null ? rightScanSpec : leftScanSpec;
+            functionCall = left == null ? right : left;
           }
         }
         break;
       }
     }
 
-    if (nodeScanSpec == null) {
+    if (functionCall == null) {
       allExpressionsConverted = false;
     }
 
-    return nodeScanSpec;
+    return functionCall;
   }
 
-  private MongoScanSpec createMongoScanSpec(String functionName,
-      SchemaPath field, Object fieldValue) throws ClassNotFoundException,
-      IOException {
+  private Document createFunctionCall(String functionName,
+      SchemaPath field, Object fieldValue) {
     // extract the field name
     String fieldName = field.getRootSegmentPath();
-    MongoCompareOp compareOp = null;
+    MongoOp compareOp = null;
     switch (functionName) {
     case FunctionNames.EQ:
-      compareOp = MongoCompareOp.EQUAL;
+      compareOp = MongoOp.EQUAL;
       break;
     case FunctionNames.NE:
-      compareOp = MongoCompareOp.NOT_EQUAL;
+      compareOp = MongoOp.NOT_EQUAL;
       break;
     case FunctionNames.GE:
-      compareOp = MongoCompareOp.GREATER_OR_EQUAL;
+      compareOp = MongoOp.GREATER_OR_EQUAL;
       break;
     case FunctionNames.GT:
-      compareOp = MongoCompareOp.GREATER;
+      compareOp = MongoOp.GREATER;
       break;
     case FunctionNames.LE:
-      compareOp = MongoCompareOp.LESS_OR_EQUAL;
+      compareOp = MongoOp.LESS_OR_EQUAL;
       break;
     case FunctionNames.LT:
-      compareOp = MongoCompareOp.LESS;
+      compareOp = MongoOp.LESS;
       break;
     case FunctionNames.IS_NULL:
     case "isNull":
     case "is null":
-      compareOp = MongoCompareOp.IFNULL;
+      compareOp = MongoOp.IFNULL;
       break;
     case FunctionNames.IS_NOT_NULL:
     case "isNotNull":
     case "is not null":
-      compareOp = MongoCompareOp.IFNOTNULL;
+      compareOp = MongoOp.IFNOTNULL;
       break;
     }
 
     if (compareOp != null) {
       Document queryFilter = new Document();
-      if (compareOp == MongoCompareOp.IFNULL) {
+      if (compareOp == MongoOp.IFNULL) {
         queryFilter.put(fieldName,
-            new Document(MongoCompareOp.EQUAL.getCompareOp(), null));
-      } else if (compareOp == MongoCompareOp.IFNOTNULL) {
+            new Document(MongoOp.EQUAL.getCompareOp(), null));
+      } else if (compareOp == MongoOp.IFNOTNULL) {
         queryFilter.put(fieldName,
-            new Document(MongoCompareOp.NOT_EQUAL.getCompareOp(), null));
+            new Document(MongoOp.NOT_EQUAL.getCompareOp(), null));
       } else {
         queryFilter.put(fieldName, new Document(compareOp.getCompareOp(),
             fieldValue));
       }
-      return new MongoScanSpec(groupScan.getScanSpec().getDbName(), groupScan
-          .getScanSpec().getCollectionName(), queryFilter);
+      return queryFilter;
     }
     return null;
   }

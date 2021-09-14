@@ -23,7 +23,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.common.PlanStringBuilder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -32,7 +35,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.bson.Document;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -40,6 +42,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 
 @JsonTypeName("mongo-shard-read")
 public class MongoSubScan extends AbstractBase implements SubScan {
@@ -52,14 +56,14 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   private final MongoStoragePlugin mongoStoragePlugin;
   private final List<SchemaPath> columns;
 
-  private final List<MongoSubScanSpec> chunkScanSpecList;
+  private final List<BaseMongoSubScanSpec> chunkScanSpecList;
 
   @JsonCreator
   public MongoSubScan(
       @JacksonInject StoragePluginRegistry registry,
       @JsonProperty("userName") String userName,
       @JsonProperty("mongoPluginConfig") StoragePluginConfig mongoPluginConfig,
-      @JsonProperty("chunkScanSpecList") LinkedList<MongoSubScanSpec> chunkScanSpecList,
+      @JsonProperty("chunkScanSpecList") LinkedList<BaseMongoSubScanSpec> chunkScanSpecList,
       @JsonProperty("columns") List<SchemaPath> columns)
       throws ExecutionSetupException {
     super(userName);
@@ -72,7 +76,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
   public MongoSubScan(String userName, MongoStoragePlugin storagePlugin,
       MongoStoragePluginConfig storagePluginConfig,
-      List<MongoSubScanSpec> chunkScanSpecList, List<SchemaPath> columns) {
+      List<BaseMongoSubScanSpec> chunkScanSpecList, List<SchemaPath> columns) {
     super(userName);
     this.mongoStoragePlugin = storagePlugin;
     this.mongoPluginConfig = storagePluginConfig;
@@ -100,13 +104,12 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     return columns;
   }
 
-  public List<MongoSubScanSpec> getChunkScanSpecList() {
+  public List<BaseMongoSubScanSpec> getChunkScanSpecList() {
     return chunkScanSpecList;
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
-      throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
     return new MongoSubScan(getUserName(), mongoStoragePlugin, mongoPluginConfig,
         chunkScanSpecList, columns);
@@ -122,112 +125,33 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     return Collections.emptyIterator();
   }
 
-  public static class MongoSubScanSpec {
+  @JsonTypeName("ShardedMongoSubScanSpec")
+  @Getter
+  @ToString
+  @SuperBuilder(setterPrefix = "set")
+  @JsonDeserialize(builder = ShardedMongoSubScanSpec.ShardedMongoSubScanSpecBuilder.class)
+  public static class ShardedMongoSubScanSpec extends BaseMongoSubScanSpec {
 
-    protected String dbName;
-    protected String collectionName;
-    protected List<String> hosts;
-    protected Map<String, Object> minFilters;
-    protected Map<String, Object> maxFilters;
-    protected int maxRecords;
+    @JsonProperty
+    private final Map<String, Object> minFilters;
 
-    protected Document filter;
+    @JsonProperty
+    private final Map<String, Object> maxFilters;
 
-    @JsonCreator
-    public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
-        @JsonProperty("collectionName") String collectionName,
-        @JsonProperty("hosts") List<String> hosts,
-        @JsonProperty("minFilters") Map<String, Object> minFilters,
-        @JsonProperty("maxFilters") Map<String, Object> maxFilters,
-        @JsonProperty("filters") Document filters,
-        @JsonProperty("maxRecords") int maxRecords) {
-      this.dbName = dbName;
-      this.collectionName = collectionName;
-      this.hosts = hosts;
-      this.minFilters = minFilters;
-      this.maxFilters = maxFilters;
-      this.filter = filters;
-      this.maxRecords = maxRecords;
-    }
+    @JsonProperty
+    private final Document filter;
 
-    MongoSubScanSpec() {
+  }
 
-    }
+  @JsonTypeName("MongoSubScanSpec")
+  @Getter
+  @ToString
+  @SuperBuilder(setterPrefix = "set")
+  @JsonDeserialize(builder = MongoSubScanSpec.MongoSubScanSpecBuilder.class)
+  public static class MongoSubScanSpec extends BaseMongoSubScanSpec {
 
-    public String getDbName() {
-      return dbName;
-    }
-
-    public MongoSubScanSpec setDbName(String dbName) {
-      this.dbName = dbName;
-      return this;
-    }
-
-    public String getCollectionName() {
-      return collectionName;
-    }
-
-    public MongoSubScanSpec setCollectionName(String collectionName) {
-      this.collectionName = collectionName;
-      return this;
-    }
-
-    public List<String> getHosts() {
-      return hosts;
-    }
-
-    public MongoSubScanSpec setHosts(List<String> hosts) {
-      this.hosts = hosts;
-      return this;
-    }
-
-    public int getMaxRecords() { return maxRecords; }
-
-    public MongoSubScanSpec setMaxRecords (int maxRecords) {
-      this.maxRecords = maxRecords;
-      return this;
-    }
-
-    public Map<String, Object> getMinFilters() {
-      return minFilters;
-    }
-
-    public MongoSubScanSpec setMinFilters(Map<String, Object> minFilters) {
-      this.minFilters = minFilters;
-      return this;
-    }
-
-    public Map<String, Object> getMaxFilters() {
-      return maxFilters;
-    }
-
-    public MongoSubScanSpec setMaxFilters(Map<String, Object> maxFilters) {
-      this.maxFilters = maxFilters;
-      return this;
-    }
-
-    public Document getFilter() {
-      return filter;
-    }
-
-    public MongoSubScanSpec setFilter(Document filter) {
-      this.filter = filter;
-      return this;
-    }
-
-    @Override
-    public String toString() {
-      return new PlanStringBuilder(this)
-        .field("dbName", dbName)
-        .field("collectionName", collectionName)
-        .field("hosts", hosts)
-        .field("minFilters", minFilters)
-        .field("maxFilters", maxFilters)
-        .field("filter", filter)
-        .field("maxRecords", maxRecords)
-        .toString();
-
-    }
+    @JsonProperty
+    private final List<Bson> operations;
 
   }
 

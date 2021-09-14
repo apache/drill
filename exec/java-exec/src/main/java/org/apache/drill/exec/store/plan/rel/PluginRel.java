@@ -15,35 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.mongo;
+package org.apache.drill.exec.store.plan.rel;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
-import org.bson.Document;
+import org.apache.calcite.rel.RelNode;
+import org.apache.drill.exec.store.plan.PluginImplementor;
 
-import org.bson.conversions.Bson;
+import java.io.IOException;
 
-import java.util.ArrayList;
-import java.util.List;
+/**
+ * Relational expression that uses specific plugin calling convention.
+ */
+public interface PluginRel extends RelNode {
 
-@AllArgsConstructor
-@Getter
-@ToString
-public class MongoScanSpec {
-  private final String dbName;
-  private final String collectionName;
+  void implement(PluginImplementor implementor) throws IOException;
 
-  private Document filters;
-
-  private List<Bson> operations = new ArrayList<>();
-
-  @JsonCreator
-  public MongoScanSpec(@JsonProperty("dbName") String dbName,
-      @JsonProperty("collectionName") String collectionName) {
-    this.dbName = dbName;
-    this.collectionName = collectionName;
-  }
+  boolean canImplement(PluginImplementor implementor);
 }

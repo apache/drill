@@ -30,31 +30,32 @@ public class TestMongoLimitPushDown extends MongoTestBase {
   public void testLimit() throws Exception {
     String sql = "SELECT `employee_id` FROM mongo.employee.`empinfo` LIMIT 4";
     queryBuilder()
-      .sql(sql)
-      .planMatcher()
-      .include("Limit", "maxRecords=4")
-      .match();
+        .sql(sql)
+        .planMatcher()
+        .exclude("Limit\\(")
+        .include("MongoGroupScan.*\"\\$limit\": 4")
+        .match();
   }
 
   @Test
   public void testLimitWithOrderBy() throws Exception {
-    // Limit should not be pushed down for this example due to the sort
     String sql = "SELECT `employee_id` FROM mongo.employee.`empinfo` ORDER BY employee_id LIMIT 4";
     queryBuilder()
       .sql(sql)
       .planMatcher()
-      .include("Limit", "maxRecords=-1")
+      .exclude("Limit")
+      .include("MongoGroupScan.*\"\\$sort\": \\{\"employee_id\": 1}", "\"\\$limit\": 4")
       .match();
   }
 
   @Test
   public void testLimitWithOffset() throws Exception {
-    // Limit should be pushed down and include the offset
     String sql = "SELECT `employee_id` FROM mongo.employee.`empinfo` LIMIT 4 OFFSET 5";
     queryBuilder()
       .sql(sql)
       .planMatcher()
-      .include("Limit", "maxRecords=9")
+      .exclude("Limit")
+      .include("\"\\$skip\": 5", "\"\\$limit\": 4")
       .match();
   }
 
@@ -64,7 +65,8 @@ public class TestMongoLimitPushDown extends MongoTestBase {
     queryBuilder()
       .sql(sql)
       .planMatcher()
-      .include("Limit", "maxRecords=4")
+      .exclude("Limit")
+      .include("\"\\$limit\": 4", "\"\\$eq\": 52\\.17")
       .match();
   }
 }

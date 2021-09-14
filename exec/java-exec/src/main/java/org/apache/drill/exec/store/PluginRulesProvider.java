@@ -15,35 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.mongo;
+package org.apache.drill.exec.store;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
-import org.bson.Document;
+import org.apache.calcite.plan.RelOptRule;
 
-import org.bson.conversions.Bson;
-
-import java.util.ArrayList;
 import java.util.List;
 
-@AllArgsConstructor
-@Getter
-@ToString
-public class MongoScanSpec {
-  private final String dbName;
-  private final String collectionName;
+/**
+ * Provides rules required for adding support of specific operator pushdown for storage plugin.
+ */
+public interface PluginRulesProvider {
 
-  private Document filters;
+  List<RelOptRule> sortRules();
 
-  private List<Bson> operations = new ArrayList<>();
+  List<RelOptRule> limitRules();
 
-  @JsonCreator
-  public MongoScanSpec(@JsonProperty("dbName") String dbName,
-      @JsonProperty("collectionName") String collectionName) {
-    this.dbName = dbName;
-    this.collectionName = collectionName;
-  }
+  List<RelOptRule> filterRules();
+
+  List<RelOptRule> projectRules();
+
+  List<RelOptRule> aggregateRules();
+
+  List<RelOptRule> unionRules();
+
+  List<RelOptRule> joinRules();
+
+  RelOptRule vertexRule();
+
+  RelOptRule prelConverterRule();
 }

@@ -15,35 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.mongo;
+package org.apache.drill.exec.store.mongo.common;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
-import org.bson.Document;
+public enum MongoOp {
+  EQUAL("$eq"),
+  NOT_EQUAL("$ne"),
+  GREATER_OR_EQUAL("$gte"),
+  GREATER("$gt"),
+  LESS_OR_EQUAL("$lte"),
+  LESS("$lt"),
+  IN("$in"),
+  AND("$and"),
+  OR("$or"),
+  NOT("$not"),
+  REGEX("$regex"),
+  OPTIONS("$options"),
+  PROJECT("$project"),
+  COND("$cond"),
+  IFNULL("$ifNull"),
+  IFNOTNULL("$ifNotNull"),
+  SUM("$sum"),
+  GROUP_BY("$group"),
+  EXISTS("$exists");
 
-import org.bson.conversions.Bson;
+  private final String compareOp;
 
-import java.util.ArrayList;
-import java.util.List;
+  MongoOp(String compareOp) {
+    this.compareOp = compareOp;
+  }
 
-@AllArgsConstructor
-@Getter
-@ToString
-public class MongoScanSpec {
-  private final String dbName;
-  private final String collectionName;
-
-  private Document filters;
-
-  private List<Bson> operations = new ArrayList<>();
-
-  @JsonCreator
-  public MongoScanSpec(@JsonProperty("dbName") String dbName,
-      @JsonProperty("collectionName") String collectionName) {
-    this.dbName = dbName;
-    this.collectionName = collectionName;
+  public String getCompareOp() {
+    return compareOp;
   }
 }

@@ -155,7 +155,7 @@ public class TestMongoChunkAssignment extends BaseTest {
 
     mongoGroupScan = new MongoGroupScan();
     mongoGroupScan.setChunksMapping(chunksMapping);
-    mongoGroupScan.setInverseChunsMapping(chunksInverseMapping);
+    mongoGroupScan.setInverseChunksMapping(chunksInverseMapping);
     MongoScanSpec scanSpec = new MongoScanSpec(dbName, collectionName);
     mongoGroupScan.setScanSpec(scanSpec);
   }

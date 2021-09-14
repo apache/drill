@@ -60,8 +60,8 @@ public class ScanPrel extends DrillScanRelBase implements LeafPrel, HasDistribut
   }
 
   @Override
-  public ScanPrel copy(RelTraitSet traitSet, GroupScan scan) {
-    return new ScanPrel(getCluster(), traitSet, scan, getRowType(), getTable());
+  public ScanPrel copy(RelTraitSet traitSet, GroupScan scan, RelDataType rowType) {
+    return new ScanPrel(getCluster(), traitSet, scan, rowType, getTable());
   }
 
   @Override

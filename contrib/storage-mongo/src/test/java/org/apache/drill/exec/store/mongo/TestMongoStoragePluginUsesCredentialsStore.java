@@ -35,7 +35,7 @@ public class TestMongoStoragePluginUsesCredentialsStore extends BaseTest {
 
   private void test(String expectedUserName, String expectedPassword, String connection, String name) throws ExecutionSetupException {
     MongoStoragePlugin plugin = new MongoStoragePlugin(
-        new MongoStoragePluginConfig(connection, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER),
+        new MongoStoragePluginConfig(connection, null, 100, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER),
         null, name);
     MongoClientImpl client = (MongoClientImpl) plugin.getClient();
     MongoCredential cred = client.getSettings().getCredential();
