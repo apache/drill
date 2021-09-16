@@ -135,6 +135,8 @@
     <httpdlog-parser.version>5.7</httpdlog-parser.version>
     <yauaa.version>5.20</yauaa.version>
     <lombok.version>1.18.20</lombok.version>
+    <brotli-codec.version>0.1.1</brotli-codec.version>
+    <aircompressor.version>0.20</aircompressor.version>
   </properties>
 
   <scm>

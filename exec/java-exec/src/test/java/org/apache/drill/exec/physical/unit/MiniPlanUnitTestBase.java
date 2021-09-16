@@ -32,10 +32,11 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
+import org.apache.drill.exec.store.parquet.compression.DrillCompressionCodecFactory;
 import org.apache.drill.test.LegacyOperatorTestBuilder;
 import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.hadoop.CodecFactory;
+import org.apache.parquet.compression.CompressionCodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 
@@ -447,12 +448,16 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
         ParquetMetadata footer = ParquetFileReader.readFooter(fs.getConf(), path);
 
         for (int i = 0; i < footer.getBlocks().size(); i++) {
+          CompressionCodecFactory ccf = DrillCompressionCodecFactory.createDirectCodecFactory(
+            fs.getConf(),
+            new ParquetDirectByteBufferAllocator(opContext.getAllocator()),
+            0
+          );
           readers.add(new ParquetRecordReader(fragContext,
               path,
               i,
               fs,
-              CodecFactory.createDirectCodecFactory(fs.getConf(),
-                  new ParquetDirectByteBufferAllocator(opContext.getAllocator()), 0),
+              ccf,
               footer,
               columnsToRead,
               ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_NO_CORRUPTION));

@@ -66,7 +66,8 @@ import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.column.page.DataPageV1;
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.column.page.PageReader;
-import org.apache.parquet.hadoop.CodecFactory;
+import org.apache.drill.exec.store.parquet.compression.DrillCompressionCodecFactory;
+import org.apache.parquet.compression.CompressionCodecFactory;
 import org.apache.parquet.hadoop.Footer;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
@@ -632,8 +633,13 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     final FileSystem fs = new CachedSingleFileSystem(fileName);
     final BufferAllocator allocator = RootAllocatorFactory.newRoot(c);
     for(int i = 0; i < 25; i++) {
+      CompressionCodecFactory ccf = DrillCompressionCodecFactory.createDirectCodecFactory(
+        dfsConfig,
+        new ParquetDirectByteBufferAllocator(allocator),
+        0
+      );
       final ParquetRecordReader rr = new ParquetRecordReader(context, fileName, 0, fs,
-          CodecFactory.createDirectCodecFactory(dfsConfig, new ParquetDirectByteBufferAllocator(allocator), 0),
+          ccf,
           f.getParquetMetadata(), columns, ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_CORRUPTION);
       final TestOutputMutator mutator = new TestOutputMutator(allocator);
       rr.setup(null, mutator);

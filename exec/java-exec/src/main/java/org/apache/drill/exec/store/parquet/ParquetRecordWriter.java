@@ -41,6 +41,7 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.store.StorageStrategy;
+import org.apache.drill.exec.store.parquet.compression.DrillCompressionCodecFactory;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -62,7 +63,7 @@ import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.column.impl.ColumnWriteStoreV1;
 import org.apache.parquet.column.values.factory.DefaultV1ValuesWriterFactory;
-import org.apache.parquet.hadoop.CodecFactory;
+import org.apache.parquet.compression.CompressionCodecFactory;
 import org.apache.parquet.hadoop.ParquetColumnChunkPageWriteStore;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
@@ -108,7 +109,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private boolean useSingleFSBlock = false;
   private CompressionCodecName codec = CompressionCodecName.SNAPPY;
   private WriterVersion writerVersion = WriterVersion.PARQUET_1_0;
-  private CodecFactory codecFactory;
+  private CompressionCodecFactory codecFactory;
 
   private long recordCount = 0;
   private long recordCountForNextMemCheck = MINIMUM_RECORD_COUNT_FOR_CHECK;
@@ -136,8 +137,11 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   public ParquetRecordWriter(FragmentContext context, ParquetWriter writer) throws OutOfMemoryException {
     this.oContext = context.newOperatorContext(writer);
-    this.codecFactory = CodecFactory.createDirectCodecFactory(writer.getFormatPlugin().getFsConf(),
-        new ParquetDirectByteBufferAllocator(oContext.getAllocator()), pageSize);
+    this.codecFactory = DrillCompressionCodecFactory.createDirectCodecFactory(
+        writer.getFormatPlugin().getFsConf(),
+        new ParquetDirectByteBufferAllocator(oContext.getAllocator()),
+        pageSize
+    );
     this.partitionColumns = writer.getPartitionColumns();
     this.hasPartitions = partitionColumns != null && partitionColumns.size() > 0;
     this.extraMetaData.put(DRILL_VERSION_PROPERTY, DrillVersionInfo.getVersion());
@@ -158,18 +162,27 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     dictionaryPageSize= Integer.parseInt(writerOptions.get(ExecConstants.PARQUET_DICT_PAGE_SIZE));
     String codecName = writerOptions.get(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE).toLowerCase();
     switch(codecName) {
-    case "snappy":
-      codec = CompressionCodecName.SNAPPY;
+    case "none":
+    case "uncompressed":
+      codec = CompressionCodecName.UNCOMPRESSED;
       break;
-    case "lzo":
-      codec = CompressionCodecName.LZO;
+    case "brotli":
+      codec = CompressionCodecName.BROTLI;
       break;
     case "gzip":
       codec = CompressionCodecName.GZIP;
       break;
-    case "none":
-    case "uncompressed":
-      codec = CompressionCodecName.UNCOMPRESSED;
+    case "lz4":
+      codec = CompressionCodecName.LZ4;
+      break;
+    case "lzo":
+      codec = CompressionCodecName.LZO;
+      break;
+    case "snappy":
+      codec = CompressionCodecName.SNAPPY;
+      break;
+    case "zstd":
+      codec = CompressionCodecName.ZSTD;
       break;
     default:
       throw new UnsupportedOperationException(String.format("Unknown compression type: %s", codecName));

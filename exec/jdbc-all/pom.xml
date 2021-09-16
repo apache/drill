@@ -188,6 +188,14 @@
           <groupId>org.apache.commons</groupId>
           <artifactId>commons-compress</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>io.airlift</groupId>
+          <artifactId>aircompresssor</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.github.rdblue</groupId>
+          <artifactId>brotli-codec</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>

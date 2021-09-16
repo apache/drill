@@ -358,7 +358,10 @@ public final class ExecConstants {
       new OptionDescription("For internal use. Do not change."));
   public static final String PARQUET_WRITER_COMPRESSION_TYPE = "store.parquet.compression";
   public static final OptionValidator PARQUET_WRITER_COMPRESSION_TYPE_VALIDATOR = new EnumeratedStringValidator(
-      PARQUET_WRITER_COMPRESSION_TYPE, new OptionDescription("Compression type for storing Parquet output. Allowed values: snappy, gzip, none"), "snappy", "gzip", "none");
+      PARQUET_WRITER_COMPRESSION_TYPE,
+      new OptionDescription("Compression type for storing Parquet output. Allowed values: none, brotli, gzip, lz4, lzo, snappy, zstd"),
+      "none", "brotli", "gzip", "lz4", "lzo", "snappy", "zstd"
+  );
   public static final String PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING = "store.parquet.enable_dictionary_encoding";
   public static final OptionValidator PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING_VALIDATOR = new BooleanValidator(
       PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING,
