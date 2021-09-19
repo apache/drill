@@ -95,18 +95,23 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
     }
   }
 
+  private static GenericContainer<?> newContainer(Network network, String host) {
+    GenericContainer<?> container = new GenericContainer<>("mongo:4.4.5")
+        .withNetwork(network)
+        .withNetworkAliases(host)
+        .withExposedPorts(MONGOS_PORT)
+        .withCommand(String.format("mongod --port %d --shardsvr --replSet rs0 --bind_ip localhost,%s", MONGOS_PORT, host));
+    return container;
+  }
+
   private static class DistributedMode extends ContainerManager {
 
     @Override
     public String setup() throws Exception {
       Network network = Network.newNetwork();
 
-      mongoContainers = Stream.of("m1", "m2", "m3")
-          .map(host -> new GenericContainer<>("mongo:4.4.5")
-              .withNetwork(network)
-              .withNetworkAliases(host)
-              .withExposedPorts(MONGOS_PORT)
-              .withCommand(String.format("mongod --port %d --shardsvr --replSet rs0 --bind_ip localhost,%s", MONGOS_PORT, host)))
+      Stream.of("m1", "m2", "m3")
+          .map(host -> newContainer(network, host))
           .collect(Collectors.toList());
 
       String configServerHost = "m4";
