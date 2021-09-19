@@ -116,6 +116,11 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
         try {
           tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(plugin.getDataSource().getConnection(), tableName);
         } catch (SQLException e) {
+          // TODO Remove me
+          System.out.println("-------------------------");
+          System.out.println(e.getMessage());
+          System.out.println(e.getSQLState());
+          System.out.println("-------------------------");
           tableWithSchema = tableName;
         }
         return new JdbcWriter(child, tableWithSchema, inner, plugin);
@@ -130,8 +135,17 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
   @Override
   public void dropTable(String tableName) {
+    String tableWithSchema = "";
+    try {
+      tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(plugin.getDataSource().getConnection(), tableName);
+    } catch (SQLException e) {
+      // TODO Remove me
+      System.out.println(e.getMessage());
+      tableWithSchema = tableName;
+    }
     // TODO Test this
-    String dropTableQuery = String.format("DROP TABLE %s", tableName);
+    String dropTableQuery = String.format("DROP TABLE %s", tableWithSchema);
+
     try {
       Connection conn = inner.getDataSource().getConnection();
       Statement stmt = conn.createStatement();

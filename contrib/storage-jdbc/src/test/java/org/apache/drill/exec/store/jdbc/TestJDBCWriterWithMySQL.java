@@ -19,18 +19,30 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryBuilder.QuerySummary;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.utility.DockerImageName;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * JDBC storage plugin tests against MySQL.
@@ -41,6 +53,7 @@ import org.testcontainers.utility.DockerImageName;
 public class TestJDBCWriterWithMySQL extends ClusterTest {
   private static final String DOCKER_IMAGE_MYSQL = "mysql:5.7.27";
   private static final String DOCKER_IMAGE_MARIADB = "mariadb:10.6.0";
+  private static final Logger logger = LoggerFactory.getLogger(TestJDBCWriterWithMySQL.class);
   private static JdbcDatabaseContainer<?> jdbcContainer;
 
   @BeforeClass
@@ -73,6 +86,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     }
 
     String jdbcUrl = jdbcContainer.getJdbcUrl();
+    logger.debug("JDBC URL: {}", jdbcUrl);
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
       jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, null, null);
     jdbcStorageConfig.setEnabled(true);
@@ -90,7 +104,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     // Local databases
     String localMySql = "jdbc:mysql://localhost:3306/?useJDBCCompliantTimezoneShift=true&serverTimezone=EST5EDT";
     JdbcStorageConfig localJdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", localMySql,
-      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, null, null);
+      "root", "password", false, null, null);
     jdbcStorageConfig.setEnabled(true);
 
     cluster.defineStoragePlugin("localMysql", localJdbcStorageConfig);
@@ -98,10 +112,31 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
 
   @Test
   public void testBasicCTAS() throws Exception {
-    String query = "CREATE TABLE mysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT 1, 2 FROM (VALUES(1))";
+    String query = "CREATE TABLE mysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    // Create the table and insert the values
+    QuerySummary insertResults = queryBuilder().sql(query).run();
+    assertTrue(insertResults.succeeded());
 
-    DirectRowSet results = queryBuilder().sql(query).rowSet();
-    results.print();
+    // Query the table to see if the insertion was successful
+    String testQuery = "SELECT * FROM  mysql.`drill_mysql_test`.`test_table`";
+    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1L, 2L)
+      .addRow(3L, 4L)
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+
+    // Now drop the table
+    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`test_table`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
   }
 
   @AfterClass

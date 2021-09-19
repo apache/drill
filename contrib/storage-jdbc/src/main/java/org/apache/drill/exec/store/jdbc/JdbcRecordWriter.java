@@ -23,7 +23,9 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.NullableBigIntHolder;
 import org.apache.drill.exec.expr.holders.NullableIntHolder;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema;
@@ -267,4 +269,53 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       this.rowList.add(holder.value);
     }
   }
+
+  @Override
+  public FieldConverter getNewNullableBigIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new NullableBigIntJDBCConverter(fieldId, fieldName, reader, this.rowList);
+  }
+
+  public static class NullableBigIntJDBCConverter extends FieldConverter {
+    private final NullableBigIntHolder holder = new NullableBigIntHolder();
+    private final List<Object> rowList;
+
+    public NullableBigIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+      super(fieldID, fieldName, reader);
+      this.rowList = rowList;
+    }
+
+    @Override
+    public void writeField() {
+      if (!reader.isSet()) {
+        this.rowList.add("null");
+      }
+      reader.read(holder);
+      this.rowList.add(holder.value);
+    }
+  }
+
+  @Override
+  public FieldConverter getNewBigIntConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new BigIntJDBCConverter(fieldId, fieldName, reader, this.rowList);
+  }
+
+  public static class BigIntJDBCConverter extends FieldConverter {
+    private final BigIntHolder holder = new BigIntHolder();
+    private final List<Object> rowList;
+
+    public BigIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+      super(fieldID, fieldName, reader);
+      this.rowList = rowList;
+    }
+
+    @Override
+    public void writeField() {
+      if (!reader.isSet()) {
+        this.rowList.add("null");
+      }
+      reader.read(holder);
+      this.rowList.add(holder.value);
+    }
+  }
+
 }

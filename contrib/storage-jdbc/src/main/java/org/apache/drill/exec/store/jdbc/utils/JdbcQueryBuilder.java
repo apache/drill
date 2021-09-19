@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.jdbc.utils;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Ordering;
-import org.apache.calcite.config.Lex;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
