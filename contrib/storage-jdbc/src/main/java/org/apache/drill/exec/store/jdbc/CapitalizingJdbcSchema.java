@@ -41,6 +41,7 @@ import org.apache.drill.exec.physical.base.Writer;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StorageStrategy;
+import org.apache.drill.exec.store.jdbc.utils.JdbcQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,12 +107,18 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
 
   @Override
-  public CreateTableEntry createNewTable(final String tableName, List<String> partitionColumns, StorageStrategy strategy) {
+  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy strategy) {
     return new CreateTableEntry() {
 
       @Override
       public Writer getWriter(PhysicalOperator child) throws IOException {
-        return new JdbcWriter(child, tableName, plugin);
+        String tableWithSchema = "";
+        try {
+          tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(plugin.getDataSource().getConnection(), tableName);
+        } catch (SQLException e) {
+          tableWithSchema = tableName;
+        }
+        return new JdbcWriter(child, tableWithSchema, inner, plugin);
       }
 
       @Override

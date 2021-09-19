@@ -86,6 +86,14 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
       cluster.defineStoragePlugin("mysqlCaseInsensitive", jdbcCaseSensitiveStorageConfig);
     }
+
+    // Local databases
+    String localMySql = "jdbc:mysql://localhost:3306/?useJDBCCompliantTimezoneShift=true&serverTimezone=EST5EDT";
+    JdbcStorageConfig localJdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", localMySql,
+      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, null, null);
+    jdbcStorageConfig.setEnabled(true);
+
+    cluster.defineStoragePlugin("localMysql", localJdbcStorageConfig);
   }
 
   @Test

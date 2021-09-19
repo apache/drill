@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.jdbc;
 
 import java.io.IOException;
 
+import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -37,23 +38,26 @@ public class JdbcWriter extends AbstractWriter {
 
   private final JdbcStoragePlugin plugin;
   private final String name;
+  private final JdbcSchema inner;
 
   @JsonCreator
   public JdbcWriter(
     @JsonProperty("child") PhysicalOperator child,
     @JsonProperty("name") String name,
     @JsonProperty("storage") StoragePluginConfig storageConfig,
+    @JacksonInject JdbcSchema inner,
     @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
     super(child);
     this.plugin = engineRegistry.resolve(storageConfig, JdbcStoragePlugin.class);
     this.name = name;
+    this.inner = inner;
   }
 
-
-  JdbcWriter(PhysicalOperator child, String name, JdbcStoragePlugin plugin) {
+  JdbcWriter(PhysicalOperator child, String name, JdbcSchema inner, JdbcStoragePlugin plugin) {
     super(child);
     this.name = name;
     this.plugin = plugin;
+    this.inner = inner;
   }
 
   @Override
@@ -63,7 +67,7 @@ public class JdbcWriter extends AbstractWriter {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new JdbcWriter(child, name, plugin);
+    return new JdbcWriter(child, name, inner, plugin);
   }
 
   public String getName() {
@@ -73,6 +77,9 @@ public class JdbcWriter extends AbstractWriter {
   public StoragePluginConfig getStorage() {
     return plugin.getConfig();
   }
+
+  @JsonIgnore
+  public JdbcSchema getInner() { return inner; }
 
   @JsonIgnore
   public JdbcStoragePlugin getPlugin() {

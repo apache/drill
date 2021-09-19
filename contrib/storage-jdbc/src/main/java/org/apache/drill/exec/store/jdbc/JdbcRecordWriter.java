@@ -64,6 +64,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   // TODO Wrap inserts in transaction?
   // TODO Config option for CREATE or CREATE IF NOT EXISTS
+  // TODO Add config option for max packet size
 
   /*
    * This map maps JDBC data types to their Drill equivalents.  The basic strategy is that if there
@@ -141,11 +142,13 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       queryBuilder.addColumn(columnName, field.getType().getMinorType(), nullable);
     }
     sql = queryBuilder.getCreateTableQuery();
+    //sql = JdbcQueryBuilder.convertToDestinationDialect(sql, dialect);
     logger.debug("Final query: {}", sql);
 
     // Execute the query to build the schema
     try {
       statement = connection.createStatement();
+      logger.debug("Executing CREATE query: {}", sql);
       statement.execute(sql);
     } catch (SQLException e) {
       throw UserException.dataReadError(e)
@@ -192,6 +195,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       logger.debug("Executing insert query: {}", insertQuery);
       Statement stmt = connection.createStatement();
       stmt.execute(insertQuery);
+      logger.debug("Query complete");
 
       // Close connection
       AutoCloseables.closeSilently(stmt, connection);
@@ -200,7 +204,6 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       throw new IOException();
     }
   }
-
 
   private String buildInsertQuery() {
     StringBuilder values = new StringBuilder();
@@ -212,7 +215,8 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     }
 
     String sql = String.format(INSERT_QUERY_TEMPLATE, tableName, values);
-    return JdbcQueryBuilder.convertToDestinationDialect(sql, dialect);
+    //return JdbcQueryBuilder.convertToDestinationDialect(sql, dialect);
+    return sql;
   }
 
 
