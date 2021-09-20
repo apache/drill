@@ -151,11 +151,13 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
       Statement stmt = conn.createStatement();
 
       logger.debug("Executing drop table query: {}", dropTableQuery);
-      boolean successfullyDropped = stmt.execute(dropTableQuery);
+      int successfullyDropped = stmt.executeUpdate(dropTableQuery);
 
-      if (!successfullyDropped) {
+      logger.debug("Result: {}", successfullyDropped);
+      if (successfullyDropped > 0) {
         throw UserException.dataWriteError()
           .message("Error while dropping table " + tableName)
+          .addContext(stmt.getWarnings().getMessage())
           .build(logger);
       }
     } catch (SQLException e) {
