@@ -595,4 +595,14 @@ public class ElasticSearchQueryTest extends ClusterTest {
             "1994-12-01 00:00:00.0", new BigDecimal("80000.00"), 0, "Graduate Degree", "S", "F", "Senior Management")
         .go();
   }
+
+  @Test
+  public void testGroupByNonExistingColumn() throws Exception {
+    try {
+      queryBuilder().sql("select distinct(full_name123) from elastic.`employee`").run();
+      fail("Query didn't fail");
+    } catch (UserRemoteException e) {
+      assertThat(e.getMessage(), containsString("EXECUTION_ERROR ERROR: Field full_name123 not defined for employee"));
+    }
+  }
 }

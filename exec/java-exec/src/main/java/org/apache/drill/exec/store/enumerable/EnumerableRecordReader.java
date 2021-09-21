@@ -17,10 +17,12 @@
  */
 package org.apache.drill.exec.store.enumerable;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.util.BuiltInMethod;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.compile.ClassBuilder;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -34,6 +36,7 @@ import org.apache.drill.exec.record.ColumnConverter;
 import org.apache.drill.exec.record.ColumnConverterFactory;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
 import org.codehaus.commons.compiler.CompileException;
 
 import java.io.IOException;
@@ -48,6 +51,7 @@ import java.util.stream.StreamSupport;
  * {@link ManagedReader} implementation that compiles and executes specified code,
  * calls the method on it for obtaining the values, and reads the results using column converters.
  */
+@Slf4j
 public class EnumerableRecordReader implements ManagedReader<SchemaNegotiator> {
 
   private static final String CLASS_NAME = "Baz";
@@ -99,7 +103,9 @@ public class EnumerableRecordReader implements ManagedReader<SchemaNegotiator> {
             .iterator();
       }
     } catch (CompileException | IOException | ClassTransformationException | ReflectiveOperationException e) {
-      throw new RuntimeException("Exception happened when executing generated code", e.getCause());
+      logger.error("Exception happened when executing generated code", e);
+      Throwable rootCause = Throwables.getRootCause(e);
+      throw new DrillRuntimeException(rootCause.getMessage(), rootCause);
     }
   }
 
