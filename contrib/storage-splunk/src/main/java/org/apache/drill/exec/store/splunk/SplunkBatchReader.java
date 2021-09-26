@@ -372,7 +372,7 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
       if (record[columnIndex] != null) {
         // Splunk may include extra garbage such as newlines or other whitespace in INT fields.
         String stringValue = record[columnIndex];
-        stringValue = stringValue.replaceAll("\\s","");
+        stringValue = stringValue.replaceAll("\\s", "");
 
         int value;
         try {
