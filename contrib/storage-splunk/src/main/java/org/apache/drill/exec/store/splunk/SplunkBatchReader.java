@@ -370,7 +370,17 @@ public class SplunkBatchReader implements ManagedReader<SchemaNegotiator> {
     @Override
     public void load(String[] record) {
       if (record[columnIndex] != null) {
-        int value = Integer.parseInt(record[columnIndex]);
+        // Splunk may include extra garbage such as newlines or other whitespace in INT fields.
+        String stringValue = record[columnIndex];
+        stringValue = stringValue.replaceAll("\\s", "");
+
+        int value;
+        try {
+          value = Integer.parseInt(stringValue);
+        } catch (NumberFormatException e) {
+          // If we still can't parse the INT field, for whatever reason, set value to -1
+          value = -1;
+        }
         columnWriter.setInt(value);
       } else {
         columnWriter.setNull();
