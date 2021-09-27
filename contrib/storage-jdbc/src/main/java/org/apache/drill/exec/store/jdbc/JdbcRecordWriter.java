@@ -74,7 +74,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   private final Connection connection;
   private final JdbcWriter config;
   private final SqlDialect dialect;
-  private String rowString;
+  private StringBuilder rowString;
   private final List<Object> rowList;
   private final List<String> insertRows;
 
@@ -176,7 +176,8 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public void startRecord() throws IOException {
-    rowString = "(";
+    rowString = new StringBuilder();
+    rowString.append("(");
     logger.debug("Start record");
   }
 
@@ -185,15 +186,16 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     // Add values to rowString
     for (int i = 0; i < this.rowList.size(); i++) {
       if (i > 0) {
-        rowString += ", ";
+        rowString.append(", ");
       }
-      rowString += this.rowList.get(i);
+      // TODO Check if the holder is a VarChar
+      rowString.append(this.rowList.get(i));
     }
 
-    rowString += ")";
+    rowString.append(")");
     logger.debug("End record: {}", rowString);
     this.rowList.clear();
-    insertRows.add(rowString);
+    insertRows.add(rowString.toString());
   }
 
   @Override
@@ -552,10 +554,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     @Override
     public void writeField() {
+      reader.read(holder);
       if (reader.isSet()) {
         byte[] bytes = new byte[holder.end - holder.start];
         holder.buffer.getBytes(holder.start, bytes);
-        reader.read(holder);
         this.rowList.add(holder);
       }
     }
@@ -578,10 +580,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     @Override
     public void writeField() {
+      reader.read(holder);
       if (reader.isSet()) {
         byte[] bytes = new byte[holder.end - holder.start];
         holder.buffer.getBytes(holder.start, bytes);
-        reader.read(holder);
         this.rowList.add(holder);
       }
     }
@@ -664,7 +666,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewTimeConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new DateJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new TimeJDBCConverter(fieldId, fieldName, reader, this.rowList);
   }
 
   public static class TimeJDBCConverter extends FieldConverter {

@@ -83,7 +83,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public boolean supportsWrite() {
-    return true;
+    return config.isWritable();
   }
 
   public DataSource getDataSource() {

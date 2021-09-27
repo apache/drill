@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
@@ -41,6 +42,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   private final String driver;
   private final String url;
   private final boolean caseInsensitiveTableNames;
+  private final boolean writable;
   private final Map<String, Object> sourceParameters;
 
   @JsonCreator
@@ -50,11 +52,13 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       @JsonProperty("username") String username,
       @JsonProperty("password") String password,
       @JsonProperty("caseInsensitiveTableNames") boolean caseInsensitiveTableNames,
+      @JsonProperty("writable") boolean writable,
       @JsonProperty("sourceParameters") Map<String, Object> sourceParameters,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider), credentialsProvider == null);
     this.driver = driver;
     this.url = url;
+    this.writable = writable;
     this.caseInsensitiveTableNames = caseInsensitiveTableNames;
     this.sourceParameters = sourceParameters == null ? Collections.emptyMap() : sourceParameters;
   }
@@ -66,6 +70,8 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   public String getUrl() {
     return url;
   }
+
+  public boolean isWritable() { return writable; }
 
   public String getUsername() {
     if (directCredentials) {
@@ -97,7 +103,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(driver, url, caseInsensitiveTableNames, sourceParameters, credentialsProvider);
+    return Objects.hash(driver, url, caseInsensitiveTableNames, sourceParameters, credentialsProvider, writable);
   }
 
   @Override
@@ -112,7 +118,18 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
     return caseInsensitiveTableNames == that.caseInsensitiveTableNames &&
         Objects.equals(driver, that.driver) &&
         Objects.equals(url, that.url) &&
+        Objects.equals(writable, that.writable) &&
         Objects.equals(sourceParameters, that.sourceParameters) &&
         Objects.equals(credentialsProvider, that.credentialsProvider);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("driver", driver)
+      .field("url", url)
+      .field("writable", writable)
+      .field("caseInsensitiveTableNames", caseInsensitiveTableNames)
+      .toString();
   }
 }

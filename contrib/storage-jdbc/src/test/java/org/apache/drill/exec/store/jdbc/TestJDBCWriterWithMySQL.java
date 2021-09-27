@@ -89,7 +89,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     String jdbcUrl = jdbcContainer.getJdbcUrl();
     logger.debug("JDBC URL: {}", jdbcUrl);
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, null, null);
+      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, true, null, null);
     jdbcStorageConfig.setEnabled(true);
 
     cluster.defineStoragePlugin("mysql", jdbcStorageConfig);
@@ -97,7 +97,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     if (osName.startsWith("linux")) {
       // adds storage plugin with case insensitive table names
       JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-        jdbcContainer.getUsername(), jdbcContainer.getPassword(), true, null, null);
+        jdbcContainer.getUsername(), jdbcContainer.getPassword(), true, true, null, null);
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
       cluster.defineStoragePlugin("mysqlCaseInsensitive", jdbcCaseSensitiveStorageConfig);
     }
@@ -105,7 +105,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     // Local databases
     String localMySql = "jdbc:mysql://localhost:3306/?useJDBCCompliantTimezoneShift=true&serverTimezone=EST5EDT";
     JdbcStorageConfig localJdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", localMySql,
-      "root", "password", false, null, null);
+      "root", "password", false, true, null, null);
     localJdbcStorageConfig.setEnabled(true);
 
     cluster.defineStoragePlugin("localMysql", localJdbcStorageConfig);
@@ -189,15 +189,20 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     // Query the table to see if the insertion was successful
     String testQuery = "SELECT * FROM  mysql.`drill_mysql_test`.`data_types`";
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
-
+    results.print();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
-      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("int_field", MinorType.INT, DataMode.OPTIONAL)
+      .add("bigint_field", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("float4_field", MinorType.FLOAT4, DataMode.OPTIONAL)
+      .add("float8_field", MinorType.FLOAT8, DataMode.OPTIONAL)
+      .add("varchar_field", MinorType.VARCHAR, DataMode.OPTIONAL)
+      .add("date_field", MinorType.DATE, DataMode.OPTIONAL)
+      .add("time_field", MinorType.TIME, DataMode.OPTIONAL)
+      .add("timestamp_field", MinorType.TIMESTAMP, DataMode.OPTIONAL)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1L, 2L)
-      .addRow(3L, 4L)
+      .addRow(1, 2L, 3.0, 4.0, "5.0")
       .build();
 
     RowSetUtilities.verify(expected, results);
