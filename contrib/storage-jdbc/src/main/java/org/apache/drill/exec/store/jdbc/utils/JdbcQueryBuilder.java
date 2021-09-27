@@ -33,6 +33,8 @@ import java.sql.JDBCType;
 
 public class JdbcQueryBuilder {
   private static final Logger logger = LoggerFactory.getLogger(JdbcQueryBuilder.class);
+  public static final int DEFAULT_VARCHAR_PRECISION = 100;
+
   private static final Config DEFAULT_CONFIGURATION = SqlParser.configBuilder()
     .setCaseSensitive(true)
     .build();
@@ -40,7 +42,7 @@ public class JdbcQueryBuilder {
   private static final String CREATE_TABLE_QUERY = "CREATE TABLE %s (";
   private final StringBuilder createTableQuery;
   private SqlDialect dialect;
-  private String columns;
+  private StringBuilder columns;
 
   public JdbcQueryBuilder(String tableName, SqlDialect dialect) {
     if (Strings.isNullOrEmpty(tableName)) {
@@ -49,7 +51,7 @@ public class JdbcQueryBuilder {
     this.dialect = dialect;
     createTableQuery = new StringBuilder();
     createTableQuery.append(String.format(CREATE_TABLE_QUERY, tableName));
-    columns = "";
+    columns = new StringBuilder();
   }
 
   // TODO Add Precision/Scale?
@@ -59,20 +61,29 @@ public class JdbcQueryBuilder {
    * @param colName The column to be added to the table
    * @param type The Drill MinorType of the column
    * @param nullable If the column is nullable or not.
+   * @param precision The precision, or overall length of a column
+   * @param scale The scale, or number of digits after the decimal
    */
-  public void addColumn(String colName, MinorType type, boolean nullable) {
+  public void addColumn(String colName, MinorType type, boolean nullable, int precision, int scale) {
+    StringBuilder queryText = new StringBuilder();
     String jdbcColType = JDBCType.valueOf(JdbcRecordWriter.JDBC_TYPE_MAPPINGS.get(type)).getName();
-    String queryText = colName + " " + jdbcColType;
+    queryText.append(colName).append(" ").append(jdbcColType);
+
+    // Add precision or scale if applicable
+    if (jdbcColType.equals("VARCHAR")) {
+      int max_precision = Math.max(precision, DEFAULT_VARCHAR_PRECISION);
+      queryText.append("(").append(max_precision).append(")");
+    }
 
     if (!nullable) {
-      queryText += " NOT NULL";
+      queryText.append(" NOT NULL");
     }
 
-    if (!Strings.isNullOrEmpty(columns)) {
-      columns += ",\n";
+    if (! Strings.isNullOrEmpty(columns.toString())) {
+      columns.append(",\n");
     }
 
-    columns += queryText;
+    columns.append(queryText);
   }
 
   /**

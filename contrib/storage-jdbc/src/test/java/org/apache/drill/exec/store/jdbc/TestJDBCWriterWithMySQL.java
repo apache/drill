@@ -170,6 +170,46 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     assertTrue(dropResults.succeeded());
   }
 
+  @Test
+  public void testBasicCTASWithDataTypes() throws Exception {
+    String query = "CREATE TABLE mysql.drill_mysql_test.`data_types` AS " +
+      "SELECT CAST(1 AS INTEGER) AS int_field," +
+      "CAST(2 AS BIGINT) AS bigint_field," +
+      "CAST(3.0 AS FLOAT) AS float4_field," +
+      "CAST(4.0 AS DOUBLE) AS float8_field," +
+      "'5.0' AS varchar_field," +
+      "CAST('2021-01-01' AS DATE) as date_field," +
+      "CAST('12:00:00' AS TIME) as time_field, " +
+      "CAST('2015-12-30 22:55:55.23' AS TIMESTAMP) as timestamp_field " +
+      "FROM (VALUES(1))";
+    // Create the table and insert the values
+    QuerySummary insertResults = queryBuilder().sql(query).run();
+    assertTrue(insertResults.succeeded());
+
+    // Query the table to see if the insertion was successful
+    String testQuery = "SELECT * FROM  mysql.`drill_mysql_test`.`data_types`";
+    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1L, 2L)
+      .addRow(3L, 4L)
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+
+    // Now drop the table
+    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`data_types`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+  }
+
+
+
   @AfterClass
   public static void stopMysql() {
     if (jdbcContainer != null) {

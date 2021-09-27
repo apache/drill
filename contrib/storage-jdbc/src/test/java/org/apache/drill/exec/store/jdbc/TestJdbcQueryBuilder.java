@@ -31,8 +31,8 @@ public class TestJdbcQueryBuilder {
   public void TestJdbcQueryBuilderWithTwoTables() {
 
     JdbcQueryBuilder builder = new JdbcQueryBuilder("t1", DatabaseProduct.MYSQL.getDialect());
-    builder.addColumn("col1", MinorType.INT, false);
-    builder.addColumn("col2", MinorType.VARCHAR, true);
+    builder.addColumn("col1", MinorType.INT, false, 0, 0);
+    builder.addColumn("col2", MinorType.VARCHAR, true, 100, 0);
 
     assertEquals("CREATE TABLE t1 (col1 INTEGER NOT NULL,\n" + "col2 VARCHAR\n" + ")", builder.getCreateTableQuery());
   }
