@@ -54,14 +54,13 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   private static final Logger logger = LoggerFactory.getLogger(JdbcRecordWriter.class);
   public static final ImmutableMap<MinorType, Integer> JDBC_TYPE_MAPPINGS;
   private static final String INSERT_QUERY_TEMPLATE = "INSERT INTO %s VALUES\n%s";
-  private final DataSource source;
   private final String tableName;
   private final Connection connection;
   private final JdbcWriter config;
   private final SqlDialect dialect;
   private String rowString;
-  private List<Object> rowList;
-  private List<String> insertRows;
+  private final List<Object> rowList;
+  private final List<String> insertRows;
 
 
   // TODO Wrap inserts in transaction?
@@ -100,12 +99,11 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   }
 
   public JdbcRecordWriter(DataSource source, OperatorContext context, String name, JdbcWriter config) {
-    this.source = source;
     this.tableName = name;
     this.config = config;
-    this.dialect = config.getPlugin().getDialect();
     this.rowList = new ArrayList<>();
     this.insertRows = new ArrayList<>();
+    this.dialect = config.getPlugin().getDialect();
 
     try {
       this.connection = source.getConnection();
@@ -118,7 +116,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   }
 
   @Override
-  public void init(Map<String, String> writerOptions) throws IOException {
+  public void init(Map<String, String> writerOptions) {
 
   }
 
@@ -317,5 +315,4 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       this.rowList.add(holder.value);
     }
   }
-
 }

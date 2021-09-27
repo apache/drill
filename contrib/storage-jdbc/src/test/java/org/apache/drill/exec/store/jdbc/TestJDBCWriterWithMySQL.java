@@ -106,7 +106,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     String localMySql = "jdbc:mysql://localhost:3306/?useJDBCCompliantTimezoneShift=true&serverTimezone=EST5EDT";
     JdbcStorageConfig localJdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", localMySql,
       "root", "password", false, null, null);
-    jdbcStorageConfig.setEnabled(true);
+    localJdbcStorageConfig.setEnabled(true);
 
     cluster.defineStoragePlugin("localMysql", localJdbcStorageConfig);
   }
@@ -168,13 +168,6 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     String dropQuery = "DROP TABLE localMysql.`drill_mysql_test`.`test_table`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
-  }
-
-  @Test
-  public void testMySQL() throws Exception {
-    String testQuery = "show tables in `localMysql`";
-    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
-    results.print();
   }
 
   @AfterClass

@@ -53,6 +53,8 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
   private final JdbcSchema inner;
   private final boolean caseSensitive;
   private final JdbcStoragePlugin plugin;
+  private final String catalog;
+  private final String schema;
 
   public CapitalizingJdbcSchema(List<String> parentSchemaPath, String name,
                           DataSource dataSource,
@@ -62,6 +64,8 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
     this.inner = new JdbcSchema(dataSource, dialect, convention, catalog, schema);
     this.caseSensitive = caseSensitive;
     this.plugin = plugin;
+    this.schema = schema;
+    this.catalog = catalog;
   }
 
   @Override
@@ -112,17 +116,7 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
       @Override
       public Writer getWriter(PhysicalOperator child) throws IOException {
-        String tableWithSchema = "";
-        try {
-          tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(plugin.getDataSource().getConnection(), tableName);
-        } catch (SQLException e) {
-          // TODO Remove me
-          System.out.println("-------------------------");
-          System.out.println(e.getMessage());
-          System.out.println(e.getSQLState());
-          System.out.println("-------------------------");
-          tableWithSchema = tableName;
-        }
+        String tableWithSchema = tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(tableName, catalog, schema);
         return new JdbcWriter(child, tableWithSchema, inner, plugin);
       }
 
@@ -135,15 +129,7 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
   @Override
   public void dropTable(String tableName) {
-    String tableWithSchema = "";
-    try {
-      tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(plugin.getDataSource().getConnection(), tableName);
-    } catch (SQLException e) {
-      // TODO Remove me
-      System.out.println(e.getMessage());
-      tableWithSchema = tableName;
-    }
-    // TODO Test this
+    String tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(tableName, catalog, schema);
     String dropTableQuery = String.format("DROP TABLE %s", tableWithSchema);
 
     try {

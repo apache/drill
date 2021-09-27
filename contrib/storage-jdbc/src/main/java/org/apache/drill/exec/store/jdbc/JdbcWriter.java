@@ -37,7 +37,7 @@ public class JdbcWriter extends AbstractWriter {
   public static final String OPERATOR_TYPE = "JDBC_WRITER";
 
   private final JdbcStoragePlugin plugin;
-  private final String name;
+  private final String tableName;
   private final JdbcSchema inner;
 
   @JsonCreator
@@ -49,13 +49,13 @@ public class JdbcWriter extends AbstractWriter {
     @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
     super(child);
     this.plugin = engineRegistry.resolve(storageConfig, JdbcStoragePlugin.class);
-    this.name = name;
+    this.tableName = name;
     this.inner = inner;
   }
 
   JdbcWriter(PhysicalOperator child, String name, JdbcSchema inner, JdbcStoragePlugin plugin) {
     super(child);
-    this.name = name;
+    this.tableName = name;
     this.plugin = plugin;
     this.inner = inner;
   }
@@ -67,11 +67,11 @@ public class JdbcWriter extends AbstractWriter {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new JdbcWriter(child, name, inner, plugin);
+    return new JdbcWriter(child, tableName, inner, plugin);
   }
 
-  public String getName() {
-    return name;
+  public String getTableName() {
+    return tableName;
   }
 
   public StoragePluginConfig getStorage() {
@@ -89,7 +89,7 @@ public class JdbcWriter extends AbstractWriter {
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
-      .field("name", name)
+      .field("tableName", tableName)
       .field("storageStrategy", getStorageStrategy())
       .toString();
   }
