@@ -259,6 +259,11 @@
       <groupId>org.apache.parquet</groupId>
       <artifactId>parquet-hadoop</artifactId>
       <exclusions>
+        <exclusion>
+          <!-- zstd (de)compression of Parquet data is handled by aircompressor -->
+          <groupId>com.github.luben</groupId>
+          <artifactId>zstd-jni</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -569,6 +574,11 @@
       <classifier>${netty.tcnative.classifier}</classifier>
     </dependency>
     <dependency>
+      <groupId>io.airlift</groupId>
+      <artifactId>aircompressor</artifactId>
+      <version>${aircompressor.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-embedder</artifactId>
       <version>${maven.version}</version>
@@ -744,6 +754,40 @@
               <artifactId>netty-all</artifactId>
             </exclusion>
           </exclusions>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <!-- Only package a Brotli codec for Linux and Mac OS X on AMD64, see PARQUET-1975 -->
+      <id>non-win-amd64</id>
+      <activation>
+        <os>
+          <arch>amd64</arch>
+          <name>!Windows</name>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>com.github.rdblue</groupId>
+          <artifactId>brotli-codec</artifactId>
+          <version>${brotli-codec.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <!-- A duplicate of the profile above to handle os.arch=x86_64 reported on Macs -->
+      <id>non-win-x86_64</id>
+      <activation>
+        <os>
+          <arch>x86_64</arch>
+          <name>!Windows</name>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>com.github.rdblue</groupId>
+          <artifactId>brotli-codec</artifactId>
+          <version>${brotli-codec.version}</version>
         </dependency>
       </dependencies>
     </profile>

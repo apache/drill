@@ -23,6 +23,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -32,12 +33,13 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
+import org.apache.drill.exec.store.parquet.compression.DrillCompressionCodecFactory;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.parquet.column.ColumnDescriptor;
-import org.apache.parquet.hadoop.CodecFactory;
+import org.apache.parquet.compression.CompressionCodecFactory;
 import org.apache.parquet.hadoop.ColumnChunkIncReadStore;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
@@ -331,10 +333,21 @@ public class DrillParquetReader extends CommonParquetRecordReader {
           Function.identity(),
           (o, n) -> n));
 
-      pageReadStore = new ColumnChunkIncReadStore(numRecordsToRead,
-        CodecFactory.createDirectCodecFactory(drillFileSystem.getConf(),
-          new ParquetDirectByteBufferAllocator(operatorContext.getAllocator()), 0),
-        operatorContext.getAllocator(), drillFileSystem, entry.getPath());
+      BufferAllocator allocator = operatorContext.getAllocator();
+
+      CompressionCodecFactory ccf = DrillCompressionCodecFactory.createDirectCodecFactory(
+        drillFileSystem.getConf(),
+        new ParquetDirectByteBufferAllocator(allocator),
+        0
+      );
+
+      pageReadStore = new ColumnChunkIncReadStore(
+        numRecordsToRead,
+        ccf,
+        allocator,
+        drillFileSystem,
+        entry.getPath()
+      );
 
       for (String[] path : schema.getPaths()) {
         Type type = schema.getType(path);

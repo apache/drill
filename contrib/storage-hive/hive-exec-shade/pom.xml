@@ -196,6 +196,10 @@
               <pattern>org.apache.commons.lang3.</pattern>
               <shadedPattern>hive.org.apache.commons.lang3.</shadedPattern>
             </relocation>
+            <relocation>
+              <pattern>io.airlift.</pattern>
+              <shadedPattern>hive.io.airlift.</shadedPattern>
+            </relocation>
           </relocations>
           <filters>
             <filter>

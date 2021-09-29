@@ -36,7 +36,7 @@ import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchStatsContex
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.hadoop.CodecFactory;
+import org.apache.parquet.compression.CompressionCodecFactory;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public class ParquetRecordReader extends CommonParquetRecordReader {
   private final FileSystem fileSystem;
   private final long numRecordsToRead; // number of records to read
   private final Path hadoopPath;
-  private final CodecFactory codecFactory;
+  private final CompressionCodecFactory codecFactory;
   private final int rowGroupIndex;
   private final ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus;
 
@@ -77,7 +77,7 @@ public class ParquetRecordReader extends CommonParquetRecordReader {
       int rowGroupIndex,
       long numRecordsToRead,
       FileSystem fs,
-      CodecFactory codecFactory,
+      CompressionCodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
       ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
@@ -88,7 +88,7 @@ public class ParquetRecordReader extends CommonParquetRecordReader {
       Path path,
       int rowGroupIndex,
       FileSystem fs,
-      CodecFactory codecFactory,
+      CompressionCodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
       ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
@@ -102,7 +102,7 @@ public class ParquetRecordReader extends CommonParquetRecordReader {
       Path path,
       int rowGroupIndex,
       FileSystem fs,
-      CodecFactory codecFactory,
+      CompressionCodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
       ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
@@ -135,7 +135,7 @@ public class ParquetRecordReader extends CommonParquetRecordReader {
     return dateCorruptionStatus;
   }
 
-  public CodecFactory getCodecFactory() {
+  public CompressionCodecFactory getCodecFactory() {
     return codecFactory;
   }
 

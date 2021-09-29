@@ -37,6 +37,7 @@ import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.CommonParquetRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
+import org.apache.drill.exec.store.parquet.compression.DrillCompressionCodecFactory;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
 import org.apache.drill.exec.store.parquet.metadata.Metadata_V4;
@@ -49,7 +50,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.hadoop.CodecFactory;
+import org.apache.parquet.compression.CompressionCodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
@@ -320,12 +321,18 @@ public abstract class AbstractParquetScanBatchCreator {
         containsCorruptDates,
         recordsToRead);
     } else {
+      CompressionCodecFactory ccf = DrillCompressionCodecFactory.createDirectCodecFactory(
+          fs.getConf(),
+          new ParquetDirectByteBufferAllocator(oContext.getAllocator()),
+          0
+      );
+
       reader = new ParquetRecordReader(context,
         rowGroup.getPath(),
         rowGroup.getRowGroupIndex(),
         recordsToRead,
         fs,
-        CodecFactory.createDirectCodecFactory(fs.getConf(), new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
+        ccf,
         footer,
         rowGroupScan.getColumns(),
         containsCorruptDates);

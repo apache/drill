@@ -40,11 +40,12 @@ import org.apache.parquet.column.page.DataPageV2;
 import org.apache.parquet.column.page.DictionaryPage;
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.column.page.PageReader;
+import org.apache.parquet.compression.CompressionCodecFactory;
+import org.apache.parquet.compression.CompressionCodecFactory.BytesInputDecompressor;
 import org.apache.parquet.format.DataPageHeaderV2;
 import org.apache.parquet.format.PageHeader;
 import org.apache.parquet.format.Util;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
-import org.apache.parquet.hadoop.CodecFactory.BytesDecompressor;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.util.HadoopStreams;
 
@@ -55,14 +56,14 @@ public class ColumnChunkIncReadStore implements PageReadStore {
 
   private static ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
 
-  private CodecFactory codecFactory;
+  private CompressionCodecFactory codecFactory;
   private BufferAllocator allocator;
   private FileSystem fs;
   private Path path;
   private long rowCount;
   private List<FSDataInputStream> streams = new ArrayList<>();
 
-  public ColumnChunkIncReadStore(long rowCount, CodecFactory codecFactory, BufferAllocator allocator,
+  public ColumnChunkIncReadStore(long rowCount, CompressionCodecFactory codecFactory, BufferAllocator allocator,
       FileSystem fs, Path path) {
     this.codecFactory = codecFactory;
     this.allocator = allocator;
@@ -82,7 +83,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
 
     private DictionaryPage dictionaryPage;
     private FSDataInputStream in;
-    private BytesDecompressor decompressor;
+    private BytesInputDecompressor decompressor;
 
     private ByteBuf lastPage;
 
@@ -100,19 +101,26 @@ public class ColumnChunkIncReadStore implements PageReadStore {
       if (dictionaryPage == null) {
         PageHeader pageHeader = new PageHeader();
         long pos = 0;
+
         try {
           pos = in.getPos();
           pageHeader = Util.readPageHeader(in);
+
           if (pageHeader.getDictionary_page_header() == null) {
             in.seek(pos);
             return null;
           }
-          dictionaryPage =
-                  new DictionaryPage(
-                          decompressor.decompress(BytesInput.from(in, pageHeader.compressed_page_size), pageHeader.getUncompressed_page_size()),
-                          pageHeader.getDictionary_page_header().getNum_values(),
-                          parquetMetadataConverter.getEncoding(pageHeader.dictionary_page_header.encoding)
-                  );
+
+          BytesInput dictPageBytes = decompressor.decompress(
+              BytesInput.from(in, pageHeader.compressed_page_size),
+              pageHeader.getUncompressed_page_size()
+          );
+
+          dictionaryPage = new DictionaryPage(
+              dictPageBytes,
+              pageHeader.getDictionary_page_header().getNum_values(),
+              parquetMetadataConverter.getEncoding(pageHeader.dictionary_page_header.encoding)
+          );
         } catch (Exception e) {
           throw new DrillRuntimeException("Error reading dictionary page." +
             "\nFile path: " + path.toUri().getPath() +
@@ -145,15 +153,20 @@ public class ColumnChunkIncReadStore implements PageReadStore {
           pageHeader = Util.readPageHeader(in);
           int uncompressedPageSize = pageHeader.getUncompressed_page_size();
           int compressedPageSize = pageHeader.getCompressed_page_size();
+
           switch (pageHeader.type) {
             case DICTIONARY_PAGE:
               if (dictionaryPage == null) {
-                dictionaryPage =
-                        new DictionaryPage(
-                                decompressor.decompress(BytesInput.from(in, pageHeader.compressed_page_size), pageHeader.getUncompressed_page_size()),
-                                pageHeader.uncompressed_page_size,
-                                parquetMetadataConverter.getEncoding(pageHeader.dictionary_page_header.encoding)
-                        );
+                BytesInput pageBytes = decompressor.decompress(
+                    BytesInput.from(in, pageHeader.compressed_page_size),
+                    pageHeader.getUncompressed_page_size()
+                );
+
+                dictionaryPage = new DictionaryPage(
+                    pageBytes,
+                    pageHeader.uncompressed_page_size,
+                    parquetMetadataConverter.getEncoding(pageHeader.dictionary_page_header.encoding)
+                );
               } else {
                 in.skip(pageHeader.compressed_page_size);
               }
@@ -165,14 +178,20 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               ByteBuffer buffer = buf.nioBuffer(0, pageHeader.compressed_page_size);
               HadoopStreams.wrap(in).readFully(buffer);
               buffer.flip();
+
+              BytesInput pageBytes = decompressor.decompress(
+                  BytesInput.from(buffer),
+                  pageHeader.getUncompressed_page_size()
+              );
+
               return new DataPageV1(
-                      decompressor.decompress(BytesInput.from(buffer), pageHeader.getUncompressed_page_size()),
-                      pageHeader.data_page_header.num_values,
-                      pageHeader.uncompressed_page_size,
-                      fromParquetStatistics(pageHeader.data_page_header.statistics, columnDescriptor.getType()),
-                      parquetMetadataConverter.getEncoding(pageHeader.data_page_header.repetition_level_encoding),
-                      parquetMetadataConverter.getEncoding(pageHeader.data_page_header.definition_level_encoding),
-                      parquetMetadataConverter.getEncoding(pageHeader.data_page_header.encoding)
+                  pageBytes,
+                  pageHeader.data_page_header.num_values,
+                  pageHeader.uncompressed_page_size,
+                  fromParquetStatistics(pageHeader.data_page_header.statistics, columnDescriptor.getType()),
+                  parquetMetadataConverter.getEncoding(pageHeader.data_page_header.repetition_level_encoding),
+                  parquetMetadataConverter.getEncoding(pageHeader.data_page_header.definition_level_encoding),
+                  parquetMetadataConverter.getEncoding(pageHeader.data_page_header.encoding)
               );
             // TODO - finish testing this with more files
             case DATA_PAGE_V2:
@@ -184,10 +203,11 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               buffer.flip();
               DataPageHeaderV2 dataHeaderV2 = pageHeader.getData_page_header_v2();
               int dataSize = compressedPageSize - dataHeaderV2.getRepetition_levels_byte_length() - dataHeaderV2.getDefinition_levels_byte_length();
-              BytesInput decompressedPageData =
-                  decompressor.decompress(
-                      BytesInput.from(buffer),
-                      pageHeader.uncompressed_page_size);
+              BytesInput decompressedPageData = decompressor.decompress(
+                  BytesInput.from(buffer),
+                  pageHeader.uncompressed_page_size
+              );
+
               ByteBuffer byteBuffer = decompressedPageData.toByteBuffer();
               int limit = byteBuffer.limit();
               byteBuffer.limit(dataHeaderV2.getRepetition_levels_byte_length());
@@ -200,17 +220,17 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               BytesInput data = BytesInput.from(byteBuffer.slice());
 
               return new DataPageV2(
-                      dataHeaderV2.getNum_rows(),
-                      dataHeaderV2.getNum_nulls(),
-                      dataHeaderV2.getNum_values(),
-                      repetitionLevels,
-                      definitionLevels,
-                      parquetMetadataConverter.getEncoding(dataHeaderV2.getEncoding()),
-                      data,
-                      uncompressedPageSize,
-                      fromParquetStatistics(dataHeaderV2.getStatistics(), columnDescriptor.getType()),
-                      dataHeaderV2.isIs_compressed()
-                  );
+                  dataHeaderV2.getNum_rows(),
+                  dataHeaderV2.getNum_nulls(),
+                  dataHeaderV2.getNum_values(),
+                  repetitionLevels,
+                  definitionLevels,
+                  parquetMetadataConverter.getEncoding(dataHeaderV2.getEncoding()),
+                  data,
+                  uncompressedPageSize,
+                  fromParquetStatistics(dataHeaderV2.getStatistics(), columnDescriptor.getType()),
+                  dataHeaderV2.isIs_compressed()
+              );
             default:
               in.skip(pageHeader.compressed_page_size);
               break;
@@ -233,6 +253,8 @@ public class ColumnChunkIncReadStore implements PageReadStore {
     }
 
     void close() {
+      decompressor.release();
+
       if (lastPage != null) {
         lastPage.release();
         lastPage = null;

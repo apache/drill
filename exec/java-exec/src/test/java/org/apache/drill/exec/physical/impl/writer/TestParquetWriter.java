@@ -47,6 +47,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -967,17 +969,10 @@ public class TestParquetWriter extends BaseTestQuery {
     for (int i = 1; i <= repeat; i++) {
       testTPCHReadWriteGzip();
       testTPCHReadWriteSnappy();
-    }
-  }
-
-  @Test
-  public void testTPCHReadWriteGzip() throws Exception {
-    try {
-      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "gzip");
-      String inputTable = "cp.`tpch/supplier.parquet`";
-        runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_gzip");
-    } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      testTPCHReadWriteBrotli();
+      testTPCHReadWriteLz4();
+      testTPCHReadWriteLzo();
+      testTPCHReadWriteZstd();
     }
   }
 
@@ -985,8 +980,76 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testTPCHReadWriteSnappy() throws Exception {
     try {
       alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "snappy");
-      String inputTable = "cp.`supplier_snappy.parquet`";
+      String inputTable = "cp.`tpch/supplier.parquet`";
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_snappy");
+    } finally {
+      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+    }
+  }
+
+  @Test
+  public void testTPCHReadWriteGzip() throws Exception {
+    try {
+      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "gzip");
+      String inputTable = "cp.`supplier_gzip.parquet`";
+        runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_gzip");
+    } finally {
+      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+    }
+  }
+
+  // We currently bundle the JNI-based com.rdblue.brotli-codec and it only provides
+  // natives for Mac and Linux on AMD64.  See PARQUET-1975.
+  @Test
+  @DisabledIfSystemProperty(named = "os.name", matches = "Windows")
+  @EnabledIfSystemProperty(named = "os.arch", matches = "amd64") // reported for Linux on AMD64
+  @EnabledIfSystemProperty(named = "os.arch", matches = "x86_64") // reported for OS X on AMD64
+  public void testTPCHReadWriteBrotli() throws Exception {
+    try {
+      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "brotli");
+      // exercise the new Parquet record reader with this parquet-mr-backed codec
+      alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
+      String inputTable = "cp.`supplier_brotli.parquet`";
+      runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_brotli");
+    } finally {
+      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+    }
+  }
+
+  @Test
+  public void testTPCHReadWriteLz4() throws Exception {
+    try {
+      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "lz4");
+      // exercise the async Parquet column reader with this aircompressor-backed codec
+      alterSession(ExecConstants.PARQUET_COLUMNREADER_ASYNC, true);
+      String inputTable = "cp.`supplier_lz4.parquet`";
+      runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_lz4");
+    } finally {
+      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+    }
+  }
+
+  @Test
+  public void testTPCHReadWriteLzo() throws Exception {
+    try {
+      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "lzo");
+      // exercise the async Parquet page reader with this aircompressor-backed codec
+      alterSession(ExecConstants.PARQUET_PAGEREADER_ASYNC, true);
+      String inputTable = "cp.`supplier_lzo.parquet`";
+      runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_lzo");
+    } finally {
+      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+    }
+  }
+
+  @Test
+  public void testTPCHReadWriteZstd() throws Exception {
+    try {
+      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "zstd");
+      // exercise the new Parquet record reader with this aircompressor-backed codec
+      alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
+      String inputTable = "cp.`supplier_zstd.parquet`";
+      runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_zstd");
     } finally {
       resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
     }

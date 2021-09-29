@@ -40,13 +40,14 @@ import org.apache.parquet.column.ValuesType;
 import org.apache.parquet.column.page.DictionaryPage;
 import org.apache.parquet.column.values.ValuesReader;
 import org.apache.parquet.column.values.dictionary.DictionaryValuesReader;
+import org.apache.parquet.compression.CompressionCodecFactory;
+import org.apache.parquet.compression.CompressionCodecFactory.BytesInputDecompressor;
 import org.apache.parquet.format.DataPageHeader;
 import org.apache.parquet.format.DataPageHeaderV2;
 import org.apache.parquet.format.PageHeader;
 import org.apache.parquet.format.PageType;
 import org.apache.parquet.format.Util;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
-import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.schema.PrimitiveType;
@@ -108,7 +109,7 @@ class PageReader {
   // These need to be held throughout reading of the entire column chunk
   List<ByteBuf> allocatedDictionaryBuffers;
 
-  protected final CodecFactory codecFactory;
+  protected final CompressionCodecFactory codecFactory;
   protected final String fileName;
 
   protected final ParquetReaderStats stats;
@@ -122,8 +123,8 @@ class PageReader {
   PageReader(org.apache.drill.exec.store.parquet.columnreaders.ColumnReader<?> parentStatus, FileSystem fs, Path path, ColumnChunkMetaData columnChunkMetaData)
     throws ExecutionSetupException {
     this.parentColumnReader = parentStatus;
-    allocatedDictionaryBuffers = new ArrayList<ByteBuf>();
-    codecFactory = parentColumnReader.parentReader.getCodecFactory();
+    this.allocatedDictionaryBuffers = new ArrayList<ByteBuf>();
+    this.codecFactory = parentColumnReader.parentReader.getCodecFactory();
     this.stats = parentColumnReader.parentReader.parquetReaderStats;
     this.fileName = path.toString();
     debugName = new StringBuilder()
@@ -239,9 +240,13 @@ class PageReader {
         this.updateStats(pageHeader, "Page Read", start, timeToRead, compressedSize, compressedSize);
         start = dataReader.getPos();
         timer.start();
-        codecFactory.getDecompressor(parentColumnReader.columnChunkMetaData.getCodec())
-            .decompress(compressedData.nioBuffer(0, compressedSize), compressedSize,
-                pageDataBuf.nioBuffer(0, uncompressedSize), uncompressedSize);
+
+        CompressionCodecName codecName = parentColumnReader.columnChunkMetaData.getCodec();
+        BytesInputDecompressor decomp = codecFactory.getDecompressor(codecName);
+        ByteBuffer input = compressedData.nioBuffer(0, compressedSize);
+        ByteBuffer output = pageDataBuf.nioBuffer(0, uncompressedSize);
+
+        decomp.decompress(input, compressedSize, output, uncompressedSize);
         pageDataBuf.writerIndex(uncompressedSize);
         timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
         this.updateStats(pageHeader, "Decompress", start, timeToRead, compressedSize, uncompressedSize);

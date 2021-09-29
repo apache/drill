@@ -37,17 +37,13 @@ import org.apache.drill.exec.util.concurrent.ExecutorServiceUtil;
 import org.apache.drill.exec.util.filereader.DirectBufInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.compress.Decompressor;
-import org.apache.hadoop.io.compress.DirectDecompressor;
-import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.parquet.column.page.DictionaryPage;
+import org.apache.parquet.compression.CompressionCodecFactory.BytesInputDecompressor;
 import org.apache.parquet.format.PageHeader;
 import org.apache.parquet.format.PageType;
 import org.apache.parquet.format.Util;
-import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
-import org.xerial.snappy.Snappy;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
@@ -200,11 +196,13 @@ class AsyncPageReader extends PageReader {
     pageDataBuf = allocateTemporaryBuffer(uncompressedSize);
     try {
       timer.start();
+
       CompressionCodecName codecName = parentColumnReader.columnChunkMetaData.getCodec();
+      BytesInputDecompressor decomp = codecFactory.getDecompressor(codecName);
       ByteBuffer input = compressedData.nioBuffer(0, compressedSize);
       ByteBuffer output = pageDataBuf.nioBuffer(0, uncompressedSize);
-      DecompressionHelper decompressionHelper = new DecompressionHelper(codecName);
-      decompressionHelper.decompress(input, compressedSize, output, uncompressedSize);
+
+      decomp.decompress(input, compressedSize, output, uncompressedSize);
       pageDataBuf.writerIndex(uncompressedSize);
       timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
       this.updateStats(pageHeader, "Decompress", 0, timeToRead, compressedSize, uncompressedSize);
@@ -495,56 +493,5 @@ class AsyncPageReader extends PageReader {
     }
       return null;
     }
-
   }
-
-  private class DecompressionHelper {
-    final CompressionCodecName codecName;
-
-    public DecompressionHelper(CompressionCodecName codecName){
-      this.codecName = codecName;
-    }
-
-    public void decompress (ByteBuffer input, int compressedSize, ByteBuffer output, int uncompressedSize)
-        throws IOException {
-      // GZip != thread_safe, so we go off and do our own thing.
-      // The hadoop interface does not support ByteBuffer so we incur some
-      // expensive copying.
-      if (codecName == CompressionCodecName.GZIP) {
-        GzipCodec codec = new GzipCodec();
-        // DirectDecompressor: @see https://hadoop.apache.org/docs/r2.7.2/api/org/apache/hadoop/io/compress/DirectDecompressor.html
-        DirectDecompressor directDecompressor = codec.createDirectDecompressor();
-        if (directDecompressor != null) {
-          logger.debug("Using GZIP direct decompressor.");
-          directDecompressor.decompress(input, output);
-        } else {
-          logger.debug("Using GZIP (in)direct decompressor.");
-          Decompressor decompressor = codec.createDecompressor();
-          decompressor.reset();
-          byte[] inputBytes = new byte[compressedSize];
-          input.position(0);
-          input.get(inputBytes);
-          decompressor.setInput(inputBytes, 0, inputBytes.length);
-          byte[] outputBytes = new byte[uncompressedSize];
-          decompressor.decompress(outputBytes, 0, uncompressedSize);
-          output.clear();
-          output.put(outputBytes);
-        }
-      } else if (codecName == CompressionCodecName.SNAPPY) {
-        // For Snappy, just call the Snappy decompressor directly instead
-        // of going thru the DirectDecompressor class.
-        // The Snappy codec is itself thread safe, while going thru the DirectDecompressor path
-        // seems to have concurrency issues.
-        output.clear();
-        int size = Snappy.uncompress(input, output);
-        output.limit(size);
-      } else {
-        CodecFactory.BytesDecompressor decompressor = codecFactory.getDecompressor(parentColumnReader.columnChunkMetaData.getCodec());
-        decompressor.decompress(input, compressedSize, output, uncompressedSize);
-      }
-    }
-
-
-  }
-
 }
