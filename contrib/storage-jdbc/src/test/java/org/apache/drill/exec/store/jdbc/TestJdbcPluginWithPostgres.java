@@ -18,8 +18,7 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -31,13 +30,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import static org.junit.Assert.assertEquals;
 
@@ -46,7 +44,6 @@ import static org.junit.Assert.assertEquals;
  */
 @Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithPostgres extends ClusterTest {
-  private static final Logger logger = LoggerFactory.getLogger(TestJdbcPluginWithPostgres.class);
 
   private static final String DOCKER_IMAGE_POSTGRES_X86 = "postgres:12.8-alpine3.14";
   private static JdbcDatabaseContainer<?> jdbcContainer;
@@ -65,7 +62,6 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
       .withInitScript("postgres-test-data.sql");
     jdbcContainer.start();
 
-    logger.debug("JDBC URL: {}", jdbcContainer.getJdbcUrl());
     JdbcStorageConfig jdbcStorageConfig =
       new JdbcStorageConfig("org.postgresql.Driver",
         jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
@@ -83,35 +79,54 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
 
   @Test
   public void validateResult() throws Exception {
-    testBuilder()
-      .sqlQuery(
-        "select person_id, first_name, last_name, address, city, state, zip, " +
-          "json, bigint_field, smallint_field, decimal_field, boolean_field, " +
-          "double_field, float_field, date_field, datetime_field, enum_field " +
-          "from pg.`public`.person order by person_id")
-      .ordered()
-      .baselineColumns("person_id", "first_name", "last_name", "address",
-        "city", "state", "zip", "json", "bigint_field", "smallint_field",
-        "decimal_field", "boolean_field", "double_field", "float_field",
-        "date_field", "datetime_field", "enum_field")
-      .baselineValues(1, "first_name_1", "last_name_1", "1401 John F Kennedy Blvd",
+    String sql = "SELECT person_id, first_name, last_name, address, city, state, zip, " +
+      "json, bigint_field, smallint_field, decimal_field, boolean_field, " +
+      "double_field, float_field, date_field, datetime_field, enum_field " +
+      "FROM pg.`public`.person ORDER BY person_id";
+
+    DirectRowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("person_id", MinorType.INT, 10)
+      .addNullable("first_name", MinorType.VARCHAR, 38)
+      .addNullable("last_name", MinorType.VARCHAR, 38)
+      .addNullable("address", MinorType.VARCHAR, 38)
+      .addNullable("city", MinorType.VARCHAR, 38)
+      .addNullable("state", MinorType.VARCHAR, 2)
+      .addNullable("zip", MinorType.INT, 10)
+      .addNullable("json", MinorType.VARCHAR, 38)
+      .addNullable("bigint_field", MinorType.BIGINT, 19)
+      .addNullable("smallint_field", MinorType.INT, 5)
+      .addNullable("decimal_field", MinorType.FLOAT8, 15, 2)
+      .addNullable("boolean_field", MinorType.BIT, 1)
+      .addNullable("double_field", MinorType.FLOAT8, 17, 17)
+      .addNullable("float_field", MinorType.FLOAT8, 17, 17)
+      .addNullable("date_field", MinorType.DATE, 13, 0)
+      .addNullable("datetime_field", MinorType.TIMESTAMP, 22)
+      .addNullable("enum_field", MinorType.VARCHAR, 38)
+      .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow(1, "first_name_1", "last_name_1", "1401 John F Kennedy Blvd",
         "Philadelphia", "PA", 19107, "{ a : 5, b : 6 }", 123456789L, 1,
         new BigDecimal("123.32"), 0, 1.0, 1.1,
-        DateUtility.parseLocalDate("2012-02-29"),
-        DateUtility.parseLocalDateTime("2012-02-29 13:00:01.0"), "XXX")
-      .baselineValues(2, "first_name_2", "last_name_2", "One Ferry Building",
+        LocalDate.parse("2012-02-29"),
+        1330538401000L, "XXX")
+      .addRow(2, "first_name_2", "last_name_2", "One Ferry Building",
         "San Francisco", "CA", 94111, "{ z : [ 1, 2, 3 ] }", 45456767L, 3,
         null, 1, 3.0, 3.1,
-        DateUtility.parseLocalDate("2011-10-30"),
-        DateUtility.parseLocalDateTime("2011-10-30 11:34:21.0"), "YYY")
-      .baselineValues(3, "first_name_3", "last_name_3", "176 Bowery",
+        LocalDate.parse("2011-10-30"),
+        1319988861000L, "YYY")
+      .addRow(3, "first_name_3", "last_name_3", "176 Bowery",
         "New York", "NY", 10012, "{ [ a, b, c ] }", 123090L, -3,
         null, 0, 5.0, 5.1,
-        DateUtility.parseLocalDate("2015-06-01"),
-        DateUtility.parseLocalDateTime("2015-09-22 15:46:10.0"), "ZZZ")
-      .baselineValues(4, null, null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, "XXX")
-      .go();
+        LocalDate.parse("2015-06-01"),
+        1442951170000L, "ZZZ")
+      .addRow(5, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null)
+      .build();
+
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -142,24 +157,6 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
   }
 
   @Test
-  public void pushDownAggWithDecimal() throws Exception {
-    String query = "SELECT sum(decimal_field * smallint_field) AS `order_total`\n" +
-      "FROM pg.`public`.person e";
-
-    DirectRowSet results = queryBuilder().sql(query).rowSet();
-
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("order_total", TypeProtos.MinorType.VARDECIMAL, 38, 2)
-      .buildSchema();
-
-    RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow(123.32)
-      .build();
-
-    RowSetUtilities.verify(expected, results);
-  }
-
-  @Test
   public void testPhysicalPlanSubmission() throws Exception {
     String query = "select * from pg.`public`.person";
     String plan = queryBuilder().sql(query).explainJson();
@@ -177,15 +174,22 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
 
   @Test
   public void testExpressionsWithoutAlias() throws Exception {
-    String query = "select count(*), 1+1+2+3+5+8+13+21+34, (1+sqrt(5))/2\n" +
+    String sql = "select count(*), 1+1+2+3+5+8+13+21+34, (1+sqrt(5))/2\n" +
       "from pg.`public`.person";
 
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .baselineColumns("EXPR$0", "EXPR$1", "EXPR$2")
-      .baselineValues(4L, 88L, 1.618033988749895)
-      .go();
+    DirectRowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("EXPR$0", MinorType.BIGINT, 19)
+      .addNullable("EXPR$1", MinorType.INT, 10)
+      .addNullable("EXPR$2", MinorType.FLOAT8, 17, 17)
+      .build();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow(4L, 88L, 1.618033988749895)
+      .build();
+
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -197,21 +201,21 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
       .sqlQuery(query)
       .unOrdered()
       .baselineColumns("EXPR$1", "EXPR$0", "EXPR$2")
-      .baselineValues(1.618033988749895, 88, 4)
+      .baselineValues(1.618033988749895, 88, 4L)
       .go();
   }
 
   @Test
   public void testExpressionsWithAliases() throws Exception {
-    String query = "select person_id as ID, 1+1+2+3+5+8+13+21+34 as FIBONACCI_SUM, (1+sqrt(5))/2 as golden_ratio\n" +
-      "from pg.`public`.person limit 2";
+    String query = "SELECT person_id AS ID, 1+1+2+3+5+8+13+21+34 as FIBONACCI_SUM, (1+sqrt(5))/2 as golden_ratio\n" +
+      "FROM pg.`public`.person limit 2";
 
     testBuilder()
       .sqlQuery(query)
       .unOrdered()
       .baselineColumns("ID", "FIBONACCI_SUM", "golden_ratio")
-      .baselineValues(1, 88L, 1.618033988749895)
-      .baselineValues(2, 88L, 1.618033988749895)
+      .baselineValues(1, 88, 1.618033988749895)
+      .baselineValues(2, 88, 1.618033988749895)
       .go();
   }
 
@@ -242,7 +246,7 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
       .sqlQuery(query)
       .unOrdered()
       .baselineColumns("person_id")
-      .baselineValuesForSingleColumn(1, 2, 3, 4)
+      .baselineValuesForSingleColumn(1, 2, 3, 5)
       .go();
   }
 
