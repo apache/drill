@@ -19,10 +19,12 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
@@ -59,10 +61,14 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class JdbcRecordWriter extends AbstractRecordWriter {
 
@@ -74,14 +80,15 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   private final Connection connection;
   private final JdbcWriter config;
   private final SqlDialect dialect;
-  private StringBuilder rowString;
   private final List<Object> rowList;
   private final List<String> insertRows;
+  private final List<JdbcWriterField> fields;
+  private StringBuilder rowString;
 
 
   // TODO Wrap inserts in transaction?
   // TODO Config option for CREATE or CREATE IF NOT EXISTS
-  // TODO Add config option for max packet size
+  // TODO Add config option for max packet size ?
 
   /*
    * This map maps JDBC data types to their Drill equivalents.  The basic strategy is that if there
@@ -116,6 +123,8 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     this.rowList = new ArrayList<>();
     this.insertRows = new ArrayList<>();
     this.dialect = config.getPlugin().getDialect();
+
+    this.fields = new ArrayList<>();
 
     try {
       this.connection = source.getConnection();
@@ -183,24 +192,53 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public void endRecord() throws IOException {
+    logger.debug("Ending record");
+
     // Add values to rowString
     for (int i = 0; i < this.rowList.size(); i++) {
       if (i > 0) {
         rowString.append(", ");
       }
-      // TODO Check if the holder is a VarChar
-      rowString.append(this.rowList.get(i));
+      JdbcWriterField currentField = fields.get(i);
+      if (currentField.getDataType() == MinorType.VARCHAR) {
+        String value;
+        // Get the string value
+        if (currentField.getMode() == DataMode.REQUIRED) {
+          VarCharHolder varCharHolder = (VarCharHolder) this.rowList.get(i);
+          value = StringFunctionHelpers.getStringFromVarCharHolder(varCharHolder);
+        } else {
+          NullableVarCharHolder nullableVarCharHolder = (NullableVarCharHolder) this.rowList.get(i);
+          value = StringFunctionHelpers.getStringFromVarCharHolder(nullableVarCharHolder);
+        }
+
+        // Escape any naughty characters
+        value = StringEscapeUtils.escapeSql(value);
+
+        // Add to value string
+        rowString.append("'").append(value).append("'");
+      } else if (currentField.getDataType() == MinorType.DATE) {
+        String dateString = formatDateForInsertQuery((Long) this.rowList.get(i));
+        rowString.append("'").append(dateString).append("'");
+      } else if (currentField.getDataType() == MinorType.TIME) {
+        String timeString = formatTimeForInsertQuery((Integer) this.rowList.get(i));
+        rowString.append("'").append(timeString).append("'");
+      } else if (currentField.getDataType() == MinorType.TIMESTAMP) {
+        String timeString = formatTimeStampForInsertQuery((Long) this.rowList.get(i));
+        rowString.append("'").append(timeString).append("'");
+      } else {
+        rowString.append(this.rowList.get(i));
+      }
     }
 
     rowString.append(")");
-    logger.debug("End record: {}", rowString);
     this.rowList.clear();
     insertRows.add(rowString.toString());
+    logger.debug("End record: {}", rowString.toString());
   }
 
   @Override
   public void abort() throws IOException {
-    logger.debug("Abort record");
+    logger.debug("Abort insert.");
   }
 
   @Override
@@ -219,6 +257,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       AutoCloseables.closeSilently(stmt, connection);
 
     } catch (SQLException e) {
+      logger.error("Error: {} ", e.getMessage());
       throw new IOException();
     }
   }
@@ -237,19 +276,38 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     return sql;
   }
 
+  private String formatDateForInsertQuery(Long dateVal) {
+    Date date=new Date(dateVal);
+    SimpleDateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
+    return df2.format(date);
+  }
+
+  private String formatTimeForInsertQuery(Integer millis) {
+    return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis),
+      TimeUnit.MILLISECONDS.toMinutes(millis) % TimeUnit.HOURS.toMinutes(1),
+      TimeUnit.MILLISECONDS.toSeconds(millis) % TimeUnit.MINUTES.toSeconds(1));
+  }
+
+  private String formatTimeStampForInsertQuery(Long time) {
+    Date date = new Date(time);
+    Format format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    return format.format(date);
+  }
+
 
   @Override
   public FieldConverter getNewNullableIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableIntJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new NullableIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class NullableIntJDBCConverter extends FieldConverter {
     private final NullableIntHolder holder = new NullableIntHolder();
     private final List<Object> rowList;
 
-    public NullableIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public NullableIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.INT, DataMode.OPTIONAL));
     }
 
     @Override
@@ -264,7 +322,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new IntJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new IntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class IntJDBCConverter extends FieldConverter {
@@ -272,9 +330,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public IntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public IntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.INT, DataMode.REQUIRED));
     }
 
     @Override
@@ -289,7 +348,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewNullableBigIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableBigIntJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new NullableBigIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class NullableBigIntJDBCConverter extends FieldConverter {
@@ -297,9 +356,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public NullableBigIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public NullableBigIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.BIGINT, DataMode.OPTIONAL));
     }
 
     @Override
@@ -314,7 +374,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewBigIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new BigIntJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new BigIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class BigIntJDBCConverter extends FieldConverter {
@@ -322,9 +382,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public BigIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public BigIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.BIGINT, DataMode.REQUIRED));
     }
 
     @Override
@@ -339,7 +400,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewNullableSmallIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableSmallIntJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new NullableSmallIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class NullableSmallIntJDBCConverter extends FieldConverter {
@@ -347,9 +408,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public NullableSmallIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public NullableSmallIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.SMALLINT, DataMode.OPTIONAL));
     }
 
     @Override
@@ -364,7 +426,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewSmallIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new SmallIntJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new SmallIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class SmallIntJDBCConverter extends FieldConverter {
@@ -372,9 +434,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public SmallIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public SmallIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.SMALLINT, DataMode.REQUIRED));
     }
 
     @Override
@@ -389,7 +452,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewNullableTinyIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableTinyIntJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new NullableTinyIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class NullableTinyIntJDBCConverter extends FieldConverter {
@@ -397,9 +460,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public NullableTinyIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public NullableTinyIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.TINYINT, DataMode.OPTIONAL));
     }
 
     @Override
@@ -414,7 +478,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewTinyIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new TinyIntJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new TinyIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class TinyIntJDBCConverter extends FieldConverter {
@@ -422,9 +486,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public TinyIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public TinyIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.TINYINT, DataMode.REQUIRED));
     }
 
     @Override
@@ -439,7 +504,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewNullableFloat4Converter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableFloat4JDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new NullableFloat4JDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class NullableFloat4JDBCConverter extends FieldConverter {
@@ -447,9 +512,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public NullableFloat4JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public NullableFloat4JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.FLOAT4, DataMode.OPTIONAL));
     }
 
     @Override
@@ -464,7 +530,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewFloat4Converter(int fieldId, String fieldName, FieldReader reader) {
-    return new Float4JDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new Float4JDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class Float4JDBCConverter extends FieldConverter {
@@ -472,9 +538,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public Float4JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public Float4JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.FLOAT4, DataMode.REQUIRED));
     }
 
     @Override
@@ -489,7 +556,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewNullableFloat8Converter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableFloat8JDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new NullableFloat8JDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class NullableFloat8JDBCConverter extends FieldConverter {
@@ -497,9 +564,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public NullableFloat8JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public NullableFloat8JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.FLOAT8, DataMode.OPTIONAL));
     }
 
     @Override
@@ -514,7 +582,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewFloat8Converter(int fieldId, String fieldName, FieldReader reader) {
-    return new Float8JDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new Float8JDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class Float8JDBCConverter extends FieldConverter {
@@ -522,9 +590,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public Float8JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public Float8JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.FLOAT8, DataMode.REQUIRED));
     }
 
     @Override
@@ -539,7 +608,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewNullableVarCharConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableVarCharJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new NullableVarCharJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class NullableVarCharJDBCConverter extends FieldConverter {
@@ -547,9 +616,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public NullableVarCharJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public NullableVarCharJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.VARCHAR, DataMode.OPTIONAL));
     }
 
     @Override
@@ -565,7 +635,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewVarCharConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new VarCharJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new VarCharJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class VarCharJDBCConverter extends FieldConverter {
@@ -573,9 +643,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public VarCharJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public VarCharJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.VARCHAR, DataMode.REQUIRED));
     }
 
     @Override
@@ -591,7 +662,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewNullableDateConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableDateJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new NullableDateJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class NullableDateJDBCConverter extends FieldConverter {
@@ -599,9 +670,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public NullableDateJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public NullableDateJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.DATE, DataMode.OPTIONAL));
     }
 
     @Override
@@ -616,7 +688,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewDateConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new DateJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new DateJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class DateJDBCConverter extends FieldConverter {
@@ -624,9 +696,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public DateJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public DateJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.DATE, DataMode.REQUIRED));
     }
 
     @Override
@@ -641,7 +714,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewNullableTimeConverter(int fieldId, String fieldName, FieldReader reader) {
-      return new NullableTimeJDBCConverter(fieldId, fieldName, reader, this.rowList);
+      return new NullableTimeJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
     }
 
     public static class NullableTimeJDBCConverter extends FieldConverter {
@@ -649,9 +722,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public NullableTimeJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public NullableTimeJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.TIME, DataMode.OPTIONAL));
     }
 
     @Override
@@ -666,7 +740,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewTimeConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new TimeJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new TimeJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class TimeJDBCConverter extends FieldConverter {
@@ -674,9 +748,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public TimeJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public TimeJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.TIME, DataMode.REQUIRED));
     }
 
     @Override
@@ -691,7 +766,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewNullableTimeStampConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableTimeStampJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new NullableTimeStampJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class NullableTimeStampJDBCConverter extends FieldConverter {
@@ -699,9 +774,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public NullableTimeStampJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public NullableTimeStampJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.TIMESTAMP, DataMode.OPTIONAL));
     }
 
     @Override
@@ -715,7 +791,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   }
   @Override
   public FieldConverter getNewTimeStampConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new TimeStampJDBCConverter(fieldId, fieldName, reader, this.rowList);
+    return new TimeStampJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
   }
 
   public static class TimeStampJDBCConverter extends FieldConverter {
@@ -723,9 +799,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     private final List<Object> rowList;
 
-    public TimeStampJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList) {
+    public TimeStampJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
       this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.TIMESTAMP, DataMode.REQUIRED));
     }
 
     @Override

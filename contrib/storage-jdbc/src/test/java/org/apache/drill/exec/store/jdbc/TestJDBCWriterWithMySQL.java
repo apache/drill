@@ -43,6 +43,9 @@ import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.utility.DockerImageName;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -101,14 +104,6 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
       cluster.defineStoragePlugin("mysqlCaseInsensitive", jdbcCaseSensitiveStorageConfig);
     }
-
-    // Local databases
-    String localMySql = "jdbc:mysql://localhost:3306/?useJDBCCompliantTimezoneShift=true&serverTimezone=EST5EDT";
-    JdbcStorageConfig localJdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", localMySql,
-      "root", "password", false, true, null, null);
-    localJdbcStorageConfig.setEnabled(true);
-
-    cluster.defineStoragePlugin("localMysql", localJdbcStorageConfig);
   }
 
   @Test
@@ -143,6 +138,14 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
   @Test
   @Ignore("Requires local installation of MySQL")
   public void testBasicCTASWithLocalDatabase() throws Exception {
+    // Local databases
+    String localMySql = "jdbc:mysql://localhost:3306/?useJDBCCompliantTimezoneShift=true&serverTimezone=EST5EDT";
+    JdbcStorageConfig localJdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", localMySql,
+      "root", "password", false, true, null, null);
+    localJdbcStorageConfig.setEnabled(true);
+
+    cluster.defineStoragePlugin("localMysql", localJdbcStorageConfig);
+
     String query = "CREATE TABLE localMysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
@@ -191,18 +194,18 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
     results.print();
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("int_field", MinorType.INT, DataMode.OPTIONAL)
-      .add("bigint_field", MinorType.BIGINT, DataMode.OPTIONAL)
-      .add("float4_field", MinorType.FLOAT4, DataMode.OPTIONAL)
-      .add("float8_field", MinorType.FLOAT8, DataMode.OPTIONAL)
-      .add("varchar_field", MinorType.VARCHAR, DataMode.OPTIONAL)
-      .add("date_field", MinorType.DATE, DataMode.OPTIONAL)
-      .add("time_field", MinorType.TIME, DataMode.OPTIONAL)
-      .add("timestamp_field", MinorType.TIMESTAMP, DataMode.OPTIONAL)
+      .addNullable("int_field", MinorType.INT, 10)
+      .addNullable("bigint_field", MinorType.BIGINT, 19)
+      .addNullable("float4_field", MinorType.FLOAT8, 12)
+      .addNullable("float8_field", MinorType.FLOAT8, 22)
+      .addNullable("varchar_field", MinorType.VARCHAR, 38)
+      .addNullable("date_field", MinorType.DATE, 10)
+      .addNullable("time_field", MinorType.TIME, 10)
+      .addNullable("timestamp_field", MinorType.TIMESTAMP, 19)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1, 2L, 3.0, 4.0, "5.0")
+      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2020-12-31"), LocalTime.parse("12:00"), 1451498155000L)
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -212,8 +215,6 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
-
-
 
   @AfterClass
   public static void stopMysql() {
