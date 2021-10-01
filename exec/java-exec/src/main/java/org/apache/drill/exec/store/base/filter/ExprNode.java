@@ -202,6 +202,7 @@ public abstract class ExprNode {
     /**
      * Rewrite a relop using the given normalized value.
      *
+     * @param normalizedValue given normalized value
      * @return a new RelOp with the normalized value. Will be the same relop
      * if the normalized value is the same as the unnormalized value.
      */
