@@ -53,7 +53,7 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
     startCluster(ClusterFixture.builder(dirTestWatcher));
     String postgresDBName = "drill_postgres_test";
 
-    DockerImageName imageName =DockerImageName.parse(DOCKER_IMAGE_POSTGRES_X86);
+    DockerImageName imageName = DockerImageName.parse(DOCKER_IMAGE_POSTGRES_X86);
 
     jdbcContainer = new PostgreSQLContainer<>(imageName)
       .withUsername("postgres")
