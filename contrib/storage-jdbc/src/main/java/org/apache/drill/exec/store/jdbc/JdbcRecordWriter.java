@@ -19,18 +19,20 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.calcite.sql.SqlDialect;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.NullableBigIntHolder;
+import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.expr.holders.NullableDateHolder;
 import org.apache.drill.exec.expr.holders.NullableFloat4Holder;
 import org.apache.drill.exec.expr.holders.NullableIntHolder;
@@ -50,6 +52,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.AbstractRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
+import org.apache.drill.exec.store.jdbc.utils.JdbcDDLQueryUtils;
 import org.apache.drill.exec.store.jdbc.utils.JdbcQueryBuilder;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
@@ -167,7 +170,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       queryBuilder.addColumn(columnName, field.getType().getMinorType(), nullable, precision, scale);
     }
     sql = queryBuilder.getCreateTableQuery();
-    //sql = JdbcQueryBuilder.convertToDestinationDialect(sql, dialect);
+    sql = JdbcDDLQueryUtils.cleanDDLQuery(sql, dialect);
     logger.debug("Final query: {}", sql);
 
     // Execute the query to build the schema
@@ -212,7 +215,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
         }
 
         // Escape any naughty characters
-        value = StringEscapeUtils.escapeSql(value);
+        value = StringEscapeUtils.escapeJava(value);
 
         // Add to value string
         rowString.append("'").append(value).append("'");
@@ -272,8 +275,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     }
 
     String sql = String.format(INSERT_QUERY_TEMPLATE, tableName, values);
-    //return JdbcQueryBuilder.convertToDestinationDialect(sql, dialect);
-    return sql;
+    return JdbcDDLQueryUtils.cleanDDLQuery(sql, dialect);
   }
 
   private String formatDateForInsertQuery(Long dateVal) {
@@ -814,4 +816,53 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       this.rowList.add(holder.value);
     }
   }
+
+  @Override
+  public FieldConverter getNewNullableBitConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new NullableBitJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+  }
+
+  public static class NullableBitJDBCConverter extends FieldConverter {
+    private final NullableBitHolder holder = new NullableBitHolder();
+
+    private final List<Object> rowList;
+
+    public NullableBitJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+      super(fieldID, fieldName, reader);
+      this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.BIT, DataMode.OPTIONAL));
+    }
+
+    @Override
+    public void writeField() {
+      if (!reader.isSet()) {
+        this.rowList.add("null");
+      }
+      reader.read(holder);
+      this.rowList.add(holder.value);
+    }
+  }
+  @Override
+  public FieldConverter getNewBitConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new BitJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+  }
+
+  public static class BitJDBCConverter extends FieldConverter {
+    private final BitHolder holder = new BitHolder();
+
+    private final List<Object> rowList;
+
+    public BitJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+      super(fieldID, fieldName, reader);
+      this.rowList = rowList;
+      fields.add(new JdbcWriterField(fieldName, MinorType.BIT, DataMode.REQUIRED));
+    }
+
+    @Override
+    public void writeField() {
+      reader.read(holder);
+      this.rowList.add(holder.value);
+    }
+  }
+
 }

@@ -19,10 +19,6 @@
 package org.apache.drill.exec.store.jdbc.utils;
 
 import org.apache.calcite.sql.SqlDialect;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.parser.SqlParser.Config;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.store.jdbc.JdbcRecordWriter;
 import org.apache.parquet.Strings;
@@ -34,10 +30,6 @@ import java.sql.JDBCType;
 public class JdbcQueryBuilder {
   private static final Logger logger = LoggerFactory.getLogger(JdbcQueryBuilder.class);
   public static final int DEFAULT_VARCHAR_PRECISION = 100;
-
-  private static final Config DEFAULT_CONFIGURATION = SqlParser.configBuilder()
-    .setCaseSensitive(true)
-    .build();
 
   private static final String CREATE_TABLE_QUERY = "CREATE TABLE %s (";
   private final StringBuilder createTableQuery;
@@ -53,8 +45,6 @@ public class JdbcQueryBuilder {
     createTableQuery.append(String.format(CREATE_TABLE_QUERY, tableName));
     columns = new StringBuilder();
   }
-
-  // TODO Add Precision/Scale?
 
   /**
    * Adds a column to the CREATE TABLE statement
@@ -99,25 +89,6 @@ public class JdbcQueryBuilder {
   @Override
   public String toString() {
     return getCreateTableQuery();
-  }
-
-  /**
-   * Converts a given SQL query from the generic dialect to the destination system dialect.  Returns
-   * null if the original query is not valid.
-   *
-   * @param sql An ANSI SQL statement
-   * @param dialect The destination system dialect
-   * @return A representation of the original query in the destination dialect
-   */
-  public static String convertToDestinationDialect(String sql, SqlDialect dialect) {
-    // TODO Fix this... it is adding additional rubbish which is invalidating the query
-    try {
-      SqlNode node = SqlParser.create(sql, DEFAULT_CONFIGURATION).parseQuery();
-      return node.toSqlString(dialect).getSql();
-    } catch (SqlParseException e) {
-      // Do nothing...
-    }
-    return null;
   }
 
   /**

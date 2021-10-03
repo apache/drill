@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
@@ -47,6 +48,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * JDBC storage plugin tests against MySQL.
@@ -183,7 +185,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
       "'5.0' AS varchar_field," +
       "CAST('2021-01-01' AS DATE) as date_field," +
       "CAST('12:00:00' AS TIME) as time_field, " +
-      "CAST('2015-12-30 22:55:55.23' AS TIMESTAMP) as timestamp_field " +
+      "CAST('2015-12-30 22:55:55.23' AS TIMESTAMP) as timestamp_field, true AS boolean_field " +
       "FROM (VALUES(1))";
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
@@ -192,7 +194,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     // Query the table to see if the insertion was successful
     String testQuery = "SELECT * FROM  mysql.`drill_mysql_test`.`data_types`";
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
-    results.print();
+
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("int_field", MinorType.INT, 10)
       .addNullable("bigint_field", MinorType.BIGINT, 19)
@@ -202,10 +204,11 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
       .addNullable("date_field", MinorType.DATE, 10)
       .addNullable("time_field", MinorType.TIME, 10)
       .addNullable("timestamp_field", MinorType.TIMESTAMP, 19)
+      .addNullable("boolean_field", MinorType.BIT)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2020-12-31"), LocalTime.parse("12:00"), 1451498155000L)
+      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2020-12-31"), LocalTime.parse("12:00"), 1451498155000L, true)
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -214,6 +217,17 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`data_types`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
+  }
+
+  @Test
+  public void testDropNonExistentTable() throws Exception {
+    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`none_shall_pass`";
+    try {
+      queryBuilder().sql(dropQuery).run();
+      fail();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Table [none_shall_pass] not found"));
+    }
   }
 
   @AfterClass
