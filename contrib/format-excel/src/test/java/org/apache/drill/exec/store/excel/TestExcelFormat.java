@@ -129,7 +129,7 @@ public class TestExcelFormat extends ClusterTest {
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .addRow("test_category", null, null, "test_author", null, null, "test_keywords", "Microsoft Office User", null, "test_subject", "test_title",
-        1571602578000L, null,1588212319000L)
+        1571602578000L, null,1633358966000L)
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
@@ -152,6 +152,24 @@ public class TestExcelFormat extends ClusterTest {
       .addRow(3.0, "Waiter", 17.0)
       .addRow(4.0, "Cicely", 6.0)
       .addRow(5.0, "Dorie", 17.0)
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testExplicitWithSpacesInColHeader() throws RpcException {
+    String sql = "SELECT col1, col2 FROM table(cp.`excel/test_data.xlsx` (type => 'excel', sheetName => 'spaceInColHeader'))";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("col1", MinorType.FLOAT8)
+      .addNullable("col2", MinorType.FLOAT8)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1,2)
+      .addRow(3,4)
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
@@ -525,7 +543,7 @@ public class TestExcelFormat extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow((Object)strArray("data", "secondSheet", "thirdSheet", "fourthSheet", "emptySheet", "missingDataSheet", "inconsistentData", "comps"))
+      .addRow((Object)strArray("data", "secondSheet", "thirdSheet", "fourthSheet", "emptySheet", "missingDataSheet", "inconsistentData", "comps", "spaceInColHeader"))
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
