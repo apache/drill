@@ -44,6 +44,7 @@ import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.utility.DockerImageName;
 
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -65,6 +66,8 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
   @BeforeClass
   public static void initMysql() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
+
+    dirTestWatcher.copyResourceToRoot(Paths.get("json/"));
     String osName = System.getProperty("os.name").toLowerCase();
     String mysqlDBName = "drill_mysql_test";
 
@@ -215,6 +218,41 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
 
     // Now drop the table
     String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`data_types`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+  }
+
+  // Test CTAS from file with various datatypes
+  // Test CTAS with null values
+  // Test CTAS with complex datatypes (Perhaps add config option for this?
+  // Test CTAS in H2IT, Postgres, Clickhouse
+
+  @Test
+  public void testCTASFromFileWithNulls() throws Exception {
+    String sql = "CREATE TABLE mysql.drill_mysql_test.`t1` AS SELECT int_field, float_field, varchar_field, boolean_field FROM cp.`json/dataTypes.json`";
+    QuerySummary insertResults = queryBuilder().sql(sql).run();
+    assertTrue(insertResults.succeeded());
+
+    sql = "SELECT * FROM mysql.drill_mysql_test.`t1`";
+    DirectRowSet results = queryBuilder().sql(sql).rowSet();
+    results.print();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("int_field", MinorType.BIGINT)
+      .addNullable("float_field", MinorType.FLOAT8)
+      .addNullable("varchar_field", MinorType.VARCHAR)
+      .addNullable("boolean_field", MinorType.BIT)
+      .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1L, 1.0, "foo1", true)
+      .addRow(null, null, null, null)
+      .addRow(2L, 2.0, "foo2", false)
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+
+    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`t1`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }

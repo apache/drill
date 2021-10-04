@@ -35,6 +35,7 @@ import org.apache.drill.exec.expr.holders.NullableBigIntHolder;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.expr.holders.NullableDateHolder;
 import org.apache.drill.exec.expr.holders.NullableFloat4Holder;
+import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
 import org.apache.drill.exec.expr.holders.NullableIntHolder;
 import org.apache.drill.exec.expr.holders.NullableSmallIntHolder;
 import org.apache.drill.exec.expr.holders.NullableTimeHolder;
@@ -68,7 +69,6 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -95,12 +95,10 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   /*
    * This map maps JDBC data types to their Drill equivalents.  The basic strategy is that if there
-   * is a Drill equivalent, then do the mapping as expected.  All flavors of INT (SMALLINT, TINYINT etc)
-   * are mapped to INT in Drill, with the exception of BIGINT.
+   * is a Drill equivalent, then do the mapping as expected.
    *
    * All flavors of character fields are mapped to VARCHAR in Drill. All versions of binary fields are
    * mapped to VARBINARY.
-   *
    */
   static {
     JDBC_TYPE_MAPPINGS = ImmutableMap.<MinorType, Integer>builder()
@@ -145,7 +143,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   }
 
   @Override
-  public void updateSchema(VectorAccessible batch) throws IOException {
+  public void updateSchema(VectorAccessible batch) {
     BatchSchema schema = batch.getSchema();
     String columnName;
     MinorType type;
@@ -154,8 +152,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     boolean nullable = false;
     JdbcQueryBuilder queryBuilder = new JdbcQueryBuilder(tableName, dialect);
 
-    for (Iterator<MaterializedField> it = schema.iterator(); it.hasNext(); ) {
-      MaterializedField field = it.next();
+    for (MaterializedField field : schema) {
       columnName = field.getName();
       type = field.getType().getMinorType();
       logger.debug("Adding column {} of type {}.", columnName, type);
@@ -169,6 +166,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
       queryBuilder.addColumn(columnName, field.getType().getMinorType(), nullable, precision, scale);
     }
+
     sql = queryBuilder.getCreateTableQuery();
     sql = JdbcDDLQueryUtils.cleanDDLQuery(sql, dialect);
     logger.debug("Final query: {}", sql);
@@ -202,20 +200,30 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       if (i > 0) {
         rowString.append(", ");
       }
+
+      // Add null value to rowstring
+      if (this.rowList.get(i) instanceof String && ((String) this.rowList.get(i)).equalsIgnoreCase("null")) {
+        rowString.append("null");
+        continue;
+      }
+
       JdbcWriterField currentField = fields.get(i);
       if (currentField.getDataType() == MinorType.VARCHAR) {
-        String value;
+        String value = null;
         // Get the string value
         if (currentField.getMode() == DataMode.REQUIRED) {
           VarCharHolder varCharHolder = (VarCharHolder) this.rowList.get(i);
           value = StringFunctionHelpers.getStringFromVarCharHolder(varCharHolder);
+          // Escape any naughty characters
+          value = StringEscapeUtils.escapeJava(value);
         } else {
-          NullableVarCharHolder nullableVarCharHolder = (NullableVarCharHolder) this.rowList.get(i);
-          value = StringFunctionHelpers.getStringFromVarCharHolder(nullableVarCharHolder);
+          try {
+            NullableVarCharHolder nullableVarCharHolder = (NullableVarCharHolder) this.rowList.get(i);
+            value = StringFunctionHelpers.getStringFromVarCharHolder(nullableVarCharHolder);
+          } catch (ClassCastException e) {
+            logger.debug("Uh oh... {}",  this.rowList.get(i));
+          }
         }
-
-        // Escape any naughty characters
-        value = StringEscapeUtils.escapeJava(value);
 
         // Add to value string
         rowString.append("'").append(value).append("'");
@@ -340,9 +348,6 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     @Override
     public void writeField() {
-      if (!reader.isSet()) {
-        this.rowList.add("null");
-      }
       reader.read(holder);
       this.rowList.add(holder.value);
     }
@@ -444,9 +449,6 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     @Override
     public void writeField() {
-      if (!reader.isSet()) {
-        this.rowList.add("null");
-      }
       reader.read(holder);
       this.rowList.add(holder.value);
     }
@@ -496,9 +498,6 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     @Override
     public void writeField() {
-      if (!reader.isSet()) {
-        this.rowList.add("null");
-      }
       reader.read(holder);
       this.rowList.add(holder.value);
     }
@@ -548,9 +547,6 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     @Override
     public void writeField() {
-      if (!reader.isSet()) {
-        this.rowList.add("null");
-      }
       reader.read(holder);
       this.rowList.add(holder.value);
     }
@@ -562,7 +558,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   }
 
   public static class NullableFloat8JDBCConverter extends FieldConverter {
-    private final NullableFloat4Holder holder = new NullableFloat4Holder();
+    private final NullableFloat8Holder holder = new NullableFloat8Holder();
 
     private final List<Object> rowList;
 
@@ -600,9 +596,6 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     @Override
     public void writeField() {
-      if (!reader.isSet()) {
-        this.rowList.add("null");
-      }
       reader.read(holder);
       this.rowList.add(holder.value);
     }
@@ -630,8 +623,8 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       if (reader.isSet()) {
         byte[] bytes = new byte[holder.end - holder.start];
         holder.buffer.getBytes(holder.start, bytes);
-        this.rowList.add(holder);
       }
+      this.rowList.add(holder);
     }
   }
 
@@ -706,9 +699,6 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     @Override
     public void writeField() {
-      if (!reader.isSet()) {
-        this.rowList.add("null");
-      }
       reader.read(holder);
       this.rowList.add(holder.value);
     }
@@ -758,9 +748,6 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     @Override
     public void writeField() {
-      if (!reader.isSet()) {
-        this.rowList.add("null");
-      }
       reader.read(holder);
       this.rowList.add(holder.value);
     }
@@ -809,9 +796,6 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
     @Override
     public void writeField() {
-      if (!reader.isSet()) {
-        this.rowList.add("null");
-      }
       reader.read(holder);
       this.rowList.add(holder.value);
     }
