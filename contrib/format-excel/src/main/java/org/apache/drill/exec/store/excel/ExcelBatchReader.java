@@ -249,7 +249,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     rowIterator = sheet.iterator();
 
     // Get the number of columns.
-    // This menthod also advances the row reader to the location of the first row of data
+    // This method also advances the row reader to the location of the first row of data
     setFirstRow();
 
     excelFieldNames = new ArrayList<>();
@@ -300,6 +300,9 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
               .replace(PARSER_WILDCARD, SAFE_WILDCARD)
               .replaceAll("\\.", SAFE_SEPARATOR)
               .replaceAll("\\n", HEADER_NEW_LINE_REPLACEMENT);
+
+            // Remove leading and trailing whitespace
+            tempColumnName = tempColumnName.trim();
             makeColumn(builder, tempColumnName, TypeProtos.MinorType.VARCHAR);
             excelFieldNames.add(colPosition, tempColumnName);
             break;
@@ -308,6 +311,9 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
           case _NONE:
           case BLANK:
             tempColumnName = cell.getStringCellValue();
+
+            // Remove leading and trailing whitespace
+            tempColumnName = tempColumnName.trim();
             makeColumn(builder, tempColumnName, TypeProtos.MinorType.FLOAT8);
             excelFieldNames.add(colPosition, tempColumnName);
             break;
