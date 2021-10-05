@@ -94,16 +94,10 @@ public abstract class ColumnReader<V extends ValueVector> {
     this.isFixedLength = fixedLength;
     this.schemaElement = schemaElement;
     this.valueVec =  v;
-    boolean useAsyncPageReader = parentReader.useAsyncPageReader;
-    if (useAsyncPageReader) {
-      this.pageReader =
-          new AsyncPageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath(),
-              columnChunkMetaData);
-    } else {
-      this.pageReader =
-          new PageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath(),
-              columnChunkMetaData);
-    }
+    this.pageReader = parentReader.useAsyncPageReader
+      ? new AsyncPageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath())
+      : new PageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath());
+
     try {
       pageReader.init();
     } catch (IOException e) {

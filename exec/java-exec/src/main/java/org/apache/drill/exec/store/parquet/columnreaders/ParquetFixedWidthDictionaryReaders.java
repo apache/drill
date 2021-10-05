@@ -64,7 +64,7 @@ public class ParquetFixedWidthDictionaryReaders {
   }
 
   /**
-   * This class uses for reading unsigned integer fields.
+   * This class is used for reading unsigned integer fields.
    */
   static class DictionaryUInt4Reader extends FixedByteAlignedReader<UInt4Vector> {
     DictionaryUInt4Reader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,

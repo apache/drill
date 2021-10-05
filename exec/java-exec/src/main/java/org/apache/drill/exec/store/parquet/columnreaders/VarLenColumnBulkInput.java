@@ -590,7 +590,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
      * Enables Parquet column readers to reset the definition level reader to a specific state.
      * @param skipCount the number of rows to skip (optional)
      *
-     * @throws IOException An IO related condition
+     * @throws IOException
      */
     void resetDefinitionLevelReader(int skipCount) throws IOException {
       pageReader.resetDefinitionLevelReader(skipCount);
