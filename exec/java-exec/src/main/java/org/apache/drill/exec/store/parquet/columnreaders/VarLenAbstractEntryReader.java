@@ -36,7 +36,7 @@ abstract class VarLenAbstractEntryReader {
    * CTOR.
    * @param buffer byte buffer for data buffering (within CPU cache)
    * @param entry reusable bulk entry object
-   * @param containerCallback
+   * @param containerCallback callback to allow a bulk reader to interact with its parent
    */
   VarLenAbstractEntryReader(ByteBuffer buffer,
     VarLenColumnBulkEntry entry,

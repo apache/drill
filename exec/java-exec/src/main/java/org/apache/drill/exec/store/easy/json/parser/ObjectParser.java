@@ -158,8 +158,8 @@ public abstract class ObjectParser extends AbstractElementParser {
    * <li>{@code foo: []}</li>
    * </ul>
    *
-   * @param key
-   * @param tokenizer
+   * @param key name of the field
+   * @param tokenizer an instance of a token iterator
    * @return a parser for the newly-created field
    */
   protected abstract ElementParser onField(String key, TokenIterator tokenizer);
@@ -172,6 +172,8 @@ public abstract class ObjectParser extends AbstractElementParser {
 
   /**
    * Parses <code>{ ^ ... }</code>
+   *
+   * @param tokenizer an instance of a token iterator
    */
   @Override
   public void parse(TokenIterator tokenizer) {
@@ -207,6 +209,8 @@ public abstract class ObjectParser extends AbstractElementParser {
    * look up the parser for that field and use it. If this is the first time
    * we've seen the field, "sniff" tokens to determine field type, create a
    * parser, then parse.
+   *
+   * @param tokenizer an instance of a token iterator
    */
   private void parseMember(TokenIterator tokenizer) {
     // Position: key: ^ ?

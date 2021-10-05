@@ -88,7 +88,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   /**
    * Create a new JSON Record Reader that uses a in memory materialized JSON stream.
    * @param fragmentContext the Drill fragment
-   * @param embeddedContent
+   * @param embeddedContent embedded content
    * @param fileSystem a Drill file system wrapper around the file system implementation
    * @param columns path names of columns/subfields to read
    * @throws OutOfMemoryException
