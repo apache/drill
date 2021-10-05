@@ -121,8 +121,8 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   public JdbcRecordWriter(DataSource source, OperatorContext context, String name, JdbcWriter config) {
     this.tableName = name;
     this.config = config;
-    this.rowList = new ArrayList<>();
-    this.insertRows = new ArrayList<>();
+    rowList = new ArrayList<>();
+    insertRows = new ArrayList<>();
     this.dialect = config.getPlugin().getDialect();
 
     this.fields = new ArrayList<>();
@@ -187,6 +187,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   @Override
   public void startRecord() throws IOException {
     rowString = new StringBuilder();
+    rowList.clear();
     rowString.append("(");
     logger.debug("Start record");
   }
@@ -196,13 +197,13 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     logger.debug("Ending record");
 
     // Add values to rowString
-    for (int i = 0; i < this.rowList.size(); i++) {
+    for (int i = 0; i < rowList.size(); i++) {
       if (i > 0) {
         rowString.append(", ");
       }
 
       // Add null value to rowstring
-      if (this.rowList.get(i) instanceof String && ((String) this.rowList.get(i)).equalsIgnoreCase("null")) {
+      if (rowList.get(i) instanceof String && ((String) rowList.get(i)).equalsIgnoreCase("null")) {
         rowString.append("null");
         continue;
       }
@@ -212,37 +213,37 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
         String value = null;
         // Get the string value
         if (currentField.getMode() == DataMode.REQUIRED) {
-          VarCharHolder varCharHolder = (VarCharHolder) this.rowList.get(i);
+          VarCharHolder varCharHolder = (VarCharHolder) rowList.get(i);
           value = StringFunctionHelpers.getStringFromVarCharHolder(varCharHolder);
           // Escape any naughty characters
           value = StringEscapeUtils.escapeJava(value);
         } else {
           try {
-            NullableVarCharHolder nullableVarCharHolder = (NullableVarCharHolder) this.rowList.get(i);
+            NullableVarCharHolder nullableVarCharHolder = (NullableVarCharHolder) rowList.get(i);
             value = StringFunctionHelpers.getStringFromVarCharHolder(nullableVarCharHolder);
           } catch (ClassCastException e) {
-            logger.debug("Uh oh... {}",  this.rowList.get(i));
+            logger.debug("Uh oh... {}",  rowList.get(i));
           }
         }
 
         // Add to value string
         rowString.append("'").append(value).append("'");
       } else if (currentField.getDataType() == MinorType.DATE) {
-        String dateString = formatDateForInsertQuery((Long) this.rowList.get(i));
+        String dateString = formatDateForInsertQuery((Long) rowList.get(i));
         rowString.append("'").append(dateString).append("'");
       } else if (currentField.getDataType() == MinorType.TIME) {
-        String timeString = formatTimeForInsertQuery((Integer) this.rowList.get(i));
+        String timeString = formatTimeForInsertQuery((Integer) rowList.get(i));
         rowString.append("'").append(timeString).append("'");
       } else if (currentField.getDataType() == MinorType.TIMESTAMP) {
-        String timeString = formatTimeStampForInsertQuery((Long) this.rowList.get(i));
+        String timeString = formatTimeStampForInsertQuery((Long) rowList.get(i));
         rowString.append("'").append(timeString).append("'");
       } else {
-        rowString.append(this.rowList.get(i));
+        rowString.append(rowList.get(i));
       }
     }
 
     rowString.append(")");
-    this.rowList.clear();
+    rowList.clear();
     insertRows.add(rowString.toString());
     logger.debug("End record: {}", rowString.toString());
   }
@@ -307,313 +308,282 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public FieldConverter getNewNullableIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new NullableIntJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class NullableIntJDBCConverter extends FieldConverter {
+  public class NullableIntJDBCConverter extends FieldConverter {
     private final NullableIntHolder holder = new NullableIntHolder();
-    private final List<Object> rowList;
 
-    public NullableIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public NullableIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.INT, DataMode.OPTIONAL));
     }
 
     @Override
     public void writeField() {
       if (!reader.isSet()) {
-        this.rowList.add("null");
+        rowList.add("null");
+        return;
       }
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new IntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new IntJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class IntJDBCConverter extends FieldConverter {
+  public class IntJDBCConverter extends FieldConverter {
     private final IntHolder holder = new IntHolder();
 
-    private final List<Object> rowList;
-
-    public IntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public IntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.INT, DataMode.REQUIRED));
     }
 
     @Override
     public void writeField() {
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewNullableBigIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableBigIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new NullableBigIntJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class NullableBigIntJDBCConverter extends FieldConverter {
+  public class NullableBigIntJDBCConverter extends FieldConverter {
     private final NullableBigIntHolder holder = new NullableBigIntHolder();
 
-    private final List<Object> rowList;
-
-    public NullableBigIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public NullableBigIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.BIGINT, DataMode.OPTIONAL));
     }
 
     @Override
     public void writeField() {
       if (!reader.isSet()) {
-        this.rowList.add("null");
+        rowList.add("null");
+        return;
       }
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewBigIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new BigIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new BigIntJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class BigIntJDBCConverter extends FieldConverter {
+  public class BigIntJDBCConverter extends FieldConverter {
     private final BigIntHolder holder = new BigIntHolder();
 
-    private final List<Object> rowList;
-
-    public BigIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public BigIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.BIGINT, DataMode.REQUIRED));
     }
 
     @Override
     public void writeField() {
       if (!reader.isSet()) {
-        this.rowList.add("null");
+        rowList.add("null");
+        return;
       }
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewNullableSmallIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableSmallIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new NullableSmallIntJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class NullableSmallIntJDBCConverter extends FieldConverter {
+  public class NullableSmallIntJDBCConverter extends FieldConverter {
     private final NullableSmallIntHolder holder = new NullableSmallIntHolder();
 
-    private final List<Object> rowList;
-
-    public NullableSmallIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public NullableSmallIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.SMALLINT, DataMode.OPTIONAL));
     }
 
     @Override
     public void writeField() {
       if (!reader.isSet()) {
-        this.rowList.add("null");
+        rowList.add("null");
+        return;
       }
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewSmallIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new SmallIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new SmallIntJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class SmallIntJDBCConverter extends FieldConverter {
+  public class SmallIntJDBCConverter extends FieldConverter {
     private final SmallIntHolder holder = new SmallIntHolder();
 
-    private final List<Object> rowList;
-
-    public SmallIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public SmallIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.SMALLINT, DataMode.REQUIRED));
     }
 
     @Override
     public void writeField() {
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewNullableTinyIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableTinyIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new NullableTinyIntJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class NullableTinyIntJDBCConverter extends FieldConverter {
+  public class NullableTinyIntJDBCConverter extends FieldConverter {
     private final NullableTinyIntHolder holder = new NullableTinyIntHolder();
 
-    private final List<Object> rowList;
-
-    public NullableTinyIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public NullableTinyIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.TINYINT, DataMode.OPTIONAL));
     }
 
     @Override
     public void writeField() {
       if (!reader.isSet()) {
-        this.rowList.add("null");
+        rowList.add("null");
+        return;
       }
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewTinyIntConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new TinyIntJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new TinyIntJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class TinyIntJDBCConverter extends FieldConverter {
+  public class TinyIntJDBCConverter extends FieldConverter {
     private final TinyIntHolder holder = new TinyIntHolder();
 
-    private final List<Object> rowList;
-
-    public TinyIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public TinyIntJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.TINYINT, DataMode.REQUIRED));
     }
 
     @Override
     public void writeField() {
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewNullableFloat4Converter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableFloat4JDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new NullableFloat4JDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class NullableFloat4JDBCConverter extends FieldConverter {
+  public class NullableFloat4JDBCConverter extends FieldConverter {
     private final NullableFloat4Holder holder = new NullableFloat4Holder();
 
-    private final List<Object> rowList;
-
-    public NullableFloat4JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public NullableFloat4JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.FLOAT4, DataMode.OPTIONAL));
     }
 
     @Override
     public void writeField() {
       if (!reader.isSet()) {
-        this.rowList.add("null");
+        rowList.add("null");
+        return;
       }
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewFloat4Converter(int fieldId, String fieldName, FieldReader reader) {
-    return new Float4JDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new Float4JDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class Float4JDBCConverter extends FieldConverter {
+  public class Float4JDBCConverter extends FieldConverter {
     private final Float4Holder holder = new Float4Holder();
 
-    private final List<Object> rowList;
-
-    public Float4JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public Float4JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.FLOAT4, DataMode.REQUIRED));
     }
 
     @Override
     public void writeField() {
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewNullableFloat8Converter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableFloat8JDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new NullableFloat8JDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class NullableFloat8JDBCConverter extends FieldConverter {
+  public class NullableFloat8JDBCConverter extends FieldConverter {
     private final NullableFloat8Holder holder = new NullableFloat8Holder();
 
-    private final List<Object> rowList;
-
-    public NullableFloat8JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public NullableFloat8JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.FLOAT8, DataMode.OPTIONAL));
     }
 
     @Override
     public void writeField() {
       if (!reader.isSet()) {
-        this.rowList.add("null");
+        rowList.add("null");
+        return;
       }
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewFloat8Converter(int fieldId, String fieldName, FieldReader reader) {
-    return new Float8JDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new Float8JDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class Float8JDBCConverter extends FieldConverter {
+  public class Float8JDBCConverter extends FieldConverter {
     private final Float8Holder holder = new Float8Holder();
 
-    private final List<Object> rowList;
-
-    public Float8JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public Float8JDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.FLOAT8, DataMode.REQUIRED));
     }
 
     @Override
     public void writeField() {
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewNullableVarCharConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableVarCharJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new NullableVarCharJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class NullableVarCharJDBCConverter extends FieldConverter {
+  public class NullableVarCharJDBCConverter extends FieldConverter {
     private final NullableVarCharHolder holder = new NullableVarCharHolder();
 
-    private final List<Object> rowList;
-
-    public NullableVarCharJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public NullableVarCharJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.VARCHAR, DataMode.OPTIONAL));
     }
 
@@ -624,23 +594,20 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
         byte[] bytes = new byte[holder.end - holder.start];
         holder.buffer.getBytes(holder.start, bytes);
       }
-      this.rowList.add(holder);
+      rowList.add(holder);
     }
   }
 
   @Override
   public FieldConverter getNewVarCharConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new VarCharJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new VarCharJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class VarCharJDBCConverter extends FieldConverter {
+  public class VarCharJDBCConverter extends FieldConverter {
     private final VarCharHolder holder = new VarCharHolder();
 
-    private final List<Object> rowList;
-
-    public VarCharJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public VarCharJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.VARCHAR, DataMode.REQUIRED));
     }
 
@@ -650,203 +617,183 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       if (reader.isSet()) {
         byte[] bytes = new byte[holder.end - holder.start];
         holder.buffer.getBytes(holder.start, bytes);
-        this.rowList.add(holder);
+        rowList.add(holder);
       }
     }
   }
 
   @Override
   public FieldConverter getNewNullableDateConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableDateJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new NullableDateJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class NullableDateJDBCConverter extends FieldConverter {
+  public class NullableDateJDBCConverter extends FieldConverter {
     private final NullableDateHolder holder = new NullableDateHolder();
 
-    private final List<Object> rowList;
-
-    public NullableDateJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public NullableDateJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.DATE, DataMode.OPTIONAL));
     }
 
     @Override
     public void writeField() {
       if (!reader.isSet()) {
-        this.rowList.add("null");
+        rowList.add("null");
+        return;
       }
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewDateConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new DateJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new DateJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class DateJDBCConverter extends FieldConverter {
+  public class DateJDBCConverter extends FieldConverter {
     private final DateHolder holder = new DateHolder();
 
-    private final List<Object> rowList;
-
-    public DateJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public DateJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.DATE, DataMode.REQUIRED));
     }
 
     @Override
     public void writeField() {
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewNullableTimeConverter(int fieldId, String fieldName, FieldReader reader) {
-      return new NullableTimeJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+      return new NullableTimeJDBCConverter(fieldId, fieldName, reader, fields);
     }
 
-    public static class NullableTimeJDBCConverter extends FieldConverter {
+    public class NullableTimeJDBCConverter extends FieldConverter {
     private final NullableTimeHolder holder = new NullableTimeHolder();
 
-    private final List<Object> rowList;
-
-    public NullableTimeJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public NullableTimeJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.TIME, DataMode.OPTIONAL));
     }
 
     @Override
     public void writeField() {
       if (!reader.isSet()) {
-        this.rowList.add("null");
+        rowList.add("null");
+        return;
       }
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewTimeConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new TimeJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new TimeJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class TimeJDBCConverter extends FieldConverter {
+  public class TimeJDBCConverter extends FieldConverter {
     private final TimeHolder holder = new TimeHolder();
 
-    private final List<Object> rowList;
-
-    public TimeJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public TimeJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.TIME, DataMode.REQUIRED));
     }
 
     @Override
     public void writeField() {
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewNullableTimeStampConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableTimeStampJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new NullableTimeStampJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class NullableTimeStampJDBCConverter extends FieldConverter {
+  public class NullableTimeStampJDBCConverter extends FieldConverter {
     private final NullableTimeStampHolder holder = new NullableTimeStampHolder();
 
-    private final List<Object> rowList;
-
-    public NullableTimeStampJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public NullableTimeStampJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.TIMESTAMP, DataMode.OPTIONAL));
     }
 
     @Override
     public void writeField() {
       if (!reader.isSet()) {
-        this.rowList.add("null");
+        rowList.add("null");
+        return;
       }
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
+
   @Override
   public FieldConverter getNewTimeStampConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new TimeStampJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new TimeStampJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class TimeStampJDBCConverter extends FieldConverter {
+  public class TimeStampJDBCConverter extends FieldConverter {
     private final TimeStampHolder holder = new TimeStampHolder();
 
-    private final List<Object> rowList;
-
-    public TimeStampJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public TimeStampJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.TIMESTAMP, DataMode.REQUIRED));
     }
 
     @Override
     public void writeField() {
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
 
   @Override
   public FieldConverter getNewNullableBitConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new NullableBitJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new NullableBitJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class NullableBitJDBCConverter extends FieldConverter {
+  public class NullableBitJDBCConverter extends FieldConverter {
     private final NullableBitHolder holder = new NullableBitHolder();
 
-    private final List<Object> rowList;
-
-    public NullableBitJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public NullableBitJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.BIT, DataMode.OPTIONAL));
     }
 
     @Override
     public void writeField() {
       if (!reader.isSet()) {
-        this.rowList.add("null");
+        rowList.add("null");
+        return;
       }
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
   @Override
   public FieldConverter getNewBitConverter(int fieldId, String fieldName, FieldReader reader) {
-    return new BitJDBCConverter(fieldId, fieldName, reader, this.rowList, this.fields);
+    return new BitJDBCConverter(fieldId, fieldName, reader, fields);
   }
 
-  public static class BitJDBCConverter extends FieldConverter {
+  public class BitJDBCConverter extends FieldConverter {
     private final BitHolder holder = new BitHolder();
 
-    private final List<Object> rowList;
-
-    public BitJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<Object> rowList, List<JdbcWriterField> fields) {
+    public BitJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
       super(fieldID, fieldName, reader);
-      this.rowList = rowList;
       fields.add(new JdbcWriterField(fieldName, MinorType.BIT, DataMode.REQUIRED));
     }
 
     @Override
     public void writeField() {
       reader.read(holder);
-      this.rowList.add(holder.value);
+      rowList.add(holder.value);
     }
   }
-
 }

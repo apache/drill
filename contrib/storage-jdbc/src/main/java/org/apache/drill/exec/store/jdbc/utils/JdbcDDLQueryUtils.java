@@ -18,13 +18,12 @@
 
 package org.apache.drill.exec.store.jdbc.utils;
 
-import org.apache.calcite.config.Lex;;
+import org.apache.calcite.config.Lex;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParser.Config;
-import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.parser.ddl.SqlDdlParserImpl;
 

@@ -222,10 +222,9 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     assertTrue(dropResults.succeeded());
   }
 
-  // Test CTAS from file with various datatypes
-  // Test CTAS with null values
-  // Test CTAS with complex datatypes (Perhaps add config option for this?
-  // Test CTAS in H2IT, Postgres, Clickhouse
+  // TODO Test CTAS with complex datatypes (Perhaps add config option for this?
+  // TODO CTAS with pre-existing table
+  // TODO Test CTAS in H2IT, Postgres, Clickhouse
 
   @Test
   public void testCTASFromFileWithNulls() throws Exception {
@@ -235,13 +234,12 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
 
     sql = "SELECT * FROM mysql.drill_mysql_test.`t1`";
     DirectRowSet results = queryBuilder().sql(sql).rowSet();
-    results.print();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("int_field", MinorType.BIGINT)
-      .addNullable("float_field", MinorType.FLOAT8)
-      .addNullable("varchar_field", MinorType.VARCHAR)
-      .addNullable("boolean_field", MinorType.BIT)
+      .addNullable("int_field", MinorType.BIGINT, 19)
+      .addNullable("float_field", MinorType.FLOAT8, 22)
+      .addNullable("varchar_field", MinorType.VARCHAR, 38)
+      .addNullable("boolean_field", MinorType.BIT, 1)
       .build();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
