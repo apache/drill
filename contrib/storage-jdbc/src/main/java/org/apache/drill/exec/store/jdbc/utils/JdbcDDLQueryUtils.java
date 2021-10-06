@@ -74,8 +74,9 @@ public class JdbcDDLQueryUtils {
         }
         sb.append(c);
       }
-    } else
+    } else {
       sb.append(sqlString);
+    }
     sb.append('\'');
   }
 
