@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.jdbc.utils;
 
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.store.jdbc.JdbcRecordWriter;
 import org.apache.parquet.Strings;
@@ -56,7 +57,17 @@ public class JdbcQueryBuilder {
    */
   public void addColumn(String colName, MinorType type, boolean nullable, int precision, int scale) {
     StringBuilder queryText = new StringBuilder();
-    String jdbcColType = JDBCType.valueOf(JdbcRecordWriter.JDBC_TYPE_MAPPINGS.get(type)).getName();
+    String jdbcColType = "";
+    try {
+      jdbcColType = JDBCType.valueOf(JdbcRecordWriter.JDBC_TYPE_MAPPINGS.get(type)).getName();
+    } catch (NullPointerException e) {
+      // JDBC Does not support writing complex fields to databases
+      throw UserException.dataWriteError()
+        .message("Drill does not support writing complex fields to JDBC data sources.")
+        .addContext(colName + " is a complex type.")
+        .build(logger);
+    }
+
     queryText.append(colName).append(" ").append(jdbcColType);
 
     // Add precision or scale if applicable

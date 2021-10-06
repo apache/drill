@@ -108,7 +108,6 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
 
     cluster.defineStoragePlugin("mysql_no_write", jdbcStorageConfigNoWrite);
 
-
     if (osName.startsWith("linux")) {
       // adds storage plugin with case insensitive table names
       JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
@@ -229,8 +228,6 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     assertTrue(dropResults.succeeded());
   }
 
-  // TODO Test CTAS with complex datatypes (Perhaps add config option for this?)
-
   @Test
   public void testCTASFromFileWithNulls() throws Exception {
     String sql = "CREATE TABLE mysql.drill_mysql_test.`t1` AS SELECT int_field, float_field, varchar_field, boolean_field FROM cp.`json/dataTypes.json`";
@@ -333,8 +330,26 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
 
   @Test
   public void testWithComplexData() throws Exception {
-    String sql = "CREATE TABLE mysql.`drill_mysql_test`.`complex` AS SELECT * FROM cp.`json/complexData.json`";
-    queryBuilder().sql(sql).run();
+    // JDBC Writer does not support writing complex types at this time.
+    try {
+      String sql = "CREATE TABLE mysql.`drill_mysql_test`.`complex` AS SELECT * FROM cp.`json/complexData.json`";
+      queryBuilder().sql(sql).run();
+      fail();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: Drill does not support writing complex fields to JDBC data sources."));
+    }
+  }
+
+  @Test
+  public void testWithArrayField() throws Exception {
+    // JDBC Writer does not support writing arrays at this time.
+    try {
+      String sql = "CREATE TABLE mysql.`drill_mysql_test`.`complex` AS SELECT * FROM cp.`json/repeatedData.json`";
+      queryBuilder().sql(sql).run();
+      fail();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: Drill does not yet support writing arrays to JDBC. repeated_field is an array."));
+    }
   }
 
   @Test

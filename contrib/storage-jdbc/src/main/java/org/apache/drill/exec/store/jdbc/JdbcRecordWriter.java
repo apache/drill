@@ -87,12 +87,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   private final List<String> insertRows;
   private final List<JdbcWriterField> fields;
   private StringBuilder rowString;
-
-
-  // TODO Wrap inserts in transaction?
-  // TODO Config option for CREATE or CREATE IF NOT EXISTS
-  // TODO Add config option for max packet size ?
-
+  
   /*
    * This map maps JDBC data types to their Drill equivalents.  The basic strategy is that if there
    * is a Drill equivalent, then do the mapping as expected.
@@ -156,6 +151,12 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       columnName = field.getName();
       type = field.getType().getMinorType();
       logger.debug("Adding column {} of type {}.", columnName, type);
+
+      if (field.getType().getMode() == DataMode.REPEATED) {
+        throw UserException.dataWriteError()
+          .message("Drill does not yet support writing arrays to JDBC. " + columnName + " is an array.")
+          .build(logger);
+      }
 
       if (field.getType().getMode() == DataMode.OPTIONAL) {
         nullable = true;
@@ -304,7 +305,6 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     Format format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     return format.format(date);
   }
-
 
   @Override
   public FieldConverter getNewNullableIntConverter(int fieldId, String fieldName, FieldReader reader) {
