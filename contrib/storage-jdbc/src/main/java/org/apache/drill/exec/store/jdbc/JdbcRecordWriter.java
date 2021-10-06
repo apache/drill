@@ -64,7 +64,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

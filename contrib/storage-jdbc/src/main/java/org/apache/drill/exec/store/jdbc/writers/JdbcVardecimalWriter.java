@@ -21,19 +21,29 @@ package org.apache.drill.exec.store.jdbc.writers;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class JdbcVardecimalWriter extends JdbcColumnWriter {
 
-  public JdbcVardecimalWriter(String colName, RowSetLoader rowWriter, int columnIndex) {
+  private final int scale;
+  private final int precision;
+
+  public JdbcVardecimalWriter(String colName, RowSetLoader rowWriter, int columnIndex, int scale, int precision) {
     super(colName, rowWriter, columnIndex);
+    this.scale = scale;
+    this.precision = precision;
   }
 
   @Override
   public void load(ResultSet results) throws SQLException {
     BigDecimal value = results.getBigDecimal(columnIndex);
     if (value != null) {
+      // Truncate value to prevent errors
+      if (value.precision() - value.scale() > scale - precision) {
+        value = value.setScale(scale - 1 , RoundingMode.HALF_UP);
+      }
       columnWriter.setDecimal(value);
     }
   }
