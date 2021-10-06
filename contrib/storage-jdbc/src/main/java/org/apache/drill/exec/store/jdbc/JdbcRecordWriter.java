@@ -19,7 +19,6 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.calcite.sql.SqlDialect;
-import org.apache.commons.text.StringEscapeUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -65,6 +64,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -87,7 +87,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   private final List<String> insertRows;
   private final List<JdbcWriterField> fields;
   private StringBuilder rowString;
-  
+
   /*
    * This map maps JDBC data types to their Drill equivalents.  The basic strategy is that if there
    * is a Drill equivalent, then do the mapping as expected.
@@ -97,8 +97,8 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
    */
   static {
     JDBC_TYPE_MAPPINGS = ImmutableMap.<MinorType, Integer>builder()
-      .put(MinorType.FLOAT8, java.sql.Types.DOUBLE)
-      .put(MinorType.FLOAT4, java.sql.Types.FLOAT)
+      .put(MinorType.FLOAT8, java.sql.Types.NUMERIC)
+      .put(MinorType.FLOAT4, java.sql.Types.NUMERIC)
       .put(MinorType.TINYINT, java.sql.Types.TINYINT)
       .put(MinorType.SMALLINT, java.sql.Types.SMALLINT)
       .put(MinorType.INT, java.sql.Types.INTEGER)
@@ -193,6 +193,8 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     logger.debug("Start record");
   }
 
+  // TODO Add support for VARDECIMAL and VARBINARY
+
   @Override
   public void endRecord() throws IOException {
     logger.debug("Ending record");
@@ -217,18 +219,20 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
           VarCharHolder varCharHolder = (VarCharHolder) rowList.get(i);
           value = StringFunctionHelpers.getStringFromVarCharHolder(varCharHolder);
           // Escape any naughty characters
-          value = StringEscapeUtils.escapeJava(value);
+          value = JdbcDDLQueryUtils.sqlEscapeString(value);
         } else {
           try {
             NullableVarCharHolder nullableVarCharHolder = (NullableVarCharHolder) rowList.get(i);
             value = StringFunctionHelpers.getStringFromVarCharHolder(nullableVarCharHolder);
+            value = JdbcDDLQueryUtils.sqlEscapeString(value);
           } catch (ClassCastException e) {
-            logger.debug("Uh oh... {}",  rowList.get(i));
+            logger.error("Unable to read field: {}",  rowList.get(i));
           }
         }
 
         // Add to value string
-        rowString.append("'").append(value).append("'");
+        rowString.append(value);
+        //rowString.append("'").append(value).append("'");
       } else if (currentField.getDataType() == MinorType.DATE) {
         String dateString = formatDateForInsertQuery((Long) rowList.get(i));
         rowString.append("'").append(dateString).append("'");
@@ -774,7 +778,11 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
         return;
       }
       reader.read(holder);
-      rowList.add(holder.value);
+      String booleanValue = "false";
+      if (holder.value == 1) {
+        booleanValue = "true";
+      }
+      rowList.add(booleanValue);
     }
   }
   @Override
@@ -793,7 +801,11 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     @Override
     public void writeField() {
       reader.read(holder);
-      rowList.add(holder.value);
+      String booleanValue = "false";
+      if (holder.value == 1) {
+        booleanValue = "true";
+      }
+      rowList.add(booleanValue);
     }
   }
 }

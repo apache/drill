@@ -23,16 +23,14 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.parser.SqlParser.Config;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.parser.ddl.SqlDdlParserImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JdbcDDLQueryUtils {
 
-  private static final Config DEFAULT_CONFIGURATION = SqlParser.configBuilder()
-    .setCaseSensitive(true)
-    .build();
-
+  private static final Logger logger = LoggerFactory.getLogger(JdbcDDLQueryUtils.class);
   /**
    * Converts a given SQL query from the generic dialect to the destination system dialect.  Returns
    * null if the original query is not valid.
@@ -53,34 +51,42 @@ public class JdbcDDLQueryUtils {
       SqlNode node = SqlParser.create(query, sqlParserConfig).parseQuery();
       String cleanSQL =  node.toSqlString(dialect).getSql();
 
+      // TODO Fix this hack
       // HACK  See CALCITE-4820 (https://issues.apache.org/jira/browse/CALCITE-4820)
       // Calcite doesn't seem to provide a way to generate INSERT queries without the ROW
-      // Keyword in front of the VALUES clause
+      // Keyword in front of the VALUES clause.
       cleanSQL = cleanSQL.replaceAll("ROW\\(", "\\(");
       return cleanSQL;
     } catch (SqlParseException e) {
+      logger.error(e.getMessage());
       return null;
     }
   }
 
-
-  /**
-   * Converts a given SQL query from the generic dialect to the destination system dialect.  Returns
-   * null if the original query is not valid.
-   *
-   * @param sql An ANSI SQL statement
-   * @param dialect The destination system dialect
-   * @return A representation of the original query in the destination dialect
-   */
-  public static String convertToDestinationDialect(String sql, SqlDialect dialect) {
-    // TODO Fix this... it is adding additional rubbish which is invalidating the query
-    try {
-      SqlNode node = SqlParser.create(sql, DEFAULT_CONFIGURATION).parseQuery();
-      return node.toSqlString(dialect).getSql();
-    } catch (SqlParseException e) {
-      // Do nothing...
-    }
-    return null;
+  private static void appendEscapedSQLString(StringBuilder sb, String sqlString) {
+    sb.append('\'');
+    if (sqlString.indexOf('\'') != -1) {
+      int length = sqlString.length();
+      for (int i = 0; i < length; i++) {
+        char c = sqlString.charAt(i);
+        if (c == '\'') {
+          sb.append('\'');
+        }
+        sb.append(c);
+      }
+    } else
+      sb.append(sqlString);
+    sb.append('\'');
   }
 
+  /**
+   * This function cleans up strings for use in INSERT queries
+   * @param value The input string
+   * @return The input string cleaned for SQL INSERT queries
+   */
+  public static String sqlEscapeString(String value) {
+    StringBuilder escaper = new StringBuilder();
+    appendEscapedSQLString(escaper, value);
+    return escaper.toString();
+  }
 }

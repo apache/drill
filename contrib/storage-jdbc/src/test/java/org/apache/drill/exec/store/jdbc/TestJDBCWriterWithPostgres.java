@@ -1,21 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
@@ -36,96 +18,67 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.ext.ScriptUtils;
-import org.testcontainers.jdbc.JdbcDatabaseDelegate;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-/**
- * JDBC storage plugin tests against MySQL.
- * Note: it requires libaio1.so library on Linux
- */
-
 @Category(JdbcStorageTest.class)
-public class TestJDBCWriterWithMySQL extends ClusterTest {
-  private static final String DOCKER_IMAGE_MYSQL = "mysql:5.7.27";
-  private static final String DOCKER_IMAGE_MARIADB = "mariadb:10.6.0";
-  private static final Logger logger = LoggerFactory.getLogger(TestJDBCWriterWithMySQL.class);
+public class TestJDBCWriterWithPostgres extends ClusterTest {
+
+  private static final String DOCKER_IMAGE_POSTGRES_X86 = "postgres:12.8-alpine3.14";
   private static JdbcDatabaseContainer<?> jdbcContainer;
 
   @BeforeClass
-  public static void initMysql() throws Exception {
+  public static void initPostgres() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
+    String postgresDBName = "drill_postgres_test";
 
-    dirTestWatcher.copyResourceToRoot(Paths.get("json/"));
-    String osName = System.getProperty("os.name").toLowerCase();
-    String mysqlDBName = "drill_mysql_test";
-
-    DockerImageName imageName;
-    if (osName.startsWith("linux") && "aarch64".equals(System.getProperty("os.arch"))) {
-      imageName = DockerImageName.parse(DOCKER_IMAGE_MARIADB).asCompatibleSubstituteFor("mysql");
-    } else {
-      imageName = DockerImageName.parse(DOCKER_IMAGE_MYSQL);
-    }
-
-    jdbcContainer = new MySQLContainer<>(imageName)
-      .withExposedPorts(3306)
-      .withConfigurationOverride("mysql_config_override")
-      .withUsername("mysqlUser")
-      .withPassword("mysqlPass")
-      .withDatabaseName(mysqlDBName)
-      .withUrlParam("serverTimezone", "UTC")
-      .withUrlParam("useJDBCCompliantTimezoneShift", "true")
-      .withInitScript("mysql-test-data.sql");
+    DockerImageName imageName = DockerImageName.parse(DOCKER_IMAGE_POSTGRES_X86);
+    jdbcContainer = new PostgreSQLContainer<>(imageName)
+      .withUsername("postgres")
+      .withPassword("password")
+      .withDatabaseName(postgresDBName)
+      .withInitScript("postgres-test-data.sql");
     jdbcContainer.start();
 
-    if (osName.startsWith("linux")) {
-      JdbcDatabaseDelegate databaseDelegate = new JdbcDatabaseDelegate(jdbcContainer, "");
-      ScriptUtils.runInitScript(databaseDelegate, "mysql-test-data-linux.sql");
-    }
-
-    String jdbcUrl = jdbcContainer.getJdbcUrl();
-    logger.debug("JDBC URL: {}", jdbcUrl);
-    JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, true, null, null);
+    JdbcStorageConfig jdbcStorageConfig =
+      new JdbcStorageConfig("org.postgresql.Driver",
+        jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
+        true, true,null, null);
     jdbcStorageConfig.setEnabled(true);
+    cluster.defineStoragePlugin("pg", jdbcStorageConfig);
 
-    cluster.defineStoragePlugin("mysql", jdbcStorageConfig);
+    JdbcStorageConfig unWritableJdbcStorageConfig =
+      new JdbcStorageConfig("org.postgresql.Driver",
+        jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
+        true, false,null, null);
+    unWritableJdbcStorageConfig.setEnabled(true);
+    cluster.defineStoragePlugin("pg_unwritable", unWritableJdbcStorageConfig);
 
-    JdbcStorageConfig jdbcStorageConfigNoWrite = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, false, null, null);
-    jdbcStorageConfigNoWrite.setEnabled(true);
+  }
 
-    cluster.defineStoragePlugin("mysql_no_write", jdbcStorageConfigNoWrite);
-
-    if (osName.startsWith("linux")) {
-      // adds storage plugin with case insensitive table names
-      JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-        jdbcContainer.getUsername(), jdbcContainer.getPassword(), true, true, null, null);
-      jdbcCaseSensitiveStorageConfig.setEnabled(true);
-      cluster.defineStoragePlugin("mysqlCaseInsensitive", jdbcCaseSensitiveStorageConfig);
+  @AfterClass
+  public static void stopPostgres() {
+    if (jdbcContainer != null) {
+      jdbcContainer.stop();
     }
   }
 
   @Test
   public void testBasicCTAS() throws Exception {
-    String query = "CREATE TABLE mysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    String query = "CREATE TABLE pg.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
     // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM  mysql.`drill_mysql_test`.`test_table`";
+    String testQuery = "SELECT * FROM pg.`public`.`test_table`";
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -141,13 +94,13 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     RowSetUtilities.verify(expected, results);
 
     // Now drop the table
-    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`test_table`";
+    String dropQuery = "DROP TABLE pg.`public`.`test_table`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
 
   @Test
-  @Ignore("Requires local installation of MySQL")
+  @Ignore("Requires local installation of Postgres")
   public void testBasicCTASWithLocalDatabase() throws Exception {
     // Local databases
     String localMySql = "jdbc:mysql://localhost:3306/?useJDBCCompliantTimezoneShift=true&serverTimezone=EST5EDT";
@@ -157,13 +110,13 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
 
     cluster.defineStoragePlugin("localMysql", localJdbcStorageConfig);
 
-    String query = "CREATE TABLE localMysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    String query = "CREATE TABLE localpg.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
     // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM  localMysql.`drill_mysql_test`.`test_table`";
+    String testQuery = "SELECT * FROM  localpg.`public`.`test_table`";
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -179,14 +132,14 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     RowSetUtilities.verify(expected, results);
 
     // Now drop the table
-    String dropQuery = "DROP TABLE localMysql.`drill_mysql_test`.`test_table`";
+    String dropQuery = "DROP TABLE localpg.`public`.`test_table`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
 
   @Test
   public void testBasicCTASWithDataTypes() throws Exception {
-    String query = "CREATE TABLE mysql.drill_mysql_test.`data_types` AS " +
+    String query = "CREATE TABLE pg.public.`data_types` AS " +
       "SELECT CAST(1 AS INTEGER) AS int_field," +
       "CAST(2 AS BIGINT) AS bigint_field," +
       "CAST(3.0 AS FLOAT) AS float4_field," +
@@ -201,14 +154,14 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     assertTrue(insertResults.succeeded());
 
     // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM  mysql.`drill_mysql_test`.`data_types`";
+    String testQuery = "SELECT * FROM  pg.`public`.`data_types`";
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("int_field", MinorType.INT, 10)
       .addNullable("bigint_field", MinorType.BIGINT, 19)
-      .addNullable("float4_field", MinorType.VARDECIMAL, 10)
-      .addNullable("float8_field", MinorType.VARDECIMAL, 10)
+      .addNullable("float4_field", MinorType.FLOAT8, 12)
+      .addNullable("float8_field", MinorType.FLOAT8, 22)
       .addNullable("varchar_field", MinorType.VARCHAR, 38)
       .addNullable("date_field", MinorType.DATE, 10)
       .addNullable("time_field", MinorType.TIME, 10)
@@ -217,29 +170,29 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2020-12-31"), LocalTime.parse("12:00"), 1451498155000L, true)
+      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2020-12-31"), LocalTime.parse("12:00"), 1451516155000L, true)
       .build();
 
     RowSetUtilities.verify(expected, results);
 
     // Now drop the table
-    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`data_types`";
+    String dropQuery = "DROP TABLE pg.`public`.`data_types`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
 
   @Test
   public void testCTASFromFileWithNulls() throws Exception {
-    String sql = "CREATE TABLE mysql.drill_mysql_test.`t1` AS SELECT int_field, float_field, varchar_field, boolean_field FROM cp.`json/dataTypes.json`";
+    String sql = "CREATE TABLE pg.public.`t1` AS SELECT int_field, float_field, varchar_field, boolean_field FROM cp.`json/dataTypes.json`";
     QuerySummary insertResults = queryBuilder().sql(sql).run();
     assertTrue(insertResults.succeeded());
 
-    sql = "SELECT * FROM mysql.drill_mysql_test.`t1`";
+    sql = "SELECT * FROM pg.public.`t1`";
     DirectRowSet results = queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("int_field", MinorType.BIGINT, 19)
-      .addNullable("float_field", MinorType.VARDECIMAL, 10)
+      .addNullable("float_field", MinorType.FLOAT8, 22)
       .addNullable("varchar_field", MinorType.VARCHAR, 38)
       .addNullable("boolean_field", MinorType.BIT, 1)
       .build();
@@ -252,39 +205,14 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
 
     RowSetUtilities.verify(expected, results);
 
-    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`t1`";
-    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
-    assertTrue(dropResults.succeeded());
-  }
-
-  @Test
-  public void testCTASFromFileWithUglyData() throws Exception {
-    String sql = "CREATE TABLE mysql.drill_mysql_test.`t2` AS SELECT ugly1, ugly2 FROM cp.`json/uglyData.json`";
-    QuerySummary insertResults = queryBuilder().sql(sql).run();
-    assertTrue(insertResults.succeeded());
-
-    sql = "SELECT * FROM mysql.drill_mysql_test.`t2`";
-    DirectRowSet results = queryBuilder().sql(sql).rowSet();
-
-   TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("ugly1", MinorType.VARCHAR, 38)
-      .addNullable("ugly2", MinorType.VARCHAR, 38)
-      .build();
-
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("O'Malley", "Abraham Lincoln's best speech started with: \"Four score and seven years ago...")
-      .build();
-
-    RowSetUtilities.verify(expected, results);
-
-    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`t2`";
+    String dropQuery = "DROP TABLE pg.`public`.`t1`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
 
   @Test
   public void testDropNonExistentTable() throws Exception {
-    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`none_shall_pass`";
+    String dropQuery = "DROP TABLE pg.`public`.`none_shall_pass`";
     try {
       queryBuilder().sql(dropQuery).run();
       fail();
@@ -295,13 +223,13 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
 
   @Test
   public void testBasicCTASIfNotExists() throws Exception {
-    String query = "CREATE TABLE IF NOT EXISTS mysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    String query = "CREATE TABLE IF NOT EXISTS pg.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
     // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM  mysql.`drill_mysql_test`.`test_table`";
+    String testQuery = "SELECT * FROM  pg.`public`.`test_table`";
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -317,14 +245,14 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     RowSetUtilities.verify(expected, results);
 
     // Now drop the table
-    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`test_table`";
+    String dropQuery = "DROP TABLE pg.`public`.`test_table`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
 
   @Test
   public void testCTASWithDuplicateTable() throws Exception {
-    String query = "CREATE TABLE mysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    String query = "CREATE TABLE pg.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
@@ -338,7 +266,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     }
 
     // Try again with IF NOT EXISTS, Should not do anything, but not throw an exception
-    query = "CREATE TABLE IF NOT EXISTS mysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    query = "CREATE TABLE IF NOT EXISTS pg.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
     DirectRowSet results = queryBuilder().sql(query).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -347,7 +275,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(false, "A table or view with given name [test_table] already exists in schema [mysql.drill_mysql_test]")
+      .addRow(false, "A table or view with given name [test_table] already exists in schema [pg.public]")
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -357,7 +285,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
   public void testWithComplexData() throws Exception {
     // JDBC Writer does not support writing complex types at this time.
     try {
-      String sql = "CREATE TABLE mysql.`drill_mysql_test`.`complex` AS SELECT * FROM cp.`json/complexData.json`";
+      String sql = "CREATE TABLE pg.`public`.`complex` AS SELECT * FROM cp.`json/complexData.json`";
       queryBuilder().sql(sql).run();
       fail();
     } catch (UserRemoteException e) {
@@ -366,10 +294,35 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
   }
 
   @Test
+  public void testCTASFromFileWithUglyData() throws Exception {
+    String sql = "CREATE TABLE pg.public.`t2` AS SELECT ugly1, ugly2 FROM cp.`json/uglyData.json`";
+    QuerySummary insertResults = queryBuilder().sql(sql).run();
+    assertTrue(insertResults.succeeded());
+
+    sql = "SELECT * FROM  pg.public.`t2`";
+    DirectRowSet results = queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("ugly1", MinorType.VARCHAR, 38)
+      .addNullable("ugly2", MinorType.VARCHAR, 38)
+      .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("O'Malley", "Abraham Lincoln's best speech started with: \"Four score and seven years ago...")
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+
+    String dropQuery = "DROP TABLE  pg.public.`t2`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+  }
+
+  @Test
   public void testWithArrayField() throws Exception {
     // JDBC Writer does not support writing arrays at this time.
     try {
-      String sql = "CREATE TABLE mysql.`drill_mysql_test`.`complex` AS SELECT * FROM cp.`json/repeatedData.json`";
+      String sql = "CREATE TABLE pg.`public`.`complex` AS SELECT * FROM cp.`json/repeatedData.json`";
       queryBuilder().sql(sql).run();
       fail();
     } catch (UserRemoteException e) {
@@ -380,26 +333,19 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
   @Test
   public void testUnwritableConnection() throws Exception {
     try {
-      String query = "CREATE TABLE IF NOT EXISTS mysql_no_write.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      String query = "CREATE TABLE IF NOT EXISTS pg_unwritable.public.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: mysql_no_write is not writable"));
+      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: pg_unwritable is not writable"));
     }
 
     try {
-      String query = "CREATE TABLE mysql_no_write.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      String query = "CREATE TABLE pg_unwritable.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: mysql_no_write is not writable"));
-    }
-  }
-
-  @AfterClass
-  public static void stopMysql() {
-    if (jdbcContainer != null) {
-      jdbcContainer.stop();
+      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: pg_unwritable is not writable"));
     }
   }
 }
