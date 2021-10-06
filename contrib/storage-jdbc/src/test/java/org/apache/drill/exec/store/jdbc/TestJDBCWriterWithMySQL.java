@@ -102,6 +102,13 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
 
     cluster.defineStoragePlugin("mysql", jdbcStorageConfig);
 
+    JdbcStorageConfig jdbcStorageConfigNoWrite = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
+      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, false, null, null);
+    jdbcStorageConfigNoWrite.setEnabled(true);
+
+    cluster.defineStoragePlugin("mysql_no_write", jdbcStorageConfigNoWrite);
+
+
     if (osName.startsWith("linux")) {
       // adds storage plugin with case insensitive table names
       JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
@@ -222,9 +229,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     assertTrue(dropResults.succeeded());
   }
 
-  // TODO Test CTAS with complex datatypes (Perhaps add config option for this?
-  // TODO CTAS with pre-existing table
-  // TODO Test CTAS in H2IT, Postgres, Clickhouse
+  // TODO Test CTAS with complex datatypes (Perhaps add config option for this?)
 
   @Test
   public void testCTASFromFileWithNulls() throws Exception {
@@ -263,6 +268,91 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
       fail();
     } catch (UserRemoteException e) {
       assertTrue(e.getMessage().contains("VALIDATION ERROR: Table [none_shall_pass] not found"));
+    }
+  }
+
+  @Test
+  public void testBasicCTASIfNotExists() throws Exception {
+    String query = "CREATE TABLE IF NOT EXISTS mysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    // Create the table and insert the values
+    QuerySummary insertResults = queryBuilder().sql(query).run();
+    assertTrue(insertResults.succeeded());
+
+    // Query the table to see if the insertion was successful
+    String testQuery = "SELECT * FROM  mysql.`drill_mysql_test`.`test_table`";
+    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1L, 2L)
+      .addRow(3L, 4L)
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+
+    // Now drop the table
+    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`test_table`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+  }
+
+  @Test
+  public void testCTASWithDuplicateTable() throws Exception {
+    String query = "CREATE TABLE mysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    // Create the table and insert the values
+    QuerySummary insertResults = queryBuilder().sql(query).run();
+    assertTrue(insertResults.succeeded());
+
+    // Run the query again, should fail.
+    try {
+      queryBuilder().sql(query).run();
+      fail();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains("VALIDATION ERROR"));
+    }
+
+    // Try again with IF NOT EXISTS, Should not do anything, but not throw an exception
+    query = "CREATE TABLE IF NOT EXISTS mysql.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    DirectRowSet results = queryBuilder().sql(query).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("ok", MinorType.BIT)
+      .add("summary", MinorType.VARCHAR, DataMode.OPTIONAL)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(false, "A table or view with given name [test_table] already exists in schema [mysql.drill_mysql_test]")
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+  }
+
+  @Test
+  public void testWithComplexData() throws Exception {
+    String sql = "CREATE TABLE mysql.`drill_mysql_test`.`complex` AS SELECT * FROM cp.`json/complexData.json`";
+    queryBuilder().sql(sql).run();
+  }
+
+  @Test
+  public void testUnwritableConnection() throws Exception {
+    try {
+      String query = "CREATE TABLE IF NOT EXISTS mysql_no_write.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      queryBuilder().sql(query).run();
+      fail();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: mysql_no_write is not writable"));
+    }
+
+    try {
+      String query = "CREATE TABLE mysql_no_write.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      queryBuilder().sql(query).run();
+      fail();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: mysql_no_write is not writable"));
     }
   }
 

@@ -113,6 +113,13 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
   @Override
   public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy strategy) {
+    if (! plugin.getConfig().isWritable()) {
+      throw UserException
+        .dataWriteError()
+        .message(plugin.getName() + " is not writable.")
+        .build(logger);
+    }
+
     return new CreateTableEntry() {
 
       @Override

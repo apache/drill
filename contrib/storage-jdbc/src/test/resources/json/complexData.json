@@ -1,0 +1,13 @@
+[
+  {
+    "numeric_array": [
+      1.0,
+      2.0,
+      3.0
+    ],
+    "map_field": {
+      "f1": "v1",
+      "f2": "v2"
+    },
+    "double_field": 5.0
+  }]
