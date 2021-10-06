@@ -1,6 +1,23 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.drill.exec.store.jdbc;
 
-import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -9,76 +26,79 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.enumerable.plan.EnumMockPlugin;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.junit.AfterClass;
+import org.h2.tools.RunScript;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
 
+
+import java.io.FileReader;
+import java.net.URL;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TimeZone;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category(JdbcStorageTest.class)
-public class TestJDBCWriterWithPostgres extends ClusterTest {
+public class TestJdbcWriterWithH2 extends ClusterTest {
 
-  private static final String DOCKER_IMAGE_POSTGRES_X86 = "postgres:12.8-alpine3.14";
-  private static JdbcDatabaseContainer<?> jdbcContainer;
+  private static final String TABLE_PATH = "jdbcmulti/";
 
   @BeforeClass
-  public static void initPostgres() throws Exception {
+  public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
-    String postgresDBName = "drill_postgres_test";
+    // Force timezone to UTC for these tests.
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
-    DockerImageName imageName = DockerImageName.parse(DOCKER_IMAGE_POSTGRES_X86);
-    jdbcContainer = new PostgreSQLContainer<>(imageName)
-      .withUsername("postgres")
-      .withPassword("password")
-      .withDatabaseName(postgresDBName)
-      .withInitScript("postgres-test-data.sql");
-    jdbcContainer.start();
-
-    JdbcStorageConfig jdbcStorageConfig =
-      new JdbcStorageConfig("org.postgresql.Driver",
-        jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
-        true, true,null, null);
-    jdbcStorageConfig.setEnabled(true);
-    cluster.defineStoragePlugin("pg", jdbcStorageConfig);
-
-    JdbcStorageConfig unWritableJdbcStorageConfig =
-      new JdbcStorageConfig("org.postgresql.Driver",
-        jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
-        true, false,null, null);
-    unWritableJdbcStorageConfig.setEnabled(true);
-    cluster.defineStoragePlugin("pg_unwritable", unWritableJdbcStorageConfig);
-
-  }
-
-  @AfterClass
-  public static void stopPostgres() {
-    if (jdbcContainer != null) {
-      jdbcContainer.stop();
+    dirTestWatcher.copyResourceToRoot(Paths.get(TABLE_PATH));
+    Class.forName("org.h2.Driver");
+    String connString = "jdbc:h2:" + dirTestWatcher.getTmpDir().getCanonicalPath();
+    URL scriptFile = TestJdbcPluginWithH2IT.class.getClassLoader().getResource("h2-test-data.sql");
+    assertNotNull("Script for test tables generation 'h2-test-data.sql' cannot be found in test resources", scriptFile);
+    try (Connection connection = DriverManager.getConnection(connString, "root", "root");
+         FileReader fileReader = new FileReader(scriptFile.getFile())) {
+      RunScript.execute(connection, fileReader);
     }
+    Map<String, Object> sourceParameters =  new HashMap<>();
+    sourceParameters.put("minimumIdle", 1);
+    JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("org.h2.Driver", connString,
+      "root", "root", true, true, sourceParameters, null);
+    jdbcStorageConfig.setEnabled(true);
+
+    JdbcStorageConfig jdbcStorageConfigNoWrite = new JdbcStorageConfig("org.h2.Driver", connString,
+      "root", "root", true, false, sourceParameters, null);
+    jdbcStorageConfig.setEnabled(true);
+    jdbcStorageConfigNoWrite.setEnabled(true);
+
+    cluster.defineStoragePlugin("h2", jdbcStorageConfig);
+    cluster.defineStoragePlugin("h2o", jdbcStorageConfig);
+    cluster.defineStoragePlugin("h2o_unwritable", jdbcStorageConfigNoWrite);
+
+    EnumMockPlugin.EnumMockStoragePluginConfig config = new EnumMockPlugin.EnumMockStoragePluginConfig();
+    config.setEnabled(true);
+    cluster.defineStoragePlugin("mocked_enum", config);
   }
 
   @Test
   public void testBasicCTAS() throws Exception {
-    String query = "CREATE TABLE pg.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    String query = "CREATE TABLE h2.tmp.`drill_h2_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
     // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM pg.`public`.`test_table`";
+    String testQuery = "SELECT * FROM h2.tmp.`drill_h2_test`.`test_table`";
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -94,52 +114,14 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
     RowSetUtilities.verify(expected, results);
 
     // Now drop the table
-    String dropQuery = "DROP TABLE pg.`public`.`test_table`";
-    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
-    assertTrue(dropResults.succeeded());
-  }
-
-  @Test
-  @Ignore("Requires local installation of Postgres")
-  public void testBasicCTASWithLocalDatabase() throws Exception {
-    // Local databases
-    String localMySql = "jdbc:mysql://localhost:3306/?useJDBCCompliantTimezoneShift=true&serverTimezone=EST5EDT";
-    JdbcStorageConfig localJdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", localMySql,
-      "root", "password", false, true, null, null);
-    localJdbcStorageConfig.setEnabled(true);
-
-    cluster.defineStoragePlugin("localMysql", localJdbcStorageConfig);
-
-    String query = "CREATE TABLE localpg.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
-    // Create the table and insert the values
-    QuerySummary insertResults = queryBuilder().sql(query).run();
-    assertTrue(insertResults.succeeded());
-
-    // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM  localpg.`public`.`test_table`";
-    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
-
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
-      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
-      .buildSchema();
-
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1L, 2L)
-      .addRow(3L, 4L)
-      .build();
-
-    RowSetUtilities.verify(expected, results);
-
-    // Now drop the table
-    String dropQuery = "DROP TABLE localpg.`public`.`test_table`";
+    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`test_table`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
 
   @Test
   public void testBasicCTASWithDataTypes() throws Exception {
-    String query = "CREATE TABLE pg.public.`data_types` AS " +
+    String query = "CREATE TABLE h2.tmp.`drill_h2_test`.`data_types` AS " +
       "SELECT CAST(1 AS INTEGER) AS int_field," +
       "CAST(2 AS BIGINT) AS bigint_field," +
       "CAST(3.0 AS FLOAT) AS float4_field," +
@@ -154,45 +136,47 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
     assertTrue(insertResults.succeeded());
 
     // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM  pg.`public`.`data_types`";
+    String testQuery = "SELECT * FROM  h2.tmp.`drill_h2_test`.`data_types`";
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
+
+    results.print();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("int_field", MinorType.INT, 10)
       .addNullable("bigint_field", MinorType.BIGINT, 19)
-      .addNullable("float4_field", MinorType.FLOAT8, 12)
-      .addNullable("float8_field", MinorType.FLOAT8, 22)
+      .addNullable("float4_field", MinorType.VARDECIMAL, 38, 37)
+      .addNullable("float8_field", MinorType.VARDECIMAL, 38, 37)
       .addNullable("varchar_field", MinorType.VARCHAR, 38)
       .addNullable("date_field", MinorType.DATE, 10)
-      .addNullable("time_field", MinorType.TIME, 10)
-      .addNullable("timestamp_field", MinorType.TIMESTAMP, 19)
-      .addNullable("boolean_field", MinorType.BIT)
+      .addNullable("time_field", MinorType.TIME, 8)
+      .addNullable("timestamp_field", MinorType.TIMESTAMP, 26, 8)
+      .addNullable("boolean_field", MinorType.BIT, 1)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2020-12-31"), LocalTime.parse("12:00"), 1451516155000L, true)
+      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2021-01-01"), LocalTime.parse("12:00"), 1451516155000L, true)
       .build();
 
     RowSetUtilities.verify(expected, results);
 
     // Now drop the table
-    String dropQuery = "DROP TABLE pg.`public`.`data_types`";
+    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`data_types`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
 
   @Test
   public void testCTASFromFileWithNulls() throws Exception {
-    String sql = "CREATE TABLE pg.public.`t1` AS SELECT int_field, float_field, varchar_field, boolean_field FROM cp.`json/dataTypes.json`";
+    String sql = "CREATE TABLE h2.tmp.`drill_h2_test`.`t1` AS SELECT int_field, float_field, varchar_field, boolean_field FROM cp.`json/dataTypes.json`";
     QuerySummary insertResults = queryBuilder().sql(sql).run();
     assertTrue(insertResults.succeeded());
 
-    sql = "SELECT * FROM pg.public.`t1`";
+    sql = "SELECT * FROM h2.tmp.`drill_h2_test`.`t1`";
     DirectRowSet results = queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("int_field", MinorType.BIGINT, 19)
-      .addNullable("float_field", MinorType.FLOAT8, 22)
+      .addNullable("float_field", MinorType.VARDECIMAL, 38, 37)
       .addNullable("varchar_field", MinorType.VARCHAR, 38)
       .addNullable("boolean_field", MinorType.BIT, 1)
       .build();
@@ -205,14 +189,14 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
 
     RowSetUtilities.verify(expected, results);
 
-    String dropQuery = "DROP TABLE pg.`public`.`t1`";
+    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`t1`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
 
   @Test
   public void testDropNonExistentTable() throws Exception {
-    String dropQuery = "DROP TABLE pg.`public`.`none_shall_pass`";
+    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`none_shall_pass`";
     try {
       queryBuilder().sql(dropQuery).run();
       fail();
@@ -223,13 +207,13 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
 
   @Test
   public void testBasicCTASIfNotExists() throws Exception {
-    String query = "CREATE TABLE IF NOT EXISTS pg.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    String query = "CREATE TABLE IF NOT EXISTS h2.tmp.`drill_h2_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
     // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM  pg.`public`.`test_table`";
+    String testQuery = "SELECT * FROM  h2.tmp.`drill_h2_test`.`test_table`";
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -245,14 +229,14 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
     RowSetUtilities.verify(expected, results);
 
     // Now drop the table
-    String dropQuery = "DROP TABLE pg.`public`.`test_table`";
+    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`test_table`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
 
   @Test
   public void testCTASWithDuplicateTable() throws Exception {
-    String query = "CREATE TABLE pg.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    String query = "CREATE TABLE h2.tmp.`drill_h2_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
@@ -266,7 +250,7 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
     }
 
     // Try again with IF NOT EXISTS, Should not do anything, but not throw an exception
-    query = "CREATE TABLE IF NOT EXISTS pg.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    query = "CREATE TABLE IF NOT EXISTS h2.tmp.`drill_h2_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
     DirectRowSet results = queryBuilder().sql(query).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -275,7 +259,7 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(false, "A table or view with given name [test_table] already exists in schema [pg.public]")
+      .addRow(false, "A table or view with given name [test_table] already exists in schema [h2.tmp.drill_h2_test]")
       .build();
 
     RowSetUtilities.verify(expected, results);
@@ -285,7 +269,7 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
   public void testWithComplexData() throws Exception {
     // JDBC Writer does not support writing complex types at this time.
     try {
-      String sql = "CREATE TABLE pg.`public`.`complex` AS SELECT * FROM cp.`json/complexData.json`";
+      String sql = "CREATE TABLE h2.tmp.`drill_h2_test`.`complex` AS SELECT * FROM cp.`json/complexData.json`";
       queryBuilder().sql(sql).run();
       fail();
     } catch (UserRemoteException e) {
@@ -295,11 +279,11 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
 
   @Test
   public void testCTASFromFileWithUglyData() throws Exception {
-    String sql = "CREATE TABLE pg.public.`t2` AS SELECT ugly1, ugly2 FROM cp.`json/uglyData.json`";
+    String sql = "CREATE TABLE h2.tmp.`drill_h2_test`.`t2` AS SELECT ugly1, ugly2 FROM cp.`json/uglyData.json`";
     QuerySummary insertResults = queryBuilder().sql(sql).run();
     assertTrue(insertResults.succeeded());
 
-    sql = "SELECT * FROM  pg.public.`t2`";
+    sql = "SELECT * FROM h2.tmp.`drill_h2_test`.`t2`";
     DirectRowSet results = queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -313,7 +297,7 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
 
     RowSetUtilities.verify(expected, results);
 
-    String dropQuery = "DROP TABLE  pg.public.`t2`";
+    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`t2`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
@@ -322,7 +306,7 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
   public void testWithArrayField() throws Exception {
     // JDBC Writer does not support writing arrays at this time.
     try {
-      String sql = "CREATE TABLE pg.`public`.`complex` AS SELECT * FROM cp.`json/repeatedData.json`";
+      String sql = "CREATE TABLE h2.tmp.`drill_h2_test`.`complex` AS SELECT * FROM cp.`json/repeatedData.json`";
       queryBuilder().sql(sql).run();
       fail();
     } catch (UserRemoteException e) {
@@ -333,19 +317,22 @@ public class TestJDBCWriterWithPostgres extends ClusterTest {
   @Test
   public void testUnwritableConnection() throws Exception {
     try {
-      String query = "CREATE TABLE IF NOT EXISTS pg_unwritable.public.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      String query = "CREATE TABLE IF NOT EXISTS h2o_unwritable.tmp.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: pg_unwritable is not writable"));
+      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: h2o_unwritable is not writable"));
     }
 
     try {
-      String query = "CREATE TABLE pg_unwritable.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      String query = "CREATE TABLE h2o_unwritable.tmp.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: pg_unwritable is not writable"));
+      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: h2o_unwritable is not writable"));
     }
   }
 }
+
+
+

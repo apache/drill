@@ -41,11 +41,13 @@ import org.apache.drill.exec.expr.holders.NullableTimeHolder;
 import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
 import org.apache.drill.exec.expr.holders.NullableTinyIntHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.expr.holders.NullableVarDecimalHolder;
 import org.apache.drill.exec.expr.holders.SmallIntHolder;
 import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.TinyIntHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.VarDecimalHolder;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -54,6 +56,7 @@ import org.apache.drill.exec.store.AbstractRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.jdbc.utils.JdbcDDLQueryUtils;
 import org.apache.drill.exec.store.jdbc.utils.JdbcQueryBuilder;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
@@ -61,6 +64,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -191,9 +195,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     rowString.append("(");
     logger.debug("Start record");
   }
-
-  // TODO Add support for VARDECIMAL and VARBINARY
-
+  
   @Override
   public void endRecord() throws IOException {
     logger.debug("Ending record");
@@ -574,6 +576,54 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     public void writeField() {
       reader.read(holder);
       rowList.add(holder.value);
+    }
+  }
+
+  @Override
+  public FieldConverter getNewNullableVarDecimalConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new NullableVardecimalJDBCConverter(fieldId, fieldName, reader, fields);
+  }
+
+  public class NullableVardecimalJDBCConverter extends FieldConverter {
+    private final NullableVarDecimalHolder holder = new NullableVarDecimalHolder();
+
+    public NullableVardecimalJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
+      super(fieldID, fieldName, reader);
+      fields.add(new JdbcWriterField(fieldName, MinorType.VARDECIMAL, DataMode.OPTIONAL));
+    }
+
+    @Override
+    public void writeField() {
+      if (!reader.isSet()) {
+        rowList.add("null");
+        return;
+      }
+      reader.read(holder);
+      BigDecimal value = DecimalUtility.getBigDecimalFromDrillBuf(holder.buffer,
+        holder.start, holder.end - holder.start, holder.scale);
+      rowList.add(value);
+    }
+  }
+
+  @Override
+  public FieldConverter getNewVarDecimalConverter(int fieldId, String fieldName, FieldReader reader) {
+    return new VardecimalJDBCConverter(fieldId, fieldName, reader, fields);
+  }
+
+  public class VardecimalJDBCConverter extends FieldConverter {
+    private final VarDecimalHolder holder = new VarDecimalHolder();
+
+    public VardecimalJDBCConverter(int fieldID, String fieldName, FieldReader reader, List<JdbcWriterField> fields) {
+      super(fieldID, fieldName, reader);
+      fields.add(new JdbcWriterField(fieldName, MinorType.VARDECIMAL, DataMode.REQUIRED));
+    }
+
+    @Override
+    public void writeField() {
+      reader.read(holder);
+      BigDecimal value = DecimalUtility.getBigDecimalFromDrillBuf(holder.buffer,
+        holder.start, holder.end - holder.start, holder.scale);
+      rowList.add(value);
     }
   }
 

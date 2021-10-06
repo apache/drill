@@ -57,10 +57,10 @@ import static org.junit.Assert.fail;
  */
 
 @Category(JdbcStorageTest.class)
-public class TestJDBCWriterWithMySQL extends ClusterTest {
+public class TestJdbcWriterWithMySQL extends ClusterTest {
   private static final String DOCKER_IMAGE_MYSQL = "mysql:5.7.27";
   private static final String DOCKER_IMAGE_MARIADB = "mariadb:10.6.0";
-  private static final Logger logger = LoggerFactory.getLogger(TestJDBCWriterWithMySQL.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestJdbcWriterWithMySQL.class);
   private static JdbcDatabaseContainer<?> jdbcContainer;
 
   @BeforeClass
@@ -240,7 +240,7 @@ public class TestJDBCWriterWithMySQL extends ClusterTest {
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("int_field", MinorType.BIGINT, 19)
       .addNullable("float_field", MinorType.VARDECIMAL, 10)
-      .addNullable("varchar_field", MinorType.VARCHAR, 38)
+      .addNullable("varchar_field", MinorType.VARCHAR, 38,0)
       .addNullable("boolean_field", MinorType.BIT, 1)
       .build();
 
