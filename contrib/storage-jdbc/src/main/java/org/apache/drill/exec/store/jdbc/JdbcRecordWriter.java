@@ -195,7 +195,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     rowString.append("(");
     logger.debug("Start record");
   }
-  
+
   @Override
   public void endRecord() throws IOException {
     logger.debug("Ending record");
