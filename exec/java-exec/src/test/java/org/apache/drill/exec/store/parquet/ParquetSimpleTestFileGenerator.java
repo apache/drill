@@ -228,7 +228,7 @@ public class ParquetSimpleTestFileGenerator {
         .withPageSize(1024)
         .withDictionaryPageSize(512)
         .withValidation(false)
-        .withWriterVersion(ParquetProperties.WriterVersion.PARQUET_2_0)
+        .withWriterVersion(ParquetProperties.WriterVersion.PARQUET_1_0)
         .withConf(conf)
         .build();
   }

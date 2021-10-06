@@ -18,12 +18,12 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.parquet.DataPageHeaderInfoProvider;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import io.netty.buffer.ByteBufUtil;
 import org.apache.drill.exec.util.filereader.BufferedDirectBufInputStream;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -57,21 +57,23 @@ import org.slf4j.LoggerFactory;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.parquet.column.Encoding.valueOf;
 
-// class to keep track of the read position of variable length columns
+/**
+ * Class that synchronously reads and, if needed, decompresses, individual pages of
+ * Parquet column data into a direct memory buffer.  This class handles both dictionary
+ * and data pages, and collects perf stats in the process.
+ */
 class PageReader {
   static final Logger logger = LoggerFactory.getLogger(PageReader.class);
 
-  public static final ParquetMetadataConverter METADATA_CONVERTER = ParquetFormatPlugin.parquetMetadataConverter;
+  protected static final ParquetMetadataConverter METADATA_CONVERTER = ParquetFormatPlugin.parquetMetadataConverter;
 
   protected final ColumnReader<?> parentColumnReader;
   protected final DirectBufInputStream dataReader;
-  //buffer to store bytes of current page
+  // buffer containing the (decompressed) contents of the last page that was read
   protected DrillBuf pageData;
 
   // for variable length data we need to keep track of our current position in the page data
@@ -107,8 +109,8 @@ class PageReader {
 
   protected FSDataInputStream inputStream;
 
-  // These need to be held throughout reading of the entire column chunk
-  Deque<ByteBuf> allocatedDictionaryBuffers;
+  // This needs to be held throughout reading of the entire column chunk
+  DrillBuf dictData;
 
   protected final CompressionCodecFactory codecFactory;
   protected final CompressionCodecName codecName;
@@ -128,7 +130,6 @@ class PageReader {
   PageReader(ColumnReader<?> parentColumnReader, FileSystem fs, Path path)
     throws ExecutionSetupException {
     this.parentColumnReader = parentColumnReader;
-    this.allocatedDictionaryBuffers = new ArrayDeque<ByteBuf>();
     this.codecFactory = parentColumnReader.parentReader.getCodecFactory();
     this.codecName = parentColumnReader.columnChunkMetaData.getCodec();
     this.allocator = parentColumnReader.parentReader.getOperatorContext().getAllocator();
@@ -166,6 +167,14 @@ class PageReader {
     }
   }
 
+  protected void handleAndThrowException(Exception e, String msg) throws UserException {
+    UserException ex = UserException.dataReadError(e).message(msg)
+        .pushContext("Row Group Start: ", columnChunkMetaData.getStartingPos())
+        .pushContext("Column: ", this.parentColumnReader.schemaElement.getName())
+        .pushContext("File: ", this.fileName).build(logger);
+    throw ex;
+  }
+
   /**
    * Initialises the backing input stream and loads the column chunk's dictionary page if it has one.
    * @throws IOException
@@ -198,7 +207,7 @@ class PageReader {
         pageHeader.type
       ));
     }
-    readDictionaryPage();
+    loadDictionary();
   }
 
   /**
@@ -231,16 +240,14 @@ class PageReader {
    * Reads and stores this column chunk's dictionary page.
    * @throws IOException
    */
-  protected void readDictionaryPage() throws IOException {
-    DrillBuf dictionaryData = codecName == CompressionCodecName.UNCOMPRESSED
+  protected void loadDictionary() throws IOException {
+    // dictData is not a local because we need to release it later.
+    this.dictData = codecName == CompressionCodecName.UNCOMPRESSED
       ? readUncompressedPage()
       : readCompressedPageV1();
 
-    // track allocation for later release
-    allocatedDictionaryBuffers.add(dictionaryData);
-
     DictionaryPage page = new DictionaryPage(
-      asBytesInput(dictionaryData, 0, pageHeader.uncompressed_page_size),
+      asBytesInput(dictData, 0, pageHeader.uncompressed_page_size),
       pageHeader.uncompressed_page_size,
       pageHeader.dictionary_page_header.num_values,
       valueOf(pageHeader.dictionary_page_header.encoding.name())
@@ -419,7 +426,7 @@ class PageReader {
 
     switch (pageHeader.getType()) {
       case DICTIONARY_PAGE:
-        readDictionaryPage();
+        loadDictionary();
         break;
       case DATA_PAGE:
         pageData = codecName == CompressionCodecName.UNCOMPRESSED
@@ -455,7 +462,7 @@ class PageReader {
       return false;
     }
 
-    clearBuffers();
+    clearDataBuffer();
     nextInternal();
 
     if (pageData == null || pageHeader == null) {
@@ -573,16 +580,17 @@ class PageReader {
     }
   }
 
-  protected void clearBuffers() {
+  protected void clearDataBuffer() {
     if (pageData != null) {
       pageData.release();
       pageData = null;
     }
   }
 
-  protected void clearDictionaryBuffers() {
-    while (allocatedDictionaryBuffers.size() > 0) {
-      allocatedDictionaryBuffers.pop().release();
+  protected void clearDictionaryBuffer() {
+    if (dictData != null) {
+      dictData.release();
+      dictData = null;
     }
   }
 
@@ -594,12 +602,12 @@ class PageReader {
       // data reader also owns the input stream and will close it.
       this.dataReader.close();
     } catch (IOException e) {
-      logger.warn("encountered an error when it tried to close its input stream: {}", e);
       //Swallow the exception which is OK for input streams
+      logger.warn("encountered an error when it tried to close its input stream: {}", e);
     }
     // Free all memory, including fixed length types. (Data is being copied for all types not just var length types)
-    clearBuffers();
-    clearDictionaryBuffers();
+    clearDataBuffer();
+    clearDictionaryBuffer();
   }
 
   /**
