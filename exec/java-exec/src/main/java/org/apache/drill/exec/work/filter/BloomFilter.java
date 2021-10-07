@@ -135,7 +135,7 @@ public class BloomFilter {
   /**
    * Merge this bloom filter with other one
    *
-   * @param other
+   * @param other other bloom filter
    */
   public void or(BloomFilter other) {
     int otherLength = other.byteBuf.capacity();

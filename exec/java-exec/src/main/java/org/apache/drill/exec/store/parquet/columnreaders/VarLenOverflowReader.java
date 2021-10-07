@@ -39,8 +39,8 @@ public final class VarLenOverflowReader extends VarLenAbstractEntryReader {
   /**
    * CTOR.
    * @param buffer byte buffer for data buffering (within CPU cache)
-   * @param containerCallback
-   * @param fieldOverflowContainer
+   * @param containerCallback container callback
+   * @param fieldOverflowContainer field overflow container
    * @param entry reusable bulk entry object
    */
   VarLenOverflowReader(ByteBuffer buffer,
