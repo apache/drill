@@ -36,6 +36,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 
@@ -48,10 +49,12 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
   private static final String DOCKER_IMAGE_POSTGRES_X86 = "postgres:12.8-alpine3.14";
   private static JdbcDatabaseContainer<?> jdbcContainer;
 
+
   @BeforeClass
   public static void initPostgres() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
     String postgresDBName = "drill_postgres_test";
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
     DockerImageName imageName = DockerImageName.parse(DOCKER_IMAGE_POSTGRES_X86);
     jdbcContainer = new PostgreSQLContainer<>(imageName)

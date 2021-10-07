@@ -139,8 +139,6 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
     String testQuery = "SELECT * FROM  h2.tmp.`drill_h2_test`.`data_types`";
     DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
-    results.print();
-
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("int_field", MinorType.INT, 10)
       .addNullable("bigint_field", MinorType.BIGINT, 19)

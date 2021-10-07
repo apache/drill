@@ -34,6 +34,8 @@ public class TestJdbcQueryBuilder {
     builder.addColumn("col1", MinorType.INT, false, 0, 0);
     builder.addColumn("col2", MinorType.VARCHAR, true, 100, 0);
 
-    assertEquals("CREATE TABLE t1 (col1 INTEGER NOT NULL,\n" + "col2 VARCHAR\n" + ")", builder.getCreateTableQuery());
+    System.out.println(builder.getCreateTableQuery());
+
+    assertEquals("CREATE TABLE t1 (col1 INTEGER NOT NULL,\n" + "col2 VARCHAR(100)\n" + ")", builder.getCreateTableQuery());
   }
 }

@@ -180,6 +180,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       statement = connection.createStatement();
       logger.debug("Executing CREATE query: {}", sql);
       statement.execute(sql);
+      statement.close();
     } catch (SQLException e) {
       throw UserException.dataReadError(e)
         .message("The JDBC storage plugin failed while trying to create the schema. ")
@@ -270,10 +271,8 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       Statement stmt = connection.createStatement();
       stmt.execute(insertQuery);
       logger.debug("Query complete");
-
       // Close connection
       AutoCloseables.closeSilently(stmt, connection);
-
     } catch (SQLException e) {
       logger.error("Error: {} ", e.getMessage());
       throw new IOException();

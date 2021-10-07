@@ -41,6 +41,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -55,6 +56,7 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
   public static void initPostgres() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
     String postgresDBName = "drill_postgres_test";
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
     DockerImageName imageName = DockerImageName.parse(DOCKER_IMAGE_POSTGRES_X86);
     jdbcContainer = new PostgreSQLContainer<>(imageName)
@@ -149,7 +151,7 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2020-12-31"), LocalTime.parse("12:00"), 1451516155000L, true)
+      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2021-01-01"), LocalTime.parse("12:00"), 1451516155000L, true)
       .build();
 
     RowSetUtilities.verify(expected, results);

@@ -86,7 +86,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     return config.isWritable();
   }
 
-  public DataSource getDataSource() {
+  public HikariDataSource getDataSource() {
     return dataSource;
   }
 

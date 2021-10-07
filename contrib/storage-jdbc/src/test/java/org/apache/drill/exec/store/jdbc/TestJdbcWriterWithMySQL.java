@@ -47,6 +47,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -62,11 +63,11 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
   private static final String DOCKER_IMAGE_MARIADB = "mariadb:10.6.0";
   private static final Logger logger = LoggerFactory.getLogger(TestJdbcWriterWithMySQL.class);
   private static JdbcDatabaseContainer<?> jdbcContainer;
-
   @BeforeClass
   public static void initMysql() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     dirTestWatcher.copyResourceToRoot(Paths.get("json/"));
     String osName = System.getProperty("os.name").toLowerCase();
     String mysqlDBName = "drill_mysql_test";
@@ -217,7 +218,7 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2020-12-31"), LocalTime.parse("12:00"), 1451498155000L, true)
+      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2021-01-01"), LocalTime.parse("12:00"), 1451516155000L, true)
       .build();
 
     RowSetUtilities.verify(expected, results);

@@ -149,6 +149,7 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
       int successfullyDropped = stmt.executeUpdate(dropTableQuery);
 
       logger.debug("Result: {}", successfullyDropped);
+      stmt.close();
       if (successfullyDropped > 0) {
         throw UserException.dataWriteError()
           .message("Error while dropping table " + tableName)
