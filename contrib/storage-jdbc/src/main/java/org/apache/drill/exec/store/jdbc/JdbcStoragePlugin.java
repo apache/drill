@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
-import javax.sql.DataSource;
 import java.util.Properties;
 import java.util.Set;
 
