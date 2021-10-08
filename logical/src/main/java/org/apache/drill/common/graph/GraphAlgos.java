@@ -67,10 +67,9 @@ public class GraphAlgos {
     /**
      * Execute a depth-first sort on the reversed DAG.
      *
-     * @param graph
-     *          The adjacency list for the DAG.
-     * @param sourceNodes
-     *          List of nodes that
+     * @param graph the adjacency list for the DAG.
+     * @param reverse true if reversed, otherwise false
+     *
      * @return
      */
     static <V extends GraphValue<V>> List<AdjacencyList<V>.Node> sortInternal(AdjacencyList<V> graph, boolean reverse) {

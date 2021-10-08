@@ -159,8 +159,8 @@ public abstract class ColumnReader<V extends ValueVector> {
     try {
       readField(recordsToRead);
 
-      valuesReadInCurrentPass += recordsReadInThisIteration;
-      pageReader.valuesRead += recordsReadInThisIteration;
+      valuesReadInCurrentPass += (int)recordsReadInThisIteration;
+      pageReader.valuesRead += (int)recordsReadInThisIteration;
       pageReader.readPosInBytes = readStartInBytes + readLength;
     } catch (Exception e) {
       UserException ex = UserException.dataReadError(e)
@@ -180,9 +180,8 @@ public abstract class ColumnReader<V extends ValueVector> {
    *
    * Return value indicates if we have finished a row group and should stop reading
    *
-   * @param recordsReadInCurrentPass
-   * @param lengthVarFieldsInCurrentRecord
-   * @return - true if we should stop reading
+   * @param recordsReadInCurrentPass records read in current pass
+   * @return true if we should stop reading
    * @throws IOException
    */
   public boolean determineSize(long recordsReadInCurrentPass) throws IOException {
@@ -245,7 +244,12 @@ public abstract class ColumnReader<V extends ValueVector> {
     return f;
   }
 
-  // Read a page if we need more data, returns true if we need to exit the read loop
+  /**
+   * Read a page. If we need more data, exit the read loop and return true.
+   *
+   * @return true if we need more data and page is not read successfully
+   * @throws IOException
+   */
   public boolean readPage() throws IOException {
     if (!pageReader.hasPage()
         || totalValuesReadAndReadyToReadInPage() == pageReader.currentPageCount) {
@@ -286,7 +290,14 @@ public abstract class ColumnReader<V extends ValueVector> {
     return valuesReadInCurrentPass > valueVec.getValueCapacity();
   }
 
-  // copied out of Parquet library, didn't want to deal with the uneeded throws statement they had declared
+  /**
+   * This is copied out of Parquet library, didn't want to deal with the
+   * unnecessary throws statement they had declared
+   *
+   * @param in incoming data
+   * @param offset offset
+   * @return little endian integer
+   */
   public static int readIntLittleEndian(DrillBuf in, int offset) {
     int ch4 = in.getByte(offset) & 0xff;
     int ch3 = in.getByte(offset + 1) & 0xff;
@@ -304,6 +315,12 @@ public abstract class ColumnReader<V extends ValueVector> {
       this.recordsToReadInThisPass = recordsToReadInThisPass;
     }
 
+    /**
+     * This method calls the column reader.
+     *
+     * @return records to read
+     * @throws IOException
+     */
     @Override public Long call() throws IOException{
 
       String oldname = Thread.currentThread().getName();
@@ -328,6 +345,12 @@ public abstract class ColumnReader<V extends ValueVector> {
       this.recordsToRead = recordsToRead;
     }
 
+    /**
+     * This method calls the column reader.
+     *
+     * @return records to read
+     * @throws IOException
+     */
     @Override public Integer call() throws IOException{
 
       String oldname = Thread.currentThread().getName();

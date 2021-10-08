@@ -69,6 +69,15 @@ public class FooterGatherer {
     }
   }
 
+  /**
+   * A function to get a list of footers.
+   *
+   * @param conf configuration for file system
+   * @param statuses list of file statuses
+   * @param parallelism parallelism
+   * @return a list of footers
+   * @throws IOException
+   */
   public static List<Footer> getFooters(final Configuration conf, List<FileStatus> statuses, int parallelism) throws IOException {
     final List<TimedCallable<Footer>> readers = new ArrayList<>();
     final List<Footer> foundFooters = new ArrayList<>();
@@ -128,9 +137,9 @@ public class FooterGatherer {
   /**
    * An updated footer reader that tries to read the entire footer without knowing the length.
    * This should reduce the amount of seek/read roundtrips in most workloads.
-   * @param fs
-   * @param status
-   * @return
+   * @param config configuration for file system
+   * @param status file status
+   * @return Footer
    * @throws IOException
    */
   public static Footer readFooter(final Configuration config, final FileStatus status) throws IOException {

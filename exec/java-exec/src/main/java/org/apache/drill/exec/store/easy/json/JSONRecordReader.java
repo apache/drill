@@ -74,10 +74,10 @@ public class JSONRecordReader extends AbstractRecordReader {
 
   /**
    * Create a JSON Record Reader that uses a file based input stream.
-   * @param fragmentContext
-   * @param inputPath
-   * @param fileSystem
-   * @param columns  pathnames of columns/subfields to read
+   * @param fragmentContext the Drill fragment
+   * @param inputPath the input path
+   * @param fileSystem a Drill file system wrapper around the file system implementation
+   * @param columns path names of columns/subfields to read
    * @throws OutOfMemoryException
    */
   public JSONRecordReader(FragmentContext fragmentContext, Path inputPath, DrillFileSystem fileSystem,
@@ -87,10 +87,10 @@ public class JSONRecordReader extends AbstractRecordReader {
 
   /**
    * Create a new JSON Record Reader that uses a in memory materialized JSON stream.
-   * @param fragmentContext
-   * @param embeddedContent
-   * @param fileSystem
-   * @param columns  pathnames of columns/subfields to read
+   * @param fragmentContext the Drill fragment
+   * @param embeddedContent embedded content
+   * @param fileSystem a Drill file system wrapper around the file system implementation
+   * @param columns path names of columns/subfields to read
    * @throws OutOfMemoryException
    */
   public JSONRecordReader(FragmentContext fragmentContext, JsonNode embeddedContent, DrillFileSystem fileSystem,
@@ -100,9 +100,8 @@ public class JSONRecordReader extends AbstractRecordReader {
 
   /**
    * Create a JSON Record Reader that uses an InputStream directly
-   * @param fragmentContext The Drill Fragmement
-   * @param inputStream The inputStream from which data will be received
-   * @param columns  pathnames of columns/subfields to read
+   * @param fragmentContext the Drill fragment
+   * @param columns path names of columns/subfields to read
    * @throws OutOfMemoryException
    */
   public JSONRecordReader(FragmentContext fragmentContext, List<SchemaPath> columns) throws OutOfMemoryException {

@@ -97,7 +97,6 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
    * Sets up projection that will transfer all of the columns in batch, and also setup
    * the partition column based on which partition a record falls into
    *
-   * @param batch
    * @throws SchemaChangeException
    * @return True if the new schema differs from old schema, False otherwise
    */
@@ -124,7 +123,7 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
   /**
    *  Provide the partition function with the appropriate value vector(s) that
    *  are involved in the range partitioning
-   *  @param batch
+   *  @param batch batch of columns
    */
   private void setupPartitionCols(VectorAccessible batch) {
     List<VectorWrapper<?>> partitionCols = Lists.newArrayList();
@@ -156,8 +155,8 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
    * For each incoming record, get the partition id it belongs to by invoking the
    * partitioning function. Set this id in the output partitionIdVector.  For all other
    * incoming value vectors, just do a transfer.
-   * @param recordCount
-   * @param firstOutputIndex
+   * @param recordCount number of incoming records
+   * @param firstOutputIndex the index of the first output
    * @return the number of records projected
    */
   private final int projectRecords(int recordCount, int firstOutputIndex) {

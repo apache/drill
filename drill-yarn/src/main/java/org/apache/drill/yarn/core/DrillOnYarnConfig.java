@@ -296,7 +296,7 @@ public class DrillOnYarnConfig {
    * initialization. Not needed by the client, so done in an unsynchronized,
    * lazy fashion.
    *
-   * @return
+   * @return Drill's class path scan
    */
 
   public ScanResult getClassPathScan() {
@@ -349,8 +349,8 @@ public class DrillOnYarnConfig {
    * immutable, so it is not possible for unit tests to change the actual
    * environment.)
    *
-   * @param key
-   * @return
+   * @param key key to allow unit tests to replace this function
+   * @return environment variable
    */
 
   protected String getEnv(String key) {
@@ -466,7 +466,7 @@ public class DrillOnYarnConfig {
    * Return the Drill home on this machine as inferred from the config file
    * contents or location.
    *
-   * @return
+   * @return Drill home
    */
 
   public File getLocalDrillHome() {
@@ -747,7 +747,7 @@ public class DrillOnYarnConfig {
    * $PWD/site-key/drill-override.conf, where site-key is the key name used to
    * localize the site archive.
    *
-   * @return
+   * @return remote site directory name
    */
 
   public String getRemoteSiteDir() {
@@ -786,8 +786,7 @@ public class DrillOnYarnConfig {
    * root and/or cluster ID (just not the same combination), so the file name
    * contains both parts.
    *
-   * @param clusterId
-   * @return
+   * @return local app id file
    */
 
   public File getLocalAppIdFile() {
@@ -818,7 +817,7 @@ public class DrillOnYarnConfig {
    * only if the application is localized, it is not set for a non-localized
    * run.
    *
-   * @return
+   * @return the DFS path to the localized Drill archive
    */
 
   public String getDrillArchiveDfsPath() {
@@ -832,7 +831,7 @@ public class DrillOnYarnConfig {
    * does not use a site archive (configuration files reside in
    * $DRILL_HOME/conf), or the application is not localized.
    *
-   * @return
+   * @return the DFS path to the localized site archive
    */
 
   public String getSiteArchiveDfsPath() {

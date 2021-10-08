@@ -152,6 +152,10 @@ public class BuildFromSchema {
   /**
    * Build a column recursively. Called internally when adding a column
    * via the addColumn() method on the tuple writer.
+   *
+   * @param state the loader state for the tuple, a row or a map
+   * @param colSchema the schema of the column to add
+   * @return the object writer for the added column
    */
 
   public ObjectWriter buildColumn(TupleState state, ColumnMetadata colSchema) {
@@ -264,7 +268,7 @@ public class BuildFromSchema {
    * it may have may layers of other repeated lists before we get to the element
    * (inner-most) array.
    *
-   * @param writer tuple writer for the tuple that holds the array
+   * @param parent tuple writer for the tuple that holds the array
    * @param colSchema schema definition of the array
    */
 

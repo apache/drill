@@ -40,7 +40,7 @@ public interface QueryResourceAllocator {
   /**
    * Make any needed adjustments to the query plan before parallelization.
    *
-   * @param plan
+   * @param plan physical plan
    */
   void visitAbstractPlan(PhysicalPlan plan);
 
@@ -48,8 +48,7 @@ public interface QueryResourceAllocator {
    * Provide the manager with the physical plan and node assignments
    * for the query to be run. This class will plan memory for the query.
    *
-   * @param plan
-   * @param work
+   * @param work query work unit
    */
 
   void visitPhysicalPlan(QueryWorkUnit work);

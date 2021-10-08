@@ -96,7 +96,7 @@ public class ResultSetOptionBuilder {
    * operation. Leave this method unset to start with an empty schema.</li>
    * <li>A combination of the above.</li>
    * </ul>
-   * @param schema the initial schema for the loader
+   * @param readerSchema the initial schema for the loader
    * @return this builder
    */
   public ResultSetOptionBuilder readerSchema(TupleMetadata readerSchema) {

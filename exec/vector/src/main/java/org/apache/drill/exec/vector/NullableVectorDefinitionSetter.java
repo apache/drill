@@ -28,7 +28,7 @@ public interface NullableVectorDefinitionSetter {
   /**
    * Set a contiguous set of values starting at position "index" to be defined.
    * @param index value position
-   * @param number of contiguous values
+   * @param numValues of contiguous values
    */
   public void setIndexDefined(int index, int numValues);
 

@@ -128,7 +128,7 @@ public class DrillControllerFactory implements ControllerFactory {
    * download ("localize") for the Drillbit. We need both the Drill software and
    * the user's site-specific configuration.
    *
-   * @return
+   * @return resources
    * @throws YarnFacadeException
    */
 
@@ -185,8 +185,8 @@ public class DrillControllerFactory implements ControllerFactory {
    * This class is very Linux-specific. The usual adjustments must be made to
    * adapt it to Windows.
    *
-   * @param config
-   * @return
+   * @param resources the means to set up the required environment variables
+   * @return task specification
    * @throws DoyConfigException
    */
 
@@ -322,9 +322,9 @@ public class DrillControllerFactory implements ControllerFactory {
    * specification if a given Drill-on-YARN configuration variable is set,
    * copying the config value to the environment variable.
    *
-   * @param spec
-   * @param configParam
-   * @param envVar
+   * @param spec launch specification
+   * @param configParam config value
+   * @param envVar environment variable
    */
 
   public void addIfSet(LaunchSpec spec, String configParam, String envVar) {
@@ -357,8 +357,8 @@ public class DrillControllerFactory implements ControllerFactory {
    * Compared to the Drill version, this one takes its parameters via a builder
    * pattern in the form of the cluster coordinator driver.
    *
-   * @param config
-   * @param dispatcher
+   * @param config used to build a Drill-on-YARN configuration
+   * @param dispatcher dispatches different events to the cluster controller
    */
 
   private void buildZooKeeper(Config config, Dispatcher dispatcher) {

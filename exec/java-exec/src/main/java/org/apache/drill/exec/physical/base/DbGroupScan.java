@@ -58,8 +58,8 @@ public interface DbGroupScan extends GroupScan {
   /**
    * Get the row count after applying the {@link RexNode} condition
    *
-   * @param condition, filter to apply
-   * @param scanRel, the current scan rel
+   * @param condition filter to apply
+   * @param scanRel the current scan rel
    * @return row count post filtering
    */
   @JsonIgnore

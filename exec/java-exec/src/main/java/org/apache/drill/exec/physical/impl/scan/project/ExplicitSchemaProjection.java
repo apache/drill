@@ -279,6 +279,11 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
    * column reference ("a", say) and an implied map reference ("a.b", say.)
    * If the column appears to be a map, determine the set of children, which
    * map appear to any depth, that were requested.
+   *
+   * @param outputTuple
+   *           projected tuple being built
+   * @param requestedCol
+   *           column as requested in the project list
    */
 
   private void resolveNullColumn(ResolvedTuple outputTuple,
@@ -296,7 +301,8 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
    * A child column of a map is not projected. Recurse to determine the full
    * set of nullable child columns.
    *
-   * @param projectedColumn the map column which was projected
+   * @param outputTuple projected tuple being built
+   * @param col the map column which was projected
    * @return a list of null markers for the requested children
    */
 

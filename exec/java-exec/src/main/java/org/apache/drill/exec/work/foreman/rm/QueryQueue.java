@@ -40,10 +40,8 @@ public interface QueryQueue {
     long queryMemoryPerNode();
 
     /**
-     * Release a query lease obtained from {@link #queue(QueryId, double))}.
+     * Release a query lease obtained from {@link #enqueue(QueryId, double)}.
      * Should be called by the per-query resource manager.
-     *
-     * @param lease the lease to be released.
      */
 
     void release();
@@ -127,7 +125,7 @@ public interface QueryQueue {
    * wait time.
    * @param queryId the query ID
    * @param cost the cost of the query used for cost-based queueing
-   * @return the query lease which must be passed to {@link #release(QueueLease)}
+   * @return the query lease which must be passed to {@code #release(QueueLease)}
    * upon query completion
    * @throws QueueTimeoutException if the query times out waiting to be
    * admitted.

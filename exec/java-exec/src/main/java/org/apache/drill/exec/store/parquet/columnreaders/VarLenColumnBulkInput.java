@@ -75,7 +75,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
    * CTOR.
    * @param parentInst parent object instance
    * @param recordsToRead number of records to read
-   * @param columnPrecInfo column precision information
+   * @param bulkReaderState bulk reader state
    * @throws IOException runtime exception in case of processing error
    */
   VarLenColumnBulkInput(VarLengthValuesColumn<V> parentInst,
@@ -91,7 +91,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
     this.fieldOverflowStateContainer = this.batchSizerMgr.getFieldOverflowContainer(parentInst.valueVec.getField().getName());
 
     // Load page if none have been read
-    loadPageIfNeeed();
+    loadPageIfNeed();
 
     // Create the internal READ_STATE object based on the current page-reader state
     this.oprReadState = new OprBulkReadState(parentInst.pageReader.readyToReadPosInBytes, parentInst.pageReader.valuesRead);
@@ -287,7 +287,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
   private final void guessColumnPrecision(ColumnPrecisionInfo columnPrecInfo) throws IOException {
     columnPrecInfo.columnPrecisionType = ColumnPrecisionType.DT_PRECISION_IS_VARIABLE;
 
-    loadPageIfNeeed();
+    loadPageIfNeed();
 
     // Minimum number of values within a data size to consider bulk processing
     final int minNumVals = VarLenBulkPageReader.BUFF_SZ / BULK_PROCESSING_MAX_PREC_LEN;
@@ -363,7 +363,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
     }
   }
 
-  private void loadPageIfNeeed() throws IOException {
+  private void loadPageIfNeed() throws IOException {
     if (!parentInst.pageReader.hasPage()) {
       // load a page
       parentInst.pageReader.next();
@@ -681,7 +681,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
      * @return underlying reader object; this object is now unusable
      *         note that you have to invoke the {@link #set(ValuesReader, int)} method
      *         to update this object state in case a) you have used the {@link ValuesReader} object and b)
-     *         want to resume using this {@link DefinitionLevelReader} object instance
+     *         want to resume using this {@link DefLevelReaderWrapper} object instance
      */
     public ValuesReader getUnderlyingReader() {
       currValue = -1; // to make this object unusable
@@ -720,8 +720,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
     /**
      * Set the {@link PageReader#dictionaryValueReader} object; if a null value is passed, then it is understood
      * the current page doesn't use dictionary encoding
-     * @param valuesReader {@link ValuesReader} object
-     * @param numValues total number of values that can be read from the stream
+     * @param _rawReader {@link ValuesReader} object
      */
     void set(ValuesReader _rawReader) {
       this.valuesReader    = _rawReader;

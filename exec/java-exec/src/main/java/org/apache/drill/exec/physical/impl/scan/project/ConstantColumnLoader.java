@@ -87,8 +87,7 @@ public class ConstantColumnLoader extends StaticColumnLoader {
   /**
    * Populate static vectors with the defined static values.
    *
-   * @param rowCount number of rows to generate. Must match the
-   * row count in the batch returned by the reader
+   * @param writer writer for a tuple
    */
 
   private void loadRow(TupleWriter writer) {

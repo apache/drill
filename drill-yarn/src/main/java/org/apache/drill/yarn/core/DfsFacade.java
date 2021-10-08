@@ -163,7 +163,7 @@ public class DfsFacade {
      * only retrieve the status once. Cache it here so that the client
      * doen't have to do the caching.
      *
-     * @return
+     * @return file status
      * @throws DfsFacadeException
      */
 
@@ -286,17 +286,17 @@ public class DfsFacade {
    * must be localized onto the remote node prior to running a command on that
    * node.
    * <p>
-   * YARN uses the size and timestamp are used to check if the file has changed
-   * on HDFS to check if YARN can use an existing copy, if any.
+   * YARN uses the size and timestamp to check if the file has changed
+   * on HDFS and to check if YARN can use an existing copy, if any.
    * <p>
    * Resources are made public.
    *
-   * @param conf
-   *          Configuration created from the Hadoop config files, in this case,
-   *          identifies the target file system.
-   * @param resourcePath
+   * @param dfsPath
    *          the path (relative or absolute) to the file on the configured file
    *          system (usually HDFS).
+   * @param dfsFileStatus the file status of the configured file system
+   * @param type local resource type (archive, file, or pattern)
+   * @param visibility local resource visibility (public, private, or application)
    * @return a YARN local resource records that contains information about path,
    *         size, type, resource and so on that YARN requires.
    * @throws IOException
