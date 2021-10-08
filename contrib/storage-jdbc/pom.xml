@@ -30,13 +30,6 @@
 
   <name>Drill : Contrib : Storage : JDBC</name>
 
-  <repositories>
-    <repository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io</url>
-    </repository>
-  </repositories>
-
   <properties>
     <mysql.connector.version>8.0.25</mysql.connector.version>
     <clickhouse.jdbc.version>0.3.1</clickhouse.jdbc.version>
