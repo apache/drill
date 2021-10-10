@@ -45,7 +45,6 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import javax.security.cert.CertificateException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -126,6 +125,8 @@ public class SimpleHttp {
     builder.writeTimeout(timeout, TimeUnit.SECONDS);
     builder.readTimeout(timeout, TimeUnit.SECONDS);
 
+    // Code to skip SSL Certificate validation
+    // Sourced from https://stackoverflow.com/questions/60110848/how-to-disable-ssl-verification
     if (! scanDefn.tableSpec().connectionConfig().verifySSLCert()) {
       try {
         TrustManager[] trustAllCerts = getAllTrustingTrustManager();
@@ -180,7 +181,6 @@ public class SimpleHttp {
   }
 
   private TrustManager[] getAllTrustingTrustManager() {
-
     return new TrustManager[] {
       new X509TrustManager() {
         @Override
