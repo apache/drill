@@ -117,7 +117,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   }
 
   public JdbcRecordWriter(DataSource source, OperatorContext context, String name, JdbcWriter config) {
-    this.tableName = name;
+    this.tableName = JdbcDDLQueryUtils.addBackTicksToTable(name);
     this.config = config;
     rowList = new ArrayList<>();
     insertRows = new ArrayList<>();
@@ -146,7 +146,6 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     String columnName;
     MinorType type;
     String sql;
-    Statement statement;
     boolean nullable = false;
     JdbcQueryBuilder queryBuilder = new JdbcQueryBuilder(tableName, dialect);
 
@@ -176,11 +175,9 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     logger.debug("Final query: {}", sql);
 
     // Execute the query to build the schema
-    try {
-      statement = connection.createStatement();
+    try (Statement statement = connection.createStatement()) {
       logger.debug("Executing CREATE query: {}", sql);
       statement.execute(sql);
-      statement.close();
     } catch (SQLException e) {
       throw UserException.dataReadError(e)
         .message("The JDBC storage plugin failed while trying to create the schema. ")

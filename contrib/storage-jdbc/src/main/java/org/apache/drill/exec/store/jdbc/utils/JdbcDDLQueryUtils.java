@@ -42,9 +42,9 @@ public class JdbcDDLQueryUtils {
   public static String cleanDDLQuery(String query, SqlDialect dialect) {
     SqlParser.Config sqlParserConfig = SqlParser.configBuilder()
       .setParserFactory(SqlDdlParserImpl.FACTORY)
-      .setConformance(SqlConformanceEnum.MYSQL_5)
+      .setConformance(SqlConformanceEnum.STRICT_2003)
       .setCaseSensitive(true)
-      .setLex(Lex.MYSQL_ANSI)
+      .setLex(Lex.MYSQL)
       .build();
 
     try {
@@ -89,5 +89,32 @@ public class JdbcDDLQueryUtils {
     StringBuilder escaper = new StringBuilder();
     appendEscapedSQLString(escaper, value);
     return escaper.toString();
+  }
+
+  /**
+   * This function adds backticks around table names.  If the table name already has backticks,
+   * it does nothing.
+   * @param inputTable The table name with or without backticks
+   * @return The table name with backticks added.
+   */
+  public static String addBackTicksToTable(String inputTable) {
+    String[] queryParts = inputTable.split("\\.");
+    StringBuilder cleanQuery = new StringBuilder();
+
+    int counter = 0;
+    for (String part : queryParts) {
+      if (counter > 0) {
+        cleanQuery.append(".");
+      }
+
+      if (part.startsWith("`") && part.endsWith("`")) {
+        cleanQuery.append(part);
+      } else {
+        cleanQuery.append("`").append(part).append("`");
+      }
+      counter++;
+    }
+
+    return cleanQuery.toString();
   }
 }

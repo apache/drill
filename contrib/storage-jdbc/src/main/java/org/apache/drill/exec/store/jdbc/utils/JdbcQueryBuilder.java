@@ -122,6 +122,6 @@ public class JdbcQueryBuilder {
       completeTable.append(".");
     }
     completeTable.append(table);
-    return completeTable.toString();
+    return JdbcDDLQueryUtils.addBackTicksToTable(completeTable.toString());
   }
 }

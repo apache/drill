@@ -141,15 +141,11 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
     String dropTableQuery = String.format("DROP TABLE %s", tableWithSchema);
     dropTableQuery = JdbcDDLQueryUtils.cleanDDLQuery(dropTableQuery, plugin.getDialect());
 
-    try {
-      Connection conn = inner.getDataSource().getConnection();
-      Statement stmt = conn.createStatement();
-
+    try (Connection conn = inner.getDataSource().getConnection();
+         Statement stmt = conn.createStatement()) {
       logger.debug("Executing drop table query: {}", dropTableQuery);
       int successfullyDropped = stmt.executeUpdate(dropTableQuery);
-
       logger.debug("Result: {}", successfullyDropped);
-      stmt.close();
       if (successfullyDropped > 0) {
         throw UserException.dataWriteError()
           .message("Error while dropping table " + tableName)

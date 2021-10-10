@@ -204,6 +204,35 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
   }
 
   @Test
+  public void testBasicCTASWithSpacesInTableName() throws Exception {
+    String query = "CREATE TABLE h2.tmp.`drill_h2_test`.`test table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    // Create the table and insert the values
+    QuerySummary insertResults = queryBuilder().sql(query).run();
+    assertTrue(insertResults.succeeded());
+
+    // Query the table to see if the insertion was successful
+    String testQuery = "SELECT * FROM h2.tmp.`drill_h2_test`.`test table`";
+    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1L, 2L)
+      .addRow(3L, 4L)
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+
+    // Now drop the table
+    String dropQuery = "DROP TABLE  h2.tmp.`drill_h2_test`.`test table`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+  }
+
+  @Test
   public void testBasicCTASIfNotExists() throws Exception {
     String query = "CREATE TABLE IF NOT EXISTS h2.tmp.`drill_h2_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
     // Create the table and insert the values
