@@ -102,6 +102,8 @@ public class HttpApiConfig {
   private final int xmlDataLevel;
   @JsonProperty
   private final boolean errorOn400;
+  @JsonProperty
+  private final boolean verifySSLCert;
   @Getter(AccessLevel.NONE)
   private final CredentialsProvider credentialsProvider;
   @Getter(AccessLevel.NONE)
@@ -153,6 +155,9 @@ public class HttpApiConfig {
 
     // Default to true for backward compatibility with first PR.
     this.requireTail = builder.requireTail;
+
+    // Default to true for backward compatibility, and better security practices
+    this.verifySSLCert = builder().verifySSLCert();
 
     this.inputType = builder.inputType.trim().toLowerCase();
 
@@ -214,6 +219,10 @@ public class HttpApiConfig {
     @Getter
     @Setter
     private boolean requireTail = true;
+
+    @Getter
+    @Setter
+    private boolean verifySSLCert = true;
 
     @Getter
     @Setter
