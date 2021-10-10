@@ -17,16 +17,25 @@
 #
 
 # This Dockerfile may be used during development. It adds built binaries from distribution/target folder
-# into the target image based on openjdk:8u232-jdk image.
+# into the target image based on openjdk:8 image.  If you've built Drill using a JDK version greater than
+# the one in the FROM command in this Dockerfile then you should bump this one up to match or exceed that.
 
-FROM openjdk:8u232-jdk
+FROM openjdk:8
 
 # Project version defined in pom.xml is passed as an argument
 ARG VERSION
 
+ENV DRILL_HOME=/opt/drill DRILL_USER=drilluser
+
 RUN mkdir /opt/drill
 
 COPY target/apache-drill-$VERSION/apache-drill-$VERSION /opt/drill
+
+RUN groupadd -g 999 $DRILL_USER \
+ && useradd -r -u 999 -g $DRILL_USER $DRILL_USER -m -d /var/lib/drill \
+ && chown -R $DRILL_USER: $DRILL_HOME
+
+USER $DRILL_USER
 
 # Starts Drill in embedded mode and connects to Sqlline
 ENTRYPOINT /opt/drill/bin/drill-embedded

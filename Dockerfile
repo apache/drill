@@ -24,7 +24,7 @@
 #
 # {docker|podman} build \
 #    --build-arg BUILD_BASE_IMAGE=maven:3.8.2-openjdk-11 \
-#    --build-arg BASE_IMAGE=openjdk:11-jre \
+#    --build-arg BASE_IMAGE=openjdk:11 \
 #    -t apache/drill-openjdk-11 
 
 # Unless otherwise specified, the intermediate container image will be 
@@ -33,7 +33,7 @@ ARG BUILD_BASE_IMAGE=maven:3.8.2-openjdk-8
 
 # Unless otherwise specified, the final container image will be based on
 # the following default.
-ARG BASE_IMAGE=openjdk:8-jre
+ARG BASE_IMAGE=openjdk:8
 
 # Uses intermediate image for building Drill to reduce target image size
 FROM $BUILD_BASE_IMAGE as build
@@ -56,11 +56,17 @@ RUN VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --n
 # Set the BASE_IMAGE build arg when you invoke docker build.  
 FROM $BASE_IMAGE
 
-ENV DRILL_HOME=/opt/drill
+ENV DRILL_HOME=/opt/drill DRILL_USER=drilluser
 
 RUN mkdir $DRILL_HOME
 
 COPY --from=build /opt/drill $DRILL_HOME
+
+RUN groupadd -g 999 $DRILL_USER \
+ && useradd -r -u 999 -g $DRILL_USER $DRILL_USER -m -d /var/lib/drill \
+ && chown -R $DRILL_USER: $DRILL_HOME
+
+USER $DRILL_USER
 
 # Starts Drill in embedded mode and connects to Sqlline
 ENTRYPOINT $DRILL_HOME/bin/drill-embedded
