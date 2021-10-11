@@ -32,9 +32,9 @@ public class TestJdbcQueryBuilder {
     String catalog = "catalog";
 
     String completeTable = JdbcQueryBuilder.buildCompleteTableName(table, catalog, schema);
-    assertEquals("catalog.schema.table", completeTable);
-    assertEquals("catalog.table", JdbcQueryBuilder.buildCompleteTableName(table, catalog, ""));
-    assertEquals("catalog.table", JdbcQueryBuilder.buildCompleteTableName(table, catalog, null));
+    assertEquals("`catalog`.`schema`.`table`", completeTable);
+    assertEquals("`catalog`.`table`", JdbcQueryBuilder.buildCompleteTableName(table, catalog, ""));
+    assertEquals("`catalog`.`table`", JdbcQueryBuilder.buildCompleteTableName(table, catalog, null));
   }
 
   @Test
@@ -44,8 +44,8 @@ public class TestJdbcQueryBuilder {
     String catalog = "catalog with spaces";
 
     String completeTable = JdbcQueryBuilder.buildCompleteTableName(table, catalog, schema);
-    assertEquals("catalog with spaces.schema with spaces.table with spaces", completeTable);
-    assertEquals("catalog with spaces.table with spaces", JdbcQueryBuilder.buildCompleteTableName(table, catalog, ""));
-    assertEquals("catalog with spaces.table with spaces", JdbcQueryBuilder.buildCompleteTableName(table, catalog, null));
+    assertEquals("`catalog with spaces`.`schema with spaces`.`table with spaces`", completeTable);
+    assertEquals("`catalog with spaces`.`table with spaces`", JdbcQueryBuilder.buildCompleteTableName(table, catalog, ""));
+    assertEquals("`catalog with spaces`.`table with spaces`", JdbcQueryBuilder.buildCompleteTableName(table, catalog, null));
   }
 }
