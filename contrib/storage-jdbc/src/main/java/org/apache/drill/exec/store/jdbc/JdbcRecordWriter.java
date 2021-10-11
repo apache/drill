@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlDialect.DatabaseProduct;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -82,6 +83,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   public static final ImmutableMap<MinorType, Integer> JDBC_TYPE_MAPPINGS;
 
   private static final String INSERT_QUERY_TEMPLATE = "INSERT INTO %s VALUES\n%s";
+  private static final String INSERT_QUERY_TEMPLATE_FOR_APACHE_PHOENIX = "UPSERT INTO %s VALUES\n%s";
   private final String tableName;
   private final Connection connection;
   private final JdbcWriter config;
@@ -150,7 +152,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     JdbcQueryBuilder queryBuilder = new JdbcQueryBuilder(tableName, dialect);
 
     for (MaterializedField field : schema) {
-      columnName = field.getName();
+      columnName = JdbcDDLQueryUtils.addBackTicksToField(field.getName());
       type = field.getType().getMinorType();
       logger.debug("Adding column {} of type {}.", columnName, type);
 
@@ -285,7 +287,13 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       values.append(insertRows.get(i));
     }
 
-    String sql = String.format(INSERT_QUERY_TEMPLATE, tableName, values);
+    String sql;
+    // Apache Phoenix does not support INSERT but does support UPSERT with the same syntax
+    if (dialect == DatabaseProduct.PHOENIX.getDialect()) {
+      sql = String.format(INSERT_QUERY_TEMPLATE_FOR_APACHE_PHOENIX, tableName, values);
+    } else {
+      sql = String.format(INSERT_QUERY_TEMPLATE, tableName, values);
+    }
     return JdbcDDLQueryUtils.cleanDDLQuery(sql, dialect);
   }
 

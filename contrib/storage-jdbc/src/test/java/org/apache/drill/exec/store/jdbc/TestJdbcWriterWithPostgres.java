@@ -192,6 +192,35 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
   }
 
   @Test
+  public void testBasicCTASWithSpacesInFieldNames() throws Exception {
+    String query = "CREATE TABLE pg.public.`test table` (`My id`, `My name`) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    // Create the table and insert the values
+    QuerySummary insertResults = queryBuilder().sql(query).run();
+    assertTrue(insertResults.succeeded());
+
+    // Query the table to see if the insertion was successful
+    String testQuery = "SELECT * FROM pg.public.`test table`";
+    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("My id", MinorType.BIGINT, DataMode.OPTIONAL)
+      .add("My name", MinorType.BIGINT, DataMode.OPTIONAL)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1L, 2L)
+      .addRow(3L, 4L)
+      .build();
+
+    RowSetUtilities.verify(expected, results);
+
+    // Now drop the table
+    String dropQuery = "DROP TABLE pg.public.`test table`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+  }
+
+  @Test
   public void testCTASFromFileWithNulls() throws Exception {
     String sql = "CREATE TABLE pg.public.`t1` AS SELECT int_field, float_field, varchar_field, boolean_field FROM cp.`json/dataTypes.json`";
     QuerySummary insertResults = queryBuilder().sql(sql).run();
@@ -336,7 +365,7 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
       queryBuilder().sql(sql).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: Drill does not yet support writing arrays to JDBC. repeated_field is an array."));
+      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: Drill does not yet support writing arrays to JDBC. `repeated_field` is an array."));
     }
   }
 

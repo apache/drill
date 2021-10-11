@@ -205,7 +205,6 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
     assertTrue(dropResults.succeeded());
   }
 
-
   @Test
   @Ignore("Requires local installation of MySQL")
   public void testBasicCTASWithLocalDatabase() throws Exception {
@@ -433,7 +432,7 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
       queryBuilder().sql(sql).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: Drill does not yet support writing arrays to JDBC. repeated_field is an array."));
+      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: Drill does not yet support writing arrays to JDBC. `repeated_field` is an array."));
     }
   }
 

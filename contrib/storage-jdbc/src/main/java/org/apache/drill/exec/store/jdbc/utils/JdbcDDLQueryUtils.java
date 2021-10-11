@@ -117,4 +117,13 @@ public class JdbcDDLQueryUtils {
 
     return cleanQuery.toString();
   }
+
+  public static String addBackTicksToField(String field) {
+    if (field.startsWith("`") && field.endsWith("`")) {
+      return field;
+    } else {
+      StringBuilder cleanField = new StringBuilder();
+      return cleanField.append("`").append(field).append("`").toString();
+    }
+  }
 }

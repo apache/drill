@@ -38,6 +38,8 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
+
 public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcStoragePlugin.class);
@@ -85,7 +87,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     return config.isWritable();
   }
 
-  public HikariDataSource getDataSource() {
+  public DataSource getDataSource() {
     return dataSource;
   }
 

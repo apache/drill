@@ -113,17 +113,17 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
         "Philadelphia", "PA", 19107, "{ a : 5, b : 6 }", 123456789L, 1,
         new BigDecimal("123.32"), 0, 1.0, 1.1,
         LocalDate.parse("2012-02-29"),
-        1330538401000L, "XXX")
+        1330520401000L, "XXX")
       .addRow(2, "first_name_2", "last_name_2", "One Ferry Building",
         "San Francisco", "CA", 94111, "{ z : [ 1, 2, 3 ] }", 45456767L, 3,
         null, 1, 3.0, 3.1,
         LocalDate.parse("2011-10-30"),
-        1319988861000L, "YYY")
+        1319974461000L, "YYY")
       .addRow(3, "first_name_3", "last_name_3", "176 Bowery",
         "New York", "NY", 10012, "{ [ a, b, c ] }", 123090L, -3,
         null, 0, 5.0, 5.1,
         LocalDate.parse("2015-06-01"),
-        1442951170000L, "ZZZ")
+        1442936770000L, "ZZZ")
       .addRow(5, null, null, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null)
       .build();
@@ -266,7 +266,7 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
       .sqlQuery(query)
       .unOrdered()
       .baselineColumns("table_type")
-      .baselineValuesForSingleColumn("TABLE", "VIEW")
+      .baselineValuesForSingleColumn("TABLE", "VIEW", "INDEX", "SEQUENCE", "SYSTEM INDEX", "SYSTEM TABLE", "SYSTEM VIEW")
       .go();
   }
 
