@@ -175,7 +175,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               }
               break;
             case DATA_PAGE:
-              pageHeaderInfo = DataPageHeaderInfoProvider.create(pageHeader);
+              pageHeaderInfo = DataPageHeaderInfoProvider.builder(pageHeader);
               valueReadSoFar += pageHeaderInfo.getNumValues();
               ByteBuf buf = allocator.buffer(compPageSize);
               lastPage = buf;
@@ -201,7 +201,7 @@ public class ColumnChunkIncReadStore implements PageReadStore {
                   METADATA_CONVERTER.getEncoding(pageHeaderInfo.getEncoding())
               );
             case DATA_PAGE_V2:
-              pageHeaderInfo = DataPageHeaderInfoProvider.create(pageHeader);
+              pageHeaderInfo = DataPageHeaderInfoProvider.builder(pageHeader);
               int repLevelSize = pageHeader.data_page_header_v2.getRepetition_levels_byte_length();
               int defLevelSize = pageHeader.data_page_header_v2.getDefinition_levels_byte_length();
               valueReadSoFar += pageHeaderInfo.getNumValues();

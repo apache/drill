@@ -80,7 +80,7 @@ public interface DataPageHeaderInfoProvider {
     }
   }
 
-  static DataPageHeaderInfoProvider create(PageHeader pageHeader) {
+  static DataPageHeaderInfoProvider builder(PageHeader pageHeader) {
     switch (pageHeader.getType()) {
       case DATA_PAGE:
         return new DataPageHeaderV1InfoProvider(pageHeader.getData_page_header());

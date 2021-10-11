@@ -61,19 +61,15 @@ import java.util.concurrent.TimeUnit;
 
 import static org.apache.parquet.column.Encoding.valueOf;
 
-/**
- * Class that synchronously reads and, if needed, decompresses, individual pages of
- * Parquet column data into a direct memory buffer.  This class handles both dictionary
- * and data pages, and collects perf stats in the process.
- */
+// class to keep track of the read position of variable length columns
 class PageReader {
   static final Logger logger = LoggerFactory.getLogger(PageReader.class);
 
-  protected static final ParquetMetadataConverter METADATA_CONVERTER = ParquetFormatPlugin.parquetMetadataConverter;
+  public static final ParquetMetadataConverter METADATA_CONVERTER = ParquetFormatPlugin.parquetMetadataConverter;
 
-  protected final ColumnReader<?> parentColumnReader;
+  protected final org.apache.drill.exec.store.parquet.columnreaders.ColumnReader<?> parentColumnReader;
   protected final DirectBufInputStream dataReader;
-  // buffer containing the (decompressed) contents of the last page that was read
+  //buffer to store bytes of current page
   protected DrillBuf pageData;
 
   // for variable length data we need to keep track of our current position in the page data
@@ -127,30 +123,28 @@ class PageReader {
 
   protected final String debugName;
 
-  PageReader(ColumnReader<?> parentColumnReader, FileSystem fs, Path path)
+  PageReader(ColumnReader<?> columnReader, FileSystem fs, Path path)
     throws ExecutionSetupException {
-    this.parentColumnReader = parentColumnReader;
+    this.parentColumnReader = columnReader;
+    this.columnDescriptor = parentColumnReader.getColumnDescriptor();
+    this.columnChunkMetaData = columnReader.columnChunkMetaData;
     this.codecFactory = parentColumnReader.parentReader.getCodecFactory();
     this.codecName = parentColumnReader.columnChunkMetaData.getCodec();
     this.allocator = parentColumnReader.parentReader.getOperatorContext().getAllocator();
     this.stats = parentColumnReader.parentReader.parquetReaderStats;
-    this.columnDescriptor = parentColumnReader.getColumnDescriptor();
-    this.columnChunkMetaData = parentColumnReader.columnChunkMetaData;
     this.fileName = path.toString();
-
     debugName = new StringBuilder()
        .append(this.parentColumnReader.parentReader.getFragmentContext().getFragIdString())
        .append(":")
        .append(this.parentColumnReader.parentReader.getOperatorContext().getStats().getId() )
-       .append(this.columnChunkMetaData.toString() )
+       .append(this.parentColumnReader.columnChunkMetaData.toString() )
        .toString();
-
     try {
       inputStream  = fs.open(path);
-      useBufferedReader = this.parentColumnReader.parentReader.useBufferedReader;
-      scanBufferSize = this.parentColumnReader.parentReader.bufferedReadSize;
-      useFadvise = this.parentColumnReader.parentReader.useFadvise;
-      enforceTotalSize = this.parentColumnReader.parentReader.enforceTotalSize;
+      useBufferedReader  = parentColumnReader.parentReader.useBufferedReader;
+      scanBufferSize = parentColumnReader.parentReader.bufferedReadSize;
+      useFadvise = parentColumnReader.parentReader.useFadvise;
+      enforceTotalSize = parentColumnReader.parentReader.enforceTotalSize;
 
       if (useBufferedReader) {
         this.dataReader = new BufferedDirectBufInputStream(inputStream, allocator, path.getName(),
@@ -175,39 +169,22 @@ class PageReader {
     throw ex;
   }
 
-  /**
-   * Initialises the backing input stream and loads the column chunk's dictionary page if it has one.
-   * @throws IOException
-   */
-  protected void init() throws IOException {
+  protected void init() throws IOException{
     dataReader.init();
 
-    Stopwatch timer = Stopwatch.createUnstarted();
+    // If getDictionaryPageOffset() was reliable we could read the dictionary page once
+    // and for all here.  Instead we must encounter the dictionary page during calls to next().
+    /*
     long dictPageOffset = columnChunkMetaData.getDictionaryPageOffset();
-
-    if (dictPageOffset <= 0) {
-      return;
+    if (dictPageOffset < dataReader.getPos()) {
+      return; // this column chunk has no dictionary page
     }
 
     // advance to the start of the dictionary page
     skip(dictPageOffset - dataReader.getPos());
-
-    timer.start();
-    this.pageHeader = Util.readPageHeader(dataReader);
-    long timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
-
-    long pageHeaderBytes = dataReader.getPos() - dictPageOffset;
-    this.updateStats(pageHeader, "Page Header", dictPageOffset, timeToRead, pageHeaderBytes, pageHeaderBytes);
-
-    if (pageHeader.type != PageType.DICTIONARY_PAGE) {
-      throw new DrillRuntimeException(String.format(
-        "%s expected at byte offset %d but instead found %s",
-        PageType.DICTIONARY_PAGE,
-        dictPageOffset,
-        pageHeader.type
-      ));
-    }
+    nextPageHeader();
     loadDictionary();
+     */
   }
 
   /**
@@ -237,10 +214,13 @@ class PageReader {
   }
 
   /**
-   * Reads and stores this column chunk's dictionary page.
+   * Reads and stores this column chunk's dictionary.
    * @throws IOException
    */
   protected void loadDictionary() throws IOException {
+    assert pageHeader.getType() == PageType.DICTIONARY_PAGE;
+    assert this.dictionary == null;
+
     // dictData is not a local because we need to release it later.
     this.dictData = codecName == CompressionCodecName.UNCOMPRESSED
       ? readUncompressedPage()
@@ -270,7 +250,7 @@ class PageReader {
     long timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
 
     logger.trace(
-      "PageReaderTask==> Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
+      "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
       columnChunkMetaData.toString(),
       dataReader.getPos(),
       outputSize,
@@ -318,7 +298,7 @@ class PageReader {
       timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
 
       logger.trace(
-        "PageReaderTask==> Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
+        "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
         columnChunkMetaData.toString(),
         dataReader.getPos(),
         outputSize,
@@ -357,6 +337,7 @@ class PageReader {
 
     try {
       timer.start();
+      // Read in both the uncompressed and compressed sections
       inputPageData = dataReader.getNext(inputSize);
       timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
       this.updateStats(pageHeader, "Page Read", start, timeToRead, inputSize, inputSize);
@@ -364,13 +345,15 @@ class PageReader {
 
       timer.start();
       start = dataReader.getPos();
+      // Write out the uncompressed section
       // Note that the following setBytes call to read the repetition and definition level sections
       // advances readerIndex in inputPageData but not writerIndex in outputPageData.
       outputPageData.setBytes(0, inputPageData, compDataOffset);
+
+      // decompress from the start of compressed data to the end of the input buffer
       CompressionCodecName codecName = columnChunkMetaData.getCodec();
       BytesInputDecompressor decomp = codecFactory.getDecompressor(codecName);
-      ByteBuffer input = inputPageData.nioBuffer(0, inputSize);
-      // decompress from the start of compressed data to the end of the input buffer
+      ByteBuffer input = inputPageData.nioBuffer(compDataOffset, inputSize - compDataOffset);
       ByteBuffer output = outputPageData.nioBuffer(compDataOffset, outputSize - compDataOffset);
       decomp.decompress(
         input,
@@ -382,7 +365,7 @@ class PageReader {
       timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
 
       logger.trace(
-        "PageReaderTask==> Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
+        "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
         columnChunkMetaData.toString(),
         dataReader.getPos(),
         outputSize,
@@ -399,23 +382,20 @@ class PageReader {
     return outputPageData;
   }
 
-  public static BytesInput asBytesInput(DrillBuf buf, int offset, int length) throws IOException {
-    return BytesInput.from(buf.nioBuffer(offset, length));
-  }
-
   /**
-   * Get the page header and the pageData (uncompressed) for the next page
+   * Reads the next page header available in the backing input stream.
+   * @throws IOException
    */
-  protected void nextInternal() throws IOException{
+  protected void readPageHeader() throws IOException {
     long start = dataReader.getPos();
     Stopwatch timer = Stopwatch.createStarted();
-    pageHeader = Util.readPageHeader(dataReader);
+    this.pageHeader = Util.readPageHeader(dataReader);
     long timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
     long pageHeaderBytes = dataReader.getPos() - start;
     this.updateStats(pageHeader, "Page Header", start, timeToRead, pageHeaderBytes, pageHeaderBytes);
 
     logger.trace(
-      "ParquetTrace,{},{},{},{},{},{},{},{}","Page Header Read","",
+      "ParquetTrace,{},{},{},{},{},{},{},{}", "Page Header Read", "",
       this.parentColumnReader.parentReader.getHadoopPath(),
       this.columnDescriptor.toString(),
       start,
@@ -423,11 +403,21 @@ class PageReader {
       0,
       timeToRead
     );
+  }
+
+  /**
+   * Get the page header and the pageData (uncompressed) for the next page
+   * @throws IOException
+   */
+  protected void nextInternal() throws IOException {
+    readPageHeader();
 
     switch (pageHeader.getType()) {
       case DICTIONARY_PAGE:
         loadDictionary();
-        break;
+        // Get another page header and deliberately fall through.  Note that the pageHeader on which this
+        // this switch statement is based is now reassigned, *during the evaluation of the switch*.
+        readPageHeader();
       case DATA_PAGE:
         pageData = codecName == CompressionCodecName.UNCOMPRESSED
           ? readUncompressedPage()
@@ -439,9 +429,8 @@ class PageReader {
           : readCompressedPageV2();
         break;
       default:
-        logger.warn("skipping page of type {} of size {}", pageHeader.getType(), pageHeader.compressed_page_size);
+        logger.info("skipping a {} of size {}", pageHeader.getType(), pageHeader.compressed_page_size);
         skip(pageHeader.compressed_page_size);
-        break;
     }
   }
 
@@ -474,16 +463,21 @@ class PageReader {
     }
 
     timer.start();
-    DataPageHeaderInfoProvider pageHeaderInfo = DataPageHeaderInfoProvider.create(this.pageHeader);
+    DataPageHeaderInfoProvider pageHeaderInfo = DataPageHeaderInfoProvider.builder(this.pageHeader);
     currentPageCount = pageHeaderInfo.getNumValues();
 
     Encoding rlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfo.getRepetitionLevelEncoding());
     Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfo.getDefinitionLevelEncoding());
     Encoding valueEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfo.getEncoding());
+    logger.trace(
+      "Rep. level encoding: {}, def level encoding: {}, value encoding: {}",
+       rlEncoding,
+       dlEncoding,
+       valueEncoding
+     );
 
     byteLength = this.pageHeader.uncompressed_page_size;
-
-    final ByteBufferInputStream in = ByteBufferInputStream.wrap(pageData.nioBuffer(0, pageData.capacity()));
+    final ByteBufferInputStream in = ByteBufferInputStream.wrap(pageData.nioBuffer(0, byteLength));
 
     readPosInBytes = 0;
     if (columnDescriptor.getMaxRepetitionLevel() > 0) {
@@ -620,7 +614,7 @@ class PageReader {
     Preconditions.checkState(columnDescriptor.getMaxDefinitionLevel() == 1);
     Preconditions.checkState(currentPageCount > 0);
 
-    DataPageHeaderInfoProvider pageHeaderInfo = DataPageHeaderInfoProvider.create(this.pageHeader);
+    DataPageHeaderInfoProvider pageHeaderInfo = DataPageHeaderInfoProvider.builder(this.pageHeader);
     Encoding rlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfo.getRepetitionLevelEncoding());
     Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfo.getDefinitionLevelEncoding());
 
@@ -642,5 +636,9 @@ class PageReader {
     for (int idx = 0; idx < skipCount; ++idx) {
       definitionLevels.skip();
     }
+  }
+
+  public static BytesInput asBytesInput(DrillBuf buf, int offset, int length) throws IOException {
+    return BytesInput.from(buf.nioBuffer(offset, length));
   }
 }
