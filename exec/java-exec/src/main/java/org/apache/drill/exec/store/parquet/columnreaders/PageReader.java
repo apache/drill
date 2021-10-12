@@ -477,33 +477,57 @@ class PageReader {
      );
 
     byteLength = this.pageHeader.uncompressed_page_size;
-    final ByteBufferInputStream in = ByteBufferInputStream.wrap(pageData.nioBuffer(0, byteLength));
+    ByteBufferInputStream repLevelStream, defLevelStream, dataStream;
+
+    switch (pageHeader.getType()) {
+      case DATA_PAGE:
+        repLevelStream = defLevelStream = dataStream = ByteBufferInputStream.wrap(
+          pageData.nioBuffer(0, byteLength)
+        );
+        break;
+      case DATA_PAGE_V2:
+        int repLevelLen = pageHeader.data_page_header_v2.repetition_levels_byte_length;
+        int defLevelLen = pageHeader.data_page_header_v2.definition_levels_byte_length;
+        repLevelStream = ByteBufferInputStream.wrap(pageData.nioBuffer(0, repLevelLen));
+        defLevelStream = ByteBufferInputStream.wrap(pageData.nioBuffer(repLevelLen, defLevelLen));
+        dataStream = ByteBufferInputStream.wrap(
+          pageData.nioBuffer(repLevelLen+defLevelLen, byteLength-repLevelLen-defLevelLen)
+        );
+        break;
+      default:
+        throw new DrillRuntimeException(String.format(
+          "Did not expect to find a page of type %s now.",
+          pageHeader.getType()
+        ));
+    }
+    
 
     readPosInBytes = 0;
     if (columnDescriptor.getMaxRepetitionLevel() > 0) {
       repetitionLevels = rlEncoding.getValuesReader(columnDescriptor, ValuesType.REPETITION_LEVEL);
-      repetitionLevels.initFromPage(currentPageCount, in);
+      repetitionLevels.initFromPage(currentPageCount, repLevelStream);
       // we know that the first value will be a 0, at the end of each list of repeated values we will hit another 0 indicating
       // a new record, although we don't know the length until we hit it (and this is a one way stream of integers) so we
       // read the first zero here to simplify the reading processes, and start reading the first value the same as all
       // of the rest. Effectively we are 'reading' the non-existent value in front of the first allowing direct access to
       // the first list of repetition levels
-      readPosInBytes = in.position();
+//      readPosInBytes += repLevelStream.position();
       repetitionLevels.readInteger();
     }
+
     if (columnDescriptor.getMaxDefinitionLevel() != 0) {
       parentColumnReader.currDefLevel = -1;
       definitionLevels = dlEncoding.getValuesReader(columnDescriptor, ValuesType.DEFINITION_LEVEL);
-      definitionLevels.initFromPage(currentPageCount, in);
-      readPosInBytes = in.position();
+      definitionLevels.initFromPage(currentPageCount, defLevelStream);
+//      readPosInBytes += defLevelStream.position();
       if (!valueEncoding.usesDictionary()) {
         valueReader = valueEncoding.getValuesReader(columnDescriptor, ValuesType.VALUES);
-        valueReader.initFromPage(currentPageCount, in);
+        valueReader.initFromPage(currentPageCount, dataStream);
       }
     }
     if (valueReader == null && columnDescriptor.getPrimitiveType().getPrimitiveTypeName() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
       valueReader = valueEncoding.getValuesReader(columnDescriptor, ValuesType.VALUES);
-      valueReader.initFromPage(currentPageCount, in);
+      valueReader.initFromPage(currentPageCount, dataStream);
     }
     if (valueEncoding.usesDictionary()) {
       // initialize two of the dictionary readers, one is for determining the lengths of each value, the second is for
