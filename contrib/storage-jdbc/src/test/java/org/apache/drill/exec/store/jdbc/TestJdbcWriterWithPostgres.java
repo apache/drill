@@ -43,6 +43,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.TimeZone;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -187,6 +188,24 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
 
     // Now drop the table
     String dropQuery = "DROP TABLE pg.public.`test table`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+  }
+
+  // The insert limit for Postgres is 1000 rows per INSERT query
+  @Test
+  public void testWithLargeFile() throws Exception {
+    String query = "CREATE TABLE pg.public.test (id,first_name,last_name,email,gender,ip_address) AS " +
+      "SELECT id,first_name,last_name,email,gender,ip_address FROM cp.`large_csv.csvh`";
+    QuerySummary insertResults = queryBuilder().sql(query).run();
+    assertTrue(insertResults.succeeded());
+
+    query = "SELECT COUNT(*) FROM pg.public.test";
+    long rowCount = queryBuilder().sql(query).singletonLong();
+    assertEquals(6000, rowCount);
+
+    // Now drop the table
+    String dropQuery = "DROP TABLE pg.public.`test`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
   }
