@@ -102,6 +102,8 @@ public class HttpApiConfig {
   private final int xmlDataLevel;
   @JsonProperty
   private final boolean errorOn400;
+
+  @JsonInclude
   @JsonProperty
   private final boolean verifySSLCert;
   @Getter(AccessLevel.NONE)

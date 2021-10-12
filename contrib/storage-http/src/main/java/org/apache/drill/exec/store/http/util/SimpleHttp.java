@@ -136,12 +136,9 @@ public class SimpleHttp {
 
 
         builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
-        builder.hostnameVerifier(new HostnameVerifier() {
-          @Override
-          public boolean verify(String hostname, SSLSession session) {
-            return true;
-          }
-        });
+        HostnameVerifier verifier = (hostname, session) -> true;
+        builder.hostnameVerifier(verifier);
+
       } catch (KeyManagementException | NoSuchAlgorithmException e) {
         logger.error("Error when configuring Drill not to verify SSL certs. {}", e.getMessage());
       }
