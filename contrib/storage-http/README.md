@@ -260,6 +260,10 @@ When a user makes HTTP calls, the response code will be from 100-599.  400 serie
 errors on 400 series errors.  This option allows you to define Drill's behavior on 400 series error codes.  When set to `true`, Drill will throw an exception and halt execution 
 on 400 series errors, `false` will return an empty result set (with implicit fields populated).
 
+#### verifySSLCert
+Default is `true`, but when set to false, Drill will trust all SSL certificates.  Useful for debugging or on internal corporate networks using self-signed certificates or 
+private certificate authorities.
+
 ## Usage
 
 This plugin is different from other plugins in that it the table component of the `FROM` clause

@@ -31,7 +31,7 @@
   <name>Drill : Contrib : Storage : HTTP</name>
 
   <properties>
-    <okhttp.version>4.9.1</okhttp.version>
+    <okhttp.version>4.9.2</okhttp.version>
   </properties>
 
   <dependencies>

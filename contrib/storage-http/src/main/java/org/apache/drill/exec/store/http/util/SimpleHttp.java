@@ -39,6 +39,11 @@ import org.apache.drill.exec.store.http.HttpSubScan;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.jetbrains.annotations.NotNull;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +51,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URLDecoder;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -116,6 +124,25 @@ public class SimpleHttp {
     builder.writeTimeout(timeout, TimeUnit.SECONDS);
     builder.readTimeout(timeout, TimeUnit.SECONDS);
 
+    // Code to skip SSL Certificate validation
+    // Sourced from https://stackoverflow.com/questions/60110848/how-to-disable-ssl-verification
+    if (! scanDefn.tableSpec().connectionConfig().verifySSLCert()) {
+      try {
+        TrustManager[] trustAllCerts = getAllTrustingTrustManager();
+        SSLContext sslContext = SSLContext.getInstance("SSL");
+        sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+        SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+
+        builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
+        HostnameVerifier verifier = (hostname, session) -> true;
+        builder.hostnameVerifier(verifier);
+
+      } catch (KeyManagementException | NoSuchAlgorithmException e) {
+        logger.error("Error when configuring Drill not to verify SSL certs. {}", e.getMessage());
+      }
+    }
+
     // Set the proxy configuration
 
     Proxy.Type proxyType;
@@ -148,6 +175,26 @@ public class SimpleHttp {
   public String url() {
     return url.toString();
   }
+
+  private TrustManager[] getAllTrustingTrustManager() {
+    return new TrustManager[] {
+      new X509TrustManager() {
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType) {
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType) {
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+          return new X509Certificate[]{};
+        }
+      }
+    };
+  }
+
 
   public InputStream getInputStream() {
 
