@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.rpc;
 
+import com.google.protobuf.Internal.EnumLite;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.MessageLite;
+import com.google.protobuf.Parser;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.Channel;
@@ -26,6 +30,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.util.concurrent.GenericFutureListener;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 
 import java.io.Closeable;
 import java.net.SocketAddress;
@@ -33,17 +42,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
-import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
-
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import com.google.protobuf.Internal.EnumLite;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.MessageLite;
-import com.google.protobuf.Parser;
 
 /**
  * The Rpc Bus deals with incoming and outgoing communication and is used on both the server and the client side of a
@@ -252,7 +250,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
     @Override
     protected void decode(final ChannelHandlerContext ctx, final InboundRpcMessage msg, final List<Object> output)
-        throws Exception {
+            throws Exception {
       if (!ctx.channel().isOpen()) {
         return;
       }
@@ -318,7 +316,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
           break;
 
         case PONG:
-          // noop.
+          ctx.fireUserEventTriggered(RpcMode.PONG);
           break;
 
         default:

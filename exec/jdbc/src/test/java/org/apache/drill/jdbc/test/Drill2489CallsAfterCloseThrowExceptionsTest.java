@@ -294,9 +294,14 @@ public class Drill2489CallsAfterCloseThrowExceptionsTest extends JdbcTestBase {
      * Reports whether it's okay if given method didn't throw any exception.
      */
     protected boolean isOkayNonthrowingMethod(Method method) {
-       return
-           "isClosed".equals(method.getName())
-           || "close".equals(method.getName());
+       switch (method.getName()) {
+         case "isClosed":
+         case "close":
+         case "isValid":
+           return true;
+         default:
+           return false;
+       }
     }
 
     /**

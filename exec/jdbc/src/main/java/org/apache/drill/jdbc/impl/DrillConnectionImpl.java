@@ -168,7 +168,7 @@ public class DrillConnectionImpl extends AvaticaConnection implements DrillConne
         throw new SQLException("Failure in creating DrillConnectionImpl: " + e, e);
       }
     } catch (Throwable t) {
-      cleanup();
+      close();
       throw t;
     }
   }
@@ -248,7 +248,11 @@ public class DrillConnectionImpl extends AvaticaConnection implements DrillConne
   @Override
   public boolean isClosed() {
     try {
-      return super.isClosed();
+      if (super.isClosed()) {
+        return true;
+      } else {
+        return client != null ? !client.connectionIsActive() : false;
+      }
     } catch (SQLException e) {
       // Currently can't happen, since AvaticaConnection.isClosed() never throws
       // SQLException.
@@ -520,8 +524,11 @@ public class DrillConnectionImpl extends AvaticaConnection implements DrillConne
 
   @Override
   public boolean isValid(int timeout) throws SQLException {
-    checkOpen();
-    return super.isValid(timeout);
+    if (timeout < 0) {
+      throw new SQLException(String.format("Invalid timeout (%d<0).", timeout));
+    }
+    return !isClosed()
+      && client.hasPing(timeout);
   }
 
   @Override
@@ -625,8 +632,9 @@ public class DrillConnectionImpl extends AvaticaConnection implements DrillConne
     }
   }
 
-  // TODO this should be an AutoCloseable, and this should be close()
-  void cleanup() {
+  @Override
+  public void close() throws SQLException {
+    super.close();
     // First close any open JDBC Statement objects, to close any open ResultSet
     // objects and release their buffers/vectors.
     openStatementsRegistry.close();

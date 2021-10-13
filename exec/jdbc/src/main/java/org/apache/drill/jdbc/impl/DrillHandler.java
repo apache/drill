@@ -30,8 +30,6 @@ public class DrillHandler implements Handler {
 
   @Override
   public void onConnectionClose(AvaticaConnection c) throws RuntimeException {
-    DrillConnectionImpl connection = (DrillConnectionImpl) c;
-    connection.cleanup();
   }
 
   @Override
