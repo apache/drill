@@ -34,6 +34,7 @@ public class RpcConstants {
   public static final String MESSAGE_HANDLER = "message-handler";
   public static final String EXCEPTION_HANDLER = "exception-handler";
   public static final String IDLE_STATE_HANDLER = "idle-state-handler";
+  public static final String HEARTBEAT_HANDLER = "heartbeat-handler";
   public static final String SASL_DECRYPTION_HANDLER = "sasl-decryption-handler";
   public static final String SASL_ENCRYPTION_HANDLER = "sasl-encryption-handler";
   public static final String LENGTH_DECODER_HANDLER = "length-decoder";
