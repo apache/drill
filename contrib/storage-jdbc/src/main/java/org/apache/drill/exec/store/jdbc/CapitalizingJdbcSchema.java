@@ -137,6 +137,13 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
   @Override
   public void dropTable(String tableName) {
+    if (! plugin.getConfig().isWritable()) {
+      throw UserException
+        .dataWriteError()
+        .message(plugin.getName() + " is not writable.")
+        .build(logger);
+    }
+
     String tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(tableName, catalog, schema);
     String dropTableQuery = String.format("DROP TABLE %s", tableWithSchema);
     dropTableQuery = JdbcDDLQueryUtils.cleanDDLQuery(dropTableQuery, plugin.getDialect());
@@ -162,7 +169,7 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
   @Override
   public boolean isMutable() {
-    return true;
+    return plugin.getConfig().isWritable();
   }
 
   @Override
