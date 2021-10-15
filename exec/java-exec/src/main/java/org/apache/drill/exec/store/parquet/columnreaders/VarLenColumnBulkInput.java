@@ -115,7 +115,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
         // read.
         if (!overflowDataAvailable()) {
           // We need to ensure there is a page of data to be read
-          if (!parentInst.pageReader.hasPage() || parentInst.pageReader.currentPageCount == oprReadState.numPageFieldsProcessed) {
+          if (!parentInst.pageReader.hasPage() || parentInst.pageReader.pageValueCount == oprReadState.numPageFieldsProcessed) {
             long totalValueCount = parentInst.columnChunkMetaData.getValueCount();
 
             if (totalValueCount == (parentInst.totalValuesRead + oprReadState.batchNumValuesReadFromPages)
@@ -233,11 +233,11 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
   }
 
   private final void setValuesReadersOnNewPage() {
-    if (parentInst.pageReader.currentPageCount > 0) {
-      custDefLevelReader.set(parentInst.pageReader.definitionLevels, parentInst.pageReader.currentPageCount);
+    if (parentInst.pageReader.pageValueCount > 0) {
+      custDefLevelReader.set(parentInst.pageReader.definitionLevels, parentInst.pageReader.pageValueCount);
       if (parentInst.usingDictionary) {
-        assert parentInst.pageReader.dictionaryValueReader != null : "Dictionary reader should not be null";
-        custDictionaryReader.set(parentInst.pageReader.dictionaryValueReader);
+        assert parentInst.pageReader.getDictionaryValueReader() != null : "Dictionary reader should not be null";
+        custDictionaryReader.set(parentInst.pageReader.getDictionaryValueReader());
       } else {
         custDictionaryReader.set(null);
       }
@@ -249,14 +249,14 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
 
   private final void setBufferedPagePayload() {
 
-    if (parentInst.pageReader.hasPage() && oprReadState.numPageFieldsProcessed < parentInst.pageReader.currentPageCount) {
+    if (parentInst.pageReader.hasPage() && oprReadState.numPageFieldsProcessed < parentInst.pageReader.pageValueCount) {
       if (!parentInst.usingDictionary) {
         pageInfo.pageData  = parentInst.pageReader.pageData;
         pageInfo.pageDataOff = (int) oprReadState.pageReadPos;
         pageInfo.pageDataLen = (int) parentInst.pageReader.byteLength;
       }
 
-      pageInfo.numPageValues = parentInst.pageReader.currentPageCount;
+      pageInfo.numPageValues = parentInst.pageReader.pageValueCount;
       pageInfo.definitionLevels = custDefLevelReader;
       pageInfo.dictionaryValueReader = custDictionaryReader;
       pageInfo.numPageFieldsRead = oprReadState.numPageFieldsProcessed;
@@ -442,7 +442,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
     // This method remainder semantic depends on whether we are dealing with page data or
     // overflow data; now that overflow data is behaving like a source of input
     if (remainingOverflowData == 0) {
-      final int pageRemaining = parentInst.pageReader.currentPageCount - oprReadState.numPageFieldsProcessed;
+      final int pageRemaining = parentInst.pageReader.pageValueCount - oprReadState.numPageFieldsProcessed;
       remaining               = Math.min(toReadRemaining, pageRemaining);
 
     } else {
@@ -599,7 +599,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
     /**
      * @return current page definition level
      */
-    ValuesReader getDefinitionLevelsReader() {
+    PageReader.IntIterator getDefinitionLevelsReader() {
       return pageReader.definitionLevels;
     }
 
@@ -623,7 +623,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
   /** A wrapper value reader with the ability to control when to read the next value */
   final static class DefLevelReaderWrapper {
     /** Definition Level */
-    private ValuesReader definitionLevels;
+    private PageReader.IntIterator definitionLevels;
     /** Peeked value     */
     private int currValue;
     /** Remaining values */
@@ -654,7 +654,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
      * @param definitionLevels {@link ValuesReader} object
      * @param numValues total number of values that can be read from the stream
      */
-    void set(ValuesReader definitionLevels, int numValues) {
+    void set(PageReader.IntIterator definitionLevels, int numValues) {
       this.definitionLevels = definitionLevels;
       this.currValue = -1;
       this.remaining = numValues;
@@ -679,11 +679,11 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
 
     /**
      * @return underlying reader object; this object is now unusable
-     *         note that you have to invoke the {@link #set(ValuesReader, int)} method
-     *         to update this object state in case a) you have used the {@link ValuesReader} object and b)
+     *         note that you have to invoke the {@link #set(PageReader.IntIterator, int)} method
+     *         to update this object state in case a) you have used the {@link PageReader.IntIterator} object and b)
      *         want to resume using this {@link DefLevelReaderWrapper} object instance
      */
-    public ValuesReader getUnderlyingReader() {
+    public PageReader.IntIterator getUnderlyingReader() {
       currValue = -1; // to make this object unusable
       return definitionLevels;
     }
@@ -692,7 +692,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
       if (remaining > 0) {
         --remaining;
         try {
-          currValue = definitionLevels.readInteger();
+          currValue = definitionLevels.nextInt();
         } catch (Exception e) {
           throw new RuntimeException(e);
         }

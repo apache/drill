@@ -20,6 +20,10 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -30,6 +34,7 @@ import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.column.Encoding;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.schema.PrimitiveType;
@@ -37,6 +42,11 @@ import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 
 public abstract class ColumnReader<V extends ValueVector> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnReader.class);
+  protected static final Set<Encoding> VALUE_DECODING_REQUIRED = new HashSet<>(Arrays.asList(
+    Encoding.DELTA_BINARY_PACKED,
+    Encoding.DELTA_BYTE_ARRAY,
+    Encoding.DELTA_LENGTH_BYTE_ARRAY
+  ));
 
   final ParquetRecordReader parentReader;
 
@@ -207,6 +217,10 @@ public abstract class ColumnReader<V extends ValueVector> {
       throw new UnsupportedOperationException();
   }
 
+  protected boolean recordsRequireDecoding() {
+    return usingDictionary || !Collections.disjoint(VALUE_DECODING_REQUIRED, columnChunkMetaData.getEncodings());
+  }
+
   protected boolean processPageData(int recordsToReadInThisPass) throws IOException {
     readValues(recordsToReadInThisPass);
     return true;
@@ -246,10 +260,10 @@ public abstract class ColumnReader<V extends ValueVector> {
    */
   public boolean readPage() throws IOException {
     if (!pageReader.hasPage()
-        || totalValuesReadAndReadyToReadInPage() == pageReader.currentPageCount) {
+        || totalValuesReadAndReadyToReadInPage() == pageReader.pageValueCount) {
       readRecords(pageReader.valuesReadyToRead);
       if (pageReader.hasPage()) {
-        totalValuesRead += pageReader.currentPageCount;
+        totalValuesRead += pageReader.pageValueCount;
       }
       if (!pageReader.next()) {
         hitRowGroupEnd();

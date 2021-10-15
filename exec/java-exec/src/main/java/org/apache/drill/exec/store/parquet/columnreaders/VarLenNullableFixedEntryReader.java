@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.ColumnPrecisionInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.PageDataInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.VarLenColumnBulkInputCallback;
-import org.apache.parquet.column.values.ValuesReader;
 
 /** Handles nullable fixed data types that have been erroneously tagged as Variable Length. */
 final class VarLenNullableFixedEntryReader extends VarLenAbstractPageEntryReader {
@@ -39,7 +38,7 @@ final class VarLenNullableFixedEntryReader extends VarLenAbstractPageEntryReader
 
   /** {@inheritDoc} */
   @Override
-  final VarLenColumnBulkEntry getEntry(int valuesToRead) {
+  VarLenColumnBulkEntry getEntry(int valuesToRead) {
     // TODO - We should not use force reload for sparse columns (values with lot of nulls)
     load(true); // load new data to process
 
@@ -56,10 +55,10 @@ final class VarLenNullableFixedEntryReader extends VarLenAbstractPageEntryReader
 
     // Fixed precision processing can directly operate on the raw definition-level reader as no peeking
     // is needed.
-    final ValuesReader definitionLevels = pageInfo.definitionLevels.getUnderlyingReader();
+    final PageReader.IntIterator definitionLevels = pageInfo.definitionLevels.getUnderlyingReader();
 
     for ( ; idx < readBatch; ++idx) {
-      if (definitionLevels.readInteger() == 1) {
+      if (definitionLevels.nextInt() == 1) {
 
         final int currPos = nonNullValues * entrySz;
         final int dataLen = getInt(srcBuff, currPos);

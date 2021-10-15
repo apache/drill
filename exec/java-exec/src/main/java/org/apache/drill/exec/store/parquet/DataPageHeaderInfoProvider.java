@@ -66,13 +66,10 @@ public interface DataPageHeaderInfoProvider {
     }
 
     @Override
-    public Encoding getDefinitionLevelEncoding() {
-      return Encoding.PLAIN;
-    }
+    public Encoding getDefinitionLevelEncoding() { return Encoding.RLE; }
+
     @Override
-    public Encoding getRepetitionLevelEncoding() {
-      return Encoding.PLAIN;
-    }
+    public Encoding getRepetitionLevelEncoding() { return Encoding.RLE; }
 
     @Override
     public Statistics getStatistics() {

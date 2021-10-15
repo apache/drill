@@ -138,7 +138,7 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
     // re-purposing this field here for length in BYTES to prevent repetitive multiplication/division
     if (usingDictionary) {
       if (currLengthDeterminingDictVal == null) {
-        currLengthDeterminingDictVal = pageReader.dictionaryLengthDeterminingReader.readBytes();
+        currLengthDeterminingDictVal = pageReader.getDictionaryLengthDeterminingReader().readBytes();
       }
       currDictValToWrite = currLengthDeterminingDictVal;
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division

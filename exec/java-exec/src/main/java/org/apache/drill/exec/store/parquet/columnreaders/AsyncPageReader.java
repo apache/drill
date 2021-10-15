@@ -306,9 +306,9 @@ class AsyncPageReader extends PageReader {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     } catch (RuntimeException e) { // Catch this explicitly to satisfy findbugs
-      handleAndThrowException(e, "Error reading page data");
+      throwUserException(e, "Error reading page data");
     } catch (Exception e) {
-      handleAndThrowException(e, "Error reading page data");
+      throwUserException(e, "Error reading page data");
     }
   }
 
@@ -517,7 +517,7 @@ class AsyncPageReader extends PageReader {
         if (pageData != null) {
           pageData.release();
         }
-        parent.handleAndThrowException(e, "Exception occurred while reading from disk.");
+        parent.throwUserException(e, "Exception occurred while reading from disk.");
       } finally {
         //Nothing to do if isShuttingDown.
     }

@@ -33,7 +33,7 @@ final class BitReader extends ColumnReader<BitVector> {
   @Override
   protected void readField(long recordsToReadInThisPass) {
 
-    recordsReadInThisIteration = Math.min(pageReader.currentPageCount
+    recordsReadInThisIteration = Math.min(pageReader.pageValueCount
         - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
 
     // A more optimized reader for bit columns was removed to fix the bug
@@ -52,7 +52,7 @@ final class BitReader extends ColumnReader<BitVector> {
     // by value reader provided by the parquet library.
     for (int i = 0; i < recordsReadInThisIteration; i++){
       valueVec.getMutator().setSafe(i + valuesReadInCurrentPass,
-            pageReader.valueReader.readBoolean() ? 1 : 0 );
+            pageReader.getValueReader().readBoolean() ? 1 : 0 );
     }
   }
 }

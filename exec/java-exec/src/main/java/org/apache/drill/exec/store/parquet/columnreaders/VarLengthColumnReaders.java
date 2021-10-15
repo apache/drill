@@ -55,7 +55,7 @@ public final class VarLengthColumnReaders {
         return false;
       }
       if (usingDictionary) {
-        currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+        currDictValToWrite = pageReader.getDictionaryValueReader().readBytes();
         ByteBuffer buf = currDictValToWrite.toByteBuffer();
         mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
       } else {
@@ -148,7 +148,7 @@ public final class VarLengthColumnReaders {
       }
 
       if (usingDictionary) {
-        currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+        currDictValToWrite = pageReader.getDictionaryValueReader().readBytes();
         ByteBuffer buf = currDictValToWrite.toByteBuffer();
         mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
       } else {
@@ -244,7 +244,7 @@ public final class VarLengthColumnReaders {
       }
 
       if (usingDictionary) {
-        currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+        currDictValToWrite = pageReader.getDictionaryValueReader().readBytes();
         ByteBuffer buf = currDictValToWrite.toByteBuffer();
         mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
       } else {
