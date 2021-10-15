@@ -39,6 +39,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
+import static org.junit.Assert.assertEquals;
 
 @Category(RowSetTests.class)
 public class TestFixedwidthRecordReader extends ClusterTest {
@@ -98,20 +99,82 @@ public class TestFixedwidthRecordReader extends ClusterTest {
   }
 
   //Test Serialization/Deserialization
+  @Test
+  public void testSerDe() throws Exception {
+    String sql = "SELECT COUNT(*) FROM dfs.`fwf/test.fwf`";
+    String plan = queryBuilder().sql(sql).explainJson();
+    long cnt = queryBuilder().physical(plan).singletonLong();
+    assertEquals(5L, cnt);
+  }
 
-  //Test Compressed File
   @Test
   public void testStarQueryWithCompressedFile() throws Exception {
     generateCompressedFile("fwf/test.fwf", "zip", "fwf/test.fwf.zip" );
 
     String sql = "SELECT * FROM dfs.`fwf/test.fwf.zip`";
-    System.out.println("Compressed file generated");
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     RowSet expected = setupTestData();
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   // Test Entering invalid schemata - incorrect limits
+    // Undefined field, what happens
+    // Parse invalid file, make sure correct error
+
+
+  @Test
+  public void testOutOfOrder() throws Exception{
+    String sql = "SELECT Address, DateTime, `Date`, Letter FROM cp.`fwf/test.fwf`";
+    QueryBuilder q = client.queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Address", TypeProtos.MinorType.INT)
+      .addNullable("DateTime", TypeProtos.MinorType.TIMESTAMP)
+      .addNullable("Date", TypeProtos.MinorType.DATE)
+      .addNullable("Letter", TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(567, Instant.parse("2021-02-10T15:30:27.00Z"), LocalDate.parse("2021-02-10"), "test")
+      .addRow(890, Instant.parse("2021-07-27T16:40:15.00Z"), LocalDate.parse("2021-07-27"), "TEST")
+      .addRow(111, Instant.parse("1111-11-11T16:28:43.11Z"), LocalDate.parse("1111-11-11"), "abcd")
+      .addRow(222, Instant.parse("2222-01-23T03:22:22.22Z"), LocalDate.parse("2222-01-22"), "efgh")
+      .addRow(333, Instant.parse("3333-02-01T06:33:33.33Z"), LocalDate.parse("3333-02-01"), "ijkl")
+      .addRow(444, Instant.parse("4444-03-02T07:44:44.44Z"), LocalDate.parse("4444-03-02"), "mnop")
+      .addRow(555, Instant.parse("5555-04-03T07:55:55.55Z"), LocalDate.parse("5555-04-03"), "qrst")
+      .addRow(666, Instant.parse("6666-05-04T08:01:01.01Z"), LocalDate.parse("6666-05-04"), "uvwx")
+      .addRow(777, Instant.parse("7777-06-05T09:11:11.11Z"), LocalDate.parse("7777-06-05"), "yzzz")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .addRow(888, Instant.parse("8888-07-07T10:22:22.22Z"), LocalDate.parse("8888-07-06"), "aabb")
+      .build();
+
+      new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  // How should we be handling an empty/blank row?
+  @Test
+  public void testEmptyRow() throws Exception {
+    String sql = "SELECT * FROM cp.`fwf/test_blankrow.fwf`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    RowSet expected = setupTestData();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  //
 
   private RowSet setupTestData(){
     TupleMetadata expectedSchema = new SchemaBuilder()
