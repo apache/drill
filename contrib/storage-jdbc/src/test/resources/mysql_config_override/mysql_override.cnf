@@ -1,2 +1,3 @@
 [mysqld]
 tls_version=TLSv1.2
+max_allowed_packet=15144486

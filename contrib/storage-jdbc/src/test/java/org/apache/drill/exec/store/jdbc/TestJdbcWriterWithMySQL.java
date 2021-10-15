@@ -31,6 +31,7 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.apache.hadoop.fs.Path;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -44,11 +45,13 @@ import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.utility.DockerImageName;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.TimeZone;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -66,9 +69,9 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
   @BeforeClass
   public static void initMysql() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
+    dirTestWatcher.copyResourceToRoot(Paths.get(""));
 
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    dirTestWatcher.copyResourceToRoot(Paths.get("json/"));
     String osName = System.getProperty("os.name").toLowerCase();
     String mysqlDBName = "drill_mysql_test";
 
@@ -443,7 +446,7 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: mysql_no_write is not writable"));
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [mysql_no_write.drill_mysql_test] is immutable."));
     }
 
     try {
@@ -451,7 +454,59 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: mysql_no_write is not writable"));
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [mysql_no_write.drill_mysql_test] is immutable."));
+    }
+  }
+
+  @Test
+  public void testWithLargeFile() throws Exception {
+    String query = "CREATE TABLE mysql.`drill_mysql_test`.test (id,first_name,last_name,email,gender,ip_address) AS " +
+      "SELECT id,first_name,last_name,email,gender,ip_address FROM cp.`csv/large_csv.csvh`";
+    QuerySummary insertResults = queryBuilder().sql(query).run();
+    assertTrue(insertResults.succeeded());
+
+    query = "SELECT COUNT(*) FROM mysql.`drill_mysql_test`.test";
+    long rowCount = queryBuilder().sql(query).singletonLong();
+    assertEquals(6000, rowCount);
+
+    // Now drop the table
+    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`test`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+  }
+
+  @Test
+  @Ignore("This is a slow test.  Please run manually.")
+  public void testWithReallyLongFile() throws Exception {
+    Path generatedFile = null;
+    try {
+      generatedFile = JdbcTestUtils.generateCsvFile("csv/very_large_file.csvh", 10, 100000);
+    } catch (IOException e) {
+      logger.error(e.getMessage());
+      fail();
+    }
+    // Query the table to see if the insertion was successful
+    String testQuery = "SELECT COUNT(*) FROM dfs.`csv/very_large_file.csvh`";
+    long resultsCount = queryBuilder().sql(testQuery).singletonLong();
+    assertEquals(100000, resultsCount);
+
+    String ctasQuery = "CREATE TABLE mysql.`drill_mysql_test`.`test_big_table` AS " +
+      "SELECT * FROM dfs.`csv/very_large_file.csvh`";
+    QuerySummary insertResults = queryBuilder().sql(ctasQuery).run();
+    assertTrue(insertResults.succeeded());
+
+    // Query the table to see if the insertion was successful
+    testQuery = "SELECT COUNT(*) FROM mysql.`drill_mysql_test`.`test_big_table`";
+    resultsCount = queryBuilder().sql(testQuery).singletonLong();
+    assertEquals(100000, resultsCount);
+
+    String dropQuery = "DROP TABLE mysql.`drill_mysql_test`.`test_big_table`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+
+    boolean deletedFile = JdbcTestUtils.deleteCsvFile(String.valueOf(generatedFile));
+    if (!deletedFile) {
+      fail();
     }
   }
 

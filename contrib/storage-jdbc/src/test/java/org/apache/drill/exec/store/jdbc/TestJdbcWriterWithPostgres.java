@@ -31,14 +31,18 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.apache.hadoop.fs.Path;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.TimeZone;
@@ -56,6 +60,8 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
   @BeforeClass
   public static void initPostgres() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
+    dirTestWatcher.copyResourceToRoot(Paths.get(""));
+
     String postgresDBName = "drill_postgres_test";
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
@@ -196,7 +202,7 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
   @Test
   public void testWithLargeFile() throws Exception {
     String query = "CREATE TABLE pg.public.test (id,first_name,last_name,email,gender,ip_address) AS " +
-      "SELECT id,first_name,last_name,email,gender,ip_address FROM cp.`large_csv.csvh`";
+      "SELECT id,first_name,last_name,email,gender,ip_address FROM cp.`csv/large_csv.csvh`";
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
@@ -208,6 +214,40 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
     String dropQuery = "DROP TABLE pg.public.`test`";
     QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
     assertTrue(dropResults.succeeded());
+  }
+
+  @Test
+  @Ignore("This is a slow test.  Please run manually.")
+  public void testWithReallyLongFile() throws Exception {
+    Path generatedFile = null;
+    try {
+      generatedFile = JdbcTestUtils.generateCsvFile("csv/very_large_file.csvh", 10, 100000);
+    } catch (IOException e) {
+      fail();
+    }
+    // Query the table to see if the insertion was successful
+    String testQuery = "SELECT COUNT(*) FROM dfs.`csv/very_large_file.csvh`";
+    long resultsCount = queryBuilder().sql(testQuery).singletonLong();
+    assertEquals(100000, resultsCount);
+
+    String ctasQuery = "CREATE TABLE pg.public.`test_big_table` AS " +
+      "SELECT * FROM dfs.`csv/very_large_file.csvh`";
+    QuerySummary insertResults = queryBuilder().sql(ctasQuery).run();
+    assertTrue(insertResults.succeeded());
+
+    // Query the table to see if the insertion was successful
+    testQuery = "SELECT COUNT(*) FROM pg.public.`test_big_table`";
+    resultsCount = queryBuilder().sql(testQuery).singletonLong();
+    assertEquals(100000, resultsCount);
+
+    String dropQuery = "DROP TABLE pg.public.`test_big_table`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+
+    boolean deletedFile = JdbcTestUtils.deleteCsvFile(String.valueOf(generatedFile));
+    if (!deletedFile) {
+      fail();
+    }
   }
 
   @Test
@@ -395,7 +435,7 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: pg_unwritable is not writable"));
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [pg_unwritable.public] is immutable."));
     }
 
     try {
@@ -403,7 +443,7 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: pg_unwritable is not writable"));
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [pg_unwritable.public] is immutable."));
     }
   }
 }

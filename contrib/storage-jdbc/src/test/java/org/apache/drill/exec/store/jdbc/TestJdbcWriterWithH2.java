@@ -31,12 +31,15 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.apache.hadoop.fs.Path;
 import org.h2.tools.RunScript;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
 import java.io.FileReader;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -47,21 +50,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class TestJdbcWriterWithH2 extends ClusterTest {
 
-  private static final String TABLE_PATH = "jdbcmulti/";
-
   @BeforeClass
   public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
     // Force timezone to UTC for these tests.
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    dirTestWatcher.copyResourceToRoot(Paths.get(""));
 
-    dirTestWatcher.copyResourceToRoot(Paths.get(TABLE_PATH));
     Class.forName("org.h2.Driver");
     String connString = "jdbc:h2:" + dirTestWatcher.getTmpDir().getCanonicalPath();
     URL scriptFile = TestJdbcPluginWithH2IT.class.getClassLoader().getResource("h2-test-data.sql");
@@ -371,13 +373,64 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
   }
 
   @Test
+  public void testWithLargeFile() throws Exception {
+    String query = "CREATE TABLE h2.tmp.`drill_h2_test`.`t2` (id,first_name,last_name,email,gender,ip_address) AS " +
+      "SELECT id,first_name,last_name,email,gender,ip_address FROM cp.`csv/large_csv.csvh`";
+    QuerySummary insertResults = queryBuilder().sql(query).run();
+    assertTrue(insertResults.succeeded());
+
+    query = "SELECT COUNT(*) FROM h2.tmp.`drill_h2_test`.`t2`";
+    long rowCount = queryBuilder().sql(query).singletonLong();
+    assertEquals(6000, rowCount);
+
+    // Now drop the table
+    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`t2`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+  }
+
+  @Test
+  @Ignore("This is a slow test.  Please run manually.")
+  public void testWithReallyLongFile() throws Exception {
+    Path generatedFile = null;
+    try {
+      generatedFile = JdbcTestUtils.generateCsvFile("csv/very_large_file.csvh", 10, 100000);
+    } catch (IOException e) {
+      fail();
+    }
+    // Query the table to see if the insertion was successful
+    String testQuery = "SELECT COUNT(*) FROM dfs.`csv/very_large_file.csvh`";
+    long resultsCount = queryBuilder().sql(testQuery).singletonLong();
+    assertEquals(100000, resultsCount);
+
+    String ctasQuery = "CREATE TABLE h2.tmp.`drill_h2_test`.`t2` AS " +
+      "SELECT * FROM dfs.`csv/very_large_file.csvh`";
+    QuerySummary insertResults = queryBuilder().sql(ctasQuery).run();
+    assertTrue(insertResults.succeeded());
+
+    // Query the table to see if the insertion was successful
+    testQuery = "SELECT COUNT(*) FROM h2.tmp.`drill_h2_test`.`t2`";
+    resultsCount = queryBuilder().sql(testQuery).singletonLong();
+    assertEquals(100000, resultsCount);
+
+    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`t2`";
+    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+    assertTrue(dropResults.succeeded());
+
+    boolean deletedFile = JdbcTestUtils.deleteCsvFile(String.valueOf(generatedFile));
+    if (!deletedFile) {
+      fail();
+    }
+  }
+
+  @Test
   public void testUnwritableConnection() throws Exception {
     try {
       String query = "CREATE TABLE IF NOT EXISTS h2o_unwritable.tmp.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: h2o_unwritable is not writable"));
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [h2o_unwritable.tmp] is immutable."));
     }
 
     try {
@@ -385,7 +438,7 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("DATA_WRITE ERROR: h2o_unwritable is not writable"));
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [h2o_unwritable.tmp] is immutable."));
     }
   }
 }

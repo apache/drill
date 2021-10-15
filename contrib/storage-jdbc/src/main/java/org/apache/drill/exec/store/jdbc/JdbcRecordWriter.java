@@ -273,7 +273,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       // Close connection
       AutoCloseables.closeSilently(stmt, connection);
     } catch (SQLException e) {
-      logger.error("Error: {} ", e.getMessage());
+      logger.error("Error: {} {} {}", e.getMessage(), e.getSQLState(), e.getErrorCode());
       throw new IOException();
     }
   }
