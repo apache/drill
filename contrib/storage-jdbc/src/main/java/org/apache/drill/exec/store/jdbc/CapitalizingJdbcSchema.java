@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.SchemaPlus;
@@ -59,12 +58,12 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
   public CapitalizingJdbcSchema(List<String> parentSchemaPath, String name,
                           DataSource dataSource,
-                         SqlDialect dialect, JdbcConvention convention, String catalog, String schema, boolean caseSensitive, JdbcStoragePlugin plugin) {
+                         SqlDialect dialect, DrillJdbcConvention convention, String catalog, String schema, boolean caseSensitive) {
     super(parentSchemaPath, name);
     this.schemaMap = new HashMap<>();
     this.inner = new JdbcSchema(dataSource, dialect, convention, catalog, schema);
     this.caseSensitive = caseSensitive;
-    this.plugin = plugin;
+    this.plugin = convention.getPlugin();
     this.schema = schema;
     this.catalog = catalog;
   }

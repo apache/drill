@@ -56,7 +56,7 @@ class JdbcCatalogSchema extends AbstractSchema {
       while (set.next()) {
         final String catalogName = set.getString(1);
         CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(
-            getSchemaPath(), catalogName, source, dialect, convention, catalogName, null, caseSensitive, convention.getPlugin());
+            getSchemaPath(), catalogName, source, dialect, convention, catalogName, null, caseSensitive);
         schemaMap.put(schema.getName(), schema);
       }
     } catch (SQLException e) {
@@ -71,8 +71,8 @@ class JdbcCatalogSchema extends AbstractSchema {
 
       if (!schemasAdded) {
         // there were no schemas, just create a default one (the jdbc system doesn't support catalogs/schemas).
-        schemaMap.put(SchemaFactory.DEFAULT_WS_NAME, new CapitalizingJdbcSchema(Collections.emptyList(), name, source, dialect, convention, null, null, caseSensitive,
-          convention.getPlugin()));
+        schemaMap.put(SchemaFactory.DEFAULT_WS_NAME, new CapitalizingJdbcSchema(Collections.emptyList(), name, source, dialect,
+          convention, null, null, caseSensitive));
       }
     } else {
       // We already have catalogs. Add schemas in this context of their catalogs.
@@ -111,14 +111,14 @@ class JdbcCatalogSchema extends AbstractSchema {
         CapitalizingJdbcSchema parentSchema = schemaMap.get(parentKey);
         if (parentSchema == null) {
           CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(getSchemaPath(), schemaName, source, dialect,
-              convention, catalogName, schemaName, caseSensitive, convention.getPlugin());
+              convention, catalogName, schemaName, caseSensitive);
 
           // if a catalog schema doesn't exist, we'll add this at the top level.
           schemaMap.put(schema.getName(), schema);
         } else {
           CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(parentSchema.getSchemaPath(), schemaName,
               source, dialect,
-              convention, catalogName, schemaName, caseSensitive, convention.getPlugin());
+              convention, catalogName, schemaName, caseSensitive);
           parentSchema.addSubSchema(schema);
         }
         added = true;
