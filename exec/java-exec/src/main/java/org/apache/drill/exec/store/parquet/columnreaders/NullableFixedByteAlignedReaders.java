@@ -324,7 +324,7 @@ public class NullableFixedByteAlignedReaders {
     protected void readField(long recordsToReadInThisPass) {
       ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
       for (int i = 0; i < recordsToReadInThisPass; i++){
-        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger());
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readFloat());
       }
       advanceWriterIndex();
     }
@@ -343,7 +343,7 @@ public class NullableFixedByteAlignedReaders {
     protected void readField(long recordsToReadInThisPass) {
       ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
       for (int i = 0; i < recordsToReadInThisPass; i++){
-        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger());
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readDouble());
       }
       advanceWriterIndex();
     }
