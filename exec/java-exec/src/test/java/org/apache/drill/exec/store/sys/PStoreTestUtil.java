@@ -21,58 +21,66 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import lombok.val;
 
 public class PStoreTestUtil {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PStoreTestUtil.class);
 
-  public static void test(PersistentStoreProvider provider) throws Exception{
-    PersistentStore<String> store = provider.getOrCreateStore(PersistentStoreConfig.newJacksonBuilder(new ObjectMapper(), String.class).name("sys.test").build());
-    String[] keys = {"first", "second"};
-    String[] values = {"value1", "value2"};
-    Map<String, String> expectedMap = Maps.newHashMap();
+  public static void test(PersistentStoreProvider provider) throws Exception {
+    val store = provider.getOrCreateStore(
+      PersistentStoreConfig.newJacksonBuilder(new ObjectMapper(), String.class)
+        .name("sys.test")
+        .build()
+    );
+    try {
+      val expectedMap = new HashMap<String, String>() {{
+        put("first", "value1");
+        put("second", "value2");
+      }}; // todo: rewrite with Java11
+      expectedMap.forEach(store::put);
+      waitForNumProps(store, expectedMap.size());
 
-    for(int i =0; i < keys.length; i++){
-      expectedMap.put(keys[i], values[i]);
-      store.put(keys[i], values[i]);
-    }
-
-    // Wait for store caches to update, this is necessary because ZookeeperClient caches can update asynchronously in some cases.
-    waitForNumProps(store, keys.length);
-
-    {
       Iterator<Map.Entry<String, String>> iter = store.getAll();
-      for(int i =0; i < keys.length; i++){
-        Entry<String, String> e = iter.next();
-        assertTrue(expectedMap.containsKey(e.getKey()));
-        assertEquals(expectedMap.get(e.getKey()), e.getValue());
+      for(int i =0; i < expectedMap.size(); i++) {
+        Entry<String, String> storeEntry = iter.next();
+
+        assertTrue(String.format("This element wasn't added to PStore, storeEntry: %s", storeEntry),
+          expectedMap.containsKey(storeEntry.getKey()));
+
+        String expectedValue = expectedMap.get(storeEntry.getKey());
+        assertEquals(String.format("The value is different in PStore for this key: %s. Expected value: %s, Actual: %s",
+          storeEntry.getKey(), expectedValue, storeEntry.getValue()), expectedValue, storeEntry.getValue());
       }
 
       assertFalse(iter.hasNext());
-    }
-
-    {
+    } finally {
       Iterator<Map.Entry<String, String>> iter = store.getAll();
-      while(iter.hasNext()){
+      while(iter.hasNext()) {
         final String key = iter.next().getKey();
         store.delete(key);
       }
-    }
 
-    // Wait for store caches to update, this is necessary because ZookeeperClient caches can update asynchronously in some cases.
-    waitForNumProps(store, 0);
-    assertFalse(store.getAll().hasNext());
+      waitForNumProps(store, 0);
+      assertFalse(store.getAll().hasNext());
+    }
   }
 
+  /**
+   * Wait for store caches to update, this is necessary because ZookeeperClient caches can update asynchronously
+   * in some cases.
+   *
+   * @param store PersistentStore
+   * @param expected num props
+   * @throws InterruptedException will fail this test once arises
+   */
   private static void waitForNumProps(PersistentStore store, int expected) throws InterruptedException {
-    for (int numProps = getNumProps(store);
-         numProps < expected;
-         numProps = getNumProps(store)) {
+    while(getNumProps(store) < expected) {
       Thread.sleep(100L);
     }
   }

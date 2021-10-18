@@ -69,8 +69,6 @@ public class ZookeeperHelper {
     if (failureInCancelled) {
       overrideProps.setProperty(ExecConstants.RETURN_ERROR_FOR_FAILURE_IN_CANCELLED_FRAGMENTS, "true");
     }
-//    overrideProps.setProperty(ExecConstants.BIT_SERVER_RPC_THREADS, "1"); // test DRILL-3192 condition
-//    overrideProps.put(ExecConstants.BIT_SERVER_RPC_THREADS, "16"); // test DRILL-3192 condition
     config = DrillConfig.create(overrideProps);
 
     if (!autoPort) {

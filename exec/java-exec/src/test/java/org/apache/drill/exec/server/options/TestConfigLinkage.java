@@ -27,7 +27,6 @@ import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,7 +42,6 @@ import static org.junit.Assert.assertEquals;
  * */
 
 @Category({OptionsTest.class, SlowTest.class})
-@Ignore // test whether this test affect the TestDrillbitResilience one
 public class TestConfigLinkage extends BaseTest {
   public static final String MOCK_PROPERTY = "mock.prop";
 

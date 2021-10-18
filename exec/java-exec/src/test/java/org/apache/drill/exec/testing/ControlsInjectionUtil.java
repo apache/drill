@@ -187,6 +187,6 @@ public class ControlsInjectionUtil {
    * Clears all the controls.
    */
   public static void clearControls(final DrillClient client) {
-    setControls(client, ExecutionControls.DEFAULT_CONTROLS);
+    setControls(client, ExecutionControls.EMPTY_CONTROLS);
   }
 }

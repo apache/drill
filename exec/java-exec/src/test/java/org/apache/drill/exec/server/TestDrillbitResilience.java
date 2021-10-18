@@ -113,6 +113,7 @@ public class TestDrillbitResilience extends ClusterTest {
   private static final int NUM_RUNS = 3;
   private static final int PROBLEMATIC_TEST_NUM_RUNS = 3;
   private static final int TIMEOUT = 10;
+  private final static Level CURRENT_LOG_LEVEL = Level.INFO;
 
   /**
    * Note: Counting sys.memory executes a fragment on every drillbit. This is a better check in comparison to
@@ -131,15 +132,15 @@ public class TestDrillbitResilience extends ClusterTest {
   public static void startSomeDrillbits() throws Exception {
     logFixture = LogFixture.builder()
       .toConsole()
-      .logger(TestDrillbitResilience.class, Level.DEBUG)
-      .logger(DrillClient.class, Level.DEBUG)
-      .logger(QueryStateProcessor.class, Level.INFO)
-      .logger(WorkManager.class, Level.DEBUG)
-      .logger(UnorderedReceiverBatch.class, Level.DEBUG)
-      .logger(ExtendedLatch.class, Level.DEBUG)
-      .logger(Foreman.class, Level.DEBUG)
-      .logger(QueryStateProcessor.class, Level.DEBUG)
-      .logger(ExecutionControlsInjector.class, Level.DEBUG)
+      .logger(TestDrillbitResilience.class, CURRENT_LOG_LEVEL)
+      .logger(DrillClient.class, CURRENT_LOG_LEVEL)
+      .logger(QueryStateProcessor.class, CURRENT_LOG_LEVEL)
+      .logger(WorkManager.class, CURRENT_LOG_LEVEL)
+      .logger(UnorderedReceiverBatch.class, CURRENT_LOG_LEVEL)
+      .logger(ExtendedLatch.class, CURRENT_LOG_LEVEL)
+      .logger(Foreman.class, CURRENT_LOG_LEVEL)
+      .logger(QueryStateProcessor.class, CURRENT_LOG_LEVEL)
+      .logger(ExecutionControlsInjector.class, CURRENT_LOG_LEVEL)
       .build();
     ZookeeperTestUtil.setJaasTestConfigFile();
     dirTestWatcher.start(TestDrillbitResilience.class); // until DirTestWatcher is implemented for JUnit5
@@ -280,8 +281,7 @@ public class TestDrillbitResilience extends ClusterTest {
     assertEquals(before, after, () -> String.format("We are leaking %d bytes", after - before));
   }
 
-  @Test
-  // @Disabled // TODO(DRILL-3163, DRILL-3167)
+  @Test // DRILL-3163, DRILL-3167
   @Timeout(value = TIMEOUT)
   public void foreman_runTryEnd() {
     final long before = countAllocatedMemory();
@@ -323,8 +323,7 @@ public class TestDrillbitResilience extends ClusterTest {
   // DRILL-3052: Since root fragment is waiting on data and leaf fragments are cancelled before they send any
   // data to root, root will never run. This test will timeout if the root did not send the final state to Foreman.
   // DRILL-2383: Cancellation TC 1: cancel before any result set is returned.
-  @Test
-  // @Disabled // TODO(DRILL-3192)
+  @RepeatedTest(PROBLEMATIC_TEST_NUM_RUNS) // DRILL-3192
   @Timeout(value = TIMEOUT)
   public void cancelWhenQueryIdArrives() {
     final long before = countAllocatedMemory();
@@ -334,7 +333,7 @@ public class TestDrillbitResilience extends ClusterTest {
       @Override
       public void queryIdArrived(final QueryId queryId) {
         super.queryIdArrived(queryId);
-        cancelAndResume(false);
+        cancelAndResume(true);
       }
     };
 
@@ -347,15 +346,7 @@ public class TestDrillbitResilience extends ClusterTest {
     assertEquals(before, after, () -> String.format("We are leaking %d bytes", after - before));
   }
 
-  @RepeatedTest(NUM_RUNS)
-//  @Disabled("DRILL-6228")
-//  org.opentest4j.AssertionFailedError:
-//  Query state is incorrect (expected: CANCELED, actual: COMPLETED) AND/OR
-//  Exception thrown: none
-//  at org.apache.drill.exec.server.TestDrillbitResilience.assertStateCompleted(TestDrillbitResilience.java:442)
-//  at org.apache.drill.exec.server.TestDrillbitResilience.assertCancelledWithoutException(TestDrillbitResilience.java:456)
-//  at org.apache.drill.exec.server.TestDrillbitResilience.assertCancelledWithoutException(TestDrillbitResilience.java:476)
-//  at org.apache.drill.exec.server.TestDrillbitResilience.cancelInMiddleOfFetchingResults(TestDrillbitResilience.java:558)
+  @RepeatedTest(NUM_RUNS) // DRILL-6228
   @Timeout(value = TIMEOUT) // DRILL-2383: Cancellation TC 2: cancel in the middle of fetching result set
   public void cancelInMiddleOfFetchingResults() {
     final long before = countAllocatedMemory();
@@ -385,8 +376,7 @@ public class TestDrillbitResilience extends ClusterTest {
   }
 
 
-  @RepeatedTest(NUM_RUNS)
-  //@Disabled("DRILL-6228")
+  @RepeatedTest(NUM_RUNS) // DRILL-6228
   @Timeout(value = TIMEOUT) // DRILL-2383: Cancellation TC 3: cancel after all result set are produced but not all are fetched
   public void cancelAfterAllResultsProduced() {
     final long before = countAllocatedMemory();
@@ -413,9 +403,8 @@ public class TestDrillbitResilience extends ClusterTest {
     assertEquals(before, after, () -> String.format("We are leaking %d bytes", after - before));
   }
 
-  @RepeatedTest(PROBLEMATIC_TEST_NUM_RUNS) // DRILL-2383: Cancellation TC 4: cancel after everything is completed and fetched
-  @Timeout(value = TIMEOUT)
-//  @Disabled("DRILL-3967") // not an issue anymore
+  @RepeatedTest(PROBLEMATIC_TEST_NUM_RUNS) // DRILL-3967
+  @Timeout(value = TIMEOUT) // DRILL-2383: Cancellation TC 4: cancel after everything is completed and fetched
   public void cancelAfterEverythingIsCompleted() {
     final long before = countAllocatedMemory();
 
@@ -474,8 +463,7 @@ public class TestDrillbitResilience extends ClusterTest {
     assertEquals(before, after, () -> String.format("We are leaking %d bytes", after - before));
   }
 
-  @Test // DRILL-2383: Completion TC 3: failed query - before query is
-  // executed - while sending fragments to other drillbits
+  @Test // DRILL-2383: Completion TC 3: failed query - before query is executed, while sending fragments to other drillbits
   @Timeout(value = TIMEOUT)
   public void failsWhenSendingFragments() {
     final long before = countAllocatedMemory();
@@ -576,9 +564,8 @@ public class TestDrillbitResilience extends ClusterTest {
     }
   }
 
-  @Test
+  @Test // DRILL-3193
   @Timeout(value = TIMEOUT)
-  // @Disabled // TODO(DRILL-3193)
   public void interruptingWhileFragmentIsBlockedInAcquiringSendingTicket() {
     final long before = countAllocatedMemory();
 
@@ -633,9 +620,8 @@ public class TestDrillbitResilience extends ClusterTest {
     }
   }
 
-  @RepeatedTest(NUM_RUNS)
+  @RepeatedTest(NUM_RUNS) // DRILL-3194
   @Timeout(value = TIMEOUT)
-//  @Disabled // TODO(DRILL-3194)
   public void memoryLeaksWhenFailed() {
     client.alterSession(SLICE_TARGET, "10");
 
