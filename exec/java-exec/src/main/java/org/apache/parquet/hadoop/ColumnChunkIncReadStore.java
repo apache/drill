@@ -215,19 +215,22 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               // Note that the repetition and definition levels are stored uncompressed in
               // the v2 page format.
               int pageBufOffset = 0;
-              final BytesInput repLevelBytes = BytesInput.from(
-                pageBuf.position(pageBufOffset).slice().limit(pageBufOffset + repLevelSize)
+              ByteBuffer bb = (ByteBuffer) pageBuf.position(pageBufOffset);
+              BytesInput repLevelBytes = BytesInput.from(
+                (ByteBuffer) bb.slice().limit(pageBufOffset + repLevelSize)
               );
               pageBufOffset += repLevelSize;
 
+              bb = (ByteBuffer) pageBuf.position(pageBufOffset);
               final BytesInput defLevelBytes = BytesInput.from(
-                pageBuf.position(pageBufOffset).slice().limit(pageBufOffset + defLevelSize)
+                (ByteBuffer) bb.slice().limit(pageBufOffset + defLevelSize)
               );
               pageBufOffset += defLevelSize;
 
               // we've now reached the beginning of compressed column data
+              bb = (ByteBuffer) pageBuf.position(pageBufOffset);
               final BytesInput colDataBytes = decompressor.decompress(
-                BytesInput.from(pageBuf.position(pageBufOffset).slice()),
+                BytesInput.from((ByteBuffer) bb.slice()),
                 pageSize - repLevelSize - defLevelSize
               );
 
