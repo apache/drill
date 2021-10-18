@@ -517,7 +517,7 @@ class PageReader {
       return false;
     }
 
-    clearDataBuffer();
+    clearDataBufferAndReaders();
     nextInternal();
 
     if (pageData == null || pageHeader == null) {
@@ -653,11 +653,12 @@ class PageReader {
     }
   }
 
-  protected void clearDataBuffer() {
+  protected void clearDataBufferAndReaders() {
     if (pageData != null) {
       pageData.release();
       pageData = null;
     }
+    this.dictionaryValueReader = this.dictionaryLengthDeterminingReader = this.valueReader = null;
   }
 
   protected void clearDictionaryBuffer() {
@@ -679,7 +680,7 @@ class PageReader {
       logger.warn("encountered an error when it tried to close its input stream: {}", e);
     }
     // Free all memory, including fixed length types. (Data is being copied for all types not just var length types)
-    clearDataBuffer();
+    clearDataBufferAndReaders();
     clearDictionaryBuffer();
   }
 

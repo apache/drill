@@ -246,15 +246,6 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test
-  public void testParquetV2() throws Exception {
-    alterSession(ExecConstants.PARQUET_PAGEREADER_ASYNC, false);
-//    alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
-    String selection = "_int_32";
-    String inputTable = "cp.`parquet_v2_simple_nullable.parquet`";
-    runTestAndValidate(selection, selection, inputTable, "parquet_v2_simple_nullable");
-  }
-
-  @Test
   public void testComplex() throws Exception {
     String selection = "*";
     String inputTable = "cp.`donuts.json`";
