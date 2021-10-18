@@ -50,10 +50,11 @@ import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.VarDecimalVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.parquet.column.ColumnDescriptor;
-import org.apache.parquet.column.Encoding;
 import org.apache.parquet.format.ConvertedType;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
+
+import java.util.Collections;
 
 public class ColumnReaderFactory {
 
@@ -209,7 +210,7 @@ public class ColumnReaderFactory {
                   columnChunkMetaData, fixedLength, (IntervalVector) v, schemaElement);
           }
         }
-        if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
+        if (!Collections.disjoint(columnChunkMetaData.getEncodings(), ColumnReader.DICTIONARY_ENCODINGS)) {
           return new ParquetFixedWidthDictionaryReaders.DictionaryFixedBinaryReader(recordReader,
               descriptor, columnChunkMetaData, fixedLength, (VarBinaryVector) v, schemaElement);
         }
@@ -323,7 +324,7 @@ public class ColumnReaderFactory {
                   columnChunkMetaData, fixedLength, (NullableIntervalVector) valueVec, schemaElement);
           }
         }
-        if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
+        if (!Collections.disjoint(columnChunkMetaData.getEncodings(), ColumnReader.DICTIONARY_ENCODINGS)) {
           return new NullableFixedByteAlignedReaders.NullableFixedBinaryReader(parentReader, columnDescriptor,
               columnChunkMetaData, fixedLength, (NullableVarBinaryVector) valueVec, schemaElement);
         }

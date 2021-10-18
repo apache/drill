@@ -30,6 +30,7 @@ import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.BaseTestQuery;
+import org.apache.parquet.io.api.Binary;
 import org.joda.time.Period;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -282,13 +282,13 @@ class AsyncPageReader extends PageReader {
       ReadStatus readStatus = nextPageFromQueue();
       pageHeader = readStatus.getPageHeader();
 
+      if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
+        loadDictionary(readStatus);
+        readStatus = nextPageFromQueue();
+        pageHeader = readStatus.getPageHeader();
+      }
+
       switch (pageHeader.getType()) {
-        case DICTIONARY_PAGE:
-          loadDictionary(readStatus);
-          // Get another page header and deliberately fall through.  Note that the pageHeader on which this
-          // this switch statement is based is now reassigned, *during the evaluation of the switch*.
-          readStatus = nextPageFromQueue();
-          pageHeader = readStatus.getPageHeader();
         case DATA_PAGE:
           pageData = codecName == CompressionCodecName.UNCOMPRESSED
             ? readStatus.getPageData()

@@ -33,6 +33,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.column.Encoding;
 import org.apache.parquet.format.SchemaElement;
@@ -42,11 +43,17 @@ import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 
 public abstract class ColumnReader<V extends ValueVector> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnReader.class);
-  protected static final Set<Encoding> VALUE_DECODING_REQUIRED = new HashSet<>(Arrays.asList(
-    Encoding.DELTA_BINARY_PACKED,
-    Encoding.DELTA_BYTE_ARRAY,
-    Encoding.DELTA_LENGTH_BYTE_ARRAY
+  public static final Set<Encoding> DICTIONARY_ENCODINGS = new HashSet<>(Arrays.asList(
+    Encoding.PLAIN_DICTIONARY,
+    Encoding.RLE_DICTIONARY
   ));
+  public static final Set<Encoding> VALUE_ENCODINGS = Sets.union(
+    DICTIONARY_ENCODINGS,
+    new HashSet<>(Arrays.asList(
+      Encoding.DELTA_BINARY_PACKED,
+      Encoding.DELTA_BYTE_ARRAY,
+      Encoding.DELTA_LENGTH_BYTE_ARRAY
+  )));
 
   final ParquetRecordReader parentReader;
 
@@ -218,7 +225,7 @@ public abstract class ColumnReader<V extends ValueVector> {
   }
 
   protected boolean recordsRequireDecoding() {
-    return usingDictionary || !Collections.disjoint(VALUE_DECODING_REQUIRED, columnChunkMetaData.getEncodings());
+    return !Collections.disjoint(VALUE_ENCODINGS, columnChunkMetaData.getEncodings());
   }
 
   protected boolean processPageData(int recordsToReadInThisPass) throws IOException {

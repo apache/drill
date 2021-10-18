@@ -415,12 +415,12 @@ class PageReader {
   protected void nextInternal() throws IOException {
     readPageHeader();
 
+    if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
+      loadDictionary();
+      readPageHeader();
+    }
+
     switch (pageHeader.getType()) {
-      case DICTIONARY_PAGE:
-        loadDictionary();
-        // Get another page header and deliberately fall through.  Note that the pageHeader on which this
-        // this switch statement is based is now reassigned, *during the evaluation of the switch*.
-        readPageHeader();
       case DATA_PAGE:
         pageData = codecName == CompressionCodecName.UNCOMPRESSED
           ? readUncompressedPage()

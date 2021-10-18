@@ -59,8 +59,8 @@ public abstract class BatchReader {
   }
 
   protected void readAllFixedFieldsSerial(long recordsToRead) throws IOException {
-    for (ColumnReader<?> crs : readState.getFixedLenColumnReaders()) {
-      crs.processPages(recordsToRead);
+    for (ColumnReader<?> colReader : readState.getFixedLenColumnReaders()) {
+      colReader.processPages(recordsToRead);
     }
   }
 

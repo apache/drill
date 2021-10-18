@@ -253,7 +253,7 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      switch (columnDescriptor.getType()) {
+      switch (columnDescriptor.getPrimitiveType().getPrimitiveTypeName()) {
         case INT32:
           if (usingDictionary) {
             for (int i = 0; i < recordsToReadInThisPass; i++) {

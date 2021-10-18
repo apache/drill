@@ -18,11 +18,11 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.parquet.column.ColumnDescriptor;
-import org.apache.parquet.format.Encoding;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.io.api.Binary;
@@ -36,7 +36,7 @@ public abstract class VarLengthColumn<V extends ValueVector> extends ColumnReade
                   ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v,
                   SchemaElement schemaElement) throws ExecutionSetupException {
     super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
+      if (!Collections.disjoint(columnChunkMetaData.getEncodings(), ColumnReader.DICTIONARY_ENCODINGS)) {
         usingDictionary = true;
       }
       else {
