@@ -104,7 +104,7 @@ final class VarLenBulkPageReader {
     pageInfo.pageDataLen = pageInfoInput.pageDataLen;
     pageInfo.numPageFieldsRead = pageInfoInput.numPageFieldsRead;
     pageInfo.definitionLevels = pageInfoInput.definitionLevels;
-    pageInfo.dictionaryValueReader = pageInfoInput.dictionaryValueReader;
+    pageInfo.encodedValueReader = pageInfoInput.encodedValueReader;
     pageInfo.numPageValues = pageInfoInput.numPageValues;
     if (clear) {
       buffer.clear();
@@ -172,7 +172,7 @@ final class VarLenBulkPageReader {
 
   private final VarLenColumnBulkEntry getVarLenEntry(int valuesToRead) {
     // Let start with non-dictionary encoding as it is predominant
-    if (!pageInfo.dictionaryValueReader.isDefined()) {
+    if (!pageInfo.encodedValueReader.isDefined()) {
       if (pageInfo.definitionLevels.hasDefinitionLevels()) {
         return nullableVLReader.getEntry(valuesToRead);
       } else {

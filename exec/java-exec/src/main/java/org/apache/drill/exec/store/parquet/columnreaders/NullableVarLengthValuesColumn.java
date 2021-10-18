@@ -80,7 +80,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
       if (currLengthDeterminingDictVal == null) {
         currLengthDeterminingDictVal = pageReader.getDictionaryLengthDeterminingReader().readBytes();
       }
-      currDictValToWrite = currLengthDeterminingDictVal;
+      currDecodedValToWrite = currLengthDeterminingDictVal;
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
       dataTypeLengthInBits = currLengthDeterminingDictVal.length();
     }
@@ -120,7 +120,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
     if (! currentValNull) {
       if (usingDictionary) {
-        currDictValToWrite = pageReader.getDictionaryValueReader().readBytes();
+        currDecodedValToWrite = pageReader.getDictionaryValueReader().readBytes();
       }
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
       dataTypeLengthInBits = variableWidthVector.getAccessor().getValueLength(valuesReadInCurrentPass);

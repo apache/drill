@@ -38,7 +38,7 @@ import io.netty.buffer.DrillBuf;
 public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLengthColumn {
 
   Binary currLengthDeterminingDictVal;
-  Binary currDictValToWrite;
+  Binary currDecodedValToWrite;
   VariableWidthVector variableWidthVector;
 
   /** Bulk read operation state that needs to be maintained across batch calls */
@@ -140,7 +140,7 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
       if (currLengthDeterminingDictVal == null) {
         currLengthDeterminingDictVal = pageReader.getDictionaryLengthDeterminingReader().readBytes();
       }
-      currDictValToWrite = currLengthDeterminingDictVal;
+      currDecodedValToWrite = currLengthDeterminingDictVal;
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
       dataTypeLengthInBits = currLengthDeterminingDictVal.length();
     } else {
