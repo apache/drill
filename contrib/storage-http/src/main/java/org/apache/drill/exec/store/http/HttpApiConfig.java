@@ -159,7 +159,7 @@ public class HttpApiConfig {
     this.requireTail = builder.requireTail;
 
     // Default to true for backward compatibility, and better security practices
-    this.verifySSLCert = builder().verifySSLCert();
+    this.verifySSLCert = builder.verifySSLCert;
 
     this.inputType = builder.inputType.trim().toLowerCase();
 
