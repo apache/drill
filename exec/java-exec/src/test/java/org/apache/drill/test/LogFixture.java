@@ -216,8 +216,6 @@ public class LogFixture implements AutoCloseable {
     appender.setEncoder(ple);
     appender.start();
 
-    Logger root = (Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-    root.addAppender(appender);
     drillLogger.addAppender(appender);
   }
 

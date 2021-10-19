@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.testing;
 
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,6 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * The base class for all types of injections (currently, pause and exception).
  */
+@Slf4j
+@ToString
 public abstract class Injection {
 
   protected final String address;  // the address of the drillbit on which to inject
@@ -67,6 +71,9 @@ public abstract class Injection {
    * @return if the injection should be injected now
    */
   protected boolean injectNow() {
+    if(logger.isDebugEnabled()) {
+      logger.debug(toString());
+    }
     return nSkip.decrementAndGet() < 0 && nFire.decrementAndGet() >= 0;
   }
 

@@ -22,6 +22,7 @@ import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.openTSDB.OpenTSDBStoragePluginConfig;
+import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryTestUtil;
@@ -196,19 +197,19 @@ public class TestOpenTSDBPlugin extends ClusterTest {
 
   @Test
   public void testInformationSchemaWrongPluginConfig() throws Exception {
-    ClusterFixture cluster = ClusterFixture.bareBuilder(dirTestWatcher)
-        .build();
-    int portNumber = QueryTestUtil.getFreePortNumber(10_000, 200);
-    final StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
-    OpenTSDBStoragePluginConfig storagePluginConfig =
+    try (ClusterFixture cluster = ClusterFixture.bareBuilder(dirTestWatcher).build();
+         ClientFixture client = cluster.clientFixture()) {
+      int portNumber = QueryTestUtil.getFreePortNumber(10_000, 200);
+      final StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
+      OpenTSDBStoragePluginConfig storagePluginConfig =
         new OpenTSDBStoragePluginConfig(String.format("http://localhost:%s/", portNumber));
-    storagePluginConfig.setEnabled(true);
-    pluginRegistry.put(OpenTSDBStoragePluginConfig.NAME, storagePluginConfig);
-    String query = "select * from information_schema.`views`";
-    cluster.clientFixture()
-        .queryBuilder()
+      storagePluginConfig.setEnabled(true);
+      pluginRegistry.put(OpenTSDBStoragePluginConfig.NAME, storagePluginConfig);
+      String query = "select * from information_schema.`views`";
+      client.queryBuilder()
         .sql(query)
         .run();
+    }
   }
 
   private long runQuery(String query) throws Exception {

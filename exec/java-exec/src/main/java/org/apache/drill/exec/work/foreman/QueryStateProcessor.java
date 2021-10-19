@@ -239,10 +239,12 @@ public class QueryStateProcessor implements AutoCloseable {
         return;
       case COMPLETED:
         wrapUpCompletion();
+        return;
       case CANCELLATION_REQUESTED:
         // since during starting state fragments are sent to the remote nodes,
         // we don't want to cancel until they all are sent out
-        addToEventQueue(QueryState.CANCELLATION_REQUESTED, null);
+        assert exception == null;
+        wrapUpCancellation();
         return;
     }
 
@@ -256,23 +258,13 @@ public class QueryStateProcessor implements AutoCloseable {
        * cause this to be called recursively.
        */
     switch (newState) {
-      case CANCELLATION_REQUESTED: {
+      case CANCELLATION_REQUESTED:
         assert exception == null;
-        recordNewState(QueryState.CANCELLATION_REQUESTED);
-        queryManager.cancelExecutingFragments(drillbitContext);
-        foremanResult.setCompleted(QueryState.CANCELED);
-        /*
-         * We don't close the foremanResult until we've gotten
-         * acknowledgments, which happens below in the case for current state
-         * == CANCELLATION_REQUESTED.
-         */
+        wrapUpCancellation();
         return;
-      }
-
-      case COMPLETED: {
+      case COMPLETED:
         wrapUpCompletion();
         return;
-      }
     }
     checkCommonStates(newState, exception);
   }
@@ -303,7 +295,13 @@ public class QueryStateProcessor implements AutoCloseable {
 
   private void wrapUpCancellation() {
     recordNewState(QueryState.CANCELLATION_REQUESTED);
+    queryManager.cancelExecutingFragments(drillbitContext);
     foremanResult.setCompleted(QueryState.CANCELED);
+    /*
+     * We don't close the foremanResult until we've gotten
+     * acknowledgments, which happens below in the case for current state
+     * == CANCELLATION_REQUESTED.
+     */
   }
 
   private void wrapUpCompletion() {

@@ -451,7 +451,7 @@ public class BaseTestQuery extends ExecTest {
     errorMsgTestHelper(testSqlQuery, UserBitShared.DrillPBError.ErrorType.PARSE.name());
   }
 
-  public static String getFile(String resource) throws IOException{
+  public static String getFile(String resource) throws IOException {
     URL url = Resources.getResource(resource);
     if (url == null) {
       throw new IOException(String.format("Unable to find path %s.", resource));

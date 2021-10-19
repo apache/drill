@@ -229,6 +229,7 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
 
   @Override
   public void close() {
+    logger.debug("Closing {}", getClass().getCanonicalName());
     batchLoader.clear();
   }
 
@@ -279,6 +280,8 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
 
     @Override
     public void interrupted(InterruptedException e) {
+      logger.debug("{} interrupted. shouldContinue value: {}", getClass().getCanonicalName(),
+        context.getExecutorState().shouldContinue());
       if (context.getExecutorState().shouldContinue()) {
         String errMsg = "Received an interrupt RPC outcome while sending ReceiverFinished message";
         logger.error(errMsg, e);

@@ -57,7 +57,7 @@ public class ControlsInjectionUtil {
         data.release();
       }
     } catch (final RpcException e) {
-      fail("Could not set option: " + e.toString());
+      fail("Could not set option: " + e);
     }
   }
 
@@ -187,6 +187,6 @@ public class ControlsInjectionUtil {
    * Clears all the controls.
    */
   public static void clearControls(final DrillClient client) {
-    setControls(client, ExecutionControls.DEFAULT_CONTROLS);
+    setControls(client, ExecutionControls.EMPTY_CONTROLS);
   }
 }

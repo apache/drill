@@ -73,7 +73,7 @@
     <commons.io.version>2.7</commons.io.version>
     <commons.collections.version>4.4</commons.collections.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <curator.version>5.1.0</curator.version>
+    <curator.version>5.2.0</curator.version>
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <jmockit.version>1.47</jmockit.version>
     <logback.version>1.2.3</logback.version>
@@ -98,7 +98,7 @@
     <javax.validation.api>2.0.1.Final</javax.validation.api>
     <asm.version>7.3.1</asm.version>
     <excludedGroups />
-    <memoryMb>4000</memoryMb>
+    <memoryMb>1800</memoryMb>
     <directMemoryMb>3000</directMemoryMb>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>

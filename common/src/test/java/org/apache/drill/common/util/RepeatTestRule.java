@@ -38,7 +38,10 @@ import java.lang.annotation.Target;
  * }
  * }
  * </pre>
+ * @deprecated It was created for Junit4. Junit5 has its own @RepeatedTest(num). And looks like it is not used now, but
+ * it can be used for manual testing
  */
+@Deprecated
 public class RepeatTestRule implements TestRule {
 
   @Retention(RetentionPolicy.RUNTIME)

@@ -18,12 +18,12 @@
 package org.apache.drill.categories;
 
 /**
- * A category for tests that take a long time to run. <br>
+ * A category for tests that intermittently fail. It is better to run them in one Maven fork to avoid OOM or deadlocks <br>
  * Junit category marker
  */
-public interface SlowTest {
+public interface FlakyTest {
     /**
      * tag for JUnit5
      */
-    String TAG = "slow-test";
+    String TAG = "flaky-test";
 }

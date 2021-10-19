@@ -68,7 +68,7 @@ public abstract class SingleRowListener implements UserResultsListener {
   }
 
   @Override
-  public void dataArrived(final QueryDataBatch result, final ConnectionThrottle throttle) {
+  public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
     final QueryData queryData = result.getHeader();
     if (result.hasData()) {
       final int nRows = this.nRows.addAndGet(queryData.getRowCount());

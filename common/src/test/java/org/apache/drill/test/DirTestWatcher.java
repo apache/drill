@@ -18,6 +18,8 @@
 package org.apache.drill.test;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
@@ -87,6 +89,8 @@ import java.nio.file.Paths;
  * {@link DirTestWatcher#getDir()} in myTestMethod1 and myTestMethod2 are
  * <b>my.proj.MyTestClass/myTestMethod1</b> and
  * <b>my.proj.MyTestClass/myTestMethod2</b> respectively.
+ * TODO: need to implement {@link AfterEachCallback} and {@link BeforeEachCallback} to use it with
+ *  JUnit5 @ExtendWith annotation
  * </p>
  */
 public class DirTestWatcher extends TestWatcher {

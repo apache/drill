@@ -52,6 +52,7 @@ public class ExtendedLatch extends CountDownLatch {
         return await(wait, TimeUnit.MILLISECONDS);
       } catch (final InterruptedException e) {
         // if we weren't ready, the while loop will continue to wait
+        logger.warn("Interrupted while waiting for event latch.", e);
       }
     }
     return false;

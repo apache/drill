@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 
+import org.apache.drill.categories.FlakyTest;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTestBase;
 import org.apache.drill.categories.JdbcTest;
@@ -54,7 +55,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Test class for Drill's INFORMATION_SCHEMA.COLUMNS implementation.
  */
-@Category(JdbcTest.class)
+@Category({JdbcTest.class, FlakyTest.class})
 public class TestInformationSchemaColumns extends JdbcTestBase {
 
   private static final String VIEW_NAME =

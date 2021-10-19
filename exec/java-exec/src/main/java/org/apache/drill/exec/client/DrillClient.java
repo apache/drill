@@ -832,7 +832,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
     private final UserProtos.RunQuery query;
 
     public ListHoldingResultsListener(UserProtos.RunQuery query) {
-      logger.debug( "Listener created for query \"\"\"{}\"\"\"", query );
+      logger.debug( "Listener created for query \"{}\"", query );
       this.query = query;
     }
 
@@ -867,7 +867,8 @@ public class DrillClient implements Closeable, ConnectionThrottle {
 
     @Override
     public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
-      logger.debug("Result arrived:  Result: {}", result);
+      logger.debug("Result arrived:  Row count: {}", result.getHeader().getRowCount());
+      logger.trace("Result batch: {}", result);
       results.add(result);
     }
 

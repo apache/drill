@@ -123,7 +123,7 @@ public final class ExecutionControls {
   /**
    * The default value for controls.
    */
-  public static final String DEFAULT_CONTROLS = "{}";
+  public static final String EMPTY_CONTROLS = "{\"injections\" : []}";
 
   /**
    * Caches the currently specified controls.

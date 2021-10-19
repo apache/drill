@@ -20,6 +20,9 @@ package org.apache.drill.exec.server;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.local.LocalClusterCoordinator;
 
+/**
+ * It is necessary to start Drillbit. For more info check {@link ClusterCoordinator}
+ */
 public class RemoteServiceSet implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteServiceSet.class);
 
@@ -40,6 +43,9 @@ public class RemoteServiceSet implements AutoCloseable {
     coordinator.close();
   }
 
+  /**
+   * @return Use a non-null service set so that the drillbits can use port hunting
+   */
   public static RemoteServiceSet getLocalServiceSet() {
     return new RemoteServiceSet(new LocalClusterCoordinator());
   }

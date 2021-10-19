@@ -23,9 +23,9 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
-public class Controls {
+import static org.apache.drill.exec.testing.ExecutionControls.EMPTY_CONTROLS;
 
-  private static final String EMPTY_CONTROLS = "{\"injections\" : []}";
+public class Controls {
 
   /**
    * Returns a builder that can be used to add injections.
