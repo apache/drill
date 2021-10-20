@@ -20,6 +20,8 @@ package org.apache.drill.exec.store;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.store.PluginHandle.PluginType;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Defines a storage connector: a storage plugin config along with the
@@ -27,6 +29,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * config.
  */
 public class ConnectorHandle {
+
+  private static final Logger logger = LoggerFactory.getLogger(ConnectorHandle.class);
 
   private final ConnectorLocator locator;
   private final Class<? extends StoragePluginConfig> configClass;
