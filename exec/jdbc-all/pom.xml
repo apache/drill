@@ -185,6 +185,10 @@
           <artifactId>encoder</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>com.dropbox.core</groupId>
+          <artifactId>dropbox-core-sdk</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.apache.commons</groupId>
           <artifactId>commons-compress</artifactId>
         </exclusion>
@@ -329,6 +333,8 @@
               <exclude>dom4j:*</exclude>
               <exclude>org.hibernate:*</exclude>
               <exclude>antlr:*</exclude>
+              <exclude>com.dropbox.*</exclude>
+              <exclude>com.github.stefanbirkner</exclude>
               <exclude>org.ow2.asm:*</exclude>
               <exclude>com.univocity:*</exclude>
               <exclude>net.sf.jpam:*</exclude>

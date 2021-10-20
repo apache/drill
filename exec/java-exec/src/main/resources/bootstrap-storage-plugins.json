@@ -202,6 +202,48 @@
         }
       },
       "enabled" : true
+    },
+    "dropbox" : {
+      "type" : "file",
+      "connection" : "dropbox:///",
+      "config": {
+        "dropboxAccessToken": "<your access token here>"
+      },
+      "workspaces" : {
+        "root" : {
+          "location" : "/",
+          "writable" : false
+        }
+      },
+      "formats" : {
+        "csv" : {
+          "type" : "text",
+          "extensions" : [ "csv" ],
+          "fieldDelimiter" : ","
+        },
+        "tsv" : {
+          "type" : "text",
+          "extensions" : [ "tsv" ],
+          "fieldDelimiter" : "\t"
+        },
+        "json" : {
+          "type" : "json",
+          "extensions" : [ "json" ]
+        },
+        "parquet" : {
+          "type" : "parquet"
+        },
+        "avro" : {
+          "type" : "avro"
+        },
+        "csvh" : {
+          "type" : "text",
+          "extensions" : [ "csvh" ],
+          "fieldDelimiter" : ",",
+          "extractHeader" : true
+        }
+      },
+      "enabled" : false
     }
   }
 }
