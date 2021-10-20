@@ -101,10 +101,10 @@ public class TestFixedwidthRecordReader extends ClusterTest {
   //Test Serialization/Deserialization
   @Test
   public void testSerDe() throws Exception {
-    String sql = "SELECT COUNT(*) FROM dfs.`fwf/test.fwf`";
+    String sql = "SELECT COUNT(*) FROM cp.`fwf/test.fwf`";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
-    assertEquals(5L, cnt);
+    assertEquals(25L, cnt);
   }
 
   @Test
