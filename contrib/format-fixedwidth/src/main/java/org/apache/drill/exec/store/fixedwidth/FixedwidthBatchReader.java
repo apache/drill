@@ -143,8 +143,6 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
     for (FixedwidthFieldConfig field : config.getFields()) {
       value = line.substring(field.getIndex() - 1, field.getIndex() + field.getWidth() - 1);
       dataType = field.getType();
-      dateTimeFormat = field.getDateTimeFormat();
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateTimeFormat, Locale.ENGLISH);
       try {
         switch (dataType) {
           case INT:
@@ -154,15 +152,21 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
             writer.scalar(i).setString(value);
             break;
           case DATE:
+            dateTimeFormat = field.getDateTimeFormat();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateTimeFormat, Locale.ENGLISH);
             LocalDate date = LocalDate.parse(value, formatter);
             writer.scalar(i).setDate(date);
             break;
           case TIME:
-            LocalTime time = LocalTime.parse(value, formatter);
+            dateTimeFormat = field.getDateTimeFormat();
+            DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern(dateTimeFormat, Locale.ENGLISH);
+            LocalTime time = LocalTime.parse(value, formatter2);
             writer.scalar(i).setTime(time);
             break;
           case TIMESTAMP:
-            LocalDateTime ldt = LocalDateTime.parse(value, formatter);
+            dateTimeFormat = field.getDateTimeFormat();
+            DateTimeFormatter formatter3 = DateTimeFormatter.ofPattern(dateTimeFormat, Locale.ENGLISH);
+            LocalDateTime ldt = LocalDateTime.parse(value, formatter3);
             ZoneId z = ZoneId.of("America/Toronto");
             ZonedDateTime zdt = ldt.atZone(z);
             Instant timeStamp = zdt.toInstant();
