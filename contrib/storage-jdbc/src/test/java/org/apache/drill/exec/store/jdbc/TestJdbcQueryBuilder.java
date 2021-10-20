@@ -18,6 +18,8 @@
 
 package org.apache.drill.exec.store.jdbc;
 
+import org.apache.calcite.sql.SqlDialect.DatabaseProduct;
+import org.apache.drill.exec.store.jdbc.utils.JdbcDDLQueryUtils;
 import org.apache.drill.exec.store.jdbc.utils.JdbcQueryBuilder;
 import org.junit.Test;
 
@@ -47,5 +49,25 @@ public class TestJdbcQueryBuilder {
     assertEquals("`catalog with spaces`.`schema with spaces`.`table with spaces`", completeTable);
     assertEquals("`catalog with spaces`.`table with spaces`", JdbcQueryBuilder.buildCompleteTableName(table, catalog, ""));
     assertEquals("`catalog with spaces`.`table with spaces`", JdbcQueryBuilder.buildCompleteTableName(table, catalog, null));
+  }
+
+  @Test
+  public void testQueryCleanup() {
+    String sql = "INSERT INTO mysql_test.data_types VALUES(1, 2, 3.0, 4.0, '5.0', '2020-12-31', '12:00:00', '2015-12-30 17:55:55')";
+    String cleanMySQL = JdbcDDLQueryUtils.cleanInsertQuery(sql, DatabaseProduct.MYSQL.getDialect());
+    assertEquals("INSERT INTO `mysql_test`.`data_types`\n" + "VALUES  (1, 2, 3.0, 4.0, '5.0', '2020-12-31', '12:00:00', '2015-12-30 17:55:55')", cleanMySQL);
+
+    sql = "INSERT INTO mysql_test.data_types VALUES ROW(1, 2, 3.0, 4.0, '5.0', '2020-12-31', '12:00:00', '2015-12-30 17:55:55')";
+    cleanMySQL = JdbcDDLQueryUtils.cleanInsertQuery(sql, DatabaseProduct.MYSQL.getDialect());
+    assertEquals("INSERT INTO `mysql_test`.`data_types`\n" + "VALUES  (1, 2, 3.0, 4.0, '5.0', '2020-12-31', '12:00:00', '2015-12-30 17:55:55')", cleanMySQL);
+
+    String cleanMSSQL = JdbcDDLQueryUtils.cleanInsertQuery(sql, DatabaseProduct.MSSQL.getDialect());
+    assertEquals("INSERT INTO [MYSQL_TEST].[DATA_TYPES]\n" + "VALUES  (1, 2, 3.0, 4.0, '5.0', '2020-12-31', '12:00:00', '2015-12-30 17:55:55')", cleanMSSQL);
+
+    String cleanOracle = JdbcDDLQueryUtils.cleanInsertQuery(sql, DatabaseProduct.ORACLE.getDialect());
+    assertEquals("INSERT INTO \"MYSQL_TEST\".\"DATA_TYPES\"\n" + "VALUES  (1, 2, 3.0, 4.0, '5.0', '2020-12-31', '12:00:00', '2015-12-30 17:55:55')", cleanOracle);
+
+    String cleanPostgres = JdbcDDLQueryUtils.cleanInsertQuery(sql, DatabaseProduct.POSTGRESQL.getDialect());
+    assertEquals("INSERT INTO \"mysql_test\".\"data_types\"\n" + "VALUES  (1, 2, 3.0, 4.0, '5.0', '2020-12-31', '12:00:00', '2015-12-30 17:55:55')", cleanPostgres);
   }
 }

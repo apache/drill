@@ -48,9 +48,9 @@
       <artifactId>HikariCP</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.github.vvysotskyi.drill-calcite</groupId>
+      <groupId>${calcite.groupId}</groupId>
       <artifactId>calcite-server</artifactId>
-      <version>1.21.0-drill-r4</version>
+      <version>1.21.0-drill-r5</version>
     </dependency>
     <!-- Test dependencies -->
     <dependency>

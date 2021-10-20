@@ -23,6 +23,7 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.calcite.sql.parser.SqlParser.ConfigBuilder;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.parser.ddl.SqlDdlParserImpl;
 import org.slf4j.Logger;
@@ -49,19 +50,43 @@ public class JdbcDDLQueryUtils {
 
     try {
       SqlNode node = SqlParser.create(query, sqlParserConfig).parseQuery();
+
+      return node.toSqlString(dialect).getSql();
+    } catch (SqlParseException e) {
+      logger.error(e.getMessage());
+      return null;
+    }
+  }
+
+  public static String cleanInsertQuery(String query, SqlDialect dialect) {
+    /*SqlParser.Config sqlParserConfig = SqlParser.configBuilder()
+      .setParserFactory(SqlDdlParserImpl.FACTORY)
+      .setConformance(SqlConformanceEnum.STRICT_99)
+      .setCaseSensitive(true)
+      .setLex(Lex.MYSQL)
+      .build();*/
+
+    ConfigBuilder sqlParserConfigBuilder = dialect.configureParser(SqlParser.configBuilder());
+    sqlParserConfigBuilder.setParserFactory(SqlDdlParserImpl.FACTORY);
+    SqlParser.Config sqlParserConfig = sqlParserConfigBuilder.build();
+
+    try {
+      SqlNode node = SqlParser.create(query, sqlParserConfig).parseQuery();
+
       String cleanSQL =  node.toSqlString(dialect).getSql();
 
       // TODO Fix this hack
       // HACK  See CALCITE-4820 (https://issues.apache.org/jira/browse/CALCITE-4820)
       // Calcite doesn't seem to provide a way to generate INSERT queries without the ROW
       // Keyword in front of the VALUES clause.
-      cleanSQL = cleanSQL.replaceAll("ROW\\(", "\\(");
+      //cleanSQL = cleanSQL.replaceAll("ROW\\(", "\\(");
       return cleanSQL;
     } catch (SqlParseException e) {
       logger.error(e.getMessage());
       return null;
     }
   }
+
 
   private static void appendEscapedSQLString(StringBuilder sb, String sqlString) {
     sb.append('\'');

@@ -18,8 +18,10 @@
 
 package org.apache.drill.exec.store.jdbc;
 
+import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialect.DatabaseProduct;
+import org.apache.calcite.sql.util.SqlBuilder;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -80,17 +82,16 @@ import java.util.concurrent.TimeUnit;
 public class JdbcRecordWriter extends AbstractRecordWriter {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcRecordWriter.class);
-  public static final ImmutableMap<MinorType, Integer> JDBC_TYPE_MAPPINGS;
 
   private static final String INSERT_QUERY_TEMPLATE = "INSERT INTO %s VALUES\n%s";
   private static final String INSERT_QUERY_TEMPLATE_FOR_APACHE_PHOENIX = "UPSERT INTO %s VALUES\n%s";
   private final String tableName;
   private final Connection connection;
-  private final JdbcWriter config;
   private final SqlDialect dialect;
   private final List<Object> rowList;
   private final List<String> insertRows;
   private final List<JdbcWriterField> fields;
+  private final JdbcWriter config;
   private StringBuilder rowString;
 
   /*
@@ -100,8 +101,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
    * All flavors of character fields are mapped to VARCHAR in Drill. All versions of binary fields are
    * mapped to VARBINARY.
    */
-  static {
-    JDBC_TYPE_MAPPINGS = ImmutableMap.<MinorType, Integer>builder()
+  public static final ImmutableMap<MinorType, Integer> JDBC_TYPE_MAPPINGS = ImmutableMap.<MinorType, Integer>builder()
       .put(MinorType.FLOAT8, java.sql.Types.NUMERIC)
       .put(MinorType.FLOAT4, java.sql.Types.NUMERIC)
       .put(MinorType.TINYINT, java.sql.Types.TINYINT)
@@ -116,15 +116,13 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       .put(MinorType.TIMESTAMP, java.sql.Types.TIMESTAMP)
       .put(MinorType.BIT, java.sql.Types.BOOLEAN)
       .build();
-  }
 
   public JdbcRecordWriter(DataSource source, OperatorContext context, String name, JdbcWriter config) {
     this.tableName = JdbcDDLQueryUtils.addBackTicksToTable(name);
-    this.config = config;
     rowList = new ArrayList<>();
     insertRows = new ArrayList<>();
     this.dialect = config.getPlugin().getDialect();
-
+    this.config = config;
     this.fields = new ArrayList<>();
 
     try {
@@ -189,7 +187,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   }
 
   @Override
-  public void startRecord() throws IOException {
+  public void startRecord() {
     rowString = new StringBuilder();
     rowList.clear();
     rowString.append("(");
@@ -255,7 +253,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   }
 
   @Override
-  public void abort() throws IOException {
+  public void abort() {
     logger.debug("Abort insert.");
   }
 
@@ -264,18 +262,30 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     logger.debug("Cleanup record");
     // Execute query
     String insertQuery = buildInsertQuery();
+    System.out.println("Insert: " + insertQuery);
 
-    try {
+    try (Statement stmt = connection.createStatement()) {
       logger.debug("Executing insert query: {}", insertQuery);
-      Statement stmt = connection.createStatement();
       stmt.execute(insertQuery);
       logger.debug("Query complete");
       // Close connection
-      AutoCloseables.closeSilently(stmt, connection);
+      AutoCloseables.closeSilently(stmt);
     } catch (SQLException e) {
       logger.error("Error: {} {} {}", e.getMessage(), e.getSQLState(), e.getErrorCode());
       throw new IOException();
+    } finally {
+      AutoCloseables.closeSilently(connection);
     }
+  }
+
+  private String buildInsertQueryUsingCalcite() {
+    SqlBuilder builder = new SqlBuilder(this.dialect);
+    builder
+      .append("INSERT INTO")
+      .identifier(tableName);
+    builder.append ("VALUES(");
+
+    return "";
   }
 
   private String buildInsertQuery() {
@@ -294,7 +304,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     } else {
       sql = String.format(INSERT_QUERY_TEMPLATE, tableName, values);
     }
-    return JdbcDDLQueryUtils.cleanDDLQuery(sql, dialect);
+    return JdbcDDLQueryUtils.cleanInsertQuery(sql, dialect);
   }
 
   private String formatDateForInsertQuery(Long dateVal) {
