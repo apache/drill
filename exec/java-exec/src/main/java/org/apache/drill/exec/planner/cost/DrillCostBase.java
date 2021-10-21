@@ -19,7 +19,8 @@ package org.apache.drill.exec.planner.cost;
 
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.runtime.Utilities;
+
+import java.util.Objects;
 
 /**
  * Implementation of the DrillRelOptCost, modeled similar to VolcanoCost
@@ -159,8 +160,21 @@ public class DrillCostBase implements DrillRelOptCost {
 
   @Override
   public int hashCode() {
-    return Utilities.hashCode(rowCount) + Utilities.hashCode(cpu)
-        + Utilities.hashCode(io) + Utilities.hashCode(network);
+    return Objects.hash(rowCount, cpu, io, network);
+  }
+
+  @Override
+  public boolean equals(Object that) {
+    if (this == that) {
+      return true;
+    } else if (that == null || getClass() != that.getClass()) {
+      return false;
+    }
+    DrillCostBase thatConfig = (DrillCostBase) that;
+    return Objects.equals(rowCount, thatConfig.rowCount) &&
+      Objects.equals(cpu, thatConfig.cpu) &&
+      Objects.equals(io, thatConfig.io) &&
+      Objects.equals(network, thatConfig.network);
   }
 
   @Override

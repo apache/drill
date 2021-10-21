@@ -54,6 +54,36 @@ public class MapRDBFormatPluginConfig extends TableFormatPluginConfig {
   }
 
   @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    } else if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+
+    MapRDBFormatPluginConfig other = (MapRDBFormatPluginConfig) obj;
+    if (readAllNumbersAsDouble != other.readAllNumbersAsDouble) {
+      return false;
+    } else if (allTextMode != other.allTextMode) {
+      return false;
+    } else if (ignoreSchemaChange != other.ignoreSchemaChange) {
+      return false;
+    } else if (enablePushdown != other.enablePushdown) {
+      return false;
+    } else if (disableCountOptimization != other.disableCountOptimization) {
+      return false;
+    } else if (nonExistentFieldSupport != other.nonExistentFieldSupport) {
+      return false;
+    } else if (!index.equals(other.index)) {
+      return false;
+    } else if (readTimestampWithZoneOffset != other.readTimestampWithZoneOffset) {
+      return false;
+    }
+    return true;
+  }
+
+
+  @Override
   protected boolean impEquals(Object obj) {
     MapRDBFormatPluginConfig other = (MapRDBFormatPluginConfig) obj;
     if (readAllNumbersAsDouble != other.readAllNumbersAsDouble) {

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -88,6 +89,11 @@ public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginC
       return false;
     }
     return storage.equals(((StoragePlugins) obj).getStorage());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(storage);
   }
 
   /**

@@ -198,10 +198,10 @@ public class DrillIndexDefinition implements IndexDefinition {
   public boolean equals(Object o) {
     if (this == o) {
       return true;
-    }
-    if (o == null) {
+    }  else if (o == null || getClass() != o.getClass()) {
       return false;
     }
+
     DrillIndexDefinition index1 = (DrillIndexDefinition) o;
     return tableName.equals(index1.tableName)
         && indexName.equals(index1.indexName)

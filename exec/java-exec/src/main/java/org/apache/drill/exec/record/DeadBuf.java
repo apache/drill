@@ -917,7 +917,7 @@ public class DeadBuf extends ByteBuf {
   }
 
   @Override
-  public boolean equals(Object arg0) {
+  public boolean equals(Object arg0) { //lgtm [java/unchecked-cast-in-equals]
     return false;
   }
 

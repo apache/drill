@@ -24,10 +24,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.drill.exec.record.MaterializedField;
 
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -170,6 +172,11 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
       return false;
     }
     return isEquivalent((TupleMetadata) o);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(parentMap, nameSpace);
   }
 
   @Override
