@@ -176,7 +176,8 @@ class PageReader {
     dataReader.init();
 
     // If getDictionaryPageOffset() was reliable we could read the dictionary page once
-    // and for all here.  Instead we must encounter the dictionary page during calls to next().
+    // and for all here.  Instead we must encounter the dictionary page during calls to next()
+    // and the code that follows remains commented out.
     /*
     long dictPageOffset = columnChunkMetaData.getDictionaryPageOffset();
     if (dictPageOffset < dataReader.getPos()) {
@@ -252,13 +253,15 @@ class PageReader {
     DrillBuf outputPageData = dataReader.getNext(outputSize);
     long timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
 
-    logger.trace(
-      "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
-      columnChunkMetaData.toString(),
-      dataReader.getPos(),
-      outputSize,
-      ByteBufUtil.hexDump(outputPageData)
-    );
+    if (logger.isTraceEnabled()) {
+        logger.trace(
+          "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
+          columnChunkMetaData.toString(),
+          dataReader.getPos(),
+          outputSize,
+          ByteBufUtil.hexDump(outputPageData)
+        );
+    }
 
     this.updateStats(pageHeader, "Page Read", start, timeToRead, outputSize, outputSize);
 
@@ -300,13 +303,15 @@ class PageReader {
       outputPageData.writerIndex(outputSize);
       timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
 
-      logger.trace(
-        "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
-        columnChunkMetaData.toString(),
-        dataReader.getPos(),
-        outputSize,
-        ByteBufUtil.hexDump(outputPageData)
-      );
+      if (logger.isTraceEnabled()) {
+        logger.trace(
+          "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
+          columnChunkMetaData.toString(),
+          dataReader.getPos(),
+          outputSize,
+          ByteBufUtil.hexDump(outputPageData)
+        );
+      }
 
       this.updateStats(pageHeader, "Decompress", start, timeToRead, inputSize, outputSize);
     } finally {
@@ -367,6 +372,7 @@ class PageReader {
       outputPageData.writerIndex(outputSize);
       timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
 
+    if (logger.isTraceEnabled()) {
       logger.trace(
         "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
         columnChunkMetaData.toString(),
@@ -374,6 +380,7 @@ class PageReader {
         outputSize,
         ByteBufUtil.hexDump(outputPageData)
       );
+    }
 
       this.updateStats(pageHeader, "Decompress", start, timeToRead, inputSize, outputSize);
     } finally {
@@ -397,19 +404,22 @@ class PageReader {
     long pageHeaderBytes = dataReader.getPos() - start;
     this.updateStats(pageHeader, "Page Header", start, timeToRead, pageHeaderBytes, pageHeaderBytes);
 
-    logger.trace(
-      "ParquetTrace,{},{},{},{},{},{},{},{}", "Page Header Read", "",
-      this.parentColumnReader.parentReader.getHadoopPath(),
-      this.columnDescriptor.toString(),
-      start,
-      0,
-      0,
-      timeToRead
-    );
+    if (logger.isTraceEnabled()) {
+      logger.trace(
+        "ParquetTrace,{},{},{},{},{},{},{},{}", "Page Header Read", "",
+        this.parentColumnReader.parentReader.getHadoopPath(),
+        this.columnDescriptor.toString(),
+        start,
+        0,
+        0,
+        timeToRead
+      );
+    }
   }
 
   /**
-   * Get the page header and the pageData (uncompressed) for the next page
+   * Inspects the type of the next page and dispatches it for dictionary loading
+   * or data decompression accordingly.
    * @throws IOException
    */
   protected void nextInternal() throws IOException {
@@ -417,6 +427,7 @@ class PageReader {
 
     if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
       loadDictionary();
+      // callers expect us to have a data page after next(), so we start over
       readPageHeader();
     }
 
@@ -437,6 +448,10 @@ class PageReader {
     }
   }
 
+  /**
+   * Decodes any repetition and definition level data in this page
+   * @returns the offset into the page buffer after any levels have been decoded.
+   */
   protected int decodeLevels() throws IOException {
     int maxRepLevel = columnDescriptor.getMaxRepetitionLevel();
     int maxDefLevel = columnDescriptor.getMaxDefinitionLevel();
@@ -619,16 +634,18 @@ class PageReader {
   }
 
   protected void updateStats(PageHeader pageHeader, String op, long start, long time, long bytesin, long bytesout) {
-    logger.trace("ParquetTrace,{},{},{},{},{},{},{},{}",
-      op,
-      pageHeader.type == PageType.DICTIONARY_PAGE ? "Dictionary Page" : "Data Page",
-      this.parentColumnReader.parentReader.getHadoopPath(),
-      this.columnDescriptor.toString(),
-      start,
-      bytesin,
-      bytesout,
-      time
-    );
+    if (logger.isTraceEnabled()) {
+      logger.trace("ParquetTrace,{},{},{},{},{},{},{},{}",
+        op,
+        pageHeader.type == PageType.DICTIONARY_PAGE ? "Dictionary Page" : "Data Page",
+        this.parentColumnReader.parentReader.getHadoopPath(),
+        this.columnDescriptor.toString(),
+        start,
+        bytesin,
+        bytesout,
+        time
+      );
+    }
 
     if (pageHeader.type == PageType.DICTIONARY_PAGE) {
       if (bytesin == bytesout) {
@@ -653,6 +670,9 @@ class PageReader {
     }
   }
 
+  /**
+   * Clear buffers and readers between pages of a column chunk
+   */
   protected void clearDataBufferAndReaders() {
     if (pageData != null) {
       pageData.release();
@@ -660,7 +680,10 @@ class PageReader {
     }
     this.dictionaryValueReader = this.dictionaryLengthDeterminingReader = this.valueReader = null;
   }
-
+  
+  /**
+   * Clear buffers between column chunks
+   */
   protected void clearDictionaryBuffer() {
     if (dictData != null) {
       dictData.release();
@@ -720,6 +743,10 @@ class PageReader {
     int nextInt();
   }
 
+  /**
+   * Provides an iterator interface that delegates to a ValuesReader on the
+   * repetition or definition levels of a Parquert v1 page.
+   */
   static class ValuesReaderIntIterator implements IntIterator {
     ValuesReader delegate;
 
@@ -734,6 +761,10 @@ class PageReader {
     }
   }
 
+  /**
+   * Provides an interator interface to the RLE/bitpacked repetition or definition
+   * levels of a Parquet v2 page
+   */
   private static class RLEIntIterator implements IntIterator {
     RunLengthBitPackingHybridDecoder delegate;
 
@@ -751,6 +782,10 @@ class PageReader {
     }
   }
 
+  /**
+   * Provides an interator interface to the nonexistent repetition or definition
+   * levels of a page that has none.
+   */
   private static final class NullIntIterator implements IntIterator {
     @Override
     public int nextInt() {

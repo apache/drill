@@ -33,6 +33,7 @@ import io.netty.buffer.ByteBufUtil;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.util.concurrent.ExecutorServiceUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -86,8 +87,9 @@ class AsyncPageReader extends PageReader {
   private LinkedBlockingQueue<ReadStatus> pageQueue;
   private ConcurrentLinkedQueue<Future<Void>> asyncPageRead;
   private long totalPageValuesRead = 0;
-  private final Object pageQueueSyncronize = new Object(); // Object to use to synchronize access to the page Queue.
-                                                     // FindBugs complains if we synchronize on a Concurrent Queue
+  // Object to use to synchronize access to the page Queue.
+  // FindBugs complains if we synchronize on a Concurrent Queue
+  private final Object pageQueueSyncronize = new Object(); 
 
   AsyncPageReader(ColumnReader<?> parentStatus, FileSystem fs, Path path) throws ExecutionSetupException {
     super(parentStatus, fs, path);
@@ -159,13 +161,15 @@ class AsyncPageReader extends PageReader {
       outputPageData.writerIndex(outputSize);
       timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
 
-      logger.trace(
-        "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
-        columnChunkMetaData.toString(),
-        dataReader.getPos(), // TODO: see comment on earlier call to getPos()
-        outputSize,
-        ByteBufUtil.hexDump(outputPageData)
-      );
+      if (logger.isTraceEnabled()) {
+        logger.trace(
+          "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
+          columnChunkMetaData.toString(),
+          dataReader.getPos(), // TODO: see comment on earlier call to getPos()
+          outputSize,
+          ByteBufUtil.hexDump(outputPageData)
+        );
+      }
 
       this.updateStats(pageHeader, "Decompress", start, timeToRead, inputSize, outputSize);
     } finally {
@@ -221,13 +225,15 @@ class AsyncPageReader extends PageReader {
       outputPageData.writerIndex(outputSize);
       timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
 
-      logger.trace(
-        "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
-        columnChunkMetaData.toString(),
-        dataReader.getPos(), // TODO: see comment on earlier call to getPos()
-        outputSize,
-        ByteBufUtil.hexDump(outputPageData)
-      );
+      if (logger.isTraceEnabled()) {
+        logger.trace(
+          "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
+          columnChunkMetaData.toString(),
+          dataReader.getPos(), // TODO: see comment on earlier call to getPos()
+          outputSize,
+          ByteBufUtil.hexDump(outputPageData)
+        );
+      }
 
       this.updateStats(pageHeader, "Decompress", start, timeToRead, inputSize, outputSize);
     } finally {
@@ -240,10 +246,16 @@ class AsyncPageReader extends PageReader {
     return outputPageData;
   }
 
+  /**
+   * Blocks for a page to become available in the queue then takes it and schedules a new page
+   * read task if the queue was full.
+   * @returns ReadStatus the page taken from the queue
+   */
   private ReadStatus nextPageFromQueue() throws InterruptedException, ExecutionException {
     ReadStatus readStatus;
     Stopwatch timer = Stopwatch.createStarted();
-    parentColumnReader.parentReader.getOperatorContext().getStats().startWait();
+    OperatorStats opStats = parentColumnReader.parentReader.getOperatorContext().getStats();
+    opStats.startWait();
     try {
       waitForExecutionResult(); // get the result of execution
       synchronized (pageQueueSyncronize) {
@@ -259,7 +271,7 @@ class AsyncPageReader extends PageReader {
         }
       }
     } finally {
-      parentColumnReader.parentReader.getOperatorContext().getStats().stopWait();
+      opStats.stopWait();
     }
 
     long timeBlocked = timer.elapsed(TimeUnit.NANOSECONDS);
@@ -276,6 +288,10 @@ class AsyncPageReader extends PageReader {
     return readStatus;
   }
 
+  /**
+   * Inspects the type of the next page and dispatches it for dictionary loading
+   * or data decompression accordingly.
+   */
   @Override
   protected void nextInternal() throws IOException {
     try {
@@ -284,6 +300,7 @@ class AsyncPageReader extends PageReader {
 
       if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
         loadDictionary(readStatus);
+        // callers expect us to have a data page after next(), so we start over
         readStatus = nextPageFromQueue();
         pageHeader = readStatus.getPageHeader();
       }
@@ -312,6 +329,9 @@ class AsyncPageReader extends PageReader {
     }
   }
 
+  /**
+   * Blocking fetch from the page queue.
+   */
   private void waitForExecutionResult() throws InterruptedException, ExecutionException {
     // Get the execution result but don't remove the Future object from the "asyncPageRead" queue yet;
     // this will ensure that cleanup will happen properly in case of an exception being thrown
@@ -359,6 +379,9 @@ class AsyncPageReader extends PageReader {
     super.clear();
   }
 
+  /**
+   * Wraps up a buffer of page data along with the page header and some metadata
+   */
   public static class ReadStatus {
     private PageHeader pageHeader;
     private DrillBuf pageData;
@@ -438,7 +461,7 @@ class AsyncPageReader extends PageReader {
       final long totalValuesRead = parent.totalPageValuesRead;
       Stopwatch timer = Stopwatch.createStarted();
 
-      final long totalValuesCount = parent.parentColumnReader.columnChunkMetaData.getValueCount();
+      final long totalValuesCount = parent.columnChunkMetaData.getValueCount();
 
       // if we are done, just put a marker object in the queue and we are done.
       logger.trace("[{}]: Total Values COUNT {}  Total Values READ {} ", name, totalValuesCount, totalValuesRead);
@@ -450,7 +473,7 @@ class AsyncPageReader extends PageReader {
           try {
             parent.inputStream.close();
           } catch (IOException e) {
-            logger.trace(String.format("[%s]: Failure while closing InputStream", name), e);
+            logger.trace("[{}]: Failure while closing InputStream", name, e);
           }
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
