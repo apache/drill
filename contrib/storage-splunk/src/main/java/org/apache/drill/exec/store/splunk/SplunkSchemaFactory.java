@@ -38,7 +38,6 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
   private static final Logger logger = LoggerFactory.getLogger(SplunkSchemaFactory.class);
   private static final String SPL_TABLE_NAME = "spl";
   private final SplunkStoragePlugin plugin;
-  // private final EntityCollection<Index> indexes;
 
   public SplunkSchemaFactory(SplunkStoragePlugin plugin) {
     super(plugin.getName());
