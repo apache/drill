@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.store.parquet.columnreaders.VarLenColumnBulkInput.BulkReaderState;
@@ -27,7 +28,6 @@ import org.apache.drill.exec.vector.VarLenBulkInput;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.parquet.column.ColumnDescriptor;
-import org.apache.parquet.format.Encoding;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.io.api.Binary;
@@ -38,7 +38,7 @@ import io.netty.buffer.DrillBuf;
 public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLengthColumn {
 
   Binary currLengthDeterminingDictVal;
-  Binary currDictValToWrite;
+  Binary currDecodedValToWrite;
   VariableWidthVector variableWidthVector;
 
   /** Bulk read operation state that needs to be maintained across batch calls */
@@ -51,7 +51,7 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
     super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     variableWidthVector = (VariableWidthVector) valueVec;
 
-    if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
+    if (!Collections.disjoint(columnChunkMetaData.getEncodings(), ColumnReader.DICTIONARY_ENCODINGS)) {
       usingDictionary = true;
       // We didn't implement the fixed length optimization when a Parquet Dictionary is used; as there are
       // no data point about this use-case. Will also enable bulk processing by default since early data
@@ -138,9 +138,9 @@ public abstract class VarLengthValuesColumn<V extends ValueVector> extends VarLe
     // re-purposing this field here for length in BYTES to prevent repetitive multiplication/division
     if (usingDictionary) {
       if (currLengthDeterminingDictVal == null) {
-        currLengthDeterminingDictVal = pageReader.dictionaryLengthDeterminingReader.readBytes();
+        currLengthDeterminingDictVal = pageReader.getDictionaryLengthDeterminingReader().readBytes();
       }
-      currDictValToWrite = currLengthDeterminingDictVal;
+      currDecodedValToWrite = currLengthDeterminingDictVal;
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
       dataTypeLengthInBits = currLengthDeterminingDictVal.length();
     } else {

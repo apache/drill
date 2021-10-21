@@ -930,7 +930,7 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testLastPageAllNulls() throws Exception {
     compareParquetReadersColumnar(
         "c_varchar, c_integer, c_bigint, c_float, c_double, c_date, c_time, c_timestamp, c_boolean",
-        "cp.`parquet/first_page_all_nulls.parquet`");
+        "cp.`parquet/last_page_all_nulls.parquet`");
   }
   @Test
   public void testFirstPageOneNull() throws Exception {
@@ -1013,6 +1013,7 @@ public class TestParquetWriter extends BaseTestQuery {
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_brotli");
     } finally {
       resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      resetSessionOption(ExecConstants.PARQUET_NEW_RECORD_READER);
     }
   }
 
@@ -1026,6 +1027,7 @@ public class TestParquetWriter extends BaseTestQuery {
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_lz4");
     } finally {
       resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      resetSessionOption(ExecConstants.PARQUET_COLUMNREADER_ASYNC);
     }
   }
 
@@ -1039,6 +1041,7 @@ public class TestParquetWriter extends BaseTestQuery {
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_lzo");
     } finally {
       resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      resetSessionOption(ExecConstants.PARQUET_PAGEREADER_ASYNC);
     }
   }
 
@@ -1052,6 +1055,7 @@ public class TestParquetWriter extends BaseTestQuery {
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_zstd");
     } finally {
       resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      resetSessionOption(ExecConstants.PARQUET_NEW_RECORD_READER);
     }
   }
 

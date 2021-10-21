@@ -1,6 +1,7 @@
 .project
 .buildpath
 .classpath
+.factorypath
 .checkstyle
 .settings/
 .idea/

@@ -81,7 +81,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
     while (readCount < recordsToReadInThisPass && writeCount < valueVec.getValueCapacity()) {
       // read a page if needed
       if (!pageReader.hasPage()
-          || (currPageValuesProcessed >= pageReader.currentPageCount)) {
+          || (currPageValuesProcessed >= pageReader.pageValueCount)) {
         if (!pageReader.next()) {
           break;
         }
@@ -101,11 +101,11 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
 
       // If we are reentering this loop, the currentDefinitionLevel has already been read
       if (currentDefinitionLevel < 0) {
-        currentDefinitionLevel = pageReader.definitionLevels.readInteger();
+        currentDefinitionLevel = pageReader.definitionLevels.nextInt();
       }
       haveMoreData = readCount < recordsToReadInThisPass
           && writeCount + nullRunLength < valueVec.getValueCapacity()
-          && currPageValuesProcessed < pageReader.currentPageCount;
+          && currPageValuesProcessed < pageReader.pageValueCount;
       while (haveMoreData && currentDefinitionLevel < columnDescriptor
           .getMaxDefinitionLevel()) {
         readCount++;
@@ -113,9 +113,9 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         currPageValuesProcessed++;
         haveMoreData = readCount < recordsToReadInThisPass
             && writeCount + nullRunLength < valueVec.getValueCapacity()
-            && currPageValuesProcessed < pageReader.currentPageCount;
+            && currPageValuesProcessed < pageReader.pageValueCount;
         if (haveMoreData) {
-          currentDefinitionLevel = pageReader.definitionLevels.readInteger();
+          currentDefinitionLevel = pageReader.definitionLevels.nextInt();
         }
       }
       //
@@ -137,7 +137,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
       haveMoreData = readCount < recordsToReadInThisPass
           && writeCount + runLength < valueVec.getValueCapacity()
           // note: writeCount+runLength
-          && currPageValuesProcessed < pageReader.currentPageCount;
+          && currPageValuesProcessed < pageReader.pageValueCount;
       while (haveMoreData && currentDefinitionLevel >= columnDescriptor
           .getMaxDefinitionLevel()) {
         readCount++;
@@ -147,9 +147,9 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
             - 1); //set the nullable bit to indicate a non-null value
         haveMoreData = readCount < recordsToReadInThisPass
             && writeCount + runLength < valueVec.getValueCapacity()
-            && currPageValuesProcessed < pageReader.currentPageCount;
+            && currPageValuesProcessed < pageReader.pageValueCount;
         if (haveMoreData) {
-          currentDefinitionLevel = pageReader.definitionLevels.readInteger();
+          currentDefinitionLevel = pageReader.definitionLevels.nextInt();
         }
       }
 
@@ -185,7 +185,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
           recordsToReadInThisPass, runLength, nullRunLength, readCount,
           writeCount, recordsReadInThisIteration, valuesReadInCurrentPass,
           totalValuesRead, readStartInBytes, readLength, pageReader.byteLength,
-          currPageValuesProcessed, pageReader.currentPageCount);
+          currPageValuesProcessed, pageReader.pageValueCount);
 
     }
 
@@ -209,13 +209,13 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
 
     // To handle the case where the page has been already loaded
     if (pageReader.definitionLevels != null && currPageValuesProcessed == 0) {
-      definitionLevelWrapper.set(pageReader.definitionLevels, pageReader.currentPageCount);
+      definitionLevelWrapper.set(pageReader.definitionLevels, pageReader.pageValueCount);
     }
 
     while (valueCount < maxValuesToProcess) {
 
       // read a page if needed
-      if (!pageReader.hasPage() || (currPageValuesProcessed == pageReader.currentPageCount)) {
+      if (!pageReader.hasPage() || (currPageValuesProcessed == pageReader.pageValueCount)) {
         if (!pageReader.next()) {
           break;
         }
@@ -226,7 +226,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         readStartInBytes = 0;
 
         // Update the Definition Level reader
-        definitionLevelWrapper.set(pageReader.definitionLevels, pageReader.currentPageCount);
+        definitionLevelWrapper.set(pageReader.definitionLevels, pageReader.pageValueCount);
       }
 
       definitionLevelWrapper.readFirstIntegerIfNeeded();
@@ -234,7 +234,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
       int numNullValues = 0;
       int numNonNullValues = 0;
       final int remaining = maxValuesToProcess - valueCount;
-      int currBatchSz = Math.min(remaining, (pageReader.currentPageCount - currPageValuesProcessed));
+      int currBatchSz = Math.min(remaining, (pageReader.pageValueCount - currPageValuesProcessed));
       assert currBatchSz > 0;
 
       // Let's skip the next run of nulls if any ...
@@ -301,7 +301,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
           recordsToReadInThisPass, numNonNullValues, numNullValues, valueCount,
           recordsReadInThisIteration, valuesReadInCurrentPass,
           totalValuesRead, readStartInBytes, readLength, pageReader.byteLength,
-          currPageValuesProcessed, pageReader.currentPageCount);
+          currPageValuesProcessed, pageReader.pageValueCount);
       }
     } // loop-end
 
@@ -310,4 +310,14 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
 
     @Override
   protected abstract void readField(long recordsToRead);
+
+  /**
+   * Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
+   * and we will go into the else condition below. The readField method of the parent class requires the
+   * writer index to be set correctly.
+   */
+  protected final void advanceWriterIndex() {
+    int writerIndex = castedBaseVector.getBuffer().writerIndex();
+    castedBaseVector.getBuffer().setIndex(0, writerIndex + (int) readLength);
+  }
 }

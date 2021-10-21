@@ -19,8 +19,6 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 
 import io.netty.buffer.DrillBuf;
 
-import java.io.IOException;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -60,14 +58,14 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
   }
 
   @Override
-  protected boolean readAndStoreValueSizeInformation() throws IOException {
+  protected boolean readAndStoreValueSizeInformation() {
     // we need to read all of the lengths to determine if this value will fit in the current vector,
     // as we can only read each definition level once, we have to store the last one as we will need it
     // at the start of the next read if we decide after reading all of the varlength values in this record
     // that it will not fit in this batch
     currentValNull = false;
     if ( currDefLevel == -1 ) {
-      currDefLevel = pageReader.definitionLevels.readInteger();
+      currDefLevel = pageReader.definitionLevels.nextInt();
     }
     if ( columnDescriptor.getMaxDefinitionLevel() > currDefLevel) {
       nullsRead++;
@@ -80,9 +78,9 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
 
     if (usingDictionary) {
       if (currLengthDeterminingDictVal == null) {
-        currLengthDeterminingDictVal = pageReader.dictionaryLengthDeterminingReader.readBytes();
+        currLengthDeterminingDictVal = pageReader.getDictionaryLengthDeterminingReader().readBytes();
       }
-      currDictValToWrite = currLengthDeterminingDictVal;
+      currDecodedValToWrite = currLengthDeterminingDictVal;
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
       dataTypeLengthInBits = currLengthDeterminingDictVal.length();
     }
@@ -122,7 +120,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
     if (! currentValNull) {
       if (usingDictionary) {
-        currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+        currDecodedValToWrite = pageReader.getDictionaryValueReader().readBytes();
       }
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
       dataTypeLengthInBits = variableWidthVector.getAccessor().getValueLength(valuesReadInCurrentPass);

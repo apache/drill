@@ -18,11 +18,12 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.store.parquet.DataPageHeaderInfoProvider;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import io.netty.buffer.ByteBufUtil;
 import org.apache.drill.exec.util.filereader.BufferedDirectBufInputStream;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -34,37 +35,37 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.bytes.ByteBufferInputStream;
 import org.apache.parquet.bytes.BytesInput;
+import org.apache.parquet.bytes.BytesUtils;
+import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.column.Dictionary;
 import org.apache.parquet.column.Encoding;
 import org.apache.parquet.column.ValuesType;
 import org.apache.parquet.column.page.DictionaryPage;
 import org.apache.parquet.column.values.ValuesReader;
 import org.apache.parquet.column.values.dictionary.DictionaryValuesReader;
+import org.apache.parquet.column.values.rle.RunLengthBitPackingHybridDecoder;
 import org.apache.parquet.compression.CompressionCodecFactory;
 import org.apache.parquet.compression.CompressionCodecFactory.BytesInputDecompressor;
-import org.apache.parquet.format.DataPageHeader;
-import org.apache.parquet.format.DataPageHeaderV2;
 import org.apache.parquet.format.PageHeader;
 import org.apache.parquet.format.PageType;
 import org.apache.parquet.format.Util;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
-import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.io.ParquetDecodingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.parquet.column.Encoding.valueOf;
 
 // class to keep track of the read position of variable length columns
 class PageReader {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(
-      org.apache.drill.exec.store.parquet.columnreaders.PageReader.class);
+  static final Logger logger = LoggerFactory.getLogger(PageReader.class);
 
   public static final ParquetMetadataConverter METADATA_CONVERTER = ParquetFormatPlugin.parquetMetadataConverter;
 
@@ -94,22 +95,26 @@ class PageReader {
   int valuesRead;
   int byteLength;
   //int rowGroupIndex;
-  ValuesReader definitionLevels;
-  ValuesReader repetitionLevels;
-  ValuesReader valueReader;
-  ValuesReader dictionaryLengthDeterminingReader;
-  ValuesReader dictionaryValueReader;
+  IntIterator definitionLevels;
+  IntIterator repetitionLevels;
+  private ValuesReader valueReader;
+  private ValuesReader dictionaryLengthDeterminingReader;
+  private ValuesReader dictionaryValueReader;
   Dictionary dictionary;
-  PageHeader pageHeader = null;
+  PageHeader pageHeader;
 
-  int currentPageCount = -1;
+  int pageValueCount = -1;
 
   protected FSDataInputStream inputStream;
 
-  // These need to be held throughout reading of the entire column chunk
-  List<ByteBuf> allocatedDictionaryBuffers;
+  // This needs to be held throughout reading of the entire column chunk
+  DrillBuf dictData;
 
   protected final CompressionCodecFactory codecFactory;
+  protected final CompressionCodecName codecName;
+  protected final BufferAllocator allocator;
+  protected final ColumnDescriptor columnDescriptor;
+  protected final ColumnChunkMetaData columnChunkMetaData;
   protected final String fileName;
 
   protected final ParquetReaderStats stats;
@@ -119,12 +124,16 @@ class PageReader {
   private final boolean enforceTotalSize;
 
   protected final String debugName;
+  private DataPageHeaderInfoProvider dataPageInfo;
 
-  PageReader(org.apache.drill.exec.store.parquet.columnreaders.ColumnReader<?> parentStatus, FileSystem fs, Path path, ColumnChunkMetaData columnChunkMetaData)
+  PageReader(ColumnReader<?> columnReader, FileSystem fs, Path path)
     throws ExecutionSetupException {
-    this.parentColumnReader = parentStatus;
-    this.allocatedDictionaryBuffers = new ArrayList<ByteBuf>();
+    this.parentColumnReader = columnReader;
+    this.columnDescriptor = parentColumnReader.getColumnDescriptor();
+    this.columnChunkMetaData = columnReader.columnChunkMetaData;
     this.codecFactory = parentColumnReader.parentReader.getCodecFactory();
+    this.codecName = parentColumnReader.columnChunkMetaData.getCodec();
+    this.allocator = parentColumnReader.parentReader.getOperatorContext().getAllocator();
     this.stats = parentColumnReader.parentReader.parquetReaderStats;
     this.fileName = path.toString();
     debugName = new StringBuilder()
@@ -135,12 +144,11 @@ class PageReader {
        .toString();
     try {
       inputStream  = fs.open(path);
-      BufferAllocator allocator =  parentColumnReader.parentReader.getOperatorContext().getAllocator();
-      columnChunkMetaData.getTotalUncompressedSize();
       useBufferedReader  = parentColumnReader.parentReader.useBufferedReader;
       scanBufferSize = parentColumnReader.parentReader.bufferedReadSize;
       useFadvise = parentColumnReader.parentReader.useFadvise;
       enforceTotalSize = parentColumnReader.parentReader.enforceTotalSize;
+
       if (useBufferedReader) {
         this.dataReader = new BufferedDirectBufInputStream(inputStream, allocator, path.getName(),
             columnChunkMetaData.getStartingPos(), columnChunkMetaData.getTotalSize(), scanBufferSize,
@@ -154,266 +162,492 @@ class PageReader {
       throw new ExecutionSetupException("Error opening or reading metadata for parquet file at location: "
           + path.getName(), e);
     }
+  }
 
+  protected void throwUserException(Exception e, String msg) throws UserException {
+    UserException ex = UserException.dataReadError(e).message(msg)
+        .pushContext("Row Group Start: ", columnChunkMetaData.getStartingPos())
+        .pushContext("Column: ", this.parentColumnReader.schemaElement.getName())
+        .pushContext("File: ", this.fileName).build(logger);
+    throw ex;
   }
 
   protected void init() throws IOException{
     dataReader.init();
-    loadDictionaryIfExists(parentColumnReader, parentColumnReader.columnChunkMetaData, dataReader);
+
+    // If getDictionaryPageOffset() was reliable we could read the dictionary page once
+    // and for all here.  Instead we must encounter the dictionary page during calls to next()
+    // and the code that follows remains commented out.
+    /*
+    long dictPageOffset = columnChunkMetaData.getDictionaryPageOffset();
+    if (dictPageOffset < dataReader.getPos()) {
+      return; // this column chunk has no dictionary page
+    }
+
+    // advance to the start of the dictionary page
+    skip(dictPageOffset - dataReader.getPos());
+    nextPageHeader();
+    loadDictionary();
+     */
   }
 
-  protected void loadDictionaryIfExists(final org.apache.drill.exec.store.parquet.columnreaders.ColumnReader<?> parentStatus,
-      final ColumnChunkMetaData columnChunkMetaData, final DirectBufInputStream f) throws IOException {
-    Stopwatch timer = Stopwatch.createUnstarted();
-    if (columnChunkMetaData.getDictionaryPageOffset() > 0) {
-      long bytesToSkip = columnChunkMetaData.getDictionaryPageOffset() - dataReader.getPos();
-      while (bytesToSkip > 0) {
-        long skipped = dataReader.skip(bytesToSkip);
-        if (skipped > 0) {
-          bytesToSkip -= skipped;
+  /**
+   * Skip over n bytes of column data
+   * @param n number of bytes to skip
+   * @throws IOException
+   */
+  protected void skip(long n) throws IOException {
+    assert n >= 0;
+
+    while (n > 0) {
+      long skipped = dataReader.skip(n);
+      if (skipped > 0) {
+        n -= skipped;
+      } else {
+        // no good way to handle this. Guava uses InputStream.available to check
+        // if EOF is reached and because available is not reliable,
+        // tries to read the rest of the data.
+        DrillBuf skipBuf = dataReader.getNext((int) n);
+        if (skipBuf != null) {
+          skipBuf.release();
         } else {
-          // no good way to handle this. Guava uses InputStream.available to check
-          // if EOF is reached and because available is not reliable,
-          // tries to read the rest of the data.
-          DrillBuf skipBuf = dataReader.getNext((int) bytesToSkip);
-          if (skipBuf != null) {
-            skipBuf.release();
-          } else {
-            throw new EOFException("End of File reachecd.");
-          }
+          throw new EOFException("End of file reached.");
         }
       }
-
-      long start=dataReader.getPos();
-      timer.start();
-      final PageHeader pageHeader = Util.readPageHeader(f);
-      long timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
-      long pageHeaderBytes=dataReader.getPos()-start;
-      this.updateStats(pageHeader, "Page Header", start, timeToRead, pageHeaderBytes, pageHeaderBytes);
-      assert pageHeader.type == PageType.DICTIONARY_PAGE;
-      readDictionaryPage(pageHeader, parentStatus);
     }
   }
 
-  private void readDictionaryPage(final PageHeader pageHeader,
-                                  final ColumnReader<?> parentStatus) throws IOException {
-    int compressedSize = pageHeader.getCompressed_page_size();
-    int uncompressedSize = pageHeader.getUncompressed_page_size();
+  /**
+   * Reads and stores this column chunk's dictionary.
+   * @throws IOException
+   */
+  protected void loadDictionary() throws IOException {
+    assert pageHeader.getType() == PageType.DICTIONARY_PAGE;
+    assert this.dictionary == null;
 
-    final DrillBuf dictionaryData = readPage(pageHeader, compressedSize, uncompressedSize);
-    allocatedDictionaryBuffers.add(dictionaryData);
+    // dictData is not a local because we need to release it later.
+    this.dictData = codecName == CompressionCodecName.UNCOMPRESSED
+      ? readUncompressedPage()
+      : readCompressedPageV1();
 
     DictionaryPage page = new DictionaryPage(
-        asBytesInput(dictionaryData, 0, uncompressedSize),
-        pageHeader.uncompressed_page_size,
-        pageHeader.dictionary_page_header.num_values,
-        valueOf(pageHeader.dictionary_page_header.encoding.name()));
+      asBytesInput(dictData, 0, pageHeader.uncompressed_page_size),
+      pageHeader.uncompressed_page_size,
+      pageHeader.dictionary_page_header.num_values,
+      valueOf(pageHeader.dictionary_page_header.encoding.name())
+    );
 
-    this.dictionary = page.getEncoding().initDictionary(parentStatus.columnDescriptor, page);
+    this.dictionary = page.getEncoding().initDictionary(columnDescriptor, page);
   }
 
-  private DrillBuf readPage(PageHeader pageHeader, int compressedSize, int uncompressedSize) throws IOException {
-    DrillBuf pageDataBuf = null;
+  /**
+   * Reads an uncompressed Parquet page without copying the buffer returned by the backing input stream.
+   * @return uncompressed Parquet page data
+   * @throws IOException
+   */
+  protected DrillBuf readUncompressedPage() throws IOException {
+    int outputSize = pageHeader.getUncompressed_page_size();
+    long start = dataReader.getPos();
+
+    Stopwatch timer = Stopwatch.createStarted();
+    DrillBuf outputPageData = dataReader.getNext(outputSize);
+    long timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
+
+    if (logger.isTraceEnabled()) {
+        logger.trace(
+          "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
+          columnChunkMetaData.toString(),
+          dataReader.getPos(),
+          outputSize,
+          ByteBufUtil.hexDump(outputPageData)
+        );
+    }
+
+    this.updateStats(pageHeader, "Page Read", start, timeToRead, outputSize, outputSize);
+
+    return outputPageData;
+  }
+
+  /**
+   * Reads a compressed v1 data page or a dictionary page, both of which are compressed
+   * in their entirety.
+   * @return decompressed Parquet page data
+   * @throws IOException
+   */
+  protected DrillBuf readCompressedPageV1() throws IOException {
     Stopwatch timer = Stopwatch.createUnstarted();
+
+    int inputSize = pageHeader.getCompressed_page_size();
+    int outputSize = pageHeader.getUncompressed_page_size();
+    long start = dataReader.getPos();
     long timeToRead;
-    long start=dataReader.getPos();
-    if (parentColumnReader.columnChunkMetaData.getCodec() == CompressionCodecName.UNCOMPRESSED) {
+
+    DrillBuf inputPageData = null;
+    DrillBuf outputPageData = this.allocator.buffer(outputSize);
+
+    try {
       timer.start();
-      pageDataBuf = dataReader.getNext(compressedSize);
-      if (logger.isTraceEnabled()) {
-        logger.trace("PageReaderTask==> Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
-            parentColumnReader.columnChunkMetaData.toString(), dataReader.getPos(),
-            pageHeader.getUncompressed_page_size(), ByteBufUtil.hexDump(pageData));
-      }
+      inputPageData = dataReader.getNext(inputSize);
       timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
-      this.updateStats(pageHeader, "Page Read", start, timeToRead, compressedSize, uncompressedSize);
-    } else {
-      DrillBuf compressedData = null;
-      pageDataBuf=allocateTemporaryBuffer(uncompressedSize);
+      this.updateStats(pageHeader, "Page Read", start, timeToRead, inputSize, inputSize);
+      timer.reset();
 
-      try {
-        timer.start();
-        compressedData = dataReader.getNext(compressedSize);
-        timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
+      timer.start();
+      start = dataReader.getPos();
+      CompressionCodecName codecName = columnChunkMetaData.getCodec();
+      BytesInputDecompressor decomp = codecFactory.getDecompressor(codecName);
+      ByteBuffer input = inputPageData.nioBuffer(0, inputSize);
+      ByteBuffer output = outputPageData.nioBuffer(0, outputSize);
 
-        timer.reset();
-        this.updateStats(pageHeader, "Page Read", start, timeToRead, compressedSize, compressedSize);
-        start = dataReader.getPos();
-        timer.start();
+      decomp.decompress(input, inputSize, output, outputSize);
+      outputPageData.writerIndex(outputSize);
+      timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
 
-        CompressionCodecName codecName = parentColumnReader.columnChunkMetaData.getCodec();
-        BytesInputDecompressor decomp = codecFactory.getDecompressor(codecName);
-        ByteBuffer input = compressedData.nioBuffer(0, compressedSize);
-        ByteBuffer output = pageDataBuf.nioBuffer(0, uncompressedSize);
+      if (logger.isTraceEnabled()) {
+        logger.trace(
+          "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
+          columnChunkMetaData.toString(),
+          dataReader.getPos(),
+          outputSize,
+          ByteBufUtil.hexDump(outputPageData)
+        );
+      }
 
-        decomp.decompress(input, compressedSize, output, uncompressedSize);
-        pageDataBuf.writerIndex(uncompressedSize);
-        timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
-        this.updateStats(pageHeader, "Decompress", start, timeToRead, compressedSize, uncompressedSize);
-      } finally {
-        if (compressedData != null) {
-          compressedData.release();
-        }
+      this.updateStats(pageHeader, "Decompress", start, timeToRead, inputSize, outputSize);
+    } finally {
+      if (inputPageData != null) {
+        inputPageData.release();
       }
     }
-    return pageDataBuf;
-  }
 
-  public static BytesInput asBytesInput(DrillBuf buf, int offset, int length) throws IOException {
-    return BytesInput.from(buf.nioBuffer(offset, length));
+    return outputPageData;
   }
-
 
   /**
-   * Get the page header and the pageData (uncompressed) for the next page
+   * Reads a compressed v2 data page which excluded the repetition and definition level
+   * sections from compression.
+   * @return decompressed Parquet page data
+   * @throws IOException
    */
-  protected void nextInternal() throws IOException{
+  protected DrillBuf readCompressedPageV2() throws IOException {
     Stopwatch timer = Stopwatch.createUnstarted();
-    // next, we need to decompress the bytes
-    // TODO - figure out if we need multiple dictionary pages, I believe it may be limited to one
-    // I think we are clobbering parts of the dictionary if there can be multiple pages of dictionary
-    do {
-      long start=dataReader.getPos();
+
+    int inputSize = pageHeader.getCompressed_page_size();
+    int repLevelSize = pageHeader.data_page_header_v2.getRepetition_levels_byte_length();
+    int defLevelSize = pageHeader.data_page_header_v2.getDefinition_levels_byte_length();
+    int compDataOffset = repLevelSize + defLevelSize;
+    int outputSize = pageHeader.uncompressed_page_size;
+    long start = dataReader.getPos();
+    long timeToRead;
+
+    DrillBuf inputPageData = null;
+    DrillBuf outputPageData = this.allocator.buffer(outputSize);
+
+    try {
       timer.start();
-      pageHeader = Util.readPageHeader(dataReader);
-      long timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
-      long pageHeaderBytes=dataReader.getPos()-start;
-      this.updateStats(pageHeader, "Page Header", start, timeToRead, pageHeaderBytes, pageHeaderBytes);
-      logger.trace("ParquetTrace,{},{},{},{},{},{},{},{}","Page Header Read","",
-          this.parentColumnReader.parentReader.getHadoopPath(),
-          this.parentColumnReader.columnDescriptor.toString(), start, 0, 0, timeToRead);
+      // Read in both the uncompressed and compressed sections
+      inputPageData = dataReader.getNext(inputSize);
+      timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
+      this.updateStats(pageHeader, "Page Read", start, timeToRead, inputSize, inputSize);
       timer.reset();
-      if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
-        readDictionaryPage(pageHeader, parentColumnReader);
+
+      timer.start();
+      start = dataReader.getPos();
+      // Write out the uncompressed section
+      // Note that the following setBytes call to read the repetition and definition level sections
+      // advances readerIndex in inputPageData but not writerIndex in outputPageData.
+      outputPageData.setBytes(0, inputPageData, compDataOffset);
+
+      // decompress from the start of compressed data to the end of the input buffer
+      CompressionCodecName codecName = columnChunkMetaData.getCodec();
+      BytesInputDecompressor decomp = codecFactory.getDecompressor(codecName);
+      ByteBuffer input = inputPageData.nioBuffer(compDataOffset, inputSize - compDataOffset);
+      ByteBuffer output = outputPageData.nioBuffer(compDataOffset, outputSize - compDataOffset);
+      decomp.decompress(
+        input,
+        inputSize - compDataOffset,
+        output,
+        outputSize - compDataOffset
+      );
+      outputPageData.writerIndex(outputSize);
+      timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
+
+    if (logger.isTraceEnabled()) {
+      logger.trace(
+        "Col: {}  readPos: {}  Uncompressed_size: {}  pageData: {}",
+        columnChunkMetaData.toString(),
+        dataReader.getPos(),
+        outputSize,
+        ByteBufUtil.hexDump(outputPageData)
+      );
+    }
+
+      this.updateStats(pageHeader, "Decompress", start, timeToRead, inputSize, outputSize);
+    } finally {
+      if (inputPageData != null) {
+        inputPageData.release();
       }
-    } while (pageHeader.getType() == PageType.DICTIONARY_PAGE);
+    }
 
-    int compressedSize = pageHeader.getCompressed_page_size();
-    int uncompressedSize = pageHeader.getUncompressed_page_size();
-    pageData = readPage(pageHeader, compressedSize, uncompressedSize);
-
+    return outputPageData;
   }
 
   /**
-   * Grab the next page.
+   * Reads the next page header available in the backing input stream.
+   * @throws IOException
+   */
+  protected void readPageHeader() throws IOException {
+    long start = dataReader.getPos();
+    Stopwatch timer = Stopwatch.createStarted();
+    this.pageHeader = Util.readPageHeader(dataReader);
+    long timeToRead = timer.elapsed(TimeUnit.NANOSECONDS);
+    long pageHeaderBytes = dataReader.getPos() - start;
+    this.updateStats(pageHeader, "Page Header", start, timeToRead, pageHeaderBytes, pageHeaderBytes);
+
+    if (logger.isTraceEnabled()) {
+      logger.trace(
+        "ParquetTrace,{},{},{},{},{},{},{},{}", "Page Header Read", "",
+        this.parentColumnReader.parentReader.getHadoopPath(),
+        this.columnDescriptor.toString(),
+        start,
+        0,
+        0,
+        timeToRead
+      );
+    }
+  }
+
+  /**
+   * Inspects the type of the next page and dispatches it for dictionary loading
+   * or data decompression accordingly.
+   * @throws IOException
+   */
+  protected void nextInternal() throws IOException {
+    readPageHeader();
+
+    if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
+      loadDictionary();
+      // callers expect us to have a data page after next(), so we start over
+      readPageHeader();
+    }
+
+    switch (pageHeader.getType()) {
+      case DATA_PAGE:
+        pageData = codecName == CompressionCodecName.UNCOMPRESSED
+          ? readUncompressedPage()
+          : readCompressedPageV1();
+        break;
+      case DATA_PAGE_V2:
+        pageData = codecName == CompressionCodecName.UNCOMPRESSED
+          ? readUncompressedPage()
+          : readCompressedPageV2();
+        break;
+      default:
+        logger.info("skipping a {} of size {}", pageHeader.getType(), pageHeader.compressed_page_size);
+        skip(pageHeader.compressed_page_size);
+    }
+  }
+
+  /**
+   * Decodes any repetition and definition level data in this page
+   * @returns the offset into the page buffer after any levels have been decoded.
+   */
+  protected int decodeLevels() throws IOException {
+    int maxRepLevel = columnDescriptor.getMaxRepetitionLevel();
+    int maxDefLevel = columnDescriptor.getMaxDefinitionLevel();
+    int dataOffset;
+
+    switch (pageHeader.getType()) {
+      case DATA_PAGE:
+        ByteBufferInputStream dataStream = ByteBufferInputStream.wrap(pageData.nioBuffer(0, byteLength));
+
+        if (maxRepLevel > 0) {
+          Encoding rlEncoding = METADATA_CONVERTER.getEncoding(dataPageInfo.getRepetitionLevelEncoding());
+          ValuesReader rlReader = rlEncoding.getValuesReader(columnDescriptor, ValuesType.REPETITION_LEVEL);
+          rlReader.initFromPage(pageValueCount, dataStream);
+          this.repetitionLevels = new ValuesReaderIntIterator(rlReader);
+
+          // we know that the first value will be a 0, at the end of each list of repeated values we will hit another 0 indicating
+          // a new record, although we don't know the length until we hit it (and this is a one way stream of integers) so we
+          // read the first zero here to simplify the reading processes, and start reading the first value the same as all
+          // of the rest. Effectively we are 'reading' the non-existent value in front of the first allowing direct access to
+          // the first list of repetition levels
+          this.repetitionLevels.nextInt();
+        }
+
+        if (maxDefLevel > 0) {
+          Encoding dlEncoding = METADATA_CONVERTER.getEncoding(dataPageInfo.getDefinitionLevelEncoding());
+          ValuesReader dlReader = dlEncoding.getValuesReader(columnDescriptor, ValuesType.DEFINITION_LEVEL);
+          dlReader.initFromPage(pageValueCount, dataStream);
+          this.definitionLevels = new ValuesReaderIntIterator(dlReader);
+        }
+
+        dataOffset = (int) dataStream.position();
+        break;
+      case DATA_PAGE_V2:
+        int repLevelLen = pageHeader.data_page_header_v2.repetition_levels_byte_length;
+        int defLevelLen = pageHeader.data_page_header_v2.definition_levels_byte_length;
+
+        if (maxRepLevel > 0) {
+          this.repetitionLevels = newRLEIterator(
+            maxRepLevel,
+            BytesInput.from(pageData.nioBuffer(0, repLevelLen))
+          );
+
+          // See earlier comment.
+          this.repetitionLevels.nextInt();
+        }
+
+        if (maxDefLevel > 0) {
+          this.definitionLevels = newRLEIterator(
+            maxDefLevel,
+            BytesInput.from(pageData.nioBuffer(repLevelLen, defLevelLen))
+          );
+        }
+
+        dataOffset = repLevelLen + defLevelLen;
+        break;
+      default:
+        throw new DrillRuntimeException(String.format(
+          "Did not expect to find a page of type %s now.",
+          pageHeader.getType()
+        ));
+    }
+    return dataOffset;
+  }
+
+  /**
+   * Read the next page in the parent column chunk
    *
-   * @return - if another page was present
+   * @return true if a page was found to read
    * @throws IOException
    */
   public boolean next() throws IOException {
-    Stopwatch timer = Stopwatch.createUnstarted();
-    currentPageCount = -1;
-    valuesRead = 0;
-    valuesReadyToRead = 0;
+    this.pageValueCount = -1;
+    this.valuesRead = this.valuesReadyToRead = 0;
+    this.parentColumnReader.currDefLevel = -1;
+    long totalValueCount = columnChunkMetaData.getValueCount();
 
-    // TODO - the metatdata for total size appears to be incorrect for impala generated files, need to find cause
-    // and submit a bug report
-    long totalValueCount = parentColumnReader.columnChunkMetaData.getValueCount();
-    if(parentColumnReader.totalValuesRead >= totalValueCount) {
+    if (parentColumnReader.totalValuesRead >= totalValueCount) {
       return false;
     }
-    clearBuffers();
 
+    clearDataBufferAndReaders();
     nextInternal();
-    if(pageData == null || pageHeader == null){
-      //TODO: Is this an error condition or a normal condition??
-      return false;
+
+    if (pageData == null || pageHeader == null) {
+      throw new DrillRuntimeException(String.format(
+        "Failed to read another page having read %d of %d values from its column chunk.",
+        parentColumnReader.totalValuesRead,
+        totalValueCount
+      ));
     }
 
-    timer.start();
-    PageHeaderInfoProvider pageHeaderInfoProvider = pageHeaderInfoProviderBuilder(pageHeader);
-    currentPageCount = pageHeaderInfoProvider.getNumValues();
+    dataPageInfo = DataPageHeaderInfoProvider.builder(this.pageHeader);
+    this.byteLength = this.pageHeader.uncompressed_page_size;
+    this.pageValueCount = dataPageInfo.getNumValues();
 
-    final Encoding rlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfoProvider.getRepetitionLevelEncoding());
-    final Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfoProvider.getDefinitionLevelEncoding());
-    final Encoding valueEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfoProvider.getEncoding());
-
-    byteLength = pageHeader.uncompressed_page_size;
-
-    final ByteBufferInputStream in = ByteBufferInputStream.wrap(pageData.nioBuffer(0, pageData.capacity()));
-
-    readPosInBytes = 0;
-    if (parentColumnReader.getColumnDescriptor().getMaxRepetitionLevel() > 0) {
-      repetitionLevels = rlEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.REPETITION_LEVEL);
-      repetitionLevels.initFromPage(currentPageCount, in);
-      // we know that the first value will be a 0, at the end of each list of repeated values we will hit another 0 indicating
-      // a new record, although we don't know the length until we hit it (and this is a one way stream of integers) so we
-      // read the first zero here to simplify the reading processes, and start reading the first value the same as all
-      // of the rest. Effectively we are 'reading' the non-existent value in front of the first allowing direct access to
-      // the first list of repetition levels
-      readPosInBytes = in.position();
-      repetitionLevels.readInteger();
-    }
-    if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0) {
-      parentColumnReader.currDefLevel = -1;
-      definitionLevels = dlEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
-      definitionLevels.initFromPage(currentPageCount, in);
-      readPosInBytes = in.position();
-      if (!valueEncoding.usesDictionary()) {
-        valueReader = valueEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
-        valueReader.initFromPage(currentPageCount, in);
-      }
-    }
-    if (valueReader == null && parentColumnReader.columnDescriptor.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
-      valueReader = valueEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
-      valueReader.initFromPage(currentPageCount, in);
-    }
-    if (valueEncoding.usesDictionary()) {
-      // initialize two of the dictionary readers, one is for determining the lengths of each value, the second is for
-      // actually copying the values out into the vectors
-      Preconditions.checkState(readPosInBytes < pageData.capacity());
-      int index = (int)readPosInBytes;
-      ByteBuffer byteBuffer = pageData.nioBuffer(index, pageData.capacity() - index);
-      dictionaryLengthDeterminingReader = new DictionaryValuesReader(dictionary);
-      dictionaryLengthDeterminingReader.initFromPage(currentPageCount, ByteBufferInputStream.wrap(byteBuffer));
-      dictionaryValueReader = new DictionaryValuesReader(dictionary);
-      dictionaryValueReader.initFromPage(currentPageCount, ByteBufferInputStream.wrap(byteBuffer));
-      parentColumnReader.usingDictionary = true;
-    } else {
-      parentColumnReader.usingDictionary = false;
-    }
+    Stopwatch timer = Stopwatch.createStarted();
     // readPosInBytes is used for actually reading the values after we determine how many will fit in the vector
     // readyToReadPosInBytes serves a similar purpose for the vector types where we must count up the values that will
     // fit one record at a time, such as for variable length data. Both operations must start in the same location after the
     // definition and repetition level data which is stored alongside the page data itself
-    readyToReadPosInBytes = readPosInBytes;
+    this.readyToReadPosInBytes = this.readPosInBytes = decodeLevels();
+
+    Encoding valueEncoding = METADATA_CONVERTER.getEncoding(dataPageInfo.getEncoding());
+    parentColumnReader.usingDictionary = valueEncoding.usesDictionary();
+
     long timeDecode = timer.elapsed(TimeUnit.NANOSECONDS);
     stats.numDataPagesDecoded.incrementAndGet();
     stats.timeDataPageDecode.addAndGet(timeDecode);
+
     return true;
   }
 
   /**
-   * Allocate a buffer which the user should release immediately. The reader does not manage release of these buffers.
+   * Lazily creates a ValuesReader for when use in the cases when the data type
+   * or encoding requires it.
+   * @return an existing or new ValuesReader
    */
-  protected DrillBuf allocateTemporaryBuffer(int size) {
-    return parentColumnReader.parentReader.getOperatorContext().getAllocator().buffer(size);
+  public ValuesReader getValueReader() {
+    if (valueReader == null) {
+      Encoding valueEncoding = METADATA_CONVERTER.getEncoding(dataPageInfo.getEncoding());
+      ByteBuffer dataBuffer = pageData.nioBuffer((int)readPosInBytes, byteLength-(int)readPosInBytes);
+      this.valueReader = valueEncoding.getValuesReader(columnDescriptor, ValuesType.VALUES);
+      try {
+        this.valueReader.initFromPage(pageValueCount, ByteBufferInputStream.wrap(dataBuffer));
+      } catch (IOException e) {
+        throw new DrillRuntimeException("Error initialising a ValuesReader for this page.", e);
+      }
+    }
+
+    return valueReader;
   }
 
+  /**
+   * Lazily creates a dictionary length determining ValuesReader for when use when this column chunk
+   * is dictionary encoded.
+   * @return an existing or new ValuesReader
+   */
+  public ValuesReader getDictionaryLengthDeterminingReader() {
+    if (dictionaryLengthDeterminingReader == null) {
+      ByteBuffer dataBuffer = pageData.nioBuffer((int)readPosInBytes, byteLength-(int)readPosInBytes);
+      dictionaryLengthDeterminingReader = new DictionaryValuesReader(dictionary);
+      try {
+        dictionaryLengthDeterminingReader.initFromPage(pageValueCount, ByteBufferInputStream.wrap(dataBuffer));
+      } catch (IOException e) {
+        throw new DrillRuntimeException(
+          "Error initialising a dictionary length determining ValuesReader for this page.",
+          e
+        );
+      }
+    }
+    return dictionaryLengthDeterminingReader;
+  }
+
+  /**
+   * Lazily creates a dictionary ValuesReader for when use when this column chunk is dictionary encoded.
+   * @return an existing or new ValuesReader
+   */
+  public ValuesReader getDictionaryValueReader() {
+    if (dictionaryValueReader == null) {
+      ByteBuffer dataBuffer = pageData.nioBuffer((int)readPosInBytes, byteLength-(int)readPosInBytes);
+      dictionaryValueReader = new DictionaryValuesReader(dictionary);
+      try {
+        dictionaryValueReader.initFromPage(pageValueCount, ByteBufferInputStream.wrap(dataBuffer));
+      } catch (IOException e) {
+        throw new DrillRuntimeException(
+          "Error initialising a dictionary ValuesReader for this page.",
+          e
+        );
+      }
+    }
+    return dictionaryValueReader;
+  }
+
+  /**
+   *
+   * @return true if the previous call to next() read a page.
+   */
   protected boolean hasPage() {
-    return currentPageCount != -1;
+    return pageValueCount != -1;
   }
 
   protected void updateStats(PageHeader pageHeader, String op, long start, long time, long bytesin, long bytesout) {
-    String pageType = "Data Page";
-    if (pageHeader.type == PageType.DICTIONARY_PAGE) {
-      pageType = "Dictionary Page";
-    }
-    logger.trace("ParquetTrace,{},{},{},{},{},{},{},{}", op, pageType,
+    if (logger.isTraceEnabled()) {
+      logger.trace("ParquetTrace,{},{},{},{},{},{},{},{}",
+        op,
+        pageHeader.type == PageType.DICTIONARY_PAGE ? "Dictionary Page" : "Data Page",
         this.parentColumnReader.parentReader.getHadoopPath(),
-        this.parentColumnReader.columnDescriptor.toString(), start, bytesin, bytesout, time);
+        this.columnDescriptor.toString(),
+        start,
+        bytesin,
+        bytesout,
+        time
+      );
+    }
 
-    if (pageHeader.type != PageType.DICTIONARY_PAGE) {
-      if (bytesin == bytesout) {
-        this.stats.timeDataPageLoads.addAndGet(time);
-        this.stats.numDataPageLoads.incrementAndGet();
-        this.stats.totalDataPageReadBytes.addAndGet(bytesin);
-      } else {
-        this.stats.timeDataPagesDecompressed.addAndGet(time);
-        this.stats.numDataPagesDecompressed.incrementAndGet();
-        this.stats.totalDataDecompressedBytes.addAndGet(bytesin);
-      }
-    } else {
+    if (pageHeader.type == PageType.DICTIONARY_PAGE) {
       if (bytesin == bytesout) {
         this.stats.timeDictPageLoads.addAndGet(time);
         this.stats.numDictPageLoads.incrementAndGet();
@@ -423,146 +657,139 @@ class PageReader {
         this.stats.numDictPagesDecompressed.incrementAndGet();
         this.stats.totalDictDecompressedBytes.addAndGet(bytesin);
       }
+    } else {
+      if (bytesin == bytesout) {
+        this.stats.timeDataPageLoads.addAndGet(time);
+        this.stats.numDataPageLoads.incrementAndGet();
+        this.stats.totalDataPageReadBytes.addAndGet(bytesin);
+      } else {
+        this.stats.timeDataPagesDecompressed.addAndGet(time);
+        this.stats.numDataPagesDecompressed.incrementAndGet();
+        this.stats.totalDataDecompressedBytes.addAndGet(bytesin);
+      }
     }
   }
 
-  protected void clearBuffers() {
+  /**
+   * Clear buffers and readers between pages of a column chunk
+   */
+  protected void clearDataBufferAndReaders() {
     if (pageData != null) {
       pageData.release();
       pageData = null;
     }
+    this.dictionaryValueReader = this.dictionaryLengthDeterminingReader = this.valueReader = null;
   }
 
-  protected void clearDictionaryBuffers() {
-    for (ByteBuf b : allocatedDictionaryBuffers) {
-      b.release();
+  /**
+   * Clear buffers between column chunks
+   */
+  protected void clearDictionaryBuffer() {
+    if (dictData != null) {
+      dictData.release();
+      dictData = null;
     }
-    allocatedDictionaryBuffers.clear();
   }
 
-  public void clear(){
+  /**
+   * Closes the backing input stream and frees all allocated buffers.
+   */
+  public void clear() {
     try {
       // data reader also owns the input stream and will close it.
       this.dataReader.close();
     } catch (IOException e) {
       //Swallow the exception which is OK for input streams
+      logger.warn("encountered an error when it tried to close its input stream: {}", e);
     }
     // Free all memory, including fixed length types. (Data is being copied for all types not just var length types)
-    clearBuffers();
-    clearDictionaryBuffers();
+    clearDataBufferAndReaders();
+    clearDictionaryBuffer();
   }
 
   /**
    * Enables Parquet column readers to reset the definition level reader to a specific state.
    * @param skipCount the number of rows to skip (optional)
    *
-   * @throws IOException An IO related condition
+   * @throws IOException
    */
   void resetDefinitionLevelReader(int skipCount) throws IOException {
-    Preconditions.checkState(parentColumnReader.columnDescriptor.getMaxDefinitionLevel() == 1);
-    Preconditions.checkState(currentPageCount > 0);
+    Preconditions.checkState(columnDescriptor.getMaxDefinitionLevel() == 1);
+    Preconditions.checkState(pageValueCount > 0);
 
-    PageHeaderInfoProvider pageHeaderInfoProvider = pageHeaderInfoProviderBuilder(pageHeader);
-    final Encoding rlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfoProvider.getRepetitionLevelEncoding());
-    final Encoding dlEncoding = METADATA_CONVERTER.getEncoding(pageHeaderInfoProvider.getDefinitionLevelEncoding());
-
-    final ByteBufferInputStream in = ByteBufferInputStream.wrap(pageData.nioBuffer(0, pageData.capacity()));
-
-    if (parentColumnReader.getColumnDescriptor().getMaxRepetitionLevel() > 0) {
-      repetitionLevels = rlEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.REPETITION_LEVEL);
-      repetitionLevels.initFromPage(currentPageCount, in);
-      repetitionLevels.readInteger();
-    }
-
-    definitionLevels = dlEncoding.getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
-    parentColumnReader.currDefLevel = -1;
-
-    // Now reinitialize the underlying decoder
-    definitionLevels.initFromPage(currentPageCount, in);
+    decodeLevels();
 
     // Skip values if requested by caller
     for (int idx = 0; idx < skipCount; ++idx) {
-      definitionLevels.skip();
+      definitionLevels.nextInt();
+    }
+  }
+
+  public static BytesInput asBytesInput(DrillBuf buf, int offset, int length) throws IOException {
+    return BytesInput.from(buf.nioBuffer(offset, length));
+  }
+
+  private IntIterator newRLEIterator(int maxLevel, BytesInput bytes) throws IOException {
+    if (maxLevel == 0) {
+      return new NullIntIterator();
+    }
+    return new RLEIntIterator(
+      new RunLengthBitPackingHybridDecoder(
+        BytesUtils.getWidthFromMaxInt(maxLevel),
+        bytes.toInputStream()));
+  }
+
+  interface IntIterator {
+    int nextInt();
+  }
+
+  /**
+   * Provides an iterator interface that delegates to a ValuesReader on the
+   * repetition or definition levels of a Parquert v1 page.
+   */
+  static class ValuesReaderIntIterator implements IntIterator {
+    ValuesReader delegate;
+
+    public ValuesReaderIntIterator(ValuesReader delegate) {
+      super();
+      this.delegate = delegate;
+    }
+
+    @Override
+    public int nextInt() {
+      return delegate.readInteger();
     }
   }
 
   /**
-   * Common interface for wrappers of {@link DataPageHeader} and {@link DataPageHeaderV2} classes.
+   * Provides an interator interface to the RLE/bitpacked repetition or definition
+   * levels of a Parquet v2 page
    */
-  private interface PageHeaderInfoProvider {
-    int getNumValues();
+  private static class RLEIntIterator implements IntIterator {
+    RunLengthBitPackingHybridDecoder delegate;
 
-    org.apache.parquet.format.Encoding getEncoding();
-
-    org.apache.parquet.format.Encoding getDefinitionLevelEncoding();
-
-    org.apache.parquet.format.Encoding getRepetitionLevelEncoding();
-  }
-
-  private static class DataPageHeaderV1InfoProvider implements PageHeaderInfoProvider {
-    private final DataPageHeader dataPageHeader;
-
-    private DataPageHeaderV1InfoProvider(DataPageHeader dataPageHeader) {
-      this.dataPageHeader = dataPageHeader;
+    public RLEIntIterator(RunLengthBitPackingHybridDecoder delegate) {
+      this.delegate = delegate;
     }
 
     @Override
-    public int getNumValues() {
-      return dataPageHeader.getNum_values();
-    }
-
-    @Override
-    public org.apache.parquet.format.Encoding getEncoding() {
-      return dataPageHeader.getEncoding();
-    }
-
-    @Override
-    public org.apache.parquet.format.Encoding getDefinitionLevelEncoding() {
-      return dataPageHeader.getDefinition_level_encoding();
-    }
-
-    @Override
-    public org.apache.parquet.format.Encoding getRepetitionLevelEncoding() {
-      return dataPageHeader.getRepetition_level_encoding();
+    public int nextInt() {
+      try {
+        return delegate.readInt();
+      } catch (IOException e) {
+        throw new ParquetDecodingException(e);
+      }
     }
   }
 
-  private static class DataPageHeaderV2InfoProvider implements PageHeaderInfoProvider {
-    private final DataPageHeaderV2 dataPageHeader;
-
-    private DataPageHeaderV2InfoProvider(DataPageHeaderV2 dataPageHeader) {
-      this.dataPageHeader = dataPageHeader;
-    }
-
+  /**
+   * Provides an interator interface to the nonexistent repetition or definition
+   * levels of a page that has none.
+   */
+  private static final class NullIntIterator implements IntIterator {
     @Override
-    public int getNumValues() {
-      return dataPageHeader.getNum_values();
-    }
-
-    @Override
-    public org.apache.parquet.format.Encoding getEncoding() {
-      return dataPageHeader.getEncoding();
-    }
-
-    @Override
-    public org.apache.parquet.format.Encoding getDefinitionLevelEncoding() {
-      return org.apache.parquet.format.Encoding.PLAIN;
-    }
-
-    @Override
-    public org.apache.parquet.format.Encoding getRepetitionLevelEncoding() {
-      return org.apache.parquet.format.Encoding.PLAIN;
-    }
-  }
-
-  private static PageHeaderInfoProvider pageHeaderInfoProviderBuilder(PageHeader pageHeader) {
-    switch (pageHeader.getType()) {
-      case DATA_PAGE:
-        return new DataPageHeaderV1InfoProvider(pageHeader.getData_page_header());
-      case DATA_PAGE_V2:
-        return new DataPageHeaderV2InfoProvider(pageHeader.getData_page_header_v2());
-      default:
-        throw new DrillRuntimeException("Unsupported page header type:" + pageHeader.getType());
+    public int nextInt() {
+      return 0;
     }
   }
 }

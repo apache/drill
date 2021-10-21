@@ -37,6 +37,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
 import org.apache.drill.shaded.guava.com.google.common.primitives.Longs;
 import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.column.values.ValuesReader;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.io.api.Binary;
@@ -80,19 +81,16 @@ public class NullableFixedByteAlignedReaders {
     @Override
     protected void readField(long recordsToReadInThisPass) {
       this.bytebuf = pageReader.pageData;
-      if (usingDictionary) {
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
         NullableVarBinaryVector.Mutator mutator =  valueVec.getMutator();
         Binary currDictValToWrite;
         for (int i = 0; i < recordsToReadInThisPass; i++) {
-          currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+          currDictValToWrite = valReader.readBytes();
           ByteBuffer buf = currDictValToWrite.toByteBuffer();
           mutator.setSafe(valuesReadInCurrentPass + i, buf, buf.position(), currDictValToWrite.length());
         }
-        // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
-        // and we will go into the else condition below. The readField method of the parent class requires the
-        // writer index to be set correctly.
-        int writerIndex = castedBaseVector.getBuffer().writerIndex();
-        castedBaseVector.getBuffer().setIndex(0, writerIndex + (int) readLength);
+        advanceWriterIndex();
       } else {
         super.readField(recordsToReadInThisPass);
         // TODO - replace this with fixed binary type in drill
@@ -121,17 +119,12 @@ public class NullableFixedByteAlignedReaders {
     @Override
     protected void readField(long recordsToReadInThisPass) {
       this.bytebuf = pageReader.pageData;
-      if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++) {
-          Binary binaryTimeStampValue = pageReader.dictionaryValueReader.readBytes();
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
-        }
-      } else {
-        for (int i = 0; i < recordsToReadInThisPass; i++) {
-          Binary binaryTimeStampValue = pageReader.valueReader.readBytes();
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
-        }
+      ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+      for (int i = 0; i < recordsToReadInThisPass; i++) {
+        Binary binaryTimeStampValue = valReader.readBytes();
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
       }
+      advanceWriterIndex();
     }
   }
 
@@ -146,18 +139,11 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
-        }
-        int writerIndex = castedBaseVector.getBuffer().writerIndex();
-        castedBaseVector.getBuffer().setIndex(0, writerIndex + (int)readLength);
-      } else {
-
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readInteger());
-        }
+      ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+      for (int i = 0; i < recordsToReadInThisPass; i++){
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger());
       }
+      advanceWriterIndex();
     }
   }
 
@@ -172,17 +158,11 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++) {
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
-        }
-        int writerIndex = castedBaseVector.getBuffer().writerIndex();
-        castedBaseVector.getBuffer().setIndex(0, writerIndex + (int) readLength);
-      } else {
-        for (int i = 0; i < recordsToReadInThisPass; i++) {
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readInteger());
-        }
+      ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+      for (int i = 0; i < recordsToReadInThisPass; i++){
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger());
       }
+      advanceWriterIndex();
     }
   }
 
@@ -197,15 +177,11 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
-        }
-      } else {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readInteger());
-        }
+      ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+      for (int i = 0; i < recordsToReadInThisPass; i++){
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger());
       }
+      advanceWriterIndex();
     }
   }
 
@@ -220,15 +196,11 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
-        }
-      } else {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readLong());
-        }
+      ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+      for (int i = 0; i < recordsToReadInThisPass; i++){
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readLong());
       }
+      advanceWriterIndex();
     }
   }
 
@@ -243,17 +215,11 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++) {
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
-        }
-        int writerIndex = castedBaseVector.getBuffer().writerIndex();
-        castedBaseVector.getBuffer().setIndex(0, writerIndex + (int) readLength);
-      } else {
-        for (int i = 0; i < recordsToReadInThisPass; i++) {
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readLong());
-        }
+      ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+      for (int i = 0; i < recordsToReadInThisPass; i++){
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readLong());
       }
+      advanceWriterIndex();
     }
   }
 
@@ -268,15 +234,11 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
-        }
-      } else {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readLong());
-        }
+      ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+      for (int i = 0; i < recordsToReadInThisPass; i++){
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readLong());
       }
+      advanceWriterIndex();
     }
   }
 
@@ -291,16 +253,16 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      switch (columnDescriptor.getType()) {
+      switch (columnDescriptor.getPrimitiveType().getPrimitiveTypeName()) {
         case INT32:
           if (usingDictionary) {
             for (int i = 0; i < recordsToReadInThisPass; i++) {
-              byte[] bytes = Ints.toByteArray(pageReader.dictionaryValueReader.readInteger());
+              byte[] bytes = Ints.toByteArray(pageReader.getDictionaryValueReader().readInteger());
               setValueBytes(i, bytes);
             }
           } else {
             for (int i = 0; i < recordsToReadInThisPass; i++) {
-              byte[] bytes = Ints.toByteArray(pageReader.valueReader.readInteger());
+              byte[] bytes = Ints.toByteArray(pageReader.getValueReader().readInteger());
               setValueBytes(i, bytes);
             }
           }
@@ -308,12 +270,12 @@ public class NullableFixedByteAlignedReaders {
         case INT64:
           if (usingDictionary) {
             for (int i = 0; i < recordsToReadInThisPass; i++) {
-              byte[] bytes = Longs.toByteArray(pageReader.dictionaryValueReader.readLong());
+              byte[] bytes = Longs.toByteArray(pageReader.getDictionaryValueReader().readLong());
               setValueBytes(i, bytes);
             }
           } else {
             for (int i = 0; i < recordsToReadInThisPass; i++) {
-              byte[] bytes = Longs.toByteArray(pageReader.valueReader.readLong());
+              byte[] bytes = Longs.toByteArray(pageReader.getValueReader().readLong());
               setValueBytes(i, bytes);
             }
           }
@@ -321,11 +283,11 @@ public class NullableFixedByteAlignedReaders {
         case FIXED_LEN_BYTE_ARRAY:
         case BINARY:
           if (usingDictionary) {
-            recordsReadInThisIteration = Math.min(pageReader.currentPageCount
+            recordsReadInThisIteration = Math.min(pageReader.pageValueCount
                 - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
             NullableVarDecimalVector.Mutator mutator = valueVec.getMutator();
             for (int i = 0; i < recordsReadInThisIteration; i++) {
-              Binary currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
+              Binary currDictValToWrite = pageReader.getDictionaryValueReader().readBytes();
               mutator.setSafe(valuesReadInCurrentPass + i, currDictValToWrite.toByteBuffer().slice(), 0,
                   currDictValToWrite.length());
             }
@@ -336,7 +298,7 @@ public class NullableFixedByteAlignedReaders {
             valueVec.getBuffer().setIndex(0, writerIndex + (int) readLength);
           } else {
             for (int i = 0; i < recordsToReadInThisPass; i++) {
-              Binary valueToWrite = pageReader.valueReader.readBytes();
+              Binary valueToWrite = pageReader.getValueReader().readBytes();
               valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valueToWrite.toByteBuffer().slice(), 0,
                   valueToWrite.length());
             }
@@ -360,15 +322,11 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readFloat());
-        }
-      } else {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readFloat());
-        }
+      ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+      for (int i = 0; i < recordsToReadInThisPass; i++){
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readFloat());
       }
+      advanceWriterIndex();
     }
   }
 
@@ -383,15 +341,11 @@ public class NullableFixedByteAlignedReaders {
     // this method is called by its superclass during a read loop
     @Override
     protected void readField(long recordsToReadInThisPass) {
-      if (usingDictionary) {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readDouble());
-        }
-      } else {
-        for (int i = 0; i < recordsToReadInThisPass; i++){
-          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readDouble());
-        }
+      ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+      for (int i = 0; i < recordsToReadInThisPass; i++){
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readDouble());
       }
+      advanceWriterIndex();
     }
   }
 
@@ -427,8 +381,9 @@ public class NullableFixedByteAlignedReaders {
     @Override
     void addNext(int start, int index) {
       int intValue;
-      if (usingDictionary) {
-        intValue =  pageReader.dictionaryValueReader.readInteger();
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        intValue =  valReader.readInteger();
       } else {
         intValue = readIntLittleEndian(bytebuf, start);
       }
@@ -451,8 +406,9 @@ public class NullableFixedByteAlignedReaders {
     @Override
     void addNext(int start, int index) {
       int intValue;
-      if (usingDictionary) {
-        intValue =  pageReader.dictionaryValueReader.readInteger();
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        intValue =  valReader.readInteger();
       } else {
         intValue = readIntLittleEndian(bytebuf, start);
       }
@@ -480,8 +436,9 @@ public class NullableFixedByteAlignedReaders {
     @Override
     void addNext(int start, int index) {
       int intValue;
-      if (usingDictionary) {
-        intValue =  pageReader.dictionaryValueReader.readInteger();
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        intValue =  valReader.readInteger();
       } else {
         intValue = readIntLittleEndian(bytebuf, start);
       }
@@ -502,8 +459,9 @@ public class NullableFixedByteAlignedReaders {
 
     @Override
     void addNext(int start, int index) {
-      if (usingDictionary) {
-        byte[] input = pageReader.dictionaryValueReader.readBytes().getBytes();
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        byte[] input = valReader.readBytes().getBytes();
         valueVec.getMutator().setSafe(index, 1,
             ParquetReaderUtility.getIntFromLEBytes(input, 0),
             ParquetReaderUtility.getIntFromLEBytes(input, 4),

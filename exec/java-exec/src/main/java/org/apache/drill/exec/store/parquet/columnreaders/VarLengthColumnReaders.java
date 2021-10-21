@@ -30,6 +30,7 @@ import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.VarDecimalVector;
 import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.column.values.ValuesReader;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 
@@ -54,10 +55,11 @@ public final class VarLengthColumnReaders {
       if (index >= varDecimalVector.getValueCapacity()) {
         return false;
       }
-      if (usingDictionary) {
-        currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
-        ByteBuffer buf = currDictValToWrite.toByteBuffer();
-        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        currDecodedValToWrite = valReader.readBytes();
+        ByteBuffer buf = currDecodedValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDecodedValToWrite.length());
       } else {
         mutator.setSafe(index, start, start + length, value);
       }
@@ -100,9 +102,9 @@ public final class VarLengthColumnReaders {
       if (index >= nullableVarDecimalVector.getValueCapacity()) {
         return false;
       }
-      if (usingDictionary) {
-        ByteBuffer buf = currDictValToWrite.toByteBuffer();
-        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
+      if (recordsRequireDecoding()) {
+        ByteBuffer buf = currDecodedValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDecodedValToWrite.length());
       } else {
         mutator.setSafe(index, 1, start, start + length, value);
       }
@@ -147,10 +149,11 @@ public final class VarLengthColumnReaders {
         return false;
       }
 
-      if (usingDictionary) {
-        currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
-        ByteBuffer buf = currDictValToWrite.toByteBuffer();
-        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        currDecodedValToWrite = valReader.readBytes();
+        ByteBuffer buf = currDecodedValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDecodedValToWrite.length());
       } else {
         mutator.setSafe(index, start, start + length, bytebuf);
       }
@@ -195,9 +198,9 @@ public final class VarLengthColumnReaders {
         return false;
       }
 
-      if (usingDictionary) {
-        ByteBuffer buf = currDictValToWrite.toByteBuffer();
-        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
+      if (recordsRequireDecoding()) {
+        ByteBuffer buf = currDecodedValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDecodedValToWrite.length());
       } else {
         mutator.setSafe(index, 1, start, start + length, value);
       }
@@ -243,10 +246,11 @@ public final class VarLengthColumnReaders {
         return false;
       }
 
-      if (usingDictionary) {
-        currDictValToWrite = pageReader.dictionaryValueReader.readBytes();
-        ByteBuffer buf = currDictValToWrite.toByteBuffer();
-        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        currDecodedValToWrite = valReader.readBytes();
+        ByteBuffer buf = currDecodedValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDecodedValToWrite.length());
       } else {
         mutator.setSafe(index, start, start + length, value);
       }
@@ -291,9 +295,9 @@ public final class VarLengthColumnReaders {
         return false;
       }
 
-      if (usingDictionary) {
-        ByteBuffer buf = currDictValToWrite.toByteBuffer();
-        mutator.setSafe(index, buf, buf.position(), currDictValToWrite.length());
+      if (recordsRequireDecoding()) {
+        ByteBuffer buf = currDecodedValToWrite.toByteBuffer();
+        mutator.setSafe(index, buf, buf.position(), currDecodedValToWrite.length());
       } else {
         mutator.setSafe(index, 1, start, start + length, value);
       }

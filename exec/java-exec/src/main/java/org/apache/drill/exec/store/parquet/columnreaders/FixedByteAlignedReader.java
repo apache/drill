@@ -24,6 +24,7 @@ import org.apache.drill.exec.vector.IntervalVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.column.values.ValuesReader;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.joda.time.DateTimeConstants;
@@ -44,7 +45,7 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
   @Override
   protected void readField(long recordsToReadInThisPass) {
 
-    recordsReadInThisIteration = Math.min(pageReader.currentPageCount
+    recordsReadInThisIteration = Math.min(pageReader.pageValueCount
         - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
 
     readStartInBytes = pageReader.readPosInBytes;
@@ -58,6 +59,21 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
 
   protected void writeData() {
     vectorData.writeBytes(bytebuf, (int) readStartInBytes, (int) readLength);
+  }
+
+  /**
+   * Advance our writer index after reading using an external values reader.
+   * @param valueBuf buffer backing the target value vector
+   * @param bitsPerByte bits of data yielded per byte read
+   */
+  protected final void advanceWriterIndex(DrillBuf valueBuf, double bitsPerByte) {
+    // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
+    // and we will go into the else condition below. The readField method of the parent class requires the
+    // writer index to be set correctly.
+    readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
+    readLength = (int) Math.ceil(readLengthInBits / bitsPerByte);
+    int writerIndex = valueBuf.writerIndex();
+    valueBuf.setIndex(0, writerIndex + (int)readLength);
   }
 
   public static class FixedBinaryReader extends FixedByteAlignedReader<VariableWidthVector> {
@@ -81,7 +97,6 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
         castedVector.getMutator().setValueLengthSafe(valuesReadInCurrentPass + i, byteLength);
       }
     }
-
   }
 
   public static abstract class ConvertedReader<V extends ValueVector> extends FixedByteAlignedReader<V> {
@@ -121,8 +136,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
     @Override
     void addNext(int start, int index) {
       int intValue;
-      if (usingDictionary) {
-        intValue =  pageReader.dictionaryValueReader.readInteger();
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        intValue =  valReader.readInteger();
       } else {
         intValue = readIntLittleEndian(bytebuf, start);
       }
@@ -147,8 +163,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
     @Override
     void addNext(int start, int index) {
       int intValue;
-      if (usingDictionary) {
-        intValue = pageReader.dictionaryValueReader.readInteger();
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        intValue =  valReader.readInteger();
       } else {
         intValue = readIntLittleEndian(bytebuf, start);
       }
@@ -177,8 +194,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
     @Override
     void addNext(int start, int index) {
       int intValue;
-      if (usingDictionary) {
-        intValue = pageReader.dictionaryValueReader.readInteger();
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        intValue =  valReader.readInteger();
       } else {
         intValue = readIntLittleEndian(bytebuf, start);
       }
@@ -200,8 +218,9 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
 
     @Override
     void addNext(int start, int index) {
-      if (usingDictionary) {
-        byte[] input = pageReader.dictionaryValueReader.readBytes().getBytes();
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        byte[] input = valReader.readBytes().getBytes();
         valueVec.getMutator().setSafe(index,
             ParquetReaderUtility.getIntFromLEBytes(input, 0),
             ParquetReaderUtility.getIntFromLEBytes(input, 4),

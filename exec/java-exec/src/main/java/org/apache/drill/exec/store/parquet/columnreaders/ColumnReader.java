@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -29,7 +31,9 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.column.Encoding;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.schema.PrimitiveType;
@@ -37,6 +41,17 @@ import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 
 public abstract class ColumnReader<V extends ValueVector> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnReader.class);
+
+  public static final Set<Encoding> DICTIONARY_ENCODINGS = ImmutableSet.of(
+    Encoding.PLAIN_DICTIONARY,
+    Encoding.RLE_DICTIONARY
+  );
+  public static final Set<Encoding> VALUE_ENCODINGS = ImmutableSet.<Encoding>builder()
+    .addAll(DICTIONARY_ENCODINGS)
+    .add(Encoding.DELTA_BINARY_PACKED)
+    .add(Encoding.DELTA_BYTE_ARRAY)
+    .add(Encoding.DELTA_LENGTH_BYTE_ARRAY)
+    .build();
 
   final ParquetRecordReader parentReader;
 
@@ -94,16 +109,10 @@ public abstract class ColumnReader<V extends ValueVector> {
     this.isFixedLength = fixedLength;
     this.schemaElement = schemaElement;
     this.valueVec =  v;
-    boolean useAsyncPageReader = parentReader.useAsyncPageReader;
-    if (useAsyncPageReader) {
-      this.pageReader =
-          new AsyncPageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath(),
-              columnChunkMetaData);
-    } else {
-      this.pageReader =
-          new PageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath(),
-              columnChunkMetaData);
-    }
+    this.pageReader = parentReader.useAsyncPageReader
+      ? new AsyncPageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath())
+      : new PageReader(this, parentReader.getFileSystem(), parentReader.getHadoopPath());
+
     try {
       pageReader.init();
     } catch (IOException e) {
@@ -213,6 +222,10 @@ public abstract class ColumnReader<V extends ValueVector> {
       throw new UnsupportedOperationException();
   }
 
+  protected boolean recordsRequireDecoding() {
+    return !Collections.disjoint(VALUE_ENCODINGS, columnChunkMetaData.getEncodings());
+  }
+
   protected boolean processPageData(int recordsToReadInThisPass) throws IOException {
     readValues(recordsToReadInThisPass);
     return true;
@@ -252,10 +265,10 @@ public abstract class ColumnReader<V extends ValueVector> {
    */
   public boolean readPage() throws IOException {
     if (!pageReader.hasPage()
-        || totalValuesReadAndReadyToReadInPage() == pageReader.currentPageCount) {
+        || totalValuesReadAndReadyToReadInPage() == pageReader.pageValueCount) {
       readRecords(pageReader.valuesReadyToRead);
       if (pageReader.hasPage()) {
-        totalValuesRead += pageReader.currentPageCount;
+        totalValuesRead += pageReader.pageValueCount;
       }
       if (!pageReader.next()) {
         hitRowGroupEnd();
