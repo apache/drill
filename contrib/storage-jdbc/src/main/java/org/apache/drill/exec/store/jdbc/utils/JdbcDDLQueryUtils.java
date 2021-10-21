@@ -23,20 +23,23 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.parser.SqlParser.ConfigBuilder;
+import org.apache.calcite.sql.util.SqlBuilder;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.parser.ddl.SqlDdlParserImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class JdbcDDLQueryUtils {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcDDLQueryUtils.class);
   /**
    * Converts a given SQL query from the generic dialect to the destination system dialect.  Returns
-   * null if the original query is not valid.
+   * null if the original query is not valid.  This should only be used for CTAS queries.
    *
-   * @param query An ANSI SQL statement
+   * @param query An ANSI SQL statement (CTAS Only)
    * @param dialect The destination system dialect
    * @return A representation of the original query in the destination dialect
    */
@@ -56,64 +59,6 @@ public class JdbcDDLQueryUtils {
       logger.error(e.getMessage());
       return null;
     }
-  }
-
-  public static String cleanInsertQuery(String query, SqlDialect dialect) {
-    /*SqlParser.Config sqlParserConfig = SqlParser.configBuilder()
-      .setParserFactory(SqlDdlParserImpl.FACTORY)
-      .setConformance(SqlConformanceEnum.STRICT_99)
-      .setCaseSensitive(true)
-      .setLex(Lex.MYSQL)
-      .build();*/
-
-    ConfigBuilder sqlParserConfigBuilder = dialect.configureParser(SqlParser.configBuilder());
-    sqlParserConfigBuilder.setParserFactory(SqlDdlParserImpl.FACTORY);
-    SqlParser.Config sqlParserConfig = sqlParserConfigBuilder.build();
-
-    try {
-      SqlNode node = SqlParser.create(query, sqlParserConfig).parseQuery();
-
-      String cleanSQL =  node.toSqlString(dialect).getSql();
-
-      // TODO Fix this hack
-      // HACK  See CALCITE-4820 (https://issues.apache.org/jira/browse/CALCITE-4820)
-      // Calcite doesn't seem to provide a way to generate INSERT queries without the ROW
-      // Keyword in front of the VALUES clause.
-      //cleanSQL = cleanSQL.replaceAll("ROW\\(", "\\(");
-      return cleanSQL;
-    } catch (SqlParseException e) {
-      logger.error(e.getMessage());
-      return null;
-    }
-  }
-
-
-  private static void appendEscapedSQLString(StringBuilder sb, String sqlString) {
-    sb.append('\'');
-    if (sqlString.indexOf('\'') != -1) {
-      int length = sqlString.length();
-      for (int i = 0; i < length; i++) {
-        char c = sqlString.charAt(i);
-        if (c == '\'') {
-          sb.append('\'');
-        }
-        sb.append(c);
-      }
-    } else {
-      sb.append(sqlString);
-    }
-    sb.append('\'');
-  }
-
-  /**
-   * This function cleans up strings for use in INSERT queries
-   * @param value The input string
-   * @return The input string cleaned for SQL INSERT queries
-   */
-  public static String sqlEscapeString(String value) {
-    StringBuilder escaper = new StringBuilder();
-    appendEscapedSQLString(escaper, value);
-    return escaper.toString();
   }
 
   /**
@@ -141,6 +86,21 @@ public class JdbcDDLQueryUtils {
     }
 
     return cleanQuery.toString();
+  }
+
+  public static void addTableToInsertQuery(SqlBuilder builder, String rawEscapedTables) {
+    final String TABLE_REGEX = "(?:`(.+?)`)+";
+    Pattern pattern = Pattern.compile(TABLE_REGEX);
+    Matcher matcher = pattern.matcher(rawEscapedTables);
+
+    int matchCount = 0;
+    while (matcher.find()) {
+      if (matchCount > 0) {
+        builder.append(".");
+      }
+      builder.identifier(matcher.group(1));
+      matchCount++;
+    }
   }
 
   public static String addBackTicksToField(String field) {

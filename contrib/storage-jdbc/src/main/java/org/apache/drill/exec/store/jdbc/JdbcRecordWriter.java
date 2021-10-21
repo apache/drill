@@ -18,9 +18,7 @@
 
 package org.apache.drill.exec.store.jdbc;
 
-import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.sql.SqlDialect;
-import org.apache.calcite.sql.SqlDialect.DatabaseProduct;
 import org.apache.calcite.sql.util.SqlBuilder;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
@@ -62,6 +60,7 @@ import org.apache.drill.exec.store.jdbc.utils.JdbcQueryBuilder;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,16 +82,15 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcRecordWriter.class);
 
-  private static final String INSERT_QUERY_TEMPLATE = "INSERT INTO %s VALUES\n%s";
-  private static final String INSERT_QUERY_TEMPLATE_FOR_APACHE_PHOENIX = "UPSERT INTO %s VALUES\n%s";
   private final String tableName;
   private final Connection connection;
   private final SqlDialect dialect;
   private final List<Object> rowList;
-  private final List<String> insertRows;
   private final List<JdbcWriterField> fields;
+  private final String rawTableName;
   private final JdbcWriter config;
-  private StringBuilder rowString;
+  private SqlBuilder insertQueryBuilder;
+  private boolean firstRecord;
 
   /*
    * This map maps JDBC data types to their Drill equivalents.  The basic strategy is that if there
@@ -119,11 +117,18 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   public JdbcRecordWriter(DataSource source, OperatorContext context, String name, JdbcWriter config) {
     this.tableName = JdbcDDLQueryUtils.addBackTicksToTable(name);
-    rowList = new ArrayList<>();
-    insertRows = new ArrayList<>();
+    this.rowList = new ArrayList<>();
     this.dialect = config.getPlugin().getDialect();
     this.config = config;
+    this.rawTableName = name;
     this.fields = new ArrayList<>();
+    this.firstRecord = true;
+
+    this.insertQueryBuilder = new SqlBuilder(this.dialect);
+    insertQueryBuilder
+      .append("INSERT INTO ");
+    JdbcDDLQueryUtils.addTableToInsertQuery(insertQueryBuilder, rawTableName);
+    insertQueryBuilder.append (" VALUES ");
 
     try {
       this.connection = source.getConnection();
@@ -137,7 +142,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public void init(Map<String, String> writerOptions) {
-
+    // Nothing to see here...
   }
 
   @Override
@@ -188,9 +193,12 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
 
   @Override
   public void startRecord() {
-    rowString = new StringBuilder();
     rowList.clear();
-    rowString.append("(");
+
+    if (!firstRecord) {
+      insertQueryBuilder.append(",");
+    }
+    insertQueryBuilder.append("(");
     logger.debug("Start record");
   }
 
@@ -201,12 +209,12 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     // Add values to rowString
     for (int i = 0; i < rowList.size(); i++) {
       if (i > 0) {
-        rowString.append(", ");
+        insertQueryBuilder.append(",");
       }
 
       // Add null value to rowstring
       if (rowList.get(i) instanceof String && ((String) rowList.get(i)).equalsIgnoreCase("null")) {
-        rowString.append("null");
+        insertQueryBuilder.append("null");
         continue;
       }
 
@@ -217,39 +225,38 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
         if (currentField.getMode() == DataMode.REQUIRED) {
           VarCharHolder varCharHolder = (VarCharHolder) rowList.get(i);
           value = StringFunctionHelpers.getStringFromVarCharHolder(varCharHolder);
-          // Escape any naughty characters
-          value = JdbcDDLQueryUtils.sqlEscapeString(value);
         } else {
           try {
             NullableVarCharHolder nullableVarCharHolder = (NullableVarCharHolder) rowList.get(i);
             value = StringFunctionHelpers.getStringFromVarCharHolder(nullableVarCharHolder);
-            value = JdbcDDLQueryUtils.sqlEscapeString(value);
           } catch (ClassCastException e) {
             logger.error("Unable to read field: {}",  rowList.get(i));
           }
         }
 
         // Add to value string
-        rowString.append(value);
-        //rowString.append("'").append(value).append("'");
+        insertQueryBuilder.literal(value);
       } else if (currentField.getDataType() == MinorType.DATE) {
         String dateString = formatDateForInsertQuery((Long) rowList.get(i));
-        rowString.append("'").append(dateString).append("'");
+        insertQueryBuilder.literal(dateString);
       } else if (currentField.getDataType() == MinorType.TIME) {
         String timeString = formatTimeForInsertQuery((Integer) rowList.get(i));
-        rowString.append("'").append(timeString).append("'");
+        insertQueryBuilder.literal(timeString);
       } else if (currentField.getDataType() == MinorType.TIMESTAMP) {
         String timeString = formatTimeStampForInsertQuery((Long) rowList.get(i));
-        rowString.append("'").append(timeString).append("'");
+        insertQueryBuilder.literal(timeString);
       } else {
-        rowString.append(rowList.get(i));
+        if (Strings.isNullOrEmpty(rowList.get(i).toString())) {
+          insertQueryBuilder.append("null");
+        } else {
+          insertQueryBuilder.append(rowList.get(i).toString());
+        }
       }
     }
 
-    rowString.append(")");
+    firstRecord = false;
+    insertQueryBuilder.append(")");
     rowList.clear();
-    insertRows.add(rowString.toString());
-    logger.debug("End record: {}", rowString.toString());
   }
 
   @Override
@@ -261,8 +268,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   public void cleanup() throws IOException {
     logger.debug("Cleanup record");
     // Execute query
-    String insertQuery = buildInsertQuery();
-    System.out.println("Insert: " + insertQuery);
+    String insertQuery = insertQueryBuilder.toString();
 
     try (Statement stmt = connection.createStatement()) {
       logger.debug("Executing insert query: {}", insertQuery);
@@ -278,47 +284,35 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     }
   }
 
-  private String buildInsertQueryUsingCalcite() {
-    SqlBuilder builder = new SqlBuilder(this.dialect);
-    builder
-      .append("INSERT INTO")
-      .identifier(tableName);
-    builder.append ("VALUES(");
-
-    return "";
-  }
-
-  private String buildInsertQuery() {
-    StringBuilder values = new StringBuilder();
-    for (int i = 0; i < insertRows.size(); i++) {
-      if (i > 0) {
-        values.append(",\n");
-      }
-      values.append(insertRows.get(i));
-    }
-
-    String sql;
-    // Apache Phoenix does not support INSERT but does support UPSERT with the same syntax
-    if (dialect == DatabaseProduct.PHOENIX.getDialect()) {
-      sql = String.format(INSERT_QUERY_TEMPLATE_FOR_APACHE_PHOENIX, tableName, values);
-    } else {
-      sql = String.format(INSERT_QUERY_TEMPLATE, tableName, values);
-    }
-    return JdbcDDLQueryUtils.cleanInsertQuery(sql, dialect);
-  }
-
+  /**
+   * Drill returns longs for date values. This function converts longs into dates formatted
+   * in YYYY-MM-dd format for insertion into a database.
+   * @param dateVal long representing a naive date
+   * @return A date string formatted YYYY-MM-dd
+   */
   private String formatDateForInsertQuery(Long dateVal) {
     Date date=new Date(dateVal);
     SimpleDateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
     return df2.format(date);
   }
 
+  /**
+   * Drill returns longs for time values. This function converts longs into times formatted
+   * in HH:mm:ss format for insertion into a database.
+   * @param millis Milliseconds since the epoch.
+   * @return A time string formatted for insertion into a database.
+   */
   private String formatTimeForInsertQuery(Integer millis) {
     return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis),
       TimeUnit.MILLISECONDS.toMinutes(millis) % TimeUnit.HOURS.toMinutes(1),
       TimeUnit.MILLISECONDS.toSeconds(millis) % TimeUnit.MINUTES.toSeconds(1));
   }
 
+  /**
+   * Drill returns longs for date times. This function converts
+   * @param time An input long that represents a timestamp
+   * @return A ISO formatted timestamp.
+   */
   private String formatTimeStampForInsertQuery(Long time) {
     Date date = new Date(time);
     Format format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
