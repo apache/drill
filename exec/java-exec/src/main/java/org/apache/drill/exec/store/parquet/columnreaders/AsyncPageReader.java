@@ -89,7 +89,7 @@ class AsyncPageReader extends PageReader {
   private long totalPageValuesRead = 0;
   // Object to use to synchronize access to the page Queue.
   // FindBugs complains if we synchronize on a Concurrent Queue
-  private final Object pageQueueSyncronize = new Object(); 
+  private final Object pageQueueSyncronize = new Object();
 
   AsyncPageReader(ColumnReader<?> parentStatus, FileSystem fs, Path path) throws ExecutionSetupException {
     super(parentStatus, fs, path);

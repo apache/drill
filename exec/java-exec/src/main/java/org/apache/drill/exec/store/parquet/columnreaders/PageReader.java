@@ -680,7 +680,7 @@ class PageReader {
     }
     this.dictionaryValueReader = this.dictionaryLengthDeterminingReader = this.valueReader = null;
   }
-  
+
   /**
    * Clear buffers between column chunks
    */
