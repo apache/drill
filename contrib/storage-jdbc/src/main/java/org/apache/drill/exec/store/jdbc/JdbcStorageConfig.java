@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
@@ -37,11 +38,14 @@ import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
 
   public static final String NAME = "jdbc";
+  public static final int DEFAULT_MAX_WRITER_BATCH_SIZE = 10000;
 
   private final String driver;
   private final String url;
   private final boolean caseInsensitiveTableNames;
+  private final boolean writable;
   private final Map<String, Object> sourceParameters;
+  private final int writerBatchSize;
 
   @JsonCreator
   public JdbcStorageConfig(
@@ -50,13 +54,17 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       @JsonProperty("username") String username,
       @JsonProperty("password") String password,
       @JsonProperty("caseInsensitiveTableNames") boolean caseInsensitiveTableNames,
+      @JsonProperty("writable") boolean writable,
       @JsonProperty("sourceParameters") Map<String, Object> sourceParameters,
-      @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
+      @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
+      @JsonProperty("writerBatchSize") int writerBatchSize) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider), credentialsProvider == null);
     this.driver = driver;
     this.url = url;
+    this.writable = writable;
     this.caseInsensitiveTableNames = caseInsensitiveTableNames;
     this.sourceParameters = sourceParameters == null ? Collections.emptyMap() : sourceParameters;
+    this.writerBatchSize = writerBatchSize == 0 ? writerBatchSize = DEFAULT_MAX_WRITER_BATCH_SIZE : writerBatchSize;
   }
 
   public String getDriver() {
@@ -66,6 +74,10 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   public String getUrl() {
     return url;
   }
+
+  public boolean isWritable() { return writable; }
+
+  public int getWriterBatchSize() { return writerBatchSize; }
 
   public String getUsername() {
     if (directCredentials) {
@@ -97,7 +109,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(driver, url, caseInsensitiveTableNames, sourceParameters, credentialsProvider);
+    return Objects.hash(driver, url, caseInsensitiveTableNames, sourceParameters, credentialsProvider, writable, writerBatchSize);
   }
 
   @Override
@@ -112,7 +124,20 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
     return caseInsensitiveTableNames == that.caseInsensitiveTableNames &&
         Objects.equals(driver, that.driver) &&
         Objects.equals(url, that.url) &&
+        Objects.equals(writable, that.writable) &&
         Objects.equals(sourceParameters, that.sourceParameters) &&
-        Objects.equals(credentialsProvider, that.credentialsProvider);
+        Objects.equals(credentialsProvider, that.credentialsProvider) &&
+        Objects.equals(writerBatchSize, that.writerBatchSize);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("driver", driver)
+      .field("url", url)
+      .field("writable", writable)
+      .field("writerBatchSize", writerBatchSize)
+      .field("caseInsensitiveTableNames", caseInsensitiveTableNames)
+      .toString();
   }
 }

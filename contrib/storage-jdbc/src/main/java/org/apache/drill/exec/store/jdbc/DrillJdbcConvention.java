@@ -80,11 +80,11 @@ public class DrillJdbcConvention extends JdbcConvention {
     rules.forEach(planner::addRule);
   }
 
-  Set<RelOptRule> getRules() {
+  public Set<RelOptRule> getRules() {
     return rules;
   }
 
-  JdbcStoragePlugin getPlugin() {
+  public JdbcStoragePlugin getPlugin() {
     return plugin;
   }
 }

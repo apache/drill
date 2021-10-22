@@ -27,13 +27,15 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class SchemaUtilites {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaUtilites.class);
+  private static final Logger logger = LoggerFactory.getLogger(SchemaUtilites.class);
   public static final Joiner SCHEMA_PATH_JOINER = Joiner.on(".").skipNulls();
 
   /**

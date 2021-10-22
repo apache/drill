@@ -71,7 +71,8 @@ class JdbcCatalogSchema extends AbstractSchema {
 
       if (!schemasAdded) {
         // there were no schemas, just create a default one (the jdbc system doesn't support catalogs/schemas).
-        schemaMap.put(SchemaFactory.DEFAULT_WS_NAME, new CapitalizingJdbcSchema(Collections.emptyList(), name, source, dialect, convention, null, null, caseSensitive));
+        schemaMap.put(SchemaFactory.DEFAULT_WS_NAME, new CapitalizingJdbcSchema(Collections.emptyList(), name, source, dialect,
+          convention, null, null, caseSensitive));
       }
     } else {
       // We already have catalogs. Add schemas in this context of their catalogs.

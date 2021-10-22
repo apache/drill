@@ -18,6 +18,10 @@
 package org.apache.drill.exec.store.jdbc;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,13 +29,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.Writer;
+import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.StorageStrategy;
+import org.apache.drill.exec.store.jdbc.utils.JdbcDDLQueryUtils;
+import org.apache.drill.exec.store.jdbc.utils.JdbcQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,14 +52,20 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
   private final Map<String, CapitalizingJdbcSchema> schemaMap;
   private final JdbcSchema inner;
   private final boolean caseSensitive;
+  private final JdbcStoragePlugin plugin;
+  private final String catalog;
+  private final String schema;
 
   public CapitalizingJdbcSchema(List<String> parentSchemaPath, String name,
                           DataSource dataSource,
-                         SqlDialect dialect, JdbcConvention convention, String catalog, String schema, boolean caseSensitive) {
+                         SqlDialect dialect, DrillJdbcConvention convention, String catalog, String schema, boolean caseSensitive) {
     super(parentSchemaPath, name);
     this.schemaMap = new HashMap<>();
     this.inner = new JdbcSchema(dataSource, dialect, convention, catalog, schema);
     this.caseSensitive = caseSensitive;
+    this.plugin = convention.getPlugin();
+    this.schema = schema;
+    this.catalog = catalog;
   }
 
   @Override
@@ -91,6 +107,68 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
       return Collections.emptySet();
     }
     return inner.getTableNames();
+  }
+
+
+  @Override
+  public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy strategy) {
+    if (! plugin.getConfig().isWritable()) {
+      throw UserException
+        .dataWriteError()
+        .message(plugin.getName() + " is not writable.")
+        .build(logger);
+    }
+
+    return new CreateTableEntry() {
+
+      @Override
+      public Writer getWriter(PhysicalOperator child) throws IOException {
+        String tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(tableName, catalog, schema);
+        return new JdbcWriter(child, tableWithSchema, inner, plugin);
+      }
+
+      @Override
+      public List<String> getPartitionColumns() {
+        return Collections.emptyList();
+      }
+    };
+  }
+
+  @Override
+  public void dropTable(String tableName) {
+    if (! plugin.getConfig().isWritable()) {
+      throw UserException
+        .dataWriteError()
+        .message(plugin.getName() + " is not writable.")
+        .build(logger);
+    }
+
+    String tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(tableName, catalog, schema);
+    String dropTableQuery = String.format("DROP TABLE %s", tableWithSchema);
+    dropTableQuery = JdbcDDLQueryUtils.cleanDDLQuery(dropTableQuery, plugin.getDialect());
+
+    try (Connection conn = inner.getDataSource().getConnection();
+         Statement stmt = conn.createStatement()) {
+      logger.debug("Executing drop table query: {}", dropTableQuery);
+      int successfullyDropped = stmt.executeUpdate(dropTableQuery);
+      logger.debug("Result: {}", successfullyDropped);
+      if (successfullyDropped > 0) {
+        throw UserException.dataWriteError()
+          .message("Error while dropping table " + tableName)
+          .addContext(stmt.getWarnings().getMessage())
+          .build(logger);
+      }
+    } catch (SQLException e) {
+      throw UserException.dataWriteError(e)
+        .message("Failure while trying to drop table '%s'.", tableName)
+        .addContext("plugin", name)
+        .build(logger);
+    }
+  }
+
+  @Override
+  public boolean isMutable() {
+    return plugin.getConfig().isWritable();
   }
 
   @Override

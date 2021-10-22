@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
-import javax.sql.DataSource;
 import java.util.Properties;
 import java.util.Set;
 
@@ -38,6 +37,8 @@ import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.sql.DataSource;
 
 public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
@@ -79,6 +80,11 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   @Override
   public boolean supportsRead() {
     return true;
+  }
+
+  @Override
+  public boolean supportsWrite() {
+    return config.isWritable();
   }
 
   public DataSource getDataSource() {

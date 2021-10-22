@@ -84,7 +84,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
 
     String jdbcUrl = jdbcContainer.getJdbcUrl();
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-            jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, null, null);
+            jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, false, null, null, 10000);
     jdbcStorageConfig.setEnabled(true);
 
     cluster.defineStoragePlugin("mysql", jdbcStorageConfig);
@@ -92,7 +92,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
     if (osName.startsWith("linux")) {
       // adds storage plugin with case insensitive table names
       JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-              jdbcContainer.getUsername(), jdbcContainer.getPassword(), true, null, null);
+              jdbcContainer.getUsername(), jdbcContainer.getPassword(), true, false,null, null, 10000);
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
       cluster.defineStoragePlugin("mysqlCaseInsensitive", jdbcCaseSensitiveStorageConfig);
     }

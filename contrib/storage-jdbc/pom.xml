@@ -34,6 +34,7 @@
     <mysql.connector.version>8.0.25</mysql.connector.version>
     <clickhouse.jdbc.version>0.3.1</clickhouse.jdbc.version>
     <h2.version>1.4.200</h2.version>
+    <postgresql.version>42.2.24</postgresql.version>
   </properties>
 
   <dependencies>
@@ -46,7 +47,11 @@
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>${calcite.groupId}</groupId>
+      <artifactId>calcite-server</artifactId>
+      <version>${calcite.version}</version>
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -66,6 +71,12 @@
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
       <version>${mysql.connector.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>${postgresql.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -89,6 +100,12 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>clickhouse</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
       <version>${testcontainers.version}</version>
       <scope>test</scope>
     </dependency>

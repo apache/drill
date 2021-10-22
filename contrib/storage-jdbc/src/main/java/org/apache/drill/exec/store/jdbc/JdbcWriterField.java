@@ -16,30 +16,25 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.store.jdbc.writers;
+package org.apache.drill.exec.store.jdbc;
 
-import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+@Getter
+@Setter
+public class JdbcWriterField {
+  private final MinorType dataType;
+  private final String fieldName;
+  private final DataMode mode;
 
-public class JdbcVardecimalWriter extends JdbcColumnWriter {
-
-  private final int scale;
-  private final int precision;
-
-  public JdbcVardecimalWriter(String colName, RowSetLoader rowWriter, int columnIndex, int scale, int precision) {
-    super(colName, rowWriter, columnIndex);
-    this.scale = scale;
-    this.precision = precision;
-  }
-
-  @Override
-  public void load(ResultSet results) throws SQLException {
-    BigDecimal value = results.getBigDecimal(columnIndex);
-    if (value != null) {
-      columnWriter.setDecimal(value);
-    }
+  @JsonCreator
+  public JdbcWriterField(String fieldName, MinorType dataType, DataMode mode) {
+    this.dataType = dataType;
+    this.fieldName = fieldName;
+    this.mode = mode;
   }
 }

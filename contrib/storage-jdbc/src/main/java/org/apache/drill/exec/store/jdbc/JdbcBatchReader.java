@@ -215,7 +215,11 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
       // column index in ResultSetMetaData starts from 1
       int jdbcType = meta.getColumnType(i);
       int width = Math.min(meta.getPrecision(i), DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision());
-      int scale = Math.min(meta.getScale(i), DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale());
+
+      // Note, if both the precision and scale are not defined in the query, Drill defaults to 38 for both
+      // Which causes an overflow exception.  We reduce the scale by one here to avoid this.  The better solution
+      // would be for the user to provide the precision and scale.
+      int scale = Math.min(meta.getScale(i), DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale() - 1);
 
       MinorType minorType = JDBC_TYPE_MAPPINGS.get(jdbcType);
       if (minorType == null) {
@@ -233,7 +237,7 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
         continue;
       }
 
-      jdbcColumns.add(new JdbcColumn(name, minorType, i));
+      jdbcColumns.add(new JdbcColumn(name, minorType, i, scale, width));
       // Precision and scale are passed for all readers whether they are needed or not.
       builder.addNullable(name, minorType, width, scale);
     }
@@ -277,7 +281,7 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
           columnWriters.add(new JdbcBitWriter(col.colName, rowWriter, col.colPosition));
           break;
         case VARDECIMAL:
-          columnWriters.add(new JdbcVardecimalWriter(col.colName, rowWriter, col.colPosition));
+          columnWriters.add(new JdbcVardecimalWriter(col.colName, rowWriter, col.colPosition, col.scale, col.precision));
           break;
         default:
           logger.warn("Unsupported data type {} found at column {}", col.type.getDescriptorForType(), col.colName);
@@ -305,11 +309,15 @@ public class JdbcBatchReader implements ManagedReader<SchemaNegotiator> {
     final String colName;
     final MinorType type;
     final int colPosition;
+    final int scale;
+    final int precision;
 
-    public JdbcColumn (String colName, MinorType type, int colPosition) {
+    public JdbcColumn (String colName, MinorType type, int colPosition, int scale, int precision) {
       this.colName = colName;
       this.type = type;
       this.colPosition = colPosition;
+      this.scale = scale;
+      this.precision = precision;
     }
   }
 }
