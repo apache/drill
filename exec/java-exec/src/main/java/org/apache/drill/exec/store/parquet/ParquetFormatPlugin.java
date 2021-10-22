@@ -167,6 +167,10 @@ public class ParquetFormatPlugin implements FormatPlugin {
     options.put(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS,
         context.getOptions().getOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS).bool_val.toString());
 
+    options.put(
+      ExecConstants.PARQUET_WRITER_FORMAT_VERSION,
+      context.getOptions().getOption(ExecConstants.PARQUET_WRITER_FORMAT_VERSION).string_val);
+
     RecordWriter recordWriter = new ParquetRecordWriter(context, writer);
     recordWriter.init(options);
 

@@ -206,6 +206,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     enableDictionary = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING));
     useSingleFSBlock = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK));
     usePrimitiveTypesForDecimals = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS));
+    writerVersion = WriterVersion.fromString(writerOptions.get(ExecConstants.PARQUET_WRITER_FORMAT_VERSION));
 
     if (useSingleFSBlock) {
       // Round up blockSize to multiple of 64K.
@@ -270,6 +271,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
         .withWriterVersion(writerVersion)
         .withAllocator(new ParquetDirectByteBufferAllocator(oContext))
         .withValuesWriterFactory(new DefaultV1ValuesWriterFactory())
+        .withWriterVersion(writerVersion)
         .build();
     // TODO: Replace ParquetColumnChunkPageWriteStore with ColumnChunkPageWriteStore from parquet library
     //   once DRILL-7906 (PARQUET-1006) will be resolved

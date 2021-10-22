@@ -375,6 +375,12 @@ public final class ExecConstants {
   public static final OptionValidator PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS_VALIDATOR = new EnumeratedStringValidator(PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS,
       new OptionDescription("Parquet writer logical type for decimal; supported types \'fixed_len_byte_array\' and \'binary\'"),
       "fixed_len_byte_array", "binary");
+  public static final String PARQUET_WRITER_FORMAT_VERSION = "store.parquet.writer.format_version";
+  public static final OptionValidator PARQUET_WRITER_FORMAT_VERSION_VALIDATOR = new EnumeratedStringValidator(
+    PARQUET_WRITER_FORMAT_VERSION,
+    new OptionDescription("Parquet format version used for storing Parquet output.  Allowed values: PARQUET_1_0, PARQUET_2_0"),
+    "PARQUET_1_0", "PARQUET_2_0"
+  );
 
   // TODO - The below two options don't seem to be used in the Drill code base
   @Deprecated // TODO: DRILL-6527
