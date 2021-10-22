@@ -50,7 +50,7 @@
     <dependency>
       <groupId>${calcite.groupId}</groupId>
       <artifactId>calcite-server</artifactId>
-      <version>1.21.0-drill-r5</version>
+      <version>${calcite.version}</version>
     </dependency>
     <!-- Test dependencies -->
     <dependency>

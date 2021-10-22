@@ -75,11 +75,11 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
     Map<String, Object> sourceParameters =  new HashMap<>();
     sourceParameters.put("minimumIdle", 1);
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("org.h2.Driver", connString,
-      "root", "root", true, true, sourceParameters, null);
+      "root", "root", true, true, sourceParameters, null, 10000);
     jdbcStorageConfig.setEnabled(true);
 
     JdbcStorageConfig jdbcStorageConfigNoWrite = new JdbcStorageConfig("org.h2.Driver", connString,
-      "root", "root", true, false, sourceParameters, null);
+      "root", "root", true, false, sourceParameters, null, 10000);
     jdbcStorageConfig.setEnabled(true);
     jdbcStorageConfigNoWrite.setEnabled(true);
 

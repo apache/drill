@@ -16,10 +16,14 @@ At present, Writing has been tested with MySQL, Postgres and H2.
 Apache Phoenix uses slightly non-standard syntax for INSERTs.  The JDBC writer should support writes to Apache Phoenix though this has not been tested and should be regarded as 
 an experimental feature.
 
-
 ## Configuring the Connection for Writing
 Firstly, it should go without saying that the Database to which you are writing should have a user permissions which allow writing.  Next, you will need to set the `writable` 
 parameter to `true` as shown below:
+
+### Setting the Batch Size
+Drill after creating the table, Drill will execute a series of `INSERT` queries with the data you are adding to the new table.  How many records can be inserted into the 
+database at once is a function of your specific database.  Larger numbers will result in fewer insert queries, and more likely faster overall performance, but may also overload 
+your database connection.  You can configure the batch size by setting the `writerBatchSize` variable in the configuration as shown below.  The default is 10000 records per batch.
 
 ### Sample Writable MySQL Connection
 ```json
@@ -30,6 +34,7 @@ parameter to `true` as shown below:
   "username": "<username>",
   "password": "<password>",
   "writable": true,
+  "writerBatchSize": 10000,
   "enabled": true
 }
 ```
@@ -68,4 +73,3 @@ Future functionality may include the possibility of converting complex types to 
 
 #### VarBinary Data
 It is not currently possible to insert a VarBinary field into a JDBC database.
-

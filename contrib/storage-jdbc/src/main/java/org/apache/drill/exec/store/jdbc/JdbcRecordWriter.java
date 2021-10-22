@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlDialect.DatabaseProduct;
 import org.apache.calcite.sql.util.SqlBuilder;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
@@ -83,7 +84,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   private static final Logger logger = LoggerFactory.getLogger(JdbcRecordWriter.class);
 
   private final String tableName;
-  private final Connection connection;
+  private Connection connection;
   private final SqlDialect dialect;
   private final List<Object> rowList;
   private final List<JdbcWriterField> fields;
@@ -91,6 +92,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   private final JdbcWriter config;
   private SqlBuilder insertQueryBuilder;
   private boolean firstRecord;
+  private int recordCount;
 
   /*
    * This map maps JDBC data types to their Drill equivalents.  The basic strategy is that if there
@@ -123,12 +125,9 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     this.rawTableName = name;
     this.fields = new ArrayList<>();
     this.firstRecord = true;
+    this.recordCount = 0;
 
-    this.insertQueryBuilder = new SqlBuilder(this.dialect);
-    insertQueryBuilder
-      .append("INSERT INTO ");
-    JdbcDDLQueryUtils.addTableToInsertQuery(insertQueryBuilder, rawTableName);
-    insertQueryBuilder.append (" VALUES ");
+    this.insertQueryBuilder = initializeInsertQuery();
 
     try {
       this.connection = source.getConnection();
@@ -254,8 +253,21 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       }
     }
 
+    recordCount++;
     firstRecord = false;
     insertQueryBuilder.append(")");
+
+    if (recordCount >= config.getPlugin().getConfig().getWriterBatchSize()) {
+      // Execute the insert query
+      String insertQuery = insertQueryBuilder.toString();
+      executeInsert(insertQuery);
+
+      // Reset the batch
+      recordCount = 0;
+      firstRecord = true;
+      insertQueryBuilder = initializeInsertQuery();
+    }
+
     rowList.clear();
   }
 
@@ -267,9 +279,15 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   @Override
   public void cleanup() throws IOException {
     logger.debug("Cleanup record");
-    // Execute query
+    // Execute last query
     String insertQuery = insertQueryBuilder.toString();
+    if (recordCount != 0) {
+      executeInsert(insertQuery);
+    }
+    AutoCloseables.closeSilently(connection);
+  }
 
+  private void executeInsert(String insertQuery) throws IOException {
     try (Statement stmt = connection.createStatement()) {
       logger.debug("Executing insert query: {}", insertQuery);
       stmt.execute(insertQuery);
@@ -278,10 +296,24 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       AutoCloseables.closeSilently(stmt);
     } catch (SQLException e) {
       logger.error("Error: {} {} {}", e.getMessage(), e.getSQLState(), e.getErrorCode());
-      throw new IOException();
-    } finally {
       AutoCloseables.closeSilently(connection);
+      throw new IOException(e.getMessage() + " " + e.getSQLState() + "\n" + insertQuery);
     }
+  }
+
+  private SqlBuilder initializeInsertQuery() {
+    SqlBuilder builder = new SqlBuilder(this.dialect);
+
+    // Apache Phoenix does not support INSERT but does support UPSERT using the same syntax
+    if (dialect == DatabaseProduct.PHOENIX.getDialect()) {
+      builder.append("UPSERT INTO ");
+    } else {
+      builder.append("INSERT INTO ");
+    }
+
+    JdbcDDLQueryUtils.addTableToInsertQuery(builder, rawTableName);
+    builder.append (" VALUES ");
+    return builder;
   }
 
   /**
