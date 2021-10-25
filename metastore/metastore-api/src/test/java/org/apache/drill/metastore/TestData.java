@@ -55,7 +55,7 @@ public class TestData {
       .lastModifiedTime(System.currentTimeMillis())
       .partitionKeys(Collections.singletonMap("dir0", "2018"))
       .additionalMetadata("additional test metadata")
-      .metadataIdentifier("part_int=3/part_varchar=g/0_0_0.parquet")
+      .metadataIdentifier(MetadataInfo.GENERAL_INFO_KEY)
       .column("`id`")
       .locations(Arrays.asList("/tmp/nation/1", "/tmp/nation/2"))
       .partitionValues(Arrays.asList("1", "2"))

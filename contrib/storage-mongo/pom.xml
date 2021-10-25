@@ -45,7 +45,7 @@
   <dependency>
     <groupId>org.mongodb</groupId>
     <artifactId>mongodb-driver-sync</artifactId>
-    <version>4.3.3</version>
+    <version>${mongo.version}</version>
   </dependency>
 
     <!-- Test dependency -->

@@ -139,6 +139,7 @@
     <aircompressor.version>0.20</aircompressor.version>
     <iceberg.version>0.12.1</iceberg.version>
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
+    <mongo.version>4.3.3</mongo.version>
     <junit.args/>
   </properties>
 

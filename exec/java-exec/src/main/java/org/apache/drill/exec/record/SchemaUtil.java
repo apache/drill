@@ -214,7 +214,13 @@ public class SchemaUtil {
         currentNames.add(columnMetadata.name());
         result.addAll(getColumnPaths(columnMetadata.tupleSchema(), currentNames));
       } else {
-        result.add(Collections.singletonList(columnMetadata.name()));
+        if (parentNames != null) {
+          List<String> combinedList = new ArrayList<>(parentNames);
+          combinedList.add(columnMetadata.name());
+          result.add(combinedList);
+        } else {
+          result.add(Collections.singletonList(columnMetadata.name()));
+        }
       }
     }
     return result;
