@@ -469,7 +469,7 @@ public abstract class AbstractBasicTablesRequestsTest extends BaseTest {
    *
    * @param tables Drill Metastore Tables instance
    */
-  private static void prepareData(Tables tables) {
+  protected static void prepareData(Tables tables) {
     TableMetadataUnit basicUnit = TestData.basicTableMetadataUnit();
 
     nationTable = BaseTableMetadata.builder()
