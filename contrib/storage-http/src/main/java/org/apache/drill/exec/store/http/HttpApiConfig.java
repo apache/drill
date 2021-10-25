@@ -103,6 +103,10 @@ public class HttpApiConfig {
   @JsonProperty
   private final boolean errorOn400;
 
+  // Enables the user to configure JSON options at the connection level rather than globally.
+  @JsonProperty
+  private final HttpJsonOptions jsonOptions;
+
   @JsonInclude
   @JsonProperty
   private final boolean verifySSLCert;
@@ -127,6 +131,7 @@ public class HttpApiConfig {
     this.method = StringUtils.isEmpty(builder.method)
         ? HttpMethod.GET.toString() : builder.method.trim().toUpperCase();
     this.url = builder.url;
+    this.jsonOptions = builder.jsonOptions;
 
     HttpMethod httpMethod = HttpMethod.valueOf(this.method);
     // Get the request method.  Only accept GET and POST requests.  Anything else will default to GET.
