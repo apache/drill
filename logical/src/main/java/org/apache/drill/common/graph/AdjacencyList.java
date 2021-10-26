@@ -17,6 +17,10 @@
  */
 package org.apache.drill.common.graph;
 
+import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Multimaps;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,11 +28,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimaps;
 
 class AdjacencyList<V extends GraphValue<V>> {
   private Set<Node> allNodes = new HashSet<Node>();
@@ -165,6 +167,16 @@ class AdjacencyList<V extends GraphValue<V>> {
     @Override
     public int hashCode() {
       return nodeValue.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (this == that) {
+        return true;
+      } else if (that == null || getClass() != that.getClass()) {
+        return false;
+      }
+      return Objects.equals(nodeValue, ((Node) that).getNodeValue());
     }
 
     public V getNodeValue() {

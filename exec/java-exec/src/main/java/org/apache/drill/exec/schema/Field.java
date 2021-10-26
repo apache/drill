@@ -22,6 +22,8 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.shaded.guava.com.google.common.base.MoreObjects;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 
+import java.util.Objects;
+
 public abstract class Field {
   final String prefixFieldName;
   MajorType fieldType;
@@ -89,6 +91,17 @@ public abstract class Field {
 
   public void setFieldType(MajorType fieldType) {
     this.fieldType = fieldType;
+  }
+
+  @Override
+  public boolean equals(Object that) {
+    if (this == that) {
+      return true;
+    } else if (that == null || getClass() != that.getClass()) {
+      return false;
+    }
+    Field thatField = (Field)that;
+    return Objects.equals(getFullFieldName(), thatField.getFullFieldName());
   }
 
   @Override

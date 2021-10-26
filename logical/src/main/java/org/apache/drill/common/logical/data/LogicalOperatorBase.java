@@ -41,6 +41,11 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
   }
 
   @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
+  }
+
+  @Override
   public void setupAndValidate(List<LogicalOperator> operators, Collection<ValidationError> errors) {
     // TODO: remove this and implement individually.
   }

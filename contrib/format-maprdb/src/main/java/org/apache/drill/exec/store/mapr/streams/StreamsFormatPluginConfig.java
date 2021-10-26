@@ -32,6 +32,16 @@ public class StreamsFormatPluginConfig extends TableFormatPluginConfig {
   }
 
   @Override
+  public boolean equals(Object that) {
+    if (this == that) {
+      return true;
+    } else if (that == null || getClass() != that.getClass()) {
+      return false;
+    }
+    return impEquals(that);
+  }
+
+  @Override
   protected boolean impEquals(Object obj) {
     return true; // TODO: compare custom properties once added
   }

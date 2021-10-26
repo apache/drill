@@ -80,4 +80,9 @@ public class LogFormatField {
            Objects.equals(fieldType, other.fieldType) &&
            Objects.equals(format, other.format);
   }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(fieldName, fieldType, format);
+  }
 }

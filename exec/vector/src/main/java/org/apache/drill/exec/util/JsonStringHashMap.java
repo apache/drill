@@ -30,7 +30,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
  * toString() method of the HashMap class to produce a JSON string instead
  */
 public class JsonStringHashMap<K, V> extends LinkedHashMap<K, V> {
-
+  // lgtm [java/inconsistent-equals-and-hashcode]
   private static final ObjectMapper mapper = new ObjectMapper()
       .registerModule(SerializationModule.getModule())
       .registerModule(new JodaModule());

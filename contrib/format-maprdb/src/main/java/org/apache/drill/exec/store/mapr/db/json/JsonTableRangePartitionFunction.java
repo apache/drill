@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mapr.db.json;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.planner.physical.AbstractRangePartitionFunction;
@@ -104,6 +105,11 @@ public class JsonTableRangePartitionFunction extends AbstractRangePartitionFunct
     partitionKeyVector = v.getValueVector();
 
     Preconditions.checkArgument(partitionKeyVector != null, "Found null partitionKeVector.");
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(refList, tableName, userName, partitionKeyVector, startKeys, stopKeys);
   }
 
   @Override

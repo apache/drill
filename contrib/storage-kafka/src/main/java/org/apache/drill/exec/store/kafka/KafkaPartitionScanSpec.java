@@ -21,6 +21,9 @@ import org.apache.drill.common.FunctionNames;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.common.PlanStringBuilder;
+
+import java.util.Objects;
 
 public class KafkaPartitionScanSpec {
   private final String topicName;
@@ -91,9 +94,18 @@ public class KafkaPartitionScanSpec {
   }
 
   @Override
+  public int hashCode() {
+    return Objects.hash(topicName, partitionId, startOffset, endOffset);
+  }
+
+  @Override
   public String toString() {
-    return "KafkaPartitionScanSpec [topicName=" + topicName + ", partitionId=" + partitionId + ", startOffset="
-               + startOffset + ", endOffset=" + endOffset + "]";
+    return new PlanStringBuilder(this)
+      .field("topicName", topicName)
+      .field("partitionId", partitionId)
+      .field("startOffset", startOffset)
+      .field("endOffset", endOffset)
+      .toString();
   }
 
   @Override

@@ -19,12 +19,11 @@ package org.apache.drill.exec.util;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JsonStringArrayList<E> extends ArrayList<E> {
-
+//lgtm [java/inconsistent-equals-and-hashcode]
   private static ObjectMapper mapper;
 
   static {

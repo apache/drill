@@ -120,7 +120,7 @@ public class AbstractPropertied implements Propertied {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(Object o) { //lgtm [java/unchecked-cast-in-equals]
     if (o == this) {
       return true;
     }
