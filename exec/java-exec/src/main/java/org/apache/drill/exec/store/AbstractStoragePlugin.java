@@ -90,7 +90,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
 
   /**
    *
-   * Note: Move this method to {@link StoragePlugin} interface in next major version release.
+   * TODO: Move this method to {@link StoragePlugin} interface in next major version release.
    */
   public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
     switch (phase) {
