@@ -963,6 +963,17 @@ public class TestParquetWriter extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void testTPCHReadWriteFormatV2() throws Exception {
+    try {
+      alterSession(ExecConstants.PARQUET_WRITER_FORMAT_VERSION, "parquet_2_0");
+      String inputTable = "cp.`tpch/supplier.parquet`";
+      runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_v2");
+    } finally {
+      resetSessionOption(ExecConstants.PARQUET_WRITER_FORMAT_VERSION);
+    }
+  }
+
   @Ignore ("Used to test decompression in AsyncPageReader. Takes too long.")
   @Test
   public void testTPCHReadWriteRunRepeated() throws Exception {
