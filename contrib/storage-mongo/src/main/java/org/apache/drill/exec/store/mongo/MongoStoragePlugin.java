@@ -202,14 +202,19 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
     String userName = credential == null ? null : credential.getUserName();
     MongoCnxnKey key = new MongoCnxnKey(serverAddress, userName);
     try {
-      return addressClientMap.get(key, () -> {
-        logger.info("Created connection to {}.", key);
-        logger.info("Number of open connections {}.", addressClientMap.size());
-        MongoClientSettings.Builder settings = MongoClientSettings.builder()
-            .applyToClusterSettings(builder -> builder.hosts(addresses));
-        if (credential != null) {
-          settings.credential(credential);
+        return addressClientMap.get(key, () -> {
+        MongoClientSettings.Builder settings;
+        if (clientURI.isSrvProtocol()) {
+          settings = MongoClientSettings.builder().applyConnectionString(clientURI);
+          logger.info("Created srv protocol connection to {}.", key);
+        } else {
+          settings = MongoClientSettings.builder().applyToClusterSettings(builder -> builder.hosts(addresses));
+          if (credential != null) {
+            settings.credential(credential);
+          }
+          logger.info("Created connection to {}.", key);
         }
+        logger.info("Number of open connections {}.", addressClientMap.size() + 1); // include this created
         return MongoClients.create(settings.build());
       });
     } catch (ExecutionException e) {
