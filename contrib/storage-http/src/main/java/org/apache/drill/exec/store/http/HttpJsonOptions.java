@@ -53,17 +53,10 @@ public class HttpJsonOptions {
   @JsonInclude
   private final boolean enableEscapeAnyChar;
 
-  /**
-   * Describes whether or not this reader can unwrap a single root array record
-   * and treat it like a set of distinct records.
-   */
-  @JsonInclude
-  private final boolean skipOuterList;  // Default should be true
-
   @JsonIgnore
   public JsonLoaderOptions getJsonOptions(OptionSet optionSet) {
 
-    JsonLoaderOptions options = new JsonLoaderOptions();
+    JsonLoaderOptions options = new JsonLoaderOptions(optionSet);
 
     if (optionSet.getBoolean(ExecConstants.JSON_READER_NAN_INF_NUMBERS) != allowNanInf) {
       options.allowNanInf = allowNanInf;
