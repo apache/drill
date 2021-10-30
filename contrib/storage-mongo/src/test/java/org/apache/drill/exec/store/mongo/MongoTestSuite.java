@@ -96,7 +96,7 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
   }
 
   private static GenericContainer<?> newContainer(Network network, String host) {
-    GenericContainer<?> container = new GenericContainer<>("mongo:4.4.5")
+    GenericContainer<?> container = new GenericContainer<>("mongo:4.4.10")
         .withNetwork(network)
         .withNetworkAliases(host)
         .withExposedPorts(MONGOS_PORT)
@@ -115,7 +115,7 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
           .collect(Collectors.toList());
 
       String configServerHost = "m4";
-      GenericContainer<?> configServer = new GenericContainer<>("mongo:4.4.5")
+      GenericContainer<?> configServer = new GenericContainer<>("mongo:4.4.10")
           .withNetwork(network)
           .withNetworkAliases(configServerHost)
           .withExposedPorts(MONGOS_PORT)
@@ -129,7 +129,7 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
       logger.info(execResult.toString());
 
       String mongosHost = "m5";
-      GenericContainer<?> mongos = new GenericContainer<>("mongo:4.4.5")
+      GenericContainer<?> mongos = new GenericContainer<>("mongo:4.4.10")
           .withNetwork(network)
           .withNetworkAliases(mongosHost)
           .withExposedPorts(MONGOS_PORT)
@@ -192,7 +192,7 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
 
     @Override
     public String setup() throws IOException {
-      mongoContainers = Collections.singletonList(new GenericContainer<>("mongo:4.4.5")
+      mongoContainers = Collections.singletonList(new GenericContainer<>("mongo:4.4.10")
           .withNetwork(Network.SHARED)
           .withNetworkAliases("M1")
           .withExposedPorts(MONGOS_PORT)
