@@ -22,7 +22,6 @@ import com.github.pjfanning.xlsx.StreamingReader;
 import com.github.pjfanning.xlsx.impl.StreamingWorkbook;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
@@ -30,9 +29,11 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchem
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.hadoop.mapred.FileSplit;
@@ -193,7 +194,25 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     ResultSetLoader loader = negotiator.build();
     rowWriter = loader.writer();
     openFile(negotiator);
-    defineSchema();
+
+    if (negotiator.hasProvidedSchema()) {
+      TupleMetadata providedSchema = negotiator.providedSchema();
+      logger.debug("Found inline schema");
+
+      // Add Implicit columns to schema
+      SchemaBuilder builderForProvidedSchema = new SchemaBuilder();
+      builderForProvidedSchema.addAll(providedSchema);
+      TupleMetadata finalSchema = builderForProvidedSchema.build();
+      buildColumnWritersFromProvidedSchema(finalSchema);
+
+      // Add schema to file negotiator
+      logger.debug("Metadata added to provided schema.");
+      addMetadataToSchema(builderForProvidedSchema);
+      // Build column writer array
+      negotiator.tableSchema(finalSchema, true);
+    } else {
+      defineSchema(negotiator);
+    }
     return true;
   }
 
@@ -231,9 +250,34 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   /**
    * This function defines the schema from the header row.
    */
-  private void defineSchema() {
+  private void defineSchema(FileSchemaNegotiator negotiator) {
     SchemaBuilder builder = new SchemaBuilder();
     getColumnHeaders(builder);
+    negotiator.tableSchema(builder.buildSchema(), false);
+  }
+
+  private void buildColumnWritersFromProvidedSchema(TupleMetadata finalSchema) {
+    // Case for empty sheet
+    if (sheet.getLastRowNum() == 0) {
+      return;
+    }
+
+    columnWriters = new ArrayList<>();
+    metadataColumnWriters = new ArrayList<>();
+    cellWriterArray = new ArrayList<>();
+    rowIterator = sheet.iterator();
+
+    // Get the number of columns.
+    // This method also advances the row reader to the location of the first row of data
+    setFirstDataRow();
+    totalColumnCount = finalSchema.size();
+    firstLine = false;
+
+    // Populate column writer array
+    for(MaterializedField field : finalSchema.toFieldList()) {
+      addColumnToArray(rowWriter, field.getName(), field.getType().getMinorType(), isMetadataField(field.getName()));
+    }
+    addMetadataWriters();
   }
 
   private void getColumnHeaders(SchemaBuilder builder) {
@@ -262,7 +306,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
       for (Cell c : currentRow) {
         missingFieldName = MISSING_FIELD_NAME_HEADER + (i + 1);
-        makeColumn(builder, missingFieldName, TypeProtos.MinorType.VARCHAR);
+        makeColumn(builder, missingFieldName, MinorType.VARCHAR);
         excelFieldNames.add(i, missingFieldName);
         i++;
       }
@@ -303,7 +347,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
             // Remove leading and trailing whitespace
             tempColumnName = tempColumnName.trim();
-            makeColumn(builder, tempColumnName, TypeProtos.MinorType.VARCHAR);
+            makeColumn(builder, tempColumnName, MinorType.VARCHAR);
             excelFieldNames.add(colPosition, tempColumnName);
             break;
           case FORMULA:
@@ -314,7 +358,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
             // Remove leading and trailing whitespace
             tempColumnName = tempColumnName.trim();
-            makeColumn(builder, tempColumnName, TypeProtos.MinorType.FLOAT8);
+            makeColumn(builder, tempColumnName, MinorType.FLOAT8);
             excelFieldNames.add(colPosition, tempColumnName);
             break;
         }
@@ -359,6 +403,22 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     // If the headerRow is greater than zero, advance the iterator to the first row of data
     // This is unfortunately necessary since the streaming reader eliminated the getRow() method.
     for (int i = 1; i < rowNumber; i++) {
+      currentRow = rowIterator.next();
+    }
+  }
+
+  /**
+   * This function is used to set the iterator to the first row of actual data.  When a schema is provided,
+   * we can safely skip the header row, and start reading the first row of data.
+   */
+  private void setFirstDataRow() {
+    // Initialize
+    currentRow = rowIterator.next();
+    int rowNumber = readerConfig.headerRow > 0 ? sheet.getFirstRowNum() : 0;
+
+    // If the headerRow is greater than zero, advance the iterator to the first row of data
+    // This is unfortunately necessary since the streaming reader eliminated the getRow() method.
+    for (int i = 0; i <= rowNumber; i++) {
       currentRow = rowIterator.next();
     }
   }
@@ -428,6 +488,16 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     } else {
       currentRow = rowIterator.next();
       return true;
+    }
+  }
+
+  private boolean isMetadataField(String fieldName) {
+    try {
+      return (IMPLICIT_STRING_COLUMN.valueOf(fieldName).getFieldName().length() > 0 ||
+        IMPLICIT_TIMESTAMP_COLUMN.valueOf(fieldName).getFieldName().length() > 0 ||
+        IMPLICIT_LIST_COLUMN.valueOf(fieldName).getFieldName().length() > 0);
+    } catch (IllegalArgumentException e) {
+      return false;
     }
   }
 
@@ -521,6 +591,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     switch (type) {
       // The Excel Reader only Supports Strings, Floats and Date/Times
       case VARCHAR:
+      case INT:
       case FLOAT8:
       case DATE:
       case TIMESTAMP:
@@ -541,10 +612,10 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
-  private void addColumnToArray(TupleWriter rowWriter, String name, TypeProtos.MinorType type, boolean isMetadata) {
+  private void addColumnToArray(TupleWriter rowWriter, String name, MinorType type, boolean isMetadata) {
     int index = rowWriter.tupleSchema().index(name);
     if (index == -1) {
-      ColumnMetadata colSchema = MetadataUtils.newScalar(name, type, TypeProtos.DataMode.OPTIONAL);
+      ColumnMetadata colSchema = MetadataUtils.newScalar(name, type, DataMode.OPTIONAL);
       if (isMetadata) {
         colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
       }
@@ -559,10 +630,14 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       columnWriters.add(rowWriter.scalar(index));
       if (readerConfig.allTextMode && type == MinorType.FLOAT8) {
         cellWriterArray.add(new NumericStringWriter(columnWriters.get(index)));
+      } else if (readerConfig.allTextMode && type == MinorType.INT) {
+        cellWriterArray.add(new IntStringWriter(columnWriters.get(index)));
       } else if (type == MinorType.VARCHAR) {
         cellWriterArray.add(new StringCellWriter(columnWriters.get(index)));
-      } else if (type == MinorType.FLOAT8) {
+      } else if (type == MinorType.FLOAT8 || type == MinorType.FLOAT4) {
         cellWriterArray.add(new NumericCellWriter(columnWriters.get(index)));
+      }  else if (type == MinorType.INT) {
+        cellWriterArray.add(new IntCellWriter(columnWriters.get(index)));
       } else if (type == MinorType.TIMESTAMP) {
         cellWriterArray.add(new TimestampCellWriter(columnWriters.get(index)));
       }
@@ -709,6 +784,40 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       }
     }
   }
+
+
+  public static class IntStringWriter extends ExcelBatchReader.CellWriter {
+    IntStringWriter(ScalarWriter columnWriter) {
+      super(columnWriter);
+    }
+
+    @Override
+    public void load(Cell cell) {
+      if (cell == null) {
+        columnWriter.setNull();
+      } else {
+        String fieldValue = String.valueOf(cell.getNumericCellValue());
+        columnWriter.setString(fieldValue);
+      }
+    }
+  }
+
+  public static class IntCellWriter extends ExcelBatchReader.CellWriter {
+    IntCellWriter(ScalarWriter columnWriter) {
+      super(columnWriter);
+    }
+
+    @Override
+    public void load(Cell cell) {
+      if (cell == null) {
+        columnWriter.setNull();
+      } else {
+        int fieldNumValue = (int) cell.getNumericCellValue();
+        columnWriter.setInt(fieldNumValue);
+      }
+    }
+  }
+
 
   public static class TimestampCellWriter extends ExcelBatchReader.CellWriter {
     TimestampCellWriter(ScalarWriter columnWriter) {
