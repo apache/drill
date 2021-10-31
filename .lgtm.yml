@@ -1,0 +1,6 @@
+# Format of this file: https://lgtm.com/help/lgtm/lgtm.yml-configuration-file
+path_classifiers:
+  documentation:
+    - docs/dev/*
+  excludes:
+    - exec/java-exec/src/main/resources/rest/static/js/*.js
