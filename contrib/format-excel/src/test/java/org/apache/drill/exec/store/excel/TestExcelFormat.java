@@ -37,6 +37,7 @@ import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
 
+import static org.apache.drill.test.QueryTestUtil.ConvertDateToLong;
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
@@ -69,6 +70,113 @@ public class TestExcelFormat extends ClusterTest {
       .baselineValues(4.0, "Cicely", "Lyver", "clyver3@mysql.com", "Female", "5/4/2000", 987.39, 6.0, 164.565)
       .baselineValues(5.0, "Dorie", "Doe", "ddoe4@spotify.com", "Female", "12/28/1955", 852.48, 17.0, 50.14588235294118)
       .go();
+  }
+
+  @Test
+  public void testStarWithProvidedSchema() throws Exception {
+    String sql = "SELECT * FROM table(dfs.`excel/schema_provisioning.xlsx` " +
+      "(schema => 'inline=(`col1` INTEGER, `col2` FLOAT, `col3` VARCHAR)'" +
+      "))";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("col1", MinorType.INT)
+      .addNullable("col2", MinorType.FLOAT4)
+      .addNullable("col3", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, null, null)
+      .addRow(2, 3.0, null)
+      .addRow(4, 5.0, "six")
+      .addRow(7, 8.0, "nine")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testExplicitWithProvidedSchema() throws Exception {
+    String sql = "SELECT col1, col2, col3 FROM table(dfs.`excel/schema_provisioning.xlsx` " +
+      "(schema => 'inline=(`col1` INTEGER, `col2` FLOAT, `col3` VARCHAR)'" +
+      "))";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("col1", MinorType.INT)
+      .addNullable("col2", MinorType.FLOAT4)
+      .addNullable("col3", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, null, null)
+      .addRow(2, 3.0, null)
+      .addRow(4, 5.0, "six")
+      .addRow(7, 8.0, "nine")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testProvidedSchemaWithMetadata() throws Exception {
+    String sql =
+      "SELECT col1, col2, col3, _category, _content_status, _content_type, _creator, _description, _identifier, _keywords, _last_modified_by_user, _revision, _subject, _title, " +
+        "_created," +
+        "_last_printed, _modified " +
+        "FROM table(dfs.`excel/schema_provisioning.xlsx` (schema => 'inline=(`col1` INTEGER, `col2` FLOAT, `col3` VARCHAR)')) LIMIT 1";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("col1", MinorType.INT)
+      .addNullable("col2", MinorType.FLOAT4)
+      .addNullable("col3", MinorType.VARCHAR)
+      .addNullable("_category", MinorType.VARCHAR)
+      .addNullable("_content_status", MinorType.VARCHAR)
+      .addNullable("_content_type", MinorType.VARCHAR)
+      .addNullable("_creator", MinorType.VARCHAR)
+      .addNullable("_description", MinorType.VARCHAR)
+      .addNullable("_identifier", MinorType.VARCHAR)
+      .addNullable("_keywords", MinorType.VARCHAR)
+      .addNullable("_last_modified_by_user", MinorType.VARCHAR)
+      .addNullable("_revision", MinorType.VARCHAR)
+      .addNullable("_subject", MinorType.VARCHAR)
+      .addNullable("_title", MinorType.VARCHAR)
+      .addNullable("_created", MinorType.TIMESTAMP)
+      .addNullable("_last_printed", MinorType.TIMESTAMP)
+      .addNullable("_modified", MinorType.TIMESTAMP)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, null, null, null, null, null, "Microsoft Office User", null, null, null, "Microsoft Office User",
+        null, null, null, ConvertDateToLong("2021-10-27T11:35:00Z"), null, ConvertDateToLong("2021-10-28T13:25:51Z"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testProvidedSchemaWithNonDefaultSheet() throws Exception {
+    String sql = "SELECT col1, col2, col3 FROM table(dfs.`excel/schema_provisioning.xlsx` " +
+      "(type => 'excel', sheetName => 'SecondSheet', schema => 'inline=(`col1` INTEGER, `col2` FLOAT, `col3` VARCHAR)'" +
+      "))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("col1", MinorType.INT)
+      .addNullable("col2", MinorType.FLOAT4)
+      .addNullable("col3", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, 4.0, "Seven")
+      .addRow(2, 5.0, "Eight")
+      .addRow(3, 6.0, "Nine")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test

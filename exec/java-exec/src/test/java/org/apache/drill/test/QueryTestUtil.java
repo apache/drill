@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.BindException;
 import java.net.ServerSocket;
+import java.time.Instant;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -351,5 +352,17 @@ public class QueryTestUtil {
          OutputStream outputStream = codec.createOutputStream(fs.create(outFile))) {
       IOUtils.copyBytes(inputStream, outputStream, fs.getConf(), false);
     }
+  }
+
+  /**
+   * When writing Drill unit tests, Drill will output strings for dates.  However,
+   * these strings must be converted into timestamps (long) for use in unit tests.  This method
+   * provides a convenient way to do so.
+   * @param dateString An input date string from Drill output
+   * @return The datestring in epoch/millis.
+   */
+  public static long ConvertDateToLong(String dateString) {
+    Instant instant = Instant.parse(dateString);
+    return instant.toEpochMilli();
   }
 }
