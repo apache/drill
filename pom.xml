@@ -378,7 +378,6 @@
             <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
             <exclude>**/resources/parquet/**/*</exclude>
             <exclude>**/.asf.yaml</exclude>
-            <exclude>**/.lgtm.yml</exclude>
             <exclude>**/*.woff2</exclude>
             <exclude>**/*.ks</exclude>
             <exclude>**/*.pcap</exclude>
@@ -462,6 +461,7 @@
             <exclude>**/*.shp</exclude>
             <exclude>**/*.dbf</exclude>
             <exclude>**/*.cnf</exclude>
+            <exclude>**/*.access_log</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -773,6 +773,7 @@
               <exclude>**/*.prj</exclude>
               <exclude>**/*.shp</exclude>
               <exclude>**/*.dbf</exclude>
+              <exclude>**/*.access_log</exclude>
             </excludes>
             <mapping>
               <java>SLASHSTAR_STYLE</java>
@@ -807,6 +808,13 @@
               <tdd>SCRIPT_STYLE</tdd>
               <linux>SLASHSTAR_STYLE</linux>
               <plist>XML_STYLE</plist>
+              <cql>SLASHSTAR_STYLE</cql>
+              <cnf>SCRIPT_STYLE</cnf>
+              <env>SCRIPT_STYLE</env>
+              <config>SCRIPT_STYLE</config>
+              <dockerignore>SCRIPT_STYLE</dockerignore>
+              <build>SCRIPT_STYLE</build>
+              <push>SCRIPT_STYLE</push>
             </mapping>
           </configuration>
           <executions>
