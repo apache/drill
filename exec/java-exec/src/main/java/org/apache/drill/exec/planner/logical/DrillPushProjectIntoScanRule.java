@@ -87,7 +87,7 @@ public class DrillPushProjectIntoScanRule extends RelOptRule {
         }
       };
 
-  protected DrillPushProjectIntoScanRule(Class<? extends Project> projectClass, Class<? extends TableScan> scanClass, String description) {
+  public DrillPushProjectIntoScanRule(Class<? extends Project> projectClass, Class<? extends TableScan> scanClass, String description) {
     super(RelOptHelper.some(projectClass, RelOptHelper.any(scanClass)), description);
   }
 

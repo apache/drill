@@ -24,6 +24,8 @@ import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.store.plan.PluginImplementor;
 import org.apache.drill.exec.store.plan.rel.PluginLimitRel;
 
+import java.util.Collections;
+
 public class PluginLimitRule extends PluginConverterRule {
 
   public PluginLimitRule(RelTrait in, Convention out, PluginImplementor pluginImplementor) {
@@ -32,13 +34,24 @@ public class PluginLimitRule extends PluginConverterRule {
 
   @Override
   public RelNode convert(RelNode rel) {
-    DrillLimitRelBase sort = (DrillLimitRelBase) rel;
-    RelNode input = convert(sort.getInput(), sort.getInput().getTraitSet().replace(getOutConvention()).simplify());
+    DrillLimitRelBase limit = (DrillLimitRelBase) rel;
+
+    PluginLimitRel pluginLimitRel = getPluginLimitRel(limit);
+    if (getPluginImplementor().artificialLimit()) {
+      // preserve original limit
+      return limit.copy(limit.getTraitSet(), Collections.singletonList(pluginLimitRel));
+    } else {
+      return pluginLimitRel;
+    }
+  }
+
+  private PluginLimitRel getPluginLimitRel(DrillLimitRelBase limit) {
+    RelNode input = convert(limit.getInput(), limit.getInput().getTraitSet().replace(getOutConvention()).simplify());
     return new PluginLimitRel(
-        rel.getCluster(),
-        sort.getTraitSet().replace(getOutConvention()),
+        limit.getCluster(),
+        limit.getTraitSet().replace(getOutConvention()),
         input,
-        sort.getOffset(),
-        sort.getFetch());
+        limit.getOffset(),
+        limit.getFetch());
   }
 }

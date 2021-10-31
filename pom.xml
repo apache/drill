@@ -137,6 +137,7 @@
     <lombok.version>1.18.20</lombok.version>
     <brotli-codec.version>0.1.1</brotli-codec.version>
     <aircompressor.version>0.20</aircompressor.version>
+    <iceberg.version>0.12.1</iceberg.version>
   </properties>
 
   <scm>

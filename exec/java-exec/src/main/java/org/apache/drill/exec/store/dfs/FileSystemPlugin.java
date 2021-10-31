@@ -20,13 +20,18 @@ package org.apache.drill.exec.store.dfs;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -37,16 +42,14 @@ import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.ClassPathFileSystem;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet.Builder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
@@ -109,6 +112,8 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
         matchers.add(p.getMatcher());
         formatPluginsByConfig.put(p.getConfig(), p);
       }
+      // sort plugins in order according to their priority
+      matchers.sort(Comparator.comparing(FormatMatcher::priority).reversed());
 
       boolean noWorkspace = config.getWorkspaces() == null || config.getWorkspaces().isEmpty();
       List<WorkspaceSchemaFactory> factories = new ArrayList<>();
@@ -265,15 +270,13 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-    Builder<StoragePluginOptimizerRule> setBuilder = ImmutableSet.builder();
-    for (FormatPlugin plugin : formatCreator.getConfiguredFormatPlugins()) {
-      Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules();
-      if (rules != null && rules.size() > 0) {
-        setBuilder.addAll(rules);
-      }
-    }
-    return setBuilder.build();
+  public Set<? extends RelOptRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
+    return formatCreator.getConfiguredFormatPlugins()
+      .stream()
+      .map(plugin -> plugin.getOptimizerRules(phase))
+      .filter(Objects::nonNull)
+      .flatMap(Collection::stream)
+      .collect(Collectors.toSet());
   }
 
   public Configuration getFsConf() {

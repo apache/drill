@@ -23,11 +23,14 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.store.plan.PluginImplementor;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Storage plugin table scan rel implementation.
@@ -38,7 +41,7 @@ public class StoragePluginTableScan extends DrillScanRelBase implements PluginRe
 
   public StoragePluginTableScan(RelOptCluster cluster, RelTraitSet traits, GroupScan grpScan,
       RelOptTable table, RelDataType rowType) {
-    super(cluster, traits, grpScan, table);
+    super(cluster, traits, grpScan.clone(getColumns(rowType)), table);
     this.rowType = rowType;
   }
 
@@ -75,5 +78,13 @@ public class StoragePluginTableScan extends DrillScanRelBase implements PluginRe
   @Override
   public boolean canImplement(PluginImplementor implementor) {
     return implementor.canImplement(this);
+  }
+
+  private static List<SchemaPath> getColumns(RelDataType rowType) {
+    return rowType.getFieldList().stream()
+      .map(filed -> filed.isDynamicStar()
+        ? SchemaPath.STAR_COLUMN
+        : SchemaPath.getSimplePath(filed.getName()))
+      .collect(Collectors.toList());
   }
 }

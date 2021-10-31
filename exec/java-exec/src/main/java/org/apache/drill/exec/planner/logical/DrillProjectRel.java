@@ -41,7 +41,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * Project implemented in Drill.
  */
 public class DrillProjectRel extends DrillProjectRelBase implements DrillRel {
-  protected DrillProjectRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<? extends RexNode> exps,
+  public DrillProjectRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<? extends RexNode> exps,
       RelDataType rowType) {
     super(DRILL_LOGICAL, cluster, traits, child, exps, rowType);
   }

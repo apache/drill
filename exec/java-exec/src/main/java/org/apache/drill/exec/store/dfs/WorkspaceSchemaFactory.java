@@ -46,6 +46,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.common.util.function.CheckedFunction;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
@@ -90,7 +91,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class WorkspaceSchemaFactory {
@@ -99,6 +99,7 @@ public class WorkspaceSchemaFactory {
   private final List<FormatMatcher> fileMatchers;
   private final List<FormatMatcher> dropFileMatchers;
   private final List<FormatMatcher> dirMatchers;
+  private final List<FormatLocationTransformer> formatLocationTransformers;
 
   private final WorkspaceConfig config;
   private final Configuration fsConf;
@@ -122,8 +123,9 @@ public class WorkspaceSchemaFactory {
     this.fsConf = plugin.getFsConf();
     this.plugin = plugin;
     this.config = config;
-    this.fileMatchers = Lists.newArrayList();
-    this.dirMatchers = Lists.newArrayList();
+    this.fileMatchers = new ArrayList<>();
+    this.dirMatchers = new ArrayList<>();
+    this.formatLocationTransformers = new ArrayList<>();
     this.storageEngineName = storageEngineName;
     this.schemaName = schemaName;
     this.wsPath = new Path(config.getLocation());
@@ -134,6 +136,10 @@ public class WorkspaceSchemaFactory {
         dirMatchers.add(m);
       }
       fileMatchers.add(m);
+      FormatLocationTransformer transformer = m.getFormatLocationTransformer();
+      if (transformer != null) {
+        formatLocationTransformers.add(transformer);
+      }
     }
 
     // NOTE: Add fallback format matcher if given in the configuration. Make sure fileMatchers is an order-preserving list.
@@ -837,12 +843,21 @@ public class WorkspaceSchemaFactory {
       public FileSelectionInspector(TableInstance key) throws IOException {
         this.key = key;
         this.fs = getFS();
-        this.fileSelection = FileSelection.create(fs, config.getLocation(), key.sig.getName(), config.allowAccessOutsideWorkspace());
+        String path = key.sig.getName();
+        FileSelection fileSelection = getFileSelection(path);
         if (fileSelection == null) {
-          this.hasDirectories = false;
-        } else {
-          this.hasDirectories = fileSelection.containsDirectories(fs);
+          fileSelection = formatLocationTransformers.stream()
+            .filter(t -> t.canTransform(path))
+            .map(t -> t.transform(path, (CheckedFunction<String, FileSelection, IOException>) this::getFileSelection))
+            .findFirst()
+            .orElse(null);
         }
+        this.fileSelection = fileSelection;
+        this.hasDirectories = fileSelection != null && fileSelection.containsDirectories(fs);
+      }
+
+      private FileSelection getFileSelection(String path) throws IOException {
+        return FileSelection.create(fs, config.getLocation(), path, config.allowAccessOutsideWorkspace());
       }
 
       protected DrillTable matchFormat() throws IOException {

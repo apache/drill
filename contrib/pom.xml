@@ -64,6 +64,7 @@
     <module>storage-druid</module>
     <module>storage-elasticsearch</module>
     <module>storage-cassandra</module>
+    <module>format-iceberg</module>
   </modules>
 
 </project>

@@ -164,5 +164,6 @@ public class EnumerableRecordReader implements ManagedReader<SchemaNegotiator> {
 
   @Override
   public void close() {
+    loader.close();
   }
 }
