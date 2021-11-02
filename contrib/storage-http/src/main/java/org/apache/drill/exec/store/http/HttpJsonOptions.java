@@ -42,35 +42,35 @@ import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 public class HttpJsonOptions {
 
   @JsonInclude
-  private final boolean allowNanInf;
+  private final Boolean allowNanInf;
 
   @JsonInclude
-  private final boolean allTextMode;
+  private final Boolean allTextMode;
 
   @JsonInclude
-  private final boolean readNumbersAsDouble;
+  private final Boolean readNumbersAsDouble;
 
   @JsonInclude
-  private final boolean enableEscapeAnyChar;
+  private final Boolean enableEscapeAnyChar;
 
   @JsonIgnore
   public JsonLoaderOptions getJsonOptions(OptionSet optionSet) {
 
     JsonLoaderOptions options = new JsonLoaderOptions(optionSet);
 
-    if (optionSet.getBoolean(ExecConstants.JSON_READER_NAN_INF_NUMBERS) != allowNanInf) {
+    if (allowNanInf != null) {
       options.allowNanInf = allowNanInf;
     }
 
-    if (optionSet.getBoolean(ExecConstants.JSON_ALL_TEXT_MODE) != allTextMode) {
+    if (allTextMode != null) {
       options.allTextMode = allTextMode;
     }
 
-    if (optionSet.getBoolean(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE) != readNumbersAsDouble) {
+    if (readNumbersAsDouble != null) {
       options.readNumbersAsDouble = readNumbersAsDouble;
     }
 
-    if (optionSet.getBoolean(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR) != enableEscapeAnyChar) {
+    if (enableEscapeAnyChar != null) {
       options.enableEscapeAnyChar = enableEscapeAnyChar;
     }
 
