@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.drill.exec.store.pdf;
 
 import org.apache.drill.common.types.TypeProtos;
@@ -10,13 +28,16 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
+import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.nio.file.Paths;
 
-public class testPdfFormat extends ClusterTest {
+import static org.junit.Assert.assertEquals;
+
+public class TestPdfFormat extends ClusterTest {
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -60,7 +81,8 @@ public class testPdfFormat extends ClusterTest {
       "_producer," +
       "_creation_date, " +
       "_modification_date, " +
-      "_trapped " +
+      "_trapped, " +
+      "_table_count " +
       "FROM cp.`pdf/20.pdf` " +
       "LIMIT 1";
 
@@ -78,6 +100,7 @@ public class testPdfFormat extends ClusterTest {
       .addNullable("_creation_date", MinorType.TIMESTAMP)
       .addNullable("_modification_date", MinorType.TIMESTAMP)
       .addNullable("_trapped", MinorType.VARCHAR)
+      .addNullable("_table_count", MinorType.INT)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -88,9 +111,25 @@ public class testPdfFormat extends ClusterTest {
         "Acrobat Distiller 7.0.5 (Windows)",
         857403000000L,
         1230835135000L,
-    null)
+        null, 1)
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testSerDe() throws Exception {
+    String sql = "SELECT COUNT(*) AS cnt FROM " +
+      "table(cp.`pdf/argentina_diputados_voting_record.pdf` (type => 'pdf', combinePages => false))";
+    String plan = queryBuilder().sql(sql).explainJson();
+    long cnt = queryBuilder().physical(plan).singletonLong();
+    assertEquals("Counts should match",31L, cnt);
+  }
+
+  @Test
+  public void testPageMerge() throws Exception {
+    String sql = "SELECT * FROM cp.`pdf/schools.pdf`";
+    QuerySummary results = client.queryBuilder().sql(sql).run();
+    assertEquals(271, results.recordCount());
   }
 }

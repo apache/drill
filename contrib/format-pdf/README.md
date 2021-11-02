@@ -3,7 +3,12 @@ One of the most annoying tasks is when you are working on a data science project
  PDF tables using Drill's SQL interface.  
 
 ## Data Model
-Since PDF files generally are not intended to be queried or read by machines, mapping the data to tables and rows is not a perfect process.
+Since PDF files generally are not intended to be queried or read by machines, mapping the data to tables and rows is not a perfect process.  The PDF reader does support 
+provided schema. 
+
+### Merging Pages
+The PDF reader reads tables from PDF files on each page.  If your PDF file has tables that span multiple pages, you can set the `combinePages` parameter to `true` and Drill 
+will merge all the tables in the PDF file.  You can also do this at query time with the `table()` function.
 
 ## Accessing Document Metadata Fields
 PDF files have a considerable amount of metadata which can be useful for analysis.  Drill will extract the following fields from every PDF file.  Note that these fields are not
@@ -20,6 +25,7 @@ PDF files have a considerable amount of metadata which can be useful for analysi
  * `_creation_date`
  * `_modification_date`
  * `_trapped`
+ * `_table_count`
  
  The query below will access a document's metadata:
  
@@ -29,7 +35,3 @@ _keywords, _creator, _producer, _creation_date,
 _modification_date, _trapped 
 FROM dfs.`pdf/20.pdf`
 ```
- 
- 
-TODO 
-* Wrap pages together (add option to do so) 

@@ -1,6 +1,25 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.drill.exec.store.pdf;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
@@ -43,6 +62,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private RowSetLoader rowWriter;
   private InputStream fsStream;
   private PDDocument document;
+  private PdfReaderConfig config;
 
   private SchemaBuilder builder;
   private List<String> columnHeaders;
@@ -63,8 +83,10 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private String trapped;
   private int unregisteredColumnCount;
   private int columns;
+  private int tableCount;
   private int rows;
   private int metadataIndex;
+  private int currentTableIndex;
 
   // Tables
   private List<Table> tables;
@@ -81,7 +103,9 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   public PdfBatchReader(PdfReaderConfig readerConfig, int maxRecords) {
     this.maxRecords = maxRecords;
     this.unregisteredColumnCount = 0;
+    this.currentTableIndex = 0;
     this.writers = new ArrayList<>();
+    this.config = readerConfig;
   }
 
   @Override
@@ -93,15 +117,28 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     builder = new SchemaBuilder();
 
     openFile(negotiator);
-    populateMetadata();
+
     // Get the tables
     tables = Utils.extractTablesFromPDF(document);
+    populateMetadata();
     logger.debug("Found {} tables", tables.size());
 
-    negotiator.tableSchema(buildSchema(), false);
+    // Support provided schema
+    TupleMetadata schema = null;
+    if (negotiator.hasProvidedSchema()) {
+      schema = negotiator.providedSchema();
+      negotiator.tableSchema(schema, false);
+    } else {
+      negotiator.tableSchema(buildSchema(), false);
+    }
     ResultSetLoader loader = negotiator.build();
     rowWriter = loader.writer();
-    buildWriterList();
+
+    if (negotiator.hasProvidedSchema()) {
+      buildWriterListFromProvidedSchema(schema);
+    } else {
+      buildWriterList();
+    }
     addImplicitColumnsToSchema();
 
     // Prepare for reading
@@ -119,6 +156,12 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       // Check to see if the limit has been reached
       if (rowWriter.limitReached(maxRecords)) {
         return false;
+      } else if (currentRowIndex >= currentTable.getRows().size() &&
+                  currentTableIndex < tables.size() &&
+                  config.plugin.getConfig().getCombinePages()) {
+        logger.debug("Merging table {} with current table.", currentTableIndex);
+        currentRowIndex = 0;
+        currentTable = tables.get(currentTableIndex++);
       } else if (currentRowIndex >= currentTable.getRows().size()) {
         return false;
       }
@@ -193,6 +236,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     creationDate = info.getCreationDate();
     modificationDate = info.getModificationDate();
     trapped = info.getTrapped();
+    tableCount = tables.size();
   }
 
   private void addImplicitColumnsToSchema() {
@@ -208,6 +252,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     addMetadataColumnToSchema("_creation_date", MinorType.TIMESTAMP);
     addMetadataColumnToSchema("_modification_date", MinorType.TIMESTAMP);
     addMetadataColumnToSchema("_trapped", MinorType.VARCHAR);
+    addMetadataColumnToSchema("_table_count", MinorType.INT);
   }
 
   private void addMetadataColumnToSchema(String columnName, MinorType dataType) {
@@ -237,6 +282,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     writeTimestampMetadataField(creationDate, startingIndex+7);
     writeTimestampMetadataField(modificationDate, startingIndex+8);
     writeStringMetadataField(trapped, startingIndex+9);
+    writers.get(startingIndex+10).getWriter().setInt(tableCount);
   }
 
   private void writeStringMetadataField(String value, int index) {
@@ -275,7 +321,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   }
 
   private TupleMetadata buildSchema() {
-    Table table = tables.get(0); // TODO... cases where there are more than one table
+    Table table = tables.get(0);
     columns = table.getColCount();
     rows = table.getRowCount();
 
@@ -303,6 +349,42 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     }
   }
 
+  private void buildWriterListFromProvidedSchema(TupleMetadata schema) {
+    if (schema == null) {
+      buildWriterList();
+      return;
+    }
+    int counter = 0;
+    for (MaterializedField field: schema.toFieldList()) {
+      String fieldName = field.getName();
+      MinorType type = field.getType().getMinorType();
+      columnHeaders.add(fieldName);
+
+      switch (type) {
+        case VARCHAR:
+          writers.add(new StringPdfColumnWriter(counter, fieldName, rowWriter));
+          break;
+        case SMALLINT:
+        case TINYINT:
+        case INT:
+          writers.add(new IntPdfColumnWriter(counter, fieldName, rowWriter));
+          break;
+        case BIGINT:
+          writers.add(new BigIntPdfColumnWriter(counter, fieldName, rowWriter));
+          break;
+        case FLOAT4:
+        case FLOAT8:
+          writers.add(new DoublePdfColumnWriter(counter, fieldName, rowWriter));
+          break;
+        default:
+          throw UserException.unsupportedError()
+            .message("PDF Reader with Provided Schema only supports String, and Numeric Types")
+            .addContext(errorContext)
+            .build(logger);
+      }
+    }
+  }
+
   public abstract static class PdfColumnWriter {
     final String columnName;
     final ScalarWriter writer;
@@ -321,8 +403,40 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     }
   }
 
-  public static class StringPdfColumnWriter extends PdfColumnWriter {
+  public static class IntPdfColumnWriter extends PdfColumnWriter {
+    IntPdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter) {
+      super(columnIndex, columnName, rowWriter.scalar(columnName));
+    }
 
+    @Override
+    public void load(RectangularTextContainer<?> cell) {
+      writer.setInt(Integer.parseInt(cell.getText()));
+    }
+  }
+
+  public static class BigIntPdfColumnWriter extends PdfColumnWriter {
+    BigIntPdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter) {
+      super(columnIndex, columnName, rowWriter.scalar(columnName));
+    }
+
+    @Override
+    public void load(RectangularTextContainer<?> cell) {
+      writer.setLong(Long.parseLong(cell.getText()));
+    }
+  }
+
+  public static class DoublePdfColumnWriter extends PdfColumnWriter {
+    DoublePdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter) {
+      super(columnIndex, columnName, rowWriter.scalar(columnName));
+    }
+
+    @Override
+    public void load(RectangularTextContainer<?> cell) {
+      writer.setDouble(Double.parseDouble(cell.getText()));
+    }
+  }
+
+  public static class StringPdfColumnWriter extends PdfColumnWriter {
     StringPdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter) {
       super(columnIndex, columnName, rowWriter.scalar(columnName));
     }

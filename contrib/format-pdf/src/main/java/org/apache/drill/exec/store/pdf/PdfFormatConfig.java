@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.pdf;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -36,29 +37,39 @@ public class PdfFormatConfig implements FormatPluginConfig {
   private final List<String> extensions;
   private final boolean extractHeaders;
   private final String extractionAlgorithm;
+  private final boolean combinePages;
+  private final int defaultTableIndex;
 
   @JsonCreator
   public PdfFormatConfig(@JsonProperty("extensions") List<String> extensions,
                          @JsonProperty("extractHeaders") boolean extractHeaders,
-                         @JsonProperty("extractionAlgorithm") String extractionAlgorithm) {
+                         @JsonProperty("extractionAlgorithm") String extractionAlgorithm,
+                         @JsonProperty("combinePages") boolean combinePages,
+                         @JsonProperty("defaultTableIndex") int defaultTableIndex) {
     this.extensions = extensions == null
       ? Collections.singletonList("pdf")
       : ImmutableList.copyOf(extensions);
     this.extractHeaders = extractHeaders;
     this.extractionAlgorithm = extractionAlgorithm;
+    this.combinePages = combinePages;
+    this.defaultTableIndex = defaultTableIndex;
   }
 
   public PdfBatchReader.PdfReaderConfig getReaderConfig(PdfFormatPlugin plugin) {
     return new PdfBatchReader.PdfReaderConfig(plugin);
   }
 
-  @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+  @JsonInclude(Include.NON_DEFAULT)
   @JsonProperty("extensions")
   public List<String> getExtensions() {
     return extensions;
   }
 
-  @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+  @JsonInclude(Include.NON_DEFAULT)
+  @JsonProperty("combinePages")
+  public boolean getCombinePages() { return combinePages; }
+
+  @JsonInclude(Include.NON_DEFAULT)
   @JsonProperty("extractHeaders")
   public boolean getExtractHeaders() {
     return extractHeaders;
@@ -71,7 +82,7 @@ public class PdfFormatConfig implements FormatPluginConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(extensions, extractHeaders, extractionAlgorithm);
+    return Objects.hash(extensions, extractHeaders, extractionAlgorithm, combinePages, defaultTableIndex);
   }
 
   @Override
@@ -84,7 +95,9 @@ public class PdfFormatConfig implements FormatPluginConfig {
     PdfFormatConfig that = (PdfFormatConfig) obj;
     return Objects.equals(extensions, that.extensions) &&
       Objects.equals(extractHeaders, that.extractHeaders) &&
-      Objects.equals(extractionAlgorithm, that.extractionAlgorithm);
+      Objects.equals(extractionAlgorithm, that.extractionAlgorithm) &&
+      Objects.equals(combinePages, that.combinePages) &&
+      Objects.equals(defaultTableIndex, that.defaultTableIndex);
   }
 
   @Override
@@ -93,6 +106,8 @@ public class PdfFormatConfig implements FormatPluginConfig {
       .field("extensions", extensions)
       .field("extractHeaders", extractHeaders)
       .field("extractionAlgorithm", extractionAlgorithm)
+      .field("combinePages", combinePages)
+      .field("defaultTableIndex", defaultTableIndex)
       .toString();
   }
 }
