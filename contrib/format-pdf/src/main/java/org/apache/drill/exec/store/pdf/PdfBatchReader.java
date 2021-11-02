@@ -45,9 +45,15 @@ import technology.tabula.RectangularTextContainer;
 import technology.tabula.Table;
 
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchemaNegotiator> {
@@ -68,7 +74,9 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private List<String> columnHeaders;
   private int currentRowIndex;
   private Table currentTable;
-
+  private int currentTableIndex;
+  private int startingTableIndex;
+  private FileScanFramework.FileSchemaNegotiator negotiator;
 
   // Document Metadata Fields
   private int pageCount;
@@ -86,7 +94,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private int tableCount;
   private int rows;
   private int metadataIndex;
-  private int currentTableIndex;
+
 
   // Tables
   private List<Table> tables;
@@ -103,20 +111,23 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   public PdfBatchReader(PdfReaderConfig readerConfig, int maxRecords) {
     this.maxRecords = maxRecords;
     this.unregisteredColumnCount = 0;
-    this.currentTableIndex = 0;
     this.writers = new ArrayList<>();
     this.config = readerConfig;
+    this.startingTableIndex = readerConfig.plugin.getConfig().getDefaultTableIndex() < 0 ? 0 : readerConfig.plugin.getConfig().getDefaultTableIndex();
+    this.currentTableIndex = this.startingTableIndex;
+    this.columnHeaders = new ArrayList<>();
   }
 
   @Override
   public boolean open(FileScanFramework.FileSchemaNegotiator negotiator) {
     System.setProperty("java.awt.headless", "true");
+    this.negotiator = negotiator;
 
     split = negotiator.split();
     errorContext = negotiator.parentErrorContext();
     builder = new SchemaBuilder();
 
-    openFile(negotiator);
+    openFile();
 
     // Get the tables
     tables = Utils.extractTablesFromPDF(document);
@@ -125,13 +136,13 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     // Support provided schema
     TupleMetadata schema = null;
-    if (negotiator.hasProvidedSchema()) {
-      schema = negotiator.providedSchema();
-      negotiator.tableSchema(schema, false);
+    if (this.negotiator.hasProvidedSchema()) {
+      schema = this.negotiator.providedSchema();
+      this.negotiator.tableSchema(schema, false);
     } else {
-      negotiator.tableSchema(buildSchema(), false);
+      this.negotiator.tableSchema(buildSchema(), false);
     }
-    ResultSetLoader loader = negotiator.build();
+    ResultSetLoader loader = this.negotiator.build();
     rowWriter = loader.writer();
 
     if (negotiator.hasProvidedSchema()) {
@@ -143,7 +154,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     // Prepare for reading
     currentRowIndex = 1;  // Skip the first line if there are headers
-    currentTable = tables.get(0);
+    currentTable = tables.get(startingTableIndex);
 
     return true;
   }
@@ -159,7 +170,6 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       } else if (currentRowIndex >= currentTable.getRows().size() &&
                   currentTableIndex < tables.size() &&
                   config.plugin.getConfig().getCombinePages()) {
-        logger.debug("Merging table {} with current table.", currentTableIndex);
         currentRowIndex = 0;
         currentTable = tables.get(currentTableIndex++);
       } else if (currentRowIndex >= currentTable.getRows().size()) {
@@ -174,6 +184,10 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   }
 
   private void processRow(List<RectangularTextContainer> row) {
+    if (row == null || row.size() == 0) {
+      return;
+    }
+
     String value;
     rowWriter.start();
     for (int i = 0; i < row.size(); i++) {
@@ -204,9 +218,8 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
   /**
    * This method opens the PDF file, and finds the tables
-   * @param negotiator The Drill file negotiator object that represents the file system
    */
-  private void openFile(FileScanFramework.FileSchemaNegotiator negotiator) {
+  private void openFile() {
     try {
       fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
       document = PDDocument.load(fsStream);
@@ -321,7 +334,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   }
 
   private TupleMetadata buildSchema() {
-    Table table = tables.get(0);
+    Table table = tables.get(startingTableIndex);
     columns = table.getColCount();
     rows = table.getRowCount();
 
@@ -376,9 +389,18 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
         case FLOAT8:
           writers.add(new DoublePdfColumnWriter(counter, fieldName, rowWriter));
           break;
+        case DATE:
+          writers.add(new DatePdfColumnWriter(counter, fieldName, rowWriter, negotiator));
+          break;
+        case TIME:
+          writers.add(new TimePdfColumnWriter(counter, fieldName, rowWriter, negotiator));
+          break;
+        case TIMESTAMP:
+          writers.add(new TimestampPdfColumnWriter(counter, fieldName, rowWriter, negotiator));
+          break;
         default:
           throw UserException.unsupportedError()
-            .message("PDF Reader with Provided Schema only supports String, and Numeric Types")
+            .message("PDF Reader with provided schema does not support " + type.name() + " data type.")
             .addContext(errorContext)
             .build(logger);
       }
@@ -444,6 +466,84 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     @Override
     public void load(RectangularTextContainer<?> cell) {
       writer.setString(cell.getText());
+    }
+  }
+
+  public static class DatePdfColumnWriter extends PdfColumnWriter {
+    private String dateFormat;
+
+    DatePdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter, FileScanFramework.FileSchemaNegotiator negotiator) {
+      super(columnIndex, columnName, rowWriter.scalar(columnName));
+
+      ColumnMetadata metadata = negotiator.providedSchema().metadata(columnName);
+      if (metadata != null) {
+        this.dateFormat = metadata.property("drill.format");
+      }
+    }
+
+    @Override
+    public void load(RectangularTextContainer<?> cell) {
+      LocalDate localDate;
+      if (Strings.isNullOrEmpty(this.dateFormat)) {
+       localDate = LocalDate.parse(cell.getText());
+      } else {
+        localDate = LocalDate.parse(cell.getText(), DateTimeFormatter.ofPattern(dateFormat));
+      }
+      writer.setDate(localDate);
+    }
+  }
+
+  public static class TimePdfColumnWriter extends PdfColumnWriter {
+    private String dateFormat;
+
+    TimePdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter, FileScanFramework.FileSchemaNegotiator negotiator) {
+      super(columnIndex, columnName, rowWriter.scalar(columnName));
+
+      ColumnMetadata metadata = negotiator.providedSchema().metadata(columnName);
+      if (metadata != null) {
+        this.dateFormat = metadata.property("drill.format");
+      }
+    }
+
+    @Override
+    public void load(RectangularTextContainer<?> cell) {
+      LocalTime localTime;
+      if (Strings.isNullOrEmpty(this.dateFormat)) {
+        localTime = LocalTime.parse(cell.getText());
+      } else {
+        localTime = LocalTime.parse(cell.getText(), DateTimeFormatter.ofPattern(dateFormat));
+      }
+      writer.setTime(localTime);
+    }
+  }
+
+  public static class TimestampPdfColumnWriter extends PdfColumnWriter {
+    private String dateFormat;
+
+    TimestampPdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter, FileScanFramework.FileSchemaNegotiator negotiator) {
+      super(columnIndex, columnName, rowWriter.scalar(columnName));
+
+      ColumnMetadata metadata = negotiator.providedSchema().metadata(columnName);
+      if (metadata != null) {
+        this.dateFormat = metadata.property("drill.format");
+      }
+    }
+
+    @Override
+    public void load(RectangularTextContainer<?> cell) {
+      Instant timestamp = null;
+      if (Strings.isNullOrEmpty(this.dateFormat)) {
+        timestamp = Instant.parse(cell.getText());
+      } else {
+        try {
+          SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat);
+          Date parsedDate = simpleDateFormat.parse(cell.getText());
+          timestamp = Instant.ofEpochMilli(parsedDate.getTime());
+        } catch (ParseException e) {
+          logger.error("Error parsing timestamp: " + e.getMessage());
+        }
+      }
+      writer.setTimestamp(timestamp);
     }
   }
 }

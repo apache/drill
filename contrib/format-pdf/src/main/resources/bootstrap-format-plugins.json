@@ -9,7 +9,7 @@
             "pdf"
           ],
           "extractHeaders": true,
-          "combinePages": true
+          "combinePages": false
         }
       }
     },
@@ -22,7 +22,7 @@
             "pdf"
           ],
           "extractHeaders": true,
-          "combinePages": true
+          "combinePages": false
         }
       }
     },
@@ -35,7 +35,7 @@
             "pdf"
           ],
           "extractHeaders": true,
-          "combinePages": true
+          "combinePages": false
         }
       }
     }

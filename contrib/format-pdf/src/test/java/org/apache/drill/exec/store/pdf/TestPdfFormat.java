@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.store.pdf;
 
-import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -32,11 +32,15 @@ import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
+import java.time.LocalDate;
 
+import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 import static org.junit.Assert.assertEquals;
 
+@Category(RowSetTests.class)
 public class TestPdfFormat extends ClusterTest {
 
   @BeforeClass
@@ -56,9 +60,33 @@ public class TestPdfFormat extends ClusterTest {
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("Apellido y Nombre", MinorType.VARCHAR)
-      .addNullable("Bloque político", TypeProtos.MinorType.VARCHAR)
-      .addNullable("Provincia", TypeProtos.MinorType.VARCHAR)
-      .addNullable("field_0", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Bloque político", MinorType.VARCHAR)
+      .addNullable("Provincia", MinorType.VARCHAR)
+      .addNullable("field_0", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("ALBRIEU, Oscar Edmundo Nicolas", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .addRow("AVOSCAN, Herman Horacio", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .addRow("CEJAS, Jorge Alberto", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testExplicitQuery() throws RpcException {
+    String sql = "SELECT `Apellido y Nombre`, `Bloque político`, `Provincia`, `field_0` " +
+      "FROM cp.`pdf/argentina_diputados_voting_record.pdf` WHERE `Provincia` = 'Rio Negro'";
+
+    QueryBuilder q = client.queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Apellido y Nombre", MinorType.VARCHAR)
+      .addNullable("Bloque político", MinorType.VARCHAR)
+      .addNullable("Provincia", MinorType.VARCHAR)
+      .addNullable("field_0", MinorType.VARCHAR)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -90,12 +118,12 @@ public class TestPdfFormat extends ClusterTest {
     RowSet results = q.rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("_page_count", TypeProtos.MinorType.INT)
-      .addNullable("_title", TypeProtos.MinorType.VARCHAR)
-      .addNullable("_author", TypeProtos.MinorType.VARCHAR)
-      .addNullable("_subject", TypeProtos.MinorType.VARCHAR)
-      .addNullable("_keywords", TypeProtos.MinorType.VARCHAR)
-      .addNullable("_creator", TypeProtos.MinorType.VARCHAR)
+      .addNullable("_page_count", MinorType.INT)
+      .addNullable("_title", MinorType.VARCHAR)
+      .addNullable("_author", MinorType.VARCHAR)
+      .addNullable("_subject", MinorType.VARCHAR)
+      .addNullable("_keywords", MinorType.VARCHAR)
+      .addNullable("_creator", MinorType.VARCHAR)
       .addNullable("_producer", MinorType.VARCHAR)
       .addNullable("_creation_date", MinorType.TIMESTAMP)
       .addNullable("_modification_date", MinorType.TIMESTAMP)
@@ -128,8 +156,74 @@ public class TestPdfFormat extends ClusterTest {
 
   @Test
   public void testPageMerge() throws Exception {
-    String sql = "SELECT * FROM cp.`pdf/schools.pdf`";
+    String sql = "SELECT * FROM table(cp.`pdf/schools.pdf` (type => 'pdf', combinePages => true))";
     QuerySummary results = client.queryBuilder().sql(sql).run();
     assertEquals(271, results.recordCount());
+  }
+
+  @Test
+  public void testProvidedSchema() throws Exception {
+    String sql = "SELECT * FROM table(cp.`pdf/schools.pdf` (type => 'pdf', combinePages => true, " +
+      "schema => 'inline=(`Last Name` VARCHAR, `First Name Address` VARCHAR, `field_0` VARCHAR, `City` " +
+      "VARCHAR, `State` VARCHAR, `Zip` VARCHAR, `field_1` VARCHAR, `Occupation Employer` VARCHAR, " +
+      "`Date` VARCHAR, `field_2` DATE properties {`drill.format` = `M/d/yyyy`}, `Amount` DOUBLE)')) " +
+      "LIMIT 5";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Last Name", MinorType.VARCHAR)
+      .addNullable("First Name Address", MinorType.VARCHAR)
+      .addNullable("field_0", MinorType.VARCHAR)
+      .addNullable("City", MinorType.VARCHAR)
+      .addNullable("State", MinorType.VARCHAR)
+      .addNullable("Zip", MinorType.VARCHAR)
+      .addNullable("field_1", MinorType.VARCHAR)
+      .addNullable("Occupation Employer", MinorType.VARCHAR)
+      .addNullable("Date", MinorType.VARCHAR)
+      .addNullable("field_2", MinorType.DATE)
+      .addNullable("Amount", MinorType.FLOAT8)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("Lidstad", "Dick & Peg 62 Mississippi River Blvd N", null, "Saint Paul", "MN", null, "55104", "retired", null, LocalDate.parse("2012-10-12"), 60.0)
+      .addRow("Strom", "Pam 1229 Hague Ave", null, "St. Paul", "MN", null, "55104", null, null, LocalDate.parse("2012-09-12"), 60.0)
+      .addRow("Seeba", "Louise & Paul 1399 Sheldon St", null, "Saint Paul", "MN", null, "55108", "BOE City of Saint Paul", null, LocalDate.parse("2012-10-12"), 60.0)
+      .addRow("Schumacher / Bales", "Douglas L. / Patricia 948 County Rd. D W", null, "Saint Paul", "MN", null, "55126", null, null, LocalDate.parse("2012-10-13"), 60.0)
+      .addRow("Abrams", "Marjorie 238 8th St east", null, "St Paul", "MN", null, "55101", "Retired Retired", null, LocalDate.parse("2012-08-08"), 75.0)
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testSpecificTable() throws Exception {
+    String sql = "SELECT COUNT(*) FROM table(cp.`pdf/schools.pdf` (type => 'pdf', defaultTableIndex => 3))";
+    long resultCount = client.queryBuilder().sql(sql).singletonLong();
+    assertEquals(45L, resultCount);
+  }
+
+  @Test
+  public void testWithCompressedFile() throws Exception {
+    generateCompressedFile("pdf/argentina_diputados_voting_record.pdf", "zip", "pdf/compressed.pdf.zip" );
+
+    String sql = "SELECT * FROM dfs.`pdf/compressed.pdf.zip` WHERE `Provincia` = 'Rio Negro'";
+
+    QueryBuilder q = client.queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Apellido y Nombre", MinorType.VARCHAR)
+      .addNullable("Bloque político", MinorType.VARCHAR)
+      .addNullable("Provincia", MinorType.VARCHAR)
+      .addNullable("field_0", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("ALBRIEU, Oscar Edmundo Nicolas", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .addRow("AVOSCAN, Herman Horacio", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .addRow("CEJAS, Jorge Alberto", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 }
