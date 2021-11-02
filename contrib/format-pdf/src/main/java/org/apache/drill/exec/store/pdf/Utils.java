@@ -66,14 +66,6 @@ public class Utils {
       Page page = pages.next();
 
       algExtractor = algorithm;
-
-      /*if (extractor.isTabular(page)) {
-        algExtractor = new SpreadsheetExtractionAlgorithm();
-      }
-      else {
-        algExtractor = new BasicExtractionAlgorithm();
-      }*/
-
       List<Rectangle> tablesOnPage = detectionAlgorithm.detect(page);
 
       for (Rectangle guessRect : tablesOnPage) {
