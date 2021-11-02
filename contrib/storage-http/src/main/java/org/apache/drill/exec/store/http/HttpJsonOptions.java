@@ -60,27 +60,18 @@ public class HttpJsonOptions {
 
     if (optionSet.getBoolean(ExecConstants.JSON_READER_NAN_INF_NUMBERS) != allowNanInf) {
       options.allowNanInf = allowNanInf;
-    } else {
-      options.allowNanInf = optionSet.getBoolean(ExecConstants.JSON_READER_NAN_INF_NUMBERS);
     }
 
     if (optionSet.getBoolean(ExecConstants.JSON_ALL_TEXT_MODE) != allTextMode) {
-
       options.allTextMode = allTextMode;
-    } else {
-      options.allTextMode = optionSet.getBoolean(ExecConstants.JSON_ALL_TEXT_MODE);
     }
 
     if (optionSet.getBoolean(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE) != readNumbersAsDouble) {
       options.readNumbersAsDouble = readNumbersAsDouble;
-    } else {
-      options.readNumbersAsDouble = optionSet.getBoolean(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
     }
 
     if (optionSet.getBoolean(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR) != enableEscapeAnyChar) {
       options.enableEscapeAnyChar = enableEscapeAnyChar;
-    } else {
-      options.enableEscapeAnyChar = optionSet.getBoolean(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR);
     }
 
     return options;
