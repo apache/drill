@@ -23,6 +23,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -71,6 +72,7 @@ public class TestHttpPlugin extends ClusterTest {
   private static String TEST_JSON_RESPONSE;
   private static String TEST_CSV_RESPONSE;
   private static String TEST_XML_RESPONSE;
+  private static String TEST_JSON_RESPONSE_WITH_DATATYPES;
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -79,6 +81,7 @@ public class TestHttpPlugin extends ClusterTest {
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.json"), Charsets.UTF_8).read();
     TEST_CSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.csv"), Charsets.UTF_8).read();
     TEST_XML_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.xml"), Charsets.UTF_8).read();
+    TEST_JSON_RESPONSE_WITH_DATATYPES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response2.json"), Charsets.UTF_8).read();
 
     dirTestWatcher.copyResourceToRoot(Paths.get("data/"));
     makeLiveConfig();
@@ -230,6 +233,16 @@ public class TestHttpPlugin extends ClusterTest {
       .requireTail(false)
       .build();
 
+    HttpApiConfig mockTableWithJsonOptions = HttpApiConfig.builder()
+      .url("http://localhost:8091/json")
+      .method("GET")
+      .headers(headers)
+      .requireTail(false)
+      .jsonOptions(HttpJsonOptions.builder()
+        .allTextMode(true)
+        .build()
+      )
+      .build();
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("sunrise", mockSchema);
@@ -240,6 +253,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("github", mockGithubWithParam);
     configs.put("github2", mockGithubWithDuplicateParam);
     configs.put("github3", mockGithubWithParamInQuery);
+    configs.put("mockJsonAllText", mockTableWithJsonOptions);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
@@ -411,6 +425,32 @@ public class TestHttpPlugin extends ClusterTest {
       .sqlQuery(sql)
       .expectsNumRecords(1)
       .go();
+  }
+
+  @Test
+  public void simpleTestWithJsonConfig() throws Exception {
+    String sql = "SELECT * FROM local.mockJsonAllText";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("col_1", MinorType.VARCHAR, DataMode.OPTIONAL)
+        .add("col_2", MinorType.VARCHAR, DataMode.OPTIONAL)
+        .add("col_3", MinorType.VARCHAR, DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("1.0", "2", "3.0")
+        .addRow("4.0", "5", "6.0")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+      fail();
+    }
   }
 
   @Test

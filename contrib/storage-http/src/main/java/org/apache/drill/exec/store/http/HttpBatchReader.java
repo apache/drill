@@ -32,11 +32,14 @@ import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
+import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
@@ -47,6 +50,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private static final String[] STRING_METADATA_FIELDS = {"_response_message", "_response_protocol", "_response_url"};
   private static final String RESPONSE_CODE_FIELD = "_response_code";
+  private static final Logger logger = LoggerFactory.getLogger(HttpBatchReader.class);
 
   private final HttpSubScan subScan;
   private final int maxRecords;
@@ -100,14 +104,20 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     populateImplicitFieldMap(http);
 
     try {
-      jsonLoader = new JsonLoaderBuilder()
+      JsonLoaderBuilder jsonBuilder = new JsonLoaderBuilder()
           .implicitFields(implicitColumns)
           .resultSetLoader(loader)
-          .standardOptions(negotiator.queryOptions())
           .dataPath(subScan.tableSpec().connectionConfig().dataPath())
           .errorContext(errorContext)
-          .fromStream(inStream)
-          .build();
+          .fromStream(inStream);
+
+      if (subScan.tableSpec().connectionConfig().jsonOptions() != null) {
+        JsonLoaderOptions jsonOptions = subScan.tableSpec().connectionConfig().jsonOptions().getJsonOptions(negotiator.queryOptions());
+        jsonBuilder.options(jsonOptions);
+      } else {
+        jsonBuilder.standardOptions(negotiator.queryOptions());
+      }
+      jsonLoader = jsonBuilder.build();
     } catch (Throwable t) {
 
       // Paranoia: ensure stream is closed if anything goes wrong.
