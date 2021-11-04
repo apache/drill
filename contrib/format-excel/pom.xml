@@ -31,7 +31,7 @@
   <name>Drill : Contrib : Format : Excel</name>
 
   <properties>
-    <poi.version>5.0.0</poi.version>
+    <poi.version>5.1.0</poi.version>
   </properties>
   <dependencies>
     <dependency>
@@ -67,7 +67,7 @@
     <dependency>
       <groupId>com.github.pjfanning</groupId>
       <artifactId>excel-streaming-reader</artifactId>
-      <version>3.1.6</version>
+      <version>3.2.0</version>
     </dependency>
   </dependencies>
   <build>
