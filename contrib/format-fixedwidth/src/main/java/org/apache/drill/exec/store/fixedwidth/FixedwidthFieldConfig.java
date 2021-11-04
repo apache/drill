@@ -40,6 +40,13 @@ public class FixedwidthFieldConfig {
   public FixedwidthFieldConfig(@JsonProperty("name") String name,
                                @JsonProperty("index") int index,
                                @JsonProperty("width") int width,
+                               @JsonProperty("type") TypeProtos.MinorType type) {
+    this(name, index, width, type, null);
+  }
+
+  public FixedwidthFieldConfig(@JsonProperty("name") String name,
+                               @JsonProperty("index") int index,
+                               @JsonProperty("width") int width,
                                @JsonProperty("type") TypeProtos.MinorType type,
                                @JsonProperty("dateTimeFormat") String dateTimeFormat) {
 
@@ -48,6 +55,8 @@ public class FixedwidthFieldConfig {
     this.width = width;
     this.type = type;
     this.dateTimeFormat = dateTimeFormat;
+
+
 
     // Need to verify names are different - where can we access all the names of other columns
 //    if(name != null){

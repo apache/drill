@@ -19,13 +19,16 @@
 package org.apache.drill.exec.store.fixedwidth;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.exec.store.log.LogFormatField;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -77,4 +80,35 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
             .field("fields", fields)
             .toString();
   }
+
+
+  @JsonIgnore
+  public boolean hasFields() {
+    return fields != null && ! fields.isEmpty();
+  }
+
+  @JsonIgnore
+  public List<String> getFieldNames() {
+    List<String> result = new ArrayList<>();
+    if (! hasFields()) {
+      return result;
+    }
+
+    for (FixedwidthFieldConfig field : fields) {
+      result.add(field.getName());
+    }
+    return result;
+  }
+
+  @JsonIgnore
+  public boolean validateFieldNames(String fieldName){
+    boolean result = false;
+    List<String> names = this.getFieldNames();
+    if (names.contains(fieldName)){
+      result = true;
+    }
+    return result;
+  }
+
+
 }
