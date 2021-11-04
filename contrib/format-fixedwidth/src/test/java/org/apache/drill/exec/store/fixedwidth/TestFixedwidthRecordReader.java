@@ -174,7 +174,7 @@ public class TestFixedwidthRecordReader extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
-  //
+  // Create unit test for overloaded constructor
 
   private RowSet setupTestData(){
     TupleMetadata expectedSchema = new SchemaBuilder()
