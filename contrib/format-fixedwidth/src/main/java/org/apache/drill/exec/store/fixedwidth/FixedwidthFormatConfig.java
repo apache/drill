@@ -24,18 +24,25 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.store.log.LogFormatField;
+import org.apache.drill.exec.store.log.LogFormatPlugin;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @JsonTypeName(FixedwidthFormatPlugin.DEFAULT_NAME)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class FixedwidthFormatConfig implements FormatPluginConfig {
+  private static final Logger logger = LoggerFactory.getLogger(FixedwidthFormatConfig.class);
   private final List<String> extensions;
   private final List<FixedwidthFieldConfig> fields;
 
@@ -44,6 +51,8 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
                                 @JsonProperty("fields") List<FixedwidthFieldConfig> fields) {
     this.extensions = extensions == null ? Collections.singletonList("fwf") : ImmutableList.copyOf(extensions);
     this.fields = fields;
+
+    validateFieldInput();
   }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -101,13 +110,21 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
   }
 
   @JsonIgnore
-  public boolean validateFieldNames(String fieldName){
-    boolean result = false;
-    List<String> names = this.getFieldNames();
-    if (names.contains(fieldName)){
-      result = true;
+  public void validateFieldInput(){
+    Set<String> uniqueNames = new HashSet<>();
+    for (String name : this.getFieldNames()){
+      if (name.length() == 0){
+        
+      }
+      if (uniqueNames.contains(name)){
+        throw UserException
+          .validationError()
+          .message("Duplicate column name: " + name)
+          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .build(logger);
+      }
+      uniqueNames.add(name);
     }
-    return result;
   }
 
 

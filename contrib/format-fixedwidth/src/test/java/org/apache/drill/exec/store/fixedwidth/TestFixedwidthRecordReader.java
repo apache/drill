@@ -50,7 +50,7 @@ public class TestFixedwidthRecordReader extends ClusterTest {
 
     FixedwidthFormatConfig formatConfig = new FixedwidthFormatConfig(Lists.newArrayList("fwf"),
       Lists.newArrayList(
-        new FixedwidthFieldConfig("Number", 1, 5, TypeProtos.MinorType.VARDECIMAL, ""),
+        new FixedwidthFieldConfig("Number", 1, 5, TypeProtos.MinorType.VARDECIMAL),
         new FixedwidthFieldConfig("Letter", 7,4, TypeProtos.MinorType.VARCHAR, ""),
         new FixedwidthFieldConfig("Address",12, 3,TypeProtos.MinorType.INT,  ""),
         new FixedwidthFieldConfig("Date",16, 10,TypeProtos.MinorType.DATE,  "MM-dd-yyyy"),
