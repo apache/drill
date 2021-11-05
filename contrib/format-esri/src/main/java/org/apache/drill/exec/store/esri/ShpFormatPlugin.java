@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.esri;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -27,7 +26,7 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchem
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.hadoop.conf.Configuration;
@@ -55,12 +54,12 @@ public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
   }
 
   @Override
-  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options) throws ExecutionSetupException {
+  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionSet options) {
     return new ShpBatchReader(scan.getMaxRecords());
   }
 
   @Override
-  protected FileScanFramework.FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
+  protected FileScanFramework.FileScanBuilder frameworkBuilder(EasySubScan scan, OptionSet options) {
     FileScanFramework.FileScanBuilder builder = new FileScanFramework.FileScanBuilder();
     builder.setReaderFactory(new ShpReaderFactory(scan.getMaxRecords()));
     initScanBuilder(builder, scan);

@@ -81,7 +81,7 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
 
   private final EasyFormatPlugin<?> formatPlugin;
   private FileSelection selection;
-  private int partitionDepth;
+  private int partitionDepth = -1;
   private int maxWidth;
   private int minWidth = 1;
 
@@ -293,8 +293,8 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
     Preconditions.checkArgument(!filesForMinor.isEmpty(),
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
-    EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin,
-        columns, selectionRoot, partitionDepth, getSchema(), limit);
+    EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin, columns, selectionRoot,
+      partitionDepth, getSchema(), limit);
     subScan.setOperatorId(getOperatorId());
     return subScan;
   }

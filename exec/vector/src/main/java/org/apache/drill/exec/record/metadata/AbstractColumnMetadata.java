@@ -55,8 +55,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonPropertyOrder({ "name", "type", "mode", "format", "default",
     "properties" })
-public abstract class AbstractColumnMetadata extends AbstractPropertied
-    implements ColumnMetadata {
+public abstract class AbstractColumnMetadata extends AbstractPropertied implements ColumnMetadata {
 
   // Capture the key schema information. We cannot use the MaterializedField
   // or MajorType because they encode child information that we encode here
@@ -155,6 +154,9 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied
 
   @Override
   public boolean isDict() { return false; }
+
+  @Override
+  public boolean isScalar() { return false; }
 
   @Override
   public boolean isDynamic() { return false; }

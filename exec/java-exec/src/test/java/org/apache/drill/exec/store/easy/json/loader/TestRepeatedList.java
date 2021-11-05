@@ -445,7 +445,7 @@ public class TestRepeatedList extends BaseJsonLoaderTest {
         .addSingleCol(objArray())
         .addSingleCol(objArray())
         .addSingleCol(singleObjArray(strArray()))
-        .addSingleCol(objArray(strArray("\"foo\""), strArray("20")))
+        .addSingleCol(objArray(strArray("foo"), strArray("20")))
         .build();
     RowSetUtilities.verify(expected, results);
     assertNull(loader.next());

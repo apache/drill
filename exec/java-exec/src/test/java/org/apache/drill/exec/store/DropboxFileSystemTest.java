@@ -27,7 +27,7 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
-import org.apache.drill.exec.store.easy.json.JSONFormatPlugin.JSONFormatConfig;
+import org.apache.drill.exec.store.easy.json.JSONFormatConfig;
 import org.apache.drill.exec.store.easy.text.TextFormatConfig;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;

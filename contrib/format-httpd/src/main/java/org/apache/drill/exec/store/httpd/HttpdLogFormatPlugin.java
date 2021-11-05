@@ -29,7 +29,6 @@ import org.apache.drill.exec.physical.impl.scan.v3.file.FileScanLifecycleBuilder
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin.ScanFrameworkVersion;
 import org.apache.hadoop.conf.Configuration;
 
 public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig> {

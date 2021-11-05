@@ -34,7 +34,6 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.easy.json.JSONFormatPlugin.JSONFormatConfig;
 import org.apache.drill.exec.store.easy.json.JsonProcessor.ReadState;
 import org.apache.drill.exec.store.easy.json.reader.CountingJsonReader;
 import org.apache.drill.exec.vector.BaseValueVector;
@@ -54,8 +53,9 @@ import com.fasterxml.jackson.databind.JsonNode;
  * but is used by some "mini-plan" unit tests, and by the VALUES
  * reader. As a result, this reader cannot be removed and must be
  * maintained until the other uses are converted to the new-style
- * JSON reader.
+ * JSON reader - {@link JsonBatchReader}.
  */
+@Deprecated
 public class JSONRecordReader extends AbstractRecordReader {
   private static final Logger logger = LoggerFactory.getLogger(JSONRecordReader.class);
 
@@ -261,7 +261,7 @@ public class JSONRecordReader extends AbstractRecordReader {
             .build();
       }
       setupParser();
-    } catch (Exception e){
+    } catch (Exception e) {
       handleAndRaise("Failure reading JSON file", e);
     }
   }

@@ -232,6 +232,7 @@ public interface ColumnMetadata extends Propertied {
   boolean isMap();
   boolean isVariant();
   boolean isDict();
+  boolean isScalar();
 
   /**
    * Reports if the column is dynamic. A dynamic column is one with

@@ -182,7 +182,7 @@ public class TestRestJson extends ClusterTest {
       System.out.println(
           client.queryBuilder().sql(sql).singletonLong());
       long end = System.currentTimeMillis();
-      System.out.println(String.format("COUNT(*) - Elapsed: %d ms", end - start));
+      System.out.printf("COUNT(*) - Elapsed: %d ms%n", end - start);
     }
 
     // Run the query and dump to a file to do a rough check

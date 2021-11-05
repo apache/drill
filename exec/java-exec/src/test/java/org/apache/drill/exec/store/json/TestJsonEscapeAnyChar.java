@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.complex.writer;
+package org.apache.drill.exec.store.json;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.vector.complex.writer.TestJsonReader.TestWrapper;
+import org.apache.drill.exec.store.json.TestJsonReader.TestWrapper;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.After;
@@ -59,7 +59,7 @@ public class TestJsonEscapeAnyChar extends ClusterTest {
 
   @Test
   public void testwithOptionEnabled() throws Exception {
-    runBoth(() -> doTestWithOptionEnabled());
+    runBoth(this::doTestWithOptionEnabled);
   }
 
   private void doTestWithOptionEnabled() throws Exception {
@@ -76,14 +76,16 @@ public class TestJsonEscapeAnyChar extends ClusterTest {
       resetJsonReaderEscapeAnyChar();
     }
   }
+
   @Test
   public void testwithOptionDisabled() throws Exception {
-    runBoth(() -> doTestWithOptionDisabled());
+    runBoth(this::doTestWithOptionDisabled);
   }
 
   private void doTestWithOptionDisabled() throws Exception {
     try {
-      queryBuilder().sql(QUERY)
+      queryBuilder()
+        .sql(QUERY)
         .run();
     } catch (UserRemoteException e) {
       assertThat(e.getMessage(), containsString("DATA_READ ERROR: Error parsing JSON - Unrecognized character escape"));

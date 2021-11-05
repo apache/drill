@@ -184,7 +184,7 @@ public class TestJsonReaderQueries extends BaseTestJsonReader {
   @Test
   @Ignore("broken")
   public void testFieldSelectionBug() throws Exception {
-    runBoth(() -> doTestFieldSelectionBug());
+    runBoth(this::doTestFieldSelectionBug);
   }
 
   private void doTestFieldSelectionBug() throws Exception {
@@ -221,7 +221,7 @@ public class TestJsonReaderQueries extends BaseTestJsonReader {
 
   @Test
   public void testReadCompressed() throws Exception {
-    runBoth(() -> doTestReadCompressed());
+    runBoth(this::doTestReadCompressed);
   }
 
   private void doTestReadCompressed() throws Exception {
@@ -269,7 +269,7 @@ public class TestJsonReaderQueries extends BaseTestJsonReader {
 
   @Test
   public void testDrill_1419() throws Exception {
-    runBoth(() -> doTestDrill_1419());
+    runBoth(this::doTestDrill_1419);
   }
 
   private void doTestDrill_1419() throws Exception {
@@ -293,7 +293,7 @@ public class TestJsonReaderQueries extends BaseTestJsonReader {
 
   @Test
   public void testSingleColumnRead_vector_fill_bug() throws Exception {
-    runBoth(() -> doTestSingleColumnRead_vector_fill_bug());
+    runBoth(this::doTestSingleColumnRead_vector_fill_bug);
   }
 
   private void doTestSingleColumnRead_vector_fill_bug() throws Exception {
@@ -304,7 +304,7 @@ public class TestJsonReaderQueries extends BaseTestJsonReader {
 
   @Test
   public void testNonExistentColumnReadAlone() throws Exception {
-    runBoth(() -> doTestNonExistentColumnReadAlone());
+    runBoth(this::doTestNonExistentColumnReadAlone);
   }
 
   private void doTestNonExistentColumnReadAlone() throws Exception {
@@ -315,7 +315,7 @@ public class TestJsonReaderQueries extends BaseTestJsonReader {
 
   @Test
   public void testAllTextMode() throws Exception {
-    runBoth(() -> doTestAllTextMode());
+    runBoth(this::doTestAllTextMode);
   }
 
   private void doTestAllTextMode() throws Exception {
@@ -583,7 +583,6 @@ public class TestJsonReaderQueries extends BaseTestJsonReader {
         os.write("{\"col1\": \"val4\", \"col2\": null}");
       }
       String sql = "select t.col1, t.col2.col3 from dfs.tmp.drill_4032 t order by col1";
-//      String sql = "select t.col1, t.col2.col3 from dfs.tmp.drill_4032 t";
       RowSet results = runTest(sql);
       results.print();
 

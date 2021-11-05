@@ -610,38 +610,12 @@ public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
 
     Path tablePath = new Path(table.toURI().getPath());
 
-    TupleMetadata schema = new SchemaBuilder()
-        .addNullable("dir0", TypeProtos.MinorType.VARCHAR)
-        .addNullable("dir1", TypeProtos.MinorType.VARCHAR)
-        .addNullable("o_orderkey", TypeProtos.MinorType.BIGINT)
-        .addNullable("o_custkey", TypeProtos.MinorType.BIGINT)
-        .addNullable("o_orderstatus", TypeProtos.MinorType.VARCHAR)
-        .addNullable("o_totalprice", TypeProtos.MinorType.FLOAT8)
-        .addNullable("o_orderdate", TypeProtos.MinorType.VARCHAR)
-        .addNullable("o_orderpriority", TypeProtos.MinorType.VARCHAR)
-        .addNullable("o_clerk", TypeProtos.MinorType.VARCHAR)
-        .addNullable("o_shippriority", TypeProtos.MinorType.BIGINT)
-        .addNullable("o_comment", TypeProtos.MinorType.VARCHAR)
-        .build();
-
     Map<SchemaPath, ColumnStatistics<?>> tableColumnStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
-    tableColumnStatistics.put(SchemaPath.getSimplePath("o_custkey"),
-        getColumnStatistics(25L,
-            1498L, 120L, TypeProtos.MinorType.BIGINT));
-    tableColumnStatistics.put(SchemaPath.getSimplePath("o_orderdate"),
-        getColumnStatistics("1994-01-01T00:00:00.000-08:00",
-            "1996-12-19T00:00:00.000-08:00", 120L, TypeProtos.MinorType.VARCHAR));
-    tableColumnStatistics.put(SchemaPath.getSimplePath("o_orderkey"),
-        getColumnStatistics(1L,
-            1319L, 120L, TypeProtos.MinorType.BIGINT));
-    tableColumnStatistics.put(SchemaPath.getSimplePath("o_shippriority"),
-        getColumnStatistics(0L,
-            0L, 120L, TypeProtos.MinorType.BIGINT));
 
     BaseTableMetadata expectedTableMetadata = BaseTableMetadata.builder()
         .tableInfo(tableInfo)
         .metadataInfo(TABLE_META_INFO)
-        .schema(schema)
+        .schema(SCHEMA)
         .location(new Path(table.toURI().getPath()))
         .columnsStatistics(tableColumnStatistics)
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
@@ -657,18 +631,6 @@ public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
         .build();
 
     Map<SchemaPath, ColumnStatistics<?>> dir0CSVStats = new HashMap<>(DIR0_1994_SEGMENT_COLUMN_STATISTICS);
-    dir0CSVStats.put(SchemaPath.getSimplePath("o_custkey"),
-        getColumnStatistics(25L,
-            1469L, 40L, TypeProtos.MinorType.BIGINT));
-    dir0CSVStats.put(SchemaPath.getSimplePath("o_orderdate"),
-        getColumnStatistics("1994-01-01T00:00:00.000-08:00",
-            "1994-12-23T00:00:00.000-08:00", 40L, TypeProtos.MinorType.VARCHAR));
-    dir0CSVStats.put(SchemaPath.getSimplePath("o_orderkey"),
-        getColumnStatistics(5L,
-            1031L, 40L, TypeProtos.MinorType.BIGINT));
-    dir0CSVStats.put(SchemaPath.getSimplePath("o_shippriority"),
-        getColumnStatistics(0L,
-            0L, 40L, TypeProtos.MinorType.BIGINT));
 
     SegmentMetadata dir0 = SegmentMetadata.builder()
         .tableInfo(baseTableInfo)
@@ -678,7 +640,7 @@ public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
             .key("1994")
             .build())
         .path(new Path(tablePath, "1994"))
-        .schema(schema)
+        .schema(SCHEMA)
         .lastModifiedTime(getMaxLastModified(new File(table, "1994")))
         .column(SchemaPath.getSimplePath("dir0"))
         .columnsStatistics(dir0CSVStats)
@@ -720,19 +682,6 @@ public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
     expectedSegmentFilesLocations.add(segmentFiles);
 
     Map<SchemaPath, ColumnStatistics<?>> dir0q1Stats = new HashMap<>(DIR0_1994_Q1_SEGMENT_COLUMN_STATISTICS);
-    dir0q1Stats.put(SchemaPath.getSimplePath("o_custkey"),
-        getColumnStatistics(392L,
-            1411L, 10L, TypeProtos.MinorType.BIGINT));
-    dir0q1Stats.put(SchemaPath.getSimplePath("o_orderdate"),
-        getColumnStatistics("1994-01-01T00:00:00.000-08:00",
-            "1994-03-26T00:00:00.000-08:00", 10L, TypeProtos.MinorType.VARCHAR));
-    dir0q1Stats.put(SchemaPath.getSimplePath("o_orderkey"),
-        getColumnStatistics(66L,
-            833L, 10L, TypeProtos.MinorType.BIGINT));
-    dir0q1Stats.put(SchemaPath.getSimplePath("o_shippriority"),
-        getColumnStatistics(0L,
-            0L, 10L, TypeProtos.MinorType.BIGINT));
-
     long dir0q1lastModified = new File(new File(new File(table, "1994"), "Q1"), "orders_94_q1.json").lastModified();
     FileMetadata dir01994q1File = FileMetadata.builder()
         .tableInfo(baseTableInfo)
@@ -741,7 +690,7 @@ public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
             .identifier("1994/Q1/orders_94_q1.json")
             .key("1994")
             .build())
-        .schema(schema)
+        .schema(SCHEMA)
         .lastModifiedTime(dir0q1lastModified)
         .columnsStatistics(dir0q1Stats)
         .metadataStatistics(Collections.singletonList(new StatisticsHolder<>(10L, TableStatisticsKind.ROW_COUNT)))
@@ -785,9 +734,7 @@ public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
           .collect(Collectors.toSet());
 
       // verify top segments locations
-      assertEquals(
-          expectedTopLevelSegmentLocations,
-          topLevelSegmentLocations);
+      assertEquals(expectedTopLevelSegmentLocations, topLevelSegmentLocations);
 
       Set<Set<Path>> segmentFilesLocations = topSegmentMetadata.stream()
           .map(SegmentMetadata::getLocations)
@@ -815,7 +762,7 @@ public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
               .key("1994")
               .build())
           .path(new Path(new Path(tablePath, "1994"), "Q1"))
-          .schema(schema)
+          .schema(SCHEMA)
           .lastModifiedTime(getMaxLastModified(new File(new File(table, "1994"), "Q1")))
           .column(SchemaPath.getSimplePath("dir1"))
           .columnsStatistics(dir0q1Stats)

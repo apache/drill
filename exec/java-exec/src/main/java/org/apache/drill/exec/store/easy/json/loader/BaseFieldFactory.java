@@ -84,8 +84,7 @@ public abstract class BaseFieldFactory implements FieldFactory {
   }
 
   protected ElementParser scalarArrayParserFor(ValueParser element) {
-    return parserFactory().scalarArrayValueParser(
-        new SimpleArrayListener(), element);
+    return parserFactory().scalarArrayValueParser(new SimpleArrayListener(), element);
   }
 
   protected ElementParser scalarArrayParserFor(ArrayWriter writer) {
@@ -96,8 +95,7 @@ public abstract class BaseFieldFactory implements FieldFactory {
    * Create a repeated list listener for a scalar value.
    */
   protected ElementParser multiDimScalarArrayFor(ObjectWriter writer, int dims) {
-    return buildOuterArrays(writer, dims,
-        innerWriter -> scalarArrayParserFor(innerWriter.array()));
+    return buildOuterArrays(writer, dims, innerWriter -> scalarArrayParserFor(innerWriter.array()));
   }
 
   /**
@@ -112,11 +110,8 @@ public abstract class BaseFieldFactory implements FieldFactory {
    * Create a map column and its associated object value listener for the
    * given key and optional provided schema.
    */
-  protected ElementParser objectParserFor(FieldDefn fieldDefn,
-      ColumnMetadata colSchema, TupleMetadata providedSchema) {
-    return objectParserFor(
-            fieldDefn.fieldWriterFor(colSchema).tuple(),
-            providedSchema);
+  protected ElementParser objectParserFor(FieldDefn fieldDefn, ColumnMetadata colSchema, TupleMetadata providedSchema) {
+    return objectParserFor(fieldDefn.fieldWriterFor(colSchema).tuple(), providedSchema);
   }
 
   /**
@@ -129,24 +124,19 @@ public abstract class BaseFieldFactory implements FieldFactory {
   }
 
   protected ElementParser objectArrayParserFor(ArrayWriter arrayWriter, TupleMetadata providedSchema) {
-    return parserFactory().arrayValueParser(
-        new StructureArrayListener(arrayWriter),
-        objectParserFor(arrayWriter.tuple(), providedSchema));
+    return parserFactory().arrayValueParser(new StructureArrayListener(arrayWriter),
+      objectParserFor(arrayWriter.tuple(), providedSchema));
   }
 
   protected ElementParser objectParserFor(TupleWriter writer, TupleMetadata providedSchema) {
-    return parserFactory().objectValueParser(
-        new TupleParser(loader, writer, providedSchema));
+    return parserFactory().objectValueParser(new TupleParser(loader, writer, providedSchema));
   }
 
   /**
    * Create a repeated list listener for a Map.
    */
-  public ElementParser multiDimObjectArrayFor(
-      ObjectWriter writer, int dims, TupleMetadata providedSchema) {
-    return buildOuterArrays(writer, dims,
-        innerWriter ->
-          objectArrayParserFor(innerWriter.array(), providedSchema));
+  public ElementParser multiDimObjectArrayFor(ObjectWriter writer, int dims, TupleMetadata providedSchema) {
+    return buildOuterArrays(writer, dims, innerWriter -> objectArrayParserFor(innerWriter.array(), providedSchema));
   }
 
   /**
@@ -162,19 +152,15 @@ public abstract class BaseFieldFactory implements FieldFactory {
    * a column schema.
    */
   protected ElementParser variantArrayParserFor(ArrayWriter arrayWriter) {
-    return parserFactory().arrayValueParser(
-        new ListArrayListener(arrayWriter),
-        variantParserFor(arrayWriter.variant()));
+    return parserFactory().arrayValueParser(new ListArrayListener(arrayWriter), variantParserFor(arrayWriter.variant()));
   }
 
   /**
    * Create a repeated list listener for a variant. Here, the inner
    * array is provided by a List (which is a repeated Union.)
    */
-  protected ElementParser multiDimVariantArrayParserFor(
-      ObjectWriter writer, int dims) {
-    return buildOuterArrays(writer, dims,
-        innerWriter -> variantArrayParserFor(innerWriter.array()));
+  protected ElementParser multiDimVariantArrayParserFor(ObjectWriter writer, int dims) {
+    return buildOuterArrays(writer, dims, innerWriter -> variantArrayParserFor(innerWriter.array()));
   }
 
   /**

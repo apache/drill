@@ -42,9 +42,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import io.netty.buffer.DrillBuf;
 
+/**
+ * This is used by old-style {@link org.apache.drill.exec.store.easy.json.JSONRecordReader}.
+ * Please use new {@link org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl} along with
+ * {@link org.apache.drill.exec.store.easy.json.JsonBatchReader} instead of this reader
+ */
+@Deprecated
 public class JsonReader extends BaseJsonReader {
-  private static final Logger logger =
-      LoggerFactory.getLogger(JsonReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(JsonReader.class);
   public final static int MAX_RECORD_SIZE = 128 * 1024;
 
   private final WorkingBuffer workingBuffer;
@@ -380,8 +385,7 @@ public class JsonReader extends BaseJsonReader {
    * @return
    * @throws IOException
    */
-  private boolean writeMapDataIfTyped(MapWriter writer, String fieldName)
-      throws IOException {
+  private boolean writeMapDataIfTyped(MapWriter writer, String fieldName) throws IOException {
     if (extended) {
       return mapOutput.run(writer, fieldName);
     } else {
@@ -426,7 +430,7 @@ public class JsonReader extends BaseJsonReader {
         workingBuffer.getBuf());
   }
 
-  private void writeData(ListWriter list) throws IOException {
+  private void writeData(ListWriter list) {
     list.startList();
     outside: while (true) {
       try {

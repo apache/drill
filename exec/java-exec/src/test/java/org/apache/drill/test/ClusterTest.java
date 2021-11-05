@@ -106,7 +106,7 @@ public class ClusterTest extends DrillTest {
     return ClusterFixture.getResource(resource);
   }
 
-  public void runAndLog(String sqlQuery) throws Exception {
+  public void runAndLog(String sqlQuery) {
     client.runQueriesAndLog(sqlQuery);
   }
 

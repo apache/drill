@@ -8,7 +8,7 @@ Drill makes extensive use of [JUnit](http://junit.org/junit4/) and other librari
 
 * [Test Data Sets](TestDataSets.md)
 * [Temp Directory Utilities](TempDirectories.md)
-* [Testing with JUnit](JUnit.md)
+* [Testing with JUnit4](JUnit4.md)
 * [Test Logging](TestLogging.md)
 
 ## Deprecated Drill Testing Techniques

@@ -53,6 +53,8 @@ import org.slf4j.LoggerFactory;
 public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   private static final Logger logger = LoggerFactory.getLogger(PrimitiveColumnMetadata.class);
 
+  private boolean forUnknownSchema;
+
   public PrimitiveColumnMetadata(MaterializedField schema) {
     super(schema);
   }
@@ -63,6 +65,11 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   public PrimitiveColumnMetadata(String name, MinorType type, DataMode mode) {
     super(name, type, mode);
+  }
+
+  public PrimitiveColumnMetadata(String name, MinorType type, DataMode mode, boolean forUnknownSchema) {
+    this(name, type, mode);
+    this.forUnknownSchema = forUnknownSchema;
   }
 
   private int estimateWidth(MajorType majorType) {
@@ -331,5 +338,15 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
       default:
         return true;
     }
+  }
+
+  @Override
+  public boolean isScalar() { return true; }
+
+  /**
+   * @return true in case this primitive is created for unknown schema, for instance the column with all null values
+   */
+  public boolean isSchemaForUnknown() {
+    return forUnknownSchema;
   }
 }

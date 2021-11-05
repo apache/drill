@@ -36,6 +36,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.BaseTestQuery;
@@ -212,23 +213,28 @@ public class TestFrameworkTest extends BaseTestQuery {
     LocalDateTime localDT = LocalDateTime.of(2019, 9, 30, 20, 47, 43, 123);
     Instant instant = localDT.atZone(ZoneId.systemDefault()).toInstant();
     long ts = instant.toEpochMilli() + instant.getNano();
-    ts = ts + ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000;
-    testBuilder()
-        .sqlQuery("select * from cp.`jsoninput/input2.json` limit 1")
-        .ordered()
-        .baselineColumns("integer", "float", "x", "z", "l", "rl", "`date`")
-        .baselineValues(2010l,
-                        17.4,
-                        mapOf("y", "kevin",
-                            "z", "paul"),
-                        listOf(mapOf("orange", "yellow",
-                                "pink", "red"),
-                            mapOf("pink", "purple")),
-                        listOf(4l, 2l),
-                        listOf(listOf(2l, 1l),
-                            listOf(4l, 6l)),
-                        LocalDateTime.ofInstant(Instant.ofEpochMilli(ts), ZoneId.systemDefault()))
-        .build().run();
+    ts = ts + ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000L;
+    try {
+      testBuilder()
+          .ordered()
+          .enableSessionOption(ExecConstants.JSON_EXTENDED_TYPES_KEY)
+          .sqlQuery("select * from cp.`jsoninput/input2.json` limit 1")
+          .baselineColumns("integer", "float", "x", "z", "l", "rl", "`date`")
+          .baselineValues(2010l,
+                          17.4,
+                          mapOf("y", "kevin",
+                              "z", "paul"),
+                          listOf(mapOf("orange", "yellow",
+                                  "pink", "red"),
+                              mapOf("pink", "purple")),
+                          listOf(4l, 2l),
+                          listOf(listOf(2l, 1l),
+                              listOf(4l, 6l)),
+                          LocalDateTime.ofInstant(Instant.ofEpochMilli(ts), ZoneId.systemDefault()))
+          .build().run();
+    } finally {
+      resetSessionOption(ExecConstants.JSON_EXTENDED_TYPES_KEY);
+    }
   }
 
   @Test

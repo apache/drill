@@ -85,10 +85,7 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
     // Partition column
     int partitionIndex = Integer.parseInt(m.group(1));
     if (! referencedPartitions.contains(partitionIndex)) {
-      builder.addMetadataColumn(
-          new PartitionColumn(
-            inCol.name(),
-            partitionIndex));
+      builder.addMetadataColumn(new PartitionColumn(inCol.name(), partitionIndex));
 
       // Remember the partition for later wildcard expansion
       referencedPartitions.add(partitionIndex);
@@ -97,8 +94,7 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
     return true;
   }
 
-  private boolean buildMetadataColumn(FileMetadataColumnDefn defn,
-      RequestedColumn inCol) {
+  private boolean buildMetadataColumn(FileMetadataColumnDefn defn, RequestedColumn inCol) {
 
     // If the projected column is a map or array, then it shadows the
     // metadata column. Example: filename.x, filename[2].
@@ -136,8 +132,7 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
       if (referencedPartitions.contains(i)) {
         continue;
       }
-      builder.addMetadataColumn(new PartitionColumn(
-          metadataManager.partitionName(i), i));
+      builder.addMetadataColumn(new PartitionColumn(metadataManager.partitionName(i), i));
       referencedPartitions.add(i);
     }
     hasImplicitCols = true;

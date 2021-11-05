@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.TopN;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.test.TestBuilder;
@@ -145,21 +146,27 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
     }
     writer.close();
 
-    TestBuilder builder = testBuilder()
-      .sqlQuery("select * from dfs.`%s` order by kl limit 8", TABLE)
-      .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
-      .ordered()
-      .baselineColumns("kl", "vl");
+    try {
+      TestBuilder builder = testBuilder()
+        .sqlQuery("select * from dfs.`%s` order by kl limit 8", TABLE)
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
+        .ordered()
+        .baselineColumns("kl", "vl");
 
-    builder.baselineValues(0l, 0l);
-    builder.baselineValues(1.0d, 1.0d);
-    builder.baselineValues("2", "2");
-    builder.baselineValues(3l, 3l);
-    builder.baselineValues(4.0d, 4.0d);
-    builder.baselineValues("5", "5");
-    builder.baselineValues(6l, 6l);
-    builder.baselineValues(7.0d, 7.0d);
-    builder.go();
+      builder.baselineValues(0l, 0l);
+      builder.baselineValues(1.0d, 1.0d);
+      builder.baselineValues("2", "2");
+      builder.baselineValues(3l, 3l);
+      builder.baselineValues(4.0d, 4.0d);
+      builder.baselineValues("5", "5");
+      builder.baselineValues(6l, 6l);
+      builder.baselineValues(7.0d, 7.0d);
+      builder.go();
+    } finally {
+      resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
+    }
   }
 
   @Test
@@ -181,38 +188,46 @@ public class TestTopNSchemaChanges extends BaseTestQuery {
     }
     writer.close();
 
-    TestBuilder builder = testBuilder()
-      .sqlQuery("select kl, vl, kl1, vl1, kl2, vl2 from dfs.`%s` order by kl limit 3", TABLE)
-      .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
-      .ordered()
-      .baselineColumns("kl", "vl", "kl1", "vl1", "kl2", "vl2")
-      .baselineValues(100.0d, 100.0d, null, null, null, null)
-      .baselineValues(101.0d, 101.0d, null, null, null, null)
-      .baselineValues(102.0d, 102.0d, null, null, null, null);
-    builder.go();
+    try {
+      TestBuilder builder = testBuilder()
+        .sqlQuery("select kl, vl, kl1, vl1, kl2, vl2 from dfs.`%s` order by kl limit 3", TABLE)
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
+        .ordered()
+        .baselineColumns("kl", "vl", "kl1", "vl1", "kl2", "vl2")
+        .baselineValues(100.0d, 100.0d, null, null, null, null)
+        .baselineValues(101.0d, 101.0d, null, null, null, null)
+        .baselineValues(102.0d, 102.0d, null, null, null, null);
+      builder.go();
 
-    builder = testBuilder()
-      .sqlQuery("select kl, vl, kl1, vl1, kl2, vl2  from dfs.`%s` order by kl1 limit 3", TABLE)
-      .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
-      .ordered()
-      .baselineColumns("kl", "vl", "kl1", "vl1", "kl2", "vl2")
-      .baselineValues(null, null, 0l, 0l, null, null)
-      .baselineValues(null, null, 1l, 1l, null, null)
-      .baselineValues(null, null, 2l, 2l, null, null);
-    builder.go();
+      builder = testBuilder()
+        .sqlQuery("select kl, vl, kl1, vl1, kl2, vl2  from dfs.`%s` order by kl1 limit 3", TABLE)
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
+        .ordered()
+        .baselineColumns("kl", "vl", "kl1", "vl1", "kl2", "vl2")
+        .baselineValues(null, null, 0l, 0l, null, null)
+        .baselineValues(null, null, 1l, 1l, null, null)
+        .baselineValues(null, null, 2l, 2l, null, null);
+      builder.go();
 
-    builder = testBuilder()
-      .sqlQuery("select kl, vl, kl1, vl1, kl2, vl2 from dfs.`%s` order by kl2 limit 3", TABLE)
-      .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
-      .ordered()
-      .baselineColumns("kl", "vl", "kl1", "vl1", "kl2", "vl2")
-      .baselineValues(null, null, null, null, "200", "200")
-      .baselineValues(null, null, null, null, "201", "201")
-      .baselineValues(null, null, null, null, "202", "202");
-    builder.go();
+      builder = testBuilder()
+        .sqlQuery("select kl, vl, kl1, vl1, kl2, vl2 from dfs.`%s` order by kl2 limit 3", TABLE)
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
+        .ordered()
+        .baselineColumns("kl", "vl", "kl1", "vl1", "kl2", "vl2")
+        .baselineValues(null, null, null, null, "200", "200")
+        .baselineValues(null, null, null, null, "201", "201")
+        .baselineValues(null, null, null, null, "202", "202");
+      builder.go();
 
-    // Since client can't handle new columns which are not in first batch, we won't test output of query.
-    // Query should run w/o any errors.
-    test("select * from dfs.`%s` order by kl limit 3", TABLE);
+      // Since client can't handle new columns which are not in first batch, we won't test output of query.
+      // Query should run w/o any errors.
+      test("select * from dfs.`%s` order by kl limit 3", TABLE);
+    } finally {
+      resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
+    }
   }
 }

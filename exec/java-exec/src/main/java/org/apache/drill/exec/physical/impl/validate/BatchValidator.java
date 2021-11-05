@@ -179,8 +179,8 @@ public class BatchValidator {
   public static boolean validate(RecordBatch batch) {
     // This is a handy place to trace batches as they flow up
     // the DAG. Works best for single-threaded runs with a few records.
-    // System.out.println(batch.getClass().getSimpleName());
-    // RowSetFormatter.print(batch);
+//     System.out.println(batch.getClass().getSimpleName());
+//     RowSetFormatter.print(RowSets.wrap(batch));
     ErrorReporter reporter = errorReporter(batch);
     int rowCount = batch.getRecordCount();
     int valueCount = rowCount;

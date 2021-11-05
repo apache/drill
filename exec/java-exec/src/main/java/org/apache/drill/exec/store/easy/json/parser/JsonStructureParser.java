@@ -202,25 +202,25 @@ public class JsonStructureParser {
     }
     switch (token) {
 
-      // File contains an array of records.
-      case START_ARRAY:
-        if (options.skipOuterList) {
-          return new RootArrayParser(this);
-        } else {
-          throw errorFactory().structureError(
-              "JSON includes an outer array, but outer array support is not enabled");
-        }
+    // File contains an array of records.
+    case START_ARRAY:
+      if (options.skipOuterList) {
+        return new RootArrayParser(this);
+      } else {
+        throw errorFactory().structureError(
+            "JSON includes an outer array, but outer array support is not enabled");
+      }
 
-      // File contains a sequence of one or more records,
-      // presumably sequentially.
-      case START_OBJECT:
-        tokenizer.unget(token);
-        return new RootObjectParser(this);
+    // File contains a sequence of one or more records,
+    // presumably sequentially.
+    case START_OBJECT:
+      tokenizer.unget(token);
+      return new RootObjectParser(this);
 
-      // Not a valid JSON file for Drill.
-      // Won't get here because the Jackson parser catches errors.
-      default:
-        throw errorFactory().syntaxError(token);
+    // Not a valid JSON file for Drill.
+    // Won't get here because the Jackson parser catches errors.
+    default:
+      throw errorFactory().syntaxError(token);
     }
   }
 
@@ -254,6 +254,7 @@ public class JsonStructureParser {
     }
     while (true) {
       try {
+        // System.out.println(tokenizer.stringValue());
         return rootState.parseRoot(tokenizer);
       } catch (RecoverableJsonException e) {
         if (! recover()) {

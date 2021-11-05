@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.store.json;
 
+import static org.apache.drill.exec.ExecConstants.ENABLE_V2_JSON_READER_KEY;
+import static org.apache.drill.exec.ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG;
+import static org.apache.drill.exec.ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -45,12 +48,12 @@ public class TestJsonRecordReader extends BaseTestQuery {
     dirTestWatcher.copyResourceToRoot(Paths.get("jsoninput/drill_3353"));
   }
 
-  private void enableV2Reader(boolean enable) throws Exception {
-    alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, enable);
+  private void enableV2Reader(boolean enable) {
+    alterSession(ENABLE_V2_JSON_READER_KEY, enable);
   }
 
-  private void resetV2Reader() throws Exception {
-    resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
+  private void resetV2Reader() {
+    resetSessionOption(ENABLE_V2_JSON_READER_KEY);
   }
 
   public interface TestWrapper {
@@ -79,7 +82,12 @@ public class TestJsonRecordReader extends BaseTestQuery {
 
   @Test
   public void testDateJsonInput() throws Exception {
-    test("select `date`, AGE(`date`, CAST('2019-09-30 20:47:43' as timestamp)) from cp.`jsoninput/input2.json` limit 10 ");
+    try{
+      alterSession(ExecConstants.JSON_EXTENDED_TYPES_KEY, true);
+      test("select `date`, AGE(`date`, CAST('2019-09-30 20:47:43' as timestamp)) from cp.`jsoninput/input2.json` limit 10 ");
+    } finally {
+      resetSessionOption(ExecConstants.JSON_EXTENDED_TYPES_KEY);
+    }
   }
 
   @Test
@@ -115,7 +123,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
   // DRILL-1634 : retrieve an element in a nested array in a repeated map.
   // RepeatedMap (Repeated List (Repeated varchar))
   public void testNestedArrayInRepeatedMap() throws Exception {
-    runBoth(() -> doTestNestedArrayInRepeatedMap());
+    runBoth(this::doTestNestedArrayInRepeatedMap);
   }
 
   private void doTestNestedArrayInRepeatedMap() throws Exception {
@@ -126,7 +134,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
 
   @Test
   public void testEmptyMapDoesNotFailValueCapacityCheck() throws Exception {
-    runBoth(() -> doTestEmptyMapDoesNotFailValueCapacityCheck());
+    runBoth(this::doTestEmptyMapDoesNotFailValueCapacityCheck);
   }
 
   private void doTestEmptyMapDoesNotFailValueCapacityCheck() throws Exception {
@@ -136,13 +144,16 @@ public class TestJsonRecordReader extends BaseTestQuery {
 
   @Test
   public void testEnableAllTextMode() throws Exception {
-    runBoth(() -> doTestEnableAllTextMode());
+    runBoth(this::doTestEnableAllTextMode);
   }
 
   private void doTestEnableAllTextMode() throws Exception {
-    alterSession(ExecConstants.JSON_ALL_TEXT_MODE, true);
-    test("select * from cp.`jsoninput/big_numeric.json`");
-    resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
+    try{
+      alterSession(ExecConstants.JSON_ALL_TEXT_MODE, true);
+      test("select * from cp.`jsoninput/big_numeric.json`");
+    } finally {
+      resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
+    }
   }
 
   @Test
@@ -168,26 +179,32 @@ public class TestJsonRecordReader extends BaseTestQuery {
   @Category(UnlikelyTest.class)
   // DRILL-1832
   public void testJsonWithNulls1() throws Exception {
-    runBoth(() -> doTestJsonWithNulls1());
+    runBoth(this::doTestJsonWithNulls1);
   }
 
   private void doTestJsonWithNulls1() throws Exception {
     final String query = "select * from cp.`jsoninput/twitter_43.json`";
-    testBuilder().sqlQuery(query).unOrdered()
-        .jsonBaselineFile("jsoninput/drill-1832-1-result.json").go();
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .jsonBaselineFile("jsoninput/drill-1832-1-result.json")
+      .go();
   }
 
   @Test
   @Category(UnlikelyTest.class)
   // DRILL-1832
   public void testJsonWithNulls2() throws Exception {
-    runBoth(() -> doTestJsonWithNulls2());
+    runBoth(this::doTestJsonWithNulls2);
   }
 
   private void doTestJsonWithNulls2() throws Exception {
     final String query = "select SUM(1) as `sum_Number_of_Records_ok` from cp.`jsoninput/twitter_43.json` having (COUNT(1) > 0)";
-    testBuilder().sqlQuery(query).unOrdered()
-        .jsonBaselineFile("jsoninput/drill-1832-2-result.json").go();
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .jsonBaselineFile("jsoninput/drill-1832-2-result.json")
+      .go();
   }
 
   // V1-only test. In V2, this works. See TestJsonReaderQueries.
@@ -197,16 +214,14 @@ public class TestJsonRecordReader extends BaseTestQuery {
     try {
       enableV2Reader(false);
       testBuilder()
-          .sqlQuery("select * from cp.`jsoninput/mixed_number_types.json`")
-          .unOrdered().jsonBaselineFile("jsoninput/mixed_number_types.json")
-          .build().run();
+        .sqlQuery("select * from cp.`jsoninput/mixed_number_types.json`")
+        .unOrdered().jsonBaselineFile("jsoninput/mixed_number_types.json")
+        .go();
       fail("Mixed number types verification failed, expected failure on conflicting number types.");
     } catch (Exception ex) {
       // this indicates successful completion of the test
-      assertTrue(ex
-          .getMessage()
-          .contains(
-              "You tried to write a BigInt type when you are using a ValueWriter of type NullableFloat8WriterImpl."));
+      assertTrue(ex.getMessage()
+        .contains("You tried to write a BigInt type when you are using a ValueWriter of type NullableFloat8WriterImpl."));
     } finally {
       resetV2Reader();
     }
@@ -214,16 +229,19 @@ public class TestJsonRecordReader extends BaseTestQuery {
 
   @Test
   public void testMixedNumberTypesInAllTextMode() throws Exception {
-    runBoth(() -> doTestMixedNumberTypesInAllTextMode());
+    runBoth(this::doTestMixedNumberTypesInAllTextMode);
   }
 
   private void doTestMixedNumberTypesInAllTextMode() throws Exception {
     try {
       alterSession("store.json.all_text_mode", true);
       testBuilder()
-          .sqlQuery("select * from cp.`jsoninput/mixed_number_types.json`")
-          .unOrdered().baselineColumns("a").baselineValues("5.2")
-          .baselineValues("6").build().run();
+        .sqlQuery("select * from cp.`jsoninput/mixed_number_types.json`")
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues("5.2")
+        .baselineValues("6")
+        .go();
     } finally {
       resetSessionOption("store.json.all_text_mode");
     }
@@ -234,9 +252,12 @@ public class TestJsonRecordReader extends BaseTestQuery {
     try {
       alterSession(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE, true);
       testBuilder()
-          .sqlQuery("select * from cp.`jsoninput/mixed_number_types.json`")
-          .unOrdered().baselineColumns("a").baselineValues(5.2D)
-          .baselineValues(6D).build().run();
+        .sqlQuery("select * from cp.`jsoninput/mixed_number_types.json`")
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues(5.2D)
+        .baselineValues(6D)
+        .go();
     } finally {
       resetSessionOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
     }
@@ -246,7 +267,7 @@ public class TestJsonRecordReader extends BaseTestQuery {
   public void drill_3353() throws Exception {
     try {
       alterSession(ExecConstants.JSON_ALL_TEXT_MODE, true);
-       test("create table dfs.tmp.drill_3353 as select a from dfs.`jsoninput/drill_3353` where e = true");
+      test("create table dfs.tmp.drill_3353 as select a from dfs.`jsoninput/drill_3353` where e = true");
       runBoth(this::doDrill_3353);
     } finally {
       resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
@@ -274,8 +295,11 @@ public class TestJsonRecordReader extends BaseTestQuery {
   private void doTestNestedFilter() throws Exception {
     String query = "select a from cp.`jsoninput/nestedFilter.json` t where t.a.b = 1";
     String baselineQuery = "select * from cp.`jsoninput/nestedFilter.json` t where t.a.b = 1";
-    testBuilder().sqlQuery(query).unOrdered().sqlBaselineQuery(baselineQuery)
-        .go();
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .sqlBaselineQuery(baselineQuery)
+      .go();
   }
 
   @Test
@@ -284,24 +308,20 @@ public class TestJsonRecordReader extends BaseTestQuery {
   /* Test for CountingJSONReader */
   public void testCountingQuerySkippingInvalidJSONRecords() throws Exception {
     try {
-      String set = "alter session set `"
-        + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG + "` = true";
-      String set1 = "alter session set `"
-        + ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG
-        + "` = true";
       String query = "select count(*) from cp.`jsoninput/drill4653/file.json`";
 
-      testNoResult(set);
-      testNoResult(set1);
       testBuilder()
         .unOrdered()
+        .disableSessionOption(ENABLE_V2_JSON_READER_KEY)
+        .enableSessionOption(JSON_READER_SKIP_INVALID_RECORDS_FLAG)
+        .enableSessionOption(JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG)
         .sqlQuery(query)
         .sqlBaselineQuery(query)
         .go();
     } finally {
-      String set = "alter session set `"
-        + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG + "` = false";
-      testNoResult(set);
+      resetSessionOption(ENABLE_V2_JSON_READER_KEY);
+      resetSessionOption(JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG);
+      resetSessionOption(JSON_READER_SKIP_INVALID_RECORDS_FLAG);
     }
   }
 
@@ -316,8 +336,11 @@ public class TestJsonRecordReader extends BaseTestQuery {
   private void doTestCountingQueryNotSkippingInvalidJSONRecords() throws Exception {
     try {
       String query = "select count(*) from cp.`jsoninput/drill4653/file.json`";
-      testBuilder().unOrdered().sqlQuery(query).sqlBaselineQuery(query).build()
-          .run();
+      testBuilder()
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .go();
     } catch (Exception ex) {
       // do nothing just return
        return;
@@ -331,24 +354,20 @@ public class TestJsonRecordReader extends BaseTestQuery {
   /* Test for JSONReader */
   public void testNotCountingQuerySkippingInvalidJSONRecords() throws Exception {
     try {
-      String set = "alter session set `"
-        + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG + "` = true";
-      String set1 = "alter session set `"
-        + ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG
-        + "` = true";
       String query = "select sum(balance) from cp.`jsoninput/drill4653/file.json`";
-      testNoResult(set);
-      testNoResult(set1);
       testBuilder()
         .unOrdered()
+        .disableSessionOption(ENABLE_V2_JSON_READER_KEY)
+        .enableSessionOption(JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG)
+        .enableSessionOption(JSON_READER_SKIP_INVALID_RECORDS_FLAG)
         .sqlQuery(query)
         .sqlBaselineQuery(query)
         .go();
     }
     finally {
-      String set = "alter session set `"
-        + ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG + "` = false";
-      testNoResult(set);
+      resetSessionOption(ENABLE_V2_JSON_READER_KEY);
+      resetSessionOption(JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG);
+      resetSessionOption(JSON_READER_SKIP_INVALID_RECORDS_FLAG);
     }
   }
 
@@ -356,16 +375,18 @@ public class TestJsonRecordReader extends BaseTestQuery {
   @Category(UnlikelyTest.class)
   // See DRILL-4653
   /* Test for JSONReader */
-  public void testNotCountingQueryNotSkippingInvalidJSONRecords()
-      throws Exception {
+  public void testNotCountingQueryNotSkippingInvalidJSONRecords() throws Exception {
     runBoth(this::doTestNotCountingQueryNotSkippingInvalidJSONRecords);
   }
 
   private void doTestNotCountingQueryNotSkippingInvalidJSONRecords() throws Exception {
     try {
       String query = "select sum(balance) from cp.`jsoninput/drill4653/file.json`";
-      testBuilder().unOrdered().sqlQuery(query).sqlBaselineQuery(query).build()
-          .run();
+      testBuilder()
+        .unOrdered()
+        .sqlQuery(query)
+        .sqlBaselineQuery(query)
+        .go();
     } catch (Exception ex) {
       // do nothing just return
       return;

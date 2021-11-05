@@ -39,6 +39,7 @@ public class ObjectValueParser extends AbstractElementParser {
         objectParser.parse(tokenizer);
         break;
       case VALUE_NULL:
+      case VALUE_STRING:
         // Silently ignore, treat as a missing field
         break;
       default:

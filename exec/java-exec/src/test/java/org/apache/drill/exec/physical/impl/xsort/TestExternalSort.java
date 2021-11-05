@@ -35,6 +35,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import static org.apache.drill.exec.ExecConstants.ENABLE_UNION_TYPE_KEY;
+import static org.apache.drill.exec.ExecConstants.ENABLE_V2_JSON_READER_KEY;
+
 @Category({SlowTest.class, OperatorTest.class})
 public class TestExternalSort extends BaseTestQuery {
 
@@ -156,7 +159,7 @@ public class TestExternalSort extends BaseTestQuery {
     builder.go();
   }
 
-  @Test
+  @Test // V2_UNION
   public void testNewColumns() throws Exception {
     final int record_count = 10000;
     final String tableDirName = "newColumns";
@@ -194,24 +197,29 @@ public class TestExternalSort extends BaseTestQuery {
       new JsonFileBuilder(rowSet).build(tableFile);
       rowSet.clear();
     }
-
-    // Test framework currently doesn't handle changing schema (i.e. new
-    // columns) on the client side
-    TestBuilder builder = testBuilder()
-        .sqlQuery("select a, b, c from dfs.`%s` order by a desc", tableDirName)
-        .ordered()
-        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
-        .baselineColumns("a", "b", "c");
-    for (int i = record_count; i >= 0;) {
-      builder.baselineValues((long) i, (long) i--, null);
-      if (i >= 0) {
-        builder.baselineValues((long) i, null, (long) i--);
+    try {
+      // Test framework currently doesn't handle changing schema (i.e. new
+      // columns) on the client side
+      TestBuilder builder = testBuilder()
+          .sqlQuery("select a, b, c from dfs.`%s` order by a desc", tableDirName)
+          .ordered()
+          .enableSessionOption(ENABLE_UNION_TYPE_KEY)
+          .disableSessionOption(ENABLE_V2_JSON_READER_KEY)
+          .baselineColumns("a", "b", "c");
+      for (int i = record_count; i >= 0;) {
+        builder.baselineValues((long) i, (long) i--, null);
+        if (i >= 0) {
+          builder.baselineValues((long) i, null, (long) i--);
+        }
       }
-    }
-    builder.go();
+      builder.go();
 
-    // TODO: Useless test: just dumps to console
-    test("select * from dfs.`%s` order by a desc", tableDirName);
+      // TODO: Useless test: just dumps to console
+      test("select * from dfs.`%s` order by a desc", tableDirName);
+    } finally {
+      resetSessionOption(ENABLE_UNION_TYPE_KEY);
+      resetSessionOption(ENABLE_V2_JSON_READER_KEY);
+    }
   }
 
   private File createTableFile(final String tableDirName, final String fileName) {
