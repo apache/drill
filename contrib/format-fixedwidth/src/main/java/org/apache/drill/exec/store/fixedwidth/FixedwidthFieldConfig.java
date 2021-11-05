@@ -57,7 +57,6 @@ public class FixedwidthFieldConfig {
     this.dateTimeFormat = dateTimeFormat;
 
 
-
     // Need to verify names are different - where can we access all the names of other columns
 //    if(name != null){
 //      this.name = name;
