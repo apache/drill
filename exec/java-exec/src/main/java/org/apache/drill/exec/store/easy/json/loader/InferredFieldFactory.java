@@ -105,25 +105,19 @@ public class InferredFieldFactory extends BaseFieldFactory {
   }
 
   private ValueParser forceResolution(FieldDefn fieldDefn, boolean isArray) {
-    return unknownParserFor(
-        fieldDefn.scalarWriterFor(
-            schemaForUnknown(fieldDefn, isArray)));
+    return unknownParserFor(fieldDefn.scalarWriterFor(schemaForUnknown(fieldDefn, isArray)));
   }
 
   private ColumnMetadata schemaForUnknown(FieldDefn fieldDefn, boolean isArray) {
-    if (loader.options().unknownsAsJson) {
-      return fieldDefn.schemaFor(MinorType.VARCHAR, isArray);
-    } else {
-      return fieldDefn.schemaFor(loader.options().nullType, isArray);
-    }
+    return loader.options().unknownsAsJson
+      ? fieldDefn.schemaFor(MinorType.VARCHAR, isArray, true)
+      : fieldDefn.schemaFor(loader.options().nullType, isArray, true);
   }
 
   private ValueParser unknownParserFor(ScalarWriter writer) {
-    if (loader.options().unknownsAsJson) {
-      return parserFactory().jsonTextParser(new VarCharListener(loader, writer));
-    } else {
-      return parserFactory().simpleValueParser(scalarListenerFor(writer));
-    }
+    return loader.options().unknownsAsJson
+      ? parserFactory().jsonTextParser(new VarCharListener(loader, writer))
+      : parserFactory().simpleValueParser(scalarListenerFor(writer));
   }
 
   private ElementParser resolveField(FieldDefn fieldDefn) {
@@ -153,11 +147,9 @@ public class InferredFieldFactory extends BaseFieldFactory {
   public ValueParser scalarParserFor(FieldDefn fieldDefn, boolean isArray) {
     if (loader.options().allTextMode) {
       return parserFactory().textValueParser(
-          new VarCharListener(loader,
-              fieldDefn.scalarWriterFor(MinorType.VARCHAR, isArray)));
+        new VarCharListener(loader, fieldDefn.scalarWriterFor(MinorType.VARCHAR, isArray)));
     } else {
-      return scalarParserFor(fieldDefn,
-              fieldDefn.schemaFor(scalarTypeFor(fieldDefn), isArray));
+      return scalarParserFor(fieldDefn, fieldDefn.schemaFor(scalarTypeFor(fieldDefn), isArray));
     }
   }
 
@@ -215,8 +207,7 @@ public class InferredFieldFactory extends BaseFieldFactory {
   private MinorType scalarTypeFor(FieldDefn fieldDefn) {
     MinorType colType = drillTypeFor(fieldDefn.lookahead().type());
     if (colType == null) {
-      throw loader().unsupportedJsonTypeException(
-          fieldDefn.key(), fieldDefn.lookahead().type());
+      throw loader().unsupportedJsonTypeException(fieldDefn.key(), fieldDefn.lookahead().type());
     }
     return colType;
   }

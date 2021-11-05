@@ -221,7 +221,6 @@ public class TestStarQueries extends BaseTestQuery {
         .sqlQuery("select *, n_nationkey as key2 from cp.`tpch/nation.parquet` order by n_name limit 2")
         .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey, n_nationkey as key2 from cp.`tpch/nation.parquet` order by n_name limit 2")
         .build().run();
-
   }
 
   @Test

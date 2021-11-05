@@ -236,7 +236,7 @@ public abstract class SingleVectorState implements VectorState {
       sourceVector.getMutator().setValueCount(offsetLength );
 
       // Getting offsets right was a pain. If you modify this code,
-      // you'll likely relive that experience. Enabling the next two
+      // you'll likely relive that experience. Enabling the three two
       // lines will help reveal some of the mystery around offsets and their
       // confusing off-by-one design.
 

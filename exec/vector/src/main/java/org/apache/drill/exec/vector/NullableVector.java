@@ -23,7 +23,7 @@ import org.apache.drill.exec.record.MaterializedField;
 
 public interface NullableVector extends ValueVector {
 
-  public interface Mutator extends ValueVector.Mutator {
+  interface Mutator extends ValueVector.Mutator {
 
     /**
      * Used by the vector accessors to force the last set value.

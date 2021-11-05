@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.complex.writer;
+package org.apache.drill.exec.store.json;
 
 import static org.apache.drill.test.TestBuilder.listOf;
 import static org.apache.drill.test.TestBuilder.mapOf;
@@ -53,7 +53,6 @@ import org.slf4j.LoggerFactory;
  * <li><tt>TestJsonReaderQuery</tt></li>
  * </ul>
  */
-//TODO: Move to JSON reader package after code review
 @Category(RowSetTest.class)
 public class TestJsonReader extends BaseTestQuery {
   private static final Logger logger = LoggerFactory.getLogger(TestJsonReader.class);
@@ -64,11 +63,11 @@ public class TestJsonReader extends BaseTestQuery {
     dirTestWatcher.copyResourceToRoot(Paths.get("vector","complex", "writer"));
   }
 
-  private void enableV2Reader(boolean enable) throws Exception {
+  private void enableV2Reader(boolean enable) {
     alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, enable);
   }
 
-  private void resetV2Reader() throws Exception {
+  private void resetV2Reader() {
     resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
   }
 
@@ -89,7 +88,7 @@ public class TestJsonReader extends BaseTestQuery {
 
    @Test
   public void schemaChange() throws Exception {
-    runBoth(() -> doSchemaChange());
+    runBoth(this::doSchemaChange);
   }
 
   private void doSchemaChange() throws Exception {
@@ -98,7 +97,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testSplitAndTransferFailure() throws Exception {
-    runBoth(() -> doTestSplitAndTransferFailure());
+    runBoth(this::doTestSplitAndTransferFailure);
   }
 
   private void doTestSplitAndTransferFailure() throws Exception {
@@ -131,7 +130,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test // DRILL-1824
   public void schemaChangeValidate() throws Exception {
-    runBoth(() -> doSchemaChangeValidate());
+    runBoth(this::doSchemaChangeValidate);
   }
 
   private void doSchemaChangeValidate() throws Exception {
@@ -179,6 +178,7 @@ public class TestJsonReader extends BaseTestQuery {
               .sqlQuery("select * from cp.`jsoninput/union/a.json`")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
               .baselineColumns("field1", "field2")
               .baselineValues(
                       1L, 1.2
@@ -221,6 +221,7 @@ public class TestJsonReader extends BaseTestQuery {
               ).go();
     } finally {
       resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
     }
   }
 
@@ -235,11 +236,13 @@ public class TestJsonReader extends BaseTestQuery {
                 "from cp.`jsoninput/union/a.json`) where a is not null")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
               .baselineColumns("a", "type")
               .baselineValues(13L, "BIGINT")
               .go();
     } finally {
       resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
     }
   }
 
@@ -254,6 +257,7 @@ public class TestJsonReader extends BaseTestQuery {
                 "when is_map(field1) then t.field1.inner1 end f1 from cp.`jsoninput/union/a.json` t")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
               .baselineColumns("f1")
               .baselineValues(1L)
               .baselineValues(2L)
@@ -262,6 +266,7 @@ public class TestJsonReader extends BaseTestQuery {
               .go();
     } finally {
       resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
     }
   }
 
@@ -271,17 +276,19 @@ public class TestJsonReader extends BaseTestQuery {
   public void testSumWithTypeCase() throws Exception {
     try {
       testBuilder()
-              .sqlQuery("select sum(cast(f1 as bigint)) sum_f1 from " +
-                "(select case when is_bigint(field1) then field1 " +
-                "when is_list(field1) then field1[0] when is_map(field1) then t.field1.inner1 end f1 " +
-                "from cp.`jsoninput/union/a.json` t)")
-              .ordered()
-              .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
-              .baselineColumns("sum_f1")
-              .baselineValues(9L)
-              .go();
+          .sqlQuery("select sum(cast(f1 as bigint)) sum_f1 from " +
+            "(select case when is_bigint(field1) then field1 " +
+            "when is_list(field1) then field1[0] when is_map(field1) then t.field1.inner1 end f1 " +
+            "from cp.`jsoninput/union/a.json` t)")
+          .ordered()
+          .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+          .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
+          .baselineColumns("sum_f1")
+          .baselineValues(9L)
+          .go();
     } finally {
       resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
     }
   }
 
@@ -294,6 +301,7 @@ public class TestJsonReader extends BaseTestQuery {
               .sqlQuery("select a + b c from cp.`jsoninput/union/b.json`")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
               .baselineColumns("c")
               .baselineValues(3L)
               .baselineValues(7.0)
@@ -301,6 +309,7 @@ public class TestJsonReader extends BaseTestQuery {
               .go();
     } finally {
       resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
     }
   }
 
@@ -322,11 +331,13 @@ public class TestJsonReader extends BaseTestQuery {
               .sqlQuery("select sum(cast(case when `type` = 'map' then t.data.a else data end as bigint)) `sum` from dfs.tmp.multi_batch t")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
               .baselineColumns("sum")
               .baselineValues(20000L)
               .go();
     } finally {
       resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
     }
   }
 
@@ -353,15 +364,17 @@ public class TestJsonReader extends BaseTestQuery {
               .sqlQuery("select sum(cast(case when `type` = 'map' then t.data.a else data end as bigint)) `sum` from dfs.tmp.multi_file t")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+              .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
               .baselineColumns("sum")
               .baselineValues(20000L)
               .go();
     } finally {
       resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
     }
   }
 
-  // V1 version of the test. See TsetJsonReaderQueries for the V2 version.
+  // V1 version of the test. See TestJsonReaderQueries for the V2 version.
 
   @Test
   public void drill_4032() throws Exception {
@@ -377,10 +390,10 @@ public class TestJsonReader extends BaseTestQuery {
     os.write("{\"col1\": \"val1\",\"col2\": null}".getBytes());
     os.flush();
     os.close();
-    testNoResult("select t.col2.col3 from dfs.tmp.drill_4032 t");
+    runBoth(() -> testNoResult("select t.col2.col3 from dfs.tmp.drill_4032 t"));
   }
 
-  @Test
+  @Test // todo: place this logic to beforeClass. And divide doDrill_4479 into 3 tests
   public void drill_4479() throws Exception {
     File table_dir = dirTestWatcher.makeTestTmpSubDir(Paths.get("drill_4479"));
     table_dir.mkdir();
@@ -394,7 +407,7 @@ public class TestJsonReader extends BaseTestQuery {
     os.flush();
     os.close();
 
-    runBoth(() -> doDrill_4479());
+    runBoth(this::doDrill_4479);
   }
 
   private void doDrill_4479() throws Exception {
@@ -436,7 +449,7 @@ public class TestJsonReader extends BaseTestQuery {
       writer.write("{ \"a\": { \"b\": { \"c\": [] }, \"c\": [] } }");
     }
 
-    runBoth(() -> doTestFlattenEmptyArrayWithAllTextMode());
+    runBoth(this::doTestFlattenEmptyArrayWithAllTextMode);
   }
 
   private void doTestFlattenEmptyArrayWithAllTextMode() throws Exception {
@@ -468,7 +481,7 @@ public class TestJsonReader extends BaseTestQuery {
       writer.write("{ \"a\": { \"b\": { \"c\": [] }, \"c\": [] } }");
     }
 
-    runBoth(() -> doTestFlattenEmptyArrayWithUnionType());
+    runBoth(this::doTestFlattenEmptyArrayWithUnionType);
   }
 
   private void doTestFlattenEmptyArrayWithUnionType() throws Exception {
@@ -554,6 +567,7 @@ public class TestJsonReader extends BaseTestQuery {
         .sqlQuery("select t.rk.a as a from dfs.`%s` t", fileName)
         .ordered()
         .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type`=true")
+        .optionSettingQueriesForTestQuery("alter session set `store.json.enable_v2_reader` = false")
         .baselineColumns("a")
         .baselineValues(map)
         .baselineValues("2")
@@ -561,6 +575,7 @@ public class TestJsonReader extends BaseTestQuery {
 
     } finally {
       resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
     }
   }
 

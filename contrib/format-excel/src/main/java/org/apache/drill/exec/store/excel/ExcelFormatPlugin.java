@@ -28,7 +28,7 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchem
 
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.hadoop.conf.Configuration;
@@ -80,12 +80,12 @@ public class ExcelFormatPlugin extends EasyFormatPlugin<ExcelFormatConfig> {
 
   @Override
   public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
-    EasySubScan scan, OptionManager options) {
+    EasySubScan scan, OptionSet options) {
     return new ExcelBatchReader(formatConfig.getReaderConfig(this), scan.getMaxRecords());
   }
 
   @Override
-  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
+  protected FileScanBuilder frameworkBuilder(EasySubScan scan, OptionSet options) {
     FileScanBuilder builder = new FileScanBuilder();
     ExcelReaderConfig readerConfig = new ExcelReaderConfig(this);
 

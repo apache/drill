@@ -246,7 +246,7 @@ public class TestUnknowns extends BaseJsonLoaderTest {
     RowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addSingleCol(strArray())
         .addSingleCol(strArray("null"))
-        .addSingleCol(strArray("\"foo\""))
+        .addSingleCol(strArray("foo"))
         .addSingleCol(strArray("10", "[20]", "{\"b\": 30}"))
         .build();
     RowSetUtilities.verify(expected, results);

@@ -22,7 +22,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 /**
  * VectorAccessible is an interface. Yet, several operations are done
- * on VectorAccessible over and over gain. While Java 8 allows static
+ * on VectorAccessible over and over gain. TODO. While Java 8 allows static
  * methods on an interface, Drill uses Java 7, which does not. This
  * class is a placeholder for common VectorAccessible methods that
  * can migrate into the interface when Drill upgrades to Java 8.

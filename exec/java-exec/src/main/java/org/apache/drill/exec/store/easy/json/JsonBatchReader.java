@@ -32,6 +32,10 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * EVF based reader. It is using by default to read JSON files - store.json.enable_v2_reader = true
+ * The old deprecated one is {@link JSONRecordReader}
+ */
 public class JsonBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private static final Logger logger = LoggerFactory.getLogger(JsonBatchReader.class);
 
@@ -64,6 +68,7 @@ public class JsonBatchReader implements ManagedReader<FileSchemaNegotiator> {
     jsonLoader = new JsonLoaderBuilder()
         .resultSetLoader(negotiator.build())
         .standardOptions(negotiator.queryOptions())
+        .providedSchema(negotiator.providedSchema())
         .errorContext(errorContext)
         .fromStream(stream)
         .build();

@@ -22,6 +22,7 @@ import org.apache.drill.categories.RowSetTest;
 
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -30,6 +31,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSetComparison;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,6 +47,7 @@ public class TestJsonModes extends ClusterTest {
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
+    client.alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, false);
   }
 
   @Test
@@ -158,5 +161,10 @@ public class TestJsonModes extends ClusterTest {
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
     assertEquals("Counts should match", 4L, cnt);
+  }
+
+  @AfterClass
+  public static void resetOptions() {
+    client.resetSession(ExecConstants.ENABLE_V2_JSON_READER_KEY);
   }
 }

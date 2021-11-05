@@ -88,7 +88,7 @@ abstract class VectorOutput {
     this.parser = parser;
   }
 
-  protected boolean innerRun() throws IOException{
+  protected boolean innerRun() throws IOException {
     JsonToken t = parser.nextToken();
     if (t != JsonToken.FIELD_NAME) {
       return false;
@@ -155,25 +155,24 @@ abstract class VectorOutput {
     return checkToken(parser.getCurrentToken(), expected1, expected2);
   }
 
-  boolean hasType() throws JsonParseException, IOException {
+  boolean hasType() throws IOException {
     JsonToken token = parser.nextToken();
     return token == JsonToken.FIELD_NAME && parser.getText().equals(ExtendedTypeName.TYPE);
   }
 
-  boolean hasBinary() throws JsonParseException, IOException {
+  boolean hasBinary() throws IOException {
     JsonToken token = parser.nextToken();
     return token == JsonToken.FIELD_NAME && parser.getText().equals(ExtendedTypeName.BINARY);
   }
 
-  long getType() throws JsonParseException, IOException {
+  long getType() throws IOException {
     if (!checkNextToken(JsonToken.VALUE_NUMBER_INT, JsonToken.VALUE_STRING)) {
       long type = parser.getValueAsLong();
       //Advancing the token, as checking current token in binary
       parser.nextToken();
       return type;
     }
-    throw new JsonParseException("Failure while reading $type value. Expected a NUMBER or STRING",
-        parser.getCurrentLocation());
+    throw new JsonParseException(parser, "Failure while reading $type value. Expected a NUMBER or STRING");
   }
 
   public boolean checkToken(final JsonToken t, final JsonToken expected1, final JsonToken expected2) throws IOException{
@@ -184,8 +183,8 @@ abstract class VectorOutput {
     } else if (t == expected2) {
       return false;
     } else {
-      throw new JsonParseException(String.format("Failure while reading ExtendedJSON typed value. Expected a %s but "
-          + "received a token of type %s", expected1, t), parser.getCurrentLocation());
+      throw new JsonParseException(parser, String.format("Failure while reading ExtendedJSON typed value. Expected a %s but "
+          + "received a token of type %s", expected1, t));
     }
   }
 
@@ -197,7 +196,7 @@ abstract class VectorOutput {
   public abstract void writeInteger(boolean isNull) throws IOException;
   public abstract void writeDecimal(boolean isNull) throws IOException;
 
-  static class ListVectorOutput extends VectorOutput{
+  static class ListVectorOutput extends VectorOutput {
     private ListWriter writer;
 
     public ListVectorOutput(WorkingBuffer work) {
@@ -262,7 +261,7 @@ abstract class VectorOutput {
           // 1. https://docs.mongodb.com/manual/reference/mongodb-extended-json
           // 2. org.apache.drill.exec.store.easy.json.values.UtcTimestampValueListener
           Instant instant = isoDateTimeFormatter.parse(parser.getValueAsString(), Instant::from);
-          long offset = ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000;
+          long offset = ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000L;
           ts.writeTimeStamp(instant.toEpochMilli() + offset);
           break;
         default:
@@ -295,7 +294,7 @@ abstract class VectorOutput {
 
     @Override
     public void writeDecimal(boolean isNull) throws IOException {
-      throw new JsonParseException("Decimal Extended types not yet supported.", parser.getCurrentLocation());
+      throw new JsonParseException(parser, "Decimal Extended types not yet supported");
     }
   }
 
@@ -368,7 +367,7 @@ abstract class VectorOutput {
           // 1. https://docs.mongodb.com/manual/reference/mongodb-extended-json
           // 2. org.apache.drill.exec.store.easy.json.values.UtcTimestampValueListener
           Instant instant = isoDateTimeFormatter.parse(parser.getValueAsString(), Instant::from);
-          long offset = ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000;
+          long offset = ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000L;
           ts.writeTimeStamp(instant.toEpochMilli() + offset);
           break;
         default:

@@ -27,7 +27,7 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchem
 
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin.ScanFrameworkVersion;
@@ -75,13 +75,12 @@ public class SasFormatPlugin extends EasyFormatPlugin<SasFormatConfig> {
   }
 
   @Override
-  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
-    EasySubScan scan, OptionManager options)  {
+  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionSet options)  {
     return new SasBatchReader(scan.getMaxRecords());
   }
 
   @Override
-  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
+  protected FileScanBuilder frameworkBuilder(EasySubScan scan, OptionSet options) {
     FileScanBuilder builder = new FileScanBuilder();
     builder.setReaderFactory(new SasReaderFactory(scan.getMaxRecords()));
 

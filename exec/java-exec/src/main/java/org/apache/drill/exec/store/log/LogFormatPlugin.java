@@ -143,8 +143,7 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
    * </ul>
    */
   @Override
-  protected FileScanBuilder frameworkBuilder(
-      OptionSet options, EasySubScan scan) throws ExecutionSetupException {
+  protected FileScanBuilder frameworkBuilder(EasySubScan scan, OptionSet options) throws ExecutionSetupException {
 
     // Pattern and schema identical across readers; define
     // up front.

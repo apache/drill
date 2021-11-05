@@ -246,15 +246,13 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   @Override
   public int addColumn(ColumnMetadata column) {
     verifyAddColumn(column.name());
-    return addColumnWriter(
-        (AbstractObjectWriter) listener.addColumn(this, column));
+    return addColumnWriter((AbstractObjectWriter) listener.addColumn(this, column));
   }
 
   @Override
   public int addColumn(MaterializedField field) {
     verifyAddColumn(field.getName());
-    return addColumnWriter(
-        (AbstractObjectWriter) listener.addColumn(this, field));
+    return addColumnWriter((AbstractObjectWriter) listener.addColumn(this, field));
   }
 
   private void verifyAddColumn(String colName) {

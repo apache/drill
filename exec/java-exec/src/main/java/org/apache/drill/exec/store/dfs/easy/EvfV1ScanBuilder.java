@@ -26,7 +26,7 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanB
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.record.CloseableRecordBatch;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +94,7 @@ class EvfV1ScanBuilder {
    * vector and batch sizes. Use this for new format plugins.
    */
   public CloseableRecordBatch build() throws ExecutionSetupException {
-    final FileScanBuilder builder = plugin.frameworkBuilder(context.getOptions(), scan);
+    final FileScanBuilder builder = plugin.frameworkBuilder(scan, context.getOptions());
 
     // Add batch reader, if none specified
 
@@ -107,13 +107,13 @@ class EvfV1ScanBuilder {
   /**
    * Initialize the scan framework builder with standard options.
    * Call this from the plugin-specific
-   * {@link #frameworkBuilder(OptionManager, EasySubScan)} method.
+   * {@link EasyFormatPlugin#frameworkBuilder(EasySubScan, OptionSet)} method.
    * The plugin can then customize/revise options as needed.
    *
    * @param builder the scan framework builder you create in the
-   * {@link #frameworkBuilder(OptionManager, EasySubScan)} method
+   * {@link EasyFormatPlugin#frameworkBuilder(EasySubScan, OptionSet)} method
    * @param scan the physical scan operator definition passed to
-   * the {@link #frameworkBuilder(OptionManager, EasySubScan)} method
+   * the {@link EasyFormatPlugin#frameworkBuilder(EasySubScan, OptionSet)} method
    */
   protected static void initScanBuilder(EasyFormatPlugin<? extends FormatPluginConfig> plugin,
       FileScanBuilder builder, EasySubScan scan) {

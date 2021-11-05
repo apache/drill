@@ -503,9 +503,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
     final NullColumnBuilder builder = new NullBuilderBuilder().build();
     final ResolvedRow rootTuple = new ResolvedRow(builder);
     try {
-      new ExplicitSchemaProjection(
-          scanProj, tableSchema, rootTuple,
-          ScanTestUtils.resolvers());
+      new ExplicitSchemaProjection(scanProj, tableSchema, rootTuple, ScanTestUtils.resolvers());
       fail();
     } catch (final UserException e) {
       // Expected

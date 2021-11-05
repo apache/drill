@@ -29,6 +29,9 @@ import org.apache.drill.exec.planner.sql.handlers.FindLimit0Visitor;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 import org.apache.drill.exec.vector.ValueVector;
 
+/**
+ * For new implementations please use new {@link org.apache.drill.exec.physical.impl.scan.framework.ManagedReader}
+ */
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,

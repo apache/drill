@@ -112,7 +112,11 @@ public class FieldDefn {
   }
 
   public ColumnMetadata schemaFor(MinorType type, boolean isArray) {
-    return MetadataUtils.newScalar(key, type, mode(isArray));
+    return schemaFor(type, isArray, false);
+  }
+
+  public ColumnMetadata schemaFor(MinorType type, boolean isArray, boolean forUnknownSchema) {
+    return MetadataUtils.newScalar(key, type, mode(isArray), forUnknownSchema);
   }
 
   public DataMode mode(boolean isArray) {

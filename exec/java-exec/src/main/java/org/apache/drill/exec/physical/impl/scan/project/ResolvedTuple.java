@@ -204,13 +204,13 @@ public abstract class ResolvedTuple implements VectorSource {
 
     public AbstractMapVector buildMap() {
       if (parentColumn.sourceIndex() != -1) {
-        ResolvedTuple parentTuple = parentColumn.parent();
-        inputMap = (AbstractMapVector) parentTuple.vector(parentColumn.sourceIndex());
+        ValueVector vector = parentColumn.parent().vector(parentColumn.sourceIndex());
+        if(vector instanceof AbstractMapVector) {
+          inputMap = (AbstractMapVector) vector;
+        }
       }
       MaterializedField colSchema = parentColumn.schema();
-      outputMap = createMap(inputMap,
-          MaterializedField.create(
-              colSchema.getName(), colSchema.getType()),
+      outputMap = createMap(inputMap, MaterializedField.create(colSchema.getName(), colSchema.getType()),
           parentColumn.parent().allocator());
       buildColumns();
       return outputMap;
@@ -237,8 +237,7 @@ public abstract class ResolvedTuple implements VectorSource {
     @Override
     protected AbstractMapVector createMap(AbstractMapVector inputMap,
         MaterializedField schema, BufferAllocator allocator) {
-      return new MapVector(schema,
-          allocator, null);
+      return new MapVector(schema, allocator, null);
     }
 
     @Override
@@ -280,8 +279,7 @@ public abstract class ResolvedTuple implements VectorSource {
       RepeatedMapVector source = (RepeatedMapVector) inputMap;
       UInt4Vector offsets = source.getOffsetVector();
       valueCount = offsets.getAccessor().getValueCount();
-      return new RepeatedMapVector(schema,
-          offsets, null);
+      return new RepeatedMapVector(schema, offsets, null);
     }
 
     @Override
@@ -336,8 +334,10 @@ public abstract class ResolvedTuple implements VectorSource {
     @Override
     public ValueVector buildVector() {
       if (parentColumn.sourceIndex() != -1) {
-        ResolvedTuple parentTuple = parentColumn.parent();
-        inputVector = (DictVector) parentTuple.vector(parentColumn.sourceIndex());
+        ValueVector vector = parentColumn.parent().vector(parentColumn.sourceIndex());
+        if(vector instanceof DictVector) {
+          inputVector = (DictVector) vector;
+        }
       }
       MaterializedField colSchema = parentColumn.schema();
       MaterializedField dictField = MaterializedField.create(colSchema.getName(), colSchema.getType());

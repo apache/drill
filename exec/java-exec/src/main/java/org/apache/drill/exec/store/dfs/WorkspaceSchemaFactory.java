@@ -67,12 +67,12 @@ import org.apache.drill.exec.record.metadata.schema.FsMetastoreSchemaProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.PartitionNotFoundException;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.easy.json.JSONFormatPlugin;
 import org.apache.drill.exec.store.table.function.TableParamDef;
 import org.apache.drill.exec.store.table.function.TableSignature;
 import org.apache.drill.exec.store.table.function.WithOptionsTableMacro;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.store.StorageStrategy;
-import org.apache.drill.exec.store.easy.json.JSONFormatPlugin;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.metastore.MetastoreRegistry;
 import org.apache.drill.metastore.components.tables.MetastoreTableInfo;
@@ -554,7 +554,7 @@ public class WorkspaceSchemaFactory {
     public CreateTableEntry createStatsTable(String tableName) {
       ensureNotStatsTable(tableName);
       final String statsTableName = getStatsTableName(tableName);
-      FormatPlugin formatPlugin = plugin.getFormatPlugin(JSONFormatPlugin.DEFAULT_NAME);
+      FormatPlugin formatPlugin = plugin.getFormatPlugin(JSONFormatPlugin.PLUGIN_NAME);
       return createOrAppendToTable(statsTableName, formatPlugin, Collections.emptyList(),
           StorageStrategy.DEFAULT);
     }
@@ -563,7 +563,7 @@ public class WorkspaceSchemaFactory {
     public CreateTableEntry appendToStatsTable(String tableName) {
       ensureNotStatsTable(tableName);
       final String statsTableName = getStatsTableName(tableName);
-      FormatPlugin formatPlugin = plugin.getFormatPlugin(JSONFormatPlugin.DEFAULT_NAME);
+      FormatPlugin formatPlugin = plugin.getFormatPlugin(JSONFormatPlugin.PLUGIN_NAME);
       return createOrAppendToTable(statsTableName, formatPlugin, Collections.emptyList(),
           StorageStrategy.DEFAULT);
     }

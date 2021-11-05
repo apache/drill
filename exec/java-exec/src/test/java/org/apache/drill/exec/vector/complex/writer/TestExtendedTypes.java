@@ -40,7 +40,7 @@ public class TestExtendedTypes extends BaseTestQuery {
 
   @Test
   public void checkReadWriteExtended() throws Exception {
-    runBoth(() -> doCheckReadWriteExtended());
+    runBoth(this::doCheckReadWriteExtended);
   }
 
   private void doCheckReadWriteExtended() throws Exception {
@@ -73,7 +73,7 @@ public class TestExtendedTypes extends BaseTestQuery {
 
   @Test
   public void testMongoExtendedTypes() throws Exception {
-    runBoth(() -> doTestMongoExtendedTypes());
+    runBoth(this::doTestMongoExtendedTypes);
   }
 
   private void doTestMongoExtendedTypes() throws Exception {

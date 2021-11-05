@@ -24,7 +24,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.vector.complex.writer.TestJsonReader;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
@@ -56,7 +55,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testEmptyList() throws Exception {
-    runBoth(() -> doTestEmptyList());
+    runBoth(this::doTestEmptyList);
   }
 
   private void doTestEmptyList() throws Exception {
@@ -77,7 +76,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testRepeatedCountStr() throws Exception {
-    runBoth(() -> doTestRepeatedCountStr());
+    runBoth(this::doTestRepeatedCountStr);
   }
 
   private void doTestRepeatedCountStr() throws Exception {
@@ -93,7 +92,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testRepeatedCountInt() throws Exception {
-    runBoth(() -> doTestRepeatedCountInt());
+    runBoth(this::doTestRepeatedCountInt);
   }
 
   private void doTestRepeatedCountInt() throws Exception {
@@ -109,7 +108,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testRepeatedCountFloat4() throws Exception {
-    runBoth(() -> doTestRepeatedCountFloat4());
+    runBoth(this::doTestRepeatedCountFloat4);
   }
 
   private void doTestRepeatedCountFloat4() throws Exception {
@@ -125,7 +124,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testRepeatedCountVarchar() throws Exception {
-    runBoth(() -> doTestRepeatedCountVarchar());
+    runBoth(this::doTestRepeatedCountVarchar);
   }
 
   private void doTestRepeatedCountVarchar() throws Exception {
@@ -141,7 +140,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testRepeatedCountBit() throws Exception {
-    runBoth(() -> doTestRepeatedCountBit());
+    runBoth(this::doTestRepeatedCountBit);
   }
 
   private void doTestRepeatedCountBit() throws Exception {
@@ -167,7 +166,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testRepeatedContainsStr() throws Exception {
-    runBoth(() -> doTestRepeatedContainsStr());
+    runBoth(this::doTestRepeatedContainsStr);
   }
 
   private void doTestRepeatedContainsStr() throws Exception {
@@ -183,7 +182,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testRepeatedContainsInt() throws Exception {
-    runBoth(() -> doTestRepeatedContainsInt());
+    runBoth(this::doTestRepeatedContainsInt);
   }
 
   private void doTestRepeatedContainsInt() throws Exception {
@@ -199,7 +198,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testRepeatedContainsFloat4() throws Exception {
-    runBoth(() -> doTestRepeatedContainsFloat4());
+    runBoth(this::doTestRepeatedContainsFloat4);
   }
 
   private void doTestRepeatedContainsFloat4() throws Exception {
@@ -215,7 +214,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testRepeatedContainsVarchar() throws Exception {
-    runBoth(() -> doTestRepeatedContainsVarchar());
+    runBoth(this::doTestRepeatedContainsVarchar);
   }
 
   private void doTestRepeatedContainsVarchar() throws Exception {
@@ -231,7 +230,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testRepeatedContainsBitTrue() throws Exception {
-    runBoth(() -> doTestRepeatedContainsBitTrue());
+    runBoth(this::doTestRepeatedContainsBitTrue);
   }
 
   private void doTestRepeatedContainsBitTrue() throws Exception {
@@ -247,7 +246,7 @@ public class TestJsonReaderFns extends BaseTestJsonReader {
 
   @Test
   public void testRepeatedContainsBitFalse() throws Exception {
-    runBoth(() -> doTestRepeatedContainsBitFalse());
+    runBoth(this::doTestRepeatedContainsBitFalse);
   }
 
   private void doTestRepeatedContainsBitFalse() throws Exception {

@@ -83,8 +83,7 @@ public class ReaderLevelProjection {
     }
   }
 
-  protected void resolveSpecial(ResolvedTuple rootOutputTuple, ColumnProjection col,
-      TupleMetadata tableSchema) {
+  protected void resolveSpecial(ResolvedTuple rootOutputTuple, ColumnProjection col, TupleMetadata tableSchema) {
     for (ReaderProjectionResolver resolver : resolvers) {
       if (resolver.resolveColumn(col, rootOutputTuple, tableSchema)) {
         return;
