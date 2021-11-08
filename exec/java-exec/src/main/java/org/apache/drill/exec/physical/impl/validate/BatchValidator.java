@@ -462,7 +462,7 @@ public class BatchValidator {
     for (MinorType type : vector.getSubTypes()) {
       if (type == MinorType.LATE) {
         error(name, vector, String.format(
-            "Union vector includes illegal type LATE",
+            "Union vector includes illegal type LATE %s",
             type.name()));
         continue;
       }

@@ -466,10 +466,10 @@ public class DateTypeFunctions {
 
     @Override
     public void eval() {
-      if (1 == 1) {
-        throw new UnsupportedOperationException(
-            "date_part function should be rewritten as extract() functions");
-      }
+      // TODO: We should fix this so that the function is rewritten for the user rather than
+      // throwing an exception. This is poor design.
+      throw new UnsupportedOperationException(
+        "date_part function should be rewritten as extract() functions");
     }
   }
 

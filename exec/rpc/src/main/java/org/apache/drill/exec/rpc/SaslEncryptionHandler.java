@@ -125,8 +125,8 @@ class SaslEncryptionHandler extends MessageToMessageEncoder<ByteBuf> {
         component.getBytes(component.readerIndex(), origMsg, 0, component.readableBytes());
         //}
 
-        if(logger.isTraceEnabled()) {
-          logger.trace("Trying to encrypt chunk of size:{} with wrapSizeLimit:{} and chunkMode: {}",
+        if (logger.isTraceEnabled()) {
+          logger.trace("Trying to encrypt chunk of size:{} with wrapSizeLimit:{}",
               component.readableBytes(), wrapSizeLimit);
         }
 
@@ -168,7 +168,7 @@ class SaslEncryptionHandler extends MessageToMessageEncoder<ByteBuf> {
       msg.resetReaderIndex();
       outOfMemoryHandler.handle();
     } catch (IOException e) {
-      logger.error("Something went wrong while wrapping the message: {} with MaxRawWrapSize: {}, ChunkMode: {} " +
+      logger.error("Something went wrong while wrapping the message: {} with MaxRawWrapSize: {}, " +
           "and error: {}", msg, wrapSizeLimit, e.getMessage());
       throw e;
     }

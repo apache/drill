@@ -72,7 +72,7 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter i
       }
     } catch (IOException ex) {
       throw UserException.dataWriteError(ex)
-        .addContext("Unable to delete tmp statistics file", fileName)
+        .addContext(String.format("Unable to delete tmp statistics file %s", fileName))
         .build(logger);
     }
     try {
@@ -84,7 +84,7 @@ public class JsonStatisticsRecordWriter extends JSONBaseStatisticsRecordWriter i
       logger.debug("Created file: {}", fileName);
     } catch (IOException ex) {
       throw UserException.dataWriteError(ex)
-        .addContext("Unable to create stistics file", fileName)
+        .addContext(String.format("Unable to create stistics file %s", fileName))
         .build(logger);
     }
   }

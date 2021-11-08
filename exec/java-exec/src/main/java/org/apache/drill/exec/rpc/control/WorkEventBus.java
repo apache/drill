@@ -71,7 +71,7 @@ public class WorkEventBus {
     final FragmentManager old = managers.putIfAbsent(fragmentManager.getHandle(), fragmentManager);
     if (old != null) {
       throw new IllegalStateException(
-          String.format("Manager {} for fragment {} already exists.", old, QueryIdHelper.getQueryIdentifier(fragmentManager.getHandle())));
+          String.format("Manager %s for fragment %s already exists.", old, QueryIdHelper.getQueryIdentifier(fragmentManager.getHandle())));
     }
   }
 
@@ -90,7 +90,7 @@ public class WorkEventBus {
   public boolean removeFragmentManager(final FragmentHandle handle, final boolean cancel) {
     final FragmentManager manager = managers.remove(handle);
     if (manager != null) {
-      assert !manager.isCancelled() : String.format("Fragment {} manager {} is already cancelled.", QueryIdHelper.getQueryIdentifier(handle), manager);
+      assert !manager.isCancelled() : String.format("Fragment %s manager %s is already cancelled.", QueryIdHelper.getQueryIdentifier(handle), manager);
       if (cancel) {
         manager.cancel();
       }

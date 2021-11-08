@@ -79,7 +79,7 @@ public class AvroMessageReader implements MessageReader {
 
     if (Schema.Type.RECORD != schema.getType()) {
       throw UserException.dataReadError()
-          .message("Root object must be record type. Found: %s", schema.getType())
+          .message(String.format("Root object must be record type. Found: %s", schema.getType()))
           .addContext("Reader", this)
           .build(logger);
     }
