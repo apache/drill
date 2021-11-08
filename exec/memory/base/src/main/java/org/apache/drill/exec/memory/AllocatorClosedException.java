@@ -20,8 +20,6 @@ package org.apache.drill.exec.memory;
 /**
  * Exception thrown when a closed BufferAllocator is used. Note
  * this is an unchecked exception.
- *
- * @param message string associated with the cause
  */
 @SuppressWarnings("serial")
 public class AllocatorClosedException extends RuntimeException {

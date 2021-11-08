@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -76,7 +77,7 @@ public class HBaseUtils {
       FilterProtos.Filter pbFilter = FilterProtos.Filter.parseFrom(filterBytes);
       return ProtobufUtil.toFilter(pbFilter);
     } catch (Exception e) {
-      throw new DrillRuntimeException("Error deserializing filter: " + filterBytes, e);
+      throw new DrillRuntimeException("Error deserializing filter: " + Arrays.toString(filterBytes), e);
     }
   }
 
