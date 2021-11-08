@@ -131,7 +131,8 @@
             </div>
             <div class="radio">
               <label>
-                <input type="radio" name="format" id="hocon" value="conf">
+                <!-- Exporting to HOCON is not currently supported, see StorageResources.java. -->
+                <input type="radio" name="format" id="hocon" value="conf" disabled>
                 HOCON
               </label>
             </div>
@@ -214,8 +215,13 @@
           if (data.result === "Success") {
             location.reload();
           } else {
-              populateAndShowAlert('pluginEnablingFailure', {'_pluginName_': name,'_errorMessage_': data.result});
+            populateAndShowAlert('pluginEnablingFailure', {'_pluginName_': name,'_errorMessage_': data.result});
           }
+        }).fail(function(response) {
+          populateAndShowAlert(
+            'pluginEnablingFailure',
+            {'_pluginName_': name,'_errorMessage_': response.responseJSON.result}
+          );
         });
       }
     }
@@ -227,7 +233,8 @@
     function doCreate() {
       $("#createForm").ajaxForm({
         dataType: 'json',
-        success: serverMessage
+        success: serverMessage,
+        error: serverMessage
       });
     }
 
@@ -254,7 +261,6 @@
     // Modal windows management
     let exportInstance; // global variable
     $('#pluginsModal').on('show.bs.modal', function(event) {
-        console.log("alarm");
       const button = $(event.relatedTarget); // Button that triggered the modal
       const modal = $(this);
       exportInstance = button.attr("name");

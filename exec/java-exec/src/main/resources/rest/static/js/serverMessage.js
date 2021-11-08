@@ -22,6 +22,8 @@ function serverMessage(data) {
         setTimeout(function() { window.location.href = "/storage"; }, 800);
         return true;
     } else {
+	    const errorMessage = data.errorMessage || data.result;
+
         messageEl.addClass("d-none");
         // Wait a fraction of a second before showing the message again. This
         // makes it clear if a second attempt gives the same error as
@@ -30,7 +32,7 @@ function serverMessage(data) {
             messageEl.removeClass("d-none")
                 .removeClass("alert-info")
                 .addClass("alert-danger")
-                .text("Please retry: " + data.result).alert();
+                .text("Please retry: " + errorMessage).alert();
         }, 200);
         return false;
     }
