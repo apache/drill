@@ -19,8 +19,6 @@
 package org.apache.drill.exec.store.xml.xsd;
 
 import org.apache.drill.common.util.DrillFileUtils;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.ws.commons.schema.XmlSchema;
 import org.junit.Test;
 
@@ -28,11 +26,10 @@ import java.io.File;
 
 public class TestXSDSchema {
 
-
   @Test
   public void testSimpleXSD() throws Exception {
     File simple_xsd = DrillFileUtils.getResourceAsFile("/xsd/simple.xsd");
-    XmlSchema schema = XSDSchemaUtils.getSchema(simple_xsd.getPath());
-    XSDSchemaUtils.getDrillSchema(schema);
+    XmlSchema[] schema = XSDSchemaUtils.getSchema(simple_xsd.getPath());
+    //XSDSchemaUtils.getDrillSchema(schema);
   }
 }
