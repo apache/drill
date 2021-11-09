@@ -129,11 +129,6 @@ public interface Controller extends AutoCloseable {
   /**
    * Interface for defining how to serialize and deserialize custom message for consumer who want to use something other
    * than Protobuf messages.
-   *
-   * @param <SEND>
-   *          The class that is expected to be sent.
-   * @param <RECEIVE>
-   *          The class that is expected to received.
    */
   public interface CustomSerDe<MSG> {
     public byte[] serializeToSend(MSG send);

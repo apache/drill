@@ -620,7 +620,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
       try {
         jsonArray.add(objectMapper.readTree(fragment.getFragmentJson()));
       } catch (IOException e) {
-        logger.error("Exception while trying to read PlanFragment JSON for %s", fragment.getHandle().getQueryId(), e);
+        logger.error("Exception while trying to read PlanFragment JSON for {}", fragment.getHandle().getQueryId(), e);
         throw new RpcException(e);
       }
     }

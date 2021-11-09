@@ -85,7 +85,7 @@ public class JoinUtils {
         return Comparator.IS_NOT_DISTINCT_FROM;
     }
     throw UserException.unsupportedError()
-        .message("Invalid comparator supplied to this join: ", condition.getRelationship())
+        .message("Invalid comparator supplied to this join: " + condition.getRelationship())
         .build(logger);
   }
 

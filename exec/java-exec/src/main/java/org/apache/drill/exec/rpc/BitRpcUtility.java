@@ -96,7 +96,7 @@ public final class BitRpcUtility {
       client.startSaslHandshake(connectionHandler, config.getSaslClientProperties(endpoint, saslProperties),
         ugi, factory, saslRpcType);
     } catch (final IOException e) {
-      logger.error("Failed while doing setup for starting sasl handshake for connection", connection.getName());
+      logger.error("Failed while doing setup for starting sasl handshake for connection {}", connection.getName());
       final Exception ex = new RpcException(String.format("Failed to initiate authentication to %s",
         endpoint.getAddress()), e);
       connectionHandler.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);

@@ -399,7 +399,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     } else {
       throw buildError(
           UserException.dataReadError()
-            .message("Syntax error on token", token.toString()));
+            .message("Syntax error on token: " + token.toString()));
     }
   }
 

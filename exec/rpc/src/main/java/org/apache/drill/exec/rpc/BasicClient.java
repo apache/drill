@@ -237,7 +237,7 @@ public abstract class BasicClient<T extends EnumLite, CC extends ClientConnectio
       }
       connection.setSaslClient(saslClient);
     } catch (final SaslException e) {
-      logger.error("Failed while creating SASL client for SASL handshake for connection", connection.getName());
+      logger.error("Failed while creating SASL client for SASL handshake for connection: {}", connection.getName());
       connectionHandler.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, e);
       return;
     }

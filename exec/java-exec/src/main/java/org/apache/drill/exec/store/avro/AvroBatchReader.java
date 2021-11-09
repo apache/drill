@@ -149,7 +149,7 @@ public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSche
     } catch (IOException | InterruptedException e) {
       throw UserException.dataReadError(e)
         .message("Error preparing Avro reader")
-        .addContext("Reader", this)
+        .addContext(String.format("Reader: %s", this))
         .build(logger);
     }
   }
@@ -166,7 +166,7 @@ public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSche
       record = reader.next(record);
     } catch (IOException e) {
       throw UserException.dataReadError(e)
-        .addContext("Reader", this)
+        .addContext(String.format("Reader %s", this))
         .build(logger);
     }
 
@@ -175,7 +175,7 @@ public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSche
     if (Schema.Type.RECORD != schema.getType()) {
       throw UserException.dataReadError()
         .message("Root object must be record type. Found: %s", schema.getType())
-        .addContext("Reader", this)
+        .addContext(String.format("Reader %s", this))
         .build(logger);
     }
 

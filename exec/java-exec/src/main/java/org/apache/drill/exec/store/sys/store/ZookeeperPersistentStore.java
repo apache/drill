@@ -151,7 +151,7 @@ public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> implemen
     try{
       client.close();
     } catch(final Exception e) {
-      logger.warn("Failure while closing out %s.", getClass().getSimpleName(), e);
+      logger.warn("Failure while closing out {}: {}", getClass().getSimpleName(), e);
     }
   }
 

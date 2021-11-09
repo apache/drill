@@ -222,7 +222,7 @@ public class SplittingParallelizer extends DefaultQueryParallelizer {
           if (logger.isDebugEnabled()) {
             logger.debug("Remote fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
           }
-          throw new ForemanSetupException(String.format("There should not be non-root/remote fragment present in plan split, but there is:",
+          throw new ForemanSetupException(String.format("There should not be non-root/remote fragment present in plan split, but there is: %s",
               DrillStringUtils.unescapeJava(fragment.toString())));
          }
         // fragments should be always empty here

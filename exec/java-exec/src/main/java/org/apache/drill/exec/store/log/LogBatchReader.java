@@ -196,7 +196,7 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
       throw UserException
           .dataReadError(e)
           .message("Failed to open input file")
-          .addContext("File path:", split.getPath())
+          .addContext(String.format("File path: %s", split.getPath()))
           .addContext(loader.errorContext())
           .build(logger);
     }
@@ -226,7 +226,7 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
       throw UserException
           .dataReadError(e)
           .message("Error reading file")
-          .addContext("File", split.getPath())
+          .addContext(String.format("File: %s", split.getPath()))
           .addContext(loader.errorContext())
           .build(logger);
     }

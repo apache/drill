@@ -170,7 +170,7 @@ public class DrillCursor implements Cursor {
 
     @Override
     public void submissionFailed(UserException ex) {
-      logger.debug("Received query failure:", instanceId, ex);
+      logger.debug("Received query failure: {} {}", instanceId, ex);
       this.executionFailureException = ex;
       completed = true;
       close();

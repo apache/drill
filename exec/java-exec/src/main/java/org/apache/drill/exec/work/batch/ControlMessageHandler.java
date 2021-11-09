@@ -142,7 +142,7 @@ public class ControlMessageHandler implements RequestHandler<ControlConnection> 
    */
   public void startNewFragment(final PlanFragment fragment, final DrillbitContext drillbitContext)
       throws UserRpcException {
-    logger.debug("Received remote fragment start instruction", fragment);
+    logger.debug("Received remote fragment start instruction: {}", fragment);
 
     try {
       final FragmentContextImpl fragmentContext = new FragmentContextImpl(drillbitContext, fragment,

@@ -517,7 +517,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
     }
     logger.debug("index_plan_info: getEstimatedRowCount obtained from DB Client for {}: indexName: {}, indexInfo: {}, " +
             "avgRowSize: {}, estimatedSize {}", this, (indexDesc == null ? "null" : indexDesc.getIndexName()),
-        (indexDesc == null ? "null" : indexDesc.getIndexInfo()), avgRowSize);
+        (indexDesc == null ? "null" : indexDesc.getIndexInfo()), avgRowSize, fullTableEstimatedSize);
     return new MapRDBStatisticsPayload(ROWCOUNT_UNKNOWN, ROWCOUNT_UNKNOWN, avgRowSize);
   }
 

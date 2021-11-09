@@ -308,7 +308,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
           DrillPBError failure = DrillPBError.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
           connection.recordRemoteFailure(msg.coordinationId, failure);
           if (RpcConstants.EXTRA_DEBUGGING) {
-            logger.debug("Updated rpc future with coordinationId {} with failure ", msg.coordinationId, failure);
+            logger.debug("Updated rpc future with coordinationId {} with failure {}", msg.coordinationId, failure);
           }
           break;
         }

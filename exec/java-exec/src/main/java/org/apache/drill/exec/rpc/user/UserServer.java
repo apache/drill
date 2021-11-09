@@ -366,7 +366,7 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
         // if timeout is unsupported or is set to false, disable timeout.
         if (!inbound.hasSupportTimeout() || !inbound.getSupportTimeout()) {
           connection.disableReadTimeout();
-          logger.warn("Timeout Disabled as client doesn't support it.", connection.getName());
+          logger.warn("Timeout Disabled as client {} doesn't support it.", connection.getName());
         }
 
         BitToUserHandshake.Builder respBuilder = BitToUserHandshake.newBuilder()
