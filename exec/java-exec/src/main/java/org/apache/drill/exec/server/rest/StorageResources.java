@@ -101,15 +101,14 @@ public class StorageResources {
   public Response getConfigsFor(@PathParam("group") String pluginGroup, @PathParam("format") String format) {
     format = StringUtils.isNotEmpty(format) ? format.replace("/", "") : JSON_FORMAT;
     return isSupported(format)
-        ? Response.ok()
-            .entity(getConfigsFor(pluginGroup).toArray())
-            .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s_storage_plugins.%s\"",
-                pluginGroup, format))
-            .build()
-        : Response.status(Response.Status.NOT_FOUND.getStatusCode())
-            .entity(String.format("Unknown \"%s\" file format for \"%s\" Storage Plugin configs group",
-                    format, pluginGroup))
-            .build();
+      ? Response.ok()
+        .entity(getConfigsFor(pluginGroup).toArray())
+        .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s_storage_plugins.%s\"",
+            pluginGroup, format))
+        .build()
+      : Response.status(Response.Status.NOT_ACCEPTABLE)
+          .entity(message("Unknown \"%s\" file format for Storage Plugin config", format))
+          .build();
   }
 
   @GET
@@ -136,20 +135,27 @@ public class StorageResources {
   @GET
   @Path("/storage/{name}.json")
   @Produces(MediaType.APPLICATION_JSON)
-  public PluginConfigWrapper getPluginConfig(@PathParam("name") String name) {
+  public Response getPluginConfig(@PathParam("name") String name) {
     try {
-      return new PluginConfigWrapper(name, storage.getStoredConfig(name));
+      return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name)))
+        .build();
     } catch (Exception e) {
       logger.error("Failure while trying to access storage config: {}", name, e);
+
+      return Response.status(Response.Status.NOT_FOUND)
+        .entity(message("Failure while trying to access storage config: %s", e.getMessage()))
+        .build();
     }
-    return new PluginConfigWrapper(name, null);
   }
 
   @GET
   @Path("/storage/{name}")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getPlugin(@PathParam("name") String name) {
-    StoragePluginModel model = new StoragePluginModel(getPluginConfig(name), request);
+    StoragePluginModel model = new StoragePluginModel(
+      (PluginConfigWrapper) getPluginConfig(name).getEntity(),
+      request
+    );
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/update.ftl", sc,
         model);
   }
@@ -158,15 +164,19 @@ public class StorageResources {
   @Path("/storage/{name}/enable/{val}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public JsonResult enablePlugin(@PathParam("name") String name, @PathParam("val") Boolean enable) {
+  public Response enablePlugin(@PathParam("name") String name, @PathParam("val") Boolean enable) {
     try {
       storage.setEnabled(name, enable);
-      return message("Success");
+      return Response.ok().entity(message("Success")).build();
     } catch (PluginNotFoundException e) {
-      return message("No plugin exists with the given name: " + name);
+      return Response.status(Response.Status.NOT_FOUND)
+        .entity(message("No plugin exists with the given name: " + name))
+        .build();
     } catch (PluginException e) {
-      logger.debug("Error in enabling storage name: {} flag: {}",  name, enable);
-      return message("Unable to enable/disable plugin:" + e.getMessage());
+      logger.info("Error when enabling storage name: {} flag: {}",  name, enable);
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+        .entity(message("Unable to enable/disable plugin: %s", e.getMessage()))
+        .build();
     }
   }
 
@@ -177,7 +187,7 @@ public class StorageResources {
   @Path("/storage/{name}/enable/{val}")
   @Produces(MediaType.APPLICATION_JSON)
   @Deprecated
-  public JsonResult enablePluginViaGet(@PathParam("name") String name, @PathParam("val") Boolean enable) {
+  public Response enablePluginViaGet(@PathParam("name") String name, @PathParam("val") Boolean enable) {
     return enablePlugin(name, enable);
   }
 
@@ -192,24 +202,28 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public Response exportPlugin(@PathParam("name") String name, @PathParam("format") String format) {
     format = StringUtils.isNotEmpty(format) ? format.replace("/", "") : JSON_FORMAT;
-    return isSupported(format)
-        ? Response.ok(getPluginConfig(name))
-            .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s.%s\"", name, format))
-            .build()
-        : Response.status(Response.Status.NOT_FOUND.getStatusCode())
-            .entity(String.format("Unknown \"%s\" file format for \"%s\" Storage Plugin config", format, name))
-            .build();
+    if (!isSupported(format)) {
+      return Response.status(Response.Status.NOT_ACCEPTABLE)
+        .entity(message("Unknown \"%s\" file format for Storage Plugin config", format))
+        .build();
+    }
+
+    return Response.ok(getPluginConfig(name))
+      .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s.%s\"", name, format))
+      .build();
   }
 
   @DELETE
   @Path("/storage/{name}.json")
   @Produces(MediaType.APPLICATION_JSON)
-  public JsonResult deletePlugin(@PathParam("name") String name) {
+  public Response deletePlugin(@PathParam("name") String name) {
     try {
       storage.remove(name);
-      return message("Success");
+      return Response.ok().entity(message("Success")).build();
     } catch (PluginException e) {
-      return message(e.getMessage());
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+        .entity(message("Error while deleting plugin: %s",  e.getMessage()))
+        .build();
     }
   }
 
@@ -217,13 +231,15 @@ public class StorageResources {
   @Path("/storage/{name}.json")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public JsonResult createOrUpdatePluginJSON(PluginConfigWrapper plugin) {
+  public Response createOrUpdatePluginJSON(PluginConfigWrapper plugin) {
     try {
       plugin.createOrUpdateInStorage(storage);
-      return message("Success");
+      return Response.ok().entity(message("Success")).build();
     } catch (PluginException e) {
       logger.error("Unable to create/ update plugin: " + plugin.getName(), e);
-      return message("Error while saving plugin: %s", e.getMessage());
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+        .entity(message("Error while saving plugin: %s ", e.getMessage()))
+        .build();
     }
   }
 
@@ -236,20 +252,27 @@ public class StorageResources {
   @Path("/storage/create_update")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.APPLICATION_JSON)
-  public JsonResult createOrUpdatePlugin(@FormParam("name") String name, @FormParam("config") String storagePluginConfig) {
+  public Response createOrUpdatePlugin(@FormParam("name") String name, @FormParam("config") String storagePluginConfig) {
     name = name.trim();
     if (name.isEmpty()) {
-      return message("Error (a storage name cannot be empty)");
+      return Response.status(Response.Status.BAD_REQUEST)
+        .entity(message("A storage config name may not be empty"))
+        .build();
     }
+
     try {
       storage.putJson(name, storagePluginConfig);
-      return message("Success");
+      return Response.ok().entity(message("Success")).build();
     } catch (PluginEncodingException e) {
       logger.warn("Error in JSON mapping: {}", storagePluginConfig, e);
-      return message("Invalid JSON: " + e.getMessage());
+      return Response.status(Response.Status.BAD_REQUEST)
+        .entity(message("Invalid JSON: %s", e.getMessage()))
+        .build();
     } catch (PluginException e) {
       logger.error("Error while saving plugin", e);
-      return message(e.getMessage());
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+        .entity(message("Error while saving plugin: ", e.getMessage()))
+        .build();
     }
   }
 
@@ -310,7 +333,7 @@ public class StorageResources {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Deprecated
-  public JsonResult createOrUpdatePlugin(PluginConfigWrapper plugin) {
+  public Response createOrUpdatePlugin(PluginConfigWrapper plugin) {
     return createOrUpdatePluginJSON(plugin);
   }
 
@@ -321,7 +344,7 @@ public class StorageResources {
   @Path("/storage/{name}/delete")
   @Produces(MediaType.APPLICATION_JSON)
   @Deprecated
-  public JsonResult deletePluginViaGet(@PathParam("name") String name) {
+  public Response deletePluginViaGet(@PathParam("name") String name) {
     return deletePlugin(name);
   }
 
@@ -341,7 +364,7 @@ public class StorageResources {
 
   /**
    * Model class for Storage Plugin page.
-   * It contains a storage plugin as well as the CSRK token for the page.
+   * It contains a storage plugin as well as the CSRF token for the page.
    */
   public static class StoragePluginModel {
     private final PluginConfigWrapper plugin;

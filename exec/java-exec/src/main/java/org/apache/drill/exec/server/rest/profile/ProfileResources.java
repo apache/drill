@@ -36,6 +36,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -257,7 +258,7 @@ public class ProfileResources {
   @GET
   @Path("/profiles.json")
   @Produces(MediaType.APPLICATION_JSON)
-  public QProfiles getProfilesJSON(@Context UriInfo uriInfo) {
+  public Response getProfilesJSON(@Context UriInfo uriInfo) {
     try {
       final QueryProfileStoreContext profileStoreContext = work.getContext().getProfileStoreContext();
       final PersistentStore<QueryProfile> completed = profileStoreContext.getCompletedProfileStore();
@@ -319,7 +320,14 @@ public class ProfileResources {
 
       Collections.sort(finishedQueries, Collections.reverseOrder());
 
-      return new QProfiles(runningQueries, finishedQueries, errors);
+
+      QProfiles qProf = new QProfiles(runningQueries, finishedQueries, errors);
+
+      return errors.size() == 0
+        ? Response.ok().entity(qProf).build()
+        : Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+          .entity(qProf)
+          .build();
     } catch (Exception e) {
       throw UserException.resourceError(e)
       .message("Failed to get profiles from persistent or ephemeral store.")
@@ -331,7 +339,7 @@ public class ProfileResources {
   @Path("/profiles")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getProfiles(@Context UriInfo uriInfo) {
-    QProfiles profiles = getProfilesJSON(uriInfo);
+    QProfiles profiles = (QProfiles) getProfilesJSON(uriInfo).getEntity();
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/list.ftl", sc, profiles);
   }
 
@@ -383,19 +391,23 @@ public class ProfileResources {
   @GET
   @Path("/profiles/{queryid}.json")
   @Produces(MediaType.APPLICATION_JSON)
-  public String getProfileJSON(@PathParam("queryid") String queryId) {
+  public Response getProfileJSON(@PathParam("queryid") String queryId) {
     try {
       String profileData = PROFILE_CACHE.getIfPresent(queryId);
       if (profileData == null) {
-        return new String(work.getContext().getProfileStoreContext()
+        profileData = new String(work.getContext().getProfileStoreContext()
           .getProfileStoreConfig().getSerializer().serialize(getQueryProfile(queryId)));
       } else {
         PROFILE_CACHE.invalidate(queryId);
-        return profileData;
       }
+
+      return Response.ok().entity(profileData).build();
+
     } catch (Exception e) {
       logger.debug("Failed to serialize profile for: " + queryId);
-      return ("{ 'message' : 'error (unable to serialize profile)' }");
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+        .entity("{ 'message' : 'error (unable to serialize profile)' }")
+        .build();
     }
   }
 

@@ -125,6 +125,10 @@
           if (serverMessage(data)) {
               setTimeout(function() { location.reload(); }, 800);
           }
+        }).fail(function(response) {
+          if (serverMessage(response.responseJSON)) {
+              setTimeout(function() { location.reload(); }, 800);
+          }
         });
       }
     });
@@ -132,13 +136,16 @@
     function doUpdate() {
       $("#updateForm").ajaxForm({
         dataType: 'json',
-        success: serverMessage
+        success: serverMessage,
+        error: serverMessage
       });
     }
 
     function deleteFunction() {
       showConfirmationDialog('"${model.getPlugin().getName()}"' + ' plugin will be deleted. Proceed?', function() {
-        $.get("/storage/" + encodeURIComponent("${model.getPlugin().getName()}") + "/delete", serverMessage);
+        $.get("/storage/" + encodeURIComponent("${model.getPlugin().getName()}") + "/delete", serverMessage).fail(function() {
+					serverMessage({ errorMessage: "Error while trying to delete." })
+        });
       });
     }
 
