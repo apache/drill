@@ -271,7 +271,7 @@ public class StorageResources {
     } catch (PluginException e) {
       logger.error("Error while saving plugin", e);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Error while saving plugin: ", e.getMessage()))
+        .entity(message("Error while saving plugin: %s", e.getMessage()))
         .build();
     }
   }
