@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.mongo;
 
 import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.categories.SlowTest;
+import org.apache.drill.exec.ExecConstants;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,6 +51,21 @@ public class TestMongoQueries extends MongoTestBase {
       .explainJson();
 
     assertEquals(queryBuilder().physical(plan).run().recordCount(), 11);
+  }
+
+  @Test
+  public void testFragmentSerDe() throws Exception {
+    client.alterSession(ExecConstants.SLICE_TARGET, 1);
+    try {
+      String plan = queryBuilder()
+        .sql(String.format("select t1.id as id, t1.name from mongo.%1$s.`%2$s` t1 where t1.name = 'Cake' union " +
+          "select t2.id as id, t2.name from mongo.%1$s.`%2$s` t2 ", DONUTS_DB, DONUTS_COLLECTION))
+        .explainJson();
+
+      assertEquals(queryBuilder().physical(plan).run().recordCount(), 5);
+    } finally {
+      client.resetSession(ExecConstants.SLICE_TARGET);
+    }
   }
 
   @Test

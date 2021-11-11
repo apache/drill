@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -113,14 +112,14 @@ public class MongoGroupScan extends AbstractGroupScan implements
       @JsonProperty("storage") MongoStoragePluginConfig storagePluginConfig,
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("useAggregate") boolean useAggregate,
-      @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException {
+      @JacksonInject StoragePluginRegistry pluginRegistry) {
     this(userName,
         pluginRegistry.resolve(storagePluginConfig, MongoStoragePlugin.class),
         scanSpec, columns, useAggregate);
   }
 
   public MongoGroupScan(String userName, MongoStoragePlugin storagePlugin,
-      MongoScanSpec scanSpec, List<SchemaPath> columns, boolean useAggregate) throws IOException {
+      MongoScanSpec scanSpec, List<SchemaPath> columns, boolean useAggregate) {
     super(userName);
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
@@ -350,7 +349,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
   public GroupScan clone(int maxRecords) {
     MongoGroupScan clone = new MongoGroupScan(this);
     clone.useAggregate = true;
-    clone.getScanSpec().getOperations().add(new Document("$limit", maxRecords));
+    clone.getScanSpec().getOperations().add(new Document("$limit", maxRecords).toJson());
     return clone;
   }
 
@@ -450,19 +449,19 @@ public class MongoGroupScan extends AbstractGroupScan implements
   private BaseMongoSubScanSpec buildSubScanSpecAndGet(ChunkInfo chunkInfo) {
     if (useAggregate) {
       return MongoSubScanSpec.builder()
-          .setOperations(scanSpec.getOperations())
-          .setDbName(scanSpec.getDbName())
-          .setCollectionName(scanSpec.getCollectionName())
-          .setHosts(chunkInfo.getChunkLocList())
+          .operations(scanSpec.getOperations())
+          .dbName(scanSpec.getDbName())
+          .collectionName(scanSpec.getCollectionName())
+          .hosts(chunkInfo.getChunkLocList())
           .build();
     }
     return ShardedMongoSubScanSpec.builder()
-        .setMinFilters(chunkInfo.getMinFilters())
-        .setMaxFilters(chunkInfo.getMaxFilters())
-        .setFilter(scanSpec.getFilters())
-        .setDbName(scanSpec.getDbName())
-        .setCollectionName(scanSpec.getCollectionName())
-        .setHosts(chunkInfo.getChunkLocList())
+        .minFilters(chunkInfo.getMinFilters())
+        .maxFilters(chunkInfo.getMaxFilters())
+        .filter(scanSpec.getFilters())
+        .dbName(scanSpec.getDbName())
+        .collectionName(scanSpec.getCollectionName())
+        .hosts(chunkInfo.getChunkLocList())
         .build();
   }
 

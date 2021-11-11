@@ -22,9 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
-import org.bson.Document;
-
-import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +33,9 @@ public class MongoScanSpec {
   private final String dbName;
   private final String collectionName;
 
-  private Document filters;
+  private String filters;
 
-  private List<Bson> operations = new ArrayList<>();
+  private List<String> operations = new ArrayList<>();
 
   @JsonCreator
   public MongoScanSpec(@JsonProperty("dbName") String dbName,
