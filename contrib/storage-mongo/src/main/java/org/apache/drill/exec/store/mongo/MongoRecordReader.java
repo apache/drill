@@ -188,7 +188,9 @@ public class MongoRecordReader extends AbstractRecordReader {
       MongoIterable<BsonDocument> projection;
       if (CollectionUtils.isNotEmpty(operations)) {
         List<Bson> operations = new ArrayList<>(this.operations);
-        operations.add(Aggregates.project(fields));
+        if (!fields.isEmpty()) {
+          operations.add(Aggregates.project(fields));
+        }
         projection = collection.aggregate(operations);
       } else {
         projection = collection.find(filters).projection(fields);
