@@ -22,28 +22,56 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Objects;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
-import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@ToString
+@EqualsAndHashCode
 @JsonTypeName("parquet") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ParquetFormatConfig implements FormatPluginConfig {
 
   private final boolean autoCorrectCorruptDates;
   private final boolean enableStringsSignedMinMax;
+  private final Integer blockSize;
+  private final Integer pageSize;
+  private final Boolean useSingleFSBlock;
+  private final String writerCompressionType;
+  private final String writerLogicalTypeForDecimals;
+  private final Boolean writerUsePrimitivesForDecimals;
+  private final String writerFormatVersion;
+
 
   public ParquetFormatConfig() {
-    this(true, false);
+    this(true, false, null, null, null, null, null, null, null);
   }
 
   @JsonCreator
-  public ParquetFormatConfig(@JsonProperty("autoCorrectCorruptDates") Boolean autoCorrectCorruptDates,
-      @JsonProperty("enableStringsSignedMinMax") boolean enableStringsSignedMinMax) {
-    this.autoCorrectCorruptDates = autoCorrectCorruptDates == null ? true : autoCorrectCorruptDates;
+  @Builder
+  public ParquetFormatConfig(
+    @JsonProperty("autoCorrectCorruptDates") Boolean autoCorrectCorruptDates,
+    @JsonProperty("enableStringsSignedMinMax") boolean enableStringsSignedMinMax,
+    @JsonProperty("blockSize") Integer blockSize,
+    @JsonProperty("pageSize") Integer pageSize,
+    @JsonProperty("useSingleFSBlock") Boolean useSingleFSBlock,
+    @JsonProperty("writerCompressionType") String writerCompressionType,
+    @JsonProperty("writerLogicalTypeForDecimals") String writerLogicalTypeForDecimals,
+    @JsonProperty("writerUsePrimitivesForDecimals") Boolean writerUsePrimitivesForDecimals,
+    @JsonProperty("writerFormatVersion") String writerFormatVersion
+  ) {
+    this.autoCorrectCorruptDates = autoCorrectCorruptDates == null || autoCorrectCorruptDates;
     this.enableStringsSignedMinMax = enableStringsSignedMinMax;
+    this.blockSize = blockSize;
+    this.pageSize = pageSize;
+    this.useSingleFSBlock = useSingleFSBlock;
+    this.writerCompressionType = writerCompressionType;
+    this.writerLogicalTypeForDecimals = writerLogicalTypeForDecimals;
+    this.writerUsePrimitivesForDecimals = writerUsePrimitivesForDecimals;
+    this.writerFormatVersion = writerFormatVersion;
   }
 
   /**
@@ -69,30 +97,38 @@ public class ParquetFormatConfig implements FormatPluginConfig {
     return enableStringsSignedMinMax;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    ParquetFormatConfig that = (ParquetFormatConfig) o;
-    return Objects.equals(autoCorrectCorruptDates, that.autoCorrectCorruptDates) &&
-           Objects.equals(enableStringsSignedMinMax, that.enableStringsSignedMinMax);
+  @JsonIgnore
+  public Integer getBlockSize() {
+    return blockSize;
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(autoCorrectCorruptDates, enableStringsSignedMinMax);
+  @JsonIgnore
+  public Integer getPageSize() {
+    return pageSize;
   }
 
-  @Override
-  public String toString() {
-    return new PlanStringBuilder(this)
-        .field("autoCorrectCorruptDates", autoCorrectCorruptDates)
-        .field("enableStringsSignedMinMax", enableStringsSignedMinMax)
-        .toString();
+  @JsonIgnore
+  public Boolean isUseSingleFSBlock() {
+    return useSingleFSBlock;
+  }
+
+  @JsonIgnore
+  public String getWriterCompressionType() {
+    return writerCompressionType;
+  }
+
+  @JsonIgnore
+  public String getWriterLogicalTypeForDecimals() {
+    return writerLogicalTypeForDecimals;
+  }
+
+  @JsonIgnore
+  public Boolean isWriterUsePrimitivesForDecimals() {
+    return writerUsePrimitivesForDecimals;
+  }
+
+  @JsonIgnore
+  public String getWriterFormatVersion() {
+    return writerFormatVersion;
   }
 }

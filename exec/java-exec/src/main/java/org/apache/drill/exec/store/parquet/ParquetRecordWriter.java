@@ -272,7 +272,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     ValuesWriterFactory valWriterFactory = writerVersion == WriterVersion.PARQUET_1_0
       ? new DefaultV1ValuesWriterFactory()
       : new DefaultV2ValuesWriterFactory();
-    
+
     ParquetProperties parquetProperties = ParquetProperties.builder()
         .withPageSize(pageSize)
         .withDictionaryEncoding(enableDictionary)
