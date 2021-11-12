@@ -45,7 +45,7 @@ public class IcebergWork {
 
   /**
    * Special deserializer for {@link IcebergWork} class that deserializes
-   * {@code scanTask} filed from byte array string created using {@link java.io.Serializable}.
+   * {@code scanTask} field from byte array string created using {@link java.io.Serializable}.
    */
   @Slf4j
   public static class IcebergWorkDeserializer extends StdDeserializer<IcebergWork> {
@@ -71,7 +71,7 @@ public class IcebergWork {
 
   /**
    * Special serializer for {@link IcebergWork} class that serializes
-   * {@code scanTask} filed to byte array string created using {@link java.io.Serializable}
+   * {@code scanTask} field to byte array string created using {@link java.io.Serializable}
    * since {@link CombinedScanTask} doesn't use any Jackson annotations.
    */
   public static class IcebergWorkSerializer extends StdSerializer<IcebergWork> {

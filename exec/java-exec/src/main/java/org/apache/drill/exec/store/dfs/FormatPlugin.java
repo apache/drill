@@ -69,7 +69,8 @@ public interface FormatPlugin {
       case PHYSICAL:
         return getOptimizerRules();
       case LOGICAL:
-      case JOIN_PLANNING:case LOGICAL_PRUNE_AND_JOIN:
+      case JOIN_PLANNING:
+      case LOGICAL_PRUNE_AND_JOIN:
       case LOGICAL_PRUNE:
       case PARTITION_PRUNING:
       default:

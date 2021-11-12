@@ -16,7 +16,7 @@ For details related to Apache Iceberg table format, please refer to [official do
 
 This format plugin supports project and filter pushdown optimizations.
 
-For the case of project pushdown, only specified in the query columns will be read, even if it is a nested column. In
+For the case of project pushdown, only columns specified in the query will be read, even they are nested columns. In
 conjunction with column-oriented formats like Parquet or ORC, it allows improving reading performance significantly.
 
 ### Filter pushdown
@@ -62,10 +62,10 @@ FROM dfs.tmp.`testAllTypes#snapshots`
 
 ### Querying specific table versions (snapshots)
 
-Apache Icebergs has the ability to track the table modifications and read specific version before or after modifications
+Apache Iceberg has the ability to track the table modifications and read specific version before or after modifications
 or modifications itself.
 
-This storage plugin embraces this ability and provides an easy-to-use way of triggering it.
+This format plugin embraces this ability and provides an easy-to-use way of triggering it.
 
 The following ways of specifying table version are supported:
 
