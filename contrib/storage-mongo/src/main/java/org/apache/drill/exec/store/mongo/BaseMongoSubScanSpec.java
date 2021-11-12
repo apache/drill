@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.mongo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
@@ -26,7 +28,12 @@ import java.util.List;
 
 @Getter
 @Setter
-@SuperBuilder(setterPrefix = "set")
+@SuperBuilder
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+  @JsonSubTypes.Type(MongoSubScan.ShardedMongoSubScanSpec.class),
+  @JsonSubTypes.Type(MongoSubScan.MongoSubScanSpec.class)
+})
 public class BaseMongoSubScanSpec {
 
   @JsonProperty

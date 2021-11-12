@@ -23,8 +23,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.Aggregates;
@@ -93,13 +95,18 @@ public class MongoRecordReader extends AbstractRecordReader {
     this.plugin = plugin;
     filters = new Document();
     if (subScanSpec instanceof MongoSubScan.MongoSubScanSpec) {
-      operations = ((MongoSubScan.MongoSubScanSpec) subScanSpec).getOperations();
+      operations = ((MongoSubScan.MongoSubScanSpec) subScanSpec).getOperations().stream()
+        .map(BsonDocument::parse)
+        .collect(Collectors.toList());
     } else {
       MongoSubScan.ShardedMongoSubScanSpec shardedMongoSubScanSpec = (MongoSubScan.ShardedMongoSubScanSpec) subScanSpec;
       Map<String, List<Document>> mergedFilters = MongoUtils.mergeFilters(
           shardedMongoSubScanSpec.getMinFilters(), shardedMongoSubScanSpec.getMaxFilters());
 
-      buildFilters(shardedMongoSubScanSpec.getFilter(), mergedFilters);
+      Document pushdownFilters = Optional.ofNullable(shardedMongoSubScanSpec.getFilter())
+        .map(Document::parse)
+        .orElse(null);
+      buildFilters(pushdownFilters, mergedFilters);
     }
     enableAllTextMode = fragmentContext.getOptions().getOption(ExecConstants.MONGO_ALL_TEXT_MODE).bool_val;
     enableNanInf = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS).bool_val;

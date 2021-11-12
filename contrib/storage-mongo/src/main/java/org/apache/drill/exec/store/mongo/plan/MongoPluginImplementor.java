@@ -66,6 +66,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -219,8 +220,12 @@ public class MongoPluginImplementor extends AbstractPluginImplementor {
   @Override
   public void implement(StoragePluginTableScan scan) throws IOException {
     groupScan = (MongoGroupScan) Utilities.getDrillTable(scan.getTable()).getGroupScan();
-    operations = new ArrayList<>(this.groupScan.getScanSpec().getOperations());
-    filters = groupScan.getScanSpec().getFilters();
+    operations = this.groupScan.getScanSpec().getOperations().stream()
+      .map(BsonDocument::parse)
+      .collect(Collectors.toList());
+    filters = Optional.ofNullable(groupScan.getScanSpec().getFilters())
+      .map(Document::parse)
+      .orElse(null);
     columns = groupScan.getColumns();
   }
 
@@ -273,9 +278,16 @@ public class MongoPluginImplementor extends AbstractPluginImplementor {
   }
 
   @Override
-  public GroupScan getPhysicalOperator() throws IOException {
+  public GroupScan getPhysicalOperator() {
     MongoScanSpec scanSpec = groupScan.getScanSpec();
-    MongoScanSpec newSpec = new MongoScanSpec(scanSpec.getDbName(), scanSpec.getCollectionName(), filters, operations);
+    List<String> operations = this.operations.stream()
+      .map(op -> op.toBsonDocument().toJson())
+      .collect(Collectors.toList());
+    String filters = Optional.ofNullable(this.filters)
+      .map(Document::toJson)
+      .orElse(null);
+    MongoScanSpec newSpec = new MongoScanSpec(scanSpec.getDbName(), scanSpec.getCollectionName(),
+      filters, operations);
     return new MongoGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(),
       newSpec, columns, runAggregate);
   }

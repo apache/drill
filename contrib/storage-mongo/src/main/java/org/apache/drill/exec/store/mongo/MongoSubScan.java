@@ -23,11 +23,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
+import lombok.extern.jackson.Jacksonized;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -42,8 +41,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.bson.Document;
-import org.bson.conversions.Bson;
 
 @JsonTypeName("mongo-shard-read")
 public class MongoSubScan extends AbstractBase implements SubScan {
@@ -64,8 +61,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
       @JsonProperty("userName") String userName,
       @JsonProperty("mongoPluginConfig") StoragePluginConfig mongoPluginConfig,
       @JsonProperty("chunkScanSpecList") LinkedList<BaseMongoSubScanSpec> chunkScanSpecList,
-      @JsonProperty("columns") List<SchemaPath> columns)
-      throws ExecutionSetupException {
+      @JsonProperty("columns") List<SchemaPath> columns) {
     super(userName);
     this.columns = columns;
     this.mongoPluginConfig = (MongoStoragePluginConfig) mongoPluginConfig;
@@ -88,11 +84,6 @@ public class MongoSubScan extends AbstractBase implements SubScan {
   public <T, X, E extends Throwable> T accept(
       PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitSubScan(this, value);
-  }
-
-  @JsonIgnore
-  public MongoStoragePluginConfig getMongoPluginConfig() {
-    return mongoPluginConfig;
   }
 
   @JsonIgnore
@@ -125,11 +116,10 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     return Collections.emptyIterator();
   }
 
-  @JsonTypeName("ShardedMongoSubScanSpec")
   @Getter
   @ToString
-  @SuperBuilder(setterPrefix = "set")
-  @JsonDeserialize(builder = ShardedMongoSubScanSpec.ShardedMongoSubScanSpecBuilder.class)
+  @Jacksonized
+  @SuperBuilder
   public static class ShardedMongoSubScanSpec extends BaseMongoSubScanSpec {
 
     @JsonProperty
@@ -139,19 +129,18 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     private final Map<String, Object> maxFilters;
 
     @JsonProperty
-    private final Document filter;
+    private final String filter;
 
   }
 
-  @JsonTypeName("MongoSubScanSpec")
   @Getter
   @ToString
-  @SuperBuilder(setterPrefix = "set")
-  @JsonDeserialize(builder = MongoSubScanSpec.MongoSubScanSpecBuilder.class)
+  @Jacksonized
+  @SuperBuilder
   public static class MongoSubScanSpec extends BaseMongoSubScanSpec {
 
     @JsonProperty
-    private final List<Bson> operations;
+    private final List<String> operations;
 
   }
 
