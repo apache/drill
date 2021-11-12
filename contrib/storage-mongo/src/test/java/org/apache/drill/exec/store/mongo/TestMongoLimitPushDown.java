@@ -69,4 +69,13 @@ public class TestMongoLimitPushDown extends MongoTestBase {
       .include("\"\\$limit\": 4", "\"\\$eq\": 52\\.17")
       .match();
   }
+
+  @Test
+  public void testSelectStarWithLimit() throws Exception {
+    testBuilder()
+      .sqlQuery("SELECT * FROM mongo.employee.`empinfo` LIMIT 4")
+      .unOrdered()
+      .expectsNumRecords(4)
+      .go();
+  }
 }

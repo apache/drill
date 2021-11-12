@@ -219,7 +219,7 @@ class RexToMongoTranslator extends RexVisitorImpl<BsonValue> {
 
     @Override
     public Boolean visitInputRef(RexInputRef inputRef) {
-      return true;
+      return inputRef.getType().getSqlTypeName() != SqlTypeName.DYNAMIC_STAR;
     }
 
     @Override
