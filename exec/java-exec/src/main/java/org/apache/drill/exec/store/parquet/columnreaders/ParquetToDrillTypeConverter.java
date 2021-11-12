@@ -54,9 +54,7 @@ public class ParquetToDrillTypeConverter {
           return (TypeProtos.MinorType.BIGINT);
         }
         switch(convertedType) {
-          // DRILL-6670: handle TIMESTAMP_MICROS as INT64 with no logical type
           case INT_64:
-          case TIMESTAMP_MICROS:
             return TypeProtos.MinorType.BIGINT;
           case UINT_64:
             return TypeProtos.MinorType.UINT8;
@@ -64,7 +62,10 @@ public class ParquetToDrillTypeConverter {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
             return TypeProtos.MinorType.VARDECIMAL;
           case TIMESTAMP_MILLIS:
+          case TIMESTAMP_MICROS:
             return TypeProtos.MinorType.TIMESTAMP;
+          case TIME_MICROS:
+            return TypeProtos.MinorType.TIME;
           default:
             throw new UnsupportedOperationException(String.format("unsupported type: %s %s", primitiveTypeName, convertedType));
         }

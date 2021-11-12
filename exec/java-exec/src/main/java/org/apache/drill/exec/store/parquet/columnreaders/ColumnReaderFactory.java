@@ -176,11 +176,15 @@ public class ColumnReaderFactory {
               columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
         }
         switch (convertedType) {
-          // DRILL-6670: handle TIMESTAMP_MICROS as INT64 with no logical type
           case INT_64:
-          case TIMESTAMP_MICROS:
             return new ParquetFixedWidthDictionaryReaders.DictionaryBigIntReader(recordReader, descriptor,
-                columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
+              columnChunkMetaData, fixedLength, (BigIntVector) v, schemaElement);
+          case TIMESTAMP_MICROS:
+            return new ParquetFixedWidthDictionaryReaders.DictionaryTimeStampMicrosReader(recordReader, descriptor,
+                columnChunkMetaData, fixedLength, (TimeStampVector) v, schemaElement);
+          case TIME_MICROS:
+            return new ParquetFixedWidthDictionaryReaders.DictionaryTimeMicrosReader(recordReader, descriptor,
+              columnChunkMetaData, fixedLength, (TimeVector) v, schemaElement);
           case UINT_64:
             return new ParquetFixedWidthDictionaryReaders.DictionaryUInt8Reader(recordReader, descriptor,
                 columnChunkMetaData, fixedLength, (UInt8Vector) v, schemaElement);
@@ -294,8 +298,11 @@ public class ColumnReaderFactory {
                 columnDescriptor, columnChunkMetaData, fixedLength, (NullableVarDecimalVector) valueVec, schemaElement);
           case TIMESTAMP_MILLIS:
             return new NullableFixedByteAlignedReaders.NullableDictionaryTimeStampReader(parentReader, columnDescriptor, columnChunkMetaData, fixedLength, (NullableTimeStampVector)valueVec, schemaElement);
-          // DRILL-6670: handle TIMESTAMP_MICROS as INT64 with no logical type
+          case TIME_MICROS:
+            return new NullableFixedByteAlignedReaders.NullableDictionaryTimeMicrosReader(parentReader, columnDescriptor, columnChunkMetaData, fixedLength, (NullableTimeVector) valueVec, schemaElement);
           case TIMESTAMP_MICROS:
+            return new NullableFixedByteAlignedReaders.NullableDictionaryTimeStampMicrosReader(parentReader,
+              columnDescriptor, columnChunkMetaData, fixedLength, (NullableTimeStampVector) valueVec, schemaElement);
           case INT_64:
             return new NullableFixedByteAlignedReaders.NullableDictionaryBigIntReader(parentReader,
               columnDescriptor, columnChunkMetaData, fixedLength, (NullableBigIntVector) valueVec, schemaElement);

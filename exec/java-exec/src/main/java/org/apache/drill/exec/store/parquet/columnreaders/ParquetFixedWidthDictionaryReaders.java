@@ -157,6 +157,34 @@ public class ParquetFixedWidthDictionaryReaders {
     }
   }
 
+  static class DictionaryTimeMicrosReader extends FixedByteAlignedReader<TimeVector> {
+    DictionaryTimeMicrosReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
+      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, TimeVector v,
+      SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    // this method is called by its superclass during a read loop
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+      recordsReadInThisIteration = Math.min(pageReader.pageValueCount
+        - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        for (int i = 0; i < recordsReadInThisIteration; i++) {
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger() / 1000);
+        }
+      } else {
+        int dataTypeLengthInBytes = (int) Math.ceil(dataTypeLengthInBits / 8.0);
+        for (int i = 0; i < recordsReadInThisIteration; i++) {
+          int value = pageReader.pageData.getInt((int) readStartInBytes + i * dataTypeLengthInBytes);
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, value / 1000);
+        }
+      }
+      advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
+    }
+  }
+
   static class DictionaryBigIntReader extends FixedByteAlignedReader<BigIntVector> {
     DictionaryBigIntReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
                                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, BigIntVector v,
@@ -306,6 +334,34 @@ public class ParquetFixedWidthDictionaryReaders {
       } else {
         super.readField(recordsToReadInThisPass);
       }
+    }
+  }
+
+  static class DictionaryTimeStampMicrosReader extends FixedByteAlignedReader<TimeStampVector> {
+    DictionaryTimeStampMicrosReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
+      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, TimeStampVector v,
+      SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    // this method is called by its superclass during a read loop
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+      recordsReadInThisIteration = Math.min(pageReader.pageValueCount
+        - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+      if (recordsRequireDecoding()) {
+        ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+        for (int i = 0; i < recordsReadInThisIteration; i++) {
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readLong() / 1000);
+        }
+      } else {
+        int dataTypeLengthInBytes = (int) Math.ceil(dataTypeLengthInBits / 8.0);
+        for (int i = 0; i < recordsReadInThisIteration; i++) {
+          long value = pageReader.pageData.getLong((int) readStartInBytes + i * dataTypeLengthInBytes);
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, value / 1000);
+        }
+      }
+      advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
     }
   }
 

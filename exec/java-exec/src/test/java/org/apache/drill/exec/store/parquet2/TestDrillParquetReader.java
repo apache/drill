@@ -18,9 +18,11 @@
 package org.apache.drill.exec.store.parquet2;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -30,6 +32,7 @@ import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.util.Text;
 import org.apache.drill.test.BaseTestQuery;
 import org.joda.time.Period;
@@ -41,6 +44,9 @@ import org.junit.experimental.categories.Category;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseLocalDate;
+import static org.apache.drill.test.TestBuilder.listOf;
+import static org.apache.drill.test.TestBuilder.mapOf;
+import static org.apache.drill.test.TestBuilder.mapOfObject;
 
 @Category({ParquetTest.class, UnlikelyTest.class})
 public class TestDrillParquetReader extends BaseTestQuery {
@@ -194,19 +200,22 @@ public class TestDrillParquetReader extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"),
+            LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"),
+            LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"),
+            LocalDateTime.of(1970, 1, 1, 0, 0, 0),new Period("PT0S"), bytesZeros)
         .build()
         .run();
   }
@@ -271,19 +280,20 @@ public class TestDrillParquetReader extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0),
+            new Period("PT0S"), bytesZeros)
         .baselineValues(4, null, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null)
         .build().run();
@@ -349,19 +359,19 @@ public class TestDrillParquetReader extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
         .build()
         .run();
   }
@@ -426,19 +436,19 @@ public class TestDrillParquetReader extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             ZonedDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
         .baselineValues(4, null, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null)
         .build().run();
@@ -1304,6 +1314,48 @@ public class TestDrillParquetReader extends BaseTestQuery {
             asList(asList(74, -115), asList(19, 85, 3))
         ))
         .go();
+  }
+
+  @Test
+  public void testTimeMicros() throws Exception {
+    testBuilder()
+      .unOrdered()
+      .sqlQuery("select * from cp.`parquet2/allTypes.parquet`")
+      .baselineColumns("int_field", "long_field", "float_field", "double_field", "string_field",
+        "boolean_field", "time_field", "timestamp_field", "date_field", "decimal_field", "uuid_field",
+        "fixed_field", "binary_field", "list_field", "map_field", "struct_field", "repeated_struct_field",
+        "repeated_list_field", "repeated_map_field")
+      .baselineValues(1, 100L, 0.5F, 1.5D, "abc", true, LocalTime.of(2, 42, 42),
+        LocalDateTime.of(1994, 4, 18, 11, 0, 0), LocalDate.of(1994, 4, 18),
+        new BigDecimal("12.34"), new byte[16], new byte[10], "hello".getBytes(StandardCharsets.UTF_8),
+        listOf("a", "b", "c"),
+        mapOfObject(
+          new Text("a"), 0.1F,
+          new Text("b"), 0.2F),
+        mapOf(
+          "struct_int_field", 123,
+          "struct_string_field", "abc"),
+        listOf(
+          mapOf(
+            "struct_int_field", 123,
+            "struct_string_field", "abc"),
+          mapOf(
+            "struct_int_field", 123,
+            "struct_string_field", "abc")),
+        listOf(listOf("a", "b", "c"), listOf("a", "b", "c")),
+        listOf(
+          mapOfObject(
+            new Text("a"), 0.1F,
+            new Text("b"), 0.2F),
+          mapOfObject(
+            new Text("a"), 0.1F,
+            new Text("b"), 0.2F))
+      )
+      .baselineValues(null, null, null, null, null, null, null, null, null, null, null, null, null,
+        listOf(), mapOfObject(), mapOf(), listOf(), listOf(), listOf())
+      .go();
+
+    testRunAndPrint(UserBitShared.QueryType.SQL, "select * from cp.`parquet2/allTypes.parquet`");
   }
 
 }
