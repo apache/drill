@@ -85,7 +85,7 @@
     -->
     <hive.version>3.1.2</hive.version>
     <hadoop.version>3.2.2</hadoop.version>
-    <hbase.version>2.4.2</hbase.version>
+    <hbase.version>2.4.8</hbase.version>
     <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.28</freemarker.version>
     <javassist.version>3.27.0-GA</javassist.version>
