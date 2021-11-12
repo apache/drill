@@ -126,6 +126,16 @@ public abstract class AbstractPluginImplementor implements PluginImplementor {
     return false;
   }
 
+  @Override
+  public boolean splitProject(Project project) {
+    return false;
+  }
+
+  @Override
+  public boolean artificialLimit() {
+    return false;
+  }
+
   private UserException getUnsupported(String rel) {
     return UserException.unsupportedError()
         .message("Plugin implementor doesn't support push down for %s", rel)

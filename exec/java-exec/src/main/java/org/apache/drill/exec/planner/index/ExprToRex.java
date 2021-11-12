@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.index;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -31,7 +30,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 
-import java.util.List;
+import java.math.BigDecimal;
 
 /**
  * Convert a logicalExpression to RexNode, notice the inputRel could be in an old plan, but newRowType is the newly built rowType
@@ -62,31 +61,25 @@ public class ExprToRex extends AbstractExprVisitor<RexNode, Void, RuntimeExcepti
     return null;
   }
 
-  private RexNode makeItemOperator(String[] paths, int index, RelDataType rowType) {
-    if (index == 0) { //last one, return ITEM([0]-inputRef, [1] Literal)
-      final RelDataTypeField field = findField(paths[0], rowType);
-      return field == null ? null : builder.makeInputRef(field.getType(), field.getIndex());
-    }
-    return builder.makeCall(SqlStdOperatorTable.ITEM,
-                            makeItemOperator(paths, index - 1, rowType),
-                            builder.makeLiteral(paths[index]));
-  }
-
   @Override
   public RexNode visitSchemaPath(SchemaPath path, Void value) throws RuntimeException {
-    PathSegment.NameSegment rootSegment = path.getRootSegment();
-    if (rootSegment.isLastPath()) {
-      final RelDataTypeField field = findField(rootSegment.getPath(), newRowType);
-      return field == null ? null : builder.makeInputRef(field.getType(), field.getIndex());
-    }
-    List<String> paths = Lists.newArrayList();
-    while (rootSegment != null) {
-      paths.add(rootSegment.getPath());
-      rootSegment = (PathSegment.NameSegment) rootSegment.getChild();
-    }
-    return makeItemOperator(paths.toArray(new String[0]), paths.size() - 1, newRowType);
-  }
+    PathSegment pathSegment = path.getRootSegment();
 
+    RelDataTypeField field = findField(pathSegment.getNameSegment().getPath(), newRowType);
+    RexNode rexNode = field == null ? null : builder.makeInputRef(field.getType(), field.getIndex());
+    while (!pathSegment.isLastPath()) {
+      pathSegment = pathSegment.getChild();
+      RexNode ref;
+      if (pathSegment.isNamed()) {
+        ref = builder.makeLiteral(pathSegment.getNameSegment().getPath());
+      } else {
+        ref = builder.makeBigintLiteral(BigDecimal.valueOf(pathSegment.getArraySegment().getIndex()));
+      }
+      rexNode = builder.makeCall(SqlStdOperatorTable.ITEM, rexNode, ref);
+    }
+
+    return rexNode;
+  }
 
   @Override
   public RexNode visitCastExpression(CastExpression e, Void value) throws RuntimeException {

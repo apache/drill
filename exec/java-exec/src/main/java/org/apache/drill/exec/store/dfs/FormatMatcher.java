@@ -25,10 +25,33 @@ import java.io.IOException;
 
 public abstract class FormatMatcher {
 
+  public static final int MEDIUM_PRIORITY = 5;
+  public static final int HIGH_PRIORITY = 7;
+
   public abstract boolean supportDirectoryReads();
   public abstract DrillTable isReadable(DrillFileSystem fs,
       FileSelection selection, FileSystemPlugin fsPlugin,
       String storageEngineName, SchemaConfig schemaConfig) throws IOException;
   public abstract boolean isFileReadable(DrillFileSystem fs, FileStatus status) throws IOException;
   public abstract FormatPlugin getFormatPlugin();
+
+  /**
+   * Priority of specific format matcher to be applied.
+   * Can be used for the case when several formats can match the format,
+   * but matchers with some more specific requirements should be applied at first.
+   *
+   * @return priority of {@link this} format matcher.
+   */
+  public int priority() {
+    return MEDIUM_PRIORITY;
+  }
+
+  /**
+   * Returns {@link FormatLocationTransformer} instance relevant for {@link this} format matcher.
+   *
+   * @return {@link FormatLocationTransformer} instance
+   */
+  public FormatLocationTransformer getFormatLocationTransformer() {
+    return null;
+  }
 }

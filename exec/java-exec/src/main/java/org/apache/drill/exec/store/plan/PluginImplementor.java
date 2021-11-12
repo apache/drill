@@ -83,4 +83,14 @@ public interface PluginImplementor {
   default void visitChild(RelNode input) throws IOException {
     ((PluginRel) input).implement(this);
   }
+
+  boolean splitProject(Project project);
+
+  /**
+   * If the plugin doesn't support native limit pushdown,
+   * but the reader can limit the number of rows to read.
+   * In this case limit operator on top of the scan should be preserved
+   * to ensure returning the correct rows number.
+   */
+  boolean artificialLimit();
 }

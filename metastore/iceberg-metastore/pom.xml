@@ -31,7 +31,6 @@
   <name>Drill : Metastore : Iceberg</name>
 
   <properties>
-    <iceberg.version>0.12.0</iceberg.version>
     <caffeine.version>2.7.0</caffeine.version>
   </properties>
 

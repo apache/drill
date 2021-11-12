@@ -34,7 +34,7 @@ public abstract class AbstractBase implements PhysicalOperator {
   protected long initialAllocation = INIT_ALLOCATION;
   protected long maxAllocation = MAX_ALLOCATION;
 
-  private final String userName;
+  protected final String userName;
   private int id;
   private PrelCostEstimates cost = PrelCostEstimates.ZERO_COST;
 

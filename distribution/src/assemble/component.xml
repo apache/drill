@@ -62,6 +62,7 @@
         <include>org.apache.drill.contrib:drill-opentsdb-storage:jar</include>
         <include>org.apache.drill.contrib:drill-udfs:jar</include>
         <include>org.apache.drill.contrib:drill-druid-storage:jar</include>
+        <include>org.apache.drill.contrib:drill-iceberg-format:jar</include>
       </includes>
       <outputDirectory>jars</outputDirectory>
       <useProjectArtifact>false</useProjectArtifact>

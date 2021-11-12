@@ -34,6 +34,7 @@ import org.apache.drill.exec.vector.accessor.ValueWriter;
 import org.apache.drill.exec.vector.complex.DictVector;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -91,8 +92,10 @@ public class ColumnConverterFactory {
 
   private TupleMetadata providedChildSchema(TupleMetadata providedSchema,
       ColumnMetadata readerSchema) {
-    return providedSchema == null ? null :
-      providedSchema.metadata(readerSchema.name()).tupleSchema();
+    return Optional.ofNullable(providedSchema)
+      .map(schema -> providedSchema.metadata(readerSchema.name()))
+      .map(ColumnMetadata::tupleSchema)
+      .orElse(null);
   }
 
   private ColumnConverter getArrayConverter(TupleMetadata providedSchema,

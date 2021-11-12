@@ -133,7 +133,7 @@ public class MetadataUtils {
   }
 
   public static MapColumnMetadata newMap(String name, TupleMetadata schema) {
-    return new MapColumnMetadata(name, DataMode.REQUIRED, (TupleSchema) schema);
+    return newMap(name, DataMode.REQUIRED, schema);
   }
 
   public static MapColumnMetadata newMap(String name) {
@@ -185,7 +185,11 @@ public class MetadataUtils {
   }
 
   public static ColumnMetadata newMapArray(String name, TupleMetadata schema) {
-    return new MapColumnMetadata(name, DataMode.REPEATED, (TupleSchema) schema);
+    return newMap(name, DataMode.REPEATED, schema);
+  }
+
+  public static MapColumnMetadata newMap(String name, DataMode dataMode, TupleMetadata schema) {
+    return new MapColumnMetadata(name, dataMode, (TupleSchema) schema);
   }
 
   public static ColumnMetadata newMapArray(String name) {
@@ -227,12 +231,12 @@ public class MetadataUtils {
     if (precision > maxPrecision) {
       throw new IllegalArgumentException(String.format(
           "%s(%d, %d) exceeds maximum suppored precision of %d",
-          type.toString(), precision, scale, maxPrecision));
+        type, precision, scale, maxPrecision));
     }
     if (scale > precision) {
       throw new IllegalArgumentException(String.format(
           "%s(%d, %d) scale exceeds precision",
-          type.toString(), precision, scale));
+        type, precision, scale));
     }
     MaterializedField field = new ColumnBuilder(name, type)
         .setMode(mode)
@@ -276,7 +280,7 @@ public class MetadataUtils {
 
   public static ColumnMetadata cloneMapWithSchema(ColumnMetadata source,
       TupleMetadata members) {
-    return new MapColumnMetadata(source.name(), source.mode(), (TupleSchema) members);
+    return newMap(source.name(), source.mode(), members);
   }
 
   public static ColumnMetadata diffMap(ColumnMetadata map, ColumnMetadata other) {

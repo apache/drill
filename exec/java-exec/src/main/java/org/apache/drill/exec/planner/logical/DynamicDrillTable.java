@@ -24,17 +24,20 @@ import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
-public class DynamicDrillTable extends DrillTable{
+public class DynamicDrillTable extends DrillTable {
 
-  private final RelDataTypeHolder holder = new RelDataTypeHolder();
+  private final RelDataTypeHolder holder;
 
   public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, String userName, Object selection) {
-    super(storageEngineName, plugin, userName, selection);
+    this(plugin, storageEngineName, userName, selection, null);
   }
 
-  public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, String userName, Object selection, MetadataProviderManager metadataProviderManager) {
+  public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, String userName,
+    Object selection, MetadataProviderManager metadataProviderManager) {
     super(storageEngineName, plugin, Schema.TableType.TABLE, userName, selection, metadataProviderManager);
+    this.holder = new RelDataTypeHolder();
   }
 
   /**
@@ -44,7 +47,7 @@ public class DynamicDrillTable extends DrillTable{
    * constructor.
    */
   public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, Object selection) {
-    super(storageEngineName, plugin, selection);
+    this(plugin, storageEngineName, ImpersonationUtil.getProcessUserName(), selection, null);
   }
 
   @Override

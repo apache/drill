@@ -18,9 +18,11 @@
 package org.apache.drill.exec.store.dfs;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -28,10 +30,11 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -56,7 +59,24 @@ public interface FormatPlugin {
   AbstractWriter getWriter(PhysicalOperator child, String location,
       List<String> partitionColumns) throws IOException;
 
-  Set<StoragePluginOptimizerRule> getOptimizerRules();
+  @Deprecated
+  default Set<? extends RelOptRule> getOptimizerRules() {
+    return Collections.emptySet();
+  }
+
+  default Set<? extends RelOptRule> getOptimizerRules(PlannerPhase phase) {
+    switch (phase) {
+      case PHYSICAL:
+        return getOptimizerRules();
+      case LOGICAL:
+      case JOIN_PLANNING:
+      case LOGICAL_PRUNE_AND_JOIN:
+      case LOGICAL_PRUNE:
+      case PARTITION_PRUNING:
+      default:
+        return ImmutableSet.of();
+    }
+  }
 
   AbstractGroupScan getGroupScan(String userName, FileSelection selection,
       List<SchemaPath> columns) throws IOException;
