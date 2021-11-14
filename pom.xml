@@ -77,6 +77,7 @@
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <jmockit.version>1.47</jmockit.version>
     <logback.version>1.2.3</logback.version>
+    <log4j2.version>2.14.1</log4j2.version>
     <mockito.version>3.11.2</mockito.version>
     <!--
       Currently Hive storage plugin only supports Apache Hive 3.1.2 or vendor specific variants of the
