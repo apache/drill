@@ -185,6 +185,25 @@ public class NullableFixedByteAlignedReaders {
     }
   }
 
+  static class NullableDictionaryTimeMicrosReader extends NullableColumnReader<NullableTimeVector> {
+
+    NullableDictionaryTimeMicrosReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
+      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableTimeVector v,
+      SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    // this method is called by its superclass during a read loop
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+      ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+      for (int i = 0; i < recordsToReadInThisPass; i++) {
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger() / 1000);
+      }
+      advanceWriterIndex();
+    }
+  }
+
   static class NullableDictionaryBigIntReader extends NullableColumnReader<NullableBigIntVector> {
 
     NullableDictionaryBigIntReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
@@ -237,6 +256,25 @@ public class NullableFixedByteAlignedReaders {
       ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
       for (int i = 0; i < recordsToReadInThisPass; i++){
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readLong());
+      }
+      advanceWriterIndex();
+    }
+  }
+
+  static class NullableDictionaryTimeStampMicrosReader extends NullableColumnReader<NullableTimeStampVector> {
+
+    NullableDictionaryTimeStampMicrosReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
+      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableTimeStampVector v,
+      SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    // this method is called by its superclass during a read loop
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+      ValuesReader valReader = usingDictionary ? pageReader.getDictionaryValueReader() : pageReader.getValueReader();
+      for (int i = 0; i < recordsToReadInThisPass; i++) {
+        valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readLong() / 1000);
       }
       advanceWriterIndex();
     }

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -255,11 +256,18 @@ public class DrillParquetGroupConverter extends GroupConverter {
           return getBigIntConverter(name, type);
         }
         switch(type.getOriginalType()) {
-          // DRILL-6670: handle TIMESTAMP_MICROS as INT64 with no logical type
           case UINT_64:
-          case INT_64 :
-          case TIMESTAMP_MICROS: {
+          case INT_64:
             return getBigIntConverter(name, type);
+          case TIMESTAMP_MICROS: {
+            TimeStampWriter writer = getTimeStampWriter(name, type);
+            return new DrillTimeStampMicrosConverter(writer);
+          }
+          case TIME_MICROS: {
+            TimeWriter writer = type.isRepetition(Repetition.REPEATED)
+              ? getWriter(name, (m, f) -> m.list(f).time(), l -> l.list().time())
+              : getWriter(name, MapWriter::time, ListWriter::time);
+            return new DrillTimeMicrosConverter(writer);
           }
           case DECIMAL: {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
@@ -308,26 +316,33 @@ public class DrillParquetGroupConverter extends GroupConverter {
         return new DrillBoolConverter(writer);
       }
       case BINARY: {
-        if (type.getOriginalType() == null) {
-          VarBinaryWriter writer = type.isRepetition(Repetition.REPEATED)
-              ? getWriter(name, (m, f) -> m.list(f).varBinary(), l -> l.list().varBinary())
-              : getWriter(name, (m, f) -> m.varBinary(f), l -> l.varBinary());
-          return new DrillVarBinaryConverter(writer, mutator.getManagedBuffer());
-        }
-        switch(type.getOriginalType()) {
-          case UTF8:
-          case ENUM: {
-            return getVarCharConverter(name, type);
-          }
-          // See DRILL-4184 and DRILL-4834. Support for this is added using new VarDecimal type.
-          case DECIMAL: {
+        LogicalTypeAnnotation.LogicalTypeAnnotationVisitor<PrimitiveConverter> typeAnnotationVisitor = new LogicalTypeAnnotation.LogicalTypeAnnotationVisitor<PrimitiveConverter>() {
+          @Override
+          public Optional<PrimitiveConverter> visit(LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalType) {
             ParquetReaderUtility.checkDecimalTypeEnabled(options);
-            return getVarDecimalConverter(name, type);
+            return Optional.of(getVarDecimalConverter(name, type));
           }
-          default: {
-            throw new UnsupportedOperationException("Unsupported type " + type.getOriginalType());
+
+          @Override
+          public Optional<PrimitiveConverter> visit(LogicalTypeAnnotation.StringLogicalTypeAnnotation stringLogicalType) {
+            return Optional.of(getVarCharConverter(name, type));
           }
-        }
+
+          @Override
+          public Optional<PrimitiveConverter> visit(LogicalTypeAnnotation.EnumLogicalTypeAnnotation stringLogicalType) {
+            return Optional.of(getVarCharConverter(name, type));
+          }
+        };
+        Supplier<PrimitiveConverter> converterSupplier = () -> {
+          VarBinaryWriter writer = type.isRepetition(Repetition.REPEATED)
+            ? getWriter(name, (m, f) -> m.list(f).varBinary(), l -> l.list().varBinary())
+            : getWriter(name, MapWriter::varBinary, ListWriter::varBinary);
+          return new DrillVarBinaryConverter(writer, mutator.getManagedBuffer());
+        };
+        return Optional.ofNullable(type.getLogicalTypeAnnotation())
+          .map(typeAnnotation -> typeAnnotation.accept(typeAnnotationVisitor))
+          .flatMap(Function.identity())
+          .orElseGet(converterSupplier);
       }
       case FIXED_LEN_BYTE_ARRAY:
         LogicalTypeAnnotation.LogicalTypeAnnotationVisitor<PrimitiveConverter> typeAnnotationVisitor = new LogicalTypeAnnotation.LogicalTypeAnnotationVisitor<PrimitiveConverter>() {
@@ -346,15 +361,16 @@ public class DrillParquetGroupConverter extends GroupConverter {
           }
         };
 
-        LogicalTypeAnnotation logicalTypeAnnotation = type.getLogicalTypeAnnotation();
-        if (logicalTypeAnnotation != null) {
-          return logicalTypeAnnotation.accept(typeAnnotationVisitor).orElseGet(() -> {
-            VarBinaryWriter writer = type.isRepetition(Repetition.REPEATED)
-                ? getWriter(name, (m, f) -> m.list(f).varBinary(), l -> l.list().varBinary())
-                : getWriter(name, MapWriter::varBinary, ListWriter::varBinary);
-            return new DrillFixedBinaryToVarbinaryConverter(writer, type.getTypeLength(), mutator.getManagedBuffer());
-          });
-        }
+        Supplier<PrimitiveConverter> converterSupplier = () -> {
+          VarBinaryWriter writer = type.isRepetition(Repetition.REPEATED)
+            ? getWriter(name, (m, f) -> m.list(f).varBinary(), l -> l.list().varBinary())
+            : getWriter(name, MapWriter::varBinary, ListWriter::varBinary);
+          return new DrillFixedBinaryToVarbinaryConverter(writer, type.getTypeLength(), mutator.getManagedBuffer());
+        };
+        return Optional.ofNullable(type.getLogicalTypeAnnotation())
+          .map(typeAnnotation -> typeAnnotation.accept(typeAnnotationVisitor))
+          .flatMap(Function.identity())
+          .orElseGet(converterSupplier);
       default:
         throw new UnsupportedOperationException("Unsupported type: " + type.getPrimitiveTypeName());
     }
@@ -519,6 +535,21 @@ public class DrillParquetGroupConverter extends GroupConverter {
     }
   }
 
+  public static class DrillTimeMicrosConverter extends PrimitiveConverter {
+    private final TimeWriter writer;
+    private final TimeHolder holder = new TimeHolder();
+
+    public DrillTimeMicrosConverter(TimeWriter writer) {
+      this.writer = writer;
+    }
+
+    @Override
+    public void addLong(long value) {
+      holder.value = (int) (value / 1000);
+      writer.write(holder);
+    }
+  }
+
   public static class DrillBigIntConverter extends PrimitiveConverter {
     private BigIntWriter writer;
     private BigIntHolder holder = new BigIntHolder();
@@ -545,6 +576,21 @@ public class DrillParquetGroupConverter extends GroupConverter {
     @Override
     public void addLong(long value) {
       holder.value = value;
+      writer.write(holder);
+    }
+  }
+
+  public static class DrillTimeStampMicrosConverter extends PrimitiveConverter {
+    private final TimeStampWriter writer;
+    private final TimeStampHolder holder = new TimeStampHolder();
+
+    public DrillTimeStampMicrosConverter(TimeStampWriter writer) {
+      this.writer = writer;
+    }
+
+    @Override
+    public void addLong(long value) {
+      holder.value = value / 1000;
       writer.write(holder);
     }
   }

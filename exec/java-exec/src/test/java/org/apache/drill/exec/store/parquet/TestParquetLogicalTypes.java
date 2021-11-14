@@ -120,19 +120,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
         .build()
         .run();
   }
@@ -195,19 +195,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
         .baselineValues(4, null, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null)
         .build().run();
@@ -271,19 +271,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
         .build()
         .run();
   }
@@ -347,19 +347,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
         .baselineValues(4, null, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null)
         .build().run();
@@ -423,19 +423,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
       .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
         1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+        LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
         new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
         bytes12)
       .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
         9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+        LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
         new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
         bytesOnes)
       .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
         -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+        LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
       .build()
       .run();
   }
@@ -498,19 +498,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
       .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
         1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+        LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
         new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
         bytes12)
       .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
         9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+        LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
         new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
         bytesOnes)
       .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
         -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+        LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
       .baselineValues(4, null, null, null, null, null, null, null, null, null, null, null, null, null,
         null, null, null, null, null)
       .build().run();
@@ -575,19 +575,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
       .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
         1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+        LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
         new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
         bytes12)
       .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
         9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+        LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
         new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
         bytesOnes)
       .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
         -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+        LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
       .build()
       .run();
   }
@@ -650,19 +650,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
       .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
         1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+        LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
         new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
         bytes12)
       .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
         9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+        LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
         new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
         bytesOnes)
       .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
         -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
         LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-        LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+        LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
       .baselineValues(4, null, null, null, null, null, null, null, null, null, null, null, null, null,
         null, null, null, null, null)
       .build().run();
@@ -726,19 +726,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
        .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
         .build()
         .run();
   }
@@ -801,19 +801,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
            bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
         .baselineValues(4, null, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null)
         .build().run();
@@ -878,19 +878,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
             bytes12)
        .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
         .build()
         .run();
   }
@@ -953,19 +953,19 @@ public class TestParquetLogicalTypes extends BaseTestQuery {
         .baselineValues(1, "UTF8 string1", "RANDOM_VALUE", 1234567, 123, 12345, 1234567, 123, 1234, 1234567,
             1234567890123456L, 1234567890123456L, 1234567890123456L, LocalDate.parse("5350-02-17"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(1234567), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1973-11-29T21:33:09.012"), 123456789012L,
+            LocalDateTime.parse("1973-11-29T21:33:09.012"), LocalDateTime.of(1970, 1, 2, 10, 17, 36, 789_000_000),
             new Period().plusMonths(875770417).plusDays(943142453).plusMillis(1650536505),
            bytes12)
         .baselineValues(2, "UTF8 string2", "MAX_VALUE", 2147483647, 127, 32767, 2147483647, 255, 65535, -1,
             9223372036854775807L, 9223372036854775807L, -1L, LocalDate.parse("1969-12-31"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0xFFFFFFFF), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("2038-01-19T03:14:07.999"), 9223372036854775807L,
+            LocalDateTime.parse("2038-01-19T03:14:07.999"), LocalDateTime.of(294247, 1, 10, 4, 0, 54, 775_000_000),
             new Period().plusMonths(16843009).plusDays(16843009).plusMillis(16843009),
             bytesOnes)
         .baselineValues(3, "UTF8 string3", "MIN_VALUE", -2147483648, -128, -32768, -2147483648, 0, 0, 0,
             -9223372036854775808L, -9223372036854775808L, 0L, LocalDate.parse("1970-01-01"),
             LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC).toLocalTime(),
-            LocalDateTime.parse("1970-01-01T00:00:00.0"), 0L, new Period("PT0S"), bytesZeros)
+            LocalDateTime.parse("1970-01-01T00:00:00.0"), LocalDateTime.of(1970, 1, 1, 0, 0, 0), new Period("PT0S"), bytesZeros)
         .baselineValues(4, null, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null)
         .build().run();

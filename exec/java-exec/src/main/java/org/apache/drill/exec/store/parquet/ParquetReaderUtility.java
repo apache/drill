@@ -619,8 +619,10 @@ public class ParquetReaderUtility {
         case DATE:
           return TypeProtos.MinorType.DATE;
         case TIME_MILLIS:
+        case TIME_MICROS:
           return TypeProtos.MinorType.TIME;
         case TIMESTAMP_MILLIS:
+        case TIMESTAMP_MICROS:
           return TypeProtos.MinorType.TIMESTAMP;
         case UTF8:
           return TypeProtos.MinorType.VARCHAR;
