@@ -208,7 +208,7 @@ public class StorageResources {
         .build();
     }
 
-    return Response.ok(getPluginConfig(name))
+    return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name)))
       .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s.%s\"", name, format))
       .build();
   }
