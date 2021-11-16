@@ -432,8 +432,7 @@ public class Metadata {
       Map<FileStatus, FileSystem> fileStatusMap, boolean allColumnsInteresting, Set<SchemaPath> columnSet) throws IOException {
     return TimedCallable.run("Fetch parquet metadata", logger,
         Collectors.toList(fileStatusMap,
-            (fileStatus, fileSystem) -> new MetadataGatherer(parquetTableMetadata_v4, fileStatus, fileSystem, allColumnsInteresting, columnSet)),
-        16
+            (fileStatus, fileSystem) -> new MetadataGatherer(parquetTableMetadata_v4, fileStatus, fileSystem, allColumnsInteresting, columnSet)), 16, readerConfig.timeoutPerRunnableInMsec()
     );
   }
 
