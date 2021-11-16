@@ -362,7 +362,7 @@ public class DrillTestWrapper {
   public static int addToCombinedVectorResults(Iterable<VectorAccessible> batches, BatchSchema expectedSchema,
                                                Long expectedBatchSize, Integer expectedNumBatches,
                                                Map<String, List<Object>> combinedVectors, Integer expectedTotalRecords)
-       throws SchemaChangeException, UnsupportedEncodingException {
+       throws SchemaChangeException {
     // TODO - this does not handle schema changes
     int numBatch = 0;
     long totalRecords = 0;
@@ -385,8 +385,6 @@ public class DrillTestWrapper {
         Assert.assertTrue(sizer.getNetBatchSize() <= expectedBatchSize);
       }
 
-      // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
-      // SchemaChangeException, so check/clean throws clause above.
       if (schema == null) {
         schema = loader.getSchema();
         for (MaterializedField mf : schema) {
@@ -736,17 +734,13 @@ public class DrillTestWrapper {
   }
 
   public static void addToMaterializedResults(List<Map<String, Object>> materializedRecords,
-                                          List<QueryDataBatch> records,
-                                          RecordBatchLoader loader)
-      throws SchemaChangeException, UnsupportedEncodingException {
+                                              List<QueryDataBatch> records, RecordBatchLoader loader) {
     long totalRecords = 0;
     QueryDataBatch batch;
     int size = records.size();
     for (int i = 0; i < size; i++) {
       batch = records.get(0);
       loader.load(batch.getHeader().getDef(), batch.getData());
-      // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
-      // SchemaChangeException, so check/clean throws clause above.
       logger.debug("reading batch with " + loader.getRecordCount() + " rows, total read so far " + totalRecords);
       totalRecords += loader.getRecordCount();
       for (int j = 0; j < loader.getRecordCount(); j++) {

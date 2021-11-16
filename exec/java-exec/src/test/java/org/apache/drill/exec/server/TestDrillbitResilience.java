@@ -185,8 +185,6 @@ public class TestDrillbitResilience extends ClusterTest {
       public void rowArrived(QueryDataBatch queryResultBatch) {
         // load the single record
         final QueryData queryData = queryResultBatch.getHeader();
-        // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
-        // SchemaChangeException.
         loader.load(queryData.getDef(), queryResultBatch.getData());
         assertEquals(1, loader.getRecordCount());
 

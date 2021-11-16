@@ -52,7 +52,6 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,13 +146,16 @@ public class TestJsonReader extends BaseTestQuery {
         .go();
   }
 
-  @Test
-  @Ignore("DRILL-1824")
+  @Test // DRILL-1824
   public void schemaChangeValidate() throws Exception {
     testBuilder()
       .sqlQuery("select b from dfs.`vector/complex/writer/schemaChange/`")
       .unOrdered()
-      .jsonBaselineFile("/vector/complex/writer/expected.json")
+      .baselineColumns("b")
+      .baselineValues(null)
+      .baselineValues(null)
+      .baselineValues(mapOf())
+      .baselineValues(mapOf("x", 1L, "y", 2L))
       .build()
       .run();
   }

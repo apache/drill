@@ -338,11 +338,18 @@ public class TestBuilder {
     }
     Map<String, Object> ret = new HashMap<>();
     int i = 0;
-    assertEquals("Must supply the same number of baseline values as columns.", baselineValues.length, baselineColumns.length);
-    for (String s : baselineColumns) {
-      ret.put(s, baselineValues[i]);
-      i++;
+    if(baselineValues != null) {
+      assertEquals("Must supply the same number of baseline values as columns.", baselineValues.length, baselineColumns.length);
+      for (String s : baselineColumns) {
+        ret.put(s, baselineValues[i]);
+        i++;
+      }
+    } else {
+      assertEquals("Must supply the same number of baseline values as columns.", 1, baselineColumns.length);
+      ret.put(baselineColumns[0], null);
     }
+
+
     this.baselineRecords.add(ret);
     return this;
   }

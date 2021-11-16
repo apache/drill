@@ -77,8 +77,6 @@ public class LoggingResultsListener implements UserResultsListener {
     try {
       if (data != null) {
         count.addAndGet(header.getRowCount());
-        // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
-        // SchemaChangeException.
         loader.load(header.getDef(), data);
 
         try {
