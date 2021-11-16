@@ -19,7 +19,6 @@ package org.apache.drill;
 
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.file.Paths;
@@ -30,8 +29,7 @@ public class TestSchemaChange extends BaseTestQuery {
     dirTestWatcher.copyResourceToRoot(Paths.get("schemachange"));
   }
 
-  @Test //DRILL-1605
-  @Ignore("Until DRILL-2171 is fixed")
+  @Test //DRILL-1605, DRILL-2171
   public void testMultiFilesWithDifferentSchema() throws Exception {
     testBuilder()
         .sqlQuery("select a, b from dfs.`schemachange/multi/*.json`")

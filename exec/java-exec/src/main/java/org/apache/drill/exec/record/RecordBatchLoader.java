@@ -28,7 +28,6 @@ import org.apache.drill.common.StackTrace;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
@@ -73,8 +72,6 @@ public class RecordBatchLoader implements VectorAccessible {
    * @param buf
    *          The buffer that holds the data associated with the record batch.
    * @return Whether the schema changed since the previous load.
-   * @throws SchemaChangeException
-   *   TODO:  Clean:  DRILL-2933  load(...) never actually throws SchemaChangeException.
    */
   @SuppressWarnings("resource")
   public boolean load(RecordBatchDef def, DrillBuf buf) {

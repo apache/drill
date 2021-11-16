@@ -304,7 +304,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       for (final RawFragmentBatch batch : incomingBatches) {
         // initialize the incoming batchLoaders
         final UserBitShared.RecordBatchDef rbd = batch.getHeader().getDef();
-        // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
         batchLoaders[i].load(rbd, batch.getBody());
         batch.release();
         ++batchOffsets[i];
@@ -418,7 +417,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         }
 
         final UserBitShared.RecordBatchDef rbd = incomingBatches[node.batchId].getHeader().getDef();
-        // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
         batchLoaders[node.batchId].load(rbd, incomingBatches[node.batchId].getBody());
         incomingBatches[node.batchId].release();
         batchOffsets[node.batchId] = 0;

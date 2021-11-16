@@ -22,7 +22,6 @@ import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.test.TestBuilder;
 import org.apache.drill.test.SubDirTestWatcher;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -218,8 +217,7 @@ public class TestMergeJoinWithSchemaChanges extends BaseTestQuery {
     builder.go();
   }
 
-  @Ignore("DRILL-5612")
-  @Test
+  @Test // DRILL-5612
   public void testMissingAndNewColumns() throws Exception {
     // missing column kl
     BufferedWriter writer = new BufferedWriter(new FileWriter(new File(leftDir, "l1.json")));

@@ -507,8 +507,7 @@ public class DrillCursor implements Cursor {
 
           final boolean schemaChanged;
           try {
-            schemaChanged = currentBatchHolder.load(qrb.getHeader().getDef(),
-                                                    qrb.getData());
+            schemaChanged = currentBatchHolder.load(qrb.getHeader().getDef(), qrb.getData());
           }
           finally {
             qrb.release();
