@@ -110,12 +110,38 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
   }
 
   @JsonIgnore
+  public List<Integer> getFieldIndices() {
+    List<Integer> result = new ArrayList<>();
+    if (! hasFields()) {
+      return result;
+    }
+
+    for (FixedwidthFieldConfig field : fields) {
+      result.add(field.getIndex());
+    }
+    return result;
+  }
+
+  @JsonIgnore
+  public List<Integer> getFieldWidths() {
+    List<Integer> result = new ArrayList<>();
+    if (! hasFields()) {
+      return result;
+    }
+
+    for (FixedwidthFieldConfig field : fields) {
+      result.add(field.getWidth());
+    }
+    return result;
+  }
+
+  @JsonIgnore
   public void validateFieldInput(){
     Set<String> uniqueNames = new HashSet<>();
     for (String name : this.getFieldNames()){
-      if (name.length() == 0){
-        
-      }
+      /*if (name.length() == 0){
+
+      }*/
       if (uniqueNames.contains(name)){
         throw UserException
           .validationError()
