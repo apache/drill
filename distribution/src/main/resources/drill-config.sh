@@ -307,10 +307,11 @@ export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:ReservedCodeCacheSize=$DRILLBIT_CODE_CA
 if [ $? -gt 0 ]; then
   # Allow reflective access on Java 9+
   export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.base/java.lang=ALL-UNNAMED"
+  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens=java.base/java.util=ALL-UNNAMED"
   export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.base/sun.nio.ch=ALL-UNNAMED"
+  export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.base/java.net=ALL-UNNAMED"
   export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.base/java.nio=ALL-UNNAMED"
   export DRILLBIT_OPTS="$DRILLBIT_OPTS --add-opens java.security.jgss/sun.security.krb5=ALL-UNNAMED"
-  export DRILLBIT_OPTS="$DRILLBIT_OPTS --illegal-access=permit"
 fi
 
 

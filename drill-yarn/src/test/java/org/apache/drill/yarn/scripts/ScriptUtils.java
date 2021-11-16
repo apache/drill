@@ -115,18 +115,15 @@ public class ScriptUtils {
    * Order is not important here (though it is to Java.)
    */
 
-  public static String stdArgs[] = buildStdArgs( );
+  public static String[] stdArgs = buildStdArgs();
 
-  private static String[] buildStdArgs( )
-  {
-    String args[] = {
+  private static String[] buildStdArgs() {
+    String[] args = {
       "-Xms4G",
       "-Xmx4G",
       "-XX:MaxDirectMemorySize=8G",
       "-XX:ReservedCodeCacheSize=1G",
       "-Ddrill\\.exec\\.enable-epoll=false",
-      // Removed in Drill 1.14
-      //"-XX:\\+CMSClassUnloadingEnabled",
       "-XX:\\+UseG1GC",
       "org\\.apache\\.drill\\.exec\\.server\\.Drillbit",
       "-Dlog\\.path=/.*/script-test/drill/log/drillbit\\.log",
