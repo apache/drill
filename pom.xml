@@ -3973,9 +3973,9 @@
       </build>
     </profile>
     <profile>
-      <id>jdk15</id>
+      <id>jdk9+</id>
       <activation>
-        <jdk>[9,18)</jdk>
+        <jdk>[9,)</jdk>
       </activation>
       <properties>
         <junit.args>
