@@ -18,33 +18,54 @@
 package org.apache.drill.exec.store.parquet;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.Getter;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@ToString
 @EqualsAndHashCode
 @JsonTypeName("parquet") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ParquetFormatConfig implements FormatPluginConfig {
 
-  private final boolean autoCorrectCorruptDates;
-  private final boolean enableStringsSignedMinMax;
-  private final Integer blockSize;
-  private final Integer pageSize;
-  private final Boolean useSingleFSBlock;
-  private final String writerCompressionType;
-  private final String writerLogicalTypeForDecimals;
-  private final Boolean writerUsePrimitivesForDecimals;
-  private final String writerFormatVersion;
+  @Getter private final boolean autoCorrectCorruptDates;
 
+  /**
+   * Parquet statistics for UTF-8 data in files created prior to 1.9.1 parquet
+   * library version were stored incorrectly.  If the user exactly knows that
+   * data in binary columns is in ASCII (not UTF-8), turning this property to
+   * 'true' enables statistics usage for varchar and decimal columns.
+   *
+   * {@link org.apache.drill.exec.ExecConstants#PARQUET_READER_STRINGS_SIGNED_MIN_MAX}
+   */
+  @Getter private final boolean enableStringsSignedMinMax;
+
+  // {@link org.apache.drill.exec.ExecConstants#PARQUET_BLOCK_SIZE}
+  @Getter private final Integer blockSize;
+
+  // {@link org.apache.drill.exec.ExecConstants#PARQUET_PAGE_SIZE}
+  @Getter private final Integer pageSize;
+
+  // {@link org.apache.drill.exec.ExecConstants#PARQUET_WRITER_USE_SINGLE_FS_BLOCK}
+  @Getter private final Boolean useSingleFSBlock;
+
+  // {@link org.apache.drill.exec.ExecConstants#PARQUET_WRITER_COMPRESSION_TYPE}
+  @Getter private final String writerCompressionType;
+
+  // {@link org.apache.drill.exec.ExecConstants#PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS}
+  @Getter private final String writerLogicalTypeForDecimals;
+
+  // {@link org.apache.drill.exec.ExecConstants#PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS}
+  @Getter private final Boolean writerUsePrimitivesForDecimals;
+
+  // {@link org.apache.drill.exec.ExecConstants#PARQUET_WRITER_FORMAT_VERSION}
+  @Getter private final String writerFormatVersion;
 
   public ParquetFormatConfig() {
     this(true, false, null, null, null, null, null, null, null);
@@ -63,7 +84,7 @@ public class ParquetFormatConfig implements FormatPluginConfig {
     @JsonProperty("writerUsePrimitivesForDecimals") Boolean writerUsePrimitivesForDecimals,
     @JsonProperty("writerFormatVersion") String writerFormatVersion
   ) {
-    this.autoCorrectCorruptDates = autoCorrectCorruptDates == null || autoCorrectCorruptDates;
+    this.autoCorrectCorruptDates = autoCorrectCorruptDates == null ? true : autoCorrectCorruptDates;
     this.enableStringsSignedMinMax = enableStringsSignedMinMax;
     this.blockSize = blockSize;
     this.pageSize = pageSize;
@@ -74,61 +95,18 @@ public class ParquetFormatConfig implements FormatPluginConfig {
     this.writerFormatVersion = writerFormatVersion;
   }
 
-  /**
-   * @return true if auto correction of corrupt dates is enabled, false otherwise
-   */
-  @JsonIgnore
-  public boolean areCorruptDatesAutoCorrected() {
-    return autoCorrectCorruptDates;
-  }
-
-  /**
-   * Parquet statistics for UTF-8 data for files created prior to 1.9.1 parquet library version was stored incorrectly.
-   * If user exactly knows that data in binary columns is in ASCII (not UTF-8), turning this property to 'true'
-   * enables statistics usage for varchar and decimal columns.
-   *
-   * Can be overridden for individual tables using
-   * @link org.apache.drill.exec.ExecConstants#PARQUET_READER_STRINGS_SIGNED_MIN_MAX} session option.
-   *
-   * @return true if string signed min max enabled, false otherwise
-   */
-  @JsonIgnore
-  public boolean isStringsSignedMinMaxEnabled() {
-    return enableStringsSignedMinMax;
-  }
-
-  @JsonIgnore
-  public Integer getBlockSize() {
-    return blockSize;
-  }
-
-  @JsonIgnore
-  public Integer getPageSize() {
-    return pageSize;
-  }
-
-  @JsonIgnore
-  public Boolean isUseSingleFSBlock() {
-    return useSingleFSBlock;
-  }
-
-  @JsonIgnore
-  public String getWriterCompressionType() {
-    return writerCompressionType;
-  }
-
-  @JsonIgnore
-  public String getWriterLogicalTypeForDecimals() {
-    return writerLogicalTypeForDecimals;
-  }
-
-  @JsonIgnore
-  public Boolean isWriterUsePrimitivesForDecimals() {
-    return writerUsePrimitivesForDecimals;
-  }
-
-  @JsonIgnore
-  public String getWriterFormatVersion() {
-    return writerFormatVersion;
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("autoCorrectCorruptDates", autoCorrectCorruptDates)
+      .field("enableStringsSignedMinMax", enableStringsSignedMinMax)
+      .field("blockSize", blockSize)
+      .field("pageSize", pageSize)
+      .field("useSingleFSBlock", useSingleFSBlock)
+      .field("writerCompressionType", writerCompressionType)
+      .field("writerLogicalTypeForDecimals", writerLogicalTypeForDecimals)
+      .field("writerUsePrimitivesForDecimals", writerUsePrimitivesForDecimals)
+      .field("writerFormatVersion", writerFormatVersion)
+      .toString();
   }
 }

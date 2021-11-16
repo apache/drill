@@ -176,8 +176,8 @@ public class ParquetReaderConfig {
 
       // first assign configuration values from format config
       if (formatConfig != null) {
-        readerConfig.autoCorrectCorruptedDates = formatConfig.areCorruptDatesAutoCorrected();
-        readerConfig.enableStringsSignedMinMax = formatConfig.isStringsSignedMinMaxEnabled();
+        readerConfig.autoCorrectCorruptedDates = formatConfig.isAutoCorrectCorruptDates();
+        readerConfig.enableStringsSignedMinMax = formatConfig.isEnableStringsSignedMinMax();
       }
 
       // then assign configuration values from Hadoop configuration

@@ -104,7 +104,7 @@ public class TestParquetReaderConfig extends BaseTest {
     // use value from format config
     ParquetFormatConfig formatConfig = new ParquetFormatConfig();
     ParquetReaderConfig readerConfig = ParquetReaderConfig.builder().withFormatConfig(formatConfig).build();
-    assertEquals(formatConfig.isStringsSignedMinMaxEnabled(), readerConfig.enableStringsSignedMinMax());
+    assertEquals(formatConfig.isEnableStringsSignedMinMax(), readerConfig.enableStringsSignedMinMax());
 
     // change format config value
     formatConfig = ParquetFormatConfig.builder()
@@ -113,7 +113,7 @@ public class TestParquetReaderConfig extends BaseTest {
       .build();
 
     readerConfig = ParquetReaderConfig.builder().withFormatConfig(formatConfig).build();
-    assertEquals(formatConfig.isStringsSignedMinMaxEnabled(), readerConfig.enableStringsSignedMinMax());
+    assertEquals(formatConfig.isEnableStringsSignedMinMax(), readerConfig.enableStringsSignedMinMax());
 
     // set system option, option value should not have higher priority
     sysOpts.setLocalOption(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX, "false");

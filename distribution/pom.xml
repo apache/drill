@@ -232,6 +232,7 @@
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
+          <!--
           <execution>
             <id>distro-assembly</id>
             <phase>package</phase>
@@ -246,6 +247,7 @@
               <finalName>apache-drill-${project.version}</finalName>
             </configuration>
           </execution>
+          -->
           <execution>
             <id>distro-assembly-not-attached</id>
             <phase>package</phase>

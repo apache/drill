@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -67,7 +68,6 @@ import org.apache.drill.exec.store.parquet.metadata.ParquetTableMetadataDirs;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
-import org.apache.drill.shaded.guava.com.google.common.base.MoreObjects;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -159,23 +159,26 @@ public class ParquetFormatPlugin implements FormatPlugin {
     OptionValue.OptionScope minScope = OptionValue.OptionScope.SESSION;
 
     writerOpts.put(ExecConstants.PARQUET_BLOCK_SIZE,
-      MoreObjects.firstNonNull(
+      ObjectUtils.firstNonNull(
         contextOpts.getOption(ExecConstants.PARQUET_BLOCK_SIZE).getValueMinScope(minScope),
-        config.getBlockSize()
+        config.getBlockSize(),
+        contextOpts.getInt(ExecConstants.PARQUET_BLOCK_SIZE)
       ).toString()
     );
 
     writerOpts.put(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK,
-      MoreObjects.firstNonNull(
+      ObjectUtils.firstNonNull(
         contextOpts.getOption(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK).getValueMinScope(minScope),
-        config.isUseSingleFSBlock()
+        config.getUseSingleFSBlock(),
+        contextOpts.getBoolean(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK)
       ).toString()
     );
 
     writerOpts.put(ExecConstants.PARQUET_PAGE_SIZE,
-      MoreObjects.firstNonNull(
+      ObjectUtils.firstNonNull(
         contextOpts.getOption(ExecConstants.PARQUET_PAGE_SIZE).getValueMinScope(minScope),
-        config.getPageSize()
+        config.getPageSize(),
+        contextOpts.getInt(ExecConstants.PARQUET_PAGE_SIZE)
       ).toString()
     );
 
@@ -190,30 +193,34 @@ public class ParquetFormatPlugin implements FormatPlugin {
     );
 
     writerOpts.put(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE,
-      MoreObjects.firstNonNull(
+      ObjectUtils.firstNonNull(
         contextOpts.getOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE).getValueMinScope(minScope),
-        config.getWriterCompressionType()
+        config.getWriterCompressionType(),
+        contextOpts.getString(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE)
       ).toString()
     );
 
     writerOpts.put(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS,
-      MoreObjects.firstNonNull(
+      ObjectUtils.firstNonNull(
         contextOpts.getOption(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS).getValueMinScope(minScope),
-        config.getWriterLogicalTypeForDecimals()
+        config.getWriterLogicalTypeForDecimals(),
+        contextOpts.getString(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS)
       ).toString()
     );
 
     writerOpts.put(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS,
-      MoreObjects.firstNonNull(
+      ObjectUtils.firstNonNull(
         contextOpts.getOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS).getValueMinScope(minScope),
-        config.isWriterUsePrimitivesForDecimals()
+        config.getWriterUsePrimitivesForDecimals(),
+        contextOpts.getBoolean(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS)
       ).toString()
     );
 
     writerOpts.put(ExecConstants.PARQUET_WRITER_FORMAT_VERSION,
-      MoreObjects.firstNonNull(
+      ObjectUtils.firstNonNull(
         contextOpts.getOption(ExecConstants.PARQUET_WRITER_FORMAT_VERSION).getValueMinScope(minScope),
-        config.getWriterFormatVersion()
+        config.getWriterFormatVersion(),
+        contextOpts.getString(ExecConstants.PARQUET_WRITER_FORMAT_VERSION)
       ).toString()
     );
 

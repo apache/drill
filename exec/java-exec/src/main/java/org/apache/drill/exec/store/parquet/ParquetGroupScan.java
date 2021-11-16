@@ -99,7 +99,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
         .withCacheFileRoot(cacheFileRoot)
         .withReaderConfig(readerConfig)
         .withFileSystem(fs)
-        .withCorrectCorruptedDates(this.formatConfig.areCorruptDatesAutoCorrected())
+        .withCorrectCorruptedDates(this.formatConfig.isAutoCorrectCorruptDates())
         .withSchema(schema)
         .build();
 
@@ -146,7 +146,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
         .withSelection(selection)
         .withReaderConfig(readerConfig)
         .withFileSystem(fs)
-        .withCorrectCorruptedDates(formatConfig.areCorruptDatesAutoCorrected())
+        .withCorrectCorruptedDates(formatConfig.isAutoCorrectCorruptDates())
         .build();
 
     this.usedMetadataCache = metadataProvider.isUsedMetadataCache();
