@@ -26,8 +26,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
-import org.apache.drill.exec.store.log.LogFormatField;
-import org.apache.drill.exec.store.log.LogFormatPlugin;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,6 +148,37 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
           .build(logger);
       }
       uniqueNames.add(name);
+    }
+    List<Integer> fieldIndices = this.getFieldIndices();
+    List<Integer> fieldWidths = this.getFieldWidths();
+    int prevIndexAndWidth = -1;
+
+    //assuming that fieldIndices is the same size as fieldWidths, width is required
+    for (int i = 0; i<fieldIndices.size(); i++) {
+      if (fieldIndices.get(i) < 0) {
+        throw UserException
+          .validationError()
+          .message("Invalid index: " + fieldIndices.get(i) + ". Index must be >= 0.")
+          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .build(logger);
+      }
+      /*
+      else if (fieldWidths.get(i) == null || fieldWidths.get(i) < 1) {
+        if (i == fieldIndices.size()-1) {
+          Integer width =
+        }
+        Integer width = fieldIndices.get(i+1) - fieldIndices.get(i);
+        fieldWidths.set(i, width);
+      }
+       */
+        else if (fieldIndices.get(i) <= prevIndexAndWidth) {
+         throw UserException
+           .validationError()
+           .message("Overlapping fields at indices " + fieldIndices.get(i-1) + "and" + fieldIndices.get(i) + ".")
+           .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+           .build(logger);
+       }
+       prevIndexAndWidth = fieldIndices.get(i) + fieldWidths.get(i);
     }
   }
 
