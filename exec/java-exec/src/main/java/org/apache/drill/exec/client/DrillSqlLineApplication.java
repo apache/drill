@@ -23,8 +23,6 @@ import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.jline.reader.impl.completer.StringsCompleter;
-import org.jline.utils.AttributedString;
-import org.jline.utils.AttributedStringBuilder;
 import sqlline.Application;
 import sqlline.CommandHandler;
 import sqlline.ConnectionMetadata;
@@ -179,9 +177,8 @@ public class DrillSqlLineApplication extends Application {
     if (config.hasPath(PROMPT_WITH_SCHEMA) && config.getBoolean(PROMPT_WITH_SCHEMA)) {
       return new PromptHandler(sqlLine) {
         @Override
-        protected AttributedString getDefaultPrompt(int connectionIndex, String url, String defaultPrompt) {
-          AttributedStringBuilder builder = new AttributedStringBuilder();
-          builder.style(resolveStyle("f:y"));
+        protected String getDefaultPrompt(int connectionIndex, String url, String defaultPrompt) {
+          StringBuilder builder = new StringBuilder();
           builder.append("apache drill");
 
           ConnectionMetadata meta = sqlLine.getConnectionMetadata();
@@ -190,7 +187,7 @@ public class DrillSqlLineApplication extends Application {
           if (currentSchema != null) {
             builder.append(" (").append(currentSchema).append(")");
           }
-          return builder.style(resolveStyle("default")).append("> ").toAttributedString();
+          return builder.append("> ").toString();
         }
       };
     }

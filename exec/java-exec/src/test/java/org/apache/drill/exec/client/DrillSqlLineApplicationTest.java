@@ -63,7 +63,7 @@ public class DrillSqlLineApplicationTest extends BaseTest {
 
   @Test
   public void testDrivers() {
-    Collection<String> drivers = application.initDrivers();
+    Collection<String> drivers = application.allowedDrivers();
     assertEquals(1L, drivers.size());
     assertEquals("org.apache.drill.jdbc.Driver", drivers.iterator().next());
   }
