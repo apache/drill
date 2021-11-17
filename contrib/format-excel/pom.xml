@@ -31,7 +31,7 @@
   <name>Drill : Contrib : Format : Excel</name>
 
   <properties>
-    <poi.version>5.0.0</poi.version>
+    <poi.version>5.1.0</poi.version>
   </properties>
   <dependencies>
     <dependency>
@@ -49,6 +49,16 @@
       <artifactId>poi-ooxml</artifactId>
       <version>${poi.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.pjfanning</groupId>
+      <artifactId>excel-streaming-reader</artifactId>
+      <version>3.2.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+      <version>2.14.1</version>
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -63,11 +73,6 @@
       <classifier>tests</classifier>
       <version>${project.version}</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.github.pjfanning</groupId>
-      <artifactId>excel-streaming-reader</artifactId>
-      <version>3.1.6</version>
     </dependency>
   </dependencies>
   <build>
