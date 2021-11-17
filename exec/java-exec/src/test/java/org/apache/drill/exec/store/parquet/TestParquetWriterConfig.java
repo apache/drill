@@ -21,16 +21,10 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
-import org.apache.drill.test.QueryBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.nio.file.Paths;
-
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class TestParquetWriterConfig extends ClusterTest {
 
