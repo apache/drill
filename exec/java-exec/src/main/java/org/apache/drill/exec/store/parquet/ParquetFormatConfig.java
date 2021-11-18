@@ -34,7 +34,20 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("parquet") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ParquetFormatConfig implements FormatPluginConfig {
 
-  @Getter private final boolean autoCorrectCorruptDates;
+  /**
+   * Until DRILL-4203 was resolved, Drill could write non-standard dates into
+   * parquet files. This issue is related to all drill releases where {@link
+   * org.apache.drill.exec.store.parquet.ParquetRecordWriter#WRITER_VERSION_PROPERTY}
+   * < {@link org.apache.drill.exec.store.parquet.ParquetReaderUtility#DRILL_WRITER_VERSION_STD_DATE_FORMAT}.
+
+   * The values have been read correctly by Drill, but external tools like
+   * Spark reading the files will see corrupted values for all dates that
+   * have been written by Drill.  To maintain compatibility with old files,
+   * the parquet reader code has been given the ability to check for the
+   * old format and automatically shift the corrupted values into corrected
+   * ones automatically.
+   */
+ @Getter private final boolean autoCorrectCorruptDates;
 
   /**
    * Parquet statistics for UTF-8 data in files created prior to 1.9.1 parquet
@@ -68,6 +81,8 @@ public class ParquetFormatConfig implements FormatPluginConfig {
   @Getter private final String writerFormatVersion;
 
   public ParquetFormatConfig() {
+    // config opts which are also system opts must default to null so as not
+    // to override system opts.
     this(true, false, null, null, null, null, null, null, null);
   }
 

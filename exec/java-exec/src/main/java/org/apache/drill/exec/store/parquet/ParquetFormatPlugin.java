@@ -232,7 +232,6 @@ public class ParquetFormatPlugin implements FormatPlugin {
 
   public WriterRecordBatch getWriterBatch(FragmentContext context, RecordBatch incoming, ParquetWriter writer)
           throws ExecutionSetupException {
-    // getConfig().get
     try {
       return new WriterRecordBatch(writer, incoming, context, getRecordWriter(context, writer));
     } catch(IOException e) {
