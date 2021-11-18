@@ -151,14 +151,15 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
     }
     List<Integer> fieldIndices = this.getFieldIndices();
     List<Integer> fieldWidths = this.getFieldWidths();
+    List<String> fieldNames = this.getFieldNames();
     int prevIndexAndWidth = -1;
 
     //assuming that fieldIndices is the same size as fieldWidths, width is required
     for (int i = 0; i<fieldIndices.size(); i++) {
-      if (fieldIndices.get(i) < 0) {
+      if (fieldIndices.get(i) < 1) {
         throw UserException
           .validationError()
-          .message("Invalid index: " + fieldIndices.get(i) + ". Index must be >= 0.")
+          .message("Invalid index for field '" + fieldNames.get(i) + "' at index: " + fieldIndices.get(i) + ". Index must be > 0.")
           .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
           .build(logger);
       }
@@ -174,13 +175,12 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
         else if (fieldIndices.get(i) <= prevIndexAndWidth) {
          throw UserException
            .validationError()
-           .message("Overlapping fields at indices " + fieldIndices.get(i-1) + "and" + fieldIndices.get(i) + ".")
+           .message("Overlapping fields: " + fieldNames.get(i-1) + " and " + fieldNames.get(i))
            .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
            .build(logger);
        }
        prevIndexAndWidth = fieldIndices.get(i) + fieldWidths.get(i);
     }
   }
-
 
 }
