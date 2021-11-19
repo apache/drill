@@ -53,6 +53,7 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private SasFileProperties fileProperties;
   private CustomErrorContext errorContext;
   private RowSetLoader rowWriter;
+  private Object[] firstRow;
 
 
   public static class SasReaderConfig {
@@ -93,6 +94,7 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     try {
       fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
       sasFileReader = new SasFileReaderImpl(fsStream);
+      firstRow = sasFileReader.readNext();
     } catch (IOException e) {
       throw UserException
         .dataReadError(e)
@@ -109,7 +111,9 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
       String fieldName = field.getName();
       MinorType type = field.getType().getMinorType();
       if (type == MinorType.FLOAT8) {
-        writerList.add(new NumericSasColumnWriter(colIndex, fieldName, rowWriter));
+        writerList.add(new DoubleSasColumnWriter(colIndex, fieldName, rowWriter));
+      } else if (type == MinorType.BIGINT) {
+        writerList.add(new BigIntSasColumnWriter(colIndex, fieldName, rowWriter));
       } else {
         writerList.add(new StringSasColumnWriter(colIndex, fieldName, rowWriter));
       }
@@ -121,22 +125,25 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     SchemaBuilder builder = new SchemaBuilder();
     List<Column> columns = sasFileReader.getColumns();
 
+    int counter = 0;
     for (Column column : columns) {
       String fieldName = column.getName();
-      MinorType type = getType(column);
+      MinorType type = getType(firstRow[counter].getClass().getSimpleName());
       builder.addNullable(fieldName, type);
+      counter++;
     }
 
     return builder.buildSchema();
   }
 
-  private MinorType getType(Column column) {
-    String typeName = column.getType().getName();
-    switch (typeName) {
-      case "java.lang.String":
+  private MinorType getType(String simpleType) {
+    switch (simpleType) {
+      case "String":
         return MinorType.VARCHAR;
-      case "java.lang.Number":
+      case "Double":
         return MinorType.FLOAT8;
+      case "Long":
+        return MinorType.BIGINT;
     }
     return null;
   }
@@ -164,15 +171,30 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     if (rowWriter.limitReached(maxRecords)) {
       return false;
     }
-
     Object[] row;
     try {
-      row = sasFileReader.readNext();
+      // Process first row
+      if (firstRow != null) {
+        row = firstRow;
+        firstRow = null;
+      } else {
+        row = sasFileReader.readNext();
+      }
+
+      if (row == null) {
+        return false;
+      }
+
+      rowWriter.start();
       for (int i = 0; i < row.length; i++) {
         writerList.get(i).load(row);
       }
+      rowWriter.save();
     } catch (IOException e) {
-      return false;
+      throw UserException.dataReadError()
+        .message("Error reading SAS file: " + e.getMessage())
+        .addContext(errorContext)
+        .build(logger);
     }
     return true;
   }
@@ -203,15 +225,35 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     }
   }
 
-  public static class NumericSasColumnWriter extends SasColumnWriter {
+  public static class BigIntSasColumnWriter extends SasColumnWriter {
 
-    NumericSasColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter) {
+    BigIntSasColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter) {
       super(columnIndex, columnName, rowWriter.scalar(columnName));
     }
 
     @Override
     public void load(Object[] row) {
-      writer.setDouble(((Long) row[columnIndex]).doubleValue());
+      writer.setLong((Long) row[columnIndex]);
+    }
+  }
+
+
+  public static class DoubleSasColumnWriter extends SasColumnWriter {
+
+    DoubleSasColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter) {
+      super(columnIndex, columnName, rowWriter.scalar(columnName));
+    }
+
+    @Override
+    public void load(Object[] row) {
+      // The SAS reader does something strange with zeros. For whatever reason, even if the
+      // field is a floating point number, the value is returned as a long.  This causes class
+      // cast exceptions.
+      if (row[columnIndex].equals(0L)) {
+        writer.setDouble(0.0);
+      } else {
+        writer.setDouble((Double) row[columnIndex]);
+      }
     }
   }
 }
