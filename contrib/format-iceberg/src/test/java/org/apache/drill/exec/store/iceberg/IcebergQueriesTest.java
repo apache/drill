@@ -96,6 +96,10 @@ public class IcebergQueriesTest extends ClusterTest {
     newPluginConfig.setEnabled(pluginConfig.isEnabled());
     pluginRegistry.put(DFS_PLUGIN_NAME, newPluginConfig);
 
+    // defining another plugin with iceberg format to ensure that DRILL-8049 is fixed
+    FileSystemConfig anotherFileSystemConfig = pluginConfig.copyWithFormats(formats);
+    pluginRegistry.put("dfs2", anotherFileSystemConfig);
+
     Configuration config = new Configuration();
     config.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
 

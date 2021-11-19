@@ -46,10 +46,18 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class IcebergFormatPlugin implements FormatPlugin {
 
   private static final String ICEBERG_CONVENTION_PREFIX = "ICEBERG.";
+
+  /**
+   * Generator for format id values. Formats with the same name may be defined
+   * in multiple storage plugins, so using the unique id within the convention name
+   * to ensure the rule names will be unique for different plugin instances.
+   */
+  private static final AtomicInteger NEXT_ID = new AtomicInteger(0);
 
   private final FileSystemConfig storageConfig;
 
@@ -77,7 +85,7 @@ public class IcebergFormatPlugin implements FormatPlugin {
     this.context = context;
     this.name = name;
     this.matcher = new IcebergFormatMatcher(this);
-    this.storagePluginRulesSupplier = storagePluginRulesSupplier(name);
+    this.storagePluginRulesSupplier = storagePluginRulesSupplier(name + NEXT_ID.getAndIncrement());
   }
 
   private static StoragePluginRulesSupplier storagePluginRulesSupplier(String name) {
