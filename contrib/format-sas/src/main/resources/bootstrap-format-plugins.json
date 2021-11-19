@@ -3,7 +3,7 @@
     "dfs": {
       "type": "file",
       "formats": {
-        "spss": {
+        "sas": {
           "type": "sas",
           "extensions": [
             "sas7bdat"
@@ -14,7 +14,7 @@
     "cp": {
       "type": "file",
       "formats": {
-        "spss": {
+        "sas": {
           "type": "sas",
           "extensions": [
             "sas7bdat"
@@ -25,7 +25,7 @@
     "s3": {
       "type": "file",
       "formats": {
-        "spss": {
+        "sas": {
           "type": "sas",
           "extensions": [
             "sas7bdat"

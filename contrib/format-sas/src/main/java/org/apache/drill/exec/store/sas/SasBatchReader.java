@@ -40,7 +40,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchemaNegotiator> {
@@ -114,6 +118,8 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
         writerList.add(new DoubleSasColumnWriter(colIndex, fieldName, rowWriter));
       } else if (type == MinorType.BIGINT) {
         writerList.add(new BigIntSasColumnWriter(colIndex, fieldName, rowWriter));
+      } else if (type == MinorType.DATE) {
+        writerList.add(new DateSasColumnWriter(colIndex, fieldName, rowWriter));
       } else {
         writerList.add(new StringSasColumnWriter(colIndex, fieldName, rowWriter));
       }
@@ -128,8 +134,13 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     int counter = 0;
     for (Column column : columns) {
       String fieldName = column.getName();
-      MinorType type = getType(firstRow[counter].getClass().getSimpleName());
-      builder.addNullable(fieldName, type);
+      try {
+        MinorType type = getType(firstRow[counter].getClass().getSimpleName());
+        builder.addNullable(fieldName, type);
+      } catch (Exception e) {
+        System.out.println("Error with column type: " + firstRow[counter].getClass().getSimpleName());
+        throw e;
+      }
       counter++;
     }
 
@@ -144,8 +155,14 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
         return MinorType.FLOAT8;
       case "Long":
         return MinorType.BIGINT;
+      case "Date":
+        return MinorType.DATE;
+      default:
+        throw UserException.dataReadError()
+          .message("SAS Reader does not support data type: " + simpleType)
+          .addContext(errorContext)
+          .build(logger);
     }
-    return null;
   }
 
   private void addImplicitColumnsToSchema() {
@@ -234,6 +251,25 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     @Override
     public void load(Object[] row) {
       writer.setLong((Long) row[columnIndex]);
+    }
+  }
+
+  public static class DateSasColumnWriter extends SasColumnWriter {
+
+    DateSasColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter) {
+      super(columnIndex, columnName, rowWriter.scalar(columnName));
+    }
+
+    @Override
+    public void load(Object[] row) {
+      LocalDate value = convertDateToLocalDate((Date)row[columnIndex]);
+      writer.setDate(value);
+    }
+
+    private LocalDate convertDateToLocalDate(Date date) {
+      return Instant.ofEpochMilli(date.toInstant().toEpochMilli())
+        .atZone(ZoneOffset.ofHours(0))
+        .toLocalDate();
     }
   }
 

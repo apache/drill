@@ -30,6 +30,8 @@ import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 import static org.junit.Assert.assertEquals;
 
 
@@ -40,12 +42,12 @@ public class TestSasReader extends ClusterTest {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
     // Needed for compressed file unit test
-    //dirTestWatcher.copyResourceToRoot(Paths.get("/"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("sas/"));
   }
 
   @Test
   public void testStarQuery() throws Exception {
-    String sql = "SELECT * FROM cp.`mixed_data_two.sas7bdat` WHERE x1 = 1";
+    String sql = "SELECT * FROM cp.`sas/mixed_data_two.sas7bdat` WHERE x1 = 1";
 
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
@@ -83,10 +85,31 @@ public class TestSasReader extends ClusterTest {
   }
 
   @Test
+  public void testDates() throws Exception {
+    String sql = "SELECT * FROM cp.`sas/date_formats.sas7bdat`";
+
+    QueryBuilder q = client.queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+    results.print();
+
+  }
+
+    @Test
   public void testSerDe() throws Exception {
-    String sql = "SELECT COUNT(*) as cnt FROM cp.`mixed_data_two.sas7bdat` ";
+    String sql = "SELECT COUNT(*) as cnt FROM cp.`sas/mixed_data_two.sas7bdat` ";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
     assertEquals("Counts should match",50L, cnt);
+  }
+
+  @Test
+  public void testLimitPushdown() throws Exception {
+    String sql = "SELECT * FROM cp.`sas/mixed_data_one.sas7bdat` LIMIT 5";
+
+    queryBuilder()
+      .sql(sql)
+      .planMatcher()
+      .include("Limit", "maxRecords=5")
+      .match();
   }
 }
