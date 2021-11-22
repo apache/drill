@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.sas;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -28,13 +29,16 @@ import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
 import java.time.LocalDate;
 
 import static org.junit.Assert.assertEquals;
+import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 
 
+@Category(RowSetTests.class)
 public class TestSasReader extends ClusterTest {
 
   @BeforeClass
@@ -104,6 +108,27 @@ public class TestSasReader extends ClusterTest {
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .addRow(null, "DATA", null, null, "9.0401M4", null, "X64_7PRO", null,
         LocalDate.parse("2017-03-14"), LocalDate.parse("2017-03-14"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testCompressedFile() throws Exception {
+    generateCompressedFile("sas/mixed_data_two.sas7bdat", "zip", "sas/mixed_data_two.sas7bdat.zip" );
+
+    String sql = "SELECT x1, x2, x3 FROM dfs.`sas/mixed_data_two.sas7bdat.zip` WHERE x1 = 1";
+    RowSet results  = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("x1", MinorType.BIGINT)
+      .addNullable("x2", MinorType.FLOAT8)
+      .addNullable("x3", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1L, 1.1, "AAAAAAAA")
+      .addRow(1L, 1.1, "AAAAAAAA")
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
