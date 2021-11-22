@@ -25,16 +25,20 @@ import com.epam.parso.impl.SasFileReaderImpl;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.hadoop.mapred.FileSplit;
+import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,11 +58,57 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private FileSplit split;
   private InputStream fsStream;
   private SasFileReader sasFileReader;
-  private SasFileProperties fileProperties;
   private CustomErrorContext errorContext;
   private RowSetLoader rowWriter;
   private Object[] firstRow;
 
+
+  private String compressionMethod;
+  private String fileLabel;
+  private String fileType;
+  private String osName;
+  private String osType;
+  private String sasRelease;
+  private String sessionEncoding;
+  private String serverType;
+  private LocalDate dateCreated;
+  private LocalDate dateModified;
+
+  private enum IMPLICIT_STRING_COLUMN {
+    COMPRESSION_METHOD("_compression_method"),
+    ENCODING("_encoding"),
+    FILE_LABEL("_file_label"),
+    FILE_TYPE("_file_type"),
+    OS_NAME("_os_name"),
+    OS_TYPE("_os_type"),
+    SAS_RELEASE("_sas_release"),
+    SESSION_ENCODING("_session_encoding");
+
+    private final String fieldName;
+
+    IMPLICIT_STRING_COLUMN(String fieldName) {
+      this.fieldName = fieldName;
+    }
+
+    public String getFieldName() {
+      return fieldName;
+    }
+  }
+
+  private enum IMPLICIT_DATE_COLUMN {
+    CREATED_DATE("_date_created"),
+    MODIFIED_DATE("_date_modified");
+
+    private final String fieldName;
+
+    IMPLICIT_DATE_COLUMN(String fieldName) {
+      this.fieldName = fieldName;
+    }
+
+    public String getFieldName() {
+      return fieldName;
+    }
+  }
 
   public static class SasReaderConfig {
     protected final SasFormatPlugin plugin;
@@ -84,7 +134,7 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     } else {
       schema = buildSchema();
     }
-    // TODO Add Implicit Columns
+    schema = addImplicitColumnsToSchema(schema);
     negotiator.tableSchema(schema, true);
 
     ResultSetLoader loader = negotiator.build();
@@ -109,6 +159,25 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     }
   }
 
+  private TupleMetadata buildSchema() {
+    SchemaBuilder builder = new SchemaBuilder();
+    List<Column> columns = sasFileReader.getColumns();
+    int counter = 0;
+    for (Column column : columns) {
+      String fieldName = column.getName();
+      try {
+        MinorType type = getType(firstRow[counter].getClass().getSimpleName());
+        builder.addNullable(fieldName, type);
+      } catch (Exception e) {
+        System.out.println("Error with column type: " + firstRow[counter].getClass().getSimpleName());
+        throw e;
+      }
+      counter++;
+    }
+
+    return builder.buildSchema();
+  }
+
   private void buildWriterList(TupleMetadata schema) {
     int colIndex = 0;
     for (MaterializedField field : schema.toFieldList()) {
@@ -125,26 +194,6 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
       }
       colIndex++;
     }
-  }
-
-  private TupleMetadata buildSchema() {
-    SchemaBuilder builder = new SchemaBuilder();
-    List<Column> columns = sasFileReader.getColumns();
-
-    int counter = 0;
-    for (Column column : columns) {
-      String fieldName = column.getName();
-      try {
-        MinorType type = getType(firstRow[counter].getClass().getSimpleName());
-        builder.addNullable(fieldName, type);
-      } catch (Exception e) {
-        System.out.println("Error with column type: " + firstRow[counter].getClass().getSimpleName());
-        throw e;
-      }
-      counter++;
-    }
-
-    return builder.buildSchema();
   }
 
   private MinorType getType(String simpleType) {
@@ -165,8 +214,28 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     }
   }
 
-  private void addImplicitColumnsToSchema() {
-    fileProperties = sasFileReader.getSasFileProperties();
+  private TupleMetadata addImplicitColumnsToSchema(TupleMetadata schema) {
+    SchemaBuilder builder = new SchemaBuilder();
+    ColumnMetadata colSchema;
+    builder.addAll(schema);
+    SasFileProperties fileProperties = sasFileReader.getSasFileProperties();
+
+    // Add String Metadata columns
+    for (IMPLICIT_STRING_COLUMN name : IMPLICIT_STRING_COLUMN.values()) {
+      colSchema = MetadataUtils.newScalar(name.getFieldName(), MinorType.VARCHAR, DataMode.OPTIONAL);
+      colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+      builder.add(colSchema);
+    }
+
+    // Add Date Column Names
+    for (IMPLICIT_DATE_COLUMN name : IMPLICIT_DATE_COLUMN.values()) {
+      colSchema = MetadataUtils.newScalar(name.getFieldName(), MinorType.DATE, DataMode.OPTIONAL);
+      colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+      builder.add(colSchema);
+    }
+
+    populateMetadata(fileProperties);
+    return builder.build();
   }
 
   @Override
@@ -206,6 +275,10 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
       for (int i = 0; i < row.length; i++) {
         writerList.get(i).load(row);
       }
+
+      // Write Metadata
+      writeMetadata(row.length);
+
       rowWriter.save();
     } catch (IOException e) {
       throw UserException.dataReadError()
@@ -214,6 +287,39 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
         .build(logger);
     }
     return true;
+  }
+
+  private void populateMetadata(SasFileProperties fileProperties) {
+    compressionMethod = fileProperties.getCompressionMethod();
+    fileLabel = fileProperties.getFileLabel();
+    fileType = fileProperties.getFileType();
+    osName = fileProperties.getOsName();
+    osType = fileProperties.getOsType();
+    sasRelease = fileProperties.getSasRelease();
+    sessionEncoding = fileProperties.getSessionEncoding();
+    serverType = fileProperties.getServerType();
+    dateCreated = convertDateToLocalDate(fileProperties.getDateCreated());
+    dateModified = convertDateToLocalDate(fileProperties.getDateCreated());
+  }
+
+  private void writeMetadata(int startIndex) {
+    ((StringSasColumnWriter)writerList.get(startIndex)).load(compressionMethod);
+    ((StringSasColumnWriter)writerList.get(startIndex+1)).load(fileLabel);
+    ((StringSasColumnWriter)writerList.get(startIndex+2)).load(fileType);
+    ((StringSasColumnWriter)writerList.get(startIndex+3)).load(osName);
+    ((StringSasColumnWriter)writerList.get(startIndex+4)).load(osType);
+    ((StringSasColumnWriter)writerList.get(startIndex+5)).load(sasRelease);
+    ((StringSasColumnWriter)writerList.get(startIndex+6)).load(sessionEncoding);
+    ((StringSasColumnWriter)writerList.get(startIndex+7)).load(serverType);
+
+    ((DateSasColumnWriter)writerList.get(startIndex+8)).load(dateCreated);
+    ((DateSasColumnWriter)writerList.get(startIndex+9)).load(dateModified);
+  }
+
+  private static LocalDate convertDateToLocalDate(Date date) {
+    return Instant.ofEpochMilli(date.toInstant().toEpochMilli())
+      .atZone(ZoneOffset.ofHours(0))
+      .toLocalDate();
   }
 
   public abstract static class SasColumnWriter {
@@ -239,6 +345,12 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     @Override
     public void load(Object[] row) {
       writer.setString((String) row[columnIndex]);
+    }
+
+    public void load (String value) {
+      if (!Strings.isNullOrEmpty(value)) {
+        writer.setString(value);
+      }
     }
   }
 
@@ -266,13 +378,10 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
       writer.setDate(value);
     }
 
-    private LocalDate convertDateToLocalDate(Date date) {
-      return Instant.ofEpochMilli(date.toInstant().toEpochMilli())
-        .atZone(ZoneOffset.ofHours(0))
-        .toLocalDate();
+    public void load(LocalDate date) {
+      writer.setDate(date);
     }
   }
-
 
   public static class DoubleSasColumnWriter extends SasColumnWriter {
 

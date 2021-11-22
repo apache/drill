@@ -25,12 +25,12 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
-import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.time.LocalDate;
 
 import static org.junit.Assert.assertEquals;
 
@@ -48,9 +48,7 @@ public class TestSasReader extends ClusterTest {
   @Test
   public void testStarQuery() throws Exception {
     String sql = "SELECT * FROM cp.`sas/mixed_data_two.sas7bdat` WHERE x1 = 1";
-
-    QueryBuilder q = client.queryBuilder().sql(sql);
-    RowSet results = q.rowSet();
+    RowSet results  = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("x1", MinorType.BIGINT)
@@ -85,16 +83,51 @@ public class TestSasReader extends ClusterTest {
   }
 
   @Test
-  public void testDates() throws Exception {
-    String sql = "SELECT * FROM cp.`sas/date_formats.sas7bdat`";
+  public void testMetadataColumns() throws Exception {
+    String sql = "SELECT _compression_method, _file_label, _file_type, " +
+      "_os_name, _os_type, _sas_release, _session_encoding, _server_type, " +
+      "_date_created, _date_modified FROM cp.`sas/date_formats.sas7bdat`";
+    RowSet results  = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("_compression_method", MinorType.VARCHAR)
+      .addNullable("_file_label", MinorType.VARCHAR)
+      .addNullable("_file_type", MinorType.VARCHAR)
+      .addNullable("_os_name", MinorType.VARCHAR)
+      .addNullable("_os_type", MinorType.VARCHAR)
+      .addNullable("_sas_release", MinorType.VARCHAR)
+      .addNullable("_session_encoding", MinorType.VARCHAR)
+      .addNullable("_server_type", MinorType.VARCHAR)
+      .addNullable("_date_created", MinorType.DATE)
+      .addNullable("_date_modified", MinorType.DATE)
+      .buildSchema();
 
-    QueryBuilder q = client.queryBuilder().sql(sql);
-    RowSet results = q.rowSet();
-    results.print();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(null, "DATA", null, null, "9.0401M4", null, "X64_7PRO", null,
+        LocalDate.parse("2017-03-14"), LocalDate.parse("2017-03-14"))
+      .build();
 
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
-    @Test
+  @Test
+  public void testDates() throws Exception {
+    String sql = "SELECT b8601da, e8601da, `date` FROM cp.`sas/date_formats.sas7bdat`";
+    RowSet results  = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("b8601da", MinorType.DATE)
+      .addNullable("e8601da", MinorType.DATE)
+      .addNullable("date", MinorType.DATE)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(LocalDate.parse("2017-03-14"), LocalDate.parse("2017-03-14"), LocalDate.parse("2017-03-14"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testSerDe() throws Exception {
     String sql = "SELECT COUNT(*) as cnt FROM cp.`sas/mixed_data_two.sas7bdat` ";
     String plan = queryBuilder().sql(sql).explainJson();
