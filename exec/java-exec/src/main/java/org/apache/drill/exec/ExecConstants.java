@@ -380,8 +380,11 @@ public final class ExecConstants {
   public static final String PARQUET_WRITER_FORMAT_VERSION = "store.parquet.writer.format_version";
   public static final OptionValidator PARQUET_WRITER_FORMAT_VERSION_VALIDATOR = new EnumeratedStringValidator(
     PARQUET_WRITER_FORMAT_VERSION,
-    new OptionDescription("Parquet format version used for storing Parquet output.  Allowed values:" + Arrays.toString(ParquetFormatPlugin.PARQUET_VERSIONS)),
-    ParquetFormatPlugin.PARQUET_VERSIONS
+    new OptionDescription(
+      "Parquet format version used for storing Parquet output.  Allowed values:" +
+        Arrays.toString(ParquetFormatPlugin.PARQUET_FORMAT_VERSIONS)
+    ),
+    ParquetFormatPlugin.PARQUET_FORMAT_VERSIONS
   );
 
   // TODO - The below two options don't seem to be used in the Drill code base
