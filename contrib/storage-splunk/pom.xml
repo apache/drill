@@ -43,6 +43,12 @@
       <groupId>com.splunk</groupId>
       <artifactId>splunk</artifactId>
       <version>1.7.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- Test dependencies -->
     <dependency>

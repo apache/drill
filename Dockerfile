@@ -60,13 +60,13 @@ ENV DRILL_HOME=/opt/drill DRILL_USER=drilluser
 
 RUN mkdir $DRILL_HOME
 
-COPY --from=build /opt/drill $DRILL_HOME
-
 RUN groupadd -g 999 $DRILL_USER \
  && useradd -r -u 999 -g $DRILL_USER $DRILL_USER -m -d /var/lib/drill \
  && chown -R $DRILL_USER: $DRILL_HOME
 
 USER $DRILL_USER
+
+COPY --from=build --chown=$DRILL_USER /opt/drill $DRILL_HOME
 
 # Starts Drill in embedded mode and connects to Sqlline
 ENTRYPOINT $DRILL_HOME/bin/drill-embedded

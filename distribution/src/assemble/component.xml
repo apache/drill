@@ -137,6 +137,10 @@
         <exclude>org.apache.drill.contrib.storage-hive</exclude>
         <exclude>org.apache.drill.memory</exclude>
         <exclude>org.apache.drill.metastore</exclude>
+        <exclude>org.projectlombok:lombok</exclude>
+        <exclude>org.junit.jupiter:*:jar</exclude>
+        <exclude>org.junit.platform:*:jar</exclude>
+        <exclude>org.junit.vintage:*:jar</exclude>
         <!-- Below Hive jars are already included in drill-hive-exec-shaded.jar -->
         <exclude>junit:junit:jar</exclude>
         <!-- exclude or sqlline has problems -->
