@@ -414,20 +414,22 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
       int minutes = secondsLeft / 60;
       int seconds = secondsLeft - minutes * 60;
 
-      String formattedTime = "";
-      if (hours < 10)
-        formattedTime += "0";
-      formattedTime += hours + ":";
+      StringBuilder formattedTime = new StringBuilder();
+      if (hours < 10) {
+        formattedTime.append("0");
+      }
+      formattedTime.append(hours).append(":");
 
-      if (minutes < 10)
-        formattedTime += "0";
-      formattedTime += minutes + ":";
+      if (minutes < 10) {
+        formattedTime.append("0");
+      }
+      formattedTime.append(minutes).append(":");
 
-      if (seconds < 10)
-        formattedTime += "0";
-      formattedTime += seconds ;
-
-      return formattedTime;
+      if (seconds < 10) {
+        formattedTime.append("0");
+      }
+      formattedTime.append(seconds);
+      return formattedTime.toString();
     }
   }
 
