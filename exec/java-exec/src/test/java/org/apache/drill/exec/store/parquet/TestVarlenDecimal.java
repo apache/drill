@@ -38,6 +38,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
@@ -112,7 +113,9 @@ public class TestVarlenDecimal extends ClusterTest {
               "select cast('%s' as decimal(36, 9)) dec36", tableName, bigDecimalValue);
 
       String json = FileUtils.readFileToString(
-          Paths.get(dirTestWatcher.getDfsTestTmpDir().getPath(), tableName, "0_0_0.json").toFile());
+        Paths.get(dirTestWatcher.getDfsTestTmpDir().getPath(), tableName, "0_0_0.json").toFile(),
+        Charset.defaultCharset()
+      );
 
       Assert.assertThat(json, CoreMatchers.containsString(bigDecimalValue));
 
@@ -142,7 +145,9 @@ public class TestVarlenDecimal extends ClusterTest {
               "select cast('%s' as decimal(36, 9)) dec36", tableName, bigDecimalValue);
 
       String csv = FileUtils.readFileToString(
-          Paths.get(dirTestWatcher.getDfsTestTmpDir().getPath(), tableName, "0_0_0.csvh").toFile());
+        Paths.get(dirTestWatcher.getDfsTestTmpDir().getPath(), tableName, "0_0_0.csvh").toFile(),
+        Charset.defaultCharset()
+      );
 
       Assert.assertThat(csv, CoreMatchers.containsString(bigDecimalValue));
 

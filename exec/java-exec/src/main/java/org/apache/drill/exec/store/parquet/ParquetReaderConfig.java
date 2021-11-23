@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.ParquetReadOptions;
 
@@ -175,8 +176,8 @@ public class ParquetReaderConfig {
 
       // first assign configuration values from format config
       if (formatConfig != null) {
-        readerConfig.autoCorrectCorruptedDates = formatConfig.areCorruptDatesAutoCorrected();
-        readerConfig.enableStringsSignedMinMax = formatConfig.isStringsSignedMinMaxEnabled();
+        readerConfig.autoCorrectCorruptedDates = formatConfig.isAutoCorrectCorruptDates();
+        readerConfig.enableStringsSignedMinMax = formatConfig.isEnableStringsSignedMinMax();
       }
 
       // then assign configuration values from Hadoop configuration
@@ -186,11 +187,13 @@ public class ParquetReaderConfig {
         readerConfig.enableTimeReadCounter = conf.getBoolean(ENABLE_TIME_READ_COUNTER, readerConfig.enableTimeReadCounter);
       }
 
-      // last assign values from session options, session options have higher priority than other configurations
+      // last assign values from session or query scoped options which have higher priority than other configurations
       if (options != null) {
-        String option = options.getOption(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX_VALIDATOR);
-        if (!option.isEmpty()) {
-          readerConfig.enableStringsSignedMinMax = Boolean.valueOf(option);
+        String optVal  = (String) options.getOption(
+          ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX
+        ).getValueMinScope(OptionValue.OptionScope.SESSION);
+        if (optVal != null && !optVal.isEmpty()) {
+          readerConfig.enableStringsSignedMinMax = Boolean.valueOf(optVal);
         }
       }
 

@@ -21,14 +21,18 @@ import org.apache.calcite.util.Pair;
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.TestBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -37,9 +41,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.schema.OriginalType;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
 import org.joda.time.Period;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -74,11 +79,11 @@ import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.BINARY;
 import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
 import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT32;
 import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT64;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @RunWith(Parameterized.class)
 @Category({SlowTest.class, ParquetTest.class})
-public class TestParquetWriter extends BaseTestQuery {
+public class TestParquetWriter extends ClusterTest {
   @Parameterized.Parameters
   public static Collection<Object[]> data() {
     return Arrays.asList(new Object[][] { {100} });
@@ -88,8 +93,6 @@ public class TestParquetWriter extends BaseTestQuery {
   public static void setupTestFiles() {
     dirTestWatcher.copyResourceToRoot(Paths.get("parquet", "int96_dict_change"));
   }
-
-  private static FileSystem fs;
 
   // Map storing a convenient name as well as the cast type necessary
   // to produce it casting from a varchar
@@ -137,14 +140,14 @@ public class TestParquetWriter extends BaseTestQuery {
   public int repeat = 1;
 
   @BeforeClass
-  public static void initFs() throws Exception {
-    fs = getLocalFileSystem();
-    alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+  public static void setUp() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+    client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
   }
 
   @AfterClass
   public static void disableDecimalDataType() {
-    resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
   }
 
   @Test
@@ -187,8 +190,7 @@ public class TestParquetWriter extends BaseTestQuery {
     new TestConstantFolding.SmallFileCreator(pathDir)
       .setRecord(sb.toString()).createFiles(1, 1, "json");
 
-    test("use dfs.tmp");
-    test("create table WIDE_PARQUET_TABLE_TestParquetWriter_testLargeFooter as select * from dfs.`%s/smallfile/smallfile.json`", path);
+    run("create table dfs.tmp.WIDE_PARQUET_TABLE_TestParquetWriter_testLargeFooter as select * from dfs.`%s/smallfile/smallfile.json`", path);
     testBuilder()
         .sqlQuery("select * from dfs.tmp.WIDE_PARQUET_TABLE_TestParquetWriter_testLargeFooter")
         .unOrdered()
@@ -204,26 +206,26 @@ public class TestParquetWriter extends BaseTestQuery {
 
     try {
       // read all of the types with the complex reader
-      alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
+      client.alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
       runTestAndValidate(allTypesSelection, "*", allTypesTable, "donuts_json");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_NEW_RECORD_READER);
+      client.resetSession(ExecConstants.PARQUET_NEW_RECORD_READER);
     }
   }
 
   @Test
   public void testAllScalarTypesDictionary() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, true);
+      client.alterSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, true);
       /// read once with the flat reader
       runTestAndValidate(allTypesSelection, "*", allTypesTable, "donuts_json");
 
       // read all of the types with the complex reader
-      alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
+      client.alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
       runTestAndValidate(allTypesSelection, "*", allTypesTable, "donuts_json");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_NEW_RECORD_READER);
-      resetSessionOption(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING);
+      client.resetSession(ExecConstants.PARQUET_NEW_RECORD_READER);
+      client.resetSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING);
     }
   }
 
@@ -238,10 +240,10 @@ public class TestParquetWriter extends BaseTestQuery {
     String selection = "type";
     String inputTable = "cp.`donuts.json`";
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, true);
+      client.alterSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, true);
       runTestAndValidate(selection, selection, inputTable, "donuts_json");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING);
+      client.resetSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING);
     }
   }
 
@@ -279,7 +281,7 @@ public class TestParquetWriter extends BaseTestQuery {
   @Test
   public void testTPCHReadWrite1_date_convertedType() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, false);
+      client.alterSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, false);
       String selection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
         "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE, cast(L_COMMITDATE as DATE) as L_COMMITDATE, cast(L_RECEIPTDATE as DATE) AS L_RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
       String validationSelection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
@@ -287,7 +289,7 @@ public class TestParquetWriter extends BaseTestQuery {
       String inputTable = "cp.`tpch/lineitem.parquet`";
       runTestAndValidate(selection, validationSelection, inputTable, "lineitem_parquet_converted");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING);
+      client.resetSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING);
     }
   }
 
@@ -336,24 +338,24 @@ public class TestParquetWriter extends BaseTestQuery {
   @Test
   public void testTPCHReadWriteNoDictUncompressed() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, false);
-      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "none");
+      client.alterSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING, false);
+      client.alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "none");
       String inputTable = "cp.`tpch/supplier.parquet`";
       runTestAndValidate("*", "*", inputTable, "supplier_parquet_no_dict_uncompressed");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING);
-      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      client.resetSession(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING);
+      client.resetSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
     }
   }
 
   @Test
   public void testTPCHReadWriteDictGzip() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "gzip");
+      client.alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "gzip");
       String inputTable = "cp.`tpch/supplier.parquet`";
       runTestAndValidate("*", "*", inputTable, "supplier_parquet_dict_gzip");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      client.resetSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
     }
   }
 
@@ -409,24 +411,24 @@ public class TestParquetWriter extends BaseTestQuery {
     // the old and new readers.
 
     try {
-      alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
+      client.alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
       runTestAndValidate(selection, validateSelection, inputTable, "parquet_decimal");
-      alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, false);
+      client.alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, false);
       runTestAndValidate(selection, validateSelection, inputTable, "parquet_decimal");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_NEW_RECORD_READER);
+      client.resetSession(ExecConstants.PARQUET_NEW_RECORD_READER);
     }
   }
 
   @Test
   public void testMulipleRowGroups() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_BLOCK_SIZE, 1024*1024);
+      client.alterSession(ExecConstants.PARQUET_BLOCK_SIZE, 1024*1024);
       String selection = "mi";
       String inputTable = "cp.`customer.json`";
       runTestAndValidate(selection, selection, inputTable, "foodmart_customer_parquet");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_BLOCK_SIZE);
+      client.resetSession(ExecConstants.PARQUET_BLOCK_SIZE);
     }
   }
 
@@ -462,15 +464,15 @@ public class TestParquetWriter extends BaseTestQuery {
     String queryFromWriteOut = "select * from " + outputFile;
 
     try {
-      test("use dfs.tmp");
-      test(ctasStmt);
+      run("use dfs.tmp");
+      run(ctasStmt);
       testBuilder()
           .ordered()
           .sqlQuery(queryFromWriteOut)
           .sqlBaselineQuery(query)
           .build().run();
     } finally {
-      deleteTableIfExists(outputFile);
+      run("drop table if exists dfs.tmp.%s", outputFile);
     }
   }
 
@@ -486,7 +488,7 @@ public class TestParquetWriter extends BaseTestQuery {
         .optionSettingQueriesForBaseline("alter system set `store.parquet.use_new_reader` = true")
         .build().run();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_NEW_RECORD_READER);
+      client.resetSession(ExecConstants.PARQUET_NEW_RECORD_READER);
     }
   }
 
@@ -505,7 +507,7 @@ public class TestParquetWriter extends BaseTestQuery {
             "alter system set `store.parquet.use_new_reader` = true")
         .build().run();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_NEW_RECORD_READER);
+      client.resetSession(ExecConstants.PARQUET_NEW_RECORD_READER);
     }
   }
 
@@ -595,8 +597,7 @@ public class TestParquetWriter extends BaseTestQuery {
     String outputTable = "decimal_test";
 
     try {
-      test("use dfs.tmp; " +
-        "create table %s as select " +
+      run("create table dfs.tmp.%s as select " +
         "cast('1.2' as decimal(38, 2)) col1, cast('1.2' as decimal(28, 2)) col2 " +
         "from cp.`employee.json` limit 1", outputTable);
 
@@ -604,12 +605,12 @@ public class TestParquetWriter extends BaseTestQuery {
 
       testBuilder()
           .unOrdered()
-          .sqlQuery("select col1, col2 from %s ", outputTable)
+          .sqlQuery("select col1, col2 from dfs.tmp.%s ", outputTable)
           .baselineColumns("col1", "col2")
           .baselineValues(result, result)
           .go();
     } finally {
-      deleteTableIfExists(outputTable);
+      run("drop table if exists dfs.tmp.%s", outputTable);
     }
   }
 
@@ -619,7 +620,7 @@ public class TestParquetWriter extends BaseTestQuery {
     final String newTblName = "testTableOutputSchema";
 
     try {
-      test("CREATE TABLE dfs.tmp.%s(id, name, bday) AS SELECT " +
+      run("CREATE TABLE dfs.tmp.%s(id, name, bday) AS SELECT " +
         "cast(`employee_id` as integer), " +
         "cast(`full_name` as varchar(100)), " +
         "cast(`birth_date` as date) " +
@@ -632,7 +633,7 @@ public class TestParquetWriter extends BaseTestQuery {
           .baselineValues(1, "Sheri Nowmer", LocalDate.parse("1961-08-26"))
           .go();
     } finally {
-      deleteTableIfExists(newTblName);
+      run("drop table if exists dfs.tmp.%s", newTblName);
     }
   }
 
@@ -642,11 +643,11 @@ public class TestParquetWriter extends BaseTestQuery {
  */
   @Test
   public void testCTASWithIntervalTypes() throws Exception { // TODO: investigate NPE errors during the test execution
-    test("use dfs.tmp");
+    run("use dfs.tmp");
 
     String tableName = "drill_1980_t1";
     // test required interval day type
-    test("create table %s as " +
+    run("create table %s as " +
         "select " +
         "interval '10 20:30:40.123' day to second col1, " +
         "interval '-1000000000 20:12:23.999' day(10) to second col2 " +
@@ -659,7 +660,7 @@ public class TestParquetWriter extends BaseTestQuery {
     tableName = "drill_1980_2";
 
     // test required interval year type
-    test("create table %s as " +
+    run("create table %s as " +
         "select " +
         "interval '10-2' year to month col1, " +
         "interval '-100-8' year(3) to month col2 " +
@@ -671,7 +672,7 @@ public class TestParquetWriter extends BaseTestQuery {
     testParquetReaderHelper(tableName, row1Col1, row1Col2, row1Col1, row1Col2);
     // test nullable interval year type
     tableName = "drill_1980_t3";
-    test("create table %s as " +
+    run("create table %s as " +
         "select " +
         "cast (intervalyear_col as interval year) col1," +
         "cast(intervalyear_col as interval year) + interval '2' year col2 " +
@@ -686,7 +687,7 @@ public class TestParquetWriter extends BaseTestQuery {
 
     // test nullable interval day type
     tableName = "drill_1980_t4";
-    test("create table %s as " +
+    run("create table %s as " +
         "select " +
         "cast(intervalday_col as interval day) col1, " +
         "cast(intervalday_col as interval day) + interval '1' day col2 " +
@@ -727,25 +728,14 @@ public class TestParquetWriter extends BaseTestQuery {
         .go();
   }
 
-  private static void deleteTableIfExists(String tableName) {
-    try {
-      Path path = new Path(dirTestWatcher.getDfsTestTmpDir().getAbsolutePath(), tableName);
-      if (fs.exists(path)) {
-        fs.delete(path, true);
-      }
-    } catch (Exception e) {
-      // ignore exceptions.
-    }
-  }
-
   public void runTestAndValidate(String selection, String validationSelection, String inputTable, String outputFile) throws Exception {
     try {
-      deleteTableIfExists(outputFile);
+      run("drop table if exists dfs.tmp.%s", outputFile);
 
       final String query = String.format("SELECT %s FROM %s", selection, inputTable);
 
-      test("use dfs.tmp");
-      test("CREATE TABLE %s AS %s", outputFile, query);
+      run("use dfs.tmp");
+      run("CREATE TABLE %s AS %s", outputFile, query);
       testBuilder()
           .unOrdered()
           .sqlQuery(query)
@@ -763,7 +753,7 @@ public class TestParquetWriter extends BaseTestQuery {
         assertEquals(DrillVersionInfo.getVersion(), version);
       }
     } finally {
-      deleteTableIfExists(outputFile);
+      run("drop table if exists dfs.tmp.%s", outputFile);
     }
   }
 
@@ -776,10 +766,10 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testImpalaParquetInt96() throws Exception {
     compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
     try {
-      alterSession(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP, true);
+      client.alterSession(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP, true);
       compareParquetReadersColumnar("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+      client.resetSession(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
     }
   }
 
@@ -806,7 +796,7 @@ public class TestParquetWriter extends BaseTestQuery {
           .baselineValues(convertToLocalDateTime("1970-01-01 00:00:01.000"))
           .build().run();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+      client.resetSession(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
     }
   }
 
@@ -822,7 +812,7 @@ public class TestParquetWriter extends BaseTestQuery {
           .baselineValues(convertToLocalDateTime("2017-12-06 16:38:43.988"))
           .build().run();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+      client.resetSession(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
     }
   }
 
@@ -841,12 +831,12 @@ public class TestParquetWriter extends BaseTestQuery {
   @Test
   public void testImpalaParquetTimestampInt96AsTimeStamp() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, false);
+      client.alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, false);
       compareParquetInt96Converters("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
-      alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
+      client.alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
       compareParquetInt96Converters("field_impala_ts", "cp.`parquet/int96_impala_1.parquet`");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_NEW_RECORD_READER);
+      client.resetSession(ExecConstants.PARQUET_NEW_RECORD_READER);
     }
   }
 
@@ -897,7 +887,7 @@ public class TestParquetWriter extends BaseTestQuery {
     try (FileWriter fw = new FileWriter(input2)) {
       fw.append("{\"b\":\"foo\"}\n");
     }
-    test("select * from " + "dfs.`" + dir.getAbsolutePath() + "`");
+    run("select * from " + "dfs.`" + dir.getAbsolutePath() + "`");
     runTestAndValidate("*", "*", "dfs.`" + dir.getAbsolutePath() + "`", "schema_change_parquet");
   }
 
@@ -959,7 +949,18 @@ public class TestParquetWriter extends BaseTestQuery {
           .build()
           .run();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+      client.resetSession(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+    }
+  }
+
+  @Test
+  public void testTPCHReadWriteFormatV2() throws Exception {
+    try {
+      client.alterSession(ExecConstants.PARQUET_WRITER_FORMAT_VERSION, "v2");
+      String inputTable = "cp.`tpch/supplier.parquet`";
+      runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_v2");
+    } finally {
+      client.resetSession(ExecConstants.PARQUET_WRITER_FORMAT_VERSION);
     }
   }
 
@@ -979,22 +980,22 @@ public class TestParquetWriter extends BaseTestQuery {
   @Test
   public void testTPCHReadWriteSnappy() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "snappy");
+      client.alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "snappy");
       String inputTable = "cp.`tpch/supplier.parquet`";
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_snappy");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      client.resetSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
     }
   }
 
   @Test
   public void testTPCHReadWriteGzip() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "gzip");
+      client.alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "gzip");
       String inputTable = "cp.`supplier_gzip.parquet`";
         runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_gzip");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      client.resetSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
     }
   }
 
@@ -1006,56 +1007,56 @@ public class TestParquetWriter extends BaseTestQuery {
   @EnabledIfSystemProperty(named = "os.arch", matches = "x86_64") // reported for OS X on AMD64
   public void testTPCHReadWriteBrotli() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "brotli");
+      client.alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "brotli");
       // exercise the new Parquet record reader with this parquet-mr-backed codec
-      alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
+      client.alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
       String inputTable = "cp.`supplier_brotli.parquet`";
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_brotli");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
-      resetSessionOption(ExecConstants.PARQUET_NEW_RECORD_READER);
+      client.resetSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      client.resetSession(ExecConstants.PARQUET_NEW_RECORD_READER);
     }
   }
 
   @Test
   public void testTPCHReadWriteLz4() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "lz4");
+      client.alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "lz4");
       // exercise the async Parquet column reader with this aircompressor-backed codec
-      alterSession(ExecConstants.PARQUET_COLUMNREADER_ASYNC, true);
+      client.alterSession(ExecConstants.PARQUET_COLUMNREADER_ASYNC, true);
       String inputTable = "cp.`supplier_lz4.parquet`";
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_lz4");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
-      resetSessionOption(ExecConstants.PARQUET_COLUMNREADER_ASYNC);
+      client.resetSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      client.resetSession(ExecConstants.PARQUET_COLUMNREADER_ASYNC);
     }
   }
 
   @Test
   public void testTPCHReadWriteLzo() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "lzo");
+      client.alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "lzo");
       // exercise the async Parquet page reader with this aircompressor-backed codec
-      alterSession(ExecConstants.PARQUET_PAGEREADER_ASYNC, true);
+      client.alterSession(ExecConstants.PARQUET_PAGEREADER_ASYNC, true);
       String inputTable = "cp.`supplier_lzo.parquet`";
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_lzo");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
-      resetSessionOption(ExecConstants.PARQUET_PAGEREADER_ASYNC);
+      client.resetSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      client.resetSession(ExecConstants.PARQUET_PAGEREADER_ASYNC);
     }
   }
 
   @Test
   public void testTPCHReadWriteZstd() throws Exception {
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "zstd");
+      client.alterSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE, "zstd");
       // exercise the new Parquet record reader with this aircompressor-backed codec
-      alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
+      client.alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, true);
       String inputTable = "cp.`supplier_zstd.parquet`";
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_zstd");
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
-      resetSessionOption(ExecConstants.PARQUET_NEW_RECORD_READER);
+      client.resetSession(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE);
+      client.resetSession(ExecConstants.PARQUET_NEW_RECORD_READER);
     }
   }
 
@@ -1077,7 +1078,7 @@ public class TestParquetWriter extends BaseTestQuery {
           .build()
           .run();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
+      client.resetSession(ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP);
     }
   }
 
@@ -1085,8 +1086,8 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testWriteDecimalIntBigIntFixedLen() throws Exception {
     String tableName = "decimalIntBigIntFixedLen";
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, FIXED_LEN_BYTE_ARRAY.name());
-      test(
+      client.alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, FIXED_LEN_BYTE_ARRAY.name());
+      run(
           "create table dfs.tmp.%s as\n" +
               "select cast('123456.789' as decimal(9, 3)) as decInt,\n" +
                      "cast('123456.789123456789' as decimal(18, 12)) as decBigInt,\n" +
@@ -1106,9 +1107,9 @@ public class TestParquetWriter extends BaseTestQuery {
               new BigDecimal("123456.789123456789"))
           .go();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
-      resetSessionOption(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
-      test("drop table if exists dfs.tmp.%s", tableName);
+      client.resetSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
+      client.resetSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
+      run("drop table if exists dfs.tmp.%s", tableName);
     }
   }
 
@@ -1116,9 +1117,9 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testWriteDecimalIntBigIntBinary() throws Exception {
     String tableName = "decimalIntBigIntBinary";
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, true);
-      alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, BINARY.name());
-      test(
+      client.alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, true);
+      client.alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, BINARY.name());
+      run(
           "create table dfs.tmp.%s as\n" +
               "select cast('123456.789' as decimal(9, 3)) as decInt,\n" +
                      "cast('123456.789123456789' as decimal(18, 12)) as decBigInt,\n" +
@@ -1138,9 +1139,9 @@ public class TestParquetWriter extends BaseTestQuery {
             new BigDecimal("123456.789123456789"))
           .go();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
-      resetSessionOption(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
-      test("drop table if exists dfs.tmp.%s", tableName);
+      client.resetSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
+      client.resetSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
+      run("drop table if exists dfs.tmp.%s", tableName);
     }
   }
 
@@ -1148,9 +1149,9 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testWriteDecimalFixedLenOnly() throws Exception {
     String tableName = "decimalFixedLenOnly";
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, false);
-      alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, FIXED_LEN_BYTE_ARRAY.name());
-      test(
+      client.alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, false);
+      client.alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, FIXED_LEN_BYTE_ARRAY.name());
+      run(
           "create table dfs.tmp.%s as\n" +
               "select cast('123456.789' as decimal(9, 3)) as decInt,\n" +
                      "cast('123456.789123456789' as decimal(18, 12)) as decBigInt,\n" +
@@ -1170,9 +1171,9 @@ public class TestParquetWriter extends BaseTestQuery {
             new BigDecimal("123456.789123456789"))
           .go();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
-      resetSessionOption(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
-      test("drop table if exists dfs.tmp.%s", tableName);
+      client.resetSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
+      client.resetSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
+      run("drop table if exists dfs.tmp.%s", tableName);
     }
   }
 
@@ -1180,9 +1181,9 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testWriteDecimalBinaryOnly() throws Exception {
     String tableName = "decimalBinaryOnly";
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, false);
-      alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, BINARY.name());
-      test(
+      client.alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, false);
+      client.alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, BINARY.name());
+      run(
         "create table dfs.tmp.%s as\n" +
             "select cast('123456.789' as decimal(9, 3)) as decInt,\n" +
                    "cast('123456.789123456789' as decimal(18, 12)) as decBigInt,\n" +
@@ -1202,9 +1203,9 @@ public class TestParquetWriter extends BaseTestQuery {
             new BigDecimal("123456.789123456789"))
           .go();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
-      resetSessionOption(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
-      test("drop table if exists dfs.tmp.%s", tableName);
+      client.resetSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
+      client.resetSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
+      run("drop table if exists dfs.tmp.%s", tableName);
     }
   }
 
@@ -1228,9 +1229,9 @@ public class TestParquetWriter extends BaseTestQuery {
     fixedLen.add(new BigDecimal("0.000000"));
 
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, true);
-      alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, FIXED_LEN_BYTE_ARRAY.name());
-      test(
+      client.alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, true);
+      client.alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, FIXED_LEN_BYTE_ARRAY.name());
+      run(
         "create table dfs.tmp.%s as\n" +
             "select * from cp.`parquet/repeatedIntLondFixedLenBinaryDecimal.parquet`", tableName);
       checkTableTypes(tableName,
@@ -1247,9 +1248,9 @@ public class TestParquetWriter extends BaseTestQuery {
           .baselineValues(ints, longs, fixedLen, fixedLen)
           .go();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
-      resetSessionOption(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
-      test("drop table if exists dfs.tmp.%s", tableName);
+      client.resetSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
+      client.resetSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
+      run("drop table if exists dfs.tmp.%s", tableName);
     }
   }
 
@@ -1273,9 +1274,9 @@ public class TestParquetWriter extends BaseTestQuery {
     fixedLen.add(new BigDecimal("0.000000"));
 
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, false);
-      alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, FIXED_LEN_BYTE_ARRAY.name());
-      test(
+      client.alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, false);
+      client.alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, FIXED_LEN_BYTE_ARRAY.name());
+      run(
           "create table dfs.tmp.%s as\n" +
               "select * from cp.`parquet/repeatedIntLondFixedLenBinaryDecimal.parquet`", tableName);
       checkTableTypes(tableName,
@@ -1292,9 +1293,9 @@ public class TestParquetWriter extends BaseTestQuery {
           .baselineValues(ints, longs, fixedLen, fixedLen)
           .go();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
-      resetSessionOption(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
-      test("drop table if exists dfs.tmp.%s", tableName);
+      client.resetSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
+      client.resetSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
+      run("drop table if exists dfs.tmp.%s", tableName);
     }
   }
 
@@ -1317,9 +1318,9 @@ public class TestParquetWriter extends BaseTestQuery {
     fixedLen.add(new BigDecimal("-999999999999.999999"));
     fixedLen.add(new BigDecimal("0.000000"));
     try {
-      alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, false);
-      alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, BINARY.name());
-      test(
+      client.alterSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS, false);
+      client.alterSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS, BINARY.name());
+      run(
         "create table dfs.tmp.%s as\n" +
             "select * from cp.`parquet/repeatedIntLondFixedLenBinaryDecimal.parquet`", tableName);
       checkTableTypes(tableName,
@@ -1336,9 +1337,9 @@ public class TestParquetWriter extends BaseTestQuery {
           .baselineValues(ints, longs, fixedLen, fixedLen)
           .go();
     } finally {
-      resetSessionOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
-      resetSessionOption(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
-      test("drop table if exists dfs.tmp.%s", tableName);
+      client.resetSession(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS);
+      client.resetSession(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS);
+      run("drop table if exists dfs.tmp.%s", tableName);
     }
   }
 
@@ -1346,7 +1347,7 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testCtasForList() throws Exception {
     String tableName = "testCtasForList";
     try {
-      test("CREATE TABLE `%s`.`%s` AS SELECT l FROM cp.`jsoninput/input2.json`", DFS_TMP_SCHEMA, tableName);
+      run("CREATE TABLE `%s`.`%s` AS SELECT l FROM cp.`jsoninput/input2.json`", DFS_TMP_SCHEMA, tableName);
       testBuilder()
           .sqlQuery("SELECT * FROM `%s`.`/%s` LIMIT 1", DFS_TMP_SCHEMA, tableName)
           .unOrdered()
@@ -1354,7 +1355,7 @@ public class TestParquetWriter extends BaseTestQuery {
           .baselineValues(asList(4L, 2L))
           .go();
     } finally {
-      test("DROP TABLE IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, tableName);
+      run("DROP TABLE IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, tableName);
     }
   }
 
@@ -1362,7 +1363,7 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testCtasForRepeatedList() throws Exception {
     String tableName = "testCtasForRepeatedList";
     try {
-      test("CREATE TABLE `%s`.`%s` AS SELECT * FROM cp.`jsoninput/repeated_list_bug.json`", DFS_TMP_SCHEMA, tableName);
+      run("CREATE TABLE `%s`.`%s` AS SELECT * FROM cp.`jsoninput/repeated_list_bug.json`", DFS_TMP_SCHEMA, tableName);
       testBuilder()
           .sqlQuery("SELECT rl FROM `%s`.`/%s`", DFS_TMP_SCHEMA, tableName)
           .unOrdered()
@@ -1371,7 +1372,7 @@ public class TestParquetWriter extends BaseTestQuery {
           .baselineValues(asList(asList(9L, 7L), asList(4L, 8L)))
           .go();
     } finally {
-      test("DROP TABLE IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, tableName);
+      run("DROP TABLE IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, tableName);
     }
   }
 
@@ -1379,7 +1380,7 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testCtasForRepeatedListOfMaps() throws Exception {
     String tableName = "testCtasForRepeatedListOfMaps";
     try {
-      test("CREATE TABLE `%s`.`%s` AS SELECT * FROM cp.`jsoninput/repeated_list_of_maps.json`", DFS_TMP_SCHEMA, tableName);
+      run("CREATE TABLE `%s`.`%s` AS SELECT * FROM cp.`jsoninput/repeated_list_of_maps.json`", DFS_TMP_SCHEMA, tableName);
       testBuilder()
           .sqlQuery("SELECT * FROM `%s`.`/%s`", DFS_TMP_SCHEMA, tableName)
           .unOrdered()
@@ -1394,7 +1395,7 @@ public class TestParquetWriter extends BaseTestQuery {
           ))
           .go();
     } finally {
-      test("DROP TABLE IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, tableName);
+      run("DROP TABLE IF EXISTS `%s`.`%s`", DFS_TMP_SCHEMA, tableName);
     }
   }
 
@@ -1402,8 +1403,8 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testCTASWithDictInSelect() throws Exception {
     String tableName = "table_with_dict";
     try {
-      test("use dfs.tmp");
-      test("create table %s as select id, mapcol from cp.`store/parquet/complex/map/parquet/000000_0.parquet`", tableName);
+      run("use dfs.tmp");
+      run("create table %s as select id, mapcol from cp.`store/parquet/complex/map/parquet/000000_0.parquet`", tableName);
       testBuilder()
           .sqlQuery("select * from %s", tableName)
           .unOrdered()
@@ -1415,7 +1416,7 @@ public class TestParquetWriter extends BaseTestQuery {
           .baselineValues(2, TestBuilder.mapOfObject("a", 1, "b", 2, "c", 3))
           .go();
     } finally {
-      test("DROP TABLE IF EXISTS %s", tableName);
+      run("DROP TABLE IF EXISTS %s", tableName);
     }
   }
 
@@ -1423,8 +1424,8 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testCTASWithRepeatedDictInSelect() throws Exception {
     String tableName = "table_with_dict_array";
     try {
-      test("use dfs.tmp");
-      test("create table %s as select id, map_array from cp.`store/parquet/complex/map/parquet/000000_0.parquet`", tableName);
+      run("use dfs.tmp");
+      run("create table %s as select id, map_array from cp.`store/parquet/complex/map/parquet/000000_0.parquet`", tableName);
       testBuilder()
           .sqlQuery("select * from %s", tableName)
           .unOrdered()
@@ -1471,7 +1472,44 @@ public class TestParquetWriter extends BaseTestQuery {
           )
           .go();
     } finally {
-      test("DROP TABLE IF EXISTS %s", tableName);
+      run("DROP TABLE IF EXISTS %s", tableName);
+    }
+  }
+
+  @Test
+  public void testFormatConfigOpts() throws Exception {
+    FileSystemConfig pluginConfig = (FileSystemConfig) cluster.storageRegistry().copyConfig("dfs");
+    FormatPluginConfig backupConfig = pluginConfig.getFormats().get("parquet");
+
+    cluster.defineFormat("dfs", "parquet", new ParquetFormatConfig(
+        false,
+        true,
+        123,
+        456,
+        true,
+        "snappy",
+        "binary",
+        true,
+        "v2"
+      )
+    );
+
+    try {
+      String query = "select * from dfs.`parquet/int96_dict_change`";
+      queryBuilder()
+        .sql(query)
+        .jsonPlanMatcher()
+        .include("\"autoCorrectCorruptDates\" : false")
+        .include("\"enableStringsSignedMinMax\" : true")
+        .include("\"blockSize\" : 123")
+        .include("\"pageSize\" : 456")
+        .include("\"useSingleFSBlock\" : true")
+        .include("\"writerCompressionType\" : \"snappy\"")
+        .include("\"writerUsePrimitivesForDecimals\" : true")
+        .include("\"writerFormatVersion\" : \"v2\"")
+        .match();
+    } finally {
+      cluster.defineFormat("dfs", "parquet", backupConfig);
     }
   }
 
@@ -1493,15 +1531,26 @@ public class TestParquetWriter extends BaseTestQuery {
 
     for (Pair<String, PrimitiveType.PrimitiveTypeName> nameType : columnsToCheck) {
       assertEquals(
-          String.format("Table %s does not contain column %s with type %s",
-              tableName, nameType.getKey(), nameType.getValue()),
           nameType.getValue(),
-          schema.getType(nameType.getKey()).asPrimitiveType().getPrimitiveTypeName());
+          schema.getType(nameType.getKey()).asPrimitiveType().getPrimitiveTypeName(),
+          String.format(
+            "Table %s does not contain column %s with type %s",
+            tableName,
+            nameType.getKey(),
+            nameType.getValue()
+          )
+        );
 
       assertEquals(
-        String.format("Table %s %s column %s with DECIMAL type", tableName,
-            isDecimalType ? "does not contain" : "contains unexpected", nameType.getKey()),
-        isDecimalType, schema.getType(nameType.getKey()).getOriginalType() == OriginalType.DECIMAL);
+        isDecimalType,
+        schema.getType(nameType.getKey()).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation,
+        String.format(
+          "Table %s %s column %s with DECIMAL type",
+          tableName,
+          isDecimalType ? "does not contain" : "contains unexpected",
+          nameType.getKey()
+        )
+      );
     }
   }
 }

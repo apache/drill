@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec;
 
+import java.util.Arrays;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
@@ -36,6 +37,7 @@ import org.apache.drill.exec.server.options.TypeValidators.PowerOfTwoLongValidat
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
+import org.apache.drill.exec.store.parquet.ParquetFormatPlugin;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -375,6 +377,15 @@ public final class ExecConstants {
   public static final OptionValidator PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS_VALIDATOR = new EnumeratedStringValidator(PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS,
       new OptionDescription("Parquet writer logical type for decimal; supported types \'fixed_len_byte_array\' and \'binary\'"),
       "fixed_len_byte_array", "binary");
+  public static final String PARQUET_WRITER_FORMAT_VERSION = "store.parquet.writer.format_version";
+  public static final OptionValidator PARQUET_WRITER_FORMAT_VERSION_VALIDATOR = new EnumeratedStringValidator(
+    PARQUET_WRITER_FORMAT_VERSION,
+    new OptionDescription(
+      "Parquet format version used for storing Parquet output.  Allowed values:" +
+        Arrays.toString(ParquetFormatPlugin.PARQUET_FORMAT_VERSIONS)
+    ),
+    ParquetFormatPlugin.PARQUET_FORMAT_VERSIONS
+  );
 
   // TODO - The below two options don't seem to be used in the Drill code base
   @Deprecated // TODO: DRILL-6527

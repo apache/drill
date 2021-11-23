@@ -21,4 +21,8 @@ package org.apache.drill.categories;
  * This is a category used to mark unit tests that test Drill Parquet support.
  */
 public interface ParquetTest {
+  /**
+   * tag for JUnit5
+   */
+  String TAG = "parquet-test";
 }

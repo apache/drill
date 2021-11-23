@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -49,6 +51,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.RecordWriter;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
@@ -77,6 +80,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ParquetFormatPlugin implements FormatPlugin {
+
+  /** {@link org.apache.parquet.column.ParquetProperties.WriterVersion} */
+  public static final String[] PARQUET_FORMAT_VERSIONS = { "v1", "v2" };
 
   private static final Logger logger = LoggerFactory.getLogger(ParquetFormatPlugin.class);
 
@@ -141,34 +147,87 @@ public class ParquetFormatPlugin implements FormatPlugin {
   }
 
   public RecordWriter getRecordWriter(FragmentContext context, ParquetWriter writer) throws IOException, OutOfMemoryException {
-    Map<String, String> options = new HashMap<>();
+    Map<String, String> writerOpts = new HashMap<>();
+    OptionManager contextOpts = context.getOptions();
 
-    options.put("location", writer.getLocation());
+    writerOpts.put("location", writer.getLocation());
 
     FragmentHandle handle = context.getHandle();
     String fragmentId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
-    options.put("prefix", fragmentId);
+    writerOpts.put("prefix", fragmentId);
 
-    options.put(ExecConstants.PARQUET_BLOCK_SIZE, context.getOptions().getOption(ExecConstants.PARQUET_BLOCK_SIZE).num_val.toString());
-    options.put(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK,
-      context.getOptions().getOption(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK).bool_val.toString());
-    options.put(ExecConstants.PARQUET_PAGE_SIZE, context.getOptions().getOption(ExecConstants.PARQUET_PAGE_SIZE).num_val.toString());
-    options.put(ExecConstants.PARQUET_DICT_PAGE_SIZE, context.getOptions().getOption(ExecConstants.PARQUET_DICT_PAGE_SIZE).num_val.toString());
+    // Many options which follow may be set as Drill config options or in the parquet format
+    // plugin config.  If there is a Drill option set at session scope or narrower it takes precendence.
+    OptionValue.OptionScope minScope = OptionValue.OptionScope.SESSION;
 
-    options.put(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE,
-        context.getOptions().getOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE).string_val);
+    writerOpts.put(ExecConstants.PARQUET_BLOCK_SIZE,
+      ObjectUtils.firstNonNull(
+        contextOpts.getOption(ExecConstants.PARQUET_BLOCK_SIZE).getValueMinScope(minScope),
+        config.getBlockSize(),
+        contextOpts.getInt(ExecConstants.PARQUET_BLOCK_SIZE)
+      ).toString()
+    );
 
-    options.put(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING,
-        context.getOptions().getOption(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING).bool_val.toString());
+    writerOpts.put(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK,
+      ObjectUtils.firstNonNull(
+        contextOpts.getOption(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK).getValueMinScope(minScope),
+        config.getUseSingleFSBlock(),
+        contextOpts.getBoolean(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK)
+      ).toString()
+    );
 
-    options.put(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS,
-        context.getOptions().getOption(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS).string_val);
+    writerOpts.put(ExecConstants.PARQUET_PAGE_SIZE,
+      ObjectUtils.firstNonNull(
+        contextOpts.getOption(ExecConstants.PARQUET_PAGE_SIZE).getValueMinScope(minScope),
+        config.getPageSize(),
+        contextOpts.getInt(ExecConstants.PARQUET_PAGE_SIZE)
+      ).toString()
+    );
 
-    options.put(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS,
-        context.getOptions().getOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS).bool_val.toString());
+    // "internal use" so not settable in format config
+    writerOpts.put(ExecConstants.PARQUET_DICT_PAGE_SIZE,
+      contextOpts.getOption(ExecConstants.PARQUET_DICT_PAGE_SIZE).num_val.toString()
+    );
+
+    // "internal use" so not settable in format config
+    writerOpts.put(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING,
+      contextOpts.getOption(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING).bool_val.toString()
+    );
+
+    writerOpts.put(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE,
+      ObjectUtils.firstNonNull(
+        contextOpts.getOption(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE).getValueMinScope(minScope),
+        config.getWriterCompressionType(),
+        contextOpts.getString(ExecConstants.PARQUET_WRITER_COMPRESSION_TYPE)
+      ).toString()
+    );
+
+    writerOpts.put(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS,
+      ObjectUtils.firstNonNull(
+        contextOpts.getOption(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS).getValueMinScope(minScope),
+        config.getWriterLogicalTypeForDecimals(),
+        contextOpts.getString(ExecConstants.PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS)
+      ).toString()
+    );
+
+    writerOpts.put(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS,
+      ObjectUtils.firstNonNull(
+        contextOpts.getOption(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS).getValueMinScope(minScope),
+        config.getWriterUsePrimitivesForDecimals(),
+        contextOpts.getBoolean(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS)
+      ).toString()
+    );
+
+    writerOpts.put(ExecConstants.PARQUET_WRITER_FORMAT_VERSION,
+      ObjectUtils.firstNonNull(
+        contextOpts.getOption(ExecConstants.PARQUET_WRITER_FORMAT_VERSION).getValueMinScope(minScope),
+        config.getWriterFormatVersion(),
+        contextOpts.getString(ExecConstants.PARQUET_WRITER_FORMAT_VERSION)
+      ).toString()
+    );
 
     RecordWriter recordWriter = new ParquetRecordWriter(context, writer);
-    recordWriter.init(options);
+    recordWriter.init(writerOpts);
 
     return recordWriter;
   }

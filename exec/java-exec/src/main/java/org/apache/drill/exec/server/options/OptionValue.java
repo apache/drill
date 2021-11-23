@@ -240,6 +240,16 @@ public class OptionValue implements Comparable<OptionValue> {
     }
   }
 
+  /**
+   * Gets the value of this option if it exists at a scope at least as narrow as the given scope.
+   * @param minScope scope which the option's scope should be narrower than
+   * @return null if the option does not exist at a scope at least as narrow as minScope
+   */
+  @JsonIgnore
+  public Object getValueMinScope(OptionScope minScope) {
+    return scope.compareTo(minScope) >= 0 ? getValue() : null;
+  }
+
   @JsonIgnore
   public OptionScope getScope() {
     return scope;

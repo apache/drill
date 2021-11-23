@@ -22,6 +22,7 @@ import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.conf.Configuration;
@@ -97,28 +98,32 @@ public class TestParquetReaderConfig extends BaseTest {
   @Test
   public void testPriorityAssignmentForStringsSignedMinMax() throws Exception {
     @SuppressWarnings("resource")
-    SystemOptionManager options = new SystemOptionManager(DrillConfig.create()).init();
+    SystemOptionManager sysOpts = new SystemOptionManager(DrillConfig.create()).init();
+    SessionOptionManager sessOpts = new SessionOptionManager(sysOpts, null);
 
     // use value from format config
     ParquetFormatConfig formatConfig = new ParquetFormatConfig();
     ParquetReaderConfig readerConfig = ParquetReaderConfig.builder().withFormatConfig(formatConfig).build();
-    assertEquals(formatConfig.isStringsSignedMinMaxEnabled(), readerConfig.enableStringsSignedMinMax());
+    assertEquals(formatConfig.isEnableStringsSignedMinMax(), readerConfig.enableStringsSignedMinMax());
 
     // change format config value
-    formatConfig = new ParquetFormatConfig(true, true);
+    formatConfig = ParquetFormatConfig.builder()
+      .autoCorrectCorruptDates(true)
+      .enableStringsSignedMinMax(true)
+      .build();
+
     readerConfig = ParquetReaderConfig.builder().withFormatConfig(formatConfig).build();
-    assertEquals(formatConfig.isStringsSignedMinMaxEnabled(), readerConfig.enableStringsSignedMinMax());
+    assertEquals(formatConfig.isEnableStringsSignedMinMax(), readerConfig.enableStringsSignedMinMax());
 
-    // set option, option value should have higher priority
-    options.setLocalOption(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX, "false");
+    // set system option, option value should not have higher priority
+    sysOpts.setLocalOption(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX, "false");
+    readerConfig = ParquetReaderConfig.builder().withFormatConfig(formatConfig).withOptions(sysOpts).build();
+    assertTrue(readerConfig.enableStringsSignedMinMax());
 
-    readerConfig = ParquetReaderConfig.builder().withFormatConfig(formatConfig).withOptions(options).build();
+    // set session option, option value should have higher priority
+    sessOpts.setLocalOption(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX, "false");
+    readerConfig = ParquetReaderConfig.builder().withFormatConfig(formatConfig).withOptions(sessOpts).build();
     assertFalse(readerConfig.enableStringsSignedMinMax());
-
-    // set option as empty (undefined), config should have higher priority
-    options.setLocalOption(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX, "");
-    readerConfig = ParquetReaderConfig.builder().withFormatConfig(formatConfig).withOptions(options).build();
-    assertEquals(formatConfig.isStringsSignedMinMaxEnabled(), readerConfig.enableStringsSignedMinMax());
   }
 
 

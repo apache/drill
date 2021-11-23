@@ -54,7 +54,14 @@ public class TestFormatPluginOptionExtractor extends BaseTest {
           assertEquals("(type: String, name: String)", d.presentParams());
           break;
         case "parquet":
-          assertEquals(d.typeName, "(type: String, autoCorrectCorruptDates: boolean, enableStringsSignedMinMax: boolean)", d.presentParams());
+          assertEquals(
+            d.typeName,
+            "(type: String, autoCorrectCorruptDates: boolean, enableStringsSignedMinMax: boolean, " +
+              "blockSize: Integer, pageSize: Integer, useSingleFSBlock: Boolean, writerCompressionType: String, " +
+              "writerLogicalTypeForDecimals: String, writerUsePrimitivesForDecimals: Boolean, " +
+              "writerFormatVersion: String)",
+            d.presentParams()
+          );
           break;
         case "json":
           assertEquals(d.typeName, "(type: String)", d.presentParams());

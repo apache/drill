@@ -62,7 +62,10 @@ import org.apache.parquet.column.ColumnWriteStore;
 import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.column.impl.ColumnWriteStoreV1;
+import org.apache.parquet.column.impl.ColumnWriteStoreV2;
 import org.apache.parquet.column.values.factory.DefaultV1ValuesWriterFactory;
+import org.apache.parquet.column.values.factory.DefaultV2ValuesWriterFactory;
+import org.apache.parquet.column.values.factory.ValuesWriterFactory;
 import org.apache.parquet.compression.CompressionCodecFactory;
 import org.apache.parquet.hadoop.ParquetColumnChunkPageWriteStore;
 import org.apache.parquet.hadoop.ParquetFileWriter;
@@ -206,6 +209,9 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     enableDictionary = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_ENABLE_DICTIONARY_ENCODING));
     useSingleFSBlock = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK));
     usePrimitiveTypesForDecimals = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS));
+    writerVersion = WriterVersion.fromString(
+      writerOptions.get(ExecConstants.PARQUET_WRITER_FORMAT_VERSION)
+    );
 
     if (useSingleFSBlock) {
       // Round up blockSize to multiple of 64K.
@@ -263,20 +269,29 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     // We don't want this number to be too small either. Ideally, slightly bigger than the page size,
     // but not bigger than the block buffer
     int initialPageBufferSize = max(MINIMUM_BUFFER_SIZE, min(pageSize + pageSize / 10, initialBlockBufferSize));
+    ValuesWriterFactory valWriterFactory = writerVersion == WriterVersion.PARQUET_1_0
+      ? new DefaultV1ValuesWriterFactory()
+      : new DefaultV2ValuesWriterFactory();
+
     ParquetProperties parquetProperties = ParquetProperties.builder()
         .withPageSize(pageSize)
         .withDictionaryEncoding(enableDictionary)
         .withDictionaryPageSize(initialPageBufferSize)
-        .withWriterVersion(writerVersion)
         .withAllocator(new ParquetDirectByteBufferAllocator(oContext))
-        .withValuesWriterFactory(new DefaultV1ValuesWriterFactory())
+        .withValuesWriterFactory(valWriterFactory)
+        .withWriterVersion(writerVersion)
         .build();
+
     // TODO: Replace ParquetColumnChunkPageWriteStore with ColumnChunkPageWriteStore from parquet library
     //   once DRILL-7906 (PARQUET-1006) will be resolved
     pageStore = new ParquetColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema,
             parquetProperties.getInitialSlabSize(), pageSize, parquetProperties.getAllocator(),
             parquetProperties.getColumnIndexTruncateLength(), parquetProperties.getPageWriteChecksumEnabled());
-    store = new ColumnWriteStoreV1(pageStore, parquetProperties);
+
+    store = writerVersion == WriterVersion.PARQUET_1_0
+      ? new ColumnWriteStoreV1(schema, pageStore, parquetProperties)
+      : new ColumnWriteStoreV2(schema, pageStore, parquetProperties);
+
     MessageColumnIO columnIO = new ColumnIOFactory(false).getColumnIO(this.schema);
     consumer = columnIO.getRecordWriter(store);
     setUp(schema, consumer);
