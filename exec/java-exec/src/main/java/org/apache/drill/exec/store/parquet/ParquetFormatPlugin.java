@@ -81,7 +81,7 @@ import org.slf4j.LoggerFactory;
 
 public class ParquetFormatPlugin implements FormatPlugin {
 
-  // {@link org.apache.parquet.column.ParquetProperties#WriterVersion}
+  /** {@link org.apache.parquet.column.ParquetProperties.WriterVersion} */
   public static final String[] PARQUET_FORMAT_VERSIONS = { "v1", "v2" };
 
   private static final Logger logger = LoggerFactory.getLogger(ParquetFormatPlugin.class);
