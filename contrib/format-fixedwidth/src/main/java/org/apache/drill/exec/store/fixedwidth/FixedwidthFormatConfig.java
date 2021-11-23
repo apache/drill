@@ -26,11 +26,13 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -43,11 +45,15 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
   private static final Logger logger = LoggerFactory.getLogger(FixedwidthFormatConfig.class);
   private final List<String> extensions;
   private final List<FixedwidthFieldConfig> fields;
+  private final List<TypeProtos.MinorType> validDataTypes = Arrays.asList(new TypeProtos.MinorType[]{TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
+    TypeProtos.MinorType.DATE, TypeProtos.MinorType.TIME, TypeProtos.MinorType.TIMESTAMP, TypeProtos.MinorType.FLOAT4,
+  TypeProtos.MinorType.FLOAT8, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARDECIMAL});
 
   @JsonCreator
   public FixedwidthFormatConfig(@JsonProperty("extensions") List<String> extensions,
                                 @JsonProperty("fields") List<FixedwidthFieldConfig> fields) {
     this.extensions = extensions == null ? Collections.singletonList("fwf") : ImmutableList.copyOf(extensions);
+    Collections.sort(fields);
     this.fields = fields;
 
     validateFieldInput();
@@ -134,12 +140,55 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
   }
 
   @JsonIgnore
+  public void setFieldWidths(int i, int value) {
+    for (FixedwidthFieldConfig field : fields) {
+      if (field.getIndex() == i) {
+        field.setWidth(value);
+      }
+    }
+  }
+
+  @JsonIgnore
+  public List<TypeProtos.MinorType> getFieldTypes() {
+    List<TypeProtos.MinorType> result = new ArrayList<>();
+    if (! hasFields()) {
+      return result;
+    }
+
+    for (FixedwidthFieldConfig field : fields) {
+      result.add(field.getType());
+    }
+    return result;
+  }
+
+  @JsonIgnore
+  public void setFieldTypes(int i) {
+    for (FixedwidthFieldConfig field : fields) {
+      if (field.getIndex() == i) {
+        field.setType();
+      }
+    }
+  }
+
+  @JsonIgnore
   public void validateFieldInput(){
     Set<String> uniqueNames = new HashSet<>();
-    for (String name : this.getFieldNames()){
-      /*if (name.length() == 0){
+    List<Integer> fieldIndices = this.getFieldIndices();
+    List<Integer> fieldWidths = this.getFieldWidths();
+    List<String> fieldNames = this.getFieldNames();
+    List<TypeProtos.MinorType> fieldTypes = this.getFieldTypes();
+    int width = 0;
+    int prevIndexAndWidth = -1;
 
-      }*/
+    // Ensure no two fields have the same name
+    for (String name : this.getFieldNames()){
+      if (name.length() == 0){
+        throw UserException
+          .validationError()
+          .message("Blank field name detected.")
+          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .build(logger);
+      }
       if (uniqueNames.contains(name)){
         throw UserException
           .validationError()
@@ -149,10 +198,6 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
       }
       uniqueNames.add(name);
     }
-    List<Integer> fieldIndices = this.getFieldIndices();
-    List<Integer> fieldWidths = this.getFieldWidths();
-    List<String> fieldNames = this.getFieldNames();
-    int prevIndexAndWidth = -1;
 
     //assuming that fieldIndices is the same size as fieldWidths, width is required
     for (int i = 0; i<fieldIndices.size(); i++) {
@@ -163,24 +208,35 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
           .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
           .build(logger);
       }
-      /*
-      else if (fieldWidths.get(i) == null || fieldWidths.get(i) < 1) {
-        if (i == fieldIndices.size()-1) {
-          Integer width =
-        }
-        Integer width = fieldIndices.get(i+1) - fieldIndices.get(i);
-        fieldWidths.set(i, width);
+      else if (fieldIndices.get(i) <= prevIndexAndWidth) {
+        throw UserException
+          .validationError()
+          .message("Overlapping fields: " + fieldNames.get(i-1) + " and " + fieldNames.get(i))
+          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .build(logger);
       }
-       */
-        else if (fieldIndices.get(i) <= prevIndexAndWidth) {
-         throw UserException
-           .validationError()
-           .message("Overlapping fields: " + fieldNames.get(i-1) + " and " + fieldNames.get(i))
-           .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
-           .build(logger);
-       }
-       prevIndexAndWidth = fieldIndices.get(i) + fieldWidths.get(i);
+
+      if (fieldWidths.get(i) == null || fieldWidths.get(i) < 1) {
+        // Come back to this - can we calculate this instead of throwing an error?
+        if (i == fieldIndices.size()-1) {
+          throw UserException
+            .validationError()
+            .message("Width for field '" + fieldNames.get(i) + "' is empty.")
+            .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+            .build(logger);
+        }
+        width = fieldIndices.get(i+1) - fieldIndices.get(i) - 1;
+        setFieldWidths(fieldIndices.get(i), width);
+      }
+        prevIndexAndWidth = fieldIndices.get(i) + fieldWidths.get(i);
+
+      // Validate Field Type
+      if (fieldTypes.get(i) == null || fieldTypes.get(i).toString().length() == 0) {
+        setFieldTypes(fieldIndices.get(i));
+      }
+      else if (!validDataTypes.contains(fieldTypes.get(i))){
+        setFieldTypes(fieldIndices.get(i)); //Should we throw an error or default to VARCHAR for data types that are not yet available in this plugin
+      }
     }
   }
-
 }

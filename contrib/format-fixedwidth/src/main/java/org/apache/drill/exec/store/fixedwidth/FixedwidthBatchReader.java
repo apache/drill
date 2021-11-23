@@ -65,7 +65,6 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
     this.maxRecords = maxRecords;
   }
 
-
   @Override
   public boolean open(FileSchemaNegotiator negotiator) {
     split = negotiator.split();
