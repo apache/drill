@@ -33,6 +33,7 @@ import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import static org.junit.Assert.assertEquals;
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
@@ -147,6 +148,29 @@ public class TestSasReader extends ClusterTest {
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .addRow(LocalDate.parse("2017-03-14"), LocalDate.parse("2017-03-14"), LocalDate.parse("2017-03-14"))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testTimes() throws Exception {
+    String sql = "SELECT * FROM cp.`sas/time_formats.sas7bdat`";
+    RowSet results  = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("E8601LZ", MinorType.TIME)
+      .addNullable("E8601TM", MinorType.TIME)
+      .addNullable("HHMM", MinorType.TIME)
+      .addNullable("HOUR", MinorType.TIME)
+      .addNullable("MMSS", MinorType.TIME)
+      .addNullable("TIME", MinorType.TIME)
+      .addNullable("TIMEAMPM", MinorType.TIME)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(LocalTime.parse("10:10:10"), LocalTime.parse("10:10:10"), LocalTime.parse("10:10:10"),
+        LocalTime.parse("10:10:10"), LocalTime.parse("10:10:10"), LocalTime.parse("10:10:10"), LocalTime.parse("10:10:10"))
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);

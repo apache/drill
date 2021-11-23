@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
@@ -167,6 +168,10 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
       String fieldName = column.getName();
       try {
         MinorType type = getType(firstRow[counter].getClass().getSimpleName());
+        if (type == MinorType.BIGINT && !column.getFormat().isEmpty()) {
+          logger.debug("Found possible time");
+          type = MinorType.TIME;
+        }
         builder.addNullable(fieldName, type);
       } catch (Exception e) {
         System.out.println("Error with column type: " + firstRow[counter].getClass().getSimpleName());
@@ -189,8 +194,15 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
         writerList.add(new BigIntSasColumnWriter(colIndex, fieldName, rowWriter));
       } else if (type == MinorType.DATE) {
         writerList.add(new DateSasColumnWriter(colIndex, fieldName, rowWriter));
-      } else {
+      } else if (type == MinorType.TIME) {
+        writerList.add(new TimeSasColumnWriter(colIndex, fieldName, rowWriter));
+      } else if (type == MinorType.VARCHAR){
         writerList.add(new StringSasColumnWriter(colIndex, fieldName, rowWriter));
+      } else {
+        throw UserException.dataReadError()
+          .message(fieldName + " is an unparsable data type: " + type.name() + ".  The SAS reader does not support this data type.")
+          .addContext(errorContext)
+          .build(logger);
       }
       colIndex++;
     }
@@ -278,7 +290,6 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
       // Write Metadata
       writeMetadata(row.length);
-
       rowWriter.save();
     } catch (IOException e) {
       throw UserException.dataReadError()
@@ -380,6 +391,43 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     public void load(LocalDate date) {
       writer.setDate(date);
+    }
+  }
+
+  public static class TimeSasColumnWriter extends SasColumnWriter {
+
+    TimeSasColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter) {
+      super(columnIndex, columnName, rowWriter.scalar(columnName));
+    }
+
+    @Override
+    public void load(Object[] row) {
+      int seconds = ((Long)row[columnIndex]).intValue();
+      LocalTime value = LocalTime.parse(formatSeconds(seconds));
+      writer.setTime(value);
+    }
+
+    private String formatSeconds(int timeInSeconds)
+    {
+      int hours = timeInSeconds / 3600;
+      int secondsLeft = timeInSeconds - hours * 3600;
+      int minutes = secondsLeft / 60;
+      int seconds = secondsLeft - minutes * 60;
+
+      String formattedTime = "";
+      if (hours < 10)
+        formattedTime += "0";
+      formattedTime += hours + ":";
+
+      if (minutes < 10)
+        formattedTime += "0";
+      formattedTime += minutes + ":";
+
+      if (seconds < 10)
+        formattedTime += "0";
+      formattedTime += seconds ;
+
+      return formattedTime;
     }
   }
 
