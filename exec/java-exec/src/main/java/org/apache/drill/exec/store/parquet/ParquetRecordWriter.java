@@ -210,7 +210,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     useSingleFSBlock = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_USE_SINGLE_FS_BLOCK));
     usePrimitiveTypesForDecimals = Boolean.parseBoolean(writerOptions.get(ExecConstants.PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS));
     writerVersion = WriterVersion.fromString(
-      writerOptions.get(ExecConstants.PARQUET_WRITER_FORMAT_VERSION).toUpperCase()
+      writerOptions.get(ExecConstants.PARQUET_WRITER_FORMAT_VERSION)
     );
 
     if (useSingleFSBlock) {

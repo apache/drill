@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -75,7 +74,6 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.slf4j.Logger;
@@ -83,9 +81,8 @@ import org.slf4j.LoggerFactory;
 
 public class ParquetFormatPlugin implements FormatPlugin {
 
-  public static final String[] PARQUET_FORMAT_VERSIONS = Stream.of(ParquetProperties.WriterVersion.values())
-    .map(ParquetProperties.WriterVersion::name)
-    .toArray(String[]::new);
+  // {@link org.apache.parquet.column.ParquetProperties#WriterVersion}
+  public static final String[] PARQUET_FORMAT_VERSIONS = { "v1", "v2" };
 
   private static final Logger logger = LoggerFactory.getLogger(ParquetFormatPlugin.class);
 

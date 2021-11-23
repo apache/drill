@@ -21,10 +21,12 @@ import org.apache.calcite.util.Pair;
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.fn.interp.TestConstantFolding;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
@@ -42,6 +44,7 @@ import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
 import org.joda.time.Period;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -76,7 +79,7 @@ import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.BINARY;
 import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
 import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT32;
 import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT64;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @RunWith(Parameterized.class)
 @Category({SlowTest.class, ParquetTest.class})
@@ -139,10 +142,6 @@ public class TestParquetWriter extends ClusterTest {
   @BeforeClass
   public static void setUp() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
-  }
-
-  @BeforeClass
-  public static void enableDecimalDataType() throws Exception {
     client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
   }
 
@@ -191,8 +190,7 @@ public class TestParquetWriter extends ClusterTest {
     new TestConstantFolding.SmallFileCreator(pathDir)
       .setRecord(sb.toString()).createFiles(1, 1, "json");
 
-    run("use dfs.tmp");
-    run("create table WIDE_PARQUET_TABLE_TestParquetWriter_testLargeFooter as select * from dfs.`%s/smallfile/smallfile.json`", path);
+    run("create table dfs.tmp.WIDE_PARQUET_TABLE_TestParquetWriter_testLargeFooter as select * from dfs.`%s/smallfile/smallfile.json`", path);
     testBuilder()
         .sqlQuery("select * from dfs.tmp.WIDE_PARQUET_TABLE_TestParquetWriter_testLargeFooter")
         .unOrdered()
@@ -599,8 +597,7 @@ public class TestParquetWriter extends ClusterTest {
     String outputTable = "decimal_test";
 
     try {
-      run("use dfs.tmp; " +
-        "create table %s as select " +
+      run("create table dfs.tmp.%s as select " +
         "cast('1.2' as decimal(38, 2)) col1, cast('1.2' as decimal(28, 2)) col2 " +
         "from cp.`employee.json` limit 1", outputTable);
 
@@ -608,7 +605,7 @@ public class TestParquetWriter extends ClusterTest {
 
       testBuilder()
           .unOrdered()
-          .sqlQuery("select col1, col2 from %s ", outputTable)
+          .sqlQuery("select col1, col2 from dfs.tmp.%s ", outputTable)
           .baselineColumns("col1", "col2")
           .baselineValues(result, result)
           .go();
@@ -959,7 +956,7 @@ public class TestParquetWriter extends ClusterTest {
   @Test
   public void testTPCHReadWriteFormatV2() throws Exception {
     try {
-      client.alterSession(ExecConstants.PARQUET_WRITER_FORMAT_VERSION, "parquet_2_0");
+      client.alterSession(ExecConstants.PARQUET_WRITER_FORMAT_VERSION, "v2");
       String inputTable = "cp.`tpch/supplier.parquet`";
       runTestAndValidate("*", "*", inputTable, "suppkey_parquet_dict_v2");
     } finally {
@@ -1481,6 +1478,9 @@ public class TestParquetWriter extends ClusterTest {
 
   @Test
   public void testFormatConfigOpts() throws Exception {
+    FileSystemConfig pluginConfig = (FileSystemConfig) cluster.storageRegistry().copyConfig("dfs");
+    FormatPluginConfig backupConfig = pluginConfig.getFormats().get("parquet");
+
     cluster.defineFormat("dfs", "parquet", new ParquetFormatConfig(
         false,
         true,
@@ -1490,23 +1490,27 @@ public class TestParquetWriter extends ClusterTest {
         "snappy",
         "binary",
         true,
-        "PARQUET_V_2"
+        "v2"
       )
     );
-    client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet_test");
-    String query = "select * from dfs.`parquet/int96_dict_change`";
-    queryBuilder()
-      .sql(query)
-      .jsonPlanMatcher()
-      .include("\"autoCorrectCorruptDates\" : false")
-      .include("\"enableStringsSignedMinMax\" : true")
-      .include("\"blockSize\" : 123")
-      .include("\"pageSize\" : 456")
-      .include("\"useSingleFSBlock\" : true")
-      .include("\"writerCompressionType\" : \"snappy\"")
-      .include("\"writerUsePrimitivesForDecimals\" : true")
-      .include("\"writerFormatVersion\" : \"PARQUET_V_2\"")
-      .match();
+
+    try {
+      String query = "select * from dfs.`parquet/int96_dict_change`";
+      queryBuilder()
+        .sql(query)
+        .jsonPlanMatcher()
+        .include("\"autoCorrectCorruptDates\" : false")
+        .include("\"enableStringsSignedMinMax\" : true")
+        .include("\"blockSize\" : 123")
+        .include("\"pageSize\" : 456")
+        .include("\"useSingleFSBlock\" : true")
+        .include("\"writerCompressionType\" : \"snappy\"")
+        .include("\"writerUsePrimitivesForDecimals\" : true")
+        .include("\"writerFormatVersion\" : \"v2\"")
+        .match();
+    } finally {
+      cluster.defineFormat("dfs", "parquet", backupConfig);
+    }
   }
 
   /**
@@ -1527,16 +1531,26 @@ public class TestParquetWriter extends ClusterTest {
 
     for (Pair<String, PrimitiveType.PrimitiveTypeName> nameType : columnsToCheck) {
       assertEquals(
-          String.format("Table %s does not contain column %s with type %s",
-              tableName, nameType.getKey(), nameType.getValue()),
           nameType.getValue(),
-          schema.getType(nameType.getKey()).asPrimitiveType().getPrimitiveTypeName());
+          schema.getType(nameType.getKey()).asPrimitiveType().getPrimitiveTypeName(),
+          String.format(
+            "Table %s does not contain column %s with type %s",
+            tableName,
+            nameType.getKey(),
+            nameType.getValue()
+          )
+        );
 
       assertEquals(
-        String.format("Table %s %s column %s with DECIMAL type", tableName,
-            isDecimalType ? "does not contain" : "contains unexpected", nameType.getKey()),
         isDecimalType,
-        schema.getType(nameType.getKey()).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation);
+        schema.getType(nameType.getKey()).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation,
+        String.format(
+          "Table %s %s column %s with DECIMAL type",
+          tableName,
+          isDecimalType ? "does not contain" : "contains unexpected",
+          nameType.getKey()
+        )
+      );
     }
   }
 }
