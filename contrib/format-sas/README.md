@@ -2,7 +2,7 @@
 This format plugin enables Drill to read SAS files. (sas7bdat)
 
 ## Data Types
-The SAS format supports the `VARCHAR`, `LONG`, `DOUBLE` and `DATE` formats.
+The SAS format supports the `VARCHAR`, `LONG`, `DOUBLE`, `TIME` and `DATE` types.
 
 ## Implicit Fields (Metadata)
 The SAS reader provides the following file metadata fields:

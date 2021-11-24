@@ -174,8 +174,10 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
         }
         builder.addNullable(fieldName, type);
       } catch (Exception e) {
-        System.out.println("Error with column type: " + firstRow[counter].getClass().getSimpleName());
-        throw e;
+        throw UserException.dataReadError()
+          .message("Error with column type: " + firstRow[counter].getClass().getSimpleName())
+          .addContext(errorContext)
+          .build(logger);
       }
       counter++;
     }

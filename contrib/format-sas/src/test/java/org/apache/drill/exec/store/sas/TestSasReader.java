@@ -181,7 +181,7 @@ public class TestSasReader extends ClusterTest {
     String sql = "SELECT COUNT(*) as cnt FROM cp.`sas/mixed_data_two.sas7bdat` ";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
-    assertEquals("Counts should match",50L, cnt);
+    assertEquals("Counts should match", 50L, cnt);
   }
 
   @Test
