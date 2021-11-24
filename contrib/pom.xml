@@ -49,6 +49,7 @@
     <module>format-httpd</module>
     <module>format-esri</module>
     <module>format-hdf5</module>
+    <module>format-sas</module>
     <module>format-spss</module>
     <module>format-xml</module>
     <module>format-image</module>
