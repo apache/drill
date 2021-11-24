@@ -38,6 +38,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @JsonTypeName(FixedwidthFormatPlugin.DEFAULT_NAME)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -168,15 +169,30 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
     List<Integer> fieldWidths = this.getFieldWidths();
     List<String> fieldNames = this.getFieldNames();
     List<TypeProtos.MinorType> fieldTypes = this.getFieldTypes();
-    int width = 0;
     int prevIndexAndWidth = -1;
 
-    // Validate Field Name - Ensure field is not empty, no two fields have the same name, and field is valid SQL syntax
+    /* Validate Field Name - Ensure field is not empty, does not exceed maximum length,
+    is valid SQL syntax, and no two fields have the same name
+     */
     for (String name : this.getFieldNames()){
       if (name.length() == 0){
         throw UserException
           .validationError()
           .message("Blank field name detected.")
+          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .build(logger);
+      }
+      if (name.length() > 1024) {
+        throw UserException
+          .validationError()
+          .message("Exceeds maximum length of 1024 characters: " + name.substring(0, 1024))
+          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .build(logger);
+      }
+      if (!Pattern.matches("[a-zA-Z]\\w*", name)) {
+        throw UserException
+          .validationError()
+          .message("Invalid input: " + name)
           .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
           .build(logger);
       }
