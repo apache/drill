@@ -64,10 +64,6 @@ public class FixedwidthFieldConfig implements Comparable<FixedwidthFieldConfig> 
 
   public int getWidth() {return width;}
 
-  public void setWidth(int value) {
-    this.width = value;
-  }
-
   public TypeProtos.MinorType getType() {return type;}
 
   public void setType() {
