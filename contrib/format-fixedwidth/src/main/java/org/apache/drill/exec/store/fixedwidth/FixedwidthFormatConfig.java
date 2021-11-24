@@ -45,9 +45,9 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
   private static final Logger logger = LoggerFactory.getLogger(FixedwidthFormatConfig.class);
   private final List<String> extensions;
   private final List<FixedwidthFieldConfig> fields;
-  private final List<TypeProtos.MinorType> validDataTypes = Arrays.asList(new TypeProtos.MinorType[]{TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
+  private final List<TypeProtos.MinorType> validDataTypes = Arrays.asList(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
     TypeProtos.MinorType.DATE, TypeProtos.MinorType.TIME, TypeProtos.MinorType.TIMESTAMP, TypeProtos.MinorType.FLOAT4,
-  TypeProtos.MinorType.FLOAT8, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARDECIMAL});
+    TypeProtos.MinorType.FLOAT8, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARDECIMAL);
 
   @JsonCreator
   public FixedwidthFormatConfig(@JsonProperty("extensions") List<String> extensions,
@@ -140,15 +140,6 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
   }
 
   @JsonIgnore
-  public void setFieldWidths(int i, int value) {
-    for (FixedwidthFieldConfig field : fields) {
-      if (field.getIndex() == i) {
-        field.setWidth(value);
-      }
-    }
-  }
-
-  @JsonIgnore
   public List<TypeProtos.MinorType> getFieldTypes() {
     List<TypeProtos.MinorType> result = new ArrayList<>();
     if (! hasFields()) {
@@ -180,7 +171,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
     int width = 0;
     int prevIndexAndWidth = -1;
 
-    // Ensure no two fields have the same name
+    // Validate Field Name - Ensure field is not empty, no two fields have the same name, and field is valid SQL syntax
     for (String name : this.getFieldNames()){
       if (name.length() == 0){
         throw UserException
@@ -199,7 +190,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
       uniqueNames.add(name);
     }
 
-    //assuming that fieldIndices is the same size as fieldWidths, width is required
+    // Validate Field Index - Must be greater than 0, and must not overlap with other fields
     for (int i = 0; i<fieldIndices.size(); i++) {
       if (fieldIndices.get(i) < 1) {
         throw UserException
@@ -216,26 +207,26 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
           .build(logger);
       }
 
+      // Validate Field Width - must be greater than 0.
       if (fieldWidths.get(i) == null || fieldWidths.get(i) < 1) {
-        // Come back to this - can we calculate this instead of throwing an error?
-        if (i == fieldIndices.size()-1) {
           throw UserException
             .validationError()
-            .message("Width for field '" + fieldNames.get(i) + "' is empty.")
+            .message("Width for field '" + fieldNames.get(i) + "' is invalid. Widths must be greater than 0.")
             .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
             .build(logger);
-        }
-        width = fieldIndices.get(i+1) - fieldIndices.get(i) - 1;
-        setFieldWidths(fieldIndices.get(i), width);
       }
         prevIndexAndWidth = fieldIndices.get(i) + fieldWidths.get(i);
 
-      // Validate Field Type
+      // Validate Field Type - must not be empty and must be included in list of valid data types for the fixed width plugin
       if (fieldTypes.get(i) == null || fieldTypes.get(i).toString().length() == 0) {
         setFieldTypes(fieldIndices.get(i));
       }
       else if (!validDataTypes.contains(fieldTypes.get(i))){
-        setFieldTypes(fieldIndices.get(i)); //Should we throw an error or default to VARCHAR for data types that are not yet available in this plugin
+        throw UserException
+          .validationError()
+          .message("Field type " + fieldTypes.get(i) + " is not valid. Please check for typos and ensure the required data type is included in the Fixed Width Format Plugin.")
+          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .build(logger);
       }
     }
   }
