@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.pdf;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +78,9 @@ public class Utils {
     try {
       objectExtractor.close();
     } catch (Exception e) {
-      logger.debug("Error closing Object extractor.");
+      throw UserException.parseError(e)
+        .message("Error extracting table: " + e.getMessage())
+        .build(logger);
     }
 
     return tables;
@@ -93,7 +96,7 @@ public class Utils {
     List<String> values = new ArrayList<>();
 
     if (firstRow != null) {
-      for (int i =0; i < firstRow.size(); i++) {
+      for (int i = 0; i < firstRow.size(); i++) {
         values.add(firstRow.get(i).getText());
       }
     }
