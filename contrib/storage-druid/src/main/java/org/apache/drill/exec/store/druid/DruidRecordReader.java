@@ -29,9 +29,8 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.druid.common.DruidFilter;
 import org.apache.drill.exec.store.druid.druid.DruidSelectResponse;
 import org.apache.drill.exec.store.druid.druid.PagingIdentifier;
-import org.apache.drill.exec.store.druid.druid.PagingSpec;
-import org.apache.drill.exec.store.druid.druid.SelectQuery;
-import org.apache.drill.exec.store.druid.druid.SelectQueryBuilder;
+import org.apache.drill.exec.store.druid.druid.ScanQuery;
+import org.apache.drill.exec.store.druid.druid.ScanQueryBuilder;
 import org.apache.drill.exec.store.druid.rest.DruidQueryClient;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
@@ -154,17 +153,17 @@ public class DruidRecordReader extends AbstractRecordReader {
       this.maxRecordsToRead >= 0
         ? Math.min(BaseValueVector.INITIAL_VALUE_ALLOCATION, this.maxRecordsToRead)
         : BaseValueVector.INITIAL_VALUE_ALLOCATION;
-    SelectQueryBuilder selectQueryBuilder = plugin.getSelectQueryBuilder();
-    SelectQuery selectQuery =
-      selectQueryBuilder.build(
+    ScanQueryBuilder scanQueryBuilder = plugin.getScanQueryBuilder();
+    ScanQuery scanQuery =
+      scanQueryBuilder.build(
         scanSpec.dataSourceName,
         this.dimensions,
         this.filter,
-        new PagingSpec(this.pagingIdentifiers, queryThreshold),
+        queryThreshold,
         scanSpec.getMinTime(),
         scanSpec.getMaxTime()
       );
-    return objectMapper.writeValueAsString(selectQuery);
+    return objectMapper.writeValueAsString(scanQuery);
   }
 
   private void setNextPagingIdentifiers(DruidSelectResponse druidSelectResponse) {
