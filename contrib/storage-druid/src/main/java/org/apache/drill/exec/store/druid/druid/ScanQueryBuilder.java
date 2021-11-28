@@ -22,8 +22,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.exec.store.druid.common.DruidConstants;
 import org.apache.drill.exec.store.druid.common.DruidFilter;
 
 import java.util.ArrayList;
@@ -61,19 +59,6 @@ public class ScanQueryBuilder {
       finalFilter,
       queryIntervals,
       batchSize);
-  }
-
-  private List<DruidDimensionSpec> getDimensionsAsSpec(List<String> columns) {
-    return columns.stream().map(column -> {
-      String type = StringUtils.equalsAnyIgnoreCase(column, DruidConstants.DRUID_TIME_DIMENSIONS) ? "extraction" : "default";
-      DruidExtractionFunctionSpec extractionFunctionSpec =
-        StringUtils.equalsAnyIgnoreCase(column, DruidConstants.DRUID_TIME_DIMENSIONS) ? getTimeExtractionFunction() : null;
-      return new DruidDimensionSpec(type, column, column, "STRING", extractionFunctionSpec);
-    }).collect(Collectors.toList());
-  }
-
-  private DruidExtractionFunctionSpec getTimeExtractionFunction() {
-    return new DruidExtractionFunctionSpec("timeFormat", DruidConstants.ISO_8601_DATE_STRING_FORMAT);
   }
 
   private List<JsonNode> parseIntervalsFromFilter(String filter)
