@@ -171,6 +171,11 @@ public class DynamicRootSchema extends DynamicSchema {
           DataContext.ROOT,
           BuiltInMethod.DATA_CONTEXT_GET_ROOT_SCHEMA.method);
     }
+
+    @Override
+    public boolean showInInformationSchema() {
+      return false;
+    }
   }
 }
 
