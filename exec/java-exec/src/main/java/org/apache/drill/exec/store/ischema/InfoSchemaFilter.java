@@ -215,7 +215,7 @@ public class InfoSchemaFilter {
         if (Strings.isNullOrEmpty(value)) {
           return Result.INCONCLUSIVE;
         }
-        
+
         boolean prefixMatch = arg.value.startsWith(value);
         boolean exactMatch = prefixMatch && arg.value.equals(value);
 

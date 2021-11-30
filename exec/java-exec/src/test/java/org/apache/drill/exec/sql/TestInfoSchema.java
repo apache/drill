@@ -64,13 +64,13 @@ public class TestInfoSchema extends BaseTestQuery {
 
   @Test
   public void selectFromAllTables() throws Exception{
-//    test("select * from INFORMATION_SCHEMA.SCHEMATA");
-//    test("select * from INFORMATION_SCHEMA.CATALOGS");
-//    test("select * from INFORMATION_SCHEMA.VIEWS");
-    test("select * from INFORMATION_SCHEMA.`TABLES` where table_schema = 'cp.default'");
-//    test("select * from INFORMATION_SCHEMA.COLUMNS");
-//    test("select * from INFORMATION_SCHEMA.`FILES`");
-//    test("select * from INFORMATION_SCHEMA.`PARTITIONS`");
+    test("select * from INFORMATION_SCHEMA.SCHEMATA");
+    test("select * from INFORMATION_SCHEMA.CATALOGS");
+    test("select * from INFORMATION_SCHEMA.VIEWS");
+    test("select * from INFORMATION_SCHEMA.`TABLES`");
+    test("select * from INFORMATION_SCHEMA.COLUMNS");
+    test("select * from INFORMATION_SCHEMA.`FILES`");
+    test("select * from INFORMATION_SCHEMA.`PARTITIONS`");
   }
 
   @Test
@@ -162,16 +162,16 @@ public class TestInfoSchema extends BaseTestQuery {
         .baselineValues("dfs.tmp")
         .go();
   }
-
+  
   @Test
-  public void showDatabasesWhereIn() throws Exception{
-    testBuilder()
-      .sqlQuery("SHOW DATABASES WHERE SCHEMA_NAME in ('dfs.tmp', 'dfs.root')")
-      .unOrdered()
-      .baselineColumns("SCHEMA_NAME")
-      .baselineValues("dfs.tmp")
-      .baselineValues("dfs.root")
-      .go();
+  public void showDatabasesWhereIn() throws Exception {
+      testBuilder()
+        .sqlQuery("SHOW DATABASES WHERE SCHEMA_NAME in ('dfs.tmp', 'dfs.root')")
+        .unOrdered()
+        .baselineColumns("SCHEMA_NAME")
+        .baselineValues("dfs.tmp")
+        .baselineValues("dfs.root")
+        .go();
   }
 
   @Test
