@@ -28,6 +28,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.util.function.CheckedFunction;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
@@ -49,6 +50,7 @@ import org.apache.iceberg.expressions.Expression;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class IcebergPluginImplementor extends AbstractPluginImplementor {
@@ -98,8 +100,12 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
     if (expression != null) {
       try {
         TableScan tableScan = DrillRelOptUtil.findScan(filter.accept(SubsetRemover.INSTANCE));
-        DrillTable drillTable = DrillRelOptUtil.getDrillTable(tableScan);
-        GroupScan scan = drillTable.getGroupScan();
+        CheckedFunction<DrillTable, GroupScan, IOException> groupScanFunction =
+            DrillTable::getGroupScan;
+        GroupScan scan = Optional.ofNullable(tableScan)
+            .map(DrillRelOptUtil::getDrillTable)
+            .map(groupScanFunction)
+            .orElse(null);
         if (scan instanceof IcebergGroupScan) {
           IcebergGroupScan groupScan = (IcebergGroupScan) scan;
           // ensures that expression compatible with table schema
@@ -107,7 +113,7 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
         } else {
           return false;
         }
-      } catch (ValidationException | IOException e) {
+      } catch (ValidationException e) {
         return false;
       }
     }
