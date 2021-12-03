@@ -104,7 +104,7 @@ public class DrillRestLoginService implements LoginService {
       if (e instanceof UserAuthenticationException) {
         logger.debug("Authentication failed for WebUser '{}'", username, e);
       } else {
-        logger.error("UnExpected failure occurred for WebUser {} during login.", username, e);
+        logger.error("Unexpected failure occurred for WebUser {} during login.", username, e);
       }
       return null;
     }
