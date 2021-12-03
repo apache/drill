@@ -543,6 +543,36 @@ public class TestMathFunctionsWithNanInf extends BaseTestQuery {
       evalTest(table_name, json, query, columns, values);
     }
 
+  @Test
+  public void testNanInfLiteralConversion() throws Exception {
+    String query =
+      "select " +
+      " cast('Infinity' as float) float_inf, " +
+      " cast('-Infinity' as float) float_ninf, " +
+      " cast('NaN' as float) float_nan, " +
+      " cast('Infinity' as double) double_inf, " +
+      " cast('-Infinity' as double) double_ninf, " +
+      " cast('NaN' as double) double_nan";
+
+    String[] columns = {
+      "float_inf", "float_ninf", "float_nan",
+      "double_inf", "double_ninf", "double_nan"
+    };
+
+    Object[] values = {
+      Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NaN,
+      Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NaN
+    };
+
+    testBuilder()
+      .sqlQuery(query)
+      .ordered()
+      .baselineColumns(columns)
+      .baselineValues(values)
+      .build()
+      .run();
+  }
+
     private void evalTest(String table_name, String json, String query, String[] columns, Object[] values) throws Exception {
       File file = new File(dirTestWatcher.getRootDir(), table_name);
       try {
