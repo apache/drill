@@ -273,7 +273,7 @@ public class FileSelection {
     String child = DrillStringUtils.removeLeadingSlash(path);
     Path combined = new Path(parent, child);
     // Unescape chars escaped with '\' for our root path to be consistent with what
-    // fs.globStatus(...) below will do with them, c.f. DRIL-8064
+    // fs.globStatus(...) below will do with them, c.f. DRILL-8064
     Path root = new Path(parent, DrillStringUtils.unescapeJava(child));
 
     if (!allowAccessOutsideWorkspace) {
