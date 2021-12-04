@@ -270,15 +270,20 @@ public class FileSelection {
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     boolean hasWildcard = path.contains(WILD_CARD);
 
-    Path combined = new Path(parent, DrillStringUtils.removeLeadingSlash(path));
+    String child = DrillStringUtils.removeLeadingSlash(path);
+    Path combined = new Path(parent, child);
+    // Unescape chars escaped with '\' for our root path to be consistent with what
+    // fs.globStatus(...) below will do with them, c.f. DRILL-8064
+    Path root = new Path(parent, DrillStringUtils.unescapeJava(child));
+
     if (!allowAccessOutsideWorkspace) {
       checkBackPaths(new Path(parent).toUri().getPath(), combined.toUri().getPath(), path);
     }
-    FileStatus[] statuses = fs.globStatus(combined); // note: this would expand wildcards
+    FileStatus[] statuses = fs.globStatus(combined); // note: this will expand wildcards
     if (statuses == null) {
       return null;
     }
-    FileSelection fileSel = create(Arrays.asList(statuses), null, combined);
+    FileSelection fileSel = create(Arrays.asList(statuses), null, root);
     if (timer != null) {
       logger.debug("FileSelection.create() took {} ms ", timer.elapsed(TimeUnit.MILLISECONDS));
       timer.stop();

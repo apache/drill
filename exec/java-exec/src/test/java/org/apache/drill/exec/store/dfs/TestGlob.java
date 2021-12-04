@@ -31,6 +31,10 @@ public class TestGlob extends BaseTestQuery {
   @BeforeClass
   public static void setupTestFiles() {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel"));
+    dirTestWatcher.copyResourceToRoot(
+      Paths.get("emptyStrings.csv"),
+      Paths.get("globEscapeCharIsA\\Backslash.csv")
+    );
   }
 
   @Test
@@ -72,6 +76,18 @@ public class TestGlob extends BaseTestQuery {
       .unOrdered()
       .baselineColumns("EXPR$0")
       .baselineValues(80L)
+      .build()
+      .run();
+  }
+
+  @Test
+  // DRILL-8064
+  public void testGlobEscapeCharRootTextFile() throws Exception {
+    testBuilder()
+      .sqlQuery("select count(*) from dfs.`globEscapeCharIsA\\\\Backslash.csv`")
+      .unOrdered()
+      .baselineColumns("EXPR$0")
+      .baselineValues(3L)
       .build()
       .run();
   }
