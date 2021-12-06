@@ -26,7 +26,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.druid.druid.SelectQueryBuilder;
+import org.apache.drill.exec.store.druid.druid.ScanQueryBuilder;
 import org.apache.drill.exec.store.druid.rest.DruidAdminClient;
 import org.apache.drill.exec.store.druid.rest.DruidQueryClient;
 import org.apache.drill.exec.store.druid.rest.RestClient;
@@ -43,7 +43,7 @@ public class DruidStoragePlugin extends AbstractStoragePlugin {
   private final DruidAdminClient druidAdminClient;
   private final DruidQueryClient druidQueryClient;
   private final DruidSchemaFactory schemaFactory;
-  private final SelectQueryBuilder selectQueryBuilder;
+  private final ScanQueryBuilder scanQueryBuilder;
 
   public DruidStoragePlugin(DruidStoragePluginConfig pluginConfig, DrillbitContext context, String name) {
     super(context, name);
@@ -53,7 +53,7 @@ public class DruidStoragePlugin extends AbstractStoragePlugin {
     this.druidAdminClient = new DruidAdminClient(pluginConfig.getCoordinatorAddress(), restClient);
     this.druidQueryClient = new DruidQueryClient(pluginConfig.getBrokerAddress(), restClient);
     this.schemaFactory = new DruidSchemaFactory(this, name);
-    this.selectQueryBuilder = new SelectQueryBuilder();
+    this.scanQueryBuilder = new ScanQueryBuilder();
   }
 
   @Override
@@ -98,5 +98,5 @@ public class DruidStoragePlugin extends AbstractStoragePlugin {
 
   public DruidQueryClient getDruidQueryClient() { return this.druidQueryClient; }
 
-  public SelectQueryBuilder getSelectQueryBuilder() { return selectQueryBuilder; }
+  public ScanQueryBuilder getScanQueryBuilder() { return scanQueryBuilder; }
 }

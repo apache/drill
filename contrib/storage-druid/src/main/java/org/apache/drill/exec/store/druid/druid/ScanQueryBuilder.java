@@ -33,17 +33,18 @@ import java.util.stream.Stream;
 
 import static org.apache.drill.exec.store.druid.common.DruidConstants.INTERVAL_DIMENSION_NAME;
 
-public class SelectQueryBuilder {
+public class ScanQueryBuilder {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  public SelectQueryBuilder() {}
+  public ScanQueryBuilder() {}
 
-  public SelectQuery build(String datasource,
-                           List<String> dimensions,
-                           DruidFilter druidFilter,
-                           PagingSpec pagingSpec,
-                           String minTime,
-                           String maxTime)
+  public ScanQuery build(String datasource,
+                         List<String> columns,
+                         DruidFilter druidFilter,
+                         int nextOffset,
+                         int queryThreshold,
+                         String minTime,
+                         String maxTime)
     throws JsonProcessingException {
     List<JsonNode> userInputIntervals =
       druidFilter == null
@@ -55,11 +56,13 @@ public class SelectQueryBuilder {
         ? null
         : (ObjectNode) objectMapper.readTree(removeIntervalFilter(druidFilter.toJson(), userInputIntervals));
 
-    return new SelectQuery(
-      datasource,getDimensionsAsSpec(dimensions),
+    return new ScanQuery(
+      datasource,
+      columns,
       finalFilter,
       queryIntervals,
-      pagingSpec);
+      nextOffset,
+      queryThreshold);
   }
 
   private List<DruidDimensionSpec> getDimensionsAsSpec(List<String> columns) {

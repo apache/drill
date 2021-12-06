@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.druid.rest;
 
-import org.apache.drill.exec.store.druid.druid.DruidSelectResponse;
+import org.apache.drill.exec.store.druid.druid.DruidScanResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -90,9 +90,9 @@ public class DruidQueryClientTest {
         new ByteArrayInputStream("[]".getBytes(StandardCharsets.UTF_8.name()));
     when(httpEntity.getContent()).thenReturn(inputStream);
 
-    DruidSelectResponse response = druidQueryClient.executeQuery(QUERY);
+    DruidScanResponse response = druidQueryClient.executeQuery(QUERY);
     assertThat(response.getEvents()).isEmpty();
-    assertThat(response.getPagingIdentifiers()).isEmpty();
+    //assertThat(response.getPagingIdentifiers()).isEmpty();
   }
 
   @Test
@@ -103,7 +103,7 @@ public class DruidQueryClientTest {
         new ByteArrayInputStream(result.getBytes(StandardCharsets.UTF_8.name()));
     when(httpEntity.getContent()).thenReturn(inputStream);
 
-    DruidSelectResponse response = druidQueryClient.executeQuery(QUERY);
+    DruidScanResponse response = druidQueryClient.executeQuery(QUERY);
     assertThat(response.getEvents()).isNotEmpty();
     assertThat(response.getEvents().size()).isEqualTo(2);
     assertThat(response.getEvents().get(0).get("some_property").textValue()).isEqualTo("some value");

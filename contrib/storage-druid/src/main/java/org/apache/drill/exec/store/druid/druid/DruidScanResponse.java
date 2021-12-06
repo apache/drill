@@ -21,25 +21,28 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
 
-public class DruidSelectResponse {
+public class DruidScanResponse {
 
-  private ArrayList<ObjectNode> events = new ArrayList<>();
-  private ArrayList<PagingIdentifier> pagingIdentifiers = new ArrayList<>();
+  final private String segementId;
+  final private ArrayList<String> columns;
+  final private ArrayList<ObjectNode> events;
 
+  public DruidScanResponse(String segementId, ArrayList<String> columns, ArrayList<ObjectNode> events) {
+    this.segementId = segementId;
+    this.columns = columns;
+    this.events = events;
+  }
+
+  public String getSegementId() {
+    return segementId;
+  }
+
+  public ArrayList<String> getColumns() {
+    return columns;
+  }
 
   public ArrayList<ObjectNode> getEvents() {
     return events;
   }
 
-  public void setEvents(ArrayList<ObjectNode> events) {
-    this.events = events;
-  }
-
-  public ArrayList<PagingIdentifier> getPagingIdentifiers() {
-    return pagingIdentifiers;
-  }
-
-  public void setPagingIdentifiers(ArrayList<PagingIdentifier> pagingIdentifiers) {
-    this.pagingIdentifiers = pagingIdentifiers;
-  }
 }
