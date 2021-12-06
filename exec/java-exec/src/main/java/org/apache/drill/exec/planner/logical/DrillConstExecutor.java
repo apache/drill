@@ -184,12 +184,26 @@ public class DrillConstExecutor implements RexExecutor {
           case FLOAT4: {
             float value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
                 ((NullableFloat4Holder) valueHolder).value : ((Float4Holder) valueHolder).value;
+
+            // +Infinity, -Infinity and NaN must be represented as strings since
+            // BigDecimal cannot represent them.
+            if (!Float.isFinite(value)) {
+              return rexBuilder.makeLiteral(Float.toString(value));
+            }
+
             return rexBuilder.makeLiteral(new BigDecimal(value),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.FLOAT, newCall.getType().isNullable()), false);
           }
           case FLOAT8: {
             double value = (materializedExpr.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) ?
                 ((NullableFloat8Holder) valueHolder).value : ((Float8Holder) valueHolder).value;
+
+            // +Infinity, -Infinity and NaN must be represented as strings since
+            // BigDecimal cannot represent them.
+            if (!Double.isFinite(value)) {
+              return rexBuilder.makeLiteral(Double.toString(value));
+            }
+
             return rexBuilder.makeLiteral(new BigDecimal(value),
                 TypeInferenceUtils.createCalciteTypeWithNullability(typeFactory, SqlTypeName.DOUBLE, newCall.getType().isNullable()), false);
           }
