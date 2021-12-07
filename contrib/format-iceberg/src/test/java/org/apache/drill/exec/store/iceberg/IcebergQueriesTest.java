@@ -75,6 +75,7 @@ import static org.apache.drill.test.TestBuilder.mapOfObject;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class IcebergQueriesTest extends ClusterTest {
   private static Table table;
@@ -333,6 +334,7 @@ public class IcebergQueriesTest extends ClusterTest {
     String query = "select * from table(dfs.tmp.testAllTypes(type => 'iceberg', snapshotId => %s, snapshotAsOfTime => %s))";
     try {
       queryBuilder().sql(query, 123, 456).run();
+      fail();
     } catch (UserRemoteException e) {
       MatcherAssert.assertThat(e.getVerboseMessage(), containsString("Both 'snapshotId' and 'snapshotAsOfTime' cannot be specified"));
     }

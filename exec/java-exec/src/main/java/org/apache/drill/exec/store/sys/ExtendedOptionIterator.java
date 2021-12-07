@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -58,7 +57,7 @@ public class ExtendedOptionIterator implements Iterator<Object> {
 
   private final OptionManager fragmentOptions;
   private final Iterator<OptionValue> mergedOptions;
-  private Map<OptionValue.Kind, String> typeMapping;
+  private final Map<OptionValue.Kind, String> typeMapping;
   private static final int SHORT_DESCRIP_MAX_SIZE = 110;
 
   public ExtendedOptionIterator(FragmentContext context, boolean internal) {
@@ -106,12 +105,7 @@ public class ExtendedOptionIterator implements Iterator<Object> {
       optionslist.add(optionsmap.get(name));
     }
 
-    Collections.sort(optionslist, new Comparator<OptionValue>() {
-      @Override
-      public int compare(OptionValue v1, OptionValue v2) {
-        return v1.name.compareTo(v2.name);
-      }
-    });
+    optionslist.sort(Comparator.comparing(OptionValue::getName));
 
     return optionslist.iterator();
   }
@@ -175,7 +169,7 @@ public class ExtendedOptionIterator implements Iterator<Object> {
     if (optionDescription == null) {
       return "";
     }
-    String description = null;
+    String description;
     if (optionDescription.hasShortDescription()) {
       description = optionDescription.getShortDescription();
     } else {

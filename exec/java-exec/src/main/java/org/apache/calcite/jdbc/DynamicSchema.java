@@ -19,6 +19,7 @@ package org.apache.calcite.jdbc;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
@@ -40,12 +41,12 @@ public class DynamicSchema extends SimpleCalciteSchema {
     if (s != null) {
       return new DynamicSchema(this, s, schemaName);
     }
-    CalciteSchema ret = getSubSchemaMap().get(schemaName);
-    return ret;
+    return getSubSchemaMap().get(schemaName);
   }
 
-  public static SchemaPlus createRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig) {
-    DynamicRootSchema rootSchema = new DynamicRootSchema(storages, schemaConfig);
+  public static SchemaPlus createRootSchema(StoragePluginRegistry storages,
+      SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider) {
+    DynamicRootSchema rootSchema = new DynamicRootSchema(storages, schemaConfig, aliasRegistryProvider);
     return rootSchema.plus();
   }
 }

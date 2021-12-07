@@ -187,6 +187,7 @@ SqlNode SqlCreateOrReplace() :
     SqlParserPos pos;
     String createType = "SIMPLE";
     boolean isTemporary = false;
+    boolean isPublic = false;
 }
 {
     <CREATE> { pos = getPos(); }
@@ -216,6 +217,15 @@ SqlNode SqlCreateOrReplace() :
                      throw new ParseException("Create schema statement does not allow <TEMPORARY> keyword.");
                  }
                  return SqlCreateSchema(pos, createType);
+             }
+    |
+        [ <PUBLIC> { isPublic = true; } ]
+        <ALIAS>
+              {
+                 if (isTemporary) {
+                     throw new ParseException("Create alias statement does not allow <TEMPORARY> keyword.");
+                 }
+                 return SqlCreateAlias(pos, createType.equals("OR_REPLACE"), isPublic);
              }
     )
 }
@@ -892,4 +902,111 @@ DrillSqlResetOption DrillSqlResetOption(Span s, String scope) :
     {
         return new DrillSqlResetOption(s.end(name), scope, name);
     }
+}
+
+/**
+ * Parses CREATE ALIAS statement
+ * CREATE [OR REPLACE] [PUBLIC] ALIAS `alias` FOR [TABLE | STORAGE] `table/storage` [AS USER 'username']
+ */
+SqlNode SqlCreateAlias(SqlParserPos pos, boolean replace, boolean isPublic) :
+{
+   SqlIdentifier alias = null;
+   String aliasTarget = "TABLE";
+   SqlIdentifier source = null;
+   SqlNode user = null;
+}
+{
+   { alias = CompoundIdentifier(); }
+   <FOR>
+   [
+        <TABLE> { aliasTarget = "TABLE"; }
+   |
+        <STORAGE> { aliasTarget = "STORAGE"; }
+   ]
+   { source = CompoundIdentifier(); }
+   [ <AS> <USER> { user = StringLiteral(); } ]
+   {
+       return SqlCreateAlias.builder()
+              .pos(pos)
+              .alias(alias)
+              .source(source)
+              .aliasKind(SqlLiteral.createCharString(aliasTarget, pos))
+              .replace(SqlLiteral.createBoolean(replace, pos))
+              .isPublic(SqlLiteral.createBoolean(isPublic, pos))
+              .user(user)
+              .build();
+   }
+}
+
+/**
+ * Parses DROP ALIAS statement
+ * DROP [PUBLIC] ALIAS [IF EXISTS] `employee-alias` [FOR (TABLE | STORAGE)] [AS USER 'username']
+ */
+SqlNode SqlDropAlias() :
+{
+   SqlParserPos pos;
+   boolean isPublic = false;
+   boolean ifExists = false;
+   SqlIdentifier alias = null;
+   String aliasTarget = "TABLE";
+   SqlNode user = null;
+}
+{
+   <DROP> { pos = getPos(); }
+   [ <PUBLIC> { isPublic = true; } ]
+   <ALIAS>
+   [ <IF> <EXISTS> { ifExists = true; } ]
+   { alias = CompoundIdentifier(); }
+   [ <FOR>
+        (
+             <TABLE> { aliasTarget = "TABLE"; }
+        |
+             <STORAGE> { aliasTarget = "STORAGE"; }
+        )
+   ]
+   [ <AS> <USER> { user = StringLiteral(); } ]
+   {
+       return SqlDropAlias.builder()
+              .pos(pos)
+              .alias(alias)
+              .aliasKind(SqlLiteral.createCharString(aliasTarget, pos))
+              .ifExists(SqlLiteral.createBoolean(ifExists, pos))
+              .isPublic(SqlLiteral.createBoolean(isPublic, pos))
+              .user(user)
+              .build();
+   }
+}
+
+/**
+ * Parses DROP ALL ALIASES statement
+ * DROP ALL [PUBLIC] ALIASES [FOR (TABLE | STORAGE)] [AS USER 'username']
+ */
+SqlNode SqlDropAllAliases() :
+{
+   SqlParserPos pos;
+   boolean isPublic = false;
+   String aliasTarget = "TABLE";
+   SqlNode user = null;
+}
+{
+   <DROP> { pos = getPos(); }
+   <ALL>
+   [ <PUBLIC> { isPublic = true; } ]
+   <ALIASES>
+   [ <FOR>
+        (
+             <TABLE> { aliasTarget = "TABLE"; }
+        |
+             <STORAGE> { aliasTarget = "STORAGE"; }
+        )
+   ]
+   [ <AS> <USER> { user = StringLiteral(); } ]
+   {
+       return SqlDropAllAliases.builder()
+              .pos(pos)
+              .aliasKind(SqlLiteral.createCharString(aliasTarget, pos))
+              .isPublic(SqlLiteral.createBoolean(isPublic, pos))
+              .user(user)
+              .build();
+   }
 }
