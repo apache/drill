@@ -260,7 +260,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     rowIterator = sheet.iterator();
 
     // Case for empty sheet
-    if (!rowIterator.hasNext()) {
+    if (rowIterator == null || !rowIterator.hasNext()) {
       return;
     }
 
@@ -285,7 +285,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     rowIterator = sheet.iterator();
 
     // Case for empty sheet
-    if (!rowIterator.hasNext()) {
+    if (rowIterator == null || !rowIterator.hasNext()) {
       builder.buildSchema();
       return;
     }
