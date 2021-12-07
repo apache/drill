@@ -257,11 +257,6 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void buildColumnWritersFromProvidedSchema(TupleMetadata finalSchema) {
-    // Case for empty sheet
-    if (sheet.getLastRowNum() == 0) {
-      return;
-    }
-
     columnWriters = new ArrayList<>();
     metadataColumnWriters = new ArrayList<>();
     cellWriterArray = new ArrayList<>();
@@ -281,12 +276,6 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void getColumnHeaders(SchemaBuilder builder) {
-    // Case for empty sheet
-    if (sheet.getLastRowNum() == 0) {
-      builder.buildSchema();
-      return;
-    }
-
     columnWriters = new ArrayList<>();
     metadataColumnWriters = new ArrayList<>();
 
@@ -435,10 +424,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private boolean nextLine(RowSetLoader rowWriter) {
-    if (sheet.getLastRowNum() == 0) {
-      // Case for empty sheet
-      return false;
-    } else if (recordCount >= readerConfig.lastRow) {
+    if (recordCount >= readerConfig.lastRow) {
       return false;
     }
 
