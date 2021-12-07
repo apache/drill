@@ -154,7 +154,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private int totalColumnCount;
   private boolean firstLine;
   private FileSplit split;
-  private int recordCount;
+  private int recordCount = 0;
   private Map<String, String> stringMetadata;
   private Map<String, Date> dateMetadata;
   private Map<String, List<String>> listMetadata;
@@ -257,7 +257,9 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void buildColumnWritersFromProvidedSchema(TupleMetadata finalSchema) {
-    rowIterator = sheet.iterator();
+    if (rowIterator == null) {
+      rowIterator = sheet.rowIterator();
+    }
 
     // Case for empty sheet
     if (rowIterator == null || !rowIterator.hasNext()) {
@@ -282,7 +284,9 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void getColumnHeaders(SchemaBuilder builder) {
-    rowIterator = sheet.iterator();
+    if (rowIterator == null) {
+      rowIterator = sheet.rowIterator();
+    }
 
     // Case for empty sheet
     if (rowIterator == null || !rowIterator.hasNext()) {
@@ -436,7 +440,15 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private boolean nextLine(RowSetLoader rowWriter) {
-    if (recordCount >= readerConfig.lastRow) {
+    if (rowIterator == null) {
+      rowIterator = sheet.rowIterator();
+    }
+
+    if (currentRow == null && rowIterator != null && rowIterator.hasNext()) {
+      currentRow = rowIterator.next();
+    }
+
+    if (currentRow == null || recordCount >= readerConfig.lastRow) {
       return false;
     }
 
