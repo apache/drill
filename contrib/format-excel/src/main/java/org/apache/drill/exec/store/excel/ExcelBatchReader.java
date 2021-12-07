@@ -258,9 +258,9 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private void buildColumnWritersFromProvidedSchema(TupleMetadata finalSchema) {
     rowIterator = sheet.iterator();
-    
+
     // Case for empty sheet
-    if(!rowIterator.hasNext()) {
+    if (!rowIterator.hasNext()) {
       return;
     }
 
