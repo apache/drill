@@ -364,9 +364,12 @@ public class SimpleHttp {
    * @return FormBody.Builder The populated formbody builder
    */
   private FormBody.Builder buildPostBody(String postBody) {
+    FormBody.Builder formBodyBuilder = new FormBody.Builder();
+    if (StringUtils.isEmpty(postBody)) {
+      return formBodyBuilder;
+    }
     final Pattern postBodyPattern = Pattern.compile("^.+=.+$");
 
-    FormBody.Builder formBodyBuilder = new FormBody.Builder();
     String[] lines = postBody.split("\\r?\\n");
     for (String line : lines) {
 
