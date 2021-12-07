@@ -257,10 +257,16 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void buildColumnWritersFromProvidedSchema(TupleMetadata finalSchema) {
+    rowIterator = sheet.iterator();
+    
+    // Case for empty sheet
+    if(!rowIterator.hasNext()) {
+      return;
+    }
+
     columnWriters = new ArrayList<>();
     metadataColumnWriters = new ArrayList<>();
     cellWriterArray = new ArrayList<>();
-    rowIterator = sheet.iterator();
 
     // Get the number of columns.
     // This method also advances the row reader to the location of the first row of data
@@ -276,10 +282,16 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void getColumnHeaders(SchemaBuilder builder) {
+    rowIterator = sheet.iterator();
+
+    // Case for empty sheet
+    if (!rowIterator.hasNext()) {
+      builder.buildSchema();
+      return;
+    }
+
     columnWriters = new ArrayList<>();
     metadataColumnWriters = new ArrayList<>();
-
-    rowIterator = sheet.iterator();
 
     // Get the number of columns.
     // This method also advances the row reader to the location of the first row of data
