@@ -183,6 +183,12 @@ public class TestHttpPlugin extends ClusterTest {
       .postBody("key1=value1\nkey2=value2")
       .build();
 
+    HttpApiConfig mockPostConfigWithoutPostBody = HttpApiConfig.builder()
+      .url("http://localhost:8091/")
+      .method("POST")
+      .headers(headers)
+      .build();
+
     HttpApiConfig mockCsvConfig = HttpApiConfig.builder()
       .url("http://localhost:8091/csv")
       .method("GET")
@@ -248,6 +254,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("sunrise", mockSchema);
     configs.put("mocktable", mockTable);
     configs.put("mockpost", mockPostConfig);
+    configs.put("nullPost", mockPostConfigWithoutPostBody);
     configs.put("mockcsv", mockCsvConfig);
     configs.put("mockxml", mockXmlConfig);
     configs.put("github", mockGithubWithParam);
@@ -282,6 +289,7 @@ public class TestHttpPlugin extends ClusterTest {
         .addRow("local.mockcsv", "http")
         .addRow("local.mockpost", "http")
         .addRow("local.mockxml", "http")
+        .addRow("local.nullpost", "http")
         .addRow("local.sunrise", "http")
         .build();
 
@@ -428,7 +436,7 @@ public class TestHttpPlugin extends ClusterTest {
   }
 
   @Test
-  public void simpleTestWithJsonConfig() throws Exception {
+  public void simpleTestWithJsonConfig() {
     String sql = "SELECT * FROM local.mockJsonAllText";
 
     try (MockWebServer server = startServer()) {
@@ -832,6 +840,46 @@ public class TestHttpPlugin extends ClusterTest {
   }
 
   @Test
+  public void testPostWithMockServerAndNullPostbody() throws Exception {
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      String sql = "SELECT * FROM local.nullPost\n.`json?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addMap("results")
+        .add("sunrise", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("sunset", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("solar_noon", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("day_length", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .resumeSchema()
+        .add("status", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"), "OK")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertEquals("POST", recordedRequest.getMethod());
+    }
+  }
+
+  @Test
   public void testPostWithMockServer() throws Exception {
     try (MockWebServer server = startServer()) {
 
@@ -926,7 +974,7 @@ public class TestHttpPlugin extends ClusterTest {
         client.queryBuilder().sql(sql).rowSet();
         fail();
       } catch (Exception e) {
-        assertTrue(e.getMessage().contains("DATA_READ ERROR: timeout"));
+         assertTrue(e.getMessage().contains("DATA_READ ERROR: timeout"));
       }
     }
   }
