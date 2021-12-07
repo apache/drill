@@ -37,6 +37,7 @@ import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.HttpSubScan;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.parquet.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import javax.net.ssl.HostnameVerifier;
@@ -364,9 +365,12 @@ public class SimpleHttp {
    * @return FormBody.Builder The populated formbody builder
    */
   private FormBody.Builder buildPostBody(String postBody) {
+    FormBody.Builder formBodyBuilder = new FormBody.Builder();
+    if (Strings.isNullOrEmpty(postBody)) {
+      return formBodyBuilder;
+    }
     final Pattern postBodyPattern = Pattern.compile("^.+=.+$");
 
-    FormBody.Builder formBodyBuilder = new FormBody.Builder();
     String[] lines = postBody.split("\\r?\\n");
     for (String line : lines) {
 
