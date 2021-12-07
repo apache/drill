@@ -44,7 +44,6 @@ public class VaultUserAuthenticator implements UserAuthenticator {
   public static final String VAULT_ADDRESS = "drill.exec.security.user.auth.vault.address";
   public static final String VAULT_TOKEN = "drill.exec.security.user.auth.vault.token";
   public static final String VAULT_AUTH_METHOD = "drill.exec.security.user.auth.vault.method";
-  public static final String VAULT_USERPASS_MOUNT = "drill.exec.security.user.auth.vault.userpass_mount";
 
   // The subset of Vault auth methods that are supported by this authenticator
   public enum VaultAuthMethod {
@@ -90,10 +89,14 @@ public class VaultUserAuthenticator implements UserAuthenticator {
       )
     );
 
-    this.userPassMount = config.getString(VAULT_USERPASS_MOUNT);
-
     // Initialise Vault client
     try {
+      logger.debug(
+        "tries to init a Vault client with Vault addr = {}, auth method = {}",
+        vaultAddress,
+        authMethod
+      );
+
       VaultConfig vaultConfig = new VaultConfig()
           .address(vaultAddress)
           .token(vaultToken)
@@ -102,7 +105,7 @@ public class VaultUserAuthenticator implements UserAuthenticator {
       this.vault = new Vault(vaultConfig);
     } catch (VaultException e) {
       logger.error(String.join(System.lineSeparator(),
-          "Error initialising the Vault client library using configuration: ",
+          "error initialising the Vault client library using configuration: ",
           "\tvaultAddress: {}",
           "\tvaultToken: {}",
           "\tauthMethod: {}"
@@ -125,6 +128,8 @@ public class VaultUserAuthenticator implements UserAuthenticator {
     AuthResponse authResp;
 
     try {
+      logger.debug("tries to authenticate user {} using {}", user, authMethod);
+
       switch (authMethod) {
         case APP_ROLE:
           authResp = vault.auth().loginByAppRole(user, password);
@@ -139,7 +144,8 @@ public class VaultUserAuthenticator implements UserAuthenticator {
           authResp = vault.auth().loginByLDAP(user, password);
           break;
         case USER_PASS:
-          authResp = vault.auth().loginByUserPass(user, password, this.userPassMount);
+          authResp = vault.auth().loginByUserPass(user, password);
+          break;
         default:
           throw new UserAuthenticationException(
             String.format(
@@ -149,7 +155,7 @@ public class VaultUserAuthenticator implements UserAuthenticator {
           );
         }
     } catch (VaultException e) {
-      logger.warn("Failed to authenticate user {} using {}: {}.", user, authMethod, e);
+      logger.warn("failed to authenticate user {} using {}: {}.", user, authMethod, e);
       throw new UserAuthenticationException(
         String.format(
           "Failed to authenticate user %s using %s: %s",
@@ -161,7 +167,7 @@ public class VaultUserAuthenticator implements UserAuthenticator {
     }
 
     logger.info(
-      "User {} authenticated against Vault successfully.",
+      "user {} authenticated against Vault successfully.",
       authResp.getUsername()
     );
   }

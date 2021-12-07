@@ -17,23 +17,26 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
+import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.ClientFixture;
-import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.vault.VaultContainer;
+import org.testcontainers.vault.VaultLogLevel;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.fail;
 
+@Category(SecurityTest.class)
 public class TestVaultUserAuthenticator extends ClusterTest {
 
   private static final String VAULT_TOKEN_VALUE = "vault-token";
@@ -41,12 +44,12 @@ public class TestVaultUserAuthenticator extends ClusterTest {
   @ClassRule
   public static final VaultContainer<?> vaultContainer =
       new VaultContainer<>(DockerImageName.parse("vault").withTag("1.1.3"))
+          .withLogLevel(VaultLogLevel.Debug)
           .withVaultToken(VAULT_TOKEN_VALUE)
-          .withVaultPort(8200)
-          .withSecretInVault(
-            null,
-            "alice=pass1",
-            "bob=buzzkill"
+          .withInitCommand(
+            "auth enable userpass",
+            "write auth/userpass/users/alice password=pass1 policies=admins",
+            "write auth/userpass/users/bob password=buzzkill policies=admins"
           );
 
   @BeforeClass
@@ -57,7 +60,8 @@ public class TestVaultUserAuthenticator extends ClusterTest {
       vaultContainer.getMappedPort(8200)
     );
 
-    ClusterFixtureBuilder cfb = ClusterFixture.builder(dirTestWatcher)
+    cluster = ClusterFixture.bareBuilder(dirTestWatcher)
+      .clusterSize(3)
       .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
       .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
       .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, "vault")
@@ -66,19 +70,18 @@ public class TestVaultUserAuthenticator extends ClusterTest {
       .configProperty(
         VaultUserAuthenticator.VAULT_AUTH_METHOD,
         VaultUserAuthenticator.VaultAuthMethod.USER_PASS
-      );
-
-    startCluster(cfb);
+      )
+      .build();
   }
 
   @Test
   public void passwordChecksGiveCorrectResults() throws Exception {
-    tryCredentials("alice", "pass1", cluster, true);
-    tryCredentials("bob", "buzzkill", cluster, true);
     tryCredentials("notalice", "pass1", cluster, false);
     tryCredentials("notbob", "buzzkill", cluster, false);
     tryCredentials("alice", "wrong", cluster, false);
     tryCredentials("bob", "incorrect", cluster, false);
+    tryCredentials("alice", "pass1", cluster, true);
+    tryCredentials("bob", "buzzkill", cluster, true);
   }
 
   private static void tryCredentials(String user, String password, ClusterFixture cluster, boolean shouldSucceed) throws Exception {
