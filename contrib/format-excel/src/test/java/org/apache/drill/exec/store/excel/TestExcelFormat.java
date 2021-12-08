@@ -266,6 +266,28 @@ public class TestExcelFormat extends ClusterTest {
   }
 
   @Test
+  public void testHandleMissingRows() throws RpcException {
+    String sql = "SELECT id, first_name, order_count FROM table(cp.`excel/blank_rows.xlsx` (type => 'excel', sheetName => 'data', headerRow => 3))";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("id", TypeProtos.MinorType.FLOAT8)
+      .addNullable("first_name", TypeProtos.MinorType.VARCHAR)
+      .addNullable("order_count", TypeProtos.MinorType.FLOAT8)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1.0, "Cornelia", 22.0)
+      .addRow(2.0, "Nydia", 22.0)
+      .addRow(3.0, "Waiter", 17.0)
+      .addRow(4.0, "Cicely", 6.0)
+      .addRow(5.0, "Dorie", 17.0)
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testExplicitWithSpacesInColHeader() throws RpcException {
     String sql = "SELECT col1, col2 FROM table(cp.`excel/test_data.xlsx` (type => 'excel', sheetName => 'spaceInColHeader'))";
 
