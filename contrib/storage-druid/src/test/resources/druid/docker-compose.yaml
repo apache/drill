@@ -7,25 +7,31 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 #
-
 version: "2.2"
 
 volumes:
   metadata_data: {}
-  druid_var:
+  middle_var: {}
+  historical_var: {}
+  broker_var: {}
+  coordinator_var: {}
+  router_var: {}
+  druid_shared: {}
+
 
 services:
   postgres:
     container_name: postgres
-    image: postgres:9
+    image: postgres:latest
     volumes:
       - metadata_data:/var/lib/postgresql/data
     environment:
@@ -37,14 +43,17 @@ services:
   zookeeper:
     container_name: zookeeper
     image: zookeeper:3.5
+    ports:
+      - "2181:2181"
     environment:
       - ZOO_MY_ID=1
 
   coordinator:
-    image: apache/incubator-druid:0.16.1-incubating
+    image: apache/druid:0.22.0
     container_name: coordinator
     volumes:
-      - druid_var:/opt/druid/var
+      - druid_shared:/opt/shared
+      - coordinator_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres
@@ -53,13 +62,13 @@ services:
     command:
       - coordinator
     env_file:
-      - environment.env
+      - environment
 
   broker:
-    image: apache/incubator-druid:0.16.1-incubating
+    image: apache/druid:0.22.0
     container_name: broker
     volumes:
-      - druid_var:/opt/druid/var
+      - broker_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres
@@ -69,13 +78,14 @@ services:
     command:
       - broker
     env_file:
-      - environment.env
+      - environment
 
   historical:
-    image: apache/incubator-druid:0.16.1-incubating
+    image: apache/druid:0.22.0
     container_name: historical
     volumes:
-      - druid_var:/opt/druid/var
+      - druid_shared:/opt/shared
+      - historical_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres
@@ -85,44 +95,31 @@ services:
     command:
       - historical
     env_file:
-      - environment.env
-
-  overlord:
-    image: apache/incubator-druid:0.16.1-incubating
-    container_name: overlord
-    volumes:
-      - druid_var:/opt/druid/var
-    depends_on:
-      - zookeeper
-      - postgres
-    ports:
-      - "8090:8090"
-    command:
-      - overlord
-    env_file:
-      - environment.env
+      - environment
 
   middlemanager:
-    image: apache/incubator-druid:0.16.1-incubating
+    image: apache/druid:0.22.0
     container_name: middlemanager
     volumes:
-      - druid_var:/opt/druid/var
+      - druid_shared:/opt/shared
+      - middle_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres
       - coordinator
     ports:
       - "8091:8091"
+      - "8100-8105:8100-8105"
     command:
       - middleManager
     env_file:
-      - environment.env
+      - environment
 
   router:
-    image: apache/incubator-druid:0.16.1-incubating
+    image: apache/druid:0.22.0
     container_name: router
     volumes:
-      - druid_var:/opt/druid/var
+      - router_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres
@@ -132,4 +129,4 @@ services:
     command:
       - router
     env_file:
-      - environment.env
+      - environment
