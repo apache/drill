@@ -35,7 +35,6 @@
 
       <link href="/static/css/bootstrap.min.css" rel="stylesheet">
       <link href="/static/css/drillStyle.css" rel="stylesheet">
-      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
       <script type="text/javascript" language="javascript" src="/static/js/jquery-3.6.0.min.js"></script>
       <script src="/static/js/popper.min.js"></script>
