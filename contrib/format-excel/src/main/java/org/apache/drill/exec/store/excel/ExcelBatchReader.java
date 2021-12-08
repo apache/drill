@@ -154,7 +154,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private int totalColumnCount;
   private boolean firstLine;
   private FileSplit split;
-  private int recordCount = 0;
+  private int recordCount;
   private Map<String, String> stringMetadata;
   private Map<String, Date> dateMetadata;
   private Map<String, List<String>> listMetadata;
