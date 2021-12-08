@@ -182,7 +182,7 @@ public class VaultUserAuthenticator implements UserAuthenticator {
             .build();
 
           LookupResponse lookupResp = new Vault(lookupConfig).auth().lookupSelf();
-          if (user.equals(lookupResp.getUsername())) {
+          if (!user.equals(lookupResp.getUsername())) {
             throw new UserAuthenticationException(String.format(
               "Attempted to authenticate user %s with a Vault token that is " +
               " valid but belongs to %s!",
