@@ -257,15 +257,18 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void buildColumnWritersFromProvidedSchema(TupleMetadata finalSchema) {
+    if (rowIterator == null) {
+      rowIterator = sheet.rowIterator();
+    }
+
     // Case for empty sheet
-    if (sheet.getLastRowNum() == 0) {
+    if (rowIterator == null || !rowIterator.hasNext()) {
       return;
     }
 
     columnWriters = new ArrayList<>();
     metadataColumnWriters = new ArrayList<>();
     cellWriterArray = new ArrayList<>();
-    rowIterator = sheet.iterator();
 
     // Get the number of columns.
     // This method also advances the row reader to the location of the first row of data
@@ -281,16 +284,18 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private void getColumnHeaders(SchemaBuilder builder) {
+    if (rowIterator == null) {
+      rowIterator = sheet.rowIterator();
+    }
+
     // Case for empty sheet
-    if (sheet.getLastRowNum() == 0) {
+    if (rowIterator == null || !rowIterator.hasNext()) {
       builder.buildSchema();
       return;
     }
 
     columnWriters = new ArrayList<>();
     metadataColumnWriters = new ArrayList<>();
-
-    rowIterator = sheet.iterator();
 
     // Get the number of columns.
     // This method also advances the row reader to the location of the first row of data
@@ -435,10 +440,15 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   private boolean nextLine(RowSetLoader rowWriter) {
-    if (sheet.getLastRowNum() == 0) {
-      // Case for empty sheet
-      return false;
-    } else if (recordCount >= readerConfig.lastRow) {
+    if (rowIterator == null) {
+      rowIterator = sheet.rowIterator();
+    }
+
+    if (currentRow == null && rowIterator != null && rowIterator.hasNext()) {
+      currentRow = rowIterator.next();
+    }
+
+    if (currentRow == null || recordCount >= readerConfig.lastRow) {
       return false;
     }
 
