@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
+import com.bettercloud.vault.Vault;
+import com.bettercloud.vault.VaultConfig;
+import com.bettercloud.vault.response.AuthResponse;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
@@ -40,7 +43,7 @@ import static org.junit.Assert.fail;
 public class TestVaultUserAuthenticator extends ClusterTest {
 
   private static final String VAULT_TOKEN_VALUE = "vault-token";
-  
+
   @ClassRule
   public static final VaultContainer<?> vaultContainer =
       new VaultContainer<>(DockerImageName.parse("vault").withTag("1.1.3"))
@@ -92,6 +95,16 @@ public class TestVaultUserAuthenticator extends ClusterTest {
       vaultContainer.getMappedPort(8200)
     );
 
+    // Use the Vault client lib to obtain Vault tokens for our test users.
+    VaultConfig vaultConfig = new VaultConfig()
+      .address(vaultAddr)
+      .token(VAULT_TOKEN_VALUE)
+      .build();
+
+    Vault vault = new Vault(vaultConfig);
+    AuthResponse aliceResp = vault.auth().loginByUserPass("alice", "pass1");
+    AuthResponse bobResp = vault.auth().loginByUserPass("bob", "buzzkill");
+
     // set up a new cluster with a config option selecting Vault token auth
     cluster = ClusterFixture.bareBuilder(dirTestWatcher)
       .clusterSize(3)
@@ -106,12 +119,13 @@ public class TestVaultUserAuthenticator extends ClusterTest {
       )
       .build();
 
-    tryCredentials("notalice", VAULT_TOKEN_VALUE, cluster, false);
-    tryCredentials("notbob", VAULT_TOKEN_VALUE, cluster, false);
+
+    tryCredentials("notalice", aliceResp.getAuthClientToken(), cluster, false);
+    tryCredentials("notbob", bobResp.getAuthClientToken(), cluster, false);
     tryCredentials("alice", "wrong", cluster, false);
     tryCredentials("bob", "incorrect", cluster, false);
-    tryCredentials("alice", VAULT_TOKEN_VALUE, cluster, true);
-    tryCredentials("bob", VAULT_TOKEN_VALUE, cluster, true);
+    tryCredentials("alice", aliceResp.getAuthClientToken(), cluster, true);
+    tryCredentials("bob", bobResp.getAuthClientToken(), cluster, true);
   }
 
   private static void tryCredentials(String user, String password, ClusterFixture cluster, boolean shouldSucceed) throws Exception {
