@@ -40,7 +40,7 @@ import static org.junit.Assert.fail;
 public class TestVaultUserAuthenticator extends ClusterTest {
 
   private static final String VAULT_TOKEN_VALUE = "vault-token";
-
+  
   @ClassRule
   public static final VaultContainer<?> vaultContainer =
       new VaultContainer<>(DockerImageName.parse("vault").withTag("1.1.3"))
@@ -75,13 +75,43 @@ public class TestVaultUserAuthenticator extends ClusterTest {
   }
 
   @Test
-  public void passwordChecksGiveCorrectResults() throws Exception {
+  public void testUserPassAuth() throws Exception {
     tryCredentials("notalice", "pass1", cluster, false);
     tryCredentials("notbob", "buzzkill", cluster, false);
     tryCredentials("alice", "wrong", cluster, false);
     tryCredentials("bob", "incorrect", cluster, false);
     tryCredentials("alice", "pass1", cluster, true);
     tryCredentials("bob", "buzzkill", cluster, true);
+  }
+
+  @Test
+  public void testVaultTokenAuth() throws Exception {
+    String vaultAddr = String.format(
+      "http://%s:%d",
+      vaultContainer.getHost(),
+      vaultContainer.getMappedPort(8200)
+    );
+
+    // set up a new cluster with a config option selecting Vault token auth
+    cluster = ClusterFixture.bareBuilder(dirTestWatcher)
+      .clusterSize(3)
+      .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
+      .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
+      .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, "vault")
+      .configProperty(VaultUserAuthenticator.VAULT_ADDRESS, vaultAddr)
+      .configProperty(VaultUserAuthenticator.VAULT_TOKEN, VAULT_TOKEN_VALUE)
+      .configProperty(
+        VaultUserAuthenticator.VAULT_AUTH_METHOD,
+        VaultUserAuthenticator.VaultAuthMethod.VAULT_TOKEN
+      )
+      .build();
+
+    tryCredentials("notalice", VAULT_TOKEN_VALUE, cluster, false);
+    tryCredentials("notbob", VAULT_TOKEN_VALUE, cluster, false);
+    tryCredentials("alice", "wrong", cluster, false);
+    tryCredentials("bob", "incorrect", cluster, false);
+    tryCredentials("alice", VAULT_TOKEN_VALUE, cluster, true);
+    tryCredentials("bob", VAULT_TOKEN_VALUE, cluster, true);
   }
 
   private static void tryCredentials(String user, String password, ClusterFixture cluster, boolean shouldSucceed) throws Exception {

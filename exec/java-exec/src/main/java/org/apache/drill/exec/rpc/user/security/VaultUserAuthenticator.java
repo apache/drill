@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
-import com.bettercloud.vault.response.AuthResponse;
+import com.bettercloud.vault.response.LookupResponse;
 import com.bettercloud.vault.Vault;
 import com.bettercloud.vault.VaultConfig;
 import com.bettercloud.vault.VaultException;
@@ -31,9 +31,9 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Implement {@link org.apache.drill.exec.rpc.user.security.UserAuthenticator} based on Pluggable Authentication
- * Module (PAM) configuration. Configure the PAM profiles using "drill.exec.security.user.auth.pam_profiles" BOOT
- * option. Ex. value  <i>[ "login", "sudo" ]</i> (value is an array of strings).
+ * Implement {@link org.apache.drill.exec.rpc.user.security.UserAuthenticator}
+ * based on HashiCorp Vault.  Configure the Vault client using the Drill BOOT
+ * options that appear below.
  */
 @Slf4j
 @EqualsAndHashCode
@@ -48,34 +48,31 @@ public class VaultUserAuthenticator implements UserAuthenticator {
   // The subset of Vault auth methods that are supported by this authenticator
   public enum VaultAuthMethod {
     APP_ROLE,
-    GCP,
-    KUBERNETES,
     LDAP,
-    USER_PASS
+    USER_PASS,
+    VAULT_TOKEN
   }
+
+  private VaultConfig vaultConfig;
 
   private Vault vault;
 
   private VaultAuthMethod authMethod;
 
-  private String userPassMount;
-
+  /**
+   * Reads Drill BOOT options and uses them to set up a Vault client.
+   * @param config object providing Drill config settings for Vault
+   * @throws DrillbitStartupException if the provided Vault configuration is invalid
+   */
   @Override
   public void setup(DrillConfig config) throws DrillbitStartupException {
     // Read config values
     String vaultAddress = Objects.requireNonNull(
       config.getString(VAULT_ADDRESS),
       String.format(
-        "Vault address is not specified. Please set [%s] config property.",
+        "Vault address BOOT option is not specified. Please set [%s] config " +
+        "option.",
         VAULT_ADDRESS
-      )
-    );
-
-    String vaultToken = Objects.requireNonNull(
-      config.getString(VAULT_TOKEN),
-      String.format(
-        "Vault token is not specified. Please set [%s] config property.",
-        VAULT_TOKEN
       )
     );
 
@@ -83,29 +80,50 @@ public class VaultUserAuthenticator implements UserAuthenticator {
       Objects.requireNonNull(
         config.getString(VAULT_AUTH_METHOD),
         String.format(
-          "Vault auth method is not specified. Please set [%s] config property.",
+          "Vault auth method is not specified. Please set [%s] config option.",
           VAULT_AUTH_METHOD
         )
       )
     );
 
+    VaultConfig vaultConfBuilder = new VaultConfig().address(vaultAddress);
+    String vaultToken = config.getString(VAULT_TOKEN);
+
+    if (this.authMethod == VaultAuthMethod.VAULT_TOKEN) {
+      // Drill will use end users' Vault tokens for Vault operations
+      if (vaultToken != null) {
+        logger.warn(
+          "When Drill is set to authenticate using end user Vault tokens the " +
+          "[{}] BOOT option is ignored.",
+          VAULT_TOKEN
+        );
+      }
+    } else {
+      // Drill needs its own Vault token set in a BOOT option
+      if (vaultToken == null) {
+        throw new DrillbitStartupException(String.format(
+          "Only the %s method is supported if you do not set a token in the " +
+            "[%s] config option.",
+          VaultAuthMethod.VAULT_TOKEN,
+          VAULT_TOKEN
+        ));
+      }
+      vaultConfBuilder.token(vaultToken);
+    }
+
     // Initialise Vault client
     try {
       logger.debug(
-        "tries to init a Vault client with Vault addr = {}, auth method = {}",
+        "Tries to init a Vault client with Vault addr = {}, auth method = {}",
         vaultAddress,
         authMethod
       );
 
-      VaultConfig vaultConfig = new VaultConfig()
-          .address(vaultAddress)
-          .token(vaultToken)
-          .build();
-
-      this.vault = new Vault(vaultConfig);
+      this.vaultConfig = vaultConfBuilder.build();
+      this.vault = new Vault(this.vaultConfig);
     } catch (VaultException e) {
       logger.error(String.join(System.lineSeparator(),
-          "error initialising the Vault client library using configuration: ",
+          "Error initialising the Vault client library using configuration: ",
           "\tvaultAddress: {}",
           "\tvaultToken: {}",
           "\tauthMethod: {}"
@@ -122,40 +140,66 @@ public class VaultUserAuthenticator implements UserAuthenticator {
     }
   }
 
+  /**
+   * Attempts to authenticate a Drill user with the provided password and the
+   * configured Vault auth method.  Only auth methods that have a natural
+   * mapping to PLAIN authentication's user and password strings are supported.
+   * @param user username
+   * @param password password
+   * @throws UserAuthenticationException if the authentication attempt fails
+   */
   @Override
-  public void authenticate(String user, String password) throws UserAuthenticationException {
-
-    AuthResponse authResp;
+  public void authenticate(
+    String user,
+    String password
+  ) throws UserAuthenticationException {
 
     try {
-      logger.debug("tries to authenticate user {} using {}", user, authMethod);
+      logger.debug("Tries to authenticate user {} using {}", user, authMethod);
 
       switch (authMethod) {
         case APP_ROLE:
-          authResp = vault.auth().loginByAppRole(user, password);
-          break;
-        case GCP:
-          authResp = vault.auth().loginByGCP(user, password);
-          break;
-        case KUBERNETES:
-          authResp = vault.auth().loginByKubernetes(user, password);
+          // user = role id, password = secret id
+          vault.auth().loginByAppRole(user, password);
           break;
         case LDAP:
-          authResp = vault.auth().loginByLDAP(user, password);
+          // user = username, password = password
+          vault.auth().loginByLDAP(user, password);
           break;
         case USER_PASS:
-          authResp = vault.auth().loginByUserPass(user, password);
+          // user = username, password = password
+          vault.auth().loginByUserPass(user, password);
           break;
+        case VAULT_TOKEN:
+          // user = username, password = vault token
+
+          // Create a throwaway Vault client using the provided token and send a
+          // token lookup request to Vault which will fail if the token is
+          // invalid.
+          VaultConfig lookupConfig = new VaultConfig()
+            .address(this.vaultConfig.getAddress())
+            .token(password)
+            .build();
+
+          LookupResponse lookupResp = new Vault(lookupConfig).auth().lookupSelf();
+          if (user.equals(lookupResp.getUsername())) {
+            throw new UserAuthenticationException(String.format(
+              "Attempted to authenticate user %s with a Vault token that is " +
+              " valid but belongs to %s!",
+              user,
+              lookupResp.getUsername()
+            ));
+          }
+          break;
+
         default:
-          throw new UserAuthenticationException(
-            String.format(
-              "The Vault authentication method '%s' is not supported",
-              authMethod
-            )
-          );
+          throw new UserAuthenticationException(String.format(
+            "The Vault authentication method '%s' is not supported",
+            authMethod
+          ));
         }
     } catch (VaultException e) {
-      logger.warn("failed to authenticate user {} using {}: {}.", user, authMethod, e);
+      logger.warn("Failed to authenticate user {} using {}: {}.", user, authMethod, e);
       throw new UserAuthenticationException(
         String.format(
           "Failed to authenticate user %s using %s: %s",
@@ -167,14 +211,14 @@ public class VaultUserAuthenticator implements UserAuthenticator {
     }
 
     logger.info(
-      "user {} authenticated against Vault successfully.",
-      authResp.getUsername()
+      "User {} authenticated against Vault successfully.",
+      user
     );
   }
 
   @Override
   public void close() throws IOException {
     this.vault = null;
-    logger.debug("has been closed.");
+    logger.debug("Has been closed.");
   }
 }
