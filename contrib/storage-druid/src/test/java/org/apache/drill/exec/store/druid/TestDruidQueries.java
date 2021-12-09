@@ -24,6 +24,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.math.BigInteger;
+
 @Ignore("These tests require a running druid instance. You may start druid by using the docker-compose provide in resources/druid and enable these tests")
 @Category({SlowTest.class, DruidStorageTest.class})
 public class TestDruidQueries extends DruidTestBase {
@@ -63,7 +65,7 @@ public class TestDruidQueries extends DruidTestBase {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("comment")
-        .expectsNumRecords(39244)
+        .expectsNumRecords(24433)
         .go();
   }
 
@@ -74,8 +76,8 @@ public class TestDruidQueries extends DruidTestBase {
     testBuilder()
       .sqlQuery(query)
       .unOrdered()
-      .baselineColumns("count")
-      .baselineValues(39244L)
+      .baselineColumns("mycount")
+      .baselineValues(24433)
       .go();
   }
 }

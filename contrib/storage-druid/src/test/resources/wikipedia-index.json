@@ -23,7 +23,7 @@
       "dataSource": "wikipedia",
       "granularitySpec": {
         "type": "uniform",
-        "segmentGranularity": "DAY",
+        "segmentGranularity": "HOUR",
         "queryGranularity": "HOUR",
         "rollup": true
       },
