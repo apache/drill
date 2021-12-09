@@ -36,6 +36,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
@@ -217,23 +218,15 @@ public class ProfileResources {
   }
 
   @XmlRootElement
-  public class QProfiles {
-    private final List<ProfileInfo> runningQueries;
-    private final List<ProfileInfo> finishedQueries;
+  public class QProfilesBase {
     private final List<String> errors;
 
-    public QProfiles(List<ProfileInfo> runningQueries, List<ProfileInfo> finishedQueries, List<String> errors) {
-      this.runningQueries = runningQueries;
-      this.finishedQueries = finishedQueries;
+    public QProfilesBase(List<String> errors) {
       this.errors = errors;
     }
 
-    public List<ProfileInfo> getRunningQueries() {
-      return runningQueries;
-    }
-
-    public List<ProfileInfo> getFinishedQueries() {
-      return finishedQueries;
+    public List<String> getErrors() {
+      return errors;
     }
 
     public int getMaxFetchedQueries() {
@@ -245,8 +238,54 @@ public class ProfileResources {
       Collections.sort(queriesPerPageOptions);
       return Joiner.on(",").join(queriesPerPageOptions);
     }
+  }
 
-    public List<String> getErrors() { return errors; }
+  @XmlRootElement
+  public class QProfiles extends QProfilesBase {
+    private  final List<ProfileInfo> runningQueries;
+    private  final List<ProfileInfo> finishedQueries;
+
+    public QProfiles(List<ProfileInfo> runningQueries, List<ProfileInfo> finishedQueries, List<String> errors) {
+      super(errors);
+      this.runningQueries = runningQueries;
+      this.finishedQueries = finishedQueries;
+    }
+
+    public List<ProfileInfo> getRunningQueries() {
+      return runningQueries;
+    }
+
+    public List<ProfileInfo> getFinishedQueries() {
+      return finishedQueries;
+    }
+  }
+
+  @XmlRootElement
+  public class QProfilesRunning extends QProfilesBase {
+    private final List<ProfileInfo> runningQueries;
+
+    public QProfilesRunning(List<ProfileInfo> runningQueries,List<String> errors) {
+      super(errors);
+      this.runningQueries = runningQueries;
+    }
+
+    public List<ProfileInfo> getRunningQueries() {
+      return runningQueries;
+    }
+  }
+
+  @XmlRootElement
+  public class QProfilesCompleted extends QProfilesBase {
+    private final List<ProfileInfo> finishedQueries;
+
+    public QProfilesCompleted(List<ProfileInfo> finishedQueries, List<String> errors) {
+      super(errors);
+      this.finishedQueries = finishedQueries;
+    }
+
+    public List<ProfileInfo> getFinishedQueries() {
+      return finishedQueries;
+    }
   }
 
   //max Param to cap listing of profiles
@@ -259,13 +298,43 @@ public class ProfileResources {
   @Path("/profiles.json")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getProfilesJSON(@Context UriInfo uriInfo) {
+    QProfilesRunning running_results = (QProfilesRunning)getRunningProfilesJSON(uriInfo).getEntity();
+    QProfilesCompleted completed_results = (QProfilesCompleted)getCompletedProfilesJSON(uriInfo).getEntity();
+    final List<String> total_errors = Lists.newArrayList();
+    total_errors.addAll(running_results.getErrors());
+    total_errors.addAll(completed_results.getErrors());
+
+    QProfiles final_results = new QProfiles(running_results.runningQueries, completed_results.finishedQueries, total_errors);
+    return total_errors.size() == 0
+        ? Response.ok().entity(final_results).build()
+        : Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+          .entity(final_results)
+          .build();
+  }
+
+  @GET
+  @Path("/profiles/json")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getSpecificJSON(@Context UriInfo uriInfo, @QueryParam("status") String status) {
+    switch (status) {
+    case "running":
+      return getRunningProfilesJSON(uriInfo);
+    case "completed":
+      return getCompletedProfilesJSON(uriInfo);
+    case "all":
+    default:
+      return getProfilesJSON(uriInfo);
+    }
+  }
+
+  @GET
+  @Path("/profiles/running.json")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getRunningProfilesJSON(@Context UriInfo uriInfo) {
     try {
       final QueryProfileStoreContext profileStoreContext = work.getContext().getProfileStoreContext();
-      final PersistentStore<QueryProfile> completed = profileStoreContext.getCompletedProfileStore();
       final TransientStore<QueryInfo> running = profileStoreContext.getRunningProfileStore();
-
       final List<String> errors = Lists.newArrayList();
-
       final List<ProfileInfo> runningQueries = Lists.newArrayList();
 
       final Iterator<Map.Entry<String, QueryInfo>> runningEntries = running.entries();
@@ -276,22 +345,41 @@ public class ProfileResources {
           if (principal.canManageProfileOf(profile.getUser())) {
             runningQueries.add(
                 new ProfileInfo(work.getContext().getConfig(),
-                    runningEntry.getKey(), profile.getStart(), System.currentTimeMillis(),
-                    profile.getForeman().getAddress(), profile.getQuery(),
+                    runningEntry.getKey(), profile.getStart(),
+                    System.currentTimeMillis(), profile.getForeman().getAddress(),
+                    profile.getQuery(),
                     ProfileUtil.getQueryStateDisplayName(profile.getState()),
-                    profile.getUser(), profile.getTotalCost(), profile.getQueueName()));
+                    profile.getUser(), profile.getTotalCost(),
+                    profile.getQueueName()));
           }
         } catch (Exception e) {
           errors.add(e.getMessage());
           logger.error("Error getting running query info.", e);
         }
       }
-
       Collections.sort(runningQueries, Collections.reverseOrder());
+      QProfilesRunning rProf = new QProfilesRunning(runningQueries, errors);
+      return errors.size() == 0
+          ? Response.ok().entity(rProf).build()
+          : Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+            .entity(rProf)
+            .build();
+    } catch (Exception e) {
+      throw UserException.resourceError(e).message("Failed to get running profiles from ephemeral store.").build(logger);
+    }
+  }
 
+  @GET
+  @Path("/profiles/completed.json")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getCompletedProfilesJSON(@Context UriInfo uriInfo) {
+    try {
+      final QueryProfileStoreContext profileStoreContext = work.getContext().getProfileStoreContext();
+      final PersistentStore<QueryProfile> completed = profileStoreContext.getCompletedProfileStore();
+      final List<String> errors = Lists.newArrayList();
       final List<ProfileInfo> finishedQueries = Lists.newArrayList();
 
-      //Defining #Profiles to load
+     // Defining #Profiles to load
       int maxProfilesToLoad = work.getContext().getConfig().getInt(ExecConstants.HTTP_MAX_PROFILES);
       String maxProfilesParams = uriInfo.getQueryParameters().getFirst(MAX_QPROFILES_PARAM);
       if (maxProfilesParams != null && !maxProfilesParams.isEmpty()) {
@@ -299,7 +387,6 @@ public class ProfileResources {
       }
 
       final Iterator<Map.Entry<String, QueryProfile>> range = completed.getRange(0, maxProfilesToLoad);
-
       while (range.hasNext()) {
         try {
           final Map.Entry<String, QueryProfile> profileEntry = range.next();
@@ -317,21 +404,15 @@ public class ProfileResources {
           logger.error("Error getting finished query profile.", e);
         }
       }
-
       Collections.sort(finishedQueries, Collections.reverseOrder());
-
-
-      QProfiles qProf = new QProfiles(runningQueries, finishedQueries, errors);
-
+      QProfilesCompleted cProf = new QProfilesCompleted(finishedQueries, errors);
       return errors.size() == 0
-        ? Response.ok().entity(qProf).build()
-        : Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-          .entity(qProf)
-          .build();
+          ? Response.ok().entity(cProf).build()
+          : Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+            .entity(cProf)
+            .build();
     } catch (Exception e) {
-      throw UserException.resourceError(e)
-      .message("Failed to get profiles from persistent or ephemeral store.")
-      .build(logger);
+      throw UserException.resourceError(e).message("Failed to get completed profiles from persistent store.").build(logger);
     }
   }
 
