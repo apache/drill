@@ -42,13 +42,15 @@ import static org.junit.Assert.fail;
 @Category(SecurityTest.class)
 public class TestVaultUserAuthenticator extends ClusterTest {
 
-  private static final String VAULT_TOKEN_VALUE = "vault-token";
+  private static final String ROOT_TOKEN_VALUE = "vault-token";
+
+  private static String vaultAddr;
 
   @ClassRule
   public static final VaultContainer<?> vaultContainer =
       new VaultContainer<>(DockerImageName.parse("vault").withTag("1.1.3"))
           .withLogLevel(VaultLogLevel.Debug)
-          .withVaultToken(VAULT_TOKEN_VALUE)
+          .withVaultToken(ROOT_TOKEN_VALUE)
           .withInitCommand(
             "auth enable userpass",
             "write auth/userpass/users/alice password=pass1 policies=admins",
@@ -57,28 +59,28 @@ public class TestVaultUserAuthenticator extends ClusterTest {
 
   @BeforeClass
   public static void init() throws Exception {
-    String vaultAddr = String.format(
+    vaultAddr = String.format(
       "http://%s:%d",
       vaultContainer.getHost(),
       vaultContainer.getMappedPort(8200)
     );
+  }
 
+  @Test
+  public void testUserPassAuth() throws Exception {
     cluster = ClusterFixture.bareBuilder(dirTestWatcher)
       .clusterSize(3)
       .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
       .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
       .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, "vault")
       .configProperty(VaultUserAuthenticator.VAULT_ADDRESS, vaultAddr)
-      .configProperty(VaultUserAuthenticator.VAULT_TOKEN, VAULT_TOKEN_VALUE)
+      .configProperty(VaultUserAuthenticator.VAULT_TOKEN, ROOT_TOKEN_VALUE)
       .configProperty(
         VaultUserAuthenticator.VAULT_AUTH_METHOD,
         VaultUserAuthenticator.VaultAuthMethod.USER_PASS
       )
       .build();
-  }
 
-  @Test
-  public void testUserPassAuth() throws Exception {
     tryCredentials("notalice", "pass1", cluster, false);
     tryCredentials("notbob", "buzzkill", cluster, false);
     tryCredentials("alice", "wrong", cluster, false);
@@ -89,21 +91,17 @@ public class TestVaultUserAuthenticator extends ClusterTest {
 
   @Test
   public void testVaultTokenAuth() throws Exception {
-    String vaultAddr = String.format(
-      "http://%s:%d",
-      vaultContainer.getHost(),
-      vaultContainer.getMappedPort(8200)
-    );
-
     // Use the Vault client lib to obtain Vault tokens for our test users.
     VaultConfig vaultConfig = new VaultConfig()
       .address(vaultAddr)
-      .token(VAULT_TOKEN_VALUE)
+      .token(ROOT_TOKEN_VALUE)
       .build();
 
     Vault vault = new Vault(vaultConfig);
     AuthResponse aliceResp = vault.auth().loginByUserPass("alice", "pass1");
+    String aliceAuthToken = aliceResp.getAuthClientToken();
     AuthResponse bobResp = vault.auth().loginByUserPass("bob", "buzzkill");
+    String bobAuthToken = bobResp.getAuthClientToken();
 
     // set up a new cluster with a config option selecting Vault token auth
     cluster = ClusterFixture.bareBuilder(dirTestWatcher)
@@ -112,20 +110,19 @@ public class TestVaultUserAuthenticator extends ClusterTest {
       .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
       .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, "vault")
       .configProperty(VaultUserAuthenticator.VAULT_ADDRESS, vaultAddr)
-      .configProperty(VaultUserAuthenticator.VAULT_TOKEN, VAULT_TOKEN_VALUE)
+      // test without any VAULT_TOKEN boot option for token auth method
       .configProperty(
         VaultUserAuthenticator.VAULT_AUTH_METHOD,
         VaultUserAuthenticator.VaultAuthMethod.VAULT_TOKEN
       )
       .build();
 
-
-    tryCredentials("notalice", aliceResp.getAuthClientToken(), cluster, false);
-    tryCredentials("notbob", bobResp.getAuthClientToken(), cluster, false);
+    tryCredentials("notalice", aliceAuthToken, cluster, false);
+    tryCredentials("notbob", bobAuthToken, cluster, false);
     tryCredentials("alice", "wrong", cluster, false);
     tryCredentials("bob", "incorrect", cluster, false);
-    tryCredentials("alice", aliceResp.getAuthClientToken(), cluster, true);
-    tryCredentials("bob", bobResp.getAuthClientToken(), cluster, true);
+    tryCredentials("alice", aliceAuthToken, cluster, true);
+    tryCredentials("bob", bobAuthToken, cluster, true);
   }
 
   private static void tryCredentials(String user, String password, ClusterFixture cluster, boolean shouldSucceed) throws Exception {

@@ -87,7 +87,9 @@ public class VaultUserAuthenticator implements UserAuthenticator {
     );
 
     VaultConfig vaultConfBuilder = new VaultConfig().address(vaultAddress);
-    String vaultToken = config.getString(VAULT_TOKEN);
+    String vaultToken = config.hasPath(VAULT_TOKEN)
+      ? config.getString(VAULT_TOKEN)
+      : null;
 
     if (this.authMethod == VaultAuthMethod.VAULT_TOKEN) {
       // Drill will use end users' Vault tokens for Vault operations
@@ -182,12 +184,14 @@ public class VaultUserAuthenticator implements UserAuthenticator {
             .build();
 
           LookupResponse lookupResp = new Vault(lookupConfig).auth().lookupSelf();
-          if (!user.equals(lookupResp.getUsername())) {
+          // Check token owner using getPath() because getUsername() sometimes
+          // returns null.
+          if (!lookupResp.getPath().endsWith("/" + user)) {
             throw new UserAuthenticationException(String.format(
               "Attempted to authenticate user %s with a Vault token that is " +
-              " valid but belongs to %s!",
+              " valid but has path %s!",
               user,
-              lookupResp.getUsername()
+              lookupResp.getPath()
             ));
           }
           break;
