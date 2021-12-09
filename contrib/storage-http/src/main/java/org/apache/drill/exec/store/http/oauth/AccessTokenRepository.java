@@ -103,6 +103,10 @@ public class AccessTokenRepository {
     Map<String, String> tokens = OAuthUtils.getOAuthTokens(client, request);
     HttpOAuthConfig updatedConfig = new HttpOAuthConfig(oAuthConfig, tokens);
 
+    if (tokens.containsKey("accessToken")) {
+      accessToken = tokens.get("accessToken");
+    }
+
     // This null check is here for testing only.  In actual Drill, the registry will not be null.
     if (registry != null) {
       OAuthUtils.updateOAuthTokens(registry, updatedConfig, pluginConfig);
