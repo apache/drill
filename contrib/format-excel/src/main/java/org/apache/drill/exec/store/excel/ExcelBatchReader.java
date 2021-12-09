@@ -272,7 +272,9 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
     // Get the number of columns.
     // This method also advances the row reader to the location of the first row of data
-    setFirstDataRow();
+    if (!setFirstDataRow()) {
+      return;
+    }
     totalColumnCount = finalSchema.size();
     firstLine = false;
 
@@ -299,7 +301,9 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
     // Get the number of columns.
     // This method also advances the row reader to the location of the first row of data
-    setFirstRow();
+    if (!setFirstRow()) {
+      return;
+    }
 
     excelFieldNames = new ArrayList<>();
     cellWriterArray = new ArrayList<>();
@@ -400,32 +404,28 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
    * There are a few gotchas here in that we have to know the header row and count the physical number of cells
    * in that row.  This function also has to move the rowIterator object to the first row of data.
    */
-  private void setFirstRow() {
+  private boolean setFirstRow() {
     // Initialize
     currentRow = rowIterator.next();
     int rowNumber = readerConfig.headerRow > 0 ? sheet.getFirstRowNum() : 0;
 
     // If the headerRow is greater than zero, advance the iterator to the first row of data
     // This is unfortunately necessary since the streaming reader eliminated the getRow() method.
-    for (int i = 1; i < rowNumber; i++) {
-      currentRow = rowIterator.next();
-    }
+    return skipToRow(rowNumber);
   }
 
   /**
    * This function is used to set the iterator to the first row of actual data.  When a schema is provided,
    * we can safely skip the header row, and start reading the first row of data.
    */
-  private void setFirstDataRow() {
+  private boolean setFirstDataRow() {
     // Initialize
     currentRow = rowIterator.next();
     int rowNumber = readerConfig.headerRow > 0 ? sheet.getFirstRowNum() : 0;
 
     // If the headerRow is greater than zero, advance the iterator to the first row of data
     // This is unfortunately necessary since the streaming reader eliminated the getRow() method.
-    for (int i = 0; i <= rowNumber; i++) {
-      currentRow = rowIterator.next();
-    }
+    return skipToRow(rowNumber + 1);
   }
 
   @Override
@@ -437,6 +437,13 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       }
     }
     return true;
+  }
+
+  private boolean skipToRow(int minRowNum) {
+    while (currentRow.getRowNum() < minRowNum && rowIterator.hasNext()) {
+      currentRow = rowIterator.next();
+    }
+    return currentRow.getRowNum() >= minRowNum;
   }
 
   private boolean nextLine(RowSetLoader rowWriter) {
