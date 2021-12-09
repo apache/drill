@@ -428,7 +428,12 @@ public class StorageResources {
 
     public StoragePluginModel(PluginConfigWrapper plugin, HttpServletRequest request) {
       this.plugin = plugin;
-      this.type = plugin.getConfig().getClass().getSimpleName();
+
+      if (plugin != null) {
+        this.type = plugin.getConfig().getClass().getSimpleName();
+      } else {
+        this.type = "Unknown";
+      }
       csrfToken = WebUtils.getCsrfTokenFromHttpRequest(request);
     }
 

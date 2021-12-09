@@ -54,7 +54,7 @@ public class AccessTokenRepository {
     this.registry = registry;
     this.pluginConfig = pluginConfig;
 
-    if (oAuthConfig.tokens().containsKey("accessToken")) {
+    if (oAuthConfig.tokens() != null && oAuthConfig.tokens().containsKey("accessToken")) {
       accessToken = oAuthConfig.tokens().get("accessToken");
     }
 
@@ -133,8 +133,9 @@ public class AccessTokenRepository {
         .build(logger);
     }
 
-    if (! oAuthConfig.tokens().containsKey("authorization_code") &&
-      Strings.isNullOrEmpty(oAuthConfig.tokens().get("authorizationCode"))) {
+    if ( oAuthConfig.tokens() == null ||
+      (! oAuthConfig.tokens().containsKey("authorization_code") &&
+      Strings.isNullOrEmpty(oAuthConfig.tokens().get("authorizationCode")))) {
       throw UserException.validationError()
         .message("The authorization code is missing in your OAuth configuration.  Please go back to the Drill configuration for this connection" +
           " and get the authorization code.")

@@ -75,13 +75,6 @@ public class TestExcelFormat extends ClusterTest {
   }
 
   @Test
-  public void testWithEmptyRows() throws Exception {
-    String sql = "SELECT * FROM cp.`excel/bad.xlsx` LIMIT 10";
-    RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();
-  }
-
-  @Test
   public void testStarWithProvidedSchema() throws Exception {
     String sql = "SELECT * FROM table(dfs.`excel/schema_provisioning.xlsx` " +
       "(schema => 'inline=(`col1` INTEGER, `col2` FLOAT, `col3` VARCHAR)'" +
