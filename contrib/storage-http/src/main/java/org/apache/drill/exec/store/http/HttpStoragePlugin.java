@@ -26,6 +26,7 @@ import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.base.filter.FilterPushDownUtils;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
@@ -36,12 +37,13 @@ import java.util.Set;
 public class HttpStoragePlugin extends AbstractStoragePlugin {
 
   private final HttpStoragePluginConfig config;
-
   private final HttpSchemaFactory schemaFactory;
+  private final StoragePluginRegistry registry;
 
   public HttpStoragePlugin(HttpStoragePluginConfig configuration, DrillbitContext context, String name) {
     super(context, name);
     this.config = configuration;
+    this.registry = context.getStorage();
     this.schemaFactory = new HttpSchemaFactory(this);
   }
 
@@ -53,6 +55,10 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
   @Override
   public HttpStoragePluginConfig getConfig() {
     return config;
+  }
+
+  public StoragePluginRegistry getRegistry() {
+    return registry;
   }
 
   @Override

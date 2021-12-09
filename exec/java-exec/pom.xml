@@ -32,7 +32,7 @@
     <libpam4j.version>1.8-rev2</libpam4j.version>
     <aether.version>1.1.0</aether.version>
     <wagon.version>3.3.4</wagon.version>
-    <okhttp.version>4.5.0</okhttp.version>
+    <okhttp.version>4.9.2</okhttp.version>
   </properties>
 
   <dependencies>
@@ -361,6 +361,11 @@
       <version>6.1.26</version>
     </dependency>
     <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <version>${okhttp.version}</version>
+    </dependency>
+    <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
     </dependency>
@@ -639,12 +644,6 @@
       <groupId>org.apache.drill.metastore</groupId>
       <artifactId>drill-iceberg-metastore</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-      <version>${okhttp.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

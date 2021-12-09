@@ -20,6 +20,7 @@ package org.apache.drill.exec.server.rest;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
@@ -36,12 +37,17 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import okhttp3.OkHttpClient;
+import okhttp3.OkHttpClient.Builder;
+import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -49,6 +55,9 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginEncodingException
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginNotFoundException;
+import org.apache.drill.exec.store.http.HttpOAuthConfig;
+import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
+import org.apache.drill.exec.store.http.oauth.OAuthUtils;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import org.slf4j.Logger;
@@ -62,6 +71,10 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_RO
 @RolesAllowed(ADMIN_ROLE)
 public class StorageResources {
   private static final Logger logger = LoggerFactory.getLogger(StorageResources.class);
+  private static final String OAUTH_SUCCESS = "<html>\n" + "<head>\n" + "  <title>Success!</title>\n" + "  <link rel=\"shortcut icon\" href=\"/static/img/drill.ico\">\n" + "  " +
+    "<link href=\"/static/css/bootstrap.min.css\" rel=\"stylesheet\">\n" + "  <link href=\"/static/css/drillStyle.css\" rel=\"stylesheet\">\n" +
+    "  <link href=\"https://fonts.googleapis.com/icon?family=Material+Icons\" rel=\"stylesheet\">\n" + "</head>\n" + "<body>\n" + "<h3>Success</h3>\n" + "  You have successfully obtained an OAuth2 authorization code.\n" +
+    "  You may now close this window. <br/>\n" + "  <button class=\"btn btn-primary\" type=\"submit\"\n" + "  onclick=\"self.close();\">Close Window</button>\n" + "</body>\n" + "</html>\n";
 
   @Inject
   UserAuthEnabled authEnabled;
@@ -176,6 +189,48 @@ public class StorageResources {
       logger.info("Error when enabling storage name: {} flag: {}",  name, enable);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
         .entity(message("Unable to enable/disable plugin: %s", e.getMessage()))
+        .build();
+    }
+  }
+
+  @GET
+  @Path("/storage/{name}/update_oath2_authtoken")
+  @Produces(MediaType.TEXT_HTML)
+  public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
+    try {
+      if (storage.getPlugin(name).getConfig().getClass().getSimpleName().equalsIgnoreCase("HttpStoragePluginConfig")) {
+        HttpStoragePluginConfig config = (HttpStoragePluginConfig)storage.getPlugin(name).getConfig();
+        HttpOAuthConfig oAuthConfig = config.oAuthConfig();
+        oAuthConfig.tokens().put("authorizationCode", code);
+
+        // Now exchange the authorization token for an access token
+        Builder builder = new OkHttpClient.Builder();
+        OkHttpClient client = builder.build();
+        Request request = OAuthUtils.getAccessTokenRequest(oAuthConfig);
+        Map<String,String> tokens = OAuthUtils.getOAuthTokens(client, request);
+
+        // This line preserves the authorization code.  It may not be necessary to retain this.
+        tokens.put("authorizationCode", code);
+
+        HttpOAuthConfig updatedOAuthConfig = new HttpOAuthConfig(oAuthConfig, tokens);
+        HttpStoragePluginConfig updatedConfig = new HttpStoragePluginConfig(config, updatedOAuthConfig);
+        updatedConfig.setEnabled(config.isEnabled());
+
+        PluginConfigWrapper updatedPlugin = new PluginConfigWrapper(name, updatedConfig);
+
+        // Update the storage plugin config
+        storage.validatedPut(name, updatedPlugin.getConfig());
+        return Response.status(Status.OK).entity(OAUTH_SUCCESS).build();
+      } else {
+        logger.error("{} is not a REST plugin. You can only add auth code to REST plugins.", name);
+        return Response.status(Status.INTERNAL_SERVER_ERROR)
+          .entity(message("Unable to add authorization code: %s", name))
+          .build();
+      }
+    } catch (PluginException e) {
+      logger.error("Error when adding auth token to {}", name);
+      return Response.status(Status.INTERNAL_SERVER_ERROR)
+        .entity(message("Unable to add authorization code: %s", e.getMessage()))
         .build();
     }
   }
@@ -368,11 +423,17 @@ public class StorageResources {
    */
   public static class StoragePluginModel {
     private final PluginConfigWrapper plugin;
+    private final String type;
     private final String csrfToken;
 
     public StoragePluginModel(PluginConfigWrapper plugin, HttpServletRequest request) {
       this.plugin = plugin;
+      this.type = plugin.getConfig().getClass().getSimpleName();
       csrfToken = WebUtils.getCsrfTokenFromHttpRequest(request);
+    }
+
+    public String getType() {
+      return type;
     }
 
     public PluginConfigWrapper getPlugin() {

@@ -31,6 +31,7 @@
   <h3>Configuration</h3>
   <form id="updateForm" role="form" action="/storage/create_update" method="POST">
     <input type="hidden" name="name" value="${model.getPlugin().getName()}" />
+    <input type="hidden" name="pluginType" value="${model.getType()}" />
     <div class="form-group">
       <div id="editor" class="form-control"></div>
       <textarea class="form-control" id="config" name="config" data-editor="json" style="display: none;" >
@@ -42,6 +43,10 @@
       <a id="enabled" class="btn btn-warning">Disable</a>
     <#else>
       <a id="enabled" class="btn btn-success text-white">Enable</a>
+    </#if>
+    <#if model.getType() == "HttpStoragePluginConfig" >
+    <! -- TODO Also check to see whether the plugin uses OAuth or not -->
+      <a id="getOauth" class="btn btn-success text-white">Get Authorization Token</a>
     </#if>
     <button type="button" class="btn btn-secondary export" name="${model.getPlugin().getName()}" data-toggle="modal"
             data-target="#pluginsModal">
@@ -132,6 +137,71 @@
         });
       }
     });
+
+    $("#getOauth").click(function() {
+      var field = document.getElementById("config");
+      try {
+        var storage_config = JSON.parse(config.value);
+
+        // Construct the Callback URL
+        var clientID = storage_config.oAuthConfig.clientID;
+       if (clientID.length == 0) {
+         window.alert("Invalid client ID.");
+         return false;
+        }
+
+        var callbackURL = storage_config.oAuthConfig.callbackURL;
+        if (callbackURL.length == 0) {
+          window.alert("Invalid callback URL.");
+          return false;
+        }
+
+        var finalURL;
+        var authorizationPath = storage_config.oAuthConfig.authorizationPath;
+        var authorizationURL = storage_config.oAuthConfig.authorizationURL;
+        var baseURL = storage_config.oAuthConfig.baseURL;
+
+        // If the user provides an Authorization URL, that will be used first to get the auth token.  If they
+        // do not provide an authURL, the next attempt will be to combine the baseURL with the authorization path.
+        // If there is no authorization path, we will proceed with just the base URL.
+        if (authorizationURL) {
+          finalURL = authorizationURL + "?client_id=" + clientID + "&redirect_uri=" + callbackURL;
+        } else if (authorizationPath) {
+          finalURL = baseURL + authorizationPath + "?client_id=" + clientID + "&redirect_uri=" + callbackURL;
+        } else {
+          finalURL = baseURL + "?client_id=" + clientID + "&redirect_uri=" + callbackURL;
+        }
+
+        var scope = storage_config.oAuthConfig.scope;
+        if (scope) {
+          var encodedScope = encodeURIComponent(scope);
+          finalURL = finalURL + "&scope=" + encodedScope;
+        }
+
+        var params = storage_config.oAuthConfig.authorizationParams
+        if (params) {
+          var param;
+          for (var key in storage_config.oAuthConfig.authorizationParams) {
+            param = params[key];
+            finalURL = finalURL + "&" + key + "=" + encodeURIComponent(param);
+          }
+        }
+        console.log(finalURL);
+        // TODO Convert to modal?
+        var tokenGetterWindow = window.open(finalURL, 'Authorize Drill', "toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600");
+
+        var timer = setInterval(function () {
+        if (tokenGetterWindow.closed) {
+          clearInterval(timer);
+          window.location.reload(); // Refresh the parent page
+        }
+      }, 1000);
+    } catch (error) {
+      console.error(error);
+      window.alert("Cannot parse JSON.");
+    }
+  });
+
 
     function doUpdate() {
       $("#updateForm").ajaxForm({

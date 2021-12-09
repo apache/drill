@@ -48,9 +48,10 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
   private static final Logger logger = LoggerFactory.getLogger(HttpScanBatchCreator.class);
 
   @Override
-  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, HttpSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context,
+                                       HttpSubScan subScan,
+                                       List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-
     try {
       ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan);
       return builder.buildScanOperator(context, subScan);

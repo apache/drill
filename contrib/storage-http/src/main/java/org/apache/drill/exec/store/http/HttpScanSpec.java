@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.store.http;
 
+import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 
 @JsonTypeName("http-scan-spec")
 public class HttpScanSpec {
@@ -30,16 +32,19 @@ public class HttpScanSpec {
   private final String connectionName;
   private final String tableName;
   private final HttpStoragePluginConfig config;
+  private final StoragePluginRegistry registry;
 
   @JsonCreator
   public HttpScanSpec(@JsonProperty("pluginName") String pluginName,
                       @JsonProperty("connection") String connectionName,
                       @JsonProperty("tableName") String tableName,
-                      @JsonProperty("config") HttpStoragePluginConfig config) {
+                      @JsonProperty("config") HttpStoragePluginConfig config,
+                      @JacksonInject StoragePluginRegistry engineRegistry) {
     this.pluginName = pluginName;
     this.connectionName = connectionName;
     this.tableName = tableName;
     this.config = config;
+    this.registry = engineRegistry;
   }
 
   @JsonProperty("pluginName")
@@ -65,6 +70,11 @@ public class HttpScanSpec {
   @JsonIgnore
   public String getURL() {
     return connectionName;
+  }
+
+  @JsonIgnore
+  public StoragePluginRegistry getRegistry() {
+    return registry;
   }
 
   @JsonIgnore
