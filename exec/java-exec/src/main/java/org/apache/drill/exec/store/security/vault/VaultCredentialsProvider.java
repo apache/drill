@@ -37,6 +37,7 @@ import java.util.Objects;
  */
 public class VaultCredentialsProvider implements CredentialsProvider {
 
+  // Drill boot options used to configure a Vault credentials provider
   public static final String VAULT_ADDRESS = "drill.exec.storage.vault.address";
   public static final String VAULT_TOKEN = "drill.exec.storage.vault.token";
 

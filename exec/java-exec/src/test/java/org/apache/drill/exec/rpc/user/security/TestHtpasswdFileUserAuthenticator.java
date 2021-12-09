@@ -17,12 +17,14 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
+import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +35,7 @@ import java.util.List;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+@Category(SecurityTest.class)
 public class TestHtpasswdFileUserAuthenticator extends ClusterTest {
   private File tempPasswdFile;
 
