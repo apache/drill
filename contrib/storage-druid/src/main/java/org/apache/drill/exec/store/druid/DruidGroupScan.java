@@ -198,7 +198,7 @@ public class DruidGroupScan extends AbstractGroupScan {
   }
 
   public ScanStats getScanStats() {
-    long recordCount = 100000 * druidWorkList.size();
+    long recordCount = 100000L * druidWorkList.size();
     return new ScanStats(
         ScanStats.GroupScanProperty.NO_EXACT_ROW_COUNT,
         recordCount,

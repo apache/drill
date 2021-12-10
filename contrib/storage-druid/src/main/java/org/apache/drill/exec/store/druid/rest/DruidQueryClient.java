@@ -17,14 +17,11 @@
  */
 package org.apache.drill.exec.store.druid.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.druid.druid.DruidScanResponse;
-import org.apache.drill.exec.store.druid.druid.PagingIdentifier;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.util.EntityUtils;
@@ -32,8 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
 
 public class DruidQueryClient {
 

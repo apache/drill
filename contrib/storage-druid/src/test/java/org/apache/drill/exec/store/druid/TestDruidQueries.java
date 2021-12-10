@@ -24,8 +24,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.math.BigInteger;
-
 @Ignore("These tests require a running druid instance. You may start druid by using the docker-compose provide in resources/druid and enable these tests")
 @Category({SlowTest.class, DruidStorageTest.class})
 public class TestDruidQueries extends DruidTestBase {

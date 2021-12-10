@@ -129,7 +129,7 @@ public class TestDataGenerator {
 
   private static class TaskStartResponse {
     @JsonProperty("task")
-    private String taskId;
+    private final String taskId;
 
     @JsonCreator
     public TaskStartResponse(@JsonProperty("task") String taskId) {
