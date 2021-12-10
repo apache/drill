@@ -51,11 +51,11 @@ public class TestFixedwidthRecordReader extends ClusterTest {
     FixedwidthFormatConfig formatConfig = new FixedwidthFormatConfig(Lists.newArrayList("fwf"),
       Lists.newArrayList(
         new FixedwidthFieldConfig("Number", 1, 5, TypeProtos.MinorType.VARDECIMAL),
-        new FixedwidthFieldConfig("Address",12, 3,TypeProtos.MinorType.INT,  ""),
-        new FixedwidthFieldConfig("Letter", 7,4, TypeProtos.MinorType.VARCHAR, ""),
-        new FixedwidthFieldConfig("Date",16, 10,TypeProtos.MinorType.DATE,  "MM-dd-yyyy"),
-        new FixedwidthFieldConfig( "Time", 27, 8,TypeProtos.MinorType.TIME,"HH:mm:ss" ),
-        new FixedwidthFieldConfig("DateTime", 36, 23,TypeProtos.MinorType.TIMESTAMP, "MM-dd-yyyy'T'HH:mm:ss.SSX" )
+        new FixedwidthFieldConfig("Address", 12, 3, TypeProtos.MinorType.INT),
+        new FixedwidthFieldConfig("Letter", 7, 4, TypeProtos.MinorType.VARCHAR),
+        new FixedwidthFieldConfig("Date", 16, 10, TypeProtos.MinorType.DATE,  "MM-dd-yyyy"),
+        new FixedwidthFieldConfig("Time", 27, 8, TypeProtos.MinorType.TIME,"HH:mm:ss"),
+        new FixedwidthFieldConfig("DateTime", 36, 23, TypeProtos.MinorType.TIMESTAMP, "MM-dd-yyyy'T'HH:mm:ss.SSX")
       ));
     cluster.defineFormat("dfs", "fwf", formatConfig);
     cluster.defineFormat("cp", "fwf", formatConfig);
@@ -218,4 +218,3 @@ public class TestFixedwidthRecordReader extends ClusterTest {
   }
 
 }
-

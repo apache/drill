@@ -224,4 +224,6 @@ public interface SchemaNegotiator {
    * schema order
    */
   ResultSetLoader build();
+
+  Object split();
 }
