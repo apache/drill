@@ -162,7 +162,6 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
     }
   }
 
-  @JsonIgnore
   public void validateFieldInput(){
     Set<String> uniqueNames = new HashSet<>();
     List<Integer> fieldIndices = this.getFieldIndices();
@@ -192,7 +191,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
       if (!Pattern.matches("[a-zA-Z]\\w*", name)) {
         throw UserException
           .validationError()
-          .message("Invalid input: " + name)
+          .message("Column Name '" + name + "' is not valid. Must contain letters, numbers, and underscores only.")
           .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
           .build(logger);
       }

@@ -56,12 +56,11 @@ public class FixedwidthBatchReader implements ManagedReader<FileSchemaNegotiator
   private CustomErrorContext errorContext;
   private InputStream fsStream;
   private ResultSetLoader loader;
-  private RowSetLoader writer;
   private BufferedReader reader;
   private int lineNum;
 
   public FixedwidthBatchReader(FixedwidthFormatConfig config, int maxRecords) {
-    this.config = config;
+    this.config = config; //reader-specific schema and projection manager
     this.maxRecords = maxRecords;
   }
 
