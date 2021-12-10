@@ -55,7 +55,7 @@ public class DruidRecordReader extends AbstractRecordReader {
   private final DruidSubScan.DruidSubScanSpec scanSpec;
   private final List<String> columns;
   private final DruidFilter filter;
-  private int nextOffset = 0;
+  private Integer nextOffset = 0;
   private int maxRecordsToRead = -1;
 
   private JsonReader jsonReader;

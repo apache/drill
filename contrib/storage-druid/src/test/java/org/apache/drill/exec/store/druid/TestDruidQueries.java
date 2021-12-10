@@ -77,7 +77,7 @@ public class TestDruidQueries extends DruidTestBase {
       .sqlQuery(query)
       .unOrdered()
       .baselineColumns("mycount")
-      .baselineValues(24433)
+      .baselineValues(24433L)
       .go();
   }
 }
