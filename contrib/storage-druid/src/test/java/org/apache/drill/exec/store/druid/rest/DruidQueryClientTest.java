@@ -92,7 +92,6 @@ public class DruidQueryClientTest {
 
     DruidScanResponse response = druidQueryClient.executeQuery(QUERY);
     assertThat(response.getEvents()).isEmpty();
-    //assertThat(response.getPagingIdentifiers()).isEmpty();
   }
 
   @Test
