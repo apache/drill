@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.drill.exec.store.druid.common.DruidFilter;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +40,7 @@ public class ScanQueryBuilder {
   public ScanQuery build(String datasource,
                          List<String> columns,
                          DruidFilter druidFilter,
-                         int nextOffset,
+                         BigInteger nextOffset,
                          int queryThreshold,
                          String minTime,
                          String maxTime)

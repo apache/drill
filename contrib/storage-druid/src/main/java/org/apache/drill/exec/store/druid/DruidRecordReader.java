@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -55,7 +56,7 @@ public class DruidRecordReader extends AbstractRecordReader {
   private final DruidSubScan.DruidSubScanSpec scanSpec;
   private final List<String> columns;
   private final DruidFilter filter;
-  private Integer nextOffset = 0;
+  private BigInteger nextOffset = BigInteger.ZERO;
   private int maxRecordsToRead = -1;
 
   private JsonReader jsonReader;
@@ -165,7 +166,7 @@ public class DruidRecordReader extends AbstractRecordReader {
   }
 
   private void setNextOffset(DruidScanResponse druidScanResponse) {
-    this.nextOffset += druidScanResponse.getEvents().size();
+    this.nextOffset = this.nextOffset.add(BigInteger.valueOf(druidScanResponse.getEvents().size()));
   }
 
   @Override
@@ -173,8 +174,8 @@ public class DruidRecordReader extends AbstractRecordReader {
     if (writer != null) {
       writer.close();
     }
-    if (this.nextOffset != 0) {
-      this.nextOffset = 0;
+    if (!this.nextOffset.equals(BigInteger.ZERO)) {
+      this.nextOffset = BigInteger.ZERO;
     }
     jsonReader = null;
   }

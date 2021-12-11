@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @JsonPropertyOrder({ "queryType", "dataSource", "descending", "dimensions", "filter", "granularity", "intervals", "pagingSpec" })
@@ -41,15 +42,15 @@ public class ScanQuery {
   private final List<String> columns;
   private final ObjectNode filter;
   private final List<String> intervals;
-  private final Integer offset;
-  private final Integer limit;
+  private final BigInteger offset;
+  private final int limit;
 
   public ScanQuery(@JsonProperty("dataSource") String dataSource,
                    @JsonProperty("columns") List<String> columns,
                    @JsonProperty("filter") ObjectNode filter,
                    @JsonProperty("intervals") List<String> intervals,
-                   @JsonProperty("offset") Integer offset,
-                   @JsonProperty("limit") Integer limit) {
+                   @JsonProperty("offset") BigInteger offset,
+                   @JsonProperty("limit") int limit) {
     this.dataSource = dataSource;
     this.columns = columns;
     this.filter = filter;
@@ -86,11 +87,11 @@ public class ScanQuery {
     return filter;
   }
 
-  public Integer getOffset() {
+  public BigInteger getOffset() {
     return offset;
   }
 
-  public Integer getLimit() {
+  public int getLimit() {
     return limit;
   }
 }
