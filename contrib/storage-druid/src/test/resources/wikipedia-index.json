@@ -1,63 +1,90 @@
 {
-  "type" : "index",
-  "spec" : {
-    "dataSchema" : {
-      "dataSource" : "wikipedia",
-      "parser" : {
-        "type" : "string",
-        "parseSpec" : {
-          "format" : "json",
-          "dimensionsSpec" : {
-            "dimensions" : [
-              "channel",
-              "cityName",
-              "comment",
-              "countryIsoCode",
-              "countryName",
-              "isAnonymous",
-              "isMinor",
-              "isNew",
-              "isRobot",
-              "isUnpatrolled",
-              "metroCode",
-              "namespace",
-              "page",
-              "regionIsoCode",
-              "regionName",
-              "user",
-              { "name": "added", "type": "long" },
-              { "name": "deleted", "type": "long" },
-              { "name": "delta", "type": "long" }
-            ]
-          },
-          "timestampSpec": {
-            "column": "time",
-            "format": "iso"
-          }
-        }
+  "spec": {
+    "type": "index_parallel",
+    "ioConfig": {
+      "type": "index_parallel",
+      "inputSource": {
+        "type": "http",
+        "uris": [
+          "https://druid.apache.org/data/wikipedia.json.gz"
+        ]
       },
-      "metricsSpec" : [],
-      "granularitySpec" : {
-        "type" : "uniform",
-        "segmentGranularity" : "day",
-        "queryGranularity" : "none",
-        "intervals" : ["2015-09-12/2015-09-13"],
-        "rollup" : false
+      "inputFormat": {
+        "type": "json"
       }
     },
-    "ioConfig" : {
-      "type" : "index",
-      "firehose" : {
-        "type" : "local",
-        "baseDir" : "quickstart/tutorial/",
-        "filter" : "wikiticker-2015-09-12-sampled.json.gz"
-      },
-      "appendToExisting" : false
+    "tuningConfig": {
+      "type": "index_parallel",
+      "partitionsSpec": {
+        "type": "dynamic"
+      }
     },
-    "tuningConfig" : {
-      "type" : "index",
-      "maxRowsPerSegment" : 5000000,
-      "maxRowsInMemory" : 25000
+    "dataSchema": {
+      "dataSource": "wikipedia",
+      "granularitySpec": {
+        "type": "uniform",
+        "segmentGranularity": "HOUR",
+        "queryGranularity": "HOUR",
+        "rollup": true
+      },
+      "timestampSpec": {
+        "column": "timestamp",
+        "format": "iso"
+      },
+      "dimensionsSpec": {
+        "dimensions": [
+          "channel",
+          "cityName",
+          "comment",
+          "countryIsoCode",
+          "countryName",
+          "diffUrl",
+          "flags",
+          "isAnonymous",
+          "isMinor",
+          "isNew",
+          "isRobot",
+          "isUnpatrolled",
+          "metroCode",
+          "namespace",
+          "page",
+          "regionIsoCode",
+          "regionName",
+          "user"
+        ]
+      },
+      "metricsSpec": [
+        {
+          "name": "count",
+          "type": "count"
+        },
+        {
+          "name": "sum_added",
+          "type": "longSum",
+          "fieldName": "added"
+        },
+        {
+          "name": "sum_commentLength",
+          "type": "longSum",
+          "fieldName": "commentLength"
+        },
+        {
+          "name": "sum_deleted",
+          "type": "longSum",
+          "fieldName": "deleted"
+        },
+        {
+          "name": "sum_delta",
+          "type": "longSum",
+          "fieldName": "delta"
+        },
+        {
+          "name": "sum_deltaBucket",
+          "type": "longSum",
+          "fieldName": "deltaBucket"
+        }
+      ]
     }
-  }
+  },
+  "type": "index_parallel"
 }

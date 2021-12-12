@@ -17,23 +17,32 @@
  */
 package org.apache.drill.exec.store.druid.druid;
 
-public class PagingIdentifier {
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-  private final String segmentName;
-  private final int segmentOffset;
+import java.util.ArrayList;
 
-  public PagingIdentifier(String segmentName, int segmentOffset) {
-    this.segmentName = segmentName;
-    this.segmentOffset = segmentOffset;
+public class DruidScanResponse {
+
+  final private String segementId;
+  final private ArrayList<String> columns;
+  final private ArrayList<ObjectNode> events;
+
+  public DruidScanResponse(String segementId, ArrayList<String> columns, ArrayList<ObjectNode> events) {
+    this.segementId = segementId;
+    this.columns = columns;
+    this.events = events;
   }
 
-  public String getSegmentName()
-  {
-    return segmentName;
+  public String getSegementId() {
+    return segementId;
   }
 
-  public int getSegmentOffset()
-  {
-    return segmentOffset;
+  public ArrayList<String> getColumns() {
+    return columns;
   }
+
+  public ArrayList<ObjectNode> getEvents() {
+    return events;
+  }
+
 }

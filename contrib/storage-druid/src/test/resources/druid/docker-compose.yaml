@@ -20,7 +20,13 @@ version: "2.2"
 
 volumes:
   metadata_data: {}
-  druid_var:
+  middle_var: {}
+  historical_var: {}
+  broker_var: {}
+  coordinator_var: {}
+  router_var: {}
+  druid_shared: {}
+
 
 services:
   postgres:
@@ -37,14 +43,17 @@ services:
   zookeeper:
     container_name: zookeeper
     image: zookeeper:3.5
+    ports:
+      - "2181:2181"
     environment:
       - ZOO_MY_ID=1
 
   coordinator:
-    image: apache/incubator-druid:0.16.1-incubating
+    image: apache/druid:0.22.0
     container_name: coordinator
     volumes:
-      - druid_var:/opt/druid/var
+      - druid_shared:/opt/shared
+      - coordinator_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres
@@ -56,10 +65,10 @@ services:
       - environment.env
 
   broker:
-    image: apache/incubator-druid:0.16.1-incubating
+    image: apache/druid:0.22.0
     container_name: broker
     volumes:
-      - druid_var:/opt/druid/var
+      - broker_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres
@@ -72,10 +81,11 @@ services:
       - environment.env
 
   historical:
-    image: apache/incubator-druid:0.16.1-incubating
+    image: apache/druid:0.22.0
     container_name: historical
     volumes:
-      - druid_var:/opt/druid/var
+      - druid_shared:/opt/shared
+      - historical_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres
@@ -87,42 +97,29 @@ services:
     env_file:
       - environment.env
 
-  overlord:
-    image: apache/incubator-druid:0.16.1-incubating
-    container_name: overlord
-    volumes:
-      - druid_var:/opt/druid/var
-    depends_on:
-      - zookeeper
-      - postgres
-    ports:
-      - "8090:8090"
-    command:
-      - overlord
-    env_file:
-      - environment.env
-
   middlemanager:
-    image: apache/incubator-druid:0.16.1-incubating
+    image: apache/druid:0.22.0
     container_name: middlemanager
     volumes:
-      - druid_var:/opt/druid/var
+      - druid_shared:/opt/shared
+      - middle_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres
       - coordinator
     ports:
       - "8091:8091"
+      - "8100-8105:8100-8105"
     command:
       - middleManager
     env_file:
       - environment.env
 
   router:
-    image: apache/incubator-druid:0.16.1-incubating
+    image: apache/druid:0.22.0
     container_name: router
     volumes:
-      - druid_var:/opt/druid/var
+      - router_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres

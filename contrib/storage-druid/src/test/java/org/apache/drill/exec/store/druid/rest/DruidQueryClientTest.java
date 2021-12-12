@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.druid.rest;
 
-import org.apache.drill.exec.store.druid.druid.DruidSelectResponse;
+import org.apache.drill.exec.store.druid.druid.DruidScanResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -55,7 +55,7 @@ public class DruidQueryClientTest {
 
   private DruidQueryClient druidQueryClient;
   private static final String BROKER_URI = "some broker uri";
-  private static final String QUERY = "some query";
+  private static final String QUERY = "{\"queryType\":\"scan\",\"dataSource\":\"wikipedia\",\"descending\":false,\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"selector\",\"dimension\":\"user\",\"value\":\"Dansker\"},{\"type\":\"search\",\"dimension\":\"comment\",\"query\":{\"type\":\"contains\",\"value\":\"Bitte\",\"caseSensitive\":false}}]},\"granularity\":\"all\",\"intervals\":[\"2016-06-27T00:00:00.000Z/2016-06-27T22:00:00.000Z\"],\"columns\":[],\"offset\":0,\"limit\":4096}";
   private static final Header ENCODING_HEADER =
       new BasicHeader(HttpHeaders.CONTENT_ENCODING, StandardCharsets.UTF_8.name());
 
@@ -90,23 +90,22 @@ public class DruidQueryClientTest {
         new ByteArrayInputStream("[]".getBytes(StandardCharsets.UTF_8.name()));
     when(httpEntity.getContent()).thenReturn(inputStream);
 
-    DruidSelectResponse response = druidQueryClient.executeQuery(QUERY);
+    DruidScanResponse response = druidQueryClient.executeQuery(QUERY);
     assertThat(response.getEvents()).isEmpty();
-    assertThat(response.getPagingIdentifiers()).isEmpty();
   }
 
   @Test
   public void executeQueryCalledSuccessfullyParseQueryResults()
       throws Exception {
-    String result = "[{\"result\":{\"pagingIdentifiers\":{\"some_segment_identifier\":500,\"some_other_segment_identifier\":501},\"events\":[{\"event\":{\"some_property\":\"some value\"}},{\"event\":{\"some_property\":\"some other value\"}}]}}]";
+    String result = "[{\"segmentId\":\"wikipedia_2016-06-27T14:00:00.000Z_2016-06-27T15:00:00.000Z_2021-12-11T11:12:16.106Z\",\"columns\":[\"__time\",\"channel\",\"cityName\",\"comment\",\"countryIsoCode\",\"countryName\",\"diffUrl\",\"flags\",\"isAnonymous\",\"isMinor\",\"isNew\",\"isRobot\",\"isUnpatrolled\",\"metroCode\",\"namespace\",\"page\",\"regionIsoCode\",\"regionName\",\"user\",\"sum_deleted\",\"sum_deltaBucket\",\"sum_added\",\"sum_commentLength\",\"count\",\"sum_delta\"],\"events\":[{\"__time\":1467036000000,\"channel\":\"#de.wikipedia\",\"cityName\":null,\"comment\":\"Bitte [[WP:Literatur]] beachten.\",\"countryIsoCode\":null,\"countryName\":null,\"diffUrl\":\"https://de.wikipedia.org/w/index.php?diff=155672392&oldid=155667393\",\"flags\":null,\"isAnonymous\":\"false\",\"isMinor\":\"false\",\"isNew\":\"false\",\"isRobot\":\"false\",\"isUnpatrolled\":\"false\",\"metroCode\":null,\"namespace\":\"Main\",\"page\":\"Walfang\",\"regionIsoCode\":null,\"regionName\":null,\"user\":\"Dansker\",\"sum_deleted\":133,\"sum_deltaBucket\":-200,\"sum_added\":0,\"sum_commentLength\":32,\"count\":1,\"sum_delta\":-133}]}]";
     InputStream inputStream =
         new ByteArrayInputStream(result.getBytes(StandardCharsets.UTF_8.name()));
     when(httpEntity.getContent()).thenReturn(inputStream);
 
-    DruidSelectResponse response = druidQueryClient.executeQuery(QUERY);
+    DruidScanResponse response = druidQueryClient.executeQuery(QUERY);
     assertThat(response.getEvents()).isNotEmpty();
-    assertThat(response.getEvents().size()).isEqualTo(2);
-    assertThat(response.getEvents().get(0).get("some_property").textValue()).isEqualTo("some value");
-    assertThat(response.getEvents().get(1).get("some_property").textValue()).isEqualTo("some other value");
+    assertThat(response.getEvents().size()).isEqualTo(1);
+    assertThat(response.getEvents().get(0).get("user").textValue()).isEqualTo("Dansker");
+    assertThat(response.getEvents().get(0).get("sum_deleted").intValue()).isEqualTo(133);
   }
 }

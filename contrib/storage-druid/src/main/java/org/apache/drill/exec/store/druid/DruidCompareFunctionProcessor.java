@@ -41,7 +41,7 @@ public class DruidCompareFunctionProcessor extends
 
   private Object value;
   private boolean success;
-  private boolean isEqualityFn;
+  private final boolean isEqualityFn;
   private SchemaPath path;
   private String functionName;
 

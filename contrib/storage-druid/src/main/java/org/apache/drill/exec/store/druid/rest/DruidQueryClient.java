@@ -17,14 +17,11 @@
  */
 package org.apache.drill.exec.store.druid.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.store.druid.druid.DruidSelectResponse;
-import org.apache.drill.exec.store.druid.druid.PagingIdentifier;
+import org.apache.drill.exec.store.druid.druid.DruidScanResponse;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.util.EntityUtils;
@@ -32,8 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
 
 public class DruidQueryClient {
 
@@ -51,7 +46,7 @@ public class DruidQueryClient {
     logger.debug("Initialized DruidQueryClient with druidURL - {}", this.queryUrl);
   }
 
-  public DruidSelectResponse executeQuery(String query) throws Exception {
+  public DruidScanResponse executeQuery(String query) throws Exception {
     logger.debug("Executing Query - {}", query);
     HttpResponse response = restClient.post(queryUrl, query);
 
@@ -69,40 +64,25 @@ public class DruidQueryClient {
     return parseResponse(responses);
   }
 
-  private DruidSelectResponse parseResponse(ArrayNode responses) {
+  private DruidScanResponse parseResponse(ArrayNode responses) {
+    String segmentId = "empty";
     ArrayList<ObjectNode> events = new ArrayList<>();
-    ObjectNode pagingIdentifiersNode = null;
+    ArrayList<String> columns = new ArrayList<>();
 
     if (responses.size() > 0) {
       ObjectNode firstNode = (ObjectNode) responses.get(0);
-      ObjectNode resultNode = (ObjectNode) firstNode.get("result");
-      pagingIdentifiersNode = (ObjectNode) resultNode.get("pagingIdentifiers");
-      ArrayNode eventsNode = (ArrayNode) resultNode.get("events");
+      segmentId = firstNode.get("segmentId").textValue();
+      ArrayNode columnsNode = (ArrayNode) firstNode.get("columns");
+      ArrayNode eventsNode = (ArrayNode) firstNode.get("events");
+      for(int i=0;i < columnsNode.size(); i++) {
+        String column = columnsNode.get(i).textValue();
+        columns.add(column);
+      }
       for(int i=0;i < eventsNode.size(); i++) {
-        ObjectNode eventNode = (ObjectNode) eventsNode.get(i).get("event");
+        ObjectNode eventNode = (ObjectNode) eventsNode.get(i);
         events.add(eventNode);
       }
     }
-
-    ArrayList<PagingIdentifier> pagingIdentifierList = new ArrayList<>();
-    if (pagingIdentifiersNode != null) {
-      for (Iterator<Map.Entry<String, JsonNode>> iterator = pagingIdentifiersNode.fields(); iterator.hasNext();) {
-        Map.Entry<String, JsonNode> currentNode = iterator.next();
-        if (currentNode != null) {
-          String segmentName = currentNode.getKey();
-          int segmentOffset = currentNode.getValue().asInt();
-          PagingIdentifier pagingIdentifier = new PagingIdentifier(segmentName, segmentOffset);
-          pagingIdentifierList.add(pagingIdentifier);
-        }
-      }
-    }
-
-    DruidSelectResponse druidSelectResponse = new DruidSelectResponse();
-    if (CollectionUtils.isNotEmpty(pagingIdentifierList)) {
-      druidSelectResponse.setPagingIdentifiers(pagingIdentifierList);
-    }
-
-    druidSelectResponse.setEvents(events);
-    return druidSelectResponse;
+    return new DruidScanResponse(segmentId, columns, events);
   }
 }

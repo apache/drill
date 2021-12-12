@@ -22,10 +22,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.exec.store.druid.common.DruidConstants;
 import org.apache.drill.exec.store.druid.common.DruidFilter;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,17 +32,18 @@ import java.util.stream.Stream;
 
 import static org.apache.drill.exec.store.druid.common.DruidConstants.INTERVAL_DIMENSION_NAME;
 
-public class SelectQueryBuilder {
+public class ScanQueryBuilder {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  public SelectQueryBuilder() {}
+  public ScanQueryBuilder() {}
 
-  public SelectQuery build(String datasource,
-                           List<String> dimensions,
-                           DruidFilter druidFilter,
-                           PagingSpec pagingSpec,
-                           String minTime,
-                           String maxTime)
+  public ScanQuery build(String datasource,
+                         List<String> columns,
+                         DruidFilter druidFilter,
+                         BigInteger nextOffset,
+                         int queryThreshold,
+                         String minTime,
+                         String maxTime)
     throws JsonProcessingException {
     List<JsonNode> userInputIntervals =
       druidFilter == null
@@ -55,24 +55,13 @@ public class SelectQueryBuilder {
         ? null
         : (ObjectNode) objectMapper.readTree(removeIntervalFilter(druidFilter.toJson(), userInputIntervals));
 
-    return new SelectQuery(
-      datasource,getDimensionsAsSpec(dimensions),
+    return new ScanQuery(
+      datasource,
+      columns,
       finalFilter,
       queryIntervals,
-      pagingSpec);
-  }
-
-  private List<DruidDimensionSpec> getDimensionsAsSpec(List<String> columns) {
-    return columns.stream().map(column -> {
-      String type = StringUtils.equalsAnyIgnoreCase(column, DruidConstants.DRUID_TIME_DIMENSIONS) ? "extraction" : "default";
-      DruidExtractionFunctionSpec extractionFunctionSpec =
-        StringUtils.equalsAnyIgnoreCase(column, DruidConstants.DRUID_TIME_DIMENSIONS) ? getTimeExtractionFunction() : null;
-      return new DruidDimensionSpec(type, column, column, "STRING", extractionFunctionSpec);
-    }).collect(Collectors.toList());
-  }
-
-  private DruidExtractionFunctionSpec getTimeExtractionFunction() {
-    return new DruidExtractionFunctionSpec("timeFormat", DruidConstants.ISO_8601_DATE_STRING_FORMAT);
+      nextOffset,
+      queryThreshold);
   }
 
   private List<JsonNode> parseIntervalsFromFilter(String filter)

@@ -63,7 +63,7 @@ public class TestDruidQueries extends DruidTestBase {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("comment")
-        .expectsNumRecords(39244)
+        .expectsNumRecords(24433)
         .go();
   }
 
@@ -74,8 +74,8 @@ public class TestDruidQueries extends DruidTestBase {
     testBuilder()
       .sqlQuery(query)
       .unOrdered()
-      .baselineColumns("count")
-      .baselineValues(39244L)
+      .baselineColumns("mycount")
+      .baselineValues(24433L)
       .go();
   }
 }

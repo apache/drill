@@ -20,9 +20,9 @@ package org.apache.drill.exec.store.druid;
 
 public interface DruidTestConstants {
   String TEST_DATASOURCE_WIKIPEDIA = "wikipedia";
-  String TEST_STRING_EQUALS_FILTER_QUERY_TEMPLATE1 = "select * from druid.`%s` as ds where ds.user = 'Eribro'";
-  String TEST_STRING_TWO_AND_EQUALS_FILTER_QUERY_TEMPLATE1 = "select * from druid.`%s` as ds where ds.user = 'Eribro' AND ds.comment like 'Musik'";
-  String TEST_STRING_TWO_OR_EQUALS_FILTER_QUERY_TEMPLATE1 = "select * from druid.`%s` as ds where ds.user = 'Eribro' OR ds.page = 'Rallicula'";
+  String TEST_STRING_EQUALS_FILTER_QUERY_TEMPLATE1 = "select * from druid.`%s` as ds where ds.user = 'Dansker'";
+  String TEST_STRING_TWO_AND_EQUALS_FILTER_QUERY_TEMPLATE1 = "select * from druid.`%s` as ds where ds.user = 'Dansker' AND ds.comment like 'Bitte'";
+  String TEST_STRING_TWO_OR_EQUALS_FILTER_QUERY_TEMPLATE1 = "select * from druid.`%s` as ds where ds.user = 'Dansker' OR ds.page = '1904'";
   String TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_1 = "SELECT ds.`comment` FROM druid.`%s` as ds";
-  String TEST_QUERY_COUNT_QUERY_TEMPLATE = "SELECT count(*) as count FROM druid.`%s` as ds";
+  String TEST_QUERY_COUNT_QUERY_TEMPLATE = "SELECT count(*) as mycount FROM druid.`%s` as ds";
 }

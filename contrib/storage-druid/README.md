@@ -4,13 +4,13 @@ Drill druid storage plugin allows you to perform SQL queries against Druid datas
 This storage plugin is part of [Apache Drill](https://github.com/apache/drill)
 
 ### Tested with Druid version
-[0.16.0-incubating](https://github.com/apache/incubator-druid/releases/tag/druid-0.16.0-incubating)
+[0.22.0](https://github.com/apache/druid/releases/tag/druid-0.22.0)
 
 ### Druid API
 
 Druid supports multiple native queries to address sundry use-cases.
 To fetch raw druid rows, druid API support two forms of query, `SELECT` (no relation to SQL) and `SCAN`.
-Currently, this plugin uses the [Select](https://druid.apache.org/docs/latest/querying/select-query.html)
+Currently, this plugin uses the [Scan](https://druid.apache.org/docs/latest/querying/scan-query.html)
 query API to fetch raw rows from druid as json.
 
 ### Filter Push-Down
@@ -44,7 +44,7 @@ Following is the default registration configuration.
 * Start Drill In Embedded Mode (mac)
 
     ```shell script
-    distribution/target/apache-drill-1.18.0-SNAPSHOT/apache-drill-1.18.0-SNAPSHOT/bin/drill-embedded
+    distribution/target/apache-drill-1.20.0-SNAPSHOT/apache-drill-1.20.0-SNAPSHOT/bin/drill-embedded
     ```
   
 * Starting Druid (Docker and Docker Compose required)

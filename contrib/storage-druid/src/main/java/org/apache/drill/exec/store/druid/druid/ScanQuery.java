@@ -22,37 +22,41 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @JsonPropertyOrder({ "queryType", "dataSource", "descending", "dimensions", "filter", "granularity", "intervals", "pagingSpec" })
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SelectQuery {
+public class ScanQuery {
 
   @JsonProperty
   private static final String granularity = "all";
 
   @JsonProperty
-  private static final String queryType = "select";
+  private static final String queryType = "scan";
 
   @JsonProperty
   private static final boolean descending = false;
 
   private final String dataSource;
-  private final List<DruidDimensionSpec> dimensions;
+  private final List<String> columns;
   private final ObjectNode filter;
   private final List<String> intervals;
-  private final PagingSpec pagingSpec;
+  private final BigInteger offset;
+  private final int limit;
 
-  public SelectQuery(@JsonProperty("dataSource") String dataSource,
-                     @JsonProperty("dimensions") List<DruidDimensionSpec> dimensions,
-                     @JsonProperty("filter") ObjectNode filter,
-                     @JsonProperty("intervals") List<String> intervals,
-                     @JsonProperty("pagingSpec") PagingSpec pagingSpec) {
+  public ScanQuery(@JsonProperty("dataSource") String dataSource,
+                   @JsonProperty("columns") List<String> columns,
+                   @JsonProperty("filter") ObjectNode filter,
+                   @JsonProperty("intervals") List<String> intervals,
+                   @JsonProperty("offset") BigInteger offset,
+                   @JsonProperty("limit") int limit) {
     this.dataSource = dataSource;
-    this.dimensions = dimensions;
+    this.columns = columns;
     this.filter = filter;
     this.intervals = intervals;
-    this.pagingSpec = pagingSpec;
+    this.offset = offset;
+    this.limit = limit;
   }
 
   public String getQueryType() {
@@ -67,8 +71,8 @@ public class SelectQuery {
     return dataSource;
   }
 
-  public List<DruidDimensionSpec> getDimensions() {
-    return dimensions;
+  public List<String> getColumns() {
+    return columns;
   }
 
   public String getGranularity() {
@@ -79,11 +83,15 @@ public class SelectQuery {
     return intervals;
   }
 
-  public PagingSpec getPagingSpec() {
-    return pagingSpec;
-  }
-
   public ObjectNode getFilter() {
     return filter;
+  }
+
+  public BigInteger getOffset() {
+    return offset;
+  }
+
+  public int getLimit() {
+    return limit;
   }
 }

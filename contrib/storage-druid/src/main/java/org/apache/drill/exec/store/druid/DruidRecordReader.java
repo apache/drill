@@ -27,11 +27,9 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.druid.common.DruidFilter;
-import org.apache.drill.exec.store.druid.druid.DruidSelectResponse;
-import org.apache.drill.exec.store.druid.druid.PagingIdentifier;
-import org.apache.drill.exec.store.druid.druid.PagingSpec;
-import org.apache.drill.exec.store.druid.druid.SelectQuery;
-import org.apache.drill.exec.store.druid.druid.SelectQueryBuilder;
+import org.apache.drill.exec.store.druid.druid.DruidScanResponse;
+import org.apache.drill.exec.store.druid.druid.ScanQuery;
+import org.apache.drill.exec.store.druid.druid.ScanQueryBuilder;
 import org.apache.drill.exec.store.druid.rest.DruidQueryClient;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
@@ -43,13 +41,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class DruidRecordReader extends AbstractRecordReader {
 
@@ -57,9 +54,9 @@ public class DruidRecordReader extends AbstractRecordReader {
   private static final ObjectMapper objectMapper = new ObjectMapper();
   private final DruidStoragePlugin plugin;
   private final DruidSubScan.DruidSubScanSpec scanSpec;
-  private final List<String> dimensions;
+  private final List<String> columns;
   private final DruidFilter filter;
-  private ArrayList<PagingIdentifier> pagingIdentifiers = new ArrayList<>();
+  private BigInteger nextOffset = BigInteger.ZERO;
   private int maxRecordsToRead = -1;
 
   private JsonReader jsonReader;
@@ -73,7 +70,7 @@ public class DruidRecordReader extends AbstractRecordReader {
                            int maxRecordsToRead,
                            FragmentContext context,
                            DruidStoragePlugin plugin) {
-    dimensions = new ArrayList<>();
+    columns = new ArrayList<>();
     setColumns(projectedColumns);
     this.maxRecordsToRead = maxRecordsToRead;
     this.plugin = plugin;
@@ -92,7 +89,7 @@ public class DruidRecordReader extends AbstractRecordReader {
       for (SchemaPath column : projectedColumns) {
         String fieldName = column.getRootSegment().getPath();
         transformed.add(column);
-        this.dimensions.add(fieldName);
+        this.columns.add(fieldName);
       }
     }
     return transformed;
@@ -116,11 +113,11 @@ public class DruidRecordReader extends AbstractRecordReader {
     Stopwatch watch = Stopwatch.createStarted();
     try {
       String query = getQuery();
-      DruidSelectResponse druidSelectResponse = druidQueryClient.executeQuery(query);
-      setNextPagingIdentifiers(druidSelectResponse);
+      DruidScanResponse druidScanResponse = druidQueryClient.executeQuery(query);
+      setNextOffset(druidScanResponse);
 
       int docCount = 0;
-      for (ObjectNode eventNode : druidSelectResponse.getEvents()) {
+      for (ObjectNode eventNode : druidScanResponse.getEvents()) {
         writer.setPosition(docCount);
         jsonReader.setSource(eventNode);
         try {
@@ -154,38 +151,22 @@ public class DruidRecordReader extends AbstractRecordReader {
       this.maxRecordsToRead >= 0
         ? Math.min(BaseValueVector.INITIAL_VALUE_ALLOCATION, this.maxRecordsToRead)
         : BaseValueVector.INITIAL_VALUE_ALLOCATION;
-    SelectQueryBuilder selectQueryBuilder = plugin.getSelectQueryBuilder();
-    SelectQuery selectQuery =
-      selectQueryBuilder.build(
+    ScanQueryBuilder scanQueryBuilder = plugin.getScanQueryBuilder();
+    ScanQuery scanQuery =
+      scanQueryBuilder.build(
         scanSpec.dataSourceName,
-        this.dimensions,
+        this.columns,
         this.filter,
-        new PagingSpec(this.pagingIdentifiers, queryThreshold),
+        this.nextOffset,
+        queryThreshold,
         scanSpec.getMinTime(),
         scanSpec.getMaxTime()
       );
-    return objectMapper.writeValueAsString(selectQuery);
+    return objectMapper.writeValueAsString(scanQuery);
   }
 
-  private void setNextPagingIdentifiers(DruidSelectResponse druidSelectResponse) {
-    ArrayList<PagingIdentifier> newPagingIdentifiers = druidSelectResponse.getPagingIdentifiers();
-
-    Map<String, String> newPagingIdentifierNames =
-      newPagingIdentifiers
-        .stream()
-        .distinct()
-        .collect(Collectors.toMap(PagingIdentifier::getSegmentName, PagingIdentifier::getSegmentName));
-
-    for (PagingIdentifier previousPagingIdentifier : this.pagingIdentifiers) {
-      if (!newPagingIdentifierNames.containsKey(previousPagingIdentifier.getSegmentName())) {
-        newPagingIdentifiers.add(
-          new PagingIdentifier(
-            previousPagingIdentifier.getSegmentName(),
-            previousPagingIdentifier.getSegmentOffset() + 1)
-        );
-      }
-    }
-    this.pagingIdentifiers = newPagingIdentifiers;
+  private void setNextOffset(DruidScanResponse druidScanResponse) {
+    this.nextOffset = this.nextOffset.add(BigInteger.valueOf(druidScanResponse.getEvents().size()));
   }
 
   @Override
@@ -193,8 +174,8 @@ public class DruidRecordReader extends AbstractRecordReader {
     if (writer != null) {
       writer.close();
     }
-    if (pagingIdentifiers != null) {
-      pagingIdentifiers.clear();
+    if (!this.nextOffset.equals(BigInteger.ZERO)) {
+      this.nextOffset = BigInteger.ZERO;
     }
     jsonReader = null;
   }
