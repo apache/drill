@@ -64,7 +64,7 @@ public class PdfFormatPlugin extends EasyFormatPlugin<PdfFormatConfig> {
       .blockSplittable(false)
       .compressible(true)
       .supportsProjectPushdown(true)
-      .extensions(pluginConfig.getExtensions())
+      .extensions(pluginConfig.extensions())
       .fsConf(fsConf)
       .defaultName(DEFAULT_NAME)
       .useEnhancedScan(true)

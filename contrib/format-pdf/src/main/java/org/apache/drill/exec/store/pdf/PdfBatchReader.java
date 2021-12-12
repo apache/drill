@@ -24,7 +24,6 @@ import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
@@ -35,7 +34,6 @@ import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -53,6 +51,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -66,7 +65,6 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private FileSplit split;
   private CustomErrorContext errorContext;
   private RowSetLoader rowWriter;
-  private InputStream fsStream;
   private PDDocument document;
   private PdfReaderConfig config;
 
@@ -92,7 +90,6 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private int unregisteredColumnCount;
   private int columns;
   private int tableCount;
-  private int rows;
   private int metadataIndex;
 
 
@@ -113,7 +110,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     this.unregisteredColumnCount = 0;
     this.writers = new ArrayList<>();
     this.config = readerConfig;
-    this.startingTableIndex = readerConfig.plugin.getConfig().getDefaultTableIndex() < 0 ? 0 : readerConfig.plugin.getConfig().getDefaultTableIndex();
+    this.startingTableIndex = readerConfig.plugin.getConfig().defaultTableIndex() < 0 ? 0 : readerConfig.plugin.getConfig().defaultTableIndex();
     this.currentTableIndex = this.startingTableIndex;
     this.columnHeaders = new ArrayList<>();
   }
@@ -129,10 +126,23 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     openFile();
 
-    // Get the tables
-    tables = Utils.extractTablesFromPDF(document);
+    // Get the tables if the user set the combine pages to true
+    if (config.plugin.getConfig().combinePages() ) {
+      tables = PdfUtils.extractTablesFromPDF(document, config.plugin.getConfig().getAlgorithm());
+      // TODO ... What happens if there are no tables... NPE?
+      currentTable = tables.get(0);
+    } else {
+      currentTable = PdfUtils.getSpecificTable(document, startingTableIndex);
+      tables = Collections.singletonList(currentTable);
+      if (currentTable == null) {
+        throw UserException.dataReadError()
+          .message("The specified table index " + startingTableIndex + " does not exist in this file. ")
+          .addContext(errorContext)
+          .build(logger);
+      }
+    }
+
     populateMetadata();
-    logger.debug("Found {} tables", tables.size());
 
     // Support provided schema
     TupleMetadata schema = null;
@@ -153,23 +163,22 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     addImplicitColumnsToSchema();
 
     // Prepare for reading
-    currentRowIndex = 1;  // Skip the first line if there are headers
-    currentTable = tables.get(startingTableIndex);
-
+    // TODO Could this be the cause of the missing row?
+    currentRowIndex = 1;
     return true;
   }
 
   @Override
   public boolean next() {
-    System.setProperty("java.awt.headless", "true");
 
     while(!rowWriter.isFull()) {
       // Check to see if the limit has been reached
       if (rowWriter.limitReached(maxRecords)) {
         return false;
-      } else if (currentRowIndex >= currentTable.getRows().size() &&
-                  currentTableIndex < tables.size() &&
-                  config.plugin.getConfig().getCombinePages()) {
+      } else if (config.plugin.getConfig().combinePages() &&  // TODO clean this up... 
+                currentRowIndex >= currentTable.getRows().size() &&
+                  currentTableIndex < tables.size()) {
+        // Case for merged pages
         currentRowIndex = 0;
         currentTable = tables.get(currentTableIndex++);
       } else if (currentRowIndex >= currentTable.getRows().size()) {
@@ -204,11 +213,6 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
   @Override
   public void close() {
-    if (fsStream != null) {
-      AutoCloseables.closeSilently(fsStream);
-      fsStream = null;
-    }
-
     if (document != null) {
       AutoCloseables.closeSilently(document.getDocument());
       AutoCloseables.closeSilently(document);
@@ -221,8 +225,9 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
    */
   private void openFile() {
     try {
-      fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
+      InputStream fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
       document = PDDocument.load(fsStream);
+      AutoCloseables.closeSilently(fsStream);
     } catch (Exception e) {
       throw UserException
         .dataReadError(e)
@@ -249,7 +254,11 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     creationDate = info.getCreationDate();
     modificationDate = info.getModificationDate();
     trapped = info.getTrapped();
-    tableCount = tables.size();
+    if (tables == null) {
+      tableCount = 1;
+    } else {
+      tableCount = tables.size();
+    }
   }
 
   private void addImplicitColumnsToSchema() {
@@ -313,33 +322,17 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     writers.get(index).getWriter().setTimestamp(Instant.ofEpochMilli(dateValue.getTimeInMillis()));
   }
 
-  private void addUnknownColumnToSchemaAndCreateWriter (TupleWriter rowWriter, String name) {
-    int index = rowWriter.tupleSchema().index(name);
-    if (index == -1) {
-      ColumnMetadata colSchema = MetadataUtils.newScalar(name, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
-      index = rowWriter.addColumn(colSchema);
-    }
-    ScalarWriter colWriter = rowWriter.scalar(index);
-
-    // Create a new column name which will be field_n
-    String newColumnName = NEW_FIELD_PREFIX + unregisteredColumnCount;
-    unregisteredColumnCount++;
-
-    // Add a new writer.  Since we want the metadata always to be at the end of the schema, we must track the metadata
-    // index and add this before the metadata, so that the column index tracks with the writer index.
-    writers.add(metadataIndex, new StringPdfColumnWriter(1, newColumnName, (RowSetLoader) rowWriter));
-
-    // Increment the metadata index
-    metadataIndex++;
-  }
-
   private TupleMetadata buildSchema() {
-    Table table = tables.get(startingTableIndex);
+    Table table;
+    if (tables == null) {
+      table = currentTable;
+    } else {
+      table = tables.get(startingTableIndex);
+    }
     columns = table.getColCount();
-    rows = table.getRowCount();
 
     // Get column header names
-    columnHeaders = Utils.extractRowValues(table);
+    columnHeaders = PdfUtils.extractRowValues(table);
 
     // Add columns to table
     int index = 0;

@@ -51,6 +51,8 @@ public class TestPdfFormat extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("pdf/"));
   }
 
+  // TODO Add tests for other extraction algos and PDF with no tables
+
   @Test
   public void testStarQuery() throws RpcException {
     String sql = "SELECT * FROM cp.`pdf/argentina_diputados_voting_record.pdf` WHERE `Provincia` = 'Rio Negro'";

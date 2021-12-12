@@ -18,100 +18,93 @@
 
 package org.apache.drill.exec.store.pdf;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-import org.apache.drill.common.PlanStringBuilder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import technology.tabula.extractors.BasicExtractionAlgorithm;
+import technology.tabula.extractors.ExtractionAlgorithm;
+import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
+
+@Slf4j
+@Builder
+@Getter
+@Setter
+@Accessors(fluent = true)
+@EqualsAndHashCode
+@ToString
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+@JsonDeserialize(builder = PdfFormatConfig.PdfFormatConfigBuilder.class)
 @JsonTypeName(PdfFormatPlugin.DEFAULT_NAME)
 public class PdfFormatConfig implements FormatPluginConfig {
 
+  @JsonProperty
   private final List<String> extensions;
-  private final boolean extractHeaders;
-  private final String extractionAlgorithm;
+
+  @JsonProperty
   private final boolean combinePages;
+
+  @JsonProperty
+  private final boolean extractHeaders;
+
+  @JsonProperty
+  private final String extractionAlgorithm;
+
+  @JsonProperty
   private final int defaultTableIndex;
 
-  @JsonCreator
-  public PdfFormatConfig(@JsonProperty("extensions") List<String> extensions,
-                         @JsonProperty("extractHeaders") boolean extractHeaders,
-                         @JsonProperty("extractionAlgorithm") String extractionAlgorithm,
-                         @JsonProperty("combinePages") boolean combinePages,
-                         @JsonProperty("defaultTableIndex") int defaultTableIndex) {
-    this.extensions = extensions == null
-      ? Collections.singletonList("pdf")
-      : ImmutableList.copyOf(extensions);
-    this.extractHeaders = extractHeaders;
-    this.extractionAlgorithm = extractionAlgorithm;
-    this.combinePages = combinePages;
-    this.defaultTableIndex = defaultTableIndex;
+  @JsonIgnore
+  private final ExtractionAlgorithm algorithm;
+
+  private PdfFormatConfig(PdfFormatConfig.PdfFormatConfigBuilder builder) {
+    this.extensions = builder.extensions == null ? Collections.singletonList("pdf") : ImmutableList.copyOf(builder.extensions);
+    this.combinePages = builder.combinePages;
+    this.extractHeaders = builder.extractHeaders;
+    this.defaultTableIndex = builder.defaultTableIndex;
+    this.extractionAlgorithm = builder.extractionAlgorithm;
+
+    if (this.extractionAlgorithm.equalsIgnoreCase("spreadsheet")) {
+      this.algorithm = new SpreadsheetExtractionAlgorithm();
+    } else if (this.extractionAlgorithm.equalsIgnoreCase("basic") || this.extractionAlgorithm == null) {
+      this.algorithm = new BasicExtractionAlgorithm();
+    } else {
+      throw UserException.validationError()
+        .message(extractionAlgorithm + " is not a valid extraction algorithm. The available choices are basic or spreasheet.")
+        .build(logger);
+    }
   }
 
+  @JsonIgnore
   public PdfBatchReader.PdfReaderConfig getReaderConfig(PdfFormatPlugin plugin) {
     return new PdfBatchReader.PdfReaderConfig(plugin);
   }
 
-  @JsonInclude(Include.NON_DEFAULT)
-  @JsonProperty("extensions")
-  public List<String> getExtensions() {
-    return extensions;
+  @JsonIgnore
+  public ExtractionAlgorithm getAlgorithm() {
+    return algorithm;
   }
 
-  @JsonInclude(Include.NON_DEFAULT)
-  @JsonProperty("combinePages")
-  public boolean getCombinePages() { return combinePages; }
-
-  @JsonInclude(Include.NON_DEFAULT)
-  @JsonProperty("extractHeaders")
-  public boolean getExtractHeaders() {
-    return extractHeaders;
-  }
-
-  @JsonProperty("extractionAlgorithm")
-  public String getExtractionAlgorithm() {
-    return extractionAlgorithm;
-  }
-
-  @JsonProperty("defaultTableIndex")
-  public int getDefaultTableIndex() { return defaultTableIndex; }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(extensions, extractHeaders, extractionAlgorithm, combinePages, defaultTableIndex);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    } else if (obj == null || getClass() != obj.getClass()) {
-      return false;
+  @JsonPOJOBuilder(withPrefix = "")
+  public static class PdfFormatConfigBuilder {
+    public PdfFormatConfig build() {
+      return new PdfFormatConfig(this);
     }
-    PdfFormatConfig that = (PdfFormatConfig) obj;
-    return Objects.equals(extensions, that.extensions) &&
-      Objects.equals(extractHeaders, that.extractHeaders) &&
-      Objects.equals(extractionAlgorithm, that.extractionAlgorithm) &&
-      Objects.equals(combinePages, that.combinePages) &&
-      Objects.equals(defaultTableIndex, that.defaultTableIndex);
-  }
-
-  @Override
-  public String toString() {
-    return new PlanStringBuilder(this)
-      .field("extensions", extensions)
-      .field("extractHeaders", extractHeaders)
-      .field("extractionAlgorithm", extractionAlgorithm)
-      .field("combinePages", combinePages)
-      .field("defaultTableIndex", defaultTableIndex)
-      .toString();
   }
 }

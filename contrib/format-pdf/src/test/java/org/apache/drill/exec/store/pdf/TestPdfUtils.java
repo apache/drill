@@ -25,21 +25,23 @@ import java.io.File;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 
-public class testPDFUtils {
+public class TestPdfUtils {
 
   private static final String DATA_PATH = "src/test/resources/pdf/";
 
   @Test
   public void testTableExtractor() throws Exception {
     PDDocument document = getDocument("argentina_diputados_voting_record.pdf");
-    List<Table> tableList = Utils.extractTablesFromPDF(document);
+    List<Table> tableList = PdfUtils.extractTablesFromPDF(document);
     document.close();
     assertEquals(tableList.size(), 1);
 
     PDDocument document2 = getDocument("twotables.pdf");
-    List<Table> tableList2 = Utils.extractTablesFromPDF(document2);
+    List<Table> tableList2 = PdfUtils.extractTablesFromPDF(document2);
     document2.close();
     assertEquals(tableList2.size(), 2);
   }
@@ -47,7 +49,7 @@ public class testPDFUtils {
   @Test
   public void testTableExtractorWithNoBoundingFrame() throws Exception {
     PDDocument document = getDocument("spreadsheet_no_bounding_frame.pdf");
-    List<Table> tableList = Utils.extractTablesFromPDF(document);
+    List<Table> tableList = PdfUtils.extractTablesFromPDF(document);
     document.close();
     assertEquals(tableList.size(), 1);
   }
@@ -55,24 +57,44 @@ public class testPDFUtils {
   @Test
   public void testTableExtractorWitMultipage() throws Exception {
     PDDocument document = getDocument("us-020.pdf");
-    List<Table> tableList = Utils.extractTablesFromPDF(document);
+    List<Table> tableList = PdfUtils.extractTablesFromPDF(document);
     document.close();
     assertEquals(tableList.size(), 4);
   }
 
   @Test
-  public void testFirstRowExtractor() throws Exception {
-    PDDocument document = getDocument("schools.pdf");
-    List<Table> tableList = Utils.extractTablesFromPDF(document);
-    document.close();
-
-    List<String> values = Utils.extractRowValues(tableList.get(0));
-    assertEquals(values.size(), 11);
+  public void testGetSpecificTable() throws Exception {
+    PDDocument document = getDocument("us-020.pdf");
+    Table table = PdfUtils.getSpecificTable(document, 0);
+    assertNotNull(table);
+    assertEquals(7, table.getColCount());
   }
 
+  @Test
+  public void testGetFullPageSpecificTable() throws Exception {
+    PDDocument document = getDocument("schools.pdf");
+    Table table = PdfUtils.getSpecificTable(document, 3);
+    assertNotNull(table);
+  }
+
+  @Test
+  public void testGetSpecificTableOutSideOfBounds() throws Exception {
+    PDDocument document = getDocument("us-020.pdf");
+    Table table = PdfUtils.getSpecificTable(document, 4);
+    assertNull(table);
+  }
+
+  @Test
+  public void testFirstRowExtractor() throws Exception {
+    PDDocument document = getDocument("schools.pdf");
+    List<Table> tableList = PdfUtils.extractTablesFromPDF(document);
+    document.close();
+
+    List<String> values = PdfUtils.extractRowValues(tableList.get(0));
+    assertEquals(values.size(), 11);
+  }
 
   private PDDocument getDocument(String fileName) throws Exception {
     return PDDocument.load(new File(DATA_PATH + fileName));
   }
-
 }

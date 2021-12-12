@@ -8,6 +8,7 @@
           "extensions": [
             "pdf"
           ],
+          "extractionAlgorithm": "basic",
           "extractHeaders": true,
           "combinePages": false
         }
@@ -21,6 +22,7 @@
           "extensions": [
             "pdf"
           ],
+          "extractionAlgorithm": "basic",
           "extractHeaders": true,
           "combinePages": false
         }
@@ -34,6 +36,7 @@
           "extensions": [
             "pdf"
           ],
+          "extractionAlgorithm": "basic",
           "extractHeaders": true,
           "combinePages": false
         }

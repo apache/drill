@@ -36,10 +36,10 @@ import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Utils {
+public class PdfUtils {
 
   public static final ExtractionAlgorithm DEFAULT_ALGORITHM = new BasicExtractionAlgorithm();
-  private static final Logger logger = LoggerFactory.getLogger(Utils.class);
+  private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
 
   /**
    * Returns a list of tables found in a given PDF document.  There are several extraction algorithms
@@ -52,8 +52,6 @@ public class Utils {
   }
 
   public static List<Table> extractTablesFromPDF(PDDocument document, ExtractionAlgorithm algorithm) {
-    System.setProperty("java.awt.headless", "true");
-
     NurminenDetectionAlgorithm detectionAlgorithm = new NurminenDetectionAlgorithm();
 
     ExtractionAlgorithm algExtractor;
@@ -87,13 +85,63 @@ public class Utils {
   }
 
   /**
+   * Returns a specific table from a PDF document. Returns null in the event that
+   * the user requests a table that does not exist.  If there is an error with the document
+   * the function will throw a UserException.
+   * @param document The source PDF document
+   * @param tableIndex The index of the desired table
+   * @return The desired Table, null if the table is not valid.
+   */
+  public static Table getSpecificTable(PDDocument document, int tableIndex) {
+    NurminenDetectionAlgorithm detectionAlgorithm = new NurminenDetectionAlgorithm();
+    ExtractionAlgorithm algExtractor;
+    SpreadsheetExtractionAlgorithm extractor = new SpreadsheetExtractionAlgorithm();
+
+    ObjectExtractor objectExtractor = new ObjectExtractor(document);
+    PageIterator pages = objectExtractor.extract();
+
+    Table specificTable;
+
+    while (pages.hasNext()) {
+      Page page = pages.next();
+
+      algExtractor = DEFAULT_ALGORITHM;
+      List<Rectangle> rectanglesOnPage = detectionAlgorithm.detect(page);
+      List<Table> tablesOnPage = new ArrayList<>();
+
+      for (Rectangle guessRect : rectanglesOnPage) {
+        Page guess = page.getArea(guessRect);
+        tablesOnPage.addAll(algExtractor.extract(guess));
+        for (int i = 0; i < tablesOnPage.size(); i++) {
+          if (i == tableIndex) {
+            specificTable = tablesOnPage.get(i);
+            return specificTable;
+          }
+        }
+      }
+    }
+    try {
+      objectExtractor.close();
+    } catch (Exception e) {
+      throw UserException.parseError(e)
+        .message("Error extracting table: " + e.getMessage())
+        .build(logger);
+    }
+
+    return null;
+  }
+
+  /**
    * Returns the values contained in a PDF Table row
    * @param table The source table
    * @return A list of the header rows
    */
   public static List<String> extractRowValues(Table table) {
-    List<RectangularTextContainer> firstRow = table.getRows().get(0);
     List<String> values = new ArrayList<>();
+    if (table == null) {
+      return values;
+    }
+    List<RectangularTextContainer> firstRow = table.getRows().get(0);
 
     if (firstRow != null) {
       for (int i = 0; i < firstRow.size(); i++) {
