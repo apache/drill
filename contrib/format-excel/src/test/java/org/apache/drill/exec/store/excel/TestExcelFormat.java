@@ -36,6 +36,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 
 import static org.apache.drill.test.QueryTestUtil.ConvertDateToLong;
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
@@ -678,4 +680,28 @@ public class TestExcelFormat extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
+
+  @Test
+  public void test1904BasedDates() throws RpcException {
+    String sql = "SELECT * FROM dfs.`excel/1904Dates.xlsx`";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("playerId", MinorType.VARCHAR)
+      .addNullable("birthYear", MinorType.FLOAT8)
+      .addNullable("birthMonth", MinorType.FLOAT8)
+      .addNullable("birthDay", MinorType.FLOAT8)
+      .addNullable("known", MinorType.FLOAT8)
+      .addNullable("date", MinorType.TIMESTAMP)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("foo", 1991, 10, 14, 1, LocalDate.parse("1991-10-14").atStartOfDay().toInstant(ZoneOffset.UTC))
+      .addRow("bar", 1989, 12, 16, 1, LocalDate.parse("1989-12-16").atStartOfDay().toInstant(ZoneOffset.UTC))
+      .addRow("baz", 1994, 3, 10, 0, LocalDate.parse("1994-03-10").atStartOfDay().toInstant(ZoneOffset.UTC))
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
 }

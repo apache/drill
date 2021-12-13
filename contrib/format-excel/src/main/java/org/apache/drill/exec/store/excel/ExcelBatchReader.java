@@ -50,6 +50,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -57,7 +59,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.TimeZone;
 
 public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
@@ -846,10 +847,13 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       if (cell == null) {
         columnWriter.setNull();
       } else {
-        logger.debug("Cell value: {}", cell.getNumericCellValue());
-        Date dt = DateUtil.getJavaDate(cell.getNumericCellValue(), TimeZone.getTimeZone("UTC"));
-        Instant timeStamp = Instant.ofEpochMilli(dt.toInstant().getEpochSecond() * 1000);
-        columnWriter.setTimestamp(timeStamp);
+        LocalDateTime dt = cell.getLocalDateTimeCellValue();
+        logger.debug("Cell value: {}", dt);
+        if (dt == null) {
+          columnWriter.setNull();
+        } else {
+          columnWriter.setTimestamp(dt.toInstant(ZoneOffset.UTC));
+        }
       }
     }
   }
