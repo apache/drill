@@ -32,6 +32,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
@@ -70,25 +71,12 @@ public class PdfFormatConfig implements FormatPluginConfig {
   @JsonProperty
   private final int defaultTableIndex;
 
-  @JsonIgnore
-  private final ExtractionAlgorithm algorithm;
-
   private PdfFormatConfig(PdfFormatConfig.PdfFormatConfigBuilder builder) {
     this.extensions = builder.extensions == null ? Collections.singletonList("pdf") : ImmutableList.copyOf(builder.extensions);
     this.combinePages = builder.combinePages;
     this.extractHeaders = builder.extractHeaders;
     this.defaultTableIndex = builder.defaultTableIndex;
     this.extractionAlgorithm = builder.extractionAlgorithm;
-
-    if (this.extractionAlgorithm.equalsIgnoreCase("spreadsheet")) {
-      this.algorithm = new SpreadsheetExtractionAlgorithm();
-    } else if (this.extractionAlgorithm.equalsIgnoreCase("basic") || this.extractionAlgorithm == null) {
-      this.algorithm = new BasicExtractionAlgorithm();
-    } else {
-      throw UserException.validationError()
-        .message(extractionAlgorithm + " is not a valid extraction algorithm. The available choices are basic or spreasheet.")
-        .build(logger);
-    }
   }
 
   @JsonIgnore
@@ -98,7 +86,15 @@ public class PdfFormatConfig implements FormatPluginConfig {
 
   @JsonIgnore
   public ExtractionAlgorithm getAlgorithm() {
-    return algorithm;
+    if (this.extractionAlgorithm.equalsIgnoreCase("spreadsheet")) {
+      return new SpreadsheetExtractionAlgorithm();
+    } else if (StringUtils.isEmpty(this.extractionAlgorithm) || this.extractionAlgorithm.equalsIgnoreCase("basic")) {
+      return new BasicExtractionAlgorithm();
+    } else {
+      throw UserException.validationError()
+        .message(extractionAlgorithm + " is not a valid extraction algorithm. The available choices are basic or spreadsheet.")
+        .build(logger);
+    }
   }
 
   @JsonPOJOBuilder(withPrefix = "")

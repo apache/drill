@@ -132,7 +132,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       // TODO ... What happens if there are no tables... NPE?
       currentTable = tables.get(0);
     } else {
-      currentTable = PdfUtils.getSpecificTable(document, startingTableIndex);
+      currentTable = PdfUtils.getSpecificTable(document, startingTableIndex, config.plugin.getConfig().getAlgorithm());
       tables = Collections.singletonList(currentTable);
       if (currentTable == null) {
         throw UserException.dataReadError()
@@ -155,6 +155,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     ResultSetLoader loader = this.negotiator.build();
     rowWriter = loader.writer();
 
+    // Build the schema
     if (negotiator.hasProvidedSchema()) {
       buildWriterListFromProvidedSchema(schema);
     } else {
@@ -175,7 +176,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       // Check to see if the limit has been reached
       if (rowWriter.limitReached(maxRecords)) {
         return false;
-      } else if (config.plugin.getConfig().combinePages() &&  // TODO clean this up... 
+      } else if (config.plugin.getConfig().combinePages() &&  // TODO clean this up...
                 currentRowIndex >= currentTable.getRows().size() &&
                   currentTableIndex < tables.size()) {
         // Case for merged pages
@@ -199,14 +200,16 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     String value;
     rowWriter.start();
-    for (int i = 0; i < row.size(); i++) {
-      value = row.get(i).getText();
+    int rowPosition = 0;
+    for (RectangularTextContainer cellValue : row) {
+      value = cellValue.getText();
 
-      if (Strings.isNullOrEmpty(value)) {
-        continue;
+      if (!Strings.isNullOrEmpty(value)) {
+        writers.get(rowPosition).load(row.get(rowPosition));
       }
-      writers.get(i).load(row.get(i));
+      rowPosition++;
     }
+
     writeMetadata();
     rowWriter.save();
   }
@@ -323,16 +326,10 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   }
 
   private TupleMetadata buildSchema() {
-    Table table;
-    if (tables == null) {
-      table = currentTable;
-    } else {
-      table = tables.get(startingTableIndex);
-    }
-    columns = table.getColCount();
+    columns = currentTable.getColCount();
 
     // Get column header names
-    columnHeaders = PdfUtils.extractRowValues(table);
+    columnHeaders = PdfUtils.extractFirstRowValues(currentTable);
 
     // Add columns to table
     int index = 0;

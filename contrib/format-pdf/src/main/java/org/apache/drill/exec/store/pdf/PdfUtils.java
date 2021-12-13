@@ -51,6 +51,13 @@ public class PdfUtils {
     return extractTablesFromPDF(document, DEFAULT_ALGORITHM);
   }
 
+  /**
+   * Returns a list of tables found in a given PDF document.  There are several extraction algorithms
+   * available and this function allows the user to select which to use.
+   * @param document The input PDF document to search for tables
+   * @param algorithm The extraction algorithm
+   * @return A list of tables found in the document.
+   */
   public static List<Table> extractTablesFromPDF(PDDocument document, ExtractionAlgorithm algorithm) {
     NurminenDetectionAlgorithm detectionAlgorithm = new NurminenDetectionAlgorithm();
 
@@ -92,20 +99,24 @@ public class PdfUtils {
    * @param tableIndex The index of the desired table
    * @return The desired Table, null if the table is not valid.
    */
-  public static Table getSpecificTable(PDDocument document, int tableIndex) {
+  public static Table getSpecificTable(PDDocument document, int tableIndex, ExtractionAlgorithm algorithm) {
     NurminenDetectionAlgorithm detectionAlgorithm = new NurminenDetectionAlgorithm();
     ExtractionAlgorithm algExtractor;
-    SpreadsheetExtractionAlgorithm extractor = new SpreadsheetExtractionAlgorithm();
+
+    if (algorithm == null) {
+      algExtractor = DEFAULT_ALGORITHM;
+    } else {
+      algExtractor = algorithm;
+    }
 
     ObjectExtractor objectExtractor = new ObjectExtractor(document);
     PageIterator pages = objectExtractor.extract();
 
     Table specificTable;
-
+    int tableCounter = 0;
     while (pages.hasNext()) {
       Page page = pages.next();
 
-      algExtractor = DEFAULT_ALGORITHM;
       List<Rectangle> rectanglesOnPage = detectionAlgorithm.detect(page);
       List<Table> tablesOnPage = new ArrayList<>();
 
@@ -113,10 +124,11 @@ public class PdfUtils {
         Page guess = page.getArea(guessRect);
         tablesOnPage.addAll(algExtractor.extract(guess));
         for (int i = 0; i < tablesOnPage.size(); i++) {
-          if (i == tableIndex) {
+          if (tableCounter == tableIndex) {
             specificTable = tablesOnPage.get(i);
             return specificTable;
           }
+          tableCounter++;
         }
       }
     }
@@ -136,7 +148,7 @@ public class PdfUtils {
    * @param table The source table
    * @return A list of the header rows
    */
-  public static List<String> extractRowValues(Table table) {
+  public static List<String> extractFirstRowValues(Table table) {
     List<String> values = new ArrayList<>();
     if (table == null) {
       return values;
@@ -147,6 +159,25 @@ public class PdfUtils {
       for (int i = 0; i < firstRow.size(); i++) {
         values.add(firstRow.get(i).getText());
       }
+    }
+    return values;
+  }
+
+  /**
+   * This function retuns the contents of a specific row in a PDF table as a list of Strings.
+   * @param table The table containing the data.
+   * @param rowIndex The desired row index
+   * @return A list of Strings with the data.
+   */
+  public static List<String> getRow(Table table, int rowIndex) {
+    List<String> values = new ArrayList<>();
+    if (table == null) {
+      return values;
+    }
+
+    List<RectangularTextContainer> row = table.getRows().get(rowIndex);
+    for (RectangularTextContainer rectangularTextContainer : row) {
+      values.add(rectangularTextContainer.getText());
     }
     return values;
   }

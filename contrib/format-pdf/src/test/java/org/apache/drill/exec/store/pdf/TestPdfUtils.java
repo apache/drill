@@ -65,7 +65,7 @@ public class TestPdfUtils {
   @Test
   public void testGetSpecificTable() throws Exception {
     PDDocument document = getDocument("us-020.pdf");
-    Table table = PdfUtils.getSpecificTable(document, 0);
+    Table table = PdfUtils.getSpecificTable(document, 0, null);
     assertNotNull(table);
     assertEquals(7, table.getColCount());
   }
@@ -73,14 +73,14 @@ public class TestPdfUtils {
   @Test
   public void testGetFullPageSpecificTable() throws Exception {
     PDDocument document = getDocument("schools.pdf");
-    Table table = PdfUtils.getSpecificTable(document, 3);
+    Table table = PdfUtils.getSpecificTable(document, 3, null);
     assertNotNull(table);
   }
 
   @Test
   public void testGetSpecificTableOutSideOfBounds() throws Exception {
     PDDocument document = getDocument("us-020.pdf");
-    Table table = PdfUtils.getSpecificTable(document, 4);
+    Table table = PdfUtils.getSpecificTable(document, 4, null);
     assertNull(table);
   }
 
@@ -90,7 +90,7 @@ public class TestPdfUtils {
     List<Table> tableList = PdfUtils.extractTablesFromPDF(document);
     document.close();
 
-    List<String> values = PdfUtils.extractRowValues(tableList.get(0));
+    List<String> values = PdfUtils.extractFirstRowValues(tableList.get(0));
     assertEquals(values.size(), 11);
   }
 
