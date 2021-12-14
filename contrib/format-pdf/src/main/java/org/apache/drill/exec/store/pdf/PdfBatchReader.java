@@ -345,7 +345,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     // Add columns to table
     int index = 0;
     for (String columnName : firstRow) {
-      if (Strings.isNullOrEmpty(columnName)) {
+      if (Strings.isNullOrEmpty(columnName) || !config.plugin.getConfig().extractHeaders()) {
         columnName = NEW_FIELD_PREFIX + unregisteredColumnCount;
         columnHeaders.set(index, columnName);
         unregisteredColumnCount++;

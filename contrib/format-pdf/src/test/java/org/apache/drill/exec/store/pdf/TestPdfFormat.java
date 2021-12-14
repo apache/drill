@@ -52,7 +52,8 @@ public class TestPdfFormat extends ClusterTest {
   }
 
   // TODO Add tests for other extraction algos and PDF with no tables
-
+  // TODO Add test for do not extract headers.
+  // TODO Remove unused PDF files
   @Test
   public void testStarQuery() throws RpcException {
     String sql = "SELECT * FROM cp.`pdf/argentina_diputados_voting_record.pdf` WHERE `Provincia` = 'Rio Negro'";
