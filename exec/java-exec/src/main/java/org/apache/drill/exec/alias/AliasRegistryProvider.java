@@ -40,7 +40,7 @@ public class AliasRegistryProvider implements AutoCloseable {
   }
 
   public AliasRegistry getStorageAliasesRegistry() {
-    if (context.getOptionManager().getOption(ExecConstants.ENABLE_ALIASES).bool_val) {
+    if (context.getOptionManager().getBoolean(ExecConstants.ENABLE_ALIASES)) {
       if (storageAliasesRegistry == null) {
         initRemoteRegistries();
       }
@@ -50,7 +50,7 @@ public class AliasRegistryProvider implements AutoCloseable {
   }
 
   public AliasRegistry getTableAliasesRegistry() {
-    if (context.getOptionManager().getOption(ExecConstants.ENABLE_ALIASES).bool_val) {
+    if (context.getOptionManager().getBoolean(ExecConstants.ENABLE_ALIASES)) {
       if (tableAliasesRegistry == null) {
         initRemoteRegistries();
       }

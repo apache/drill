@@ -40,7 +40,7 @@ public class BaseAliasHandler extends DefaultSqlHandler {
    * Checks whether aliases support is enabled.
    */
   protected void checkAliasesEnabled() {
-    if (!context.getOption(ExecConstants.ENABLE_ALIASES).bool_val) {
+    if (!context.getOptions().getBoolean(ExecConstants.ENABLE_ALIASES)) {
       throw UserException.validationError()
         .message("Aliases support is disabled.")
         .build(logger);
