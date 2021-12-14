@@ -74,7 +74,6 @@ public class TestVaultUserAuthenticator extends ClusterTest {
       .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
       .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, "vault")
       .configProperty(VaultUserAuthenticator.VAULT_ADDRESS, vaultAddr)
-      .configProperty(VaultUserAuthenticator.VAULT_TOKEN, ROOT_TOKEN_VALUE)
       .configProperty(
         VaultUserAuthenticator.VAULT_AUTH_METHOD,
         VaultUserAuthenticator.VaultAuthMethod.USER_PASS
@@ -110,7 +109,6 @@ public class TestVaultUserAuthenticator extends ClusterTest {
       .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
       .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, "vault")
       .configProperty(VaultUserAuthenticator.VAULT_ADDRESS, vaultAddr)
-      // test without any VAULT_TOKEN boot option for token auth method
       .configProperty(
         VaultUserAuthenticator.VAULT_AUTH_METHOD,
         VaultUserAuthenticator.VaultAuthMethod.VAULT_TOKEN

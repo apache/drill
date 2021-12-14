@@ -42,7 +42,6 @@ public class VaultUserAuthenticator implements UserAuthenticator {
 
   // Drill boot options used to configure Vault auth.
   public static final String VAULT_ADDRESS = "drill.exec.security.user.auth.vault.address";
-  public static final String VAULT_TOKEN = "drill.exec.security.user.auth.vault.token";
   public static final String VAULT_AUTH_METHOD = "drill.exec.security.user.auth.vault.method";
 
   // The subset of Vault auth methods that are supported by this authenticator
@@ -86,32 +85,9 @@ public class VaultUserAuthenticator implements UserAuthenticator {
       )
     );
 
+    // There's no need for Drill have its own Vault token for it to use auth
+    // methods.
     VaultConfig vaultConfBuilder = new VaultConfig().address(vaultAddress);
-    String vaultToken = config.hasPath(VAULT_TOKEN)
-      ? config.getString(VAULT_TOKEN)
-      : null;
-
-    if (this.authMethod == VaultAuthMethod.VAULT_TOKEN) {
-      // Drill will use end users' Vault tokens for Vault operations
-      if (vaultToken != null) {
-        logger.warn(
-          "When Drill is set to authenticate using end user Vault tokens the " +
-          "[{}] BOOT option is ignored.",
-          VAULT_TOKEN
-        );
-      }
-    } else {
-      // Drill needs its own Vault token set in a BOOT option
-      if (vaultToken == null) {
-        throw new DrillbitStartupException(String.format(
-          "Only the %s method is supported if you do not set a token in the " +
-            "[%s] config option.",
-          VaultAuthMethod.VAULT_TOKEN,
-          VAULT_TOKEN
-        ));
-      }
-      vaultConfBuilder.token(vaultToken);
-    }
 
     // Initialise Vault client
     try {
@@ -127,11 +103,9 @@ public class VaultUserAuthenticator implements UserAuthenticator {
       logger.error(String.join(System.lineSeparator(),
           "Error initialising the Vault client library using configuration: ",
           "\tvaultAddress: {}",
-          "\tvaultToken: {}",
           "\tauthMethod: {}"
         ),
         vaultAddress,
-        vaultToken,
         authMethod,
         e
       );
@@ -175,9 +149,10 @@ public class VaultUserAuthenticator implements UserAuthenticator {
         case VAULT_TOKEN:
           // user = username, password = vault token
 
-          // Create a throwaway Vault client using the provided token and send a
-          // token lookup request to Vault which will fail if the token is
-          // invalid.
+          // The BetterCloud Vault client doesn't provide an auth-by-token
+          // method so instead we create a throwaway Vault client using the
+          // provided token and send a token lookup request to Vault which
+          // will fail if the token is invalid.
           VaultConfig lookupConfig = new VaultConfig()
             .address(this.vaultConfig.getAddress())
             .token(password)
