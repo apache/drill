@@ -86,10 +86,10 @@ public class PdfFormatConfig implements FormatPluginConfig {
 
   @JsonIgnore
   public ExtractionAlgorithm getAlgorithm() {
-    if (this.extractionAlgorithm.equalsIgnoreCase("spreadsheet")) {
-      return new SpreadsheetExtractionAlgorithm();
-    } else if (StringUtils.isEmpty(this.extractionAlgorithm) || this.extractionAlgorithm.equalsIgnoreCase("basic")) {
+    if (StringUtils.isEmpty(this.extractionAlgorithm) || this.extractionAlgorithm.equalsIgnoreCase("basic")) {
       return new BasicExtractionAlgorithm();
+    } else if (this.extractionAlgorithm.equalsIgnoreCase("spreadsheet")) {
+      return new SpreadsheetExtractionAlgorithm();
     } else {
       throw UserException.validationError()
         .message(extractionAlgorithm + " is not a valid extraction algorithm. The available choices are basic or spreadsheet.")

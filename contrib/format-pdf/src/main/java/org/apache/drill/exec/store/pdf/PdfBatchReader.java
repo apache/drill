@@ -62,18 +62,20 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private final int maxRecords;
 
   private final List<PdfColumnWriter> writers;
+  private final PdfReaderConfig config;
+  private final int startingTableIndex;
   private FileSplit split;
   private CustomErrorContext errorContext;
   private RowSetLoader rowWriter;
   private PDDocument document;
-  private PdfReaderConfig config;
 
   private SchemaBuilder builder;
   private List<String> columnHeaders;
-  private int currentRowIndex;
   private Table currentTable;
   private int currentTableIndex;
-  private int startingTableIndex;
+  private List<String> firstRow;
+  private PdfRowIterator rowIterator;
+
   private FileScanFramework.FileSchemaNegotiator negotiator;
 
   // Document Metadata Fields
@@ -142,17 +144,23 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       }
     }
 
+    // Get the row iterator and grab the first row to build the schema
+    rowIterator = new PdfRowIterator(currentTable);
+    if (rowIterator.hasNext()) {
+      firstRow = PdfUtils.convertRowToStringArray(rowIterator.next());
+    }
+
     populateMetadata();
 
     // Support provided schema
     TupleMetadata schema = null;
-    if (this.negotiator.hasProvidedSchema()) {
-      schema = this.negotiator.providedSchema();
-      this.negotiator.tableSchema(schema, false);
+    if (negotiator.hasProvidedSchema()) {
+      schema = negotiator.providedSchema();
+      negotiator.tableSchema(schema, false);
     } else {
-      this.negotiator.tableSchema(buildSchema(), false);
+      negotiator.tableSchema(buildSchema(), false);
     }
-    ResultSetLoader loader = this.negotiator.build();
+    ResultSetLoader loader = negotiator.build();
     rowWriter = loader.writer();
 
     // Build the schema
@@ -162,10 +170,6 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       buildWriterList();
     }
     addImplicitColumnsToSchema();
-
-    // Prepare for reading
-    // TODO Could this be the cause of the missing row?
-    currentRowIndex = 1;
     return true;
   }
 
@@ -173,22 +177,29 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   public boolean next() {
 
     while(!rowWriter.isFull()) {
-      // Check to see if the limit has been reached
       if (rowWriter.limitReached(maxRecords)) {
+        // Stop reading if the limit has been reached
         return false;
-      } else if (config.plugin.getConfig().combinePages() &&  // TODO clean this up...
-                currentRowIndex >= currentTable.getRows().size() &&
-                  currentTableIndex < tables.size()) {
-        // Case for merged pages
-        currentRowIndex = 0;
-        currentTable = tables.get(currentTableIndex++);
-      } else if (currentRowIndex >= currentTable.getRows().size()) {
+      } else if (config.plugin.getConfig().combinePages() &&
+                (!rowIterator.hasNext()) &&
+                  currentTableIndex < (tables.size() - 1)) {
+        // Case for end of current page but more tables exist and combinePages is set to true.
+        // Get the next table
+        currentTableIndex++;
+        currentTable = tables.get(currentTableIndex);
+
+        // Update the row iterator
+        rowIterator = new PdfRowIterator(currentTable);
+        // Skip the first row in the new table because it most likely contains headers.
+        if (config.plugin.getConfig().extractHeaders()) {
+          rowIterator.next();
+        }
+      } else if (! rowIterator.hasNext()) {
         return false;
       }
 
       // Process the row
-      processRow(currentTable.getRows().get(currentRowIndex));
-      currentRowIndex++;
+      processRow(rowIterator.next());
     }
     return true;
   }
@@ -329,11 +340,11 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     columns = currentTable.getColCount();
 
     // Get column header names
-    columnHeaders = PdfUtils.extractFirstRowValues(currentTable);
+    columnHeaders = firstRow;
 
     // Add columns to table
     int index = 0;
-    for (String columnName : columnHeaders) {
+    for (String columnName : firstRow) {
       if (Strings.isNullOrEmpty(columnName)) {
         columnName = NEW_FIELD_PREFIX + unregisteredColumnCount;
         columnHeaders.set(index, columnName);

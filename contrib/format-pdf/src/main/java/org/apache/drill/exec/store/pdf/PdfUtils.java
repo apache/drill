@@ -123,9 +123,9 @@ public class PdfUtils {
       for (Rectangle guessRect : rectanglesOnPage) {
         Page guess = page.getArea(guessRect);
         tablesOnPage.addAll(algExtractor.extract(guess));
-        for (int i = 0; i < tablesOnPage.size(); i++) {
+        for (Table table : tablesOnPage) {
           if (tableCounter == tableIndex) {
-            specificTable = tablesOnPage.get(i);
+            specificTable = table;
             return specificTable;
           }
           tableCounter++;
@@ -156,8 +156,8 @@ public class PdfUtils {
     List<RectangularTextContainer> firstRow = table.getRows().get(0);
 
     if (firstRow != null) {
-      for (int i = 0; i < firstRow.size(); i++) {
-        values.add(firstRow.get(i).getText());
+      for (RectangularTextContainer rectangularTextContainer : firstRow) {
+        values.add(rectangularTextContainer.getText());
       }
     }
     return values;
@@ -169,7 +169,7 @@ public class PdfUtils {
    * @param rowIndex The desired row index
    * @return A list of Strings with the data.
    */
-  public static List<String> getRow(Table table, int rowIndex) {
+  public static List<String> getRowAsStringList(Table table, int rowIndex) {
     List<String> values = new ArrayList<>();
     if (table == null) {
       return values;
@@ -180,5 +180,28 @@ public class PdfUtils {
       values.add(rectangularTextContainer.getText());
     }
     return values;
+  }
+
+  public static List<String> convertRowToStringArray(List<RectangularTextContainer> input) {
+    List<String> values = new ArrayList<>();
+    for (RectangularTextContainer rectangularTextContainer : input) {
+      values.add(rectangularTextContainer.getText());
+    }
+    return values;
+  }
+
+
+  /**
+   * This function retuns the contents of a specific row in a PDF table as a list of Strings.
+   * @param table The table containing the data.
+   * @param rowIndex The desired row index
+   * @return A list of Strings with the data.
+   */
+  public static List<RectangularTextContainer> getRow(Table table, int rowIndex) {
+    List<RectangularTextContainer> values = new ArrayList<>();
+    if (table == null) {
+      return values;
+    }
+    return table.getRows().get(rowIndex);
   }
 }

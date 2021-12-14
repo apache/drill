@@ -18,27 +18,30 @@
 
 package org.apache.drill.exec.store.pdf;
 
+import technology.tabula.RectangularTextContainer;
 import technology.tabula.Table;
 
 import java.util.Iterator;
 import java.util.List;
 
-public class PdfRowIterator implements Iterator<List<String>> {
+public class PdfRowIterator implements Iterator<List<RectangularTextContainer>> {
   private final Table table;
   private int rowCounter;
 
   public PdfRowIterator(Table table) {
     this.table = table;
-    rowCounter = 0;
+    this.rowCounter = 0;
   }
 
   @Override
   public boolean hasNext() {
-    return rowCounter > table.getRowCount();
+    return rowCounter < table.getRowCount();
   }
 
   @Override
-  public List<String> next() {
-    return PdfUtils.getRow(table, rowCounter);
+  public List<RectangularTextContainer> next() {
+    List<RectangularTextContainer> nextRow = PdfUtils.getRow(table, rowCounter);
+    rowCounter++;
+    return nextRow;
   }
 }

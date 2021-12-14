@@ -28,7 +28,7 @@ The available options are:
 * `extractHeaders`: Extracts the first row of any tables as the header row.  If set to `false`, Drill will assign column names of `field_0`, `field_1` to each column.
 * `combinePages`: Merges multipage tables together.
 * `defaultTableIndex`:  Allows you to query different tables within the PDF file. Index starts at `1`. 
-* `extractionAlgorithm`:  Allows you to choose the extraction algorithm used for extacting data from the PDF file.  Choices are `spreadsheet` and `basic`.  Depending on your data, one may work better than the other.
+* `extractionAlgorithm`:  Allows you to choose the extraction algorithm used for extracting data from the PDF file.  Choices are `spreadsheet` and `basic`.  Depending on your data, one may work better than the other.
 
 ## Accessing Document Metadata Fields
 PDF files have a considerable amount of metadata which can be useful for analysis.  Drill will extract the following fields from every PDF file.  Note that these fields are not projected in star queries and must be selected explicitly.  The document's creator populates these fields and some or all may be empty. With the exception of `_page_count` which is an `INT` and the two date fields, all the other fields are `VARCHAR` fields.

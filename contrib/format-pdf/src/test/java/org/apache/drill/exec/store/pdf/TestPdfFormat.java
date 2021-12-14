@@ -158,9 +158,9 @@ public class TestPdfFormat extends ClusterTest {
 
   @Test
   public void testPageMerge() throws Exception {
-    String sql = "SELECT * FROM table(cp.`pdf/schools.pdf` (type => 'pdf', combinePages => true))";
+    String sql = "SELECT * FROM table(cp.`pdf/schools.pdf` (type => 'pdf', combinePages => true, extractHeaders=> true))";
     QuerySummary results = client.queryBuilder().sql(sql).run();
-    assertEquals(271, results.recordCount());
+    assertEquals(221, results.recordCount());
   }
 
   @Test
