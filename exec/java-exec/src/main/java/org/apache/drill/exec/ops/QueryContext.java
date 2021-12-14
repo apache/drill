@@ -27,6 +27,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.expr.holders.ValueHolder;
@@ -392,5 +393,9 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
 
   public MetastoreRegistry getMetastoreRegistry() {
     return drillbitContext.getMetastoreRegistry();
+  }
+
+  public AliasRegistryProvider getAliasRegistryProvider() {
+    return drillbitContext.getAliasRegistryProvider();
   }
 }

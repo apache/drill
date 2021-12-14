@@ -155,16 +155,17 @@ public class DrillTableInfo {
 
     switch (tableFromSchema.getJdbcTableType()) {
       case TABLE:
+      case SYSTEM_TABLE:
         if (tableFromSchema instanceof DrillTable) {
           return (DrillTable) tableFromSchema;
         } else {
           throw UserException.validationError()
-              .message("ANALYZE does not support [%s] table kind", tableFromSchema.getClass().getSimpleName())
+              .message("[%s] table kind is not supported", tableFromSchema.getClass().getSimpleName())
               .build(logger);
         }
       default:
         throw UserException.validationError()
-            .message("ANALYZE does not support [%s] object type", tableFromSchema.getJdbcTableType())
+            .message("[%s] object type is not supported", tableFromSchema.getJdbcTableType())
             .build(logger);
     }
   }

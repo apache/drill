@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.sys;
 
 import java.util.Iterator;
 
+import org.apache.drill.exec.alias.AliasTarget;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.store.sys.OptionIterator.OptionValueWrapper;
 
@@ -121,6 +122,20 @@ public enum SystemTable {
     @Override
     public Iterator<Object> getIterator(final ExecutorFragmentContext context, final int maxRecords) {
       return new FunctionsIterator(context);
+    }
+  },
+
+  STORAGE_ALIASES("storage_aliases", false, AliasesIterator.AliasInfo.class) {
+    @Override
+    public Iterator<Object> getIterator(ExecutorFragmentContext context, int maxRecords) {
+      return new AliasesIterator(context, AliasTarget.STORAGE, maxRecords);
+    }
+  },
+
+  TABLE_ALIASES("table_aliases", false, AliasesIterator.AliasInfo.class) {
+    @Override
+    public Iterator<Object> getIterator(ExecutorFragmentContext context, int maxRecords) {
+      return new AliasesIterator(context, AliasTarget.TABLE, maxRecords);
     }
   };
 

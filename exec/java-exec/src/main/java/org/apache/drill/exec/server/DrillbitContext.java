@@ -23,6 +23,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -63,6 +64,7 @@ public class DrillbitContext implements AutoCloseable {
   private final DataConnectionCreator connectionsPool;
   private final DrillbitEndpoint endpoint;
   private final StoragePluginRegistry storagePlugins;
+  private final AliasRegistryProvider aliasRegistryProvider;
   private final OperatorCreatorRegistry operatorCreatorRegistry;
   private final Controller controller;
   private final WorkEventBus workBus;
@@ -126,6 +128,7 @@ public class DrillbitContext implements AutoCloseable {
     //This profile store context is built from the profileStoreProvider
     profileStoreContext = new QueryProfileStoreContext(config, profileStoreProvider, coord);
     this.metastoreRegistry = new MetastoreRegistry(config);
+    this.aliasRegistryProvider = new AliasRegistryProvider(this);
 
     this.counters = DrillCounters.getInstance();
   }
@@ -212,6 +215,10 @@ public class DrillbitContext implements AutoCloseable {
 
   public StoragePluginRegistry getStorage() {
     return this.storagePlugins;
+  }
+
+  public AliasRegistryProvider getAliasRegistryProvider() {
+    return aliasRegistryProvider;
   }
 
   public EventLoopGroup getBitLoopGroup() {
@@ -304,6 +311,7 @@ public class DrillbitContext implements AutoCloseable {
     getRemoteFunctionRegistry().close();
     getCompiler().close();
     getMetastoreRegistry().close();
+    getAliasRegistryProvider().close();
   }
 
   public ResourceManager getResourceManager() {

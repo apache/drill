@@ -21,6 +21,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.parquet.Strings;
 
 import java.net.URL;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * A convenience class used to expedite zookeeper paths manipulations.
@@ -33,18 +35,11 @@ public final class PathUtils {
    * @param parts  path segments to combine
    * @see #normalize(String)
    */
-  public static final String join(final String... parts) {
-    final StringBuilder sb = new StringBuilder();
-    for (final String part:parts) {
-      Preconditions.checkNotNull(part, "parts cannot contain null");
-      if (!Strings.isNullOrEmpty(part)) {
-        sb.append(part).append("/");
-      }
-    }
-    if (sb.length() > 0) {
-      sb.deleteCharAt(sb.length() - 1);
-    }
-    final String path = sb.toString();
+  public static String join(final String... parts) {
+    String path = Arrays.stream(parts)
+        .peek(part -> Preconditions.checkNotNull(part, "parts cannot contain null"))
+        .filter(part -> !Strings.isNullOrEmpty(part))
+        .collect(Collectors.joining("/"));
     return normalize(path);
   }
 
@@ -53,7 +48,7 @@ public final class PathUtils {
    *
    * @return  normalized path
    */
-  public static final String normalize(final String path) {
+  public static String normalize(final String path) {
     if (Strings.isNullOrEmpty(Preconditions.checkNotNull(path))) {
       return path;
     }

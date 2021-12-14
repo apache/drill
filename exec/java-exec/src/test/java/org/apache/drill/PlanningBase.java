@@ -20,9 +20,10 @@ package org.apache.drill;
 import java.io.IOException;
 import java.net.URL;
 
+import org.apache.calcite.jdbc.DynamicSchema;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import io.netty.buffer.DrillBuf;
-import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
@@ -105,8 +106,9 @@ public class PlanningBase extends ExecTest {
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
     final DrillOperatorTable table = new DrillOperatorTable(functionRegistry, systemOptions);
-    final SchemaPlus root = CalciteSchema.createRootSchema(false, false).plus();
-    registry.getSchemaFactory().registerSchemas(SchemaConfig.newBuilder("foo", context).build(), root);
+    SchemaConfig schemaConfig = SchemaConfig.newBuilder("foo", context).build();
+    SchemaPlus root = DynamicSchema.createRootSchema(registry, schemaConfig, new AliasRegistryProvider(dbContext));
+    registry.getSchemaFactory().registerSchemas(schemaConfig, root);
 
     when(context.getNewDefaultSchema()).thenReturn(root);
     when(context.getLpPersistence()).thenReturn(new LogicalPlanPersistence(config, ClassPathScanner.fromPrescan(config)));

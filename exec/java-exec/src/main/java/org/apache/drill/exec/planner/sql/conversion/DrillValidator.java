@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.planner.sql.conversion;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.calcite.jdbc.CalciteSchema;
+import org.apache.calcite.jdbc.DynamicRootSchema;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCall;
@@ -33,6 +36,8 @@ import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Static;
+import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 class DrillValidator extends SqlValidatorImpl {
@@ -51,6 +56,7 @@ class DrillValidator extends SqlValidatorImpl {
         case IDENTIFIER:
           SqlIdentifier tempNode = (SqlIdentifier) sqlNode;
           changeNamesIfTableIsTemporary(tempNode);
+          replaceAliasWithActualName(tempNode);
           // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
           ((DrillCalciteCatalogReader) getCatalogReader()).isValidSchema(tempNode.names);
           break;
@@ -63,10 +69,30 @@ class DrillValidator extends SqlValidatorImpl {
     super.validateFrom(node, targetRowType, scope);
   }
 
+  private void replaceAliasWithActualName(SqlIdentifier tempNode) {
+    CalciteSchema schema = getCatalogReader().getRootSchema();
+    if (schema instanceof DynamicRootSchema) {
+      DynamicRootSchema rootSchema = (DynamicRootSchema) schema;
+      String alias = SchemaPath.getCompoundPath(tempNode.names.toArray(new String[0])).toExpr();
+      SchemaPath actualPath = rootSchema.resolveTableAlias(alias);
+      if (actualPath != null) {
+        List<String> names = new ArrayList<>();
+        PathSegment pathSegment = actualPath.getRootSegment();
+        while (pathSegment != null) {
+          names.add(pathSegment.getNameSegment().getPath());
+          pathSegment = pathSegment.getChild();
+        }
+        changeNames(tempNode, names);
+      }
+    }
+  }
+
   @Override
   public String deriveAlias(SqlNode node, int ordinal) {
     if (node instanceof SqlIdentifier) {
-      changeNamesIfTableIsTemporary(((SqlIdentifier) node));
+      SqlIdentifier sqlIdentifier = (SqlIdentifier) node;
+      changeNamesIfTableIsTemporary(sqlIdentifier);
+      replaceAliasWithActualName(sqlIdentifier);
     }
     return SqlValidatorUtil.getAlias(node, ordinal);
   }
@@ -84,12 +110,16 @@ class DrillValidator extends SqlValidatorImpl {
   private void changeNamesIfTableIsTemporary(SqlIdentifier tempNode) {
     List<String> temporaryTableNames = ((DrillCalciteCatalogReader) getCatalogReader()).getTemporaryNames(tempNode.names);
     if (temporaryTableNames != null) {
-      SqlParserPos pos = tempNode.getComponentParserPosition(0);
-      List<SqlParserPos> poses = Lists.newArrayList();
-      for (int i = 0; i < temporaryTableNames.size(); i++) {
-        poses.add(i, pos);
-      }
-      tempNode.setNames(temporaryTableNames, poses);
+      changeNames(tempNode, temporaryTableNames);
     }
+  }
+
+  private void changeNames(SqlIdentifier sqlIdentifier, List<String> newNames) {
+    SqlParserPos pos = sqlIdentifier.getComponentParserPosition(0);
+    List<SqlParserPos> poses = Lists.newArrayList();
+    for (int i = 0; i < newNames.size(); i++) {
+      poses.add(i, pos);
+    }
+    sqlIdentifier.setNames(newNames, poses);
   }
 }

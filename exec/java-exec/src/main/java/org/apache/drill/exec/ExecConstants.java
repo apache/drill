@@ -1230,6 +1230,10 @@ public final class ExecConstants {
           "the sender to send out its data more rapidly, but you should know that it has a risk to OOM when the system is solving parallel " +
           "large queries until we have a more accurate resource manager."));
 
+  public static final String ENABLE_ALIASES = "exec.enable_aliases";
+  public static final BooleanValidator ENABLE_ALIASES_VALIDATOR = new BooleanValidator(
+    ENABLE_ALIASES, new OptionDescription("Enable storage and tables aliases functionality. (Drill 1.20+)"));
+
   public static final String ENABLE_REST_VERBOSE_ERRORS_KEY = "drill.exec.http.rest.errors.verbose";
   public static final OptionValidator ENABLE_REST_VERBOSE_ERRORS = new BooleanValidator(ENABLE_REST_VERBOSE_ERRORS_KEY,
       new OptionDescription("Toggles verbose output of executable error messages in rest response"));

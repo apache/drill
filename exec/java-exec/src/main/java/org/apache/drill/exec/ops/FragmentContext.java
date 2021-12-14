@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.metastore.MetastoreRegistry;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.calcite.schema.SchemaPlus;
@@ -197,6 +198,13 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
    * @return Metastore registry
    */
   MetastoreRegistry getMetastoreRegistry();
+
+  /**
+   * Get an instance of alias registry provider for obtaining aliases.
+   *
+   * @return alias registry provider
+   */
+  AliasRegistryProvider getAliasRegistryProvider();
 
   /**
    * An operator is experiencing memory pressure. Asks the fragment

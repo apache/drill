@@ -149,7 +149,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
-    assertEquals(20, tables.size());
+    assertEquals(22, tables.size());
 
     verifyTable("information_schema", "CATALOGS", tables);
     verifyTable("information_schema", "COLUMNS", tables);
@@ -183,7 +183,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
-    assertEquals(20, tables.size());
+    assertEquals(22, tables.size());
 
     verifyTable("information_schema", "CATALOGS", tables);
     verifyTable("information_schema", "COLUMNS", tables);
@@ -208,7 +208,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();
-    assertEquals(11, tables.size());
+    assertEquals(12, tables.size());
 
     //Verify System Tables
     for (SystemTable sysTbl : SystemTable.values()) {
@@ -242,7 +242,7 @@ public class TestMetadataProvider extends BaseTestQuery {
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<ColumnMetadata> columns = resp.getColumnsList();
-    assertEquals(162, columns.size());
+    assertEquals(170, columns.size());
     // too many records to verify the output.
   }
 

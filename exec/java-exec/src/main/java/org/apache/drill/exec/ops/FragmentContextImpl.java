@@ -37,6 +37,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -652,6 +653,11 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   @Override
   public MetastoreRegistry getMetastoreRegistry() {
     return context.getMetastoreRegistry();
+  }
+
+  @Override
+  public AliasRegistryProvider getAliasRegistryProvider() {
+    return context.getAliasRegistryProvider();
   }
 
   @Override

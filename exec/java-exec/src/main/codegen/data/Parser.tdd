@@ -46,7 +46,10 @@
     "STATISTICS",
     "SAMPLE",
     "COLUMNS",
-    "REMOVE"
+    "REMOVE",
+    "ALIAS",
+    "ALIASES",
+    "STORAGE"
   ]
 
   # List of methods for parsing custom SQL statements.
@@ -57,6 +60,8 @@
     "SqlDescribeTable()",
     "SqlUseSchema()",
     "SqlCreateOrReplace()"
+    "SqlDropAlias()",
+    "SqlDropAllAliases()",
     "SqlDrop()",
     "SqlShowFiles()",
     "SqlRefreshMetadata()",
@@ -122,6 +127,8 @@
         "ADD"
         "ADMIN"
         "AFTER"
+        "ALIAS"
+        "ALIASES"
         "ALWAYS"
         "APPLY"
         "ASC"
@@ -372,6 +379,7 @@
         "SQL_VARCHAR"
         "STATE"
         "STATEMENT"
+        "STORAGE"
         "STRUCTURE"
         "STYLE"
         "SUBCLASS_ORIGIN"

@@ -107,7 +107,8 @@ public class SchemaTreeProvider implements AutoCloseable {
    * @return
    */
   public SchemaPlus createRootSchema(SchemaConfig schemaConfig) {
-      final SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig);
+      SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig,
+        dContext.getAliasRegistryProvider());
       schemaTreesToClose.add(rootSchema);
       return rootSchema;
   }
@@ -132,7 +133,8 @@ public class SchemaTreeProvider implements AutoCloseable {
    */
   public SchemaPlus createFullRootSchema(SchemaConfig schemaConfig) {
     try {
-      final SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig);
+      SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig,
+        dContext.getAliasRegistryProvider());
       dContext.getSchemaFactory().registerSchemas(schemaConfig, rootSchema);
       schemaTreesToClose.add(rootSchema);
       return rootSchema;
