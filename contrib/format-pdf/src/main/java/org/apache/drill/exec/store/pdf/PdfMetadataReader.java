@@ -33,14 +33,12 @@ import java.util.Map;
 
 public class PdfMetadataReader {
 
-  private final PDDocument document;
   private final Map<String, Object> metadata;
   private final List<PdfBatchReader.PdfColumnWriter> writers;
   private RowSetLoader rowWriter;
 
 
   public PdfMetadataReader(PDDocument document) {
-    this.document = document;
     this.writers = new ArrayList<>();
     // We are using a LinkedHashMap to preserve the order
     this.metadata = new LinkedHashMap<>();
