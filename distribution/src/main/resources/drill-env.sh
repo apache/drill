@@ -99,9 +99,9 @@
 #export DRILLBIT_CGROUP=${DRILLBIT_CGROUP:-"drillcpu"}
 
 # Custom JVM arguments to pass to the both the Drillbit and sqlline. Typically
-# used to override system properties as shown below.
+# used to override system properties as shown below. Empty by default.
 
-export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv6Addresses=false"
+#export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Dproperty=value"
 
 # As above, but only for the Drillbit. Empty by default.
 

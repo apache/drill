@@ -213,6 +213,9 @@ fi
 # Set Drill-provided defaults here. Do not put Drill defaults
 # in the distribution or user environment config files.
 
+# Prefer IPv4 over IPv6
+export DRILL_JAVA_OPTS=${$DRILL_JAVA_OPTS:-" -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv6Addresses=false"}
+
 # The SQLline client does not need the code cache.
 
 export SQLLINE_JAVA_OPTS=${SQLLINE_JAVA_OPTS:-""}
