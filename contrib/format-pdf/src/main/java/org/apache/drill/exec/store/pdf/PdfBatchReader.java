@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.pdf;
 
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.common.AutoCloseables;
@@ -30,13 +29,11 @@ import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import technology.tabula.RectangularTextContainer;
@@ -50,9 +47,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchemaNegotiator> {
@@ -64,6 +61,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private final List<PdfColumnWriter> writers;
   private final PdfReaderConfig config;
   private final int startingTableIndex;
+  private PdfMetadataReader metadataReader;
   private FileSplit split;
   private CustomErrorContext errorContext;
   private RowSetLoader rowWriter;
@@ -75,24 +73,8 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private int currentTableIndex;
   private List<String> firstRow;
   private PdfRowIterator rowIterator;
-
   private FileScanFramework.FileSchemaNegotiator negotiator;
-
-  // Document Metadata Fields
-  private int pageCount;
-  private String title;
-  private String author;
-  private String subject;
-  private String keywords;
-  private String creator;
-  private String producer;
-  private Calendar creationDate;
-  private Calendar modificationDate;
-  private String trapped;
   private int unregisteredColumnCount;
-  private int columns;
-  private int tableCount;
-  private int metadataIndex;
 
 
   // Tables
@@ -127,6 +109,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     builder = new SchemaBuilder();
 
     openFile();
+    metadataReader = new PdfMetadataReader(document);
 
     // Get the tables if the user set the combine pages to true
     if (config.plugin.getConfig().combinePages() ) {
@@ -150,8 +133,6 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       firstRow = PdfUtils.convertRowToStringArray(rowIterator.next());
     }
 
-    populateMetadata();
-
     // Support provided schema
     TupleMetadata schema = null;
     if (negotiator.hasProvidedSchema()) {
@@ -160,16 +141,18 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     } else {
       negotiator.tableSchema(buildSchema(), false);
     }
+
+
     ResultSetLoader loader = negotiator.build();
     rowWriter = loader.writer();
-
+    metadataReader.setRowWriter(rowWriter);
     // Build the schema
     if (negotiator.hasProvidedSchema()) {
       buildWriterListFromProvidedSchema(schema);
     } else {
       buildWriterList();
     }
-    addImplicitColumnsToSchema();
+    metadataReader.addImplicitColumnsToSchema();
     return true;
   }
 
@@ -221,7 +204,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       rowPosition++;
     }
 
-    writeMetadata();
+    metadataReader.writeMetadata();
     rowWriter.save();
   }
 
@@ -245,100 +228,12 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     } catch (Exception e) {
       throw UserException
         .dataReadError(e)
-        .message("Failed to open open input file: %s", split.getPath().toString())
-        .addContext(e.getMessage())
+        .addContext("Failed to open open input file: %s", split.getPath().toString())
         .addContext(errorContext)
         .build(logger);
     }
   }
-
-  /**
-   * Metadata fields are calculated once when the file is opened.  This function populates
-   * the metadata fields so that these are only calculated once.
-   */
-  private void populateMetadata() {
-    PDDocumentInformation info = document.getDocumentInformation();
-    pageCount = document.getNumberOfPages();
-    title = info.getTitle();
-    author = info.getAuthor();
-    subject = info.getSubject();
-    keywords = info.getKeywords();
-    creator = info.getCreator();
-    producer = info.getProducer();
-    creationDate = info.getCreationDate();
-    modificationDate = info.getModificationDate();
-    trapped = info.getTrapped();
-    if (tables == null) {
-      tableCount = 1;
-    } else {
-      tableCount = tables.size();
-    }
-  }
-
-  private void addImplicitColumnsToSchema() {
-    metadataIndex = columns;
-    // Add to schema
-    addMetadataColumnToSchema("_page_count", MinorType.INT);
-    addMetadataColumnToSchema("_title", MinorType.VARCHAR);
-    addMetadataColumnToSchema("_author", MinorType.VARCHAR);
-    addMetadataColumnToSchema("_subject", MinorType.VARCHAR);
-    addMetadataColumnToSchema("_keywords", MinorType.VARCHAR);
-    addMetadataColumnToSchema("_creator", MinorType.VARCHAR);
-    addMetadataColumnToSchema("_producer", MinorType.VARCHAR);
-    addMetadataColumnToSchema("_creation_date", MinorType.TIMESTAMP);
-    addMetadataColumnToSchema("_modification_date", MinorType.TIMESTAMP);
-    addMetadataColumnToSchema("_trapped", MinorType.VARCHAR);
-    addMetadataColumnToSchema("_table_count", MinorType.INT);
-  }
-
-  private void addMetadataColumnToSchema(String columnName, MinorType dataType) {
-    int index = rowWriter.tupleSchema().index(columnName);
-    if (index == -1) {
-      ColumnMetadata colSchema = MetadataUtils.newScalar(columnName, dataType, DataMode.OPTIONAL);
-
-      // Exclude from wildcard queries
-      colSchema.setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
-      metadataIndex++;
-
-      index = rowWriter.addColumn(colSchema);
-    }
-
-    writers.add(new StringPdfColumnWriter(index, columnName, rowWriter));
-  }
-
-  private void writeMetadata() {
-    int startingIndex = columnHeaders.size();
-    writers.get(startingIndex).getWriter().setInt(pageCount);
-    writeStringMetadataField(title, startingIndex+1);
-    writeStringMetadataField(author, startingIndex+2);
-    writeStringMetadataField(subject, startingIndex+3);
-    writeStringMetadataField(keywords, startingIndex+4);
-    writeStringMetadataField(creator, startingIndex+5);
-    writeStringMetadataField(producer, startingIndex+6);
-    writeTimestampMetadataField(creationDate, startingIndex+7);
-    writeTimestampMetadataField(modificationDate, startingIndex+8);
-    writeStringMetadataField(trapped, startingIndex+9);
-    writers.get(startingIndex+10).getWriter().setInt(tableCount);
-  }
-
-  private void writeStringMetadataField(String value, int index) {
-    if (value == null) {
-      return;
-    }
-    writers.get(index).getWriter().setString(value);
-  }
-
-  private void writeTimestampMetadataField(Calendar dateValue, int index) {
-    if (dateValue == null) {
-      return;
-    }
-
-    writers.get(index).getWriter().setTimestamp(Instant.ofEpochMilli(dateValue.getTimeInMillis()));
-  }
-
   private TupleMetadata buildSchema() {
-    columns = currentTable.getColCount();
-
     // Get column header names
     columnHeaders = firstRow;
 
@@ -421,9 +316,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     public abstract void load (RectangularTextContainer<?> cell);
 
-    public ScalarWriter getWriter() {
-      return writer;
-    }
+    public abstract void loadFromValue(Object value);
   }
 
   public static class IntPdfColumnWriter extends PdfColumnWriter {
@@ -434,6 +327,11 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     @Override
     public void load(RectangularTextContainer<?> cell) {
       writer.setInt(Integer.parseInt(cell.getText()));
+    }
+
+    @Override
+    public void loadFromValue(Object value) {
+      writer.setInt((Integer) value);
     }
   }
 
@@ -446,6 +344,11 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     public void load(RectangularTextContainer<?> cell) {
       writer.setLong(Long.parseLong(cell.getText()));
     }
+
+    @Override
+    public void loadFromValue(Object value) {
+      writer.setLong((Long) value);
+    }
   }
 
   public static class DoublePdfColumnWriter extends PdfColumnWriter {
@@ -457,6 +360,11 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     public void load(RectangularTextContainer<?> cell) {
       writer.setDouble(Double.parseDouble(cell.getText()));
     }
+
+    @Override
+    public void loadFromValue(Object value) {
+      writer.setDouble((Double) value);
+    }
   }
 
   public static class StringPdfColumnWriter extends PdfColumnWriter {
@@ -467,6 +375,13 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     @Override
     public void load(RectangularTextContainer<?> cell) {
       writer.setString(cell.getText());
+    }
+
+    @Override
+    public void loadFromValue(Object value) {
+      if (! Strings.isNullOrEmpty((String) value)) {
+        writer.setString((String) value);
+      }
     }
   }
 
@@ -486,11 +401,16 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     public void load(RectangularTextContainer<?> cell) {
       LocalDate localDate;
       if (Strings.isNullOrEmpty(this.dateFormat)) {
-       localDate = LocalDate.parse(cell.getText());
+        localDate = LocalDate.parse(cell.getText());
       } else {
         localDate = LocalDate.parse(cell.getText(), DateTimeFormatter.ofPattern(dateFormat));
       }
       writer.setDate(localDate);
+    }
+
+    @Override
+    public void loadFromValue(Object value) {
+      writer.setDate(LocalDate.parse((String)value));
     }
   }
 
@@ -516,10 +436,19 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       }
       writer.setTime(localTime);
     }
+
+    @Override
+    public void loadFromValue(Object value) {
+      writer.setTime(LocalTime.parse((String)value));
+    }
   }
 
   public static class TimestampPdfColumnWriter extends PdfColumnWriter {
     private String dateFormat;
+
+    TimestampPdfColumnWriter(int columnIndex, String columnName, RowSetLoader rowWriter) {
+      super(columnIndex, columnName, rowWriter.scalar(columnName));
+    }
 
     TimestampPdfColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter, FileScanFramework.FileSchemaNegotiator negotiator) {
       super(columnIndex, columnName, rowWriter.scalar(columnName));
@@ -545,6 +474,12 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
         }
       }
       writer.setTimestamp(timestamp);
+    }
+
+    @Override
+    public void loadFromValue(Object value) {
+      GregorianCalendar calendar = (GregorianCalendar) value;
+      writer.setTimestamp(calendar.getTime().toInstant());
     }
   }
 }

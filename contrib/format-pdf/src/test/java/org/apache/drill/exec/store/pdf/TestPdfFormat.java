@@ -102,6 +102,31 @@ public class TestPdfFormat extends ClusterTest {
   }
 
   @Test
+  public void testNoHeaders() throws RpcException {
+    String sql = "SELECT * " +
+      "FROM table(cp.`pdf/argentina_diputados_voting_record.pdf` " +
+      "(type => 'pdf', combinePages => false, extractHeaders => false)) WHERE field_2 = 'Rio Negro'";
+
+    QueryBuilder q = client.queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("field_0", MinorType.VARCHAR)
+      .addNullable("field_1", MinorType.VARCHAR)
+      .addNullable("field_2", MinorType.VARCHAR)
+      .addNullable("field_3", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("ALBRIEU, Oscar Edmundo Nicolas", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .addRow("AVOSCAN, Herman Horacio", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .addRow("CEJAS, Jorge Alberto", "Frente para la Victoria - PJ", "Rio Negro", "AFIRMATIVO")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testMetadataQuery() throws RpcException {
     String sql = "SELECT _page_count, " +
       "_title, " +
@@ -112,8 +137,7 @@ public class TestPdfFormat extends ClusterTest {
       "_producer," +
       "_creation_date, " +
       "_modification_date, " +
-      "_trapped, " +
-      "_table_count " +
+      "_trapped " +
       "FROM cp.`pdf/20.pdf` " +
       "LIMIT 1";
 
@@ -131,7 +155,6 @@ public class TestPdfFormat extends ClusterTest {
       .addNullable("_creation_date", MinorType.TIMESTAMP)
       .addNullable("_modification_date", MinorType.TIMESTAMP)
       .addNullable("_trapped", MinorType.VARCHAR)
-      .addNullable("_table_count", MinorType.INT)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
@@ -142,7 +165,7 @@ public class TestPdfFormat extends ClusterTest {
         "Acrobat Distiller 7.0.5 (Windows)",
         857403000000L,
         1230835135000L,
-        null, 1)
+        null)
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
