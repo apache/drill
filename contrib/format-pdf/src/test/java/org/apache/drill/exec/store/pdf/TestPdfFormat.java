@@ -52,7 +52,6 @@ public class TestPdfFormat extends ClusterTest {
   }
 
   // TODO Add tests for other extraction algos and PDF with no tables
-  // TODO Add test for do not extract headers.
   // TODO Remove unused PDF files
   @Test
   public void testStarQuery() throws RpcException {
@@ -99,6 +98,25 @@ public class TestPdfFormat extends ClusterTest {
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testFullScan() throws Exception {
+    String sql = "SELECT * " +
+      "FROM table(cp.`pdf/argentina_diputados_voting_record.pdf` " +
+      "(type => 'pdf', combinePages => false, extractHeaders => false))";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(31, results.rowCount());
+    results.clear();
+
+    sql = "SELECT * " +
+      "FROM table(cp.`pdf/argentina_diputados_voting_record.pdf` " +
+      "(type => 'pdf', combinePages => false, extractHeaders => true))";
+
+    results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(31,results.rowCount());
+    results.clear();
   }
 
   @Test
