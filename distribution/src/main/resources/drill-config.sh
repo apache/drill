@@ -213,9 +213,6 @@ fi
 # Set Drill-provided defaults here. Do not put Drill defaults
 # in the distribution or user environment config files.
 
-# Prefer IPv4 over IPv6
-export DRILL_JAVA_OPTS=${$DRILL_JAVA_OPTS:-" -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv6Addresses=false"}
-
 # The SQLline client does not need the code cache.
 
 export SQLLINE_JAVA_OPTS=${SQLLINE_JAVA_OPTS:-""}
@@ -304,6 +301,8 @@ export DRILLBIT_CODE_CACHE_SIZE=${DRILLBIT_CODE_CACHE_SIZE:-"1G"}
 
 export DRILLBIT_OPTS="-Xms$DRILL_HEAP -Xmx$DRILL_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY"
 export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:ReservedCodeCacheSize=$DRILLBIT_CODE_CACHE_SIZE -Ddrill.exec.enable-epoll=false"
+# Prefer IPv4 over IPv6
+export DRILLBIT_OPTS="$DRILLBIT_OPTS -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv6Addresses=false"
 
 # Check that java is newer than 1.8
 "$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.8" > /dev/null
