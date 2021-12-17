@@ -190,6 +190,26 @@ public class TestPdfFormat extends ClusterTest {
   }
 
   @Test
+  public void testUnicode() throws Exception {
+    String sql = "SELECT * FROM cp.`pdf/arabic.pdf`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("مرحباً", MinorType.VARCHAR)
+      .addNullable("اسمي سلطان", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("انا من ولاية كارولينا الشمال", "من اين انت؟")
+      .addRow( "1234", "عندي 47 قطط")
+      .addRow("هل انت شباك؟", "اسمي Jeremy في الانجليزية")
+      .addRow("Jeremy is جرمي in Arabic", null)
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testSerDe() throws Exception {
     String sql = "SELECT COUNT(*) AS cnt FROM " +
       "table(cp.`pdf/argentina_diputados_voting_record.pdf` (type => 'pdf', combinePages => false))";

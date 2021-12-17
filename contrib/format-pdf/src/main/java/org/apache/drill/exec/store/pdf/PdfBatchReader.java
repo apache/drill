@@ -76,14 +76,11 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private FileScanFramework.FileSchemaNegotiator negotiator;
   private int unregisteredColumnCount;
 
-
   // Tables
   private List<Table> tables;
 
-
   static class PdfReaderConfig {
     final PdfFormatPlugin plugin;
-
     PdfReaderConfig(PdfFormatPlugin plugin) {
       this.plugin = plugin;
     }
@@ -101,6 +98,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
   @Override
   public boolean open(FileScanFramework.FileSchemaNegotiator negotiator) {
+    // TODO Remove this
     System.setProperty("java.awt.headless", "true");
     this.negotiator = negotiator;
 
@@ -410,7 +408,9 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     @Override
     public void loadFromValue(Object value) {
-      writer.setDate(LocalDate.parse((String)value));
+      if (value != null) {
+        writer.setDate(LocalDate.parse((String) value));
+      }
     }
   }
 
@@ -439,7 +439,9 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     @Override
     public void loadFromValue(Object value) {
-      writer.setTime(LocalTime.parse((String)value));
+      if (value != null) {
+        writer.setTime(LocalTime.parse((String) value));
+      }
     }
   }
 
@@ -478,8 +480,10 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     @Override
     public void loadFromValue(Object value) {
-      GregorianCalendar calendar = (GregorianCalendar) value;
-      writer.setTimestamp(calendar.getTime().toInstant());
+      if (value != null) {
+        GregorianCalendar calendar = (GregorianCalendar) value;
+        writer.setTimestamp(calendar.getTime().toInstant());
+      }
     }
   }
 }
