@@ -117,7 +117,9 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     } else {
       currentTable = PdfUtils.getSpecificTable(document, startingTableIndex, config.plugin.getConfig().getAlgorithm());
       tables = Collections.singletonList(currentTable);
-      if (currentTable == null) {
+
+      // If the user specifies a table index, and that table does not exist, throw an exception.
+      if (currentTable == null && startingTableIndex != 0) {
         throw UserException.dataReadError()
           .message("The specified table index " + startingTableIndex + " does not exist in this file. ")
           .addContext(errorContext)
@@ -176,6 +178,12 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
           rowIterator.next();
         }
       } else if (! rowIterator.hasNext()) {
+        // Special case for document with no tables
+        if (currentTable == null) {
+          rowWriter.start();
+          metadataReader.writeMetadata();
+          rowWriter.save();
+        }
         return false;
       }
 
@@ -187,6 +195,9 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
   private void processRow(List<RectangularTextContainer> row) {
     if (row == null || row.size() == 0) {
+      rowWriter.start();
+      metadataReader.writeMetadata();
+      rowWriter.save();
       return;
     }
 
@@ -221,7 +232,12 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private void openFile() {
     try {
       InputStream fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
-      document = PDDocument.load(fsStream);
+      if (Strings.isNullOrEmpty(config.plugin.getConfig().password())) {
+        document = PDDocument.load(fsStream);
+      } else {
+        document = PDDocument.load(fsStream, config.plugin.getConfig().password());
+      }
+
       AutoCloseables.closeSilently(fsStream);
     } catch (Exception e) {
       throw UserException
@@ -231,9 +247,15 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
         .build(logger);
     }
   }
+
   private TupleMetadata buildSchema() {
     // Get column header names
     columnHeaders = firstRow;
+
+    // Case for file with no tables
+    if (columnHeaders == null) {
+      return builder.buildSchema();
+    }
 
     // Add columns to table
     int index = 0;
@@ -251,6 +273,11 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   }
 
   private void buildWriterList() {
+    // Case for file with no tables.
+    if (columnHeaders == null) {
+      return;
+    }
+
     for (String header : columnHeaders) {
       writers.add(new StringPdfColumnWriter(columnHeaders.indexOf(header), header, rowWriter));
     }

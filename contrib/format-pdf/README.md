@@ -26,7 +26,7 @@ To configure the PDF reader, simply add the information below to the `formats` s
 ```
 The available options are:
 * `extractHeaders`: Extracts the first row of any tables as the header row.  If set to `false`, Drill will assign column names of `field_0`, `field_1` to each column.
-* `combinePages`: Merges multipage tables together.
+* `combinePages`: Merges multi page tables together.
 * `defaultTableIndex`:  Allows you to query different tables within the PDF file. Index starts at `1`. 
 * `extractionAlgorithm`:  Allows you to choose the extraction algorithm used for extracting data from the PDF file.  Choices are `spreadsheet` and `basic`.  Depending on your data, one may work better than the other.
 
@@ -63,4 +63,13 @@ schema => 'inline=(`Last Name` VARCHAR, `First Name Address` VARCHAR,
 `Date` VARCHAR, `field_2` DATE properties {`drill.format` = `M/d/yyyy`}, 
 `Amount` DOUBLE)')) 
 LIMIT 5
+```
+
+### Encrypted Files
+If a PDF file is encrypted, you can supply the password to the file via the `table()` function as shown below.  Note that the password will be recorded in any query logs that 
+may exist.
+
+```sql
+SELECT * 
+FROM table(dfs.`encrypted_pdf.pdf`(type => 'pdf', password=> 'your_password'))
 ```

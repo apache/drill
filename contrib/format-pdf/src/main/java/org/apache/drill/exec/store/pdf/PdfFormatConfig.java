@@ -69,6 +69,9 @@ public class PdfFormatConfig implements FormatPluginConfig {
   private final String extractionAlgorithm;
 
   @JsonProperty
+  private final String password;
+
+  @JsonProperty
   private final int defaultTableIndex;
 
   private PdfFormatConfig(PdfFormatConfig.PdfFormatConfigBuilder builder) {
@@ -77,6 +80,7 @@ public class PdfFormatConfig implements FormatPluginConfig {
     this.extractHeaders = builder.extractHeaders;
     this.defaultTableIndex = builder.defaultTableIndex;
     this.extractionAlgorithm = builder.extractionAlgorithm;
+    this.password = builder.password;
   }
 
   @JsonIgnore

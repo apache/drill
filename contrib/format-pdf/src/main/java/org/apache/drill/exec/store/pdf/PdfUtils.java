@@ -97,7 +97,7 @@ public class PdfUtils {
    * the function will throw a UserException.
    * @param document The source PDF document
    * @param tableIndex The index of the desired table
-   * @return The desired Table, null if the table is not valid.
+   * @return The desired Table, null if the table is not valid, or if the document has no tables.
    */
   public static Table getSpecificTable(PDDocument document, int tableIndex, ExtractionAlgorithm algorithm) {
     NurminenDetectionAlgorithm detectionAlgorithm = new NurminenDetectionAlgorithm();
@@ -123,6 +123,10 @@ public class PdfUtils {
       for (Rectangle guessRect : rectanglesOnPage) {
         Page guess = page.getArea(guessRect);
         tablesOnPage.addAll(algExtractor.extract(guess));
+        if (tablesOnPage.size() == 0) {
+          return null;
+        }
+
         for (Table table : tablesOnPage) {
           if (tableCounter == tableIndex) {
             specificTable = table;

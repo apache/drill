@@ -29,6 +29,7 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
+import org.apache.drill.test.QueryTestUtil;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -51,7 +52,7 @@ public class TestPdfFormat extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("pdf/"));
   }
 
-  // TODO Add tests for other extraction algos and PDF with no tables
+  // TODO Add tests for other extraction algos
   // TODO Remove unused PDF files
   @Test
   public void testStarQuery() throws RpcException {
@@ -117,6 +118,33 @@ public class TestPdfFormat extends ClusterTest {
     results = client.queryBuilder().sql(sql).rowSet();
     assertEquals(31,results.rowCount());
     results.clear();
+  }
+
+  @Test
+  public void testEncryptedFile() throws Exception {
+    String sql = "SELECT * " +
+      "FROM table(cp.`pdf/encrypted.pdf` " +
+      "(type => 'pdf', combinePages => false, extractHeaders => true, password => 'userpassword'))";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("FLA Audit Profile", MinorType.VARCHAR)
+      .addNullable("field_0", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("Country", "China")
+      .addRow("Factory name", "01001523B")
+      .addRow("IEM", "BVCPS (HK), Shen Zhen Office")
+      .addRow("Date of audit", "May 20-22, 2003")
+      .addRow("PC(s)", "adidas-Salomon")
+      .addRow("Number of workers", "243")
+      .addRow("Product(s)", "Scarf, cap, gloves, beanies and headbands")
+      .addRow("Production processes", "Sewing, cutting, packing, embroidery, die-cutting")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -223,6 +251,51 @@ public class TestPdfFormat extends ClusterTest {
     String sql = "SELECT * FROM table(cp.`pdf/schools.pdf` (type => 'pdf', combinePages => true, extractHeaders=> true))";
     QuerySummary results = client.queryBuilder().sql(sql).run();
     assertEquals(221, results.recordCount());
+  }
+
+  @Test
+  public void testFileWithNoTables() throws Exception {
+    String sql = "SELECT * FROM table(cp.`pdf/labor.pdf` (type => 'pdf', extractionAlgorithm => 'spreadsheet'))";
+    QuerySummary results = client.queryBuilder().sql(sql).run();
+    assertEquals(1,results.recordCount());
+  }
+
+  @Test
+  public void testMetadataQueryWithFileWithNoTables() throws RpcException {
+    String sql = "SELECT _page_count, " +
+      "_title, " +
+      "_author, " +
+      "_subject, " +
+      "_keywords, " +
+      "_creator, " +
+      "_producer," +
+      "_creation_date, " +
+      "_modification_date, " +
+      "_trapped " +
+      "FROM table(cp.`pdf/labor.pdf` (type => 'pdf', extractionAlgorithm => 'spreadsheet')) LIMIT 1";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("_page_count", MinorType.INT)
+      .addNullable("_title", MinorType.VARCHAR)
+      .addNullable("_author", MinorType.VARCHAR)
+      .addNullable("_subject", MinorType.VARCHAR)
+      .addNullable("_keywords", MinorType.VARCHAR)
+      .addNullable("_creator", MinorType.VARCHAR)
+      .addNullable("_producer", MinorType.VARCHAR)
+      .addNullable("_creation_date", MinorType.TIMESTAMP)
+      .addNullable("_modification_date", MinorType.TIMESTAMP)
+      .addNullable("_trapped", MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1, null, null, null, null, "pdftk 2.01 - www.pdftk.com",
+        "itext-paulo-155 (itextpdf.sf.net-lowagie.com)",
+        QueryTestUtil.ConvertDateToLong("2015-04-25T23:09:47Z"),
+        QueryTestUtil.ConvertDateToLong("2015-04-25T23:09:47Z"), null)
+    .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test

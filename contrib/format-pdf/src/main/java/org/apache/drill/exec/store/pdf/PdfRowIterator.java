@@ -35,6 +35,9 @@ public class PdfRowIterator implements Iterator<List<RectangularTextContainer>> 
 
   @Override
   public boolean hasNext() {
+    if (table == null) {
+      return false;
+    }
     return rowCounter < table.getRowCount();
   }
 
