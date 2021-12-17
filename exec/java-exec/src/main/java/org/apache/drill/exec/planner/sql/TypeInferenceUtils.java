@@ -926,6 +926,7 @@ public class TypeInferenceUtils {
     switch (timeUnit) {
       case YEAR:
       case MONTH:
+      case WEEK:
       case DAY:
       case HOUR:
       case MINUTE:
@@ -935,7 +936,7 @@ public class TypeInferenceUtils {
       default:
         throw UserException
             .functionError()
-            .message("extract function supports the following time units: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND")
+            .message("extract function supports the following time units: YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, SECOND")
             .build(logger);
     }
   }
