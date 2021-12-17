@@ -40,6 +40,7 @@ import java.time.LocalDate;
 
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @Category(RowSetTests.class)
 public class TestPdfFormat extends ClusterTest {
@@ -52,7 +53,6 @@ public class TestPdfFormat extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("pdf/"));
   }
 
-  // TODO Add tests for other extraction algos
   // TODO Remove unused PDF files
   @Test
   public void testStarQuery() throws RpcException {
@@ -296,6 +296,51 @@ public class TestPdfFormat extends ClusterTest {
         QueryTestUtil.ConvertDateToLong("2015-04-25T23:09:47Z"), null)
     .build();
     new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testExtractionAlgorithms() throws Exception {
+
+    String sql = "SELECT * FROM table(cp.`pdf/schools.pdf` (type => 'pdf', combinePages => true, extractionAlgorithm => 'spreadsheet'))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("field_0", MinorType.VARCHAR)
+      .addNullable("Last Name", MinorType.VARCHAR)
+      .addNullable("First Name", MinorType.VARCHAR)
+      .addNullable("Address", MinorType.VARCHAR)
+      .addNullable("City", MinorType.VARCHAR)
+      .addNullable("State", MinorType.VARCHAR)
+      .addNullable("Zip", MinorType.VARCHAR)
+      .addNullable("Occupation", MinorType.VARCHAR)
+      .addNullable("Employer", MinorType.VARCHAR)
+      .addNullable("Date", MinorType.VARCHAR)
+      .addNullable("Amount", MinorType.VARCHAR)
+      .buildSchema();
+
+    assertTrue(results.schema().isEquivalent(expectedSchema));
+    assertEquals(216, results.rowCount());
+    results.clear();
+
+    sql = "SELECT * FROM table(cp.`pdf/schools.pdf` (type => 'pdf', combinePages => true, extractionAlgorithm => 'basic'))";
+    results = client.queryBuilder().sql(sql).rowSet();
+
+    expectedSchema = new SchemaBuilder()
+      .addNullable("Last Name", MinorType.VARCHAR)
+      .addNullable("First Name Address", MinorType.VARCHAR)
+      .addNullable("field_0", MinorType.VARCHAR)
+      .addNullable("City", MinorType.VARCHAR)
+      .addNullable("State", MinorType.VARCHAR)
+      .addNullable("Zip", MinorType.VARCHAR)
+      .addNullable("field_1", MinorType.VARCHAR)
+      .addNullable("Occupation Employer", MinorType.VARCHAR)
+      .addNullable("Date", MinorType.VARCHAR)
+      .addNullable("field_2", MinorType.VARCHAR)
+      .addNullable("Amount", MinorType.VARCHAR)
+      .buildSchema();
+
+    assertTrue(results.schema().isEquivalent(expectedSchema));
+    assertEquals(221, results.rowCount());
+    results.clear();
   }
 
   @Test
