@@ -53,7 +53,6 @@ public class TestPdfFormat extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("pdf/"));
   }
 
-  // TODO Remove unused PDF files
   @Test
   public void testStarQuery() throws RpcException {
     String sql = "SELECT * FROM cp.`pdf/argentina_diputados_voting_record.pdf` WHERE `Provincia` = 'Rio Negro'";
