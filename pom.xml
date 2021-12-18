@@ -76,7 +76,7 @@
     <curator.version>5.2.0</curator.version>
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <jmockit.version>1.47</jmockit.version>
-    <logback.version>1.2.3</logback.version>
+    <logback.version>1.2.9</logback.version>
     <mockito.version>3.11.2</mockito.version>
     <!--
       Currently Hive storage plugin only supports Apache Hive 3.1.2 or vendor specific variants of the
