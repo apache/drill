@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.store.iceberg.plan;
 
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -26,6 +29,7 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Util;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.function.CheckedFunction;
@@ -38,6 +42,7 @@ import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.store.SubsetRemover;
 import org.apache.drill.exec.store.iceberg.IcebergGroupScan;
+import org.apache.drill.exec.store.iceberg.format.IcebergFormatPlugin;
 import org.apache.drill.exec.store.plan.AbstractPluginImplementor;
 import org.apache.drill.exec.store.plan.rel.PluginFilterRel;
 import org.apache.drill.exec.store.plan.rel.PluginLimitRel;
@@ -150,7 +155,23 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
 
   @Override
   public boolean canImplement(Project project) {
-    return true;
+    RelTraitSet traitSet = project.getInput().getTraitSet();
+    if (!traitSet.isEmpty()) {
+      RelTrait trait = traitSet.get(0);
+      if (trait instanceof Convention) {
+        Convention c = (Convention) trait;
+        if (StringUtils.contains(c.getName(), IcebergFormatPlugin.ICEBERG_CONVENTION_PREFIX)) {
+          return true; // accept the iceberg queries
+        }
+      }
+    }
+    List<String> fields = project.getInput().getRowType().getFieldNames();
+    if (!fields.isEmpty()) {
+      if(StringUtils.equals(SchemaPath.DYNAMIC_STAR, fields.get(0))) {
+        return true; // accept the plan queries of iceberg
+      }
+    }
+    return false; // does not affect other format and storage
   }
 
   @Override

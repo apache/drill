@@ -50,7 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class IcebergFormatPlugin implements FormatPlugin {
 
-  private static final String ICEBERG_CONVENTION_PREFIX = "ICEBERG.";
+  public static final String ICEBERG_CONVENTION_PREFIX = "ICEBERG.";
 
   /**
    * Generator for format id values. Formats with the same name may be defined
