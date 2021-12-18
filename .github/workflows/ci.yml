@@ -59,7 +59,7 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Build and test
         # The total GitHub Actions memory is 7000Mb. But GitHub CI requires some memory for the container to perform tests
-        run: mvn install --batch-mode --no-transfer-progress # -X -V for debugging
+        run: mvn install --batch-mode --no-transfer-progress -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 # -X -V for debugging
 
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
@@ -100,7 +100,7 @@ jobs:
       # Builds Drill project, performs license checkstyle goal and regenerates java and C++ protobuf files
       - name: Build
         run: |
-          MAVEN_OPTS="-Xms1G -Xmx1G" mvn install -Drat.skip=false -Dlicense.skip=false --batch-mode --no-transfer-progress -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true && \
+          MAVEN_OPTS="-Xms1G -Xmx1G" mvn install -Drat.skip=false -Dlicense.skip=false --batch-mode --no-transfer-progress -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true && \
           pushd protocol && mvn process-sources -P proto-compile && popd && \
           mkdir contrib/native/client/build && pushd contrib/native/client/build && cmake -G "Unix Makefiles" .. && make cpProtobufs && popd; \
       # Checks whether project files weren't changed after regenerating protobufs
