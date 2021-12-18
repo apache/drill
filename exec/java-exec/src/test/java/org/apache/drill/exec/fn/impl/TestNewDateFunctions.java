@@ -132,6 +132,16 @@ public class TestNewDateFunctions extends BaseTestQuery {
   }
 
   @Test
+  public void testExtractWeek() throws Exception {
+    testBuilder()
+      .sqlQuery("SELECT EXTRACT(WEEK FROM hire_date) AS col FROM cp.`employee.json` WHERE last_name='Nowmer'")
+      .unOrdered()
+      .baselineColumns("col")
+      .baselineValues(48L)
+      .go();
+  }
+
+  @Test
   public void testLocalTimestamp() throws Exception {
     testBuilder()
         .sqlQuery("select extract(day from localtimestamp) = extract(day from current_date) as col from cp.`employee.json` limit 1")
