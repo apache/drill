@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
+import org.apache.drill.exec.store.easy.text.TextFormatConfig;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 
@@ -143,6 +143,17 @@ public class BaseCsvTest extends ClusterTest {
         }
         out.print(",");
         out.println((i + 1) * 10);
+      }
+    }
+    return fileName;
+  }
+
+  protected String buildBiggishFile() throws IOException {
+    String fileName = "biggish.csv";
+    try(PrintWriter out = new PrintWriter(new FileWriter(new File(testDir, fileName)))) {
+      out.println("id");
+      for (int i = 0; i < 100; i++) {
+        out.println(i + 1);
       }
     }
     return fileName;

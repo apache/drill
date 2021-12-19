@@ -22,8 +22,9 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -31,7 +32,7 @@ import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,36 +41,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class HttpdLogBatchReader implements ManagedReader<FileSchemaNegotiator> {
+public class HttpdLogBatchReader implements ManagedReader {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpdLogBatchReader.class);
   public static final String RAW_LINE_COL_NAME = "_raw";
   public static final String MATCHED_COL_NAME = "_matched";
   private final HttpdLogFormatConfig formatConfig;
-  private final int maxRecords;
-  private final EasySubScan scan;
-  private HttpdParser parser;
-  private FileSplit split;
+  private final HttpdParser parser;
+  private final FileDescrip file;
   private InputStream fsStream;
-  private RowSetLoader rowWriter;
+  private final RowSetLoader rowWriter;
   private BufferedReader reader;
   private int lineNumber;
-  private CustomErrorContext errorContext;
-  private ScalarWriter rawLineWriter;
-  private ScalarWriter matchedWriter;
+  private final CustomErrorContext errorContext;
+  private final ScalarWriter rawLineWriter;
+  private final ScalarWriter matchedWriter;
   private int errorCount;
 
-
-  public HttpdLogBatchReader(HttpdLogFormatConfig formatConfig, int maxRecords, EasySubScan scan) {
+  public HttpdLogBatchReader(HttpdLogFormatConfig formatConfig, EasySubScan scan, FileSchemaNegotiator negotiator) {
     this.formatConfig = formatConfig;
-    this.maxRecords = maxRecords;
-    this.scan = scan;
-  }
 
-  @Override
-  public boolean open(FileSchemaNegotiator negotiator) {
     // Open the input stream to the log file
-    openFile(negotiator);
+    file = negotiator.file();
+    openFile();
     errorContext = negotiator.parentErrorContext();
     try {
       parser = new HttpdParser(
@@ -92,7 +86,6 @@ public class HttpdLogBatchReader implements ManagedReader<FileSchemaNegotiator> 
     parser.addFieldsToParser(rowWriter);
     rawLineWriter = addImplicitColumn(RAW_LINE_COL_NAME, MinorType.VARCHAR);
     matchedWriter = addImplicitColumn(MATCHED_COL_NAME, MinorType.BIT);
-    return true;
   }
 
   @Override
@@ -107,11 +100,6 @@ public class HttpdLogBatchReader implements ManagedReader<FileSchemaNegotiator> 
 
   private boolean nextLine(RowSetLoader rowWriter) {
     String line;
-
-    // Check if the limit has been reached
-    if (rowWriter.limitReached(maxRecords)) {
-      return false;
-    }
 
     try {
       line = reader.readLine();
@@ -164,19 +152,19 @@ public class HttpdLogBatchReader implements ManagedReader<FileSchemaNegotiator> 
     try {
       fsStream.close();
     } catch (IOException e) {
-      logger.warn("Error when closing HTTPD file: {} {}", split.getPath().toString(), e.getMessage());
+      logger.warn("Error when closing HTTPD file: {} {}", file.split().getPath().toString(), e.getMessage());
     }
     fsStream = null;
   }
 
-  private void openFile(FileSchemaNegotiator negotiator) {
-    split = negotiator.split();
+  private void openFile() {
+    Path path = file.split().getPath();
     try {
-      fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
+      fsStream = file.fileSystem().openPossiblyCompressedStream(path);
     } catch (Exception e) {
       throw UserException
         .dataReadError(e)
-        .message("Failed to open open input file: %s", split.getPath().toString())
+        .message("Failed to open open input file: %s", path.toString())
         .addContext(e.getMessage())
         .build(logger);
     }

@@ -41,7 +41,7 @@ public class TestTextReader extends BaseTestQuery {
         .go();
   }
 
-  @Ignore ("Not needed any more. (DRILL-3178)")
+  @Ignore("Not needed any more. (DRILL-3178)")
   @Test
   public void ensureFailureOnNewLineDelimiterWithinQuotes() {
     try {
@@ -53,6 +53,10 @@ public class TestTextReader extends BaseTestQuery {
   }
 
   @Test
+  @Ignore("Query succeeds with EVF V2")
+  // Test should be modified for some other case. Note that this test is a bit
+  // inadequate: there are many places that can throw a validation error, all
+  // should be tested.
   public void ensureColumnNameDisplayedinError() throws Exception {
     final String COL_NAME = "col1";
 

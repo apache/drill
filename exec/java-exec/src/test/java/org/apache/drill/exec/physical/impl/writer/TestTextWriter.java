@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.writer;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.store.easy.text.TextFormatConfig;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
@@ -39,7 +40,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 import static org.junit.Assert.assertEquals;
 
 public class TestTextWriter extends ClusterTest {
