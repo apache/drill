@@ -112,7 +112,6 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     // Get the tables if the user set the combine pages to true
     if (config.plugin.getConfig().combinePages() ) {
       tables = PdfUtils.extractTablesFromPDF(document, config.plugin.getConfig().getAlgorithm());
-      // TODO ... What happens if there are no tables... NPE?
       currentTable = tables.get(0);
     } else {
       currentTable = PdfUtils.getSpecificTable(document, startingTableIndex, config.plugin.getConfig().getAlgorithm());
