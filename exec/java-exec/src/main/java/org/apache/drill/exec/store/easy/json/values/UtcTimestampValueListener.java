@@ -18,10 +18,10 @@
 package org.apache.drill.exec.store.easy.json.values;
 
 import java.time.Instant;
-import java.time.ZoneId;
 
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.exec.store.easy.json.parser.TokenIterator;
+import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 import com.fasterxml.jackson.core.JsonToken;
@@ -40,8 +40,6 @@ import com.fasterxml.jackson.core.JsonToken;
  * Drill dates are in the local time zone, so conversion is needed.
  */
 public class UtcTimestampValueListener extends ScalarListener {
-
-  private static final ZoneId LOCAL_ZONE_ID = ZoneId.systemDefault();
 
   public UtcTimestampValueListener(JsonLoaderImpl loader, ScalarWriter writer) {
     super(loader, writer);
@@ -67,6 +65,6 @@ public class UtcTimestampValueListener extends ScalarListener {
       default:
         throw tokenizer.invalidValue(token);
     }
-    writer.setLong(instant.toEpochMilli() + LOCAL_ZONE_ID.getRules().getOffset(instant).getTotalSeconds() * 1000);
+    writer.setLong(DateUtilities.utcInstantToDrillTimetamp(instant));
   }
 }

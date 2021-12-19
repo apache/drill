@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.easy.text.reader;
 
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
-import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
+import org.apache.drill.exec.store.easy.text.TextFormatConfig;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 public class TextParsingSettings {
@@ -40,7 +40,6 @@ public class TextParsingSettings {
   private final boolean parseUnescapedQuotes;
   private final boolean ignoreLeadingWhitespace;
   private final boolean ignoreTrailingWhitespace;
-
   /**
    * Configure the properties for this one scan based on:
    * <p>

@@ -75,7 +75,6 @@ public class ParquetWriter extends AbstractWriter {
                        String location,
                        List<String> partitionColumns,
                        ParquetFormatPlugin formatPlugin) {
-
     super(child);
     this.formatPlugin = formatPlugin;
     this.location = location;

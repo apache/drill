@@ -91,7 +91,7 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
         .fsConf(fsConf)
         .defaultName(PLUGIN_NAME)
         .readerOperatorType(OPERATOR_TYPE)
-        .useEnhancedScan(true)
+        .scanVersion(ScanFrameworkVersion.EVF_V1)
         .supportsLimitPushdown(true)
         .build();
   }

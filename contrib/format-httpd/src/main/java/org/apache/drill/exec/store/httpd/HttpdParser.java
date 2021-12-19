@@ -186,9 +186,7 @@ public class HttpdParser {
 
     dummy.addParseTarget(String.class.getMethod("indexOf", String.class), allParserPaths);
 
-    /*
-    If the column is not requested explicitly, remove it from the requested path list.
-     */
+    // If the column is not requested explicitly, remove it from the requested path list.
     if (!isStarQuery() &&
         !isMetadataQuery() &&
         !isOnlyImplicitColumns()) {

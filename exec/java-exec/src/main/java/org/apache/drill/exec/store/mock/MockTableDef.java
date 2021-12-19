@@ -37,7 +37,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  * the file is brittle, but this is for testing so we're favoring convenience
  * over robustness.
  */
-
 @JsonTypeName("mock-table")
 public class MockTableDef {
 
@@ -46,7 +45,6 @@ public class MockTableDef {
    * described by this group scan. Each block can have a distinct schema to test
    * for schema changes.
    */
-
   public static class MockScanEntry {
 
     final int records;
@@ -88,7 +86,6 @@ public class MockTableDef {
    * Meta-data description of the columns we wish to create during a simulated
    * scan.
    */
-
   @JsonInclude(Include.NON_NULL)
   public static class MockColumn {
 
@@ -96,7 +93,6 @@ public class MockTableDef {
      * Column type given as a Drill minor type (that is, a type without the
      * extra information such as cardinality, width, etc.
      */
-
     @JsonProperty("type")
     public MinorType minorType;
     public String name;
@@ -112,7 +108,6 @@ public class MockTableDef {
      * of a class that resides elsewhere. If null, the default generator for the
      * data type is used.
      */
-
     public String generator;
 
     /**
@@ -123,7 +118,6 @@ public class MockTableDef {
      * repeat to 20 and the actual generated batches will contain fields
      * foo1, foo2, ... foo20.
      */
-
     public Integer repeat;
     public Map<String,Object> properties;
 
@@ -188,7 +182,7 @@ public class MockTableDef {
     }
   }
 
-  private String descrip;
+  private final String descrip;
   List<MockTableDef.MockScanEntry> entries;
 
   public MockTableDef(@JsonProperty("descrip") final String descrip,
@@ -201,7 +195,6 @@ public class MockTableDef {
    * Description of this data source. Ignored by the scanner, purely
    * for the convenience of the author.
    */
-
   public String getDescrip() { return descrip; }
 
   /**
@@ -210,6 +203,5 @@ public class MockTableDef {
    * fragment.
    * @return
    */
-
   public List<MockTableDef.MockScanEntry> getEntries() { return entries; }
 }

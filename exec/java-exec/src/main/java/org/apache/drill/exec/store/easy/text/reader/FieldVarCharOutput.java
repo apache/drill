@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.text.reader;
 
+import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
@@ -43,6 +44,19 @@ class FieldVarCharOutput extends BaseFieldOutput {
         TextFormatPlugin.MAXIMUM_NUMBER_COLUMNS,
         makeMask(writer));
     this.colWriters = colWriters;
+  }
+
+  FieldVarCharOutput(FixedReceiver receiver) {
+    this(receiver.rowWriter(), makeWriters(receiver));
+  }
+
+  private static ValueWriter[] makeWriters(FixedReceiver receiver) {
+    final TupleMetadata schema = receiver.rowWriter().tupleSchema();
+    final ValueWriter[] colWriters = new ValueWriter[schema.size()];
+    for (int i = 0; i < schema.size(); i++) {
+      colWriters[i] = receiver.scalar(i);
+    }
+    return colWriters;
   }
 
   private static boolean[] makeMask(RowSetLoader writer) {

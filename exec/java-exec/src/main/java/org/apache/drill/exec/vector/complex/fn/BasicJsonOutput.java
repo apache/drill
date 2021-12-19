@@ -19,10 +19,13 @@ package org.apache.drill.exec.vector.complex.fn;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.joda.time.Period;
 import org.joda.time.format.ISOPeriodFormat;
@@ -225,7 +228,7 @@ public class BasicJsonOutput implements JsonOutput {
   @Override
   public void writeTimestamp(FieldReader reader) throws IOException {
     if (reader.isSet()) {
-      writeTimestamp(reader.readLocalDateTime());
+      writeTimestamp(DateUtilities.localDateTimeToUTCInstant(reader.readLocalDateTime()));
     } else {
       writeTimeNull();
     }
@@ -351,7 +354,7 @@ public class BasicJsonOutput implements JsonOutput {
   @Override
   public void writeTimestamp(int index, FieldReader reader) throws IOException {
     if (reader.isSet()) {
-      writeTimestamp(reader.readLocalDateTime(index));
+      writeTimestamp(DateUtilities.localDateTimeToUTCInstant(reader.readLocalDateTime(index)));
     } else {
       writeTimestampNull();
     }
@@ -441,8 +444,8 @@ public class BasicJsonOutput implements JsonOutput {
   }
 
   @Override
-  public void writeTimestamp(TemporalAccessor value) throws IOException {
-    gen.writeString(timestampFormatter.format(value));
+  public void writeTimestamp(Instant value) throws IOException {
+    gen.writeString(timestampFormatter.format(value.atOffset(ZoneOffset.UTC)));
   }
 
   @Override

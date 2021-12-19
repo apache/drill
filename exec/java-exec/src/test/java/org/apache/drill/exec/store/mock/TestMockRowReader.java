@@ -49,13 +49,14 @@ import org.junit.experimental.categories.Category;
 
 /**
  * Tests the mock data source directly by wrapping it in a mock
- * scan operator, without the rest of Drill.
+ * scan operator, without the rest of Drill. A side effect is that this
+ * also tests the scan mechanism itself.
  */
-
 @Category({RowSetTests.class, UnlikelyTest.class})
 public class TestMockRowReader extends SubOperatorTest {
 
-  private static ScanFixture buildScan(MockSubScanPOP config, List<ManagedReader<SchemaNegotiator>> readers) {
+  private static ScanFixture buildScan(MockSubScanPOP config,
+      List<ManagedReader<SchemaNegotiator>> readers) {
     BaseScanFixtureBuilder builder = new BaseScanFixtureBuilder();
     List<SchemaPath> projList = new ArrayList<>();
     projList.add(SchemaPath.STAR_COLUMN);
@@ -67,7 +68,6 @@ public class TestMockRowReader extends SubOperatorTest {
   /**
    * Test the most basic case: required integers and strings.
    */
-
   @Test
   public void testBasics() {
     int rowCount = 10;
@@ -117,7 +117,6 @@ public class TestMockRowReader extends SubOperatorTest {
    * including filling values with nulls at some percentage, 25% by
    * default.
    */
-
   @Test
   public void testOptional() {
     int rowCount = 10;
@@ -165,7 +164,6 @@ public class TestMockRowReader extends SubOperatorTest {
   /**
    * Test a repeated column.
    */
-
   @Test
   public void testColumnRepeat() {
     int rowCount = 10;
@@ -214,7 +212,6 @@ public class TestMockRowReader extends SubOperatorTest {
   /**
    * Verify limit on individual batch size (limiting row count per batch).
    */
-
   @Test
   public void testBatchSize() {
     int rowCount = 20;
@@ -259,7 +256,6 @@ public class TestMockRowReader extends SubOperatorTest {
   /**
    * Test a mock varchar column large enough to cause vector overflow.
    */
-
   @Test
   public void testOverflow() {
     int rowCount = ValueVector.MAX_ROW_COUNT;
@@ -271,7 +267,6 @@ public class TestMockRowReader extends SubOperatorTest {
     MockSubScanPOP config = new MockSubScanPOP("dummy", true, Collections.singletonList(entry));
 
     ManagedReader<SchemaNegotiator> reader = new ExtendedMockBatchReader(entry);
-    @SuppressWarnings("unchecked")
     List<ManagedReader<SchemaNegotiator>> readers = Collections.singletonList(reader);
 
     // Create options and the scan operator

@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.store.easy.json.values;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.exec.store.easy.json.parser.TokenIterator;
+import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 import com.fasterxml.jackson.core.JsonToken;
@@ -32,8 +32,6 @@ import com.fasterxml.jackson.core.JsonToken;
  * of the Drillbit machine. Does no time zone conversions.
  */
 public class TimestampValueListener extends ScalarListener {
-
-  public static final LocalDateTime LOCAL_EPOCH = LocalDateTime.of(1970, 1, 1, 0, 0, 0);
 
   public TimestampValueListener(JsonLoaderImpl loader, ScalarWriter writer) {
     super(loader, writer);
@@ -51,7 +49,7 @@ public class TimestampValueListener extends ScalarListener {
       case VALUE_STRING:
         try {
           LocalDateTime localDT = LocalDateTime.parse(tokenizer.stringValue());
-          writer.setLong(Duration.between(LOCAL_EPOCH, localDT).toMillis());
+          writer.setLong(DateUtilities.localDateTimeToDrillTimetamp(localDT));
         } catch (Exception e) {
           throw loader.dataConversionError(schema(), "date", tokenizer.stringValue());
         }

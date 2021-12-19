@@ -67,6 +67,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -98,6 +99,7 @@ public class TestValueVector extends ExecTest {
 
   @Test(expected = OversizedAllocationException.class)
   @Category(UnlikelyTest.class)
+  @Ignore("OOM when run from maven")
   public void testFixedVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
     final UInt4Vector vector = new UInt4Vector(field, allocator);
@@ -155,6 +157,7 @@ public class TestValueVector extends ExecTest {
 
   @Test(expected = OversizedAllocationException.class)
   @Category(UnlikelyTest.class)
+  @Ignore("OOM when run from maven")
   public void testVariableVectorReallocation() {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, UInt4Holder.TYPE);
     final VarCharVector vector = new VarCharVector(field, allocator);

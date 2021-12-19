@@ -137,7 +137,6 @@ class ReaderState {
     /**
      * Initial state before opening the reader.
      */
-
     START,
 
     /**
@@ -157,7 +156,6 @@ class ReaderState {
      * the next call to {@link ReaderState#next()} will return this look-ahead
      * batch rather than reading a new one.
      */
-
     LOOK_AHEAD,
 
     /**
@@ -173,20 +171,17 @@ class ReaderState {
      * row in the result set loader. That look-ahead is handled by the
      * (shim) reader which this class manages.
      */
-
     LOOK_AHEAD_WITH_EOF,
 
     /**
      * Normal state: the reader has supplied data but not yet reported EOF.
      */
-
     ACTIVE,
 
     /**
      * The reader has reported EOF. No look-ahead batch is active. The
      * reader's next() method will no longer be called.
      */
-
     EOF,
 
     /**
@@ -250,6 +245,7 @@ class ReaderState {
       throw UserException.validationError(e)
         .message("Invalid runtime type conversion")
         .build(logger);
+
     } catch (Throwable t) {
 
       // Wrap all others in a user exception.

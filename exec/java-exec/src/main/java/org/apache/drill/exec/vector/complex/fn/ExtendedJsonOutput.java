@@ -19,7 +19,7 @@ package org.apache.drill.exec.vector.complex.fn;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.temporal.TemporalAccessor;
@@ -72,10 +72,10 @@ public class ExtendedJsonOutput extends BasicJsonOutput {
   }
 
   @Override
-  public void writeTimestamp(TemporalAccessor value) throws IOException {
+  public void writeTimestamp(Instant value) throws IOException {
     gen.writeStartObject();
     gen.writeFieldName(ExtendedType.TIMESTAMP.serialized);
-    super.writeTimestamp(((LocalDateTime) value).atOffset(ZoneOffset.UTC)); // output date time in local time zone
+    super.writeTimestamp(value); // output date time in UTC
     gen.writeEndObject();
   }
 

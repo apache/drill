@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.text.reader;
 
-import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.vector.accessor.ValueWriter;
+import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 
 /**
  * For CSV files without headers, but with a provided schema,
@@ -27,8 +26,8 @@ import org.apache.drill.exec.vector.accessor.ValueWriter;
  */
 public class ConstrainedFieldOutput extends FieldVarCharOutput {
 
-  ConstrainedFieldOutput(RowSetLoader writer, ValueWriter[] colWriters) {
-    super(writer, colWriters);
+  ConstrainedFieldOutput(FixedReceiver receiver) {
+    super(receiver);
   }
 
   @Override

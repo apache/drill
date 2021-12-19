@@ -33,7 +33,6 @@ import java.util.TimeZone;
 import static org.apache.drill.test.rowSet.RowSetUtilities.dec;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 
-import org.apache.drill.categories.FlakyTest;
 import org.apache.drill.categories.JsonTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -44,7 +43,7 @@ import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category({JsonTest.class, FlakyTest.class})
+@Category({JsonTest.class})
 public class TestExtendedTypes extends BaseJsonLoaderTest {
 
   @Test
@@ -461,6 +460,7 @@ public class TestExtendedTypes extends BaseJsonLoaderTest {
   }
 
   private final String LONG_HINT = "<{\"$numberLong\": scalar}>";
+
   @Test
   public void testInvalidTypeToken() {
     String json =
