@@ -21,6 +21,7 @@ import org.apache.calcite.DataContext;
 
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.linq4j.tree.Expressions;
+import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.UserException;
@@ -42,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Loads schemas from storage plugins later when {@link #getSubSchema(String, boolean)}
@@ -59,6 +61,7 @@ public class DynamicRootSchema extends DynamicSchema {
   /** Creates a root schema. */
   DynamicRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider) {
     super(null, new RootSchema(), ROOT_SCHEMA_NAME);
+    ((RootSchema)this.schema).setDynRootSchema(this);
     this.schemaConfig = schemaConfig;
     this.storages = storages;
     this.aliasRegistryProvider = aliasRegistryProvider;
@@ -78,13 +81,13 @@ public class DynamicRootSchema extends DynamicSchema {
   private CalciteSchema getSchema(String schemaName, boolean caseSensitive) {
     // Drill registers schemas in lower case, see AbstractSchema constructor
     schemaName = schemaName == null ? null : schemaName.toLowerCase();
-    CalciteSchema retSchema = getSubSchemaMap().get(schemaName);
+    CalciteSchema retSchema = subSchemaMap.map().get(schemaName);
     if (retSchema != null) {
       return retSchema;
     }
 
     loadSchemaFactory(schemaName, caseSensitive);
-    retSchema = getSubSchemaMap().get(schemaName);
+    retSchema = subSchemaMap.map().get(schemaName);
     return retSchema;
   }
 
@@ -154,10 +157,25 @@ public class DynamicRootSchema extends DynamicSchema {
     }
   }
 
-  static class RootSchema extends AbstractSchema {
+  public static class RootSchema extends AbstractSchema {
 
-    public RootSchema() {
+    private StoragePluginRegistry storages;
+
+    private DynamicRootSchema dynRootSchema;
+
+    public RootSchema(StoragePluginRegistry storages) {
       super(Collections.emptyList(), ROOT_SCHEMA_NAME);
+      this.storages = storages;
+    }
+
+    @Override
+    public Set<String> getSubSchemaNames() {
+      return storages.availablePlugins();
+    }
+
+    @Override
+    public Schema getSubSchema(String name) {
+      return dynRootSchema.getSubSchema(name, false).schema;
     }
 
     @Override
@@ -175,6 +193,10 @@ public class DynamicRootSchema extends DynamicSchema {
     @Override
     public boolean showInInformationSchema() {
       return false;
+    }
+
+    public void setDynRootSchema(DynamicRootSchema dynRootSchema) {
+      this.dynRootSchema = dynRootSchema;
     }
   }
 }

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.ischema;
 
+import org.apache.calcite.jdbc.DynamicRootSchema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
@@ -76,7 +77,11 @@ public abstract class InfoSchemaRecordGenerator<S> {
       return;
     }
 
-    for (String name: schema.getSubSchemaNames()) {
+    Set<String> subSchemaNames = schema instanceof DynamicRootSchema.RootSchema
+      ? ((DynamicRootSchema.RootSchema) schema).getSubSchemaNames()
+      : schema.getSubSchemaNames();
+
+    for (String name: subSchemaNames) {
       String subSchemaPath = schemaPath.isEmpty() ? name : schemaPath + "." + name;
       scanSchemaImpl(subSchemaPath, schema.getSubSchema(name), visitedPaths);
     }

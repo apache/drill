@@ -162,7 +162,7 @@ public class TestInfoSchema extends BaseTestQuery {
         .baselineValues("dfs.tmp")
         .go();
   }
-  
+
   @Test
   public void showDatabasesWhereIn() throws Exception {
       testBuilder()

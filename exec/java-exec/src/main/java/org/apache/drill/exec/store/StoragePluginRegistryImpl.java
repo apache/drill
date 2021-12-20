@@ -918,12 +918,12 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     // Register schemas with the refreshed plugins
     // TODO: this code requires instantiating all plugins, even though
     // the query won't use them. Need a way to do deferred registration.
-    for (PluginHandle plugin : pluginCache.plugins()) {
+    for (PluginHandle handle : pluginCache.plugins()) {
       try {
-        plugin.plugin().registerSchemas(schemaConfig, parent);
+        handle.plugin().registerSchemas(schemaConfig, parent);
       } catch (Exception e) {
         logger.warn("Error during `{}` schema initialization: {}",
-            plugin.name(), e.getMessage(), e.getCause());
+            handle.name(), e.getMessage(), e.getCause());
       }
     }
   }

@@ -17,12 +17,10 @@
  */
 package org.apache.drill.exec.store;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.calcite.jdbc.DynamicSchema;
@@ -120,17 +118,20 @@ public class SchemaTreeProvider implements AutoCloseable {
    * @param provider {@link SchemaConfigInfoProvider} instance
    * @return Root of the schema tree.
    */
+  /*
   public SchemaPlus createFullRootSchema(final String userName, final SchemaConfigInfoProvider provider) {
     final String schemaUser = isImpersonationEnabled ? userName : ImpersonationUtil.getProcessUserName();
     final SchemaConfig schemaConfig = SchemaConfig.newBuilder(schemaUser, provider).build();
     return createFullRootSchema(schemaConfig);
   }
+  */
 
   /**
    * Create and return a Full SchemaTree with given <i>schemaConfig</i>.
    * @param schemaConfig
    * @return
    */
+  /*
   public SchemaPlus createFullRootSchema(SchemaConfig schemaConfig) {
     try {
       SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig,
@@ -138,6 +139,7 @@ public class SchemaTreeProvider implements AutoCloseable {
       dContext.getSchemaFactory().registerSchemas(schemaConfig, rootSchema);
       schemaTreesToClose.add(rootSchema);
       return rootSchema;
+
     }
     catch(IOException e) {
       // We can't proceed further without a schema, throw a runtime exception.
@@ -154,14 +156,16 @@ public class SchemaTreeProvider implements AutoCloseable {
           .build(logger);
     }
   }
+  */
 
   @Override
   public void close() throws Exception {
     List<AutoCloseable> toClose = Lists.newArrayList();
+    /*
     for(SchemaPlus tree : schemaTreesToClose) {
       addSchemasToCloseList(tree, toClose);
     }
-
+    */
     AutoCloseables.close(toClose);
   }
 
