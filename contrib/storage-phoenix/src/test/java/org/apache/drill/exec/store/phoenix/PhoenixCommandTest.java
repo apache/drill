@@ -29,7 +29,6 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
@@ -65,10 +64,30 @@ public class PhoenixCommandTest extends PhoenixBaseTest {
     new RowSetComparison(expected).verifyAndClearAll(sets);
   }
 
-  @Ignore
   @Test
   public void testDescribe() throws Exception {
-    run("USE phoenix123.v1");
-    assertEquals(4, queryBuilder().sql("DESCRIBE NATION").run().recordCount());
+    assertEquals(4, queryBuilder().sql("DESCRIBE phoenix123.v1.NATION").run().recordCount());
+  }
+
+  @Test
+  public void testDescribeCaseInsensitive() throws Exception {
+    String sql = "DESCRIBE phoenix123.v1.nation"; // use lowercase
+    QueryBuilder builder = client.queryBuilder().sql(sql);
+    RowSet sets = builder.rowSet();
+
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("COLUMN_NAME", MinorType.VARCHAR)
+        .addNullable("DATA_TYPE", MinorType.VARCHAR)
+        .addNullable("IS_NULLABLE", MinorType.VARCHAR)
+        .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow("N_NATIONKEY", "BIGINT", "NO")
+        .addRow("N_NAME", "CHARACTER VARYING", "YES")
+        .addRow("N_REGIONKEY", "BIGINT", "YES")
+        .addRow("N_COMMENT", "CHARACTER VARYING", "YES")
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(sets);
   }
 }

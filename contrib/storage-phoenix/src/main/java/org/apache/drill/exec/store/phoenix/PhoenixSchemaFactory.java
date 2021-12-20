@@ -119,5 +119,10 @@ public class PhoenixSchemaFactory extends AbstractSchemaFactory {
     public void addSchemas(Map<String, PhoenixSchema> schemas) {
       schemaMap.putAll(schemas);
     }
+
+    @Override
+    public boolean areTableNamesCaseSensitive() {
+      return false;
+    }
   }
 }
