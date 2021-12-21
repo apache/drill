@@ -27,6 +27,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.http.HttpOAuthConfig;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
+import org.apache.drill.exec.store.http.util.HttpOAuthUtils;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.parquet.Strings;
@@ -94,13 +95,13 @@ public class AccessTokenRepository {
     // If the refresh token is present process with that
     if (oAuthConfig.tokens().containsKey("refreshToken") &&
       StringUtils.isNotEmpty(oAuthConfig.tokens().get("refreshToken"))) {
-      request = OAuthUtils.getAccessTokenRequestFromRefreshToken(oAuthConfig);
+      request = HttpOAuthUtils.getAccessTokenRequestFromRefreshToken(oAuthConfig);
     } else {
-      request = OAuthUtils.getAccessTokenRequest(oAuthConfig);
+      request = HttpOAuthUtils.getAccessTokenRequest(oAuthConfig);
     }
 
     // Update/Refresh the tokens
-    Map<String, String> tokens = OAuthUtils.getOAuthTokens(client, request);
+    Map<String, String> tokens = HttpOAuthUtils.getOAuthTokens(client, request);
     HttpOAuthConfig updatedConfig = new HttpOAuthConfig(oAuthConfig, tokens);
 
     if (tokens.containsKey("accessToken")) {
@@ -109,7 +110,7 @@ public class AccessTokenRepository {
 
     // This null check is here for testing only.  In actual Drill, the registry will not be null.
     if (registry != null) {
-      OAuthUtils.updateOAuthTokens(registry, updatedConfig, pluginConfig);
+      HttpOAuthUtils.updateOAuthTokens(registry, updatedConfig, pluginConfig);
     }
     return accessToken;
   }

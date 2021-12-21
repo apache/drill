@@ -223,4 +223,19 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
   public UsernamePasswordCredentials getUsernamePasswordCredentials() {
     return new UsernamePasswordCredentials(credentialsProvider);
   }
+
+  @Override
+  public HttpStoragePluginConfig updateCredentials(AbstractSecuredStoragePluginConfig config, CredentialsProvider credentialsProvider) {
+    HttpStoragePluginConfig newConfig = (HttpStoragePluginConfig) config;
+    return new HttpStoragePluginConfig(newConfig.cacheResults,
+      newConfig.connections,
+      newConfig.timeout,
+      newConfig.proxyHost,
+      newConfig.proxyPort,
+      newConfig.proxyType,
+      newConfig.proxyUsername(),
+      newConfig.proxyPassword(),
+      newConfig.oAuthConfig,
+      credentialsProvider);
+  }
 }

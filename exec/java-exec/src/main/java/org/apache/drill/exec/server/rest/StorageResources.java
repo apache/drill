@@ -49,14 +49,14 @@ import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.security.OAuthCredentialsProvider;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginEncodingException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginNotFoundException;
-import org.apache.drill.exec.store.http.HttpOAuthConfig;
-import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.oauth.OAuthUtils;
 import org.glassfish.jersey.server.mvc.Viewable;
 
@@ -199,9 +199,7 @@ public class StorageResources {
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
     try {
       if (storage.getPlugin(name).getConfig().getClass().getSimpleName().equalsIgnoreCase("HttpStoragePluginConfig")) {
-        HttpStoragePluginConfig config = (HttpStoragePluginConfig)storage.getPlugin(name).getConfig();
-        HttpOAuthConfig oAuthConfig = config.oAuthConfig();
-        oAuthConfig.tokens().put("authorizationCode", code);
+        AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) storage.getPlugin(name).getConfig();
 
         // Now exchange the authorization token for an access token
         Builder builder = new OkHttpClient.Builder();
@@ -211,12 +209,10 @@ public class StorageResources {
 
         // This line preserves the authorization code.  It may not be necessary to retain this.
         tokens.put("authorizationCode", code);
+        OAuthCredentialsProvider credentialsProvider = new OAuthCredentialsProvider(tokens);
+        AbstractSecuredStoragePluginConfig newSecuredConfig = securedStoragePluginConfig.updateCredentials(securedStoragePluginConfig, credentialsProvider);
 
-        HttpOAuthConfig updatedOAuthConfig = new HttpOAuthConfig(oAuthConfig, tokens);
-        HttpStoragePluginConfig updatedConfig = new HttpStoragePluginConfig(config, updatedOAuthConfig);
-        updatedConfig.setEnabled(config.isEnabled());
-
-        PluginConfigWrapper updatedPlugin = new PluginConfigWrapper(name, updatedConfig);
+        PluginConfigWrapper updatedPlugin = new PluginConfigWrapper(name, newSecuredConfig);
 
         // Update the storage plugin config
         storage.validatedPut(name, updatedPlugin.getConfig());

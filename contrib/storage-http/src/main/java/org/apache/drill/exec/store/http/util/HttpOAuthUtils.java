@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.store.http.oauth;
+package org.apache.drill.exec.store.http.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.FormBody;
@@ -25,7 +25,11 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
+import org.apache.drill.exec.store.http.HttpOAuthConfig;
+import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
+import org.apache.drill.exec.store.http.oauth.OAuthUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,34 +37,34 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OAuthUtils {
+public class HttpOAuthUtils {
   private static final Logger logger = LoggerFactory.getLogger(OAuthUtils.class);
 
   /**
-   * Craft a GET request to obtain an access token.
-   * @param credentialsProvider A credential provider containing the clientID, clientSecret and authorizationCode
-   * @return A Request Body to obtain an access token
+   * Crafts a POST response for obtaining an access token and refresh token.
+   * @param oAuthConfig The oAuthConfiguration containing the client_id, client_secret, and auth_code.
+   * @return A Request Body with the correct parameters for obtaining an access token
    */
-  public static RequestBody getPostResponse(CredentialsProvider credentialsProvider) {
+  public static RequestBody getPostResponse(HttpOAuthConfig oAuthConfig) {
     return new FormBody.Builder()
       .add("grant_type", "authorization_code")
-      .add("client_id", credentialsProvider.getCredentials().get("clientID"))
-      .add("client_secret", credentialsProvider.getCredentials().get("clientSecret"))
-      .add("code", credentialsProvider.getCredentials().get("authorizationCode"))
+      .add("client_id", oAuthConfig.clientID())
+      .add("client_secret", oAuthConfig.clientSecret())
+      .add("code", oAuthConfig.tokens().get("authorizationCode"))
       .build();
   }
 
   /**
    * Crafts a POST response for refreshing an access token when a refresh token is present.
-   * @param credentialsProvider A credential provider containing the clientID, clientSecret and refreshToken
+   * @param oAuthConfig The oAuthConfiguration containing the client_id, client_secret, and auth_code.
    * @return A Request Body with the correct parameters for obtaining an access token
    */
-  public static RequestBody getPostResponseForTokenRefresh(CredentialsProvider credentialsProvider) {
+  public static RequestBody getPostResponseForTokenRefresh(HttpOAuthConfig oAuthConfig) {
     return new FormBody.Builder()
       .add("grant_type", "refresh_token")
-      .add("client_id", credentialsProvider.getCredentials().get("clientID"))
-      .add("client_secret", credentialsProvider.getCredentials().get("clientSecret"))
-      .add("refresh_token", credentialsProvider.getCredentials().get("refreshToken"))
+      .add("client_id", oAuthConfig.clientID())
+      .add("client_secret", oAuthConfig.clientSecret())
+      .add("refresh_token", oAuthConfig.tokens().get("refreshToken"))
       .build();
   }
 
@@ -76,18 +80,17 @@ public class OAuthUtils {
   /**
    * Crafts a POST request to obtain an access token.  This method should be used for the initial call
    * to the OAuth API when you are exchanging the authorization code for an access token.
-   * @param credentialsProvider The credentialsProvider containing the client_id, client_secret, and auth_code.
+   * @param oAuthConfig The oAuthConfiguration containing the client_id, client_secret, and auth_code.
    * @return A request to obtain the access token.
    */
-  public static Request getAccessTokenRequest(CredentialsProvider credentialsProvider) {
+  public static Request getAccessTokenRequest(HttpOAuthConfig oAuthConfig ) {
     return new Request.Builder()
       .url(buildAccessTokenURL(oAuthConfig))
       .header("Content-Type", "application/json")
       .addHeader("Accept", "application/json")
-      .post(getPostResponse(credentialsProvider))
+      .post(getPostResponse(oAuthConfig))
       .build();
   }
-
 
   /**
    * Crafts a POST request to obtain an access token.  This method should be used for the additional calls
@@ -96,12 +99,12 @@ public class OAuthUtils {
    * @param oAuthConfig The oAuthConfiguration containing the client_id, client_secret, and refresh token.
    * @return A request to obtain the access token.
    */
-  public static Request getAccessTokenRequestFromRefreshToken(CredentialsProvider credentialsProvider) {
+  public static Request getAccessTokenRequestFromRefreshToken(HttpOAuthConfig oAuthConfig) {
     return new Request.Builder()
       .url(buildAccessTokenURL(oAuthConfig))
       .header("Content-Type", "application/json")
       .addHeader("Accept", "application/json")
-      .post(getPostResponseForTokenRefresh(credentialsProvider))
+      .post(getPostResponseForTokenRefresh(oAuthConfig))
       .build();
   }
 
@@ -164,4 +167,24 @@ public class OAuthUtils {
 
     }
   }
+
+  /**
+   * This method updates the OAuth tokens which are stored in the plugin config.  It should be called
+   * AFTER any token has been refreshed to make sure the tokens are preserved for future use.
+   * @param plugins The current StoragePluginRegistry
+   * @param oAuthConfig The oAuthConfig with new tokens
+   * @param pluginConfig The storage plugin config
+   */
+  public static void updateOAuthTokens(StoragePluginRegistry plugins, HttpOAuthConfig oAuthConfig, HttpStoragePluginConfig pluginConfig) {
+    HttpStoragePluginConfig newConfig = new HttpStoragePluginConfig(pluginConfig, oAuthConfig);
+    try {
+      String name = plugins.getPluginByConfig(pluginConfig).getName();
+      plugins.validatedPut(name, newConfig);
+    } catch (PluginException e) {
+      throw UserException.connectionError(e)
+        .message("Error updating OAuth tokens: " + e.getMessage())
+        .build(logger);
+    }
+  }
 }
+
