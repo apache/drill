@@ -123,7 +123,12 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
           } else if (next != IterOutcome.OK && next != IterOutcome.OK_NEW_SCHEMA && next != EMIT) {
             return next;
           } else if (next == IterOutcome.OK_NEW_SCHEMA) {
-            setupNewSchema();
+            try {
+              stats.startSetup();
+              setupNewSchema();
+            } finally {
+              stats.stopSetup();
+            }
           }
           incomingRecordCount = incoming.getRecordCount();
           memoryManager.update();

@@ -185,7 +185,12 @@ public class PartitionSenderRootExec extends BaseRootExec {
             partitioner.flushOutgoingBatches(false, true);
             partitioner.clear();
           }
-          createPartitioner();
+          try {
+            stats.startSetup();
+            createPartitioner();
+          } finally {
+            stats.stopSetup();
+          }
 
           if (first) {
             // Send an empty batch for fast schema

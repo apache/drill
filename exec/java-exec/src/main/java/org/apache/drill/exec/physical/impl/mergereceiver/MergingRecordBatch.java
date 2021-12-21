@@ -619,7 +619,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
    * @throws SchemaChangeException
    */
   private MergingReceiverGeneratorBase createMerger() {
-
+    stats.startSetup();
     final CodeGenerator<MergingReceiverGeneratorBase> cg =
         CodeGenerator.get(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION,
             context.getOptions());
@@ -651,6 +651,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       return merger;
     } catch (SchemaChangeException e) {
       throw schemaChangeException(e, logger);
+    } finally {
+      stats.stopSetup();
     }
   }
 
