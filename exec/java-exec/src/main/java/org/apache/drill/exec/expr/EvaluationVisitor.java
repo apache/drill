@@ -218,7 +218,7 @@ public class EvaluationVisitor {
 
   void newScope() {
     mapStack.push(previousExpressions);
-    previousExpressions = Maps.newHashMap();;
+    previousExpressions = Maps.newHashMap();
   }
 
   void leaveScope() {
