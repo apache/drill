@@ -99,7 +99,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   @Override
   public boolean open(FileScanFramework.FileSchemaNegotiator negotiator) {
     // TODO Remove this
-    System.setProperty("java.awt.headless", "true");
+    //System.setProperty("java.awt.headless", "true");
     this.negotiator = negotiator;
 
     split = negotiator.split();
