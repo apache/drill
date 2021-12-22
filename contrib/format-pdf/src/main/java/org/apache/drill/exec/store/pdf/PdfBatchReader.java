@@ -98,8 +98,6 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
   @Override
   public boolean open(FileScanFramework.FileSchemaNegotiator negotiator) {
-    // TODO Remove this
-    //System.setProperty("java.awt.headless", "true");
     this.negotiator = negotiator;
 
     split = negotiator.split();
@@ -140,7 +138,6 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
     } else {
       negotiator.tableSchema(buildSchema(), false);
     }
-
 
     ResultSetLoader loader = negotiator.build();
     rowWriter = loader.writer();
@@ -226,7 +223,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
   }
 
   /**
-   * This method opens the PDF file, and finds the tables
+   * This method opens the PDF file and finds the tables
    */
   private void openFile() {
     try {
@@ -234,6 +231,7 @@ public class PdfBatchReader implements ManagedReader<FileScanFramework.FileSchem
       if (Strings.isNullOrEmpty(config.plugin.getConfig().password())) {
         document = PDDocument.load(fsStream);
       } else {
+        // Case for encrypted files
         document = PDDocument.load(fsStream, config.plugin.getConfig().password());
       }
 
