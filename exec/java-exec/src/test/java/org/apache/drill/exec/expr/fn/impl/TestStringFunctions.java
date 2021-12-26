@@ -179,7 +179,7 @@ public class TestStringFunctions extends BaseTestQuery {
       .go();
 
     testBuilder()
-      .sqlQuery("select split_part('a,b,c', ',', -4, -5) res1 from (values(1))")
+      .sqlQuery("select split_part('a,b,c', ',', -5, -4) res1 from (values(1))")
       .ordered()
       .baselineColumns("res1")
       .baselineValues("")
@@ -229,7 +229,8 @@ public class TestStringFunctions extends BaseTestQuery {
         .go();
       expectedErrorEncountered = false;
     } catch (Exception ex) {
-      assertTrue(ex.getMessage().contains("Index in split_part can not be zero"));
+      assertTrue(ex.getMessage(),
+        ex.getMessage().contains("Index in split_part can not be zero"));
       expectedErrorEncountered = true;
     }
     if (!expectedErrorEncountered) {
@@ -247,8 +248,8 @@ public class TestStringFunctions extends BaseTestQuery {
         .go();
       expectedErrorEncountered = false;
     } catch (Exception ex) {
-      assertTrue(ex.getMessage().contains("End in split_part must be greater " +
-        "than or equal to start"));
+      assertTrue(ex.getMessage(),
+        ex.getMessage().contains("End index in split_part must be greater or equal to start index"));
       expectedErrorEncountered = true;
     }
     if (!expectedErrorEncountered) {
@@ -266,8 +267,8 @@ public class TestStringFunctions extends BaseTestQuery {
         .go();
       expectedErrorEncountered = false;
     } catch (Exception ex) {
-      assertTrue(ex.getMessage().contains("End in split_part must be greater " +
-        "than or equal to start"));
+      assertTrue(ex.getMessage(),
+        ex.getMessage().contains("End index in split_part must be greater or equal to start index"));
       expectedErrorEncountered = true;
     }
     if (!expectedErrorEncountered) {
@@ -285,8 +286,8 @@ public class TestStringFunctions extends BaseTestQuery {
         .go();
       expectedErrorEncountered = false;
     } catch (Exception ex) {
-      assertTrue(ex.getMessage().contains("End index in split_part must has the " +
-        "same sign as the start index"));
+      assertTrue(ex.getMessage(),
+        ex.getMessage().contains("End index in split_part must has the same sign as the start index"));
       expectedErrorEncountered = true;
     }
     if (!expectedErrorEncountered) {

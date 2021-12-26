@@ -429,7 +429,7 @@ public class StringFunctions{
         int size = splits.size();
         int arrayIndex = size + index.value;
         if (arrayIndex >= 0) {
-          result = splits.get(arrayIndex);
+          result = (String) splits.get(arrayIndex);
         }
       } else {
         int arrayIndex = index.value - 1;
