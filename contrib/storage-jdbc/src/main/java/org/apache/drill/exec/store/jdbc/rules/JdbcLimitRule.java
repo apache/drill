@@ -37,6 +37,10 @@ public class JdbcLimitRule extends DrillJdbcRuleBase.DrillJdbcLimitRule {
   public boolean matches(RelOptRuleCall call) {
     DrillLimitRelBase limit = call.rel(0);
     if (super.matches(call)) {
+      // MS SQL doesn't support either OFFSET or FETCH without ORDER BY.
+      // But for the case of FETCH without OFFSET, Calcite generates TOP N
+      // instead of FETCH, and it is supported by MS SQL.
+      // So do not push down only the limit with both OFFSET and FETCH but without ORDER BY.
       return limit.getOffset() == null
         || !limit.getTraitSet().contains(RelCollations.EMPTY)
         || !(convention.getPlugin().getDialect() instanceof MssqlSqlDialect);
