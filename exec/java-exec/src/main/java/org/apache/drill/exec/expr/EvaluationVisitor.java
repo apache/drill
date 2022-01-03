@@ -79,6 +79,7 @@ import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -217,7 +218,7 @@ public class EvaluationVisitor {
 
   void newScope() {
     mapStack.push(previousExpressions);
-    previousExpressions = new HashMap<>(previousExpressions);
+    previousExpressions = Maps.newHashMap();
   }
 
   void leaveScope() {
@@ -229,7 +230,17 @@ public class EvaluationVisitor {
    * Get a HoldingContainer for the expression if it had been already evaluated
    */
   private HoldingContainer getPrevious(LogicalExpression expression, MappingSet mappingSet) {
-    HoldingContainer previous = previousExpressions.get(new ExpressionHolder(expression, mappingSet));
+    ExpressionHolder holder = new ExpressionHolder(expression, mappingSet);
+    HoldingContainer previous = null;
+    for (Map<ExpressionHolder,HoldingContainer> m : mapStack) {
+      previous = m.get(holder);
+      if (previous != null) {
+        break;
+      }
+    }
+    if (previous == null) {
+      previous = previousExpressions.get(holder);
+    }
     if (previous != null) {
       logger.debug("Found previously evaluated expression: {}", ExpressionStringBuilder.toString(expression));
     }
