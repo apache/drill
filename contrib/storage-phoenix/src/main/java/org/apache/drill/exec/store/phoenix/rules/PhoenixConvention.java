@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.phoenix.rules;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,10 +33,12 @@ import org.apache.calcite.linq4j.tree.ConstantUntypedNull;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.planner.RuleInstance;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.store.enumerable.plan.DrillJdbcRuleBase;
 import org.apache.drill.exec.store.enumerable.plan.VertexDrelConverterRule;
 import org.apache.drill.exec.store.phoenix.PhoenixStoragePlugin;
@@ -60,22 +63,28 @@ public class PhoenixConvention extends JdbcConvention {
         .rules(this, DrillRelFactories.LOGICAL_BUILDER).stream()
         .filter(rule -> !EXCLUDED_CALCITE_RULES.contains(rule.getClass()))
         .collect(Collectors.toList());
-    this.rules = ImmutableSet.<RelOptRule>builder()
-        .addAll(calciteJdbcRules)
-        .add(PhoenixIntermediatePrelConverterRule.INSTANCE)
-        .add(new VertexDrelConverterRule(this))
-        .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(Convention.NONE, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(DrillRel.DRILL_LOGICAL, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcFilterRule(Convention.NONE, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcFilterRule(DrillRel.DRILL_LOGICAL, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcSortRule(Convention.NONE, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcSortRule(DrillRel.DRILL_LOGICAL, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcLimitRule(Convention.NONE, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcLimitRule(DrillRel.DRILL_LOGICAL, this))
-        .add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE)
-        .add(RuleInstance.PROJECT_REMOVE_RULE)
-        .add(new PhoenixJoinRule(Convention.NONE, this))
-        .build();
+
+    List<RelTrait> inputTraits = Arrays.asList(
+      Convention.NONE,
+      DrillRel.DRILL_LOGICAL,
+      Prel.DRILL_PHYSICAL);
+
+    ImmutableSet.Builder<RelOptRule> builder = ImmutableSet.<RelOptRule>builder()
+      .addAll(calciteJdbcRules)
+      .add(new PhoenixIntermediatePrelConverterRule(this))
+      .add(new VertexDrelConverterRule(this))
+      .add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE)
+      .add(RuleInstance.PROJECT_REMOVE_RULE);
+    for (RelTrait inputTrait : inputTraits) {
+      builder
+        .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(inputTrait, this))
+        .add(new DrillJdbcRuleBase.DrillJdbcFilterRule(inputTrait, this))
+        .add(new DrillJdbcRuleBase.DrillJdbcSortRule(inputTrait, this))
+        .add(new DrillJdbcRuleBase.DrillJdbcLimitRule(inputTrait, this))
+        .add(new PhoenixJoinRule(inputTrait, this));
+    }
+
+    this.rules = builder.build();
   }
 
   @Override

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,18 +26,21 @@ import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcRules;
 import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcFilterRule;
 import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcProjectRule;
-import org.apache.calcite.adapter.jdbc.JdbcRules.JdbcSortRule;
 import org.apache.calcite.adapter.jdbc.JdbcToEnumerableConverterRule;
 import org.apache.calcite.linq4j.tree.ConstantUntypedNull;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.planner.RuleInstance;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.store.enumerable.plan.DrillJdbcRuleBase;
 import org.apache.drill.exec.store.enumerable.plan.VertexDrelConverterRule;
+import org.apache.drill.exec.store.jdbc.rules.JdbcLimitRule;
+import org.apache.drill.exec.store.jdbc.rules.JdbcSortRule;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 /**
@@ -48,7 +52,7 @@ public class DrillJdbcConvention extends JdbcConvention {
    * Unwanted Calcite's JdbcRules are filtered out using this set
    */
   private static final Set<Class<? extends RelOptRule>> EXCLUDED_CALCITE_RULES = ImmutableSet.of(
-      JdbcToEnumerableConverterRule.class, JdbcFilterRule.class, JdbcProjectRule.class, JdbcSortRule.class);
+      JdbcToEnumerableConverterRule.class, JdbcFilterRule.class, JdbcProjectRule.class, JdbcRules.JdbcSortRule.class);
 
   private final ImmutableSet<RelOptRule> rules;
   private final JdbcStoragePlugin plugin;
@@ -59,21 +63,27 @@ public class DrillJdbcConvention extends JdbcConvention {
     List<RelOptRule> calciteJdbcRules = JdbcRules.rules(this, DrillRelFactories.LOGICAL_BUILDER).stream()
         .filter(rule -> !EXCLUDED_CALCITE_RULES.contains(rule.getClass()))
         .collect(Collectors.toList());
-    this.rules = ImmutableSet.<RelOptRule>builder()
-        .addAll(calciteJdbcRules)
-        .add(new JdbcIntermediatePrelConverterRule(this))
-        .add(new VertexDrelConverterRule(this))
-        .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(Convention.NONE, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(DrillRel.DRILL_LOGICAL, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcFilterRule(Convention.NONE, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcFilterRule(DrillRel.DRILL_LOGICAL, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcSortRule(Convention.NONE, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcSortRule(DrillRel.DRILL_LOGICAL, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcLimitRule(Convention.NONE, this))
-        .add(new DrillJdbcRuleBase.DrillJdbcLimitRule(DrillRel.DRILL_LOGICAL, this))
-        .add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE)
-        .add(RuleInstance.PROJECT_REMOVE_RULE)
-        .build();
+
+    List<RelTrait> inputTraits = Arrays.asList(
+      Convention.NONE,
+      DrillRel.DRILL_LOGICAL,
+      Prel.DRILL_PHYSICAL);
+
+    ImmutableSet.Builder<RelOptRule> builder = ImmutableSet.<RelOptRule>builder()
+      .addAll(calciteJdbcRules)
+      .add(new JdbcIntermediatePrelConverterRule(this))
+      .add(new VertexDrelConverterRule(this))
+      .add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE)
+      .add(RuleInstance.PROJECT_REMOVE_RULE);
+    for (RelTrait inputTrait : inputTraits) {
+      builder
+        .add(new DrillJdbcRuleBase.DrillJdbcProjectRule(inputTrait, this))
+        .add(new DrillJdbcRuleBase.DrillJdbcFilterRule(inputTrait, this))
+        .add(new JdbcSortRule(inputTrait, this))
+        .add(new JdbcLimitRule(inputTrait, this));
+    }
+
+    this.rules = builder.build();
   }
 
   @Override
