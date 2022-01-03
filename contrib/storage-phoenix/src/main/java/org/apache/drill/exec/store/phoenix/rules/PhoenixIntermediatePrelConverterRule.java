@@ -17,50 +17,44 @@
  */
 package org.apache.drill.exec.store.phoenix.rules;
 
-import java.util.function.Predicate;
-
-import org.apache.calcite.plan.Convention;
-import org.apache.calcite.plan.ConventionTraitDef;
+import org.apache.calcite.adapter.jdbc.JdbcConvention;
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.store.enumerable.plan.VertexDrel;
 
-final class PhoenixIntermediatePrelConverterRule extends ConverterRule {
+final class PhoenixIntermediatePrelConverterRule extends RelOptRule {
 
-  static final PhoenixIntermediatePrelConverterRule INSTANCE = new PhoenixIntermediatePrelConverterRule();
+  private final RelTrait inTrait;
+  private final RelTrait outTrait;
 
-  private PhoenixIntermediatePrelConverterRule() {
-    super(VertexDrel.class, (Predicate<RelNode>) input -> true,
-        DrillRel.DRILL_LOGICAL, Prel.DRILL_PHYSICAL, DrillRelFactories.LOGICAL_BUILDER, "Phoenix_PREL_Converter");
-  }
+  public PhoenixIntermediatePrelConverterRule(JdbcConvention jdbcConvention) {
+    super(
+      RelOptHelper.some(VertexDrel.class, DrillRel.DRILL_LOGICAL,
+        RelOptHelper.any(RelNode.class, jdbcConvention)),
+      DrillRelFactories.LOGICAL_BUILDER, "Phoenix_PREL_Converter" + jdbcConvention);
 
-  @Override
-  public RelNode convert(RelNode in) {
-    return new PhoenixIntermediatePrel(
-        in.getCluster(),
-        in.getTraitSet().replace(getOutTrait()),
-        in.getInput(0));
+    this.inTrait = DrillRel.DRILL_LOGICAL;
+    this.outTrait = Prel.DRILL_PHYSICAL;
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    RelNode rel = call.rel(0);
-    if (rel.getTraitSet().contains(getInTrait())) {
-      Convention c = rel.getInput(0).getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
-      /*
-       * only accept the PhoenixConvention
-       * need to avoid the NPE or ClassCastException
-       */
-      if (c != null && c instanceof PhoenixConvention) {
-        final RelNode converted = convert(rel);
-        if (converted != null) {
-          call.transformTo(converted);
-        }
-      }
-    }
+    VertexDrel in = call.rel(0);
+    RelNode intermediatePrel = new PhoenixIntermediatePrel(
+      in.getCluster(),
+      in.getTraitSet().replace(outTrait),
+      in.getInput(0));
+    call.transformTo(intermediatePrel);
+  }
+
+  @Override
+  public boolean matches(RelOptRuleCall call) {
+    return super.matches(call) && call.rel(0).getTraitSet().contains(inTrait);
   }
 }
