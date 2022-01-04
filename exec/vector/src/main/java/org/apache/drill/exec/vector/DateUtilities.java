@@ -258,7 +258,7 @@ public class DateUtilities {
     // The instant is in UTC, which is needed to get the TZ offset at
     // that specific instant. (Won't work the other way, alas.)
     return instant.toEpochMilli() +
-        LOCAL_ZONE_ID.getRules().getOffset(instant).getTotalSeconds() * 1000;
+        LOCAL_ZONE_ID.getRules().getOffset(instant).getTotalSeconds() * 1000L;
   }
 
   /**

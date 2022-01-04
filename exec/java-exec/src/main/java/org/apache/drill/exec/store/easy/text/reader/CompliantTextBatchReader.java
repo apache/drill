@@ -124,10 +124,6 @@ public class CompliantTextBatchReader implements ManagedReader {
    * Extract header and use that to define the reader schema.
    *
    * @param schemaNegotiator used to define the reader schema
-   * @param providedHeaders "artificial" headers created from a
-   * provided schema, if any. Used when using a provided schema
-   * with a text file that contains no headers; ignored for
-   * text file with headers
    */
   private TextOutput openWithHeaders(FileSchemaNegotiator schemaNegotiator) throws IOException {
     validateNoColumnsProjection(schemaNegotiator);

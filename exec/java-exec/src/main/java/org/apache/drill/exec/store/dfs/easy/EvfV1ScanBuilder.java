@@ -40,8 +40,6 @@ import org.slf4j.LoggerFactory;
  * <p>
  * This is for "version 1" of EVF. Newer code should use "version 2."
  *
- * @param scan the physical operation definition for the scan operation. Contains
- * one or more files to read. (The Easy format plugin works only for files.)
  * @return the scan framework which orchestrates the scan operation across
  * potentially many files
  * @throws ExecutionSetupException for all setup failures
