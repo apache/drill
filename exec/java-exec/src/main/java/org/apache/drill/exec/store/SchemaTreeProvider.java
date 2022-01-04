@@ -20,7 +20,6 @@ package org.apache.drill.exec.store;
 import java.util.List;
 
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.calcite.jdbc.DynamicSchema;
@@ -118,6 +117,7 @@ public class SchemaTreeProvider implements AutoCloseable {
    * @param provider {@link SchemaConfigInfoProvider} instance
    * @return Root of the schema tree.
    */
+  //TODO jnturton: clean up
   /*
   public SchemaPlus createFullRootSchema(final String userName, final SchemaConfigInfoProvider provider) {
     final String schemaUser = isImpersonationEnabled ? userName : ImpersonationUtil.getProcessUserName();
@@ -160,15 +160,19 @@ public class SchemaTreeProvider implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    List<AutoCloseable> toClose = Lists.newArrayList();
+    //TODO jnturton: clean up
     /*
+    List<AutoCloseable> toClose = Lists.newArrayList();
     for(SchemaPlus tree : schemaTreesToClose) {
       addSchemasToCloseList(tree, toClose);
     }
-    */
+
     AutoCloseables.close(toClose);
+    */
   }
 
+  //TODO jnturton: clean up
+  /*
   private static void addSchemasToCloseList(final SchemaPlus tree, final List<AutoCloseable> toClose) {
     for(String subSchemaName : tree.getSubSchemaNames()) {
       addSchemasToCloseList(tree.getSubSchema(subSchemaName), toClose);
@@ -181,4 +185,5 @@ public class SchemaTreeProvider implements AutoCloseable {
       // Ignore as the SchemaPlus is not an implementation of Drill schema.
     }
   }
+   */
 }

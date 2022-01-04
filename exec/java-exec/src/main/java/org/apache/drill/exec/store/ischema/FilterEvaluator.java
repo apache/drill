@@ -58,7 +58,7 @@ public interface FilterEvaluator {
    * @return whether to prune this schema and all its descendants from the
    * search tree.
    */
-  boolean shouldPruneSchema(String schemaName, SchemaPlus schema);
+  boolean shouldPruneSchema(String schemaName);
 
   /**
    * Visit the given schema.
@@ -116,7 +116,7 @@ public interface FilterEvaluator {
     }
 
     @Override
-    public boolean shouldPruneSchema(String schemaName, SchemaPlus schema) {
+    public boolean shouldPruneSchema(String schemaName) {
       return false;
     }
 
@@ -170,7 +170,7 @@ public interface FilterEvaluator {
     }
 
     @Override
-    public boolean shouldPruneSchema(String schemaName, SchemaPlus schema) {
+    public boolean shouldPruneSchema(String schemaName) {
       Map<String, String> recordValues = ImmutableMap.of(
         CATS_COL_CATALOG_NAME, IS_CATALOG_NAME,
         SHRD_COL_TABLE_SCHEMA, schemaName,

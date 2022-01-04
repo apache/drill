@@ -60,7 +60,7 @@ public class DynamicRootSchema extends DynamicSchema {
 
   /** Creates a root schema. */
   DynamicRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider) {
-    super(null, new RootSchema(), ROOT_SCHEMA_NAME);
+    super(null, new RootSchema(storages), ROOT_SCHEMA_NAME);
     ((RootSchema)this.schema).setDynRootSchema(this);
     this.schemaConfig = schemaConfig;
     this.storages = storages;
