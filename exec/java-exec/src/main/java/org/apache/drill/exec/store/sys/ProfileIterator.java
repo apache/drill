@@ -60,7 +60,6 @@ public abstract class ProfileIterator implements Iterator<Object> {
       return getProfiles(0, maxRecords);
     }
 
-
     /*
       For non-administrators getting profiles by range might not return exact number of requested profiles
       since some extracted profiles may belong to different users.
