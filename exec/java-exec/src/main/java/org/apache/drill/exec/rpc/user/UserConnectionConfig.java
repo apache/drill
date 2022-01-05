@@ -67,7 +67,6 @@ class UserConnectionConfig extends AbstractConnectionConfig {
             maxWrappedSize, RpcConstants.MAX_RECOMMENDED_WRAPPED_SIZE);
       }
       encryptionContext.setMaxWrappedSize(maxWrappedSize);
-
       logger.info("Configured all user connections to require authentication with encryption: {} using: {}",
           encryptionContext.getEncryptionCtxtString(), authProvider.getAllFactoryNames());
     } else if (config.getBoolean(ExecConstants.USER_ENCRYPTION_SASL_ENABLED)) {
@@ -76,16 +75,13 @@ class UserConnectionConfig extends AbstractConnectionConfig {
     } else {
       authEnabled = false;
     }
-    impersonationManager = !config.getBoolean(ExecConstants.IMPERSONATION_ENABLED)
-        ? null
-        : new InboundImpersonationManager();
-
+    impersonationManager = config.getBoolean(ExecConstants.IMPERSONATION_ENABLED)
+        ? new InboundImpersonationManager()
+        : null;
     sslEnabled = config.getBoolean(ExecConstants.USER_SSL_ENABLED);
-
-    if(isSSLEnabled() && isAuthEnabled() && isEncryptionEnabled()){
+    if (isSSLEnabled() && isAuthEnabled() && isEncryptionEnabled()) {
       logger.warn("The server is configured to use both SSL and SASL encryption (only one should be configured).");
     }
-
   }
 
   @Override

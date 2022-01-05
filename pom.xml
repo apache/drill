@@ -46,6 +46,7 @@
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <junit.version>5.7.2</junit.version>
     <junit4.version>4.13.2</junit4.version>
+    <junit.platform.version>1.8.2</junit.platform.version>
     <slf4j.version>1.7.26</slf4j.version>
     <shaded.guava.version>28.2-jre</shaded.guava.version>
     <guava.version>30.1.1-jre</guava.version>
@@ -1140,6 +1141,30 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-suite-api</artifactId>
+      <version>${junit.platform.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-suite-engine</artifactId>
+      <version>${junit.platform.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-engine</artifactId>
+      <version>${junit.platform.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <version>${junit.platform.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -2268,6 +2293,10 @@
               <exclusion>
                 <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.slf4j</groupId>
+                <artifactId>*</artifactId>
               </exclusion>
             </exclusions>
           </dependency>

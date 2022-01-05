@@ -33,6 +33,7 @@
     <phoenix.version>5.1.2</phoenix.version>
     <!-- Keep the 2.4.2 to reduce dependency conflict -->
     <hbase.minicluster.version>2.4.2</hbase.minicluster.version>
+    <jetty.version>9.4.31.v20200723</jetty.version>
   </properties>
   
   <dependencies>
@@ -110,7 +111,7 @@
           <artifactId>commons-logging</artifactId>
           <groupId>commons-logging</groupId>
         </exclusion>
-         <exclusion>
+        <exclusion>
           <groupId>javax.servlet</groupId>
           <artifactId>*</artifactId>
         </exclusion>
@@ -140,6 +141,12 @@
       <groupId>org.apache.phoenix</groupId>
       <artifactId>phoenix-hbase-compat-2.4.0</artifactId>
       <version>${phoenix.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kerby</groupId>
+      <artifactId>kerb-core</artifactId>
+      <version>1.0.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -188,9 +195,76 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-asyncfs</artifactId>
+      <type>test-jar</type>
+      <version>${hbase.minicluster.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs-client</artifactId>
       <version>${hadoop.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minikdc</artifactId>
+      <version>${hadoop.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-testing-util</artifactId>
+      <version>${hbase.minicluster.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-protocol-shaded</artifactId>
+      <version>${hbase.minicluster.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

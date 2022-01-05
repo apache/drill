@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.store.phoenix;
 
-import java.sql.Connection;
+import java.io.IOException;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -48,7 +50,9 @@ import org.apache.drill.exec.store.phoenix.PhoenixReader.GenericDateDefn;
 import org.apache.drill.exec.store.phoenix.PhoenixReader.GenericDefn;
 import org.apache.drill.exec.store.phoenix.PhoenixReader.GenericTimeDefn;
 import org.apache.drill.exec.store.phoenix.PhoenixReader.GenericTimestampDefn;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.LoggerFactory;
 
 public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
@@ -58,8 +62,6 @@ public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
   private final PhoenixSubScan subScan;
   private CustomErrorContext errorContext;
   private PhoenixReader reader;
-  private Connection conn;
-  private PreparedStatement pstmt;
   private ResultSet results;
   private ResultSetMetaData meta;
   private ColumnDefn[] columns;
@@ -71,58 +73,65 @@ public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
 
   @Override
   public boolean open(SchemaNegotiator negotiator) {
-    try {
+    UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
+    return ugi.doAs((PrivilegedAction<Boolean>) () -> {
       errorContext = negotiator.parentErrorContext();
-      conn = subScan.getPlugin().getDataSource().getConnection();
-      pstmt = conn.prepareStatement(subScan.getSql());
-      results = pstmt.executeQuery();
-      meta = pstmt.getMetaData();
-    } catch (SQLException e) {
-      throw UserException
-              .dataReadError(e)
-              .message("Failed to execute the phoenix sql query. " + e.getMessage())
-              .addContext(errorContext)
-              .build(logger);
-    }
-    try {
-      negotiator.tableSchema(defineMetadata(), true);
-      reader = new PhoenixReader(negotiator.build(), columns, results);
-      bindColumns(reader.getStorage());
-    } catch (SQLException e) {
-      throw UserException
-              .dataReadError(e)
-              .message("Failed to get type of columns from metadata. " + e.getMessage())
-              .addContext(errorContext)
-              .build(logger);
-    }
-    watch = Stopwatch.createStarted();
-    return true;
+      try {
+        errorContext = negotiator.parentErrorContext();
+        PreparedStatement pstmt =
+          subScan.getPlugin().getDataSource(negotiator.userName()).getConnection().prepareStatement(subScan.getSql());
+        results = pstmt.executeQuery();
+        meta = pstmt.getMetaData();
+      } catch (SQLException e) {
+        throw UserException
+          .dataReadError(e)
+          .message("Failed to execute the phoenix sql query. " + e.getMessage())
+          .addContext(errorContext)
+          .build(logger);
+      }
+      try {
+        negotiator.tableSchema(defineMetadata(), true);
+        reader = new PhoenixReader(negotiator.build(), columns, results);
+        bindColumns(reader.getStorage());
+      } catch (SQLException e) {
+        throw UserException
+          .dataReadError(e)
+          .message("Failed to get type of columns from metadata. " + e.getMessage())
+          .addContext(errorContext)
+          .build(logger);
+      }
+      watch = Stopwatch.createStarted();
+      return true;
+    });
   }
 
   @Override
   public boolean next() {
+    UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
     try {
-      while(!reader.getStorage().isFull()) {
-        if (!reader.processRow()) { // return true if one row is processed.
-          watch.stop();
-          logger.debug("Phoenix fetch total record numbers : {}", reader.getRowCount());
-          return false; // the EOF is reached.
+      return ugi.doAs((PrivilegedExceptionAction<Boolean>) () -> {
+        while (!reader.getStorage().isFull()) {
+          if (!reader.processRow()) { // return true if one row is processed.
+            watch.stop();
+            logger.debug("Phoenix fetch total record numbers : {}", reader.getRowCount());
+            return false; // the EOF is reached.
+          }
         }
-      }
-      return true; // batch full but not reached the EOF.
-    } catch (SQLException e) {
+        return true; // batch full but not reached the EOF.
+      });
+    } catch (IOException | InterruptedException e) {
       throw UserException
-              .dataReadError(e)
-              .message("Failed to get the data from the result set. " + e.getMessage())
-              .addContext(errorContext)
-              .build(logger);
+        .dataReadError(e)
+        .message("Failed to get the data from the result set. " + e.getMessage())
+        .addContext(errorContext)
+        .build(logger);
     }
   }
 
   @Override
   public void close() {
     logger.debug("Phoenix fetch batch size : {}, took {} ms. ", reader.getBatchCount(), watch.elapsed(TimeUnit.MILLISECONDS));
-    AutoCloseables.closeSilently(results, pstmt, conn);
+    AutoCloseables.closeSilently(results, reader);
   }
 
   private TupleMetadata defineMetadata() throws SQLException {

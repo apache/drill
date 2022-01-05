@@ -66,6 +66,11 @@ public class ClientFixture implements AutoCloseable {
       clientProps = cluster.getClientProps();
     }
 
+    protected ClientBuilder(ClusterFixture cluster, Properties properties) {
+      this.cluster = cluster;
+      clientProps = properties;
+    }
+
     /**
      * Specify an optional client property.
      * @param key property name

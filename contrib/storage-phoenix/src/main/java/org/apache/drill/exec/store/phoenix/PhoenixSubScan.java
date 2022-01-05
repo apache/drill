@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.PlanStringBuilder;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -47,20 +46,21 @@ public class PhoenixSubScan extends AbstractBase implements SubScan {
 
   @JsonCreator
   public PhoenixSubScan(
+      @JsonProperty("userName") String userName,
       @JsonProperty("sql") String sql,
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("scanSpec") PhoenixScanSpec scanSpec,
       @JsonProperty("config") StoragePluginConfig config,
       @JacksonInject StoragePluginRegistry registry) {
-    super("no-user");
+    super(userName);
     this.sql = sql;
     this.columns = columns;
     this.scanSpec = scanSpec;
     this.plugin = registry.resolve(config, PhoenixStoragePlugin.class);
   }
 
-  public PhoenixSubScan(String sql, List<SchemaPath> columns, PhoenixScanSpec scanSpec, PhoenixStoragePlugin plugin) {
-    super("no-user");
+  public PhoenixSubScan(String userName, String sql, List<SchemaPath> columns, PhoenixScanSpec scanSpec, PhoenixStoragePlugin plugin) {
+    super(userName);
     this.sql = sql;
     this.columns = columns;
     this.scanSpec = scanSpec;
@@ -98,8 +98,8 @@ public class PhoenixSubScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
-    return new PhoenixSubScan(sql, columns, scanSpec, plugin);
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
+    return new PhoenixSubScan(userName, sql, columns, scanSpec, plugin);
   }
 
   @Override

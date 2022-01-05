@@ -33,6 +33,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 import org.apache.drill.exec.util.FileSystemUtil;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.Metastore;
 import org.apache.drill.metastore.components.tables.BasicTablesRequests;
@@ -45,8 +46,10 @@ import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -181,22 +184,25 @@ public interface RecordCollector {
     @Override
     public List<Records.Column> columns(String schemaPath, SchemaPlus schema) {
       AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
-      List<Records.Column> records = new ArrayList<>();
-      for (Pair<String, ? extends Table> tableNameToTable : drillSchema.getTablesByNames(schema.getTableNames())) {
-        String tableName = tableNameToTable.getKey();
-        Table table = tableNameToTable.getValue();
-        Schema.TableType tableType = table.getJdbcTableType();
+      UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
+      return ugi.doAs((PrivilegedAction<List<Records.Column>>) () -> {
+        List<Records.Column> records = new ArrayList<>();
+        for (Pair<String, ? extends Table> tableNameToTable : drillSchema.getTablesByNames(schema.getTableNames())) {
+          String tableName = tableNameToTable.getKey();
+          Table table = tableNameToTable.getValue();
+          Schema.TableType tableType = table.getJdbcTableType();
 
-        if (filterEvaluator.shouldVisitTable(schemaPath, tableName, tableType)) {
-          RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl(DRILL_REL_DATATYPE_SYSTEM));
-          for (RelDataTypeField field : tableRow.getFieldList()) {
-            if (filterEvaluator.shouldVisitColumn(schemaPath, tableName, field.getName())) {
-              records.add(new Records.Column(IS_CATALOG_NAME, schemaPath, tableName, field));
+          if (filterEvaluator.shouldVisitTable(schemaPath, tableName, tableType)) {
+            RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl(DRILL_REL_DATATYPE_SYSTEM));
+            for (RelDataTypeField field : tableRow.getFieldList()) {
+              if (filterEvaluator.shouldVisitColumn(schemaPath, tableName, field.getName())) {
+                records.add(new Records.Column(IS_CATALOG_NAME, schemaPath, tableName, field));
+              }
             }
           }
         }
-      }
-      return records;
+        return records;
+      });
     }
 
     @Override

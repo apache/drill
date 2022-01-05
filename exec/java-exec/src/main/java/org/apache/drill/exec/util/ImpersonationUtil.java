@@ -99,8 +99,6 @@ public class ImpersonationUtil {
       }
       return true;
     }
-
-
   }
   /**
    * Create and return proxy user {@link org.apache.hadoop.security.UserGroupInformation} of operator owner if operator
@@ -127,7 +125,7 @@ public class ImpersonationUtil {
   }
 
   /**
-   * Create and return proxy user {@link org.apache.hadoop.security.UserGroupInformation} for give user name.
+   * Create and return proxy user {@link org.apache.hadoop.security.UserGroupInformation} for given user name.
    *
    * @param proxyUserName Proxy user name (must be valid)
    */

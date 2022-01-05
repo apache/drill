@@ -38,7 +38,7 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.writer.ScalarArrayWriter;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
-public class PhoenixReader {
+public class PhoenixReader implements AutoCloseable {
 
   private final RowSetLoader writer;
   private final ColumnDefn[] columns;
@@ -102,6 +102,11 @@ public class PhoenixReader {
     COLUMN_TYPE_MAP.put(Types.VARBINARY, MinorType.VARBINARY); // Raw variable length byte array.
     // boolean
     COLUMN_TYPE_MAP.put(Types.BOOLEAN, MinorType.BIT);
+  }
+
+  @Override
+  public void close() throws Exception {
+    results.close();
   }
 
   protected abstract static class ColumnDefn {

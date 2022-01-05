@@ -50,20 +50,21 @@ public class PhoenixGroupScan extends AbstractGroupScan {
 
   @JsonCreator
   public PhoenixGroupScan(
+      @JsonProperty("userName") String userName,
       @JsonProperty("sql") String sql,
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("scanSpec") PhoenixScanSpec scanSpec,
       @JsonProperty("config") PhoenixStoragePluginConfig config,
       @JacksonInject StoragePluginRegistry plugins) {
-    super("no-user");
+    super(userName);
     this.sql = sql;
     this.columns = columns;
     this.scanSpec = scanSpec;
     this.plugin = plugins.resolve(config, PhoenixStoragePlugin.class);
   }
 
-  public PhoenixGroupScan(PhoenixScanSpec scanSpec, PhoenixStoragePlugin plugin) {
-    super("no-user");
+  public PhoenixGroupScan(String userName, PhoenixScanSpec scanSpec, PhoenixStoragePlugin plugin) {
+    super(userName);
     this.sql = scanSpec.getSql();
     this.columns = ALL_COLUMNS;
     this.scanSpec = scanSpec;
@@ -86,8 +87,9 @@ public class PhoenixGroupScan extends AbstractGroupScan {
     this.plugin = scan.plugin;
   }
 
-  public PhoenixGroupScan(String sql, List<SchemaPath> columns, PhoenixScanSpec scanSpec, PhoenixStoragePlugin plugin) {
-    super("no-user");
+  public PhoenixGroupScan(String user, String sql, List<SchemaPath> columns, PhoenixScanSpec scanSpec,
+                          PhoenixStoragePlugin plugin) {
+    super(user);
     this.sql = sql;
     this.columns = columns;
     this.scanSpec = scanSpec;
@@ -124,7 +126,7 @@ public class PhoenixGroupScan extends AbstractGroupScan {
 
   @Override
   public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
-    return new PhoenixSubScan(sql, columns, scanSpec, plugin);
+    return new PhoenixSubScan(userName, sql, columns, scanSpec, plugin);
   }
 
   @Override
