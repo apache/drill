@@ -95,7 +95,7 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
         .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
         .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
-        .configProperty(ExecConstants.AUTHENTICATION_MECHANISMS, Lists.newArrayList("kerberos"))
+        .configNonStringProperty(ExecConstants.AUTHENTICATION_MECHANISMS, Lists.newArrayList("kerberos"))
         .configProperty(ExecConstants.IMPERSONATION_ENABLED, true)
         .configProperty(ExecConstants.BIT_AUTHENTICATION_ENABLED, true)
         .configProperty(ExecConstants.BIT_AUTHENTICATION_MECHANISM, "kerberos")

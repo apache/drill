@@ -115,11 +115,22 @@ public class ClusterFixtureBuilder {
   /**
    * Add an additional boot-time property for the embedded Drillbit.
    * @param key config property name
-   * @param value property value
+   * @param value String property value
    * @return this builder
    */
   public ClusterFixtureBuilder configProperty(String key, Object value) {
     configBuilder.put(key, value.toString());
+    return this;
+  }
+
+  /**
+   * Non-string {@link #configProperty}
+   * @param key config property name
+   * @param value property value
+   * @return this builder
+   */
+  public ClusterFixtureBuilder configNonStringProperty(String key, Object value) {
+    configBuilder.put(key, value);
     return this;
   }
 

@@ -62,6 +62,7 @@ public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
   private final PhoenixSubScan subScan;
   private CustomErrorContext errorContext;
   private PhoenixReader reader;
+  private PreparedStatement pstmt;
   private ResultSet results;
   private ResultSetMetaData meta;
   private ColumnDefn[] columns;
@@ -77,8 +78,7 @@ public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
     return ugi.doAs((PrivilegedAction<Boolean>) () -> {
       errorContext = negotiator.parentErrorContext();
       try {
-        errorContext = negotiator.parentErrorContext();
-        PreparedStatement pstmt =
+        pstmt =
           subScan.getPlugin().getDataSource(negotiator.userName()).getConnection().prepareStatement(subScan.getSql());
         results = pstmt.executeQuery();
         meta = pstmt.getMetaData();
@@ -86,7 +86,7 @@ public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
         throw UserException
           .dataReadError(e)
           .message("Failed to execute the phoenix sql query. " + e.getMessage())
-          .addContext(errorContext)
+          .addContext(negotiator.parentErrorContext())
           .build(logger);
       }
       try {
@@ -131,7 +131,7 @@ public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
   @Override
   public void close() {
     logger.debug("Phoenix fetch batch size : {}, took {} ms. ", reader.getBatchCount(), watch.elapsed(TimeUnit.MILLISECONDS));
-    AutoCloseables.closeSilently(results, reader);
+    AutoCloseables.closeSilently(results, pstmt, reader);
   }
 
   private TupleMetadata defineMetadata() throws SQLException {
