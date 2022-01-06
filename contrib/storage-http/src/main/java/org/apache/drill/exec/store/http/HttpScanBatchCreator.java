@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.http;
 
+import okhttp3.HttpUrl;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -32,11 +33,19 @@ import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
+import org.apache.drill.exec.store.http.paginator.OffsetPaginator;
+import org.apache.drill.exec.store.http.paginator.PagePaginator;
+import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
+
+  private static final Logger logger = LoggerFactory.getLogger(HttpScanBatchCreator.class);
 
   @Override
   public CloseableRecordBatch getBatch(ExecutorFragmentContext context, HttpSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
@@ -74,15 +83,60 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
     ReaderFactory readerFactory = new HttpReaderFactory(subScan);
     builder.setReaderFactory(readerFactory);
     builder.nullType(Types.optional(MinorType.VARCHAR));
+
+    // TODO Add page size limit here to ScanFramework Builder
+
     return builder;
   }
 
   private static class HttpReaderFactory implements ReaderFactory {
     private final HttpSubScan subScan;
+    private final HttpPaginatorConfig paginatorConfig;
+    private Paginator paginator;
+
     private int count;
 
     public HttpReaderFactory(HttpSubScan subScan) {
       this.subScan = subScan;
+
+      paginatorConfig = subScan.tableSpec().connectionConfig().paginator();
+      if (paginatorConfig != null) {
+        // TODO Handle the case of no limit queries in pagination
+        logger.debug("Creating paginator using config: {}", paginatorConfig);
+
+        // Initialize the paginator and generate the base URLs
+        this.paginator = getPaginator();
+      }
+    }
+
+    private Paginator getPaginator() {
+      HttpUrl.Builder urlBuilder;
+      HttpUrl rawUrl = HttpUrl.parse(subScan.tableSpec().connectionConfig().url());
+
+      // If the URL is not parsable or otherwise invalid
+      if (rawUrl == null) {
+        throw UserException.validationError()
+          .message("Invalid URL: " + subScan.tableSpec().connectionConfig().url())
+          .build(logger);
+      }
+
+      urlBuilder = rawUrl.newBuilder();
+
+      Paginator paginator = null;
+      if (paginatorConfig.getMethodType() == PaginatorMethod.OFFSET) {
+        paginator = new OffsetPaginator(urlBuilder,
+          subScan.maxRecords(),
+          paginatorConfig.pageSize(),
+          paginatorConfig.limitParam(),
+          paginatorConfig.offsetParam());
+      } else if (paginatorConfig.getMethodType() == PaginatorMethod.PAGE) {
+        paginator = new PagePaginator(urlBuilder,
+          subScan.maxRecords(),
+          paginatorConfig.pageSize(),
+          paginatorConfig.pageParam(),
+          paginatorConfig.pageSizeParam());
+      }
+      return paginator;
     }
 
     @Override
@@ -90,12 +144,14 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
     @Override
     public ManagedReader<SchemaNegotiator> next() {
+      logger.debug("Getting new batch reader.");
 
       // Get the expected input type
       String inputType = subScan.tableSpec().connectionConfig().inputType();
 
       // Only a single scan (in a single thread)
-      if (count++ == 0) {
+      if (count++ == 0 && paginatorConfig == null) {
+        // Case for no pagination
         if (inputType.equalsIgnoreCase(HttpApiConfig.CSV_INPUT_FORMAT)) {
           return new HttpCSVBatchReader(subScan);
         } else if (inputType.equalsIgnoreCase(HttpApiConfig.XML_INPUT_FORMAT)) {
@@ -103,7 +159,25 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
         } else {
           return new HttpBatchReader(subScan);
         }
+      } else if (paginatorConfig != null) {
+        /*
+        * If the paginator is not null and generated a list of URLs, we create
+        * a new batch reader for each URL.  In the future, this could be parallelized in
+        * the group scan such that the calls could be sent to different drillbits.
+        */
+        if (!paginator.hasMore()) {
+          return null;
+        }
+
+        if (inputType.equalsIgnoreCase(HttpApiConfig.CSV_INPUT_FORMAT)) {
+          return new HttpCSVBatchReader(subScan, paginator);
+        } else if (inputType.equalsIgnoreCase(HttpApiConfig.XML_INPUT_FORMAT)) {
+          return new HttpXMLBatchReader(subScan, paginator);
+        } else {
+          return new HttpBatchReader(subScan, paginator);
+        }
       }
+      logger.debug("No new batch reader.");
       return null;
     }
   }

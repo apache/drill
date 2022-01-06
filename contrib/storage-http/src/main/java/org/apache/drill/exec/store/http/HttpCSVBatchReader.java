@@ -33,9 +33,12 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
+import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
@@ -52,10 +55,21 @@ public class HttpCSVBatchReader extends HttpBatchReader {
   private SchemaBuilder builder;
   private RowSetLoader rowWriter;
   private InputStream inStream;
+  private ResultSetLoader resultLoader;
 
+  private static final Logger logger = LoggerFactory.getLogger(HttpCSVBatchReader.class);
 
   public HttpCSVBatchReader(HttpSubScan subScan) {
     super(subScan);
+    this.subScan = subScan;
+    this.maxRecords = subScan.maxRecords();
+
+    this.csvSettings = new CsvParserSettings();
+    csvSettings.setLineSeparatorDetectionEnabled(true);
+  }
+
+  public HttpCSVBatchReader(HttpSubScan subScan, Paginator paginator) {
+    super(subScan, paginator);
     this.subScan = subScan;
     this.maxRecords = subScan.maxRecords();
 
@@ -99,7 +113,7 @@ public class HttpCSVBatchReader extends HttpBatchReader {
     builder = new SchemaBuilder();
     TupleMetadata drillSchema = buildSchema();
     negotiator.tableSchema(drillSchema, true);
-    ResultSetLoader resultLoader = negotiator.build();
+    resultLoader = negotiator.build();
 
     // Add implicit columns
     if (implicitColumnsAreProjected()) {
@@ -121,7 +135,6 @@ public class HttpCSVBatchReader extends HttpBatchReader {
       if (rowWriter.limitReached(maxRecords)) {
         return false;
       }
-
       if (!processRow()) {
         return false;
       }
@@ -131,6 +144,7 @@ public class HttpCSVBatchReader extends HttpBatchReader {
 
   @Override
   public void close() {
+    logger.debug("Closing URL: {}", baseUrl);
     AutoCloseables.closeSilently(inStream);
   }
 
@@ -162,6 +176,12 @@ public class HttpCSVBatchReader extends HttpBatchReader {
   private boolean processRow() {
     String[] nextRow = csvReader.parseNext();
     if (nextRow == null) {
+
+      if (paginator != null &&
+        maxRecords < 0 && (resultLoader.totalRowCount()) < paginator.getPageSize()) {
+        logger.debug("Ending CSV pagination: Pages too small");
+        paginator.endPagination();
+      }
       return false;
     }
     rowWriter.start();

@@ -30,6 +30,7 @@ import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
+import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.xml.XMLReader;
 
@@ -44,9 +45,18 @@ public class HttpXMLBatchReader extends HttpBatchReader {
   private final int dataLevel;
   private InputStream inStream;
   private XMLReader xmlReader;
+  private ResultSetLoader resultLoader;
 
   public HttpXMLBatchReader(HttpSubScan subScan) {
     super(subScan);
+    this.subScan = subScan;
+    this.maxRecords = subScan.maxRecords();
+    this.dataLevel = subScan.tableSpec().connectionConfig().xmlDataLevel();
+  }
+
+
+  public HttpXMLBatchReader(HttpSubScan subScan, Paginator paginator) {
+    super(subScan, paginator);
     this.subScan = subScan;
     this.maxRecords = subScan.maxRecords();
     this.dataLevel = subScan.tableSpec().connectionConfig().xmlDataLevel();
@@ -75,6 +85,7 @@ public class HttpXMLBatchReader extends HttpBatchReader {
       .scanDefn(subScan)
       .url(url)
       .tempDir(new File(tempDirPath))
+      .paginator(paginator)
       .proxyConfig(proxySettings(negotiator.drillConfig(), url))
       .errorContext(errorContext)
       .build();
@@ -84,7 +95,7 @@ public class HttpXMLBatchReader extends HttpBatchReader {
     // Initialize the XMLReader the reader
     try {
       xmlReader = new XMLReader(inStream, dataLevel, maxRecords);
-      ResultSetLoader resultLoader = negotiator.build();
+      resultLoader = negotiator.build();
 
       if (implicitColumnsAreProjected()) {
         implicitColumns = new ImplicitColumns(resultLoader.writer());
@@ -107,12 +118,31 @@ public class HttpXMLBatchReader extends HttpBatchReader {
 
   @Override
   public boolean next() {
-    return xmlReader.next();
+    boolean result;
+    try {
+      result = xmlReader.next();
+    } catch (UserException e) {
+      // This covers the case of an empty XML response.  We don't want to throw an
+      // exception, just catch anything and halt execution.  Otherwise, throw the original exception.
+      if (e.getMessage().contains("EOF")) {
+        return false;
+      } else {
+        throw e;
+      }
+    }
+
+    if (paginator != null &&
+      maxRecords < 0 && (resultLoader.totalRowCount()) < paginator.getPageSize()) {
+      logger.debug("Ending XML pagination: Pages too small");
+      paginator.endPagination();
+    }
+
+    return result;
   }
 
   @Override
   public void close() {
     AutoCloseables.closeSilently(inStream);
-    xmlReader.close();
+    AutoCloseables.closeSilently(xmlReader);
   }
 }

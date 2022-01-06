@@ -74,7 +74,7 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
     // existing plugins perform filter push-down at the physical
     // phase, which also works fine if push-down is independent of
     // parallelization.
-    if (FilterPushDownUtils.isFilterPushDownPhase(phase)) {
+    if (FilterPushDownUtils.isFilterPushDownPhase(phase) || phase == PlannerPhase.LOGICAL) {
       return HttpPushDownListener.rulesFor(optimizerContext);
     } else {
       return ImmutableSet.of();

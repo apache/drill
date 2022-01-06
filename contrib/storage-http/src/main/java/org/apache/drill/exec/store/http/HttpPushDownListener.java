@@ -31,6 +31,7 @@ import org.apache.drill.exec.store.base.filter.ExprNode.ColRelOpConstNode;
 import org.apache.drill.exec.store.base.filter.ExprNode.OrNode;
 import org.apache.drill.exec.store.base.filter.FilterPushDownListener;
 import org.apache.drill.exec.store.base.filter.FilterPushDownStrategy;
+import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 
 import java.util.Collections;
@@ -87,10 +88,23 @@ public class HttpPushDownListener implements FilterPushDownListener {
 
     HttpScanPushDownListener(HttpGroupScan groupScan) {
       this.groupScan = groupScan;
+
       // Add fields from config
       if (groupScan.getHttpConfig().params() != null) {
         for (String field : groupScan.getHttpConfig().params()) {
           filterParams.put(field, field);
+        }
+      }
+
+      // Add fields from paginator, if present
+      HttpPaginatorConfig paginator = groupScan.getHttpConfig().paginator();
+      if (paginator != null) {
+        if (paginator.getMethodType() == PaginatorMethod.OFFSET) {
+          filterParams.put(paginator.limitParam(), paginator.limitParam());
+          filterParams.put(paginator.offsetParam(), paginator.offsetParam());
+        } else if (paginator.getMethodType() == PaginatorMethod.PAGE) {
+          filterParams.put(paginator.pageParam(), paginator.pageParam());
+          filterParams.put(paginator.pageSizeParam(), paginator.pageSizeParam());
         }
       }
 

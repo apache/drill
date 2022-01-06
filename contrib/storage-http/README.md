@@ -4,7 +4,7 @@ The HTTP storage plugin lets you query APIs over HTTP/REST. The plugin
 expects JSON responses.
 
 The HTTP plugin is new in Drill 1.18 and is an Alpha feature. It works well, and we
-enourage you to use it and provide feedback. However, we reserve the right to change
+encourage you to use it and provide feedback. However, we reserve the right to change
 the plugin based on that feedback.
 
 ## Configuration
@@ -186,7 +186,7 @@ If your query contains other conditions (`!=`, `<`, etc.) then those conditions 
 in Drill after the REST service returns the data.
 
 Only fields listed in the `params` config filed will become parameters, all other
-experssions are handled within Drill as explained above.
+expressions are handled within Drill as explained above.
 
 At present, Drill requires the values to be literals (constants). Drill does not
 currently allow expressions. That is, the following will not become an HTTP parameter:
@@ -277,6 +277,19 @@ If the `authType` is set to `basic`, `username` and `password` must be set in th
 `username`: The username for basic authentication.
 
 `password`: The password for basic authentication.
+
+#### Limiting Results
+Some APIs support a query parameter which is used to limit the number of results returned by the API.  In this case you can set the `limitQueryParam` config variable to the query parameter name and Drill will automatically include this in your query.  For instance, if you have an API which supports a limit query parameter called `maxRecords` and you set the abovementioned config variable then execute the following query:
+  
+```sql
+SELECT <fields>
+FROM api.limitedApi
+LIMIT 10 
+```  
+Drill will send the following request to your API:
+```
+https://<api>?maxRecords=10
+```
 
 #### errorOn400
 When a user makes HTTP calls, the response code will be from 100-599.  400 series error codes can contain useful information and in some cases you would not want Drill to throw 
@@ -599,7 +612,7 @@ If using a "tail" in the query, verify that the tail is quoted using back-ticks
 as shown in the examples.
 
 Check that the URL is correct. If not, check the plugin configuration properties
-described above to find out why the pieces were assembed as you want.
+described above to find out why the pieces were assembled as you want.
 
 If the query works but delivers unexpected results, check the Drill log file.
 Drill logs a message like the following at the info level when opening the HTTP connection:
