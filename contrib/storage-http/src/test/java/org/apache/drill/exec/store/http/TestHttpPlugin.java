@@ -22,6 +22,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -30,7 +31,6 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
@@ -183,6 +183,22 @@ public class TestHttpPlugin extends ClusterTest {
       .postBody("key1=value1\nkey2=value2")
       .build();
 
+    HttpPaginatorConfig offsetPaginatorForJson = HttpPaginatorConfig.builder()
+      .limitParam("limit")
+      .offsetParam("offset")
+      .method("offset")
+      .pageSize(2)
+      .build();
+
+    HttpApiConfig mockJsonConfigWithPaginator = HttpApiConfig.builder()
+      .url("http://localhost:8091/json")
+      .method("get")
+      .headers(headers)
+      .requireTail(false)
+      .paginator(offsetPaginatorForJson)
+      .inputType("json")
+      .build();
+
     HttpApiConfig mockPostConfigWithoutPostBody = HttpApiConfig.builder()
       .url("http://localhost:8091/")
       .method("POST")
@@ -198,6 +214,15 @@ public class TestHttpPlugin extends ClusterTest {
       .password("pass")
       .dataPath("results")
       .inputType("csv")
+      .build();
+
+    HttpApiConfig mockCsvConfigWithPaginator = HttpApiConfig.builder()
+      .url("http://localhost:8091/csv")
+      .method("get")
+      .paginator(offsetPaginatorForJson)
+      .inputType("csv")
+      .requireTail(false)
+      .dataPath("results")
       .build();
 
     HttpApiConfig mockXmlConfig = HttpApiConfig.builder()
@@ -251,6 +276,8 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
+    configs.put("csv_paginator", mockCsvConfigWithPaginator);
+    configs.put("json_paginator", mockJsonConfigWithPaginator);
     configs.put("sunrise", mockSchema);
     configs.put("mocktable", mockTable);
     configs.put("mockpost", mockPostConfig);
@@ -640,7 +667,23 @@ public class TestHttpPlugin extends ClusterTest {
   }
 
   @Test
-   public void testSerDe() throws Exception {
+   public void testSerDeCSV() throws Exception {
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(
+        new MockResponse().setResponseCode(200)
+          .setBody(TEST_CSV_RESPONSE)
+      );
+
+      String sql = "SELECT COUNT(*) FROM local.mockcsv.`csv?arg1=4` ";
+      String plan = queryBuilder().sql(sql).explainJson();
+      long cnt = queryBuilder().physical(plan).singletonLong();
+      assertEquals("Counts should match", 2L, cnt);
+    }
+  }
+
+  @Test
+  public void testSerDe() throws Exception {
     try (MockWebServer server = startServer()) {
 
       server.enqueue(
@@ -959,6 +1002,17 @@ public class TestHttpPlugin extends ClusterTest {
   }
 
   @Test
+  public void testLimitPushdownWithFilter() throws Exception {
+    String sql = "SELECT sunrise, sunset FROM live.sunrise2 WHERE `date`='2019-10-02' LIMIT 5";
+
+    queryBuilder()
+      .sql(sql)
+      .planMatcher()
+      .include("Limit", "maxRecords=5", "filters=\\{date=2019-10-02\\}")
+      .match();
+  }
+
+  @Test
   public void testSlowResponse() throws Exception {
     try (MockWebServer server = startServer()) {
 
@@ -989,6 +1043,22 @@ public class TestHttpPlugin extends ClusterTest {
       );
 
       String sql = "SELECT * FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      assertNull(results);
+    }
+  }
+
+  @Test
+  public void testZeroByteResponseFromCSV() throws Exception {
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(
+        new MockResponse().setResponseCode(200)
+          .setBody("")
+      );
+
+      String sql = "SELECT * FROM local.mockcsv.`csv?arg1=4`";
 
       RowSet results = client.queryBuilder().sql(sql).rowSet();
       assertNull(results);

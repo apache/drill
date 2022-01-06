@@ -58,7 +58,6 @@ public class HttpApiConfig {
 
   @JsonProperty
   private final String url;
-
   /**
    * Whether this API configuration represents a schema (with the
    * table providing additional parts of the URL), or if this
@@ -101,6 +100,8 @@ public class HttpApiConfig {
   @JsonProperty
   private final int xmlDataLevel;
   @JsonProperty
+  private final String limitQueryParam;
+  @JsonProperty
   private final boolean errorOn400;
 
   // Enables the user to configure JSON options at the connection level rather than globally.
@@ -112,6 +113,9 @@ public class HttpApiConfig {
   private final boolean verifySSLCert;
   @Getter(AccessLevel.NONE)
   private final CredentialsProvider credentialsProvider;
+  @JsonProperty
+  private final HttpPaginatorConfig paginator;
+
   @Getter(AccessLevel.NONE)
   protected boolean directCredentials;
 
@@ -172,6 +176,9 @@ public class HttpApiConfig {
     this.errorOn400 = builder.errorOn400;
     this.credentialsProvider = CredentialProviderUtils.getCredentialsProvider(builder.userName, builder.password, builder.credentialsProvider);
     this.directCredentials = builder.credentialsProvider == null;
+
+    this.limitQueryParam = builder.limitQueryParam;
+    this.paginator = builder.paginator;
   }
 
   @JsonProperty

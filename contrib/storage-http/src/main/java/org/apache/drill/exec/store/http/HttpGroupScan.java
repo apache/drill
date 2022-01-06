@@ -228,8 +228,14 @@ public class HttpGroupScan extends AbstractGroupScan {
           1E9, 1E112, 1E12);
     }
 
-    // No good estimates at all, just make up something.
+    // No good estimates at all, just make up something.  Make it smaller if there is a limit.
     double estRowCount = 10_000;
+    // If the limit is greater than 10_000 then use a smaller number so the limit is pushed down.
+    if (maxRecords >= -1) {
+      estRowCount = Math.min(maxRecords, 10_000);
+      estRowCount = estRowCount / 2;
+    }
+
 
     // NOTE this was important! if the predicates don't make the query more
     // efficient they won't get pushed down

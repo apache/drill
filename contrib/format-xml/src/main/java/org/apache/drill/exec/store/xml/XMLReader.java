@@ -41,13 +41,14 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
+import java.io.Closeable;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Stack;
 
-public class XMLReader {
+public class XMLReader implements Closeable {
   private static final Logger logger = LoggerFactory.getLogger(XMLReader.class);
   private static final String ATTRIBUTE_MAP_NAME = "attributes";
 

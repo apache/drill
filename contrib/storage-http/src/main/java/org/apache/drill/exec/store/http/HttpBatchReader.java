@@ -33,11 +33,13 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
+import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,13 +56,27 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private final HttpSubScan subScan;
   private final int maxRecords;
+  protected final Paginator paginator;
+  protected String baseUrl;
   private JsonLoader jsonLoader;
-  private int recordCount;
+  private ResultSetLoader resultSetLoader;
+
   protected ImplicitColumns implicitColumns;
+
 
   public HttpBatchReader(HttpSubScan subScan) {
     this.subScan = subScan;
     this.maxRecords = subScan.maxRecords();
+    this.baseUrl = subScan.tableSpec().connectionConfig().url();
+    this.paginator = null;
+  }
+
+  public HttpBatchReader(HttpSubScan subScan, Paginator paginator) {
+    this.subScan = subScan;
+    this.maxRecords = subScan.maxRecords();
+    this.paginator = paginator;
+    this.baseUrl = paginator.next();
+    logger.debug("Batch reader with URL: {}", this.baseUrl);
   }
 
   @Override
@@ -72,6 +88,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         .getString(ExecConstants.DRILL_TMP_DIR);
 
     HttpUrl url = buildUrl();
+    logger.debug("Final URL: {}", url);
 
     CustomErrorContext errorContext = new ChildErrorContext(negotiator.parentErrorContext()) {
       @Override
@@ -92,11 +109,10 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       .build();
 
     // JSON loader setup
-    ResultSetLoader loader = negotiator.build();
 
-
+    resultSetLoader = negotiator.build();
     if (implicitColumnsAreProjected()) {
-      implicitColumns = new ImplicitColumns(loader.writer());
+      implicitColumns = new ImplicitColumns(resultSetLoader.writer());
       buildImplicitColumns();
     }
 
@@ -106,13 +122,19 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     try {
       JsonLoaderBuilder jsonBuilder = new JsonLoaderBuilder()
           .implicitFields(implicitColumns)
-          .resultSetLoader(loader)
+          .resultSetLoader(resultSetLoader)
+          .standardOptions(negotiator.queryOptions())
+          .maxRows(maxRecords)
           .dataPath(subScan.tableSpec().connectionConfig().dataPath())
           .errorContext(errorContext)
           .fromStream(inStream);
 
       if (subScan.tableSpec().connectionConfig().jsonOptions() != null) {
-        JsonLoaderOptions jsonOptions = subScan.tableSpec().connectionConfig().jsonOptions().getJsonOptions(negotiator.queryOptions());
+        JsonLoaderOptions jsonOptions = subScan
+          .tableSpec()
+          .connectionConfig()
+          .jsonOptions()
+          .getJsonOptions(negotiator.queryOptions());
         jsonBuilder.options(jsonOptions);
       } else {
         jsonBuilder.standardOptions(negotiator.queryOptions());
@@ -126,7 +148,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
       throw t;
     }
 
-    return true; // Please read the first batch
+    return true;
   }
 
   protected void buildImplicitColumns() {
@@ -163,8 +185,8 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   }
 
   protected HttpUrl buildUrl() {
+    logger.debug("Building URL from {}", baseUrl);
     HttpApiConfig apiConfig = subScan.tableSpec().connectionConfig();
-    String baseUrl = apiConfig.url();
 
     // Append table name, if available.
     if (subScan.tableSpec().tableName() != null) {
@@ -180,6 +202,12 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         subScan.filters() != null) {
       addFilters(urlBuilder, apiConfig.params(), subScan.filters());
     }
+
+    // Add limit parameter if defined and limit set
+    if (! Strings.isNullOrEmpty(apiConfig.limitQueryParam()) && maxRecords > 0) {
+      urlBuilder.addQueryParameter(apiConfig.limitQueryParam(), String.valueOf(maxRecords));
+    }
+
     return urlBuilder.build();
   }
 
@@ -189,6 +217,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
    */
   protected void addFilters(Builder urlBuilder, List<String> params,
       Map<String, String> filters) {
+
     for (String param : params) {
       String value = filters.get(param);
       if (value != null) {
@@ -216,13 +245,15 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
   @Override
   public boolean next() {
-    recordCount++;
+    boolean result = jsonLoader.readBatch();
 
-    // Stop after the limit has been reached
-    if (maxRecords >= 1 && recordCount > maxRecords) {
-      return false;
+    // Allows limitless pagination.
+    if (paginator != null &&
+      maxRecords < 0 && (resultSetLoader.totalRowCount()) < paginator.getPageSize()) {
+      logger.debug("Partially filled page received, ending pagination");
+      paginator.endPagination();
     }
-    return jsonLoader.readBatch();
+    return result;
   }
 
   @Override

@@ -36,6 +36,7 @@ import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.HttpSubScan;
+import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.jetbrains.annotations.NotNull;
 
@@ -77,21 +78,24 @@ public class SimpleHttp {
   private final File tempDir;
   private final HttpProxyConfig proxyConfig;
   private final CustomErrorContext errorContext;
+  private final Paginator paginator;
   private final HttpUrl url;
   private String responseMessage;
   private int responseCode;
   private String responseProtocol;
   private String responseURL;
 
+
   @lombok.Builder
   public SimpleHttp(HttpSubScan scanDefn, HttpUrl url, File tempDir,
-    HttpProxyConfig proxyConfig, CustomErrorContext errorContext) {
+    HttpProxyConfig proxyConfig, CustomErrorContext errorContext, Paginator paginator) {
     this.scanDefn = scanDefn;
     this.url = url;
     this.tempDir = tempDir;
     this.proxyConfig = proxyConfig;
     this.errorContext = errorContext;
     this.client = setupHttpClient();
+    this.paginator = paginator;
   }
 
   /**
@@ -235,6 +239,13 @@ public class SimpleHttp {
       responseCode = response.code();
       responseProtocol = response.protocol().toString();
       responseURL = response.request().url().toString();
+
+      // Case for pagination without limit
+      if (paginator != null && (
+        response.code() != 200 || response.body() == null ||
+        response.body().contentLength() == 0)) {
+        paginator.endPagination();
+      }
 
       // If the request is unsuccessful, throw a UserException
       if (!isSuccessful(responseCode)) {

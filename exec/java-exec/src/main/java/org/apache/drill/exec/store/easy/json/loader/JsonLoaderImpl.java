@@ -298,6 +298,9 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
           implicitFields.writeImplicitColumns();
         }
         rowWriter.save();
+      } else if (rowWriter.limitReached(maxRows)) {
+        eof = true;
+        break;
       } else {
         // Special case for empty data sets to still record implicit columns
         if (implicitFields != null) {

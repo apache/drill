@@ -35,7 +35,7 @@ public class ImplicitColumnUtils {
 
   /**
    * This class represents an implicit column in a dataset.  These columns are typically used for metadata that is consistent
-   * across an entire dataset.  A filename for example, or HTTP response codes.  It is good practice to name
+   * across an entire dataset.  A filename for example, or HTTP response codes.  It is a good practice to name
    * implicit fields with an underscore so that these field names do not conflict with fields from the user's
    * data.  For example _http_response_code.
    *
