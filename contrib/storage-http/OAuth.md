@@ -49,7 +49,6 @@ They are:
 * `scope`:  The scope of your access token.  This will be provided in your API documentation.
 
 
-
 ```json
 "oauthConfig": {
   "clientID": "<Your client ID>",

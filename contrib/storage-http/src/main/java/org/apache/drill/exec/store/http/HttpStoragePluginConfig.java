@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 
 @JsonTypeName(HttpStoragePluginConfig.NAME)
-public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig {
+public class HttpStoragePluginConfig extends Abstract  SecuredStoragePluginConfig {
   private static final Logger logger = LoggerFactory.getLogger(HttpStoragePluginConfig.class);
   public static final String NAME = "http";
   public final Map<String, HttpApiConfig> connections;
@@ -65,7 +65,14 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
                                  @JsonProperty("oAuthConfig") HttpOAuthConfig oAuthConfig,
                                  @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider
                                  ) {
-    super(CredentialProviderUtils.getCredentialsProvider(normalize(proxyUsername), normalize(proxyPassword), credentialsProvider),
+    super(CredentialProviderUtils.getCredentialsProvider(
+        oAuthConfig.clientID(),
+        oAuthConfig.clientSecret(),
+        oAuthConfig.getAccessToken(),
+        oAuthConfig.getRefreshToken(),
+        normalize(proxyUsername),
+        normalize(proxyPassword),
+        credentialsProvider),
         credentialsProvider == null);
     this.cacheResults = cacheResults != null && cacheResults;
 

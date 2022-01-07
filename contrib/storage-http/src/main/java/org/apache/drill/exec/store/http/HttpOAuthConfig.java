@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.http;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -29,7 +30,9 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.exec.store.security.OAuthTokenCredentials;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -91,7 +94,7 @@ public class HttpOAuthConfig {
     this.accessTokenPath = that.accessTokenPath;
     this.generateCSRFToken = that.generateCSRFToken;
     this.scope = that.scope;
-    this.tokens = tokens;
+    this.tokens = tokens == null ? new HashMap<>() : tokens;
   }
 
   private HttpOAuthConfig(HttpOAuthConfig.HttpOAuthConfigBuilder builder) {
@@ -122,6 +125,24 @@ public class HttpOAuthConfig {
       .field("generateCSRFToken", generateCSRFToken)
       .field("tokens", tokens.keySet())
       .toString();
+  }
+
+  @JsonIgnore
+  public String getAccessToken() {
+    if (tokens != null && tokens.containsKey(OAuthTokenCredentials.ACCESS_TOKEN)) {
+      return tokens.get(OAuthTokenCredentials.ACCESS_TOKEN);
+    } else {
+      return null;
+    }
+  }
+
+  @JsonIgnore
+  public String getRefreshToken() {
+    if (tokens != null && tokens.containsKey(OAuthTokenCredentials.REFRESH_TOKEN)) {
+      return tokens.get(OAuthTokenCredentials.REFRESH_TOKEN);
+    } else {
+      return null;
+    }
   }
 
   @JsonPOJOBuilder(withPrefix = "")

@@ -58,6 +58,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginNotFoundException;
 import org.apache.drill.exec.store.http.oauth.OAuthUtils;
+import org.apache.drill.exec.store.security.OAuthTokenCredentials;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import org.slf4j.Logger;
@@ -200,6 +201,8 @@ public class StorageResources {
     try {
       if (storage.getPlugin(name).getConfig().getClass().getSimpleName().equalsIgnoreCase("HttpStoragePluginConfig")) {
         AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) storage.getPlugin(name).getConfig();
+        OAuthTokenCredentials creds = new OAuthTokenCredentials(securedStoragePluginConfig.getCredentialsProvider());
+
 
         // Now exchange the authorization token for an access token
         Builder builder = new OkHttpClient.Builder();

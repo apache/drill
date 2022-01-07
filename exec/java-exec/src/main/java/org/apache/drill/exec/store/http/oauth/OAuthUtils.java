@@ -26,6 +26,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.store.security.OAuthTokenCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,9 +59,9 @@ public class OAuthUtils {
   public static RequestBody getPostResponseForTokenRefresh(CredentialsProvider credentialsProvider) {
     return new FormBody.Builder()
       .add("grant_type", "refresh_token")
-      .add("client_id", credentialsProvider.getCredentials().get("clientID"))
-      .add("client_secret", credentialsProvider.getCredentials().get("clientSecret"))
-      .add("refresh_token", credentialsProvider.getCredentials().get("refreshToken"))
+      .add("client_id", credentialsProvider.getCredentials().get(OAuthTokenCredentials.CLIENT_ID))
+      .add("client_secret", credentialsProvider.getCredentials().get(OAuthTokenCredentials.CLIENT_SECRET))
+      .add("refresh_token", credentialsProvider.getCredentials().get(OAuthTokenCredentials.REFRESH_TOKEN))
       .build();
   }
 
@@ -161,7 +162,6 @@ public class OAuthUtils {
       throw UserException.connectionError()
         .message("Error refreshing access OAuth2 access token. " + e.getMessage())
         .build(logger);
-
     }
   }
 }
