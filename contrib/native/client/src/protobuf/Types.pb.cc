@@ -14,26 +14,30 @@
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
+
+PROTOBUF_PRAGMA_INIT_SEG
 namespace common {
-class MajorTypeDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<MajorType> _instance;
-} _MajorType_default_instance_;
+constexpr MajorType::MajorType(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : sub_type_()
+  , minor_type_(0)
+
+  , mode_(0)
+
+  , width_(0)
+  , precision_(0)
+  , scale_(0)
+  , timezone_(0){}
+struct MajorTypeDefaultTypeInternal {
+  constexpr MajorTypeDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~MajorTypeDefaultTypeInternal() {}
+  union {
+    MajorType _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT MajorTypeDefaultTypeInternal _MajorType_default_instance_;
 }  // namespace common
-static void InitDefaultsscc_info_MajorType_Types_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::common::_MajorType_default_instance_;
-    new (ptr) ::common::MajorType();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::common::MajorType::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_MajorType_Types_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_MajorType_Types_2eproto}, {}};
-
 static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_Types_2eproto[1];
 static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_Types_2eproto[2];
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_Types_2eproto = nullptr;
@@ -92,22 +96,19 @@ const char descriptor_table_protodef_Types_2eproto[] PROTOBUF_SECTION_VARIABLE(p
   "\002B-\n\035org.apache.drill.common.typesB\nType"
   "ProtosH\001"
   ;
-static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_Types_2eproto_deps[1] = {
-};
-static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_Types_2eproto_sccs[1] = {
-  &scc_info_MajorType_Types_2eproto.base,
-};
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_Types_2eproto_once;
-static bool descriptor_table_Types_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_Types_2eproto = {
-  &descriptor_table_Types_2eproto_initialized, descriptor_table_protodef_Types_2eproto, "Types.proto", 888,
-  &descriptor_table_Types_2eproto_once, descriptor_table_Types_2eproto_sccs, descriptor_table_Types_2eproto_deps, 1, 0,
+  false, false, 888, descriptor_table_protodef_Types_2eproto, "Types.proto", 
+  &descriptor_table_Types_2eproto_once, nullptr, 0, 1,
   schemas, file_default_instances, TableStruct_Types_2eproto::offsets,
-  file_level_metadata_Types_2eproto, 1, file_level_enum_descriptors_Types_2eproto, file_level_service_descriptors_Types_2eproto,
+  file_level_metadata_Types_2eproto, file_level_enum_descriptors_Types_2eproto, file_level_service_descriptors_Types_2eproto,
 };
+PROTOBUF_ATTRIBUTE_WEAK const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable* descriptor_table_Types_2eproto_getter() {
+  return &descriptor_table_Types_2eproto;
+}
 
 // Force running AddDescriptors() at dynamic initialization time.
-static bool dynamic_init_dummy_Types_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_Types_2eproto), true);
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY static ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptorsRunner dynamic_init_dummy_Types_2eproto(&descriptor_table_Types_2eproto);
 namespace common {
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* MinorType_descriptor() {
   ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_Types_2eproto);
@@ -179,8 +180,6 @@ bool DataMode_IsValid(int value) {
 
 // ===================================================================
 
-void MajorType::InitAsDefaultInstance() {
-}
 class MajorType::_Internal {
  public:
   using HasBits = decltype(std::declval<MajorType>()._has_bits_);
@@ -204,17 +203,18 @@ class MajorType::_Internal {
   }
 };
 
-MajorType::MajorType()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+MajorType::MajorType(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  sub_type_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:common.MajorType)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:common.MajorType)
 }
 MajorType::MajorType(const MajorType& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       sub_type_(from.sub_type_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&minor_type_, &from.minor_type_,
     static_cast<size_t>(reinterpret_cast<char*>(&timezone_) -
     reinterpret_cast<char*>(&minor_type_)) + sizeof(timezone_));
@@ -222,27 +222,31 @@ MajorType::MajorType(const MajorType& from)
 }
 
 void MajorType::SharedCtor() {
-  ::memset(&minor_type_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&timezone_) -
-      reinterpret_cast<char*>(&minor_type_)) + sizeof(timezone_));
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&minor_type_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&timezone_) -
+    reinterpret_cast<char*>(&minor_type_)) + sizeof(timezone_));
 }
 
 MajorType::~MajorType() {
   // @@protoc_insertion_point(destructor:common.MajorType)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void MajorType::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void MajorType::ArenaDtor(void* object) {
+  MajorType* _this = reinterpret_cast< MajorType* >(object);
+  (void)_this;
+}
+void MajorType::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void MajorType::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const MajorType& MajorType::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_MajorType_Types_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void MajorType::Clear() {
 // @@protoc_insertion_point(message_clear_start:common.MajorType)
@@ -258,7 +262,7 @@ void MajorType::Clear() {
         reinterpret_cast<char*>(&minor_type_)) + sizeof(timezone_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* MajorType::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -267,12 +271,11 @@ const char* MajorType::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional .common.MinorType minor_type = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::common::MinorType_IsValid(val))) {
             _internal_set_minor_type(static_cast<::common::MinorType>(val));
@@ -284,7 +287,7 @@ const char* MajorType::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
       // optional .common.DataMode mode = 2;
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::common::DataMode_IsValid(val))) {
             _internal_set_mode(static_cast<::common::DataMode>(val));
@@ -297,7 +300,7 @@ const char* MajorType::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_width(&has_bits);
-          width_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          width_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -305,7 +308,7 @@ const char* MajorType::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_precision(&has_bits);
-          precision_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          precision_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -313,7 +316,7 @@ const char* MajorType::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
           _Internal::set_has_scale(&has_bits);
-          scale_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          scale_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -321,7 +324,7 @@ const char* MajorType::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
       case 6:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 48)) {
           _Internal::set_has_timezone(&has_bits);
-          timezone_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          timezone_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -331,7 +334,7 @@ const char* MajorType::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
           ptr -= 1;
           do {
             ptr += 1;
-            ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+            ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
             CHK_(ptr);
             if (PROTOBUF_PREDICT_TRUE(::common::MinorType_IsValid(val))) {
               _internal_add_sub_type(static_cast<::common::MinorType>(val));
@@ -341,17 +344,20 @@ const char* MajorType::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<56>(ptr));
         } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 58) {
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser(_internal_mutable_sub_type(), ptr, ctx, ::common::MinorType_IsValid, &_internal_metadata_, 7);
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(_internal_mutable_sub_type(), ptr, ctx, ::common::MinorType_IsValid, &_internal_metadata_, 7);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -420,7 +426,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:common.MajorType)
   return target;
@@ -514,7 +520,7 @@ void MajorType::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void MajorType::MergeFrom(const MajorType& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:common.MajorType)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -563,27 +569,28 @@ bool MajorType::IsInitialized() const {
 
 void MajorType::InternalSwap(MajorType* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   sub_type_.InternalSwap(&other->sub_type_);
-  swap(minor_type_, other->minor_type_);
-  swap(mode_, other->mode_);
-  swap(width_, other->width_);
-  swap(precision_, other->precision_);
-  swap(scale_, other->scale_);
-  swap(timezone_, other->timezone_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(MajorType, timezone_)
+      + sizeof(MajorType::timezone_)
+      - PROTOBUF_FIELD_OFFSET(MajorType, minor_type_)>(
+          reinterpret_cast<char*>(&minor_type_),
+          reinterpret_cast<char*>(&other->minor_type_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata MajorType::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_Types_2eproto_getter, &descriptor_table_Types_2eproto_once,
+      file_level_metadata_Types_2eproto[0]);
 }
-
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace common
 PROTOBUF_NAMESPACE_OPEN
 template<> PROTOBUF_NOINLINE ::common::MajorType* Arena::CreateMaybeMessage< ::common::MajorType >(Arena* arena) {
-  return Arena::CreateInternal< ::common::MajorType >(arena);
+  return Arena::CreateMessageInternal< ::common::MajorType >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

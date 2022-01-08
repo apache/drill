@@ -1010,7 +1010,7 @@ public final class TypeProtos {
   /**
    * Protobuf type {@code common.MajorType}
    */
-  public  static final class MajorType extends
+  public static final class MajorType extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:common.MajorType)
       MajorTypeOrBuilder {
@@ -1177,14 +1177,14 @@ public final class TypeProtos {
      * <code>optional .common.MinorType minor_type = 1;</code>
      * @return Whether the minorType field is set.
      */
-    public boolean hasMinorType() {
+    @java.lang.Override public boolean hasMinorType() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .common.MinorType minor_type = 1;</code>
      * @return The minorType.
      */
-    public org.apache.drill.common.types.TypeProtos.MinorType getMinorType() {
+    @java.lang.Override public org.apache.drill.common.types.TypeProtos.MinorType getMinorType() {
       @SuppressWarnings("deprecation")
       org.apache.drill.common.types.TypeProtos.MinorType result = org.apache.drill.common.types.TypeProtos.MinorType.valueOf(minorType_);
       return result == null ? org.apache.drill.common.types.TypeProtos.MinorType.LATE : result;
@@ -1196,14 +1196,14 @@ public final class TypeProtos {
      * <code>optional .common.DataMode mode = 2;</code>
      * @return Whether the mode field is set.
      */
-    public boolean hasMode() {
+    @java.lang.Override public boolean hasMode() {
       return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .common.DataMode mode = 2;</code>
      * @return The mode.
      */
-    public org.apache.drill.common.types.TypeProtos.DataMode getMode() {
+    @java.lang.Override public org.apache.drill.common.types.TypeProtos.DataMode getMode() {
       @SuppressWarnings("deprecation")
       org.apache.drill.common.types.TypeProtos.DataMode result = org.apache.drill.common.types.TypeProtos.DataMode.valueOf(mode_);
       return result == null ? org.apache.drill.common.types.TypeProtos.DataMode.OPTIONAL : result;
@@ -1215,6 +1215,7 @@ public final class TypeProtos {
      * <code>optional int32 width = 3;</code>
      * @return Whether the width field is set.
      */
+    @java.lang.Override
     public boolean hasWidth() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -1222,6 +1223,7 @@ public final class TypeProtos {
      * <code>optional int32 width = 3;</code>
      * @return The width.
      */
+    @java.lang.Override
     public int getWidth() {
       return width_;
     }
@@ -1236,6 +1238,7 @@ public final class TypeProtos {
      * <code>optional int32 precision = 4;</code>
      * @return Whether the precision field is set.
      */
+    @java.lang.Override
     public boolean hasPrecision() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -1247,6 +1250,7 @@ public final class TypeProtos {
      * <code>optional int32 precision = 4;</code>
      * @return The precision.
      */
+    @java.lang.Override
     public int getPrecision() {
       return precision_;
     }
@@ -1261,6 +1265,7 @@ public final class TypeProtos {
      * <code>optional int32 scale = 5;</code>
      * @return Whether the scale field is set.
      */
+    @java.lang.Override
     public boolean hasScale() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -1272,6 +1277,7 @@ public final class TypeProtos {
      * <code>optional int32 scale = 5;</code>
      * @return The scale.
      */
+    @java.lang.Override
     public int getScale() {
       return scale_;
     }
@@ -1286,6 +1292,7 @@ public final class TypeProtos {
      * <code>optional int32 timeZone = 6;</code>
      * @return Whether the timeZone field is set.
      */
+    @java.lang.Override
     public boolean hasTimeZone() {
       return ((bitField0_ & 0x00000020) != 0);
     }
@@ -1297,6 +1304,7 @@ public final class TypeProtos {
      * <code>optional int32 timeZone = 6;</code>
      * @return The timeZone.
      */
+    @java.lang.Override
     public int getTimeZone() {
       return timeZone_;
     }
@@ -1321,6 +1329,7 @@ public final class TypeProtos {
      * <code>repeated .common.MinorType sub_type = 7;</code>
      * @return A list containing the subType.
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.common.types.TypeProtos.MinorType> getSubTypeList() {
       return new com.google.protobuf.Internal.ListAdapter<
           java.lang.Integer, org.apache.drill.common.types.TypeProtos.MinorType>(subType_, subType_converter_);
@@ -1333,6 +1342,7 @@ public final class TypeProtos {
      * <code>repeated .common.MinorType sub_type = 7;</code>
      * @return The count of subType.
      */
+    @java.lang.Override
     public int getSubTypeCount() {
       return subType_.size();
     }
@@ -1345,6 +1355,7 @@ public final class TypeProtos {
      * @param index The index of the element to return.
      * @return The subType at the given index.
      */
+    @java.lang.Override
     public org.apache.drill.common.types.TypeProtos.MinorType getSubType(int index) {
       return subType_converter_.convert(subType_.get(index));
     }
@@ -1825,13 +1836,14 @@ public final class TypeProtos {
        * <code>optional .common.MinorType minor_type = 1;</code>
        * @return Whether the minorType field is set.
        */
-      public boolean hasMinorType() {
+      @java.lang.Override public boolean hasMinorType() {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .common.MinorType minor_type = 1;</code>
        * @return The minorType.
        */
+      @java.lang.Override
       public org.apache.drill.common.types.TypeProtos.MinorType getMinorType() {
         @SuppressWarnings("deprecation")
         org.apache.drill.common.types.TypeProtos.MinorType result = org.apache.drill.common.types.TypeProtos.MinorType.valueOf(minorType_);
@@ -1867,13 +1879,14 @@ public final class TypeProtos {
        * <code>optional .common.DataMode mode = 2;</code>
        * @return Whether the mode field is set.
        */
-      public boolean hasMode() {
+      @java.lang.Override public boolean hasMode() {
         return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .common.DataMode mode = 2;</code>
        * @return The mode.
        */
+      @java.lang.Override
       public org.apache.drill.common.types.TypeProtos.DataMode getMode() {
         @SuppressWarnings("deprecation")
         org.apache.drill.common.types.TypeProtos.DataMode result = org.apache.drill.common.types.TypeProtos.DataMode.valueOf(mode_);
@@ -1909,6 +1922,7 @@ public final class TypeProtos {
        * <code>optional int32 width = 3;</code>
        * @return Whether the width field is set.
        */
+      @java.lang.Override
       public boolean hasWidth() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -1916,6 +1930,7 @@ public final class TypeProtos {
        * <code>optional int32 width = 3;</code>
        * @return The width.
        */
+      @java.lang.Override
       public int getWidth() {
         return width_;
       }
@@ -1950,6 +1965,7 @@ public final class TypeProtos {
        * <code>optional int32 precision = 4;</code>
        * @return Whether the precision field is set.
        */
+      @java.lang.Override
       public boolean hasPrecision() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -1961,6 +1977,7 @@ public final class TypeProtos {
        * <code>optional int32 precision = 4;</code>
        * @return The precision.
        */
+      @java.lang.Override
       public int getPrecision() {
         return precision_;
       }
@@ -2003,6 +2020,7 @@ public final class TypeProtos {
        * <code>optional int32 scale = 5;</code>
        * @return Whether the scale field is set.
        */
+      @java.lang.Override
       public boolean hasScale() {
         return ((bitField0_ & 0x00000010) != 0);
       }
@@ -2014,6 +2032,7 @@ public final class TypeProtos {
        * <code>optional int32 scale = 5;</code>
        * @return The scale.
        */
+      @java.lang.Override
       public int getScale() {
         return scale_;
       }
@@ -2056,6 +2075,7 @@ public final class TypeProtos {
        * <code>optional int32 timeZone = 6;</code>
        * @return Whether the timeZone field is set.
        */
+      @java.lang.Override
       public boolean hasTimeZone() {
         return ((bitField0_ & 0x00000020) != 0);
       }
@@ -2067,6 +2087,7 @@ public final class TypeProtos {
        * <code>optional int32 timeZone = 6;</code>
        * @return The timeZone.
        */
+      @java.lang.Override
       public int getTimeZone() {
         return timeZone_;
       }

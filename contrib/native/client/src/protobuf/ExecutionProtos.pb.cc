@@ -14,48 +14,39 @@
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
-extern PROTOBUF_INTERNAL_EXPORT_UserBitShared_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_QueryId_UserBitShared_2eproto;
+
+PROTOBUF_PRAGMA_INIT_SEG
 namespace exec {
 namespace bit {
-class FragmentHandleDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FragmentHandle> _instance;
-} _FragmentHandle_default_instance_;
-class ServerPreparedStatementStateDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ServerPreparedStatementState> _instance;
-} _ServerPreparedStatementState_default_instance_;
+constexpr FragmentHandle::FragmentHandle(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : query_id_(nullptr)
+  , parent_query_id_(nullptr)
+  , major_fragment_id_(0)
+  , minor_fragment_id_(0){}
+struct FragmentHandleDefaultTypeInternal {
+  constexpr FragmentHandleDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~FragmentHandleDefaultTypeInternal() {}
+  union {
+    FragmentHandle _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT FragmentHandleDefaultTypeInternal _FragmentHandle_default_instance_;
+constexpr ServerPreparedStatementState::ServerPreparedStatementState(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : sql_query_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string){}
+struct ServerPreparedStatementStateDefaultTypeInternal {
+  constexpr ServerPreparedStatementStateDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~ServerPreparedStatementStateDefaultTypeInternal() {}
+  union {
+    ServerPreparedStatementState _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT ServerPreparedStatementStateDefaultTypeInternal _ServerPreparedStatementState_default_instance_;
 }  // namespace bit
 }  // namespace exec
-static void InitDefaultsscc_info_FragmentHandle_ExecutionProtos_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::_FragmentHandle_default_instance_;
-    new (ptr) ::exec::bit::FragmentHandle();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::FragmentHandle::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_FragmentHandle_ExecutionProtos_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_FragmentHandle_ExecutionProtos_2eproto}, {
-      &scc_info_QueryId_UserBitShared_2eproto.base,}};
-
-static void InitDefaultsscc_info_ServerPreparedStatementState_ExecutionProtos_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::_ServerPreparedStatementState_default_instance_;
-    new (ptr) ::exec::bit::ServerPreparedStatementState();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::ServerPreparedStatementState::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ServerPreparedStatementState_ExecutionProtos_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ServerPreparedStatementState_ExecutionProtos_2eproto}, {}};
-
 static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_ExecutionProtos_2eproto[2];
 static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_ExecutionProtos_2eproto = nullptr;
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_ExecutionProtos_2eproto = nullptr;
@@ -107,32 +98,24 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor
   &::descriptor_table_Coordination_2eproto,
   &::descriptor_table_UserBitShared_2eproto,
 };
-static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_ExecutionProtos_2eproto_sccs[2] = {
-  &scc_info_FragmentHandle_ExecutionProtos_2eproto.base,
-  &scc_info_ServerPreparedStatementState_ExecutionProtos_2eproto.base,
-};
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_ExecutionProtos_2eproto_once;
-static bool descriptor_table_ExecutionProtos_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_ExecutionProtos_2eproto = {
-  &descriptor_table_ExecutionProtos_2eproto_initialized, descriptor_table_protodef_ExecutionProtos_2eproto, "ExecutionProtos.proto", 330,
-  &descriptor_table_ExecutionProtos_2eproto_once, descriptor_table_ExecutionProtos_2eproto_sccs, descriptor_table_ExecutionProtos_2eproto_deps, 2, 2,
+  false, false, 330, descriptor_table_protodef_ExecutionProtos_2eproto, "ExecutionProtos.proto", 
+  &descriptor_table_ExecutionProtos_2eproto_once, descriptor_table_ExecutionProtos_2eproto_deps, 2, 2,
   schemas, file_default_instances, TableStruct_ExecutionProtos_2eproto::offsets,
-  file_level_metadata_ExecutionProtos_2eproto, 2, file_level_enum_descriptors_ExecutionProtos_2eproto, file_level_service_descriptors_ExecutionProtos_2eproto,
+  file_level_metadata_ExecutionProtos_2eproto, file_level_enum_descriptors_ExecutionProtos_2eproto, file_level_service_descriptors_ExecutionProtos_2eproto,
 };
+PROTOBUF_ATTRIBUTE_WEAK const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable* descriptor_table_ExecutionProtos_2eproto_getter() {
+  return &descriptor_table_ExecutionProtos_2eproto;
+}
 
 // Force running AddDescriptors() at dynamic initialization time.
-static bool dynamic_init_dummy_ExecutionProtos_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_ExecutionProtos_2eproto), true);
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY static ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptorsRunner dynamic_init_dummy_ExecutionProtos_2eproto(&descriptor_table_ExecutionProtos_2eproto);
 namespace exec {
 namespace bit {
 
 // ===================================================================
 
-void FragmentHandle::InitAsDefaultInstance() {
-  ::exec::bit::_FragmentHandle_default_instance_._instance.get_mutable()->query_id_ = const_cast< ::exec::shared::QueryId*>(
-      ::exec::shared::QueryId::internal_default_instance());
-  ::exec::bit::_FragmentHandle_default_instance_._instance.get_mutable()->parent_query_id_ = const_cast< ::exec::shared::QueryId*>(
-      ::exec::shared::QueryId::internal_default_instance());
-}
 class FragmentHandle::_Internal {
  public:
   using HasBits = decltype(std::declval<FragmentHandle>()._has_bits_);
@@ -168,16 +151,16 @@ void FragmentHandle::clear_parent_query_id() {
   if (parent_query_id_ != nullptr) parent_query_id_->Clear();
   _has_bits_[0] &= ~0x00000002u;
 }
-FragmentHandle::FragmentHandle()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+FragmentHandle::FragmentHandle(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.FragmentHandle)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.FragmentHandle)
 }
 FragmentHandle::FragmentHandle(const FragmentHandle& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_query_id()) {
     query_id_ = new ::exec::shared::QueryId(*from.query_id_);
   } else {
@@ -195,30 +178,33 @@ FragmentHandle::FragmentHandle(const FragmentHandle& from)
 }
 
 void FragmentHandle::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FragmentHandle_ExecutionProtos_2eproto.base);
-  ::memset(&query_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&minor_fragment_id_) -
-      reinterpret_cast<char*>(&query_id_)) + sizeof(minor_fragment_id_));
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&query_id_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&minor_fragment_id_) -
+    reinterpret_cast<char*>(&query_id_)) + sizeof(minor_fragment_id_));
 }
 
 FragmentHandle::~FragmentHandle() {
   // @@protoc_insertion_point(destructor:exec.bit.FragmentHandle)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void FragmentHandle::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete query_id_;
   if (this != internal_default_instance()) delete parent_query_id_;
 }
 
+void FragmentHandle::ArenaDtor(void* object) {
+  FragmentHandle* _this = reinterpret_cast< FragmentHandle* >(object);
+  (void)_this;
+}
+void FragmentHandle::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void FragmentHandle::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const FragmentHandle& FragmentHandle::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FragmentHandle_ExecutionProtos_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FragmentHandle::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.FragmentHandle)
@@ -243,7 +229,7 @@ void FragmentHandle::Clear() {
         reinterpret_cast<char*>(&major_fragment_id_)) + sizeof(minor_fragment_id_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* FragmentHandle::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -252,7 +238,6 @@ const char* FragmentHandle::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional .exec.shared.QueryId query_id = 1;
       case 1:
@@ -265,7 +250,7 @@ const char* FragmentHandle::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_major_fragment_id(&has_bits);
-          major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -273,7 +258,7 @@ const char* FragmentHandle::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_minor_fragment_id(&has_bits);
-          minor_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          minor_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -286,11 +271,14 @@ const char* FragmentHandle::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -342,7 +330,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.FragmentHandle)
   return target;
@@ -414,7 +402,7 @@ void FragmentHandle::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void FragmentHandle::MergeFrom(const FragmentHandle& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.FragmentHandle)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -456,23 +444,24 @@ bool FragmentHandle::IsInitialized() const {
 
 void FragmentHandle::InternalSwap(FragmentHandle* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(query_id_, other->query_id_);
-  swap(parent_query_id_, other->parent_query_id_);
-  swap(major_fragment_id_, other->major_fragment_id_);
-  swap(minor_fragment_id_, other->minor_fragment_id_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FragmentHandle, minor_fragment_id_)
+      + sizeof(FragmentHandle::minor_fragment_id_)
+      - PROTOBUF_FIELD_OFFSET(FragmentHandle, query_id_)>(
+          reinterpret_cast<char*>(&query_id_),
+          reinterpret_cast<char*>(&other->query_id_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata FragmentHandle::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_ExecutionProtos_2eproto_getter, &descriptor_table_ExecutionProtos_2eproto_once,
+      file_level_metadata_ExecutionProtos_2eproto[0]);
 }
-
 
 // ===================================================================
 
-void ServerPreparedStatementState::InitAsDefaultInstance() {
-}
 class ServerPreparedStatementState::_Internal {
  public:
   using HasBits = decltype(std::declval<ServerPreparedStatementState>()._has_bits_);
@@ -481,45 +470,48 @@ class ServerPreparedStatementState::_Internal {
   }
 };
 
-ServerPreparedStatementState::ServerPreparedStatementState()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+ServerPreparedStatementState::ServerPreparedStatementState(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.ServerPreparedStatementState)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.ServerPreparedStatementState)
 }
 ServerPreparedStatementState::ServerPreparedStatementState(const ServerPreparedStatementState& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   sql_query_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_sql_query()) {
-    sql_query_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.sql_query_);
+    sql_query_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_sql_query(), 
+      GetArena());
   }
   // @@protoc_insertion_point(copy_constructor:exec.bit.ServerPreparedStatementState)
 }
 
 void ServerPreparedStatementState::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ServerPreparedStatementState_ExecutionProtos_2eproto.base);
-  sql_query_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+sql_query_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 ServerPreparedStatementState::~ServerPreparedStatementState() {
   // @@protoc_insertion_point(destructor:exec.bit.ServerPreparedStatementState)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void ServerPreparedStatementState::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   sql_query_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
+void ServerPreparedStatementState::ArenaDtor(void* object) {
+  ServerPreparedStatementState* _this = reinterpret_cast< ServerPreparedStatementState* >(object);
+  (void)_this;
+}
+void ServerPreparedStatementState::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void ServerPreparedStatementState::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ServerPreparedStatementState& ServerPreparedStatementState::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ServerPreparedStatementState_ExecutionProtos_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ServerPreparedStatementState::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.ServerPreparedStatementState)
@@ -529,10 +521,10 @@ void ServerPreparedStatementState::Clear() {
 
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    sql_query_.ClearNonDefaultToEmptyNoArena();
+    sql_query_.ClearNonDefaultToEmpty();
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* ServerPreparedStatementState::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -541,7 +533,6 @@ const char* ServerPreparedStatementState::_InternalParse(const char* ptr, ::PROT
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional string sql_query = 1;
       case 1:
@@ -556,11 +547,14 @@ const char* ServerPreparedStatementState::_InternalParse(const char* ptr, ::PROT
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -594,7 +588,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.ServerPreparedStatementState)
   return target;
@@ -643,13 +637,12 @@ void ServerPreparedStatementState::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Mess
 void ServerPreparedStatementState::MergeFrom(const ServerPreparedStatementState& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.ServerPreparedStatementState)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from._internal_has_sql_query()) {
-    _has_bits_[0] |= 0x00000001u;
-    sql_query_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.sql_query_);
+    _internal_set_sql_query(from._internal_sql_query());
   }
 }
 
@@ -673,26 +666,26 @@ bool ServerPreparedStatementState::IsInitialized() const {
 
 void ServerPreparedStatementState::InternalSwap(ServerPreparedStatementState* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  sql_query_.Swap(&other->sql_query_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  sql_query_.Swap(&other->sql_query_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata ServerPreparedStatementState::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_ExecutionProtos_2eproto_getter, &descriptor_table_ExecutionProtos_2eproto_once,
+      file_level_metadata_ExecutionProtos_2eproto[1]);
 }
-
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace bit
 }  // namespace exec
 PROTOBUF_NAMESPACE_OPEN
 template<> PROTOBUF_NOINLINE ::exec::bit::FragmentHandle* Arena::CreateMaybeMessage< ::exec::bit::FragmentHandle >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::FragmentHandle >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::FragmentHandle >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::ServerPreparedStatementState* Arena::CreateMaybeMessage< ::exec::bit::ServerPreparedStatementState >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::ServerPreparedStatementState >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::ServerPreparedStatementState >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

@@ -90,7 +90,7 @@ public final class ExecProtos {
   /**
    * Protobuf type {@code exec.bit.FragmentHandle}
    */
-  public  static final class FragmentHandle extends
+  public static final class FragmentHandle extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.FragmentHandle)
       FragmentHandleOrBuilder {
@@ -208,6 +208,7 @@ public final class ExecProtos {
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      * @return Whether the queryId field is set.
      */
+    @java.lang.Override
     public boolean hasQueryId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -215,12 +216,14 @@ public final class ExecProtos {
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      * @return The queryId.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
     }
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
     }
@@ -231,6 +234,7 @@ public final class ExecProtos {
      * <code>optional int32 major_fragment_id = 2;</code>
      * @return Whether the majorFragmentId field is set.
      */
+    @java.lang.Override
     public boolean hasMajorFragmentId() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -238,6 +242,7 @@ public final class ExecProtos {
      * <code>optional int32 major_fragment_id = 2;</code>
      * @return The majorFragmentId.
      */
+    @java.lang.Override
     public int getMajorFragmentId() {
       return majorFragmentId_;
     }
@@ -248,6 +253,7 @@ public final class ExecProtos {
      * <code>optional int32 minor_fragment_id = 3;</code>
      * @return Whether the minorFragmentId field is set.
      */
+    @java.lang.Override
     public boolean hasMinorFragmentId() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -255,6 +261,7 @@ public final class ExecProtos {
      * <code>optional int32 minor_fragment_id = 3;</code>
      * @return The minorFragmentId.
      */
+    @java.lang.Override
     public int getMinorFragmentId() {
       return minorFragmentId_;
     }
@@ -265,6 +272,7 @@ public final class ExecProtos {
      * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
      * @return Whether the parentQueryId field is set.
      */
+    @java.lang.Override
     public boolean hasParentQueryId() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -272,12 +280,14 @@ public final class ExecProtos {
      * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
      * @return The parentQueryId.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryId getParentQueryId() {
       return parentQueryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : parentQueryId_;
     }
     /**
      * <code>optional .exec.shared.QueryId parent_query_id = 4;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getParentQueryIdOrBuilder() {
       return parentQueryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : parentQueryId_;
     }
@@ -814,6 +824,7 @@ public final class ExecProtos {
        * <code>optional int32 major_fragment_id = 2;</code>
        * @return Whether the majorFragmentId field is set.
        */
+      @java.lang.Override
       public boolean hasMajorFragmentId() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -821,6 +832,7 @@ public final class ExecProtos {
        * <code>optional int32 major_fragment_id = 2;</code>
        * @return The majorFragmentId.
        */
+      @java.lang.Override
       public int getMajorFragmentId() {
         return majorFragmentId_;
       }
@@ -851,6 +863,7 @@ public final class ExecProtos {
        * <code>optional int32 minor_fragment_id = 3;</code>
        * @return Whether the minorFragmentId field is set.
        */
+      @java.lang.Override
       public boolean hasMinorFragmentId() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -858,6 +871,7 @@ public final class ExecProtos {
        * <code>optional int32 minor_fragment_id = 3;</code>
        * @return The minorFragmentId.
        */
+      @java.lang.Override
       public int getMinorFragmentId() {
         return minorFragmentId_;
       }
@@ -1085,7 +1099,7 @@ public final class ExecProtos {
    *
    * Protobuf type {@code exec.bit.ServerPreparedStatementState}
    */
-  public  static final class ServerPreparedStatementState extends
+  public static final class ServerPreparedStatementState extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.ServerPreparedStatementState)
       ServerPreparedStatementStateOrBuilder {
@@ -1174,6 +1188,7 @@ public final class ExecProtos {
      * <code>optional string sql_query = 1;</code>
      * @return Whether the sqlQuery field is set.
      */
+    @java.lang.Override
     public boolean hasSqlQuery() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -1181,6 +1196,7 @@ public final class ExecProtos {
      * <code>optional string sql_query = 1;</code>
      * @return The sqlQuery.
      */
+    @java.lang.Override
     public java.lang.String getSqlQuery() {
       java.lang.Object ref = sqlQuery_;
       if (ref instanceof java.lang.String) {
@@ -1199,6 +1215,7 @@ public final class ExecProtos {
      * <code>optional string sql_query = 1;</code>
      * @return The bytes for sqlQuery.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getSqlQueryBytes() {
       java.lang.Object ref = sqlQuery_;

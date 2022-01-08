@@ -233,7 +233,7 @@ public final class BitData {
   /**
    * Protobuf type {@code exec.bit.data.BitClientHandshake}
    */
-  public  static final class BitClientHandshake extends
+  public static final class BitClientHandshake extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.data.BitClientHandshake)
       BitClientHandshakeOrBuilder {
@@ -333,6 +333,7 @@ public final class BitData {
      * <code>optional int32 rpc_version = 1;</code>
      * @return Whether the rpcVersion field is set.
      */
+    @java.lang.Override
     public boolean hasRpcVersion() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -340,6 +341,7 @@ public final class BitData {
      * <code>optional int32 rpc_version = 1;</code>
      * @return The rpcVersion.
      */
+    @java.lang.Override
     public int getRpcVersion() {
       return rpcVersion_;
     }
@@ -350,14 +352,14 @@ public final class BitData {
      * <code>optional .exec.shared.RpcChannel channel = 2 [default = BIT_DATA];</code>
      * @return Whether the channel field is set.
      */
-    public boolean hasChannel() {
+    @java.lang.Override public boolean hasChannel() {
       return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.RpcChannel channel = 2 [default = BIT_DATA];</code>
      * @return The channel.
      */
-    public org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel() {
+    @java.lang.Override public org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.UserBitShared.RpcChannel result = org.apache.drill.exec.proto.UserBitShared.RpcChannel.valueOf(channel_);
       return result == null ? org.apache.drill.exec.proto.UserBitShared.RpcChannel.BIT_DATA : result;
@@ -706,6 +708,7 @@ public final class BitData {
        * <code>optional int32 rpc_version = 1;</code>
        * @return Whether the rpcVersion field is set.
        */
+      @java.lang.Override
       public boolean hasRpcVersion() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -713,6 +716,7 @@ public final class BitData {
        * <code>optional int32 rpc_version = 1;</code>
        * @return The rpcVersion.
        */
+      @java.lang.Override
       public int getRpcVersion() {
         return rpcVersion_;
       }
@@ -743,13 +747,14 @@ public final class BitData {
        * <code>optional .exec.shared.RpcChannel channel = 2 [default = BIT_DATA];</code>
        * @return Whether the channel field is set.
        */
-      public boolean hasChannel() {
+      @java.lang.Override public boolean hasChannel() {
         return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.shared.RpcChannel channel = 2 [default = BIT_DATA];</code>
        * @return The channel.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.UserBitShared.RpcChannel result = org.apache.drill.exec.proto.UserBitShared.RpcChannel.valueOf(channel_);
@@ -875,7 +880,7 @@ public final class BitData {
   /**
    * Protobuf type {@code exec.bit.data.BitServerHandshake}
    */
-  public  static final class BitServerHandshake extends
+  public static final class BitServerHandshake extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.data.BitServerHandshake)
       BitServerHandshakeOrBuilder {
@@ -975,6 +980,7 @@ public final class BitData {
      * <code>optional int32 rpc_version = 1;</code>
      * @return Whether the rpcVersion field is set.
      */
+    @java.lang.Override
     public boolean hasRpcVersion() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -982,6 +988,7 @@ public final class BitData {
      * <code>optional int32 rpc_version = 1;</code>
      * @return The rpcVersion.
      */
+    @java.lang.Override
     public int getRpcVersion() {
       return rpcVersion_;
     }
@@ -1374,6 +1381,7 @@ public final class BitData {
        * <code>optional int32 rpc_version = 1;</code>
        * @return Whether the rpcVersion field is set.
        */
+      @java.lang.Override
       public boolean hasRpcVersion() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -1381,6 +1389,7 @@ public final class BitData {
        * <code>optional int32 rpc_version = 1;</code>
        * @return The rpcVersion.
        */
+      @java.lang.Override
       public int getRpcVersion() {
         return rpcVersion_;
       }
@@ -1665,7 +1674,7 @@ public final class BitData {
   /**
    * Protobuf type {@code exec.bit.data.FragmentRecordBatch}
    */
-  public  static final class FragmentRecordBatch extends
+  public static final class FragmentRecordBatch extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.data.FragmentRecordBatch)
       FragmentRecordBatchOrBuilder {
@@ -1818,6 +1827,7 @@ public final class BitData {
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      * @return Whether the queryId field is set.
      */
+    @java.lang.Override
     public boolean hasQueryId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -1825,12 +1835,14 @@ public final class BitData {
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      * @return The queryId.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
     }
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
     }
@@ -1841,6 +1853,7 @@ public final class BitData {
      * <code>optional int32 receiving_major_fragment_id = 2;</code>
      * @return Whether the receivingMajorFragmentId field is set.
      */
+    @java.lang.Override
     public boolean hasReceivingMajorFragmentId() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -1848,6 +1861,7 @@ public final class BitData {
      * <code>optional int32 receiving_major_fragment_id = 2;</code>
      * @return The receivingMajorFragmentId.
      */
+    @java.lang.Override
     public int getReceivingMajorFragmentId() {
       return receivingMajorFragmentId_;
     }
@@ -1858,6 +1872,7 @@ public final class BitData {
      * <code>repeated int32 receiving_minor_fragment_id = 3;</code>
      * @return A list containing the receivingMinorFragmentId.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Integer>
         getReceivingMinorFragmentIdList() {
       return receivingMinorFragmentId_;
@@ -1884,6 +1899,7 @@ public final class BitData {
      * <code>optional int32 sending_major_fragment_id = 4;</code>
      * @return Whether the sendingMajorFragmentId field is set.
      */
+    @java.lang.Override
     public boolean hasSendingMajorFragmentId() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -1891,6 +1907,7 @@ public final class BitData {
      * <code>optional int32 sending_major_fragment_id = 4;</code>
      * @return The sendingMajorFragmentId.
      */
+    @java.lang.Override
     public int getSendingMajorFragmentId() {
       return sendingMajorFragmentId_;
     }
@@ -1901,6 +1918,7 @@ public final class BitData {
      * <code>optional int32 sending_minor_fragment_id = 5;</code>
      * @return Whether the sendingMinorFragmentId field is set.
      */
+    @java.lang.Override
     public boolean hasSendingMinorFragmentId() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -1908,6 +1926,7 @@ public final class BitData {
      * <code>optional int32 sending_minor_fragment_id = 5;</code>
      * @return The sendingMinorFragmentId.
      */
+    @java.lang.Override
     public int getSendingMinorFragmentId() {
       return sendingMinorFragmentId_;
     }
@@ -1918,6 +1937,7 @@ public final class BitData {
      * <code>optional .exec.shared.RecordBatchDef def = 6;</code>
      * @return Whether the def field is set.
      */
+    @java.lang.Override
     public boolean hasDef() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -1925,12 +1945,14 @@ public final class BitData {
      * <code>optional .exec.shared.RecordBatchDef def = 6;</code>
      * @return The def.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.RecordBatchDef getDef() {
       return def_ == null ? org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.getDefaultInstance() : def_;
     }
     /**
      * <code>optional .exec.shared.RecordBatchDef def = 6;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.RecordBatchDefOrBuilder getDefOrBuilder() {
       return def_ == null ? org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.getDefaultInstance() : def_;
     }
@@ -1941,6 +1963,7 @@ public final class BitData {
      * <code>optional bool isLastBatch = 7;</code>
      * @return Whether the isLastBatch field is set.
      */
+    @java.lang.Override
     public boolean hasIsLastBatch() {
       return ((bitField0_ & 0x00000020) != 0);
     }
@@ -1948,6 +1971,7 @@ public final class BitData {
      * <code>optional bool isLastBatch = 7;</code>
      * @return The isLastBatch.
      */
+    @java.lang.Override
     public boolean getIsLastBatch() {
       return isLastBatch_;
     }
@@ -2570,6 +2594,7 @@ public final class BitData {
        * <code>optional int32 receiving_major_fragment_id = 2;</code>
        * @return Whether the receivingMajorFragmentId field is set.
        */
+      @java.lang.Override
       public boolean hasReceivingMajorFragmentId() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -2577,6 +2602,7 @@ public final class BitData {
        * <code>optional int32 receiving_major_fragment_id = 2;</code>
        * @return The receivingMajorFragmentId.
        */
+      @java.lang.Override
       public int getReceivingMajorFragmentId() {
         return receivingMajorFragmentId_;
       }
@@ -2686,6 +2712,7 @@ public final class BitData {
        * <code>optional int32 sending_major_fragment_id = 4;</code>
        * @return Whether the sendingMajorFragmentId field is set.
        */
+      @java.lang.Override
       public boolean hasSendingMajorFragmentId() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -2693,6 +2720,7 @@ public final class BitData {
        * <code>optional int32 sending_major_fragment_id = 4;</code>
        * @return The sendingMajorFragmentId.
        */
+      @java.lang.Override
       public int getSendingMajorFragmentId() {
         return sendingMajorFragmentId_;
       }
@@ -2723,6 +2751,7 @@ public final class BitData {
        * <code>optional int32 sending_minor_fragment_id = 5;</code>
        * @return Whether the sendingMinorFragmentId field is set.
        */
+      @java.lang.Override
       public boolean hasSendingMinorFragmentId() {
         return ((bitField0_ & 0x00000010) != 0);
       }
@@ -2730,6 +2759,7 @@ public final class BitData {
        * <code>optional int32 sending_minor_fragment_id = 5;</code>
        * @return The sendingMinorFragmentId.
        */
+      @java.lang.Override
       public int getSendingMinorFragmentId() {
         return sendingMinorFragmentId_;
       }
@@ -2880,6 +2910,7 @@ public final class BitData {
        * <code>optional bool isLastBatch = 7;</code>
        * @return Whether the isLastBatch field is set.
        */
+      @java.lang.Override
       public boolean hasIsLastBatch() {
         return ((bitField0_ & 0x00000040) != 0);
       }
@@ -2887,6 +2918,7 @@ public final class BitData {
        * <code>optional bool isLastBatch = 7;</code>
        * @return The isLastBatch.
        */
+      @java.lang.Override
       public boolean getIsLastBatch() {
         return isLastBatch_;
       }
@@ -3123,7 +3155,7 @@ public final class BitData {
   /**
    * Protobuf type {@code exec.bit.data.RuntimeFilterBDef}
    */
-  public  static final class RuntimeFilterBDef extends
+  public static final class RuntimeFilterBDef extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.data.RuntimeFilterBDef)
       RuntimeFilterBDefOrBuilder {
@@ -3281,6 +3313,7 @@ public final class BitData {
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      * @return Whether the queryId field is set.
      */
+    @java.lang.Override
     public boolean hasQueryId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -3288,12 +3321,14 @@ public final class BitData {
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      * @return The queryId.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
     }
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
     }
@@ -3304,6 +3339,7 @@ public final class BitData {
      * <code>optional int32 major_fragment_id = 2;</code>
      * @return Whether the majorFragmentId field is set.
      */
+    @java.lang.Override
     public boolean hasMajorFragmentId() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -3311,6 +3347,7 @@ public final class BitData {
      * <code>optional int32 major_fragment_id = 2;</code>
      * @return The majorFragmentId.
      */
+    @java.lang.Override
     public int getMajorFragmentId() {
       return majorFragmentId_;
     }
@@ -3321,6 +3358,7 @@ public final class BitData {
      * <code>optional int32 minor_fragment_id = 3;</code>
      * @return Whether the minorFragmentId field is set.
      */
+    @java.lang.Override
     public boolean hasMinorFragmentId() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -3328,6 +3366,7 @@ public final class BitData {
      * <code>optional int32 minor_fragment_id = 3;</code>
      * @return The minorFragmentId.
      */
+    @java.lang.Override
     public int getMinorFragmentId() {
       return minorFragmentId_;
     }
@@ -3342,6 +3381,7 @@ public final class BitData {
      * <code>optional bool to_foreman = 4;</code>
      * @return Whether the toForeman field is set.
      */
+    @java.lang.Override
     public boolean hasToForeman() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -3353,6 +3393,7 @@ public final class BitData {
      * <code>optional bool to_foreman = 4;</code>
      * @return The toForeman.
      */
+    @java.lang.Override
     public boolean getToForeman() {
       return toForeman_;
     }
@@ -3363,6 +3404,7 @@ public final class BitData {
      * <code>repeated int32 bloom_filter_size_in_bytes = 5;</code>
      * @return A list containing the bloomFilterSizeInBytes.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Integer>
         getBloomFilterSizeInBytesList() {
       return bloomFilterSizeInBytes_;
@@ -3444,6 +3486,7 @@ public final class BitData {
      * <code>optional int32 hj_op_id = 7;</code>
      * @return Whether the hjOpId field is set.
      */
+    @java.lang.Override
     public boolean hasHjOpId() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -3455,6 +3498,7 @@ public final class BitData {
      * <code>optional int32 hj_op_id = 7;</code>
      * @return The hjOpId.
      */
+    @java.lang.Override
     public int getHjOpId() {
       return hjOpId_;
     }
@@ -3469,6 +3513,7 @@ public final class BitData {
      * <code>optional int64 rf_identifier = 8;</code>
      * @return Whether the rfIdentifier field is set.
      */
+    @java.lang.Override
     public boolean hasRfIdentifier() {
       return ((bitField0_ & 0x00000020) != 0);
     }
@@ -3480,6 +3525,7 @@ public final class BitData {
      * <code>optional int64 rf_identifier = 8;</code>
      * @return The rfIdentifier.
      */
+    @java.lang.Override
     public long getRfIdentifier() {
       return rfIdentifier_;
     }
@@ -4128,6 +4174,7 @@ public final class BitData {
        * <code>optional int32 major_fragment_id = 2;</code>
        * @return Whether the majorFragmentId field is set.
        */
+      @java.lang.Override
       public boolean hasMajorFragmentId() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -4135,6 +4182,7 @@ public final class BitData {
        * <code>optional int32 major_fragment_id = 2;</code>
        * @return The majorFragmentId.
        */
+      @java.lang.Override
       public int getMajorFragmentId() {
         return majorFragmentId_;
       }
@@ -4165,6 +4213,7 @@ public final class BitData {
        * <code>optional int32 minor_fragment_id = 3;</code>
        * @return Whether the minorFragmentId field is set.
        */
+      @java.lang.Override
       public boolean hasMinorFragmentId() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -4172,6 +4221,7 @@ public final class BitData {
        * <code>optional int32 minor_fragment_id = 3;</code>
        * @return The minorFragmentId.
        */
+      @java.lang.Override
       public int getMinorFragmentId() {
         return minorFragmentId_;
       }
@@ -4206,6 +4256,7 @@ public final class BitData {
        * <code>optional bool to_foreman = 4;</code>
        * @return Whether the toForeman field is set.
        */
+      @java.lang.Override
       public boolean hasToForeman() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -4217,6 +4268,7 @@ public final class BitData {
        * <code>optional bool to_foreman = 4;</code>
        * @return The toForeman.
        */
+      @java.lang.Override
       public boolean getToForeman() {
         return toForeman_;
       }
@@ -4483,6 +4535,7 @@ public final class BitData {
        * <code>optional int32 hj_op_id = 7;</code>
        * @return Whether the hjOpId field is set.
        */
+      @java.lang.Override
       public boolean hasHjOpId() {
         return ((bitField0_ & 0x00000040) != 0);
       }
@@ -4494,6 +4547,7 @@ public final class BitData {
        * <code>optional int32 hj_op_id = 7;</code>
        * @return The hjOpId.
        */
+      @java.lang.Override
       public int getHjOpId() {
         return hjOpId_;
       }
@@ -4536,6 +4590,7 @@ public final class BitData {
        * <code>optional int64 rf_identifier = 8;</code>
        * @return Whether the rfIdentifier field is set.
        */
+      @java.lang.Override
       public boolean hasRfIdentifier() {
         return ((bitField0_ & 0x00000080) != 0);
       }
@@ -4547,6 +4602,7 @@ public final class BitData {
        * <code>optional int64 rf_identifier = 8;</code>
        * @return The rfIdentifier.
        */
+      @java.lang.Override
       public long getRfIdentifier() {
         return rfIdentifier_;
       }
@@ -4658,7 +4714,7 @@ public final class BitData {
   /**
    * Protobuf type {@code exec.bit.data.AckWithCredit}
    */
-  public  static final class AckWithCredit extends
+  public static final class AckWithCredit extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.data.AckWithCredit)
       AckWithCreditOrBuilder {
@@ -4749,6 +4805,7 @@ public final class BitData {
      * <code>optional int32 allowed_credit = 1;</code>
      * @return Whether the allowedCredit field is set.
      */
+    @java.lang.Override
     public boolean hasAllowedCredit() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -4760,6 +4817,7 @@ public final class BitData {
      * <code>optional int32 allowed_credit = 1;</code>
      * @return The allowedCredit.
      */
+    @java.lang.Override
     public int getAllowedCredit() {
       return allowedCredit_;
     }
@@ -5087,6 +5145,7 @@ public final class BitData {
        * <code>optional int32 allowed_credit = 1;</code>
        * @return Whether the allowedCredit field is set.
        */
+      @java.lang.Override
       public boolean hasAllowedCredit() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -5098,6 +5157,7 @@ public final class BitData {
        * <code>optional int32 allowed_credit = 1;</code>
        * @return The allowedCredit.
        */
+      @java.lang.Override
       public int getAllowedCredit() {
         return allowedCredit_;
       }
