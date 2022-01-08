@@ -23,11 +23,8 @@ import org.apache.drill.exec.store.http.paginator.OffsetPaginator;
 import org.apache.drill.exec.store.http.paginator.PagePaginator;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This class tests the functionality of the various paginator classes as it pertains
@@ -41,39 +38,11 @@ public class TestPaginator {
     HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder();
 
     OffsetPaginator op = new OffsetPaginator(urlBuilder, 25, 5, "limit", "offset");
-    List<HttpUrl> urls = op.buildPaginatedURLs();
-    assertEquals(5, urls.size());
 
-    List<HttpUrl> expected = new ArrayList<>();
-    expected.add( HttpUrl.parse("https://myapi.com/?offset=0&limit=5"));
-    expected.add( HttpUrl.parse("https://myapi.com/?offset=5&limit=5"));
-    expected.add( HttpUrl.parse("https://myapi.com/?offset=10&limit=5"));
-    expected.add( HttpUrl.parse("https://myapi.com/?offset=15&limit=5"));
-    expected.add( HttpUrl.parse("https://myapi.com/?offset=20&limit=5"));
-
-    assertEquals(expected, urls);
-  }
-
-  @Test
-  public void TestOffsetPaginatorIterator() {
-    String baseUrl = "https://myapi.com";
-    HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder();
-
-    OffsetPaginator op = new OffsetPaginator(urlBuilder, 25, 5, "limit", "offset");
-    assertEquals(5, op.count());
-
-    String next = op.next();
-    assertEquals(next, "https://myapi.com/?offset=0&limit=5");
-    next = op.next();
-    assertEquals(next, "https://myapi.com/?offset=5&limit=5");
-    next = op.next();
-    assertEquals(next, "https://myapi.com/?offset=10&limit=5");
-    next = op.next();
-    assertEquals(next, "https://myapi.com/?offset=15&limit=5");
-    next = op.next();
-    assertEquals(next, "https://myapi.com/?offset=20&limit=5");
-    next = op.next();
-    assertNull(next);
+    for (int i = 0; i < 25; i += 5) {
+      assertEquals(String.format("%s/?offset=%d&limit=5", baseUrl, i), op.next());
+    }
+    assertFalse(op.hasNext());
   }
 
   @Test
@@ -82,11 +51,13 @@ public class TestPaginator {
     HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder();
 
     PagePaginator pp = new PagePaginator(urlBuilder, 10, 2, "page", "per_page");
-    List<HttpUrl> urls = pp.getPaginatedUrls();
-    assertEquals(5, urls.size());
+    for (int i = 1; i <= 5; i++) {
+      assertEquals(String.format("%s?page=%d&per_page=%d", baseUrl, i, 2), pp.next());
+    }
+    assertFalse(pp.hasNext());
 
     PagePaginator pp2 = new PagePaginator(urlBuilder, 10, 100, "page", "per_page");
-    List<HttpUrl> urls2 = pp2.getPaginatedUrls();
-    assertEquals(1, urls2.size());
+    assertEquals(String.format("%s?page=%d&per_page=%d", baseUrl, 1, 100), pp2.next());
+    assertFalse(pp.hasNext());
   }
 }
