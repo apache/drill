@@ -639,7 +639,7 @@ public class IcebergQueriesTest extends ClusterTest {
       .sql(query)
       .planMatcher()
       .include("Limit\\(fetch\\=\\[1\\]\\)")
-      .include("limit\\=1")
+      .include("maxRecords\\=1")
       .match();
 
     long count = queryBuilder().sql(query).run().recordCount();
@@ -654,7 +654,7 @@ public class IcebergQueriesTest extends ClusterTest {
       .sql(query)
       .planMatcher()
       .include("Limit\\(fetch\\=\\[1\\]\\)")
-      .include("limit\\=1")
+      .include("maxRecords\\=1")
       .include("filter\\=ref\\(name=\"int_field\"\\) \\=\\= 1")
       .match();
 
@@ -674,7 +674,7 @@ public class IcebergQueriesTest extends ClusterTest {
       .sql(query)
       .planMatcher()
       .include("Limit\\(fetch\\=\\[1\\]\\)")
-      .include("limit\\=-1")
+      .include("maxRecords\\=-1")
       .match();
 
     testBuilder()
