@@ -1003,7 +1003,7 @@ public class TestHttpPlugin extends ClusterTest {
     queryBuilder()
       .sql(sql)
       .planMatcher()
-      .include("Limit", "limit=5")
+      .include("Limit", "maxRecords=5")
       .match();
   }
 
