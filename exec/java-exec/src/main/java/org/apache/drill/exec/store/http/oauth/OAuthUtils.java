@@ -67,11 +67,11 @@ public class OAuthUtils {
 
   /**
    * Helper method for building the access token URL.
-   * @param oAuthConfig The oAuthConfig.
+   * @param credentialsProvider The credentialsProvider containing all the OAuth pieces.
    * @return The URL string for obtaining an Auth Code.
    */
-  public static String buildAccessTokenURL(HttpOAuthConfig oAuthConfig) {
-    return oAuthConfig.baseURL() + oAuthConfig.accessTokenPath();
+  public static String buildAccessTokenURL(CredentialsProvider credentialsProvider) {
+    return credentialsProvider.getCredentials().get(OAuthTokenCredentials.TOKEN_URI);
   }
 
   /**
@@ -82,7 +82,7 @@ public class OAuthUtils {
    */
   public static Request getAccessTokenRequest(CredentialsProvider credentialsProvider) {
     return new Request.Builder()
-      .url(buildAccessTokenURL(oAuthConfig))
+      .url(buildAccessTokenURL(credentialsProvider))
       .header("Content-Type", "application/json")
       .addHeader("Accept", "application/json")
       .post(getPostResponse(credentialsProvider))
@@ -94,12 +94,12 @@ public class OAuthUtils {
    * Crafts a POST request to obtain an access token.  This method should be used for the additional calls
    * to the OAuth API when you are refreshing the access token. The refresh token must be populated for this
    * to be successful.
-   * @param oAuthConfig The oAuthConfiguration containing the client_id, client_secret, and refresh token.
+   * @param credentialsProvider The credential provider containing the client_id, client_secret, and refresh token.
    * @return A request to obtain the access token.
    */
   public static Request getAccessTokenRequestFromRefreshToken(CredentialsProvider credentialsProvider) {
     return new Request.Builder()
-      .url(buildAccessTokenURL(oAuthConfig))
+      .url(buildAccessTokenURL(credentialsProvider))
       .header("Content-Type", "application/json")
       .addHeader("Accept", "application/json")
       .post(getPostResponseForTokenRefresh(credentialsProvider))
@@ -139,7 +139,7 @@ public class OAuthUtils {
 
       if (parsedJson.containsKey("access_token")) {
         accessToken = (String) parsedJson.get("access_token");
-        tokens.put("accessToken", accessToken);
+        tokens.put(OAuthTokenCredentials.ACCESS_TOKEN, accessToken);
         logger.debug("Successfully added access token");
       } else {
         // Something went wrong here.
@@ -154,7 +154,7 @@ public class OAuthUtils {
       // access token expires.
       if (parsedJson.containsKey("refresh_token")) {
         refreshToken = (String) parsedJson.get("refresh_token");
-        tokens.put("refreshToken", refreshToken);
+        tokens.put(OAuthTokenCredentials.REFRESH_TOKEN, refreshToken);
       }
       return tokens;
 

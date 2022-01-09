@@ -34,10 +34,6 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
     this.directCredentials = directCredentials;
   }
 
-  public AbstractSecuredStoragePluginConfig updateCredentials(AbstractSecuredStoragePluginConfig config, CredentialsProvider credentialsProvider) {
-    return null;
-  }
-
   public CredentialsProvider getCredentialsProvider() {
     if (directCredentials) {
       return null;

@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 
 @JsonTypeName(HttpStoragePluginConfig.NAME)
-public class HttpStoragePluginConfig extends Abstract  SecuredStoragePluginConfig {
+public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig {
   private static final Logger logger = LoggerFactory.getLogger(HttpStoragePluginConfig.class);
   public static final String NAME = "http";
   public final Map<String, HttpApiConfig> connections;
@@ -70,6 +70,8 @@ public class HttpStoragePluginConfig extends Abstract  SecuredStoragePluginConfi
         oAuthConfig.clientSecret(),
         oAuthConfig.getAccessToken(),
         oAuthConfig.getRefreshToken(),
+        oAuthConfig.authorizationURL(),
+        (oAuthConfig.baseURL() + oAuthConfig.accessTokenPath()),
         normalize(proxyUsername),
         normalize(proxyPassword),
         credentialsProvider),
@@ -229,20 +231,5 @@ public class HttpStoragePluginConfig extends Abstract  SecuredStoragePluginConfi
   @JsonIgnore
   public UsernamePasswordCredentials getUsernamePasswordCredentials() {
     return new UsernamePasswordCredentials(credentialsProvider);
-  }
-
-  @Override
-  public HttpStoragePluginConfig updateCredentials(AbstractSecuredStoragePluginConfig config, CredentialsProvider credentialsProvider) {
-    HttpStoragePluginConfig newConfig = (HttpStoragePluginConfig) config;
-    return new HttpStoragePluginConfig(newConfig.cacheResults,
-      newConfig.connections,
-      newConfig.timeout,
-      newConfig.proxyHost,
-      newConfig.proxyPort,
-      newConfig.proxyType,
-      newConfig.proxyUsername(),
-      newConfig.proxyPassword(),
-      newConfig.oAuthConfig,
-      credentialsProvider);
   }
 }

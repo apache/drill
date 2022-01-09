@@ -161,7 +161,7 @@
         var authorizationURL = storage_config.oAuthConfig.authorizationURL;
         var baseURL = storage_config.oAuthConfig.baseURL;
 
-        // If the user provides an Authorization URL, that will be used first to get the auth token.  If they
+        // If the user provides an Authorization URL, that will be used first to get the authorization code.  If they
         // do not provide an authURL, the next attempt will be to combine the baseURL with the authorization path.
         // If there is no authorization path, we will proceed with just the base URL.
         if (authorizationURL) {

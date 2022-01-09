@@ -27,9 +27,13 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
   public static final String CLIENT_SECRET = "clientSecret";
   public static final String ACCESS_TOKEN = "accessToken";
   public static final String REFRESH_TOKEN = "refreshToken";
+  public static final String AUTH_URI = "authorizationURI";
+  public static final String TOKEN_URI = "tokenURI";
 
   private final String clientID;
   private final String clientSecret;
+  private final String authorizationURI;
+  private final String tokenURI;
   private String accessToken;
   private String refreshToken;
 
@@ -39,6 +43,8 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
     Map<String, String> credentials = credentialsProvider.getCredentials();
     this.clientID = credentials.get(CLIENT_ID);
     this.clientSecret = credentials.get(CLIENT_SECRET);
+    this.authorizationURI = credentials.get(AUTH_URI);
+    this.tokenURI = credentials.get(TOKEN_URI);
 
     try {
       this.accessToken = credentials.get(ACCESS_TOKEN);
@@ -67,5 +73,13 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
 
   public String getRefreshToken() {
     return refreshToken;
+  }
+
+  public String getAuthUri() {
+    return authorizationURI;
+  }
+
+  public String getTokenUri() {
+    return tokenURI;
   }
 }

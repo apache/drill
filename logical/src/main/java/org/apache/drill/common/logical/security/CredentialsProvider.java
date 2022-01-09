@@ -19,6 +19,10 @@ package org.apache.drill.common.logical.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import org.apache.drill.common.exceptions.UserException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -33,6 +37,16 @@ public interface CredentialsProvider {
    * Returns map with authentication credentials. Key is the credential name, for example {@code "username"}
    * and map value is corresponding credential value.
    */
+  static final Logger logger = LoggerFactory.getLogger(CredentialsProvider.class);
+
   @JsonIgnore
   Map<String, String> getCredentials();
+
+  @JsonIgnore
+  default void updateCredentials(String key, String value) throws UserException {
+    throw UserException.internalError()
+      .message("Update credential function not implemented for " + Id.NAME)
+      .build(logger);
+  }
+
 }

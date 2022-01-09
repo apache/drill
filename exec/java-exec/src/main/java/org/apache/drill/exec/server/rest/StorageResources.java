@@ -50,7 +50,7 @@ import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
-import org.apache.drill.common.logical.security.OAuthCredentialsProvider;
+import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginEncodingException;
@@ -201,21 +201,20 @@ public class StorageResources {
     try {
       if (storage.getPlugin(name).getConfig().getClass().getSimpleName().equalsIgnoreCase("HttpStoragePluginConfig")) {
         AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) storage.getPlugin(name).getConfig();
-        OAuthTokenCredentials creds = new OAuthTokenCredentials(securedStoragePluginConfig.getCredentialsProvider());
-
+        CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
 
         // Now exchange the authorization token for an access token
         Builder builder = new OkHttpClient.Builder();
         OkHttpClient client = builder.build();
-        Request request = OAuthUtils.getAccessTokenRequest(oAuthConfig);
-        Map<String,String> tokens = OAuthUtils.getOAuthTokens(client, request);
+        Request request = OAuthUtils.getAccessTokenRequest(credentialsProvider);
+        Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, request);
+        credentialsProvider.updateCredentials("authorizationCode", code);
+        credentialsProvider.updateCredentials(OAuthTokenCredentials.ACCESS_TOKEN, updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
+        if (updatedTokens.containsKey(OAuthTokenCredentials.REFRESH_TOKEN)) {
+          credentialsProvider.updateCredentials(OAuthTokenCredentials.REFRESH_TOKEN, updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
+        }
 
-        // This line preserves the authorization code.  It may not be necessary to retain this.
-        tokens.put("authorizationCode", code);
-        OAuthCredentialsProvider credentialsProvider = new OAuthCredentialsProvider(tokens);
-        AbstractSecuredStoragePluginConfig newSecuredConfig = securedStoragePluginConfig.updateCredentials(securedStoragePluginConfig, credentialsProvider);
-
-        PluginConfigWrapper updatedPlugin = new PluginConfigWrapper(name, newSecuredConfig);
+        PluginConfigWrapper updatedPlugin = new PluginConfigWrapper(name, securedStoragePluginConfig);
 
         // Update the storage plugin config
         storage.validatedPut(name, updatedPlugin.getConfig());
