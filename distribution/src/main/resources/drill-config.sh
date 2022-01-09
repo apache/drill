@@ -302,6 +302,9 @@ export DRILLBIT_CODE_CACHE_SIZE=${DRILLBIT_CODE_CACHE_SIZE:-"1G"}
 export DRILLBIT_OPTS="-Xms$DRILL_HEAP -Xmx$DRILL_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY"
 export DRILLBIT_OPTS="$DRILLBIT_OPTS -XX:ReservedCodeCacheSize=$DRILLBIT_CODE_CACHE_SIZE -Ddrill.exec.enable-epoll=false"
 
+# This option prevents the PDF Format Plugin from opening unnecessary Java windows
+export DRILLBIT_OPTS="$DRILLBIT_OPTS -Djava.awt.headless=true"
+
 # Check that java is newer than 1.8
 "$JAVA" -version 2>&1 | grep "version" | egrep -e "1\.8" > /dev/null
 if [ $? -gt 0 ]; then
