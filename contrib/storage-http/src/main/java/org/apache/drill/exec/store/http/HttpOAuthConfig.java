@@ -26,9 +26,9 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.drill.common.PlanStringBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,18 +37,18 @@ import java.util.Map;
 @Builder
 @Getter
 @Setter
+@ToString
 @Accessors(fluent = true)
 @EqualsAndHashCode
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonDeserialize(builder = HttpOAuthConfig.HttpOAuthConfigBuilder.class)
 public class HttpOAuthConfig {
 
-  // TODO Change to URI
   @JsonProperty("callbackURL")
   private final String callbackURL;
 
   @JsonProperty("authorizationURL")
-  private final String authorizationURI;
+  private final String authorizationURL;
 
   @JsonProperty("authorizationParams")
   private final Map<String, String> authorizationParams;
@@ -69,7 +69,7 @@ public class HttpOAuthConfig {
    */
   public HttpOAuthConfig(HttpOAuthConfig that, Map<String, String> tokens) {
     this.callbackURL = that.callbackURL;
-    this.authorizationURI = that.authorizationURI;
+    this.authorizationURL = that.authorizationURL;
     this.authorizationParams = that.authorizationParams;
     this.generateCSRFToken = that.generateCSRFToken;
     this.scope = that.scope;
@@ -78,22 +78,11 @@ public class HttpOAuthConfig {
 
   private HttpOAuthConfig(HttpOAuthConfig.HttpOAuthConfigBuilder builder) {
     this.callbackURL = builder.callbackURL;
-    this.authorizationURI = builder.authorizationURL;
+    this.authorizationURL = builder.authorizationURL;
     this.authorizationParams = builder.authorizationParams;
     this.generateCSRFToken = builder.generateCSRFToken;
     this.scope = builder.scope;
     this.tokens = builder.tokens;
-  }
-
-  @Override
-  public String toString() {
-    return new PlanStringBuilder(this)
-      .field("callbackURL", callbackURL)
-      .field("authorizationURL", authorizationURI)
-      .field("authorizationParams", authorizationParams)
-      .field("generateCSRFToken", generateCSRFToken)
-      .field("tokens", tokens.keySet())
-      .toString();
   }
 
   @JsonPOJOBuilder(withPrefix = "")

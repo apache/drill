@@ -156,11 +156,11 @@
           return false;
         }
 
-        var authorizationURI = storage_config.oAuthConfig.authorizationURI;
+        var authorizationURL = storage_config.oAuthConfig.authorizationURL;
         if (authorizationURL) {
           finalURL = authorizationURL + "?client_id=" + clientID + "&redirect_uri=" + callbackURL;
         } else {
-          window.alert("Invalid authorization URI.")
+          window.alert("Invalid authorization URL.")
           return false;
         }
 

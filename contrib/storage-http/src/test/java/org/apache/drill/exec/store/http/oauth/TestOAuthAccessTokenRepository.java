@@ -75,7 +75,7 @@ public class TestOAuthAccessTokenRepository extends ClusterTest {
       HttpOAuthConfig localOAuthConfig = HttpOAuthConfig.builder()
         .callbackURL("http://localhost:8091/storage/clickup" +
           "/update_oath2_authtoken")
-        .authorizationURI("http://localhost:8091/api")
+        .authorizationURL("http://localhost:8091/api")
         .tokens(tokens)
         .build();
 
