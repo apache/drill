@@ -156,7 +156,6 @@ public class TestOAuthProcess extends ClusterTest {
 
       assertEquals("you_have_access", credentialsProvider.getCredentials().get(OAuthTokenCredentials.ACCESS_TOKEN));
       assertEquals("refresh_me", credentialsProvider.getCredentials().get(OAuthTokenCredentials.REFRESH_TOKEN));
-      
       // Now execute a query and get query results.
       server.enqueue(new MockResponse()
         .setResponseCode(200)
