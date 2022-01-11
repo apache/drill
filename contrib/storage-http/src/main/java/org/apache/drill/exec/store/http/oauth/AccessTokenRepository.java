@@ -99,7 +99,7 @@ public class AccessTokenRepository {
     validateKeys();
 
     // If the refresh token is present process with that
-    if (Strings.isNullOrEmpty(refreshToken)) {
+    if (! Strings.isNullOrEmpty(refreshToken)) {
       request = OAuthUtils.getAccessTokenRequestFromRefreshToken(pluginConfig.getCredentialsProvider());
     } else {
       throw UserException.connectionError()
@@ -110,6 +110,11 @@ public class AccessTokenRepository {
     // Update/Refresh the tokens
     Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, request);
     credentialsProvider.updateCredentials(OAuthTokenCredentials.ACCESS_TOKEN, updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
+
+    // If we get a new refresh token, update it as well
+    if (updatedTokens.containsKey(OAuthTokenCredentials.REFRESH_TOKEN)) {
+      credentialsProvider.updateCredentials(OAuthTokenCredentials.REFRESH_TOKEN, updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
+    }
 
     if (updatedTokens.containsKey("accessToken")) {
       accessToken = updatedTokens.get("accessToken");
@@ -147,14 +152,5 @@ public class AccessTokenRepository {
         .message("The access token path field is missing in your OAuth configuration.")
         .build(logger);
     }
-
-    /*if ( oAuthConfig.tokens() == null ||
-      (! oAuthConfig.tokens().containsKey("authorization_code") &&
-      Strings.isNullOrEmpty(oAuthConfig.tokens().get("authorizationCode")))) {
-      throw UserException.validationError()
-        .message("The authorization code is missing in your OAuth configuration.  Please go back to the Drill configuration for this connection" +
-          " and get the authorization code.")
-        .build(logger);
-    }*/
   }
 }

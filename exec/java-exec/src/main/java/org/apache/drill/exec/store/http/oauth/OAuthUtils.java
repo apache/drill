@@ -100,8 +100,10 @@ public class OAuthUtils {
    * @return A request to obtain the access token.
    */
   public static Request getAccessTokenRequestFromRefreshToken(CredentialsProvider credentialsProvider) {
+    String tokenURI = credentialsProvider.getCredentials().get(OAuthTokenCredentials.TOKEN_URI);
+    logger.debug("Requesting new access token with refresh token from {}", tokenURI);
     return new Request.Builder()
-      .url(buildAccessTokenURL(credentialsProvider))
+      .url(tokenURI)
       .header("Content-Type", "application/json")
       .addHeader("Accept", "application/json")
       .post(getPostResponseForTokenRefresh(credentialsProvider))
@@ -158,6 +160,7 @@ public class OAuthUtils {
         refreshToken = (String) parsedJson.get("refresh_token");
         tokens.put(OAuthTokenCredentials.REFRESH_TOKEN, refreshToken);
       }
+      response.close();
       return tokens;
 
     } catch (NullPointerException | IOException e) {

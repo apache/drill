@@ -55,14 +55,15 @@ public class AccessTokenInterceptor implements Interceptor {
 
     if (response.code() == HttpURLConnection.HTTP_UNAUTHORIZED) {
       logger.debug("Unauthorized request.");
+      response.close();
       synchronized (this) {
         final String newAccessToken = accessTokenRepository.getAccessToken();
-        // Access token is refreshed in another thread.
+        // Access token is refreshed in another thread
         if (!accessToken.equals(newAccessToken)) {
           return chain.proceed(newRequestWithAccessToken(request, newAccessToken));
         }
 
-        // Need to refresh an access token
+        // Need to refresh access token
         final String updatedAccessToken;
         try {
           updatedAccessToken = accessTokenRepository.refreshAccessToken();
