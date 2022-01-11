@@ -22,14 +22,14 @@ import okhttp3.OkHttpClient.Builder;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.http.HttpOAuthConfig;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
-import org.apache.drill.exec.store.http.util.HttpOAuthUtils;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
+import org.apache.drill.exec.store.security.OAuthTokenCredentials;
 import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,23 +41,23 @@ public class AccessTokenRepository {
 
   private static final Logger logger = LoggerFactory.getLogger(AccessTokenRepository.class);
   private String accessToken;
+  private final String refreshToken;
+  private HttpStoragePluginConfig pluginConfig;
   private final OkHttpClient client;
-  private final HttpOAuthConfig oAuthConfig;
   private final StoragePluginRegistry registry;
-  private final HttpStoragePluginConfig pluginConfig;
+  private final OAuthTokenCredentials credentials;
+  private final CredentialsProvider credentialsProvider;
 
-  public AccessTokenRepository(HttpOAuthConfig oAuthConfig,
-                               HttpProxyConfig proxyConfig,
+  public AccessTokenRepository(HttpProxyConfig proxyConfig,
                                HttpStoragePluginConfig pluginConfig,
                                StoragePluginRegistry registry) {
     Builder builder = new OkHttpClient.Builder();
-    this.oAuthConfig = oAuthConfig;
     this.registry = registry;
     this.pluginConfig = pluginConfig;
-
-    if (oAuthConfig.tokens() != null && oAuthConfig.tokens().containsKey("accessToken")) {
-      accessToken = oAuthConfig.tokens().get("accessToken");
-    }
+    this.credentialsProvider = pluginConfig.getCredentialsProvider();
+    this.credentials = new OAuthTokenCredentials(credentialsProvider);
+    accessToken = credentials.getAccessToken();
+    refreshToken = credentials.getRefreshToken();
 
     // Add proxy info
     SimpleHttp.addProxyInfo(builder, proxyConfig);
@@ -71,7 +71,13 @@ public class AccessTokenRepository {
   public String getAccessToken() {
     logger.debug("Getting Access token");
     if (accessToken == null) {
-      return refreshAccessToken();
+      try {
+        return refreshAccessToken();
+      } catch (PluginException e) {
+        throw UserException.internalError(e)
+          .message("Unable to access storage plugin: " + e.getMessage())
+          .build(logger);
+      }
     }
     return accessToken;
   }
@@ -87,30 +93,34 @@ public class AccessTokenRepository {
    *
    * @return String of the new access token.
    */
-  public String refreshAccessToken() {
+  public String refreshAccessToken() throws PluginException {
     Request request;
     logger.debug("Refreshing Access Token.");
     validateKeys();
 
     // If the refresh token is present process with that
-    if (oAuthConfig.tokens().containsKey("refreshToken") &&
-      StringUtils.isNotEmpty(oAuthConfig.tokens().get("refreshToken"))) {
-      request = HttpOAuthUtils.getAccessTokenRequestFromRefreshToken(oAuthConfig);
+    if (Strings.isNullOrEmpty(refreshToken)) {
+      request = OAuthUtils.getAccessTokenRequestFromRefreshToken(pluginConfig.getCredentialsProvider());
     } else {
-      request = HttpOAuthUtils.getAccessTokenRequest(oAuthConfig);
+      throw UserException.connectionError()
+        .message("Your connection expired. Please refresh your access token in the Drill configuration.")
+        .build(logger);
     }
 
     // Update/Refresh the tokens
-    Map<String, String> tokens = HttpOAuthUtils.getOAuthTokens(client, request);
-    HttpOAuthConfig updatedConfig = new HttpOAuthConfig(oAuthConfig, tokens);
+    Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, request);
+    credentialsProvider.updateCredentials(OAuthTokenCredentials.ACCESS_TOKEN, updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
 
-    if (tokens.containsKey("accessToken")) {
-      accessToken = tokens.get("accessToken");
+    if (updatedTokens.containsKey("accessToken")) {
+      accessToken = updatedTokens.get("accessToken");
     }
 
     // This null check is here for testing only.  In actual Drill, the registry will not be null.
     if (registry != null) {
-      HttpOAuthUtils.updateOAuthTokens(registry, updatedConfig, pluginConfig);
+      String name = registry.getPluginByConfig(pluginConfig).getName();
+      HttpStoragePluginConfig updatedConfig = new HttpStoragePluginConfig(pluginConfig, pluginConfig.oAuthConfig);
+      registry.validatedPut(name, updatedConfig);
+      pluginConfig = updatedConfig;
     }
     return accessToken;
   }
@@ -120,31 +130,31 @@ public class AccessTokenRepository {
    * if anything is missing.
    */
   private void validateKeys() {
-    if (Strings.isNullOrEmpty(oAuthConfig.clientID())) {
+    if (Strings.isNullOrEmpty(credentials.getClientID())) {
       throw UserException.validationError()
         .message("The client ID field is missing in your OAuth configuration.")
         .build(logger);
     }
 
-    if (Strings.isNullOrEmpty(oAuthConfig.clientSecret())) {
+    if (Strings.isNullOrEmpty(credentials.getClientSecret())) {
       throw UserException.validationError()
         .message("The client secret field is missing in your OAuth configuration.")
         .build(logger);
     }
 
-    if (Strings.isNullOrEmpty(oAuthConfig.accessTokenPath())) {
+    if (Strings.isNullOrEmpty(credentials.getTokenUri())) {
       throw UserException.validationError()
         .message("The access token path field is missing in your OAuth configuration.")
         .build(logger);
     }
 
-    if ( oAuthConfig.tokens() == null ||
+    /*if ( oAuthConfig.tokens() == null ||
       (! oAuthConfig.tokens().containsKey("authorization_code") &&
       Strings.isNullOrEmpty(oAuthConfig.tokens().get("authorizationCode")))) {
       throw UserException.validationError()
         .message("The authorization code is missing in your OAuth configuration.  Please go back to the Drill configuration for this connection" +
           " and get the authorization code.")
         .build(logger);
-    }
+    }*/
   }
 }

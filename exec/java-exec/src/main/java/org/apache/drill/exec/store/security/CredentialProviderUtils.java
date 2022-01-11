@@ -54,7 +54,6 @@ public class CredentialProviderUtils {
    * @param clientSecret The OAUth Client Secret.  This is provided by the application during signup.
    * @param accessToken  The OAuth Access Token.  The application provides this during the authentication process
    * @param refreshToken  The OAAuth Refresh Token,  The application provides this during the authentication process
-   * @param authURI The authorization URI.  This is the URI where the authorization token is obtained
    * @param tokenURI The URI from which you swap the auth code for access and refresh tokens.
    * @param username  Optional username for proxy or other services
    * @param password  Optional password for proxy or other services
@@ -66,7 +65,6 @@ public class CredentialProviderUtils {
     String clientSecret,
     String accessToken,
     String refreshToken,
-    String authURI,
     String tokenURI,
     String username,
     String password,
@@ -93,9 +91,6 @@ public class CredentialProviderUtils {
     }
     if (password != null) {
       mapBuilder.put(OAuthTokenCredentials.PASSWORD, password);
-    }
-    if (authURI != null) {
-      mapBuilder.put(OAuthTokenCredentials.AUTH_URI, authURI);
     }
     if (tokenURI != null) {
       mapBuilder.put(OAuthTokenCredentials.TOKEN_URI, tokenURI);

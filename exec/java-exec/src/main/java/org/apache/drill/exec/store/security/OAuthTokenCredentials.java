@@ -19,6 +19,8 @@
 package org.apache.drill.exec.store.security;
 
 import org.apache.drill.common.logical.security.CredentialsProvider;
+
+import java.util.HashMap;
 import java.util.Map;
 
 public class OAuthTokenCredentials extends UsernamePasswordCredentials {
@@ -27,12 +29,10 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
   public static final String CLIENT_SECRET = "clientSecret";
   public static final String ACCESS_TOKEN = "accessToken";
   public static final String REFRESH_TOKEN = "refreshToken";
-  public static final String AUTH_URI = "authorizationURI";
   public static final String TOKEN_URI = "tokenURI";
 
   private final String clientID;
   private final String clientSecret;
-  private final String authorizationURI;
   private final String tokenURI;
   private String accessToken;
   private String refreshToken;
@@ -40,23 +40,22 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
 
   public OAuthTokenCredentials(CredentialsProvider credentialsProvider) {
    super(credentialsProvider);
-    Map<String, String> credentials = credentialsProvider.getCredentials();
-    this.clientID = credentials.get(CLIENT_ID);
-    this.clientSecret = credentials.get(CLIENT_SECRET);
-    this.authorizationURI = credentials.get(AUTH_URI);
-    this.tokenURI = credentials.get(TOKEN_URI);
+   if (credentialsProvider == null) {
+     this.clientID = null;
+     this.clientSecret = null;
+     this.tokenURI = null;
+     this.accessToken = null;
+     this.refreshToken = null;
+   } else {
+     Map<String, String> credentials = credentialsProvider.getCredentials() == null
+       ? new HashMap<>() : credentialsProvider.getCredentials();
 
-    try {
-      this.accessToken = credentials.get(ACCESS_TOKEN);
-    } catch (NullPointerException e) {
-      this.accessToken = null;
-    }
-
-    try {
-      this.refreshToken = credentials.get(REFRESH_TOKEN);
-    } catch (NullPointerException e) {
-      this.refreshToken = null;
-    }
+     this.clientID = credentials.getOrDefault(CLIENT_ID, null);
+     this.clientSecret = credentials.getOrDefault(CLIENT_SECRET, null);
+     this.tokenURI = credentials.getOrDefault(TOKEN_URI, null);
+     this.accessToken = credentials.getOrDefault(ACCESS_TOKEN, null);
+     this.refreshToken = credentials.getOrDefault(REFRESH_TOKEN, null);
+   }
   }
 
   public String getClientID() {
@@ -73,10 +72,6 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
 
   public String getRefreshToken() {
     return refreshToken;
-  }
-
-  public String getAuthUri() {
-    return authorizationURI;
   }
 
   public String getTokenUri() {

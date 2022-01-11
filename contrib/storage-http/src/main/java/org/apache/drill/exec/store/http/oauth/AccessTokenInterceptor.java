@@ -22,6 +22,8 @@ import lombok.NonNull;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +63,14 @@ public class AccessTokenInterceptor implements Interceptor {
         }
 
         // Need to refresh an access token
-        final String updatedAccessToken = accessTokenRepository.refreshAccessToken();
+        final String updatedAccessToken;
+        try {
+          updatedAccessToken = accessTokenRepository.refreshAccessToken();
+        } catch (PluginException e) {
+          throw UserException.connectionError()
+            .message("Unable to obtain access token: " + e.getMessage())
+            .build(logger);
+        }
         // Retry the request
         return chain.proceed(newRequestWithAccessToken(request, updatedAccessToken));
       }

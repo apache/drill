@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.security;
 
 import org.apache.drill.common.logical.security.CredentialsProvider;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class UsernamePasswordCredentials {
@@ -29,9 +30,14 @@ public class UsernamePasswordCredentials {
   private final String password;
 
   public UsernamePasswordCredentials(CredentialsProvider credentialsProvider) {
-    Map<String, String> credentials = credentialsProvider.getCredentials();
-    this.username = credentials.get(USERNAME);
-    this.password = credentials.get(PASSWORD);
+    if (credentialsProvider == null) {
+      this.username = null;
+      this.password = null;
+    } else {
+      Map<String, String> credentials = credentialsProvider.getCredentials() == null ? new HashMap<>() : credentialsProvider.getCredentials();
+      this.username = credentials.get(USERNAME);
+      this.password = credentials.get(PASSWORD);
+    }
   }
 
   public String getUsername() {

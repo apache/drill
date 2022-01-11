@@ -144,7 +144,7 @@
         var storage_config = JSON.parse(config.value);
 
         // Construct the Callback URL
-        var clientID = storage_config.oAuthConfig.clientID;
+        var clientID = storage_config.credentialsProvider.credentials.clientID;
        if (clientID.length == 0) {
          window.alert("Invalid client ID.");
          return false;
@@ -156,28 +156,22 @@
           return false;
         }
 
-        var finalURL;
-        var authorizationPath = storage_config.oAuthConfig.authorizationPath;
-        var authorizationURL = storage_config.oAuthConfig.authorizationURL;
-        var baseURL = storage_config.oAuthConfig.baseURL;
-
-        // If the user provides an Authorization URL, that will be used first to get the authorization code.  If they
-        // do not provide an authURL, the next attempt will be to combine the baseURL with the authorization path.
-        // If there is no authorization path, we will proceed with just the base URL.
+        var authorizationURI = storage_config.oAuthConfig.authorizationURI;
         if (authorizationURL) {
           finalURL = authorizationURL + "?client_id=" + clientID + "&redirect_uri=" + callbackURL;
-        } else if (authorizationPath) {
-          finalURL = baseURL + authorizationPath + "?client_id=" + clientID + "&redirect_uri=" + callbackURL;
         } else {
-          finalURL = baseURL + "?client_id=" + clientID + "&redirect_uri=" + callbackURL;
+          window.alert("Invalid authorization URI.")
+          return false;
         }
 
+        // Add scope(s) if populated
         var scope = storage_config.oAuthConfig.scope;
         if (scope) {
           var encodedScope = encodeURIComponent(scope);
           finalURL = finalURL + "&scope=" + encodedScope;
         }
 
+        // Add any additional parameters to the oAuth configuration string
         var params = storage_config.oAuthConfig.authorizationParams
         if (params) {
           var param;

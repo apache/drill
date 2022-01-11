@@ -127,7 +127,7 @@ public class SimpleHttp {
     if (oAuthConfig != null) {
       // Add interceptors for OAuth2
       logger.debug("Adding OAuth2 Interceptor");
-      AccessTokenRepository repository = new AccessTokenRepository(oAuthConfig, proxyConfig, config, registry);
+      AccessTokenRepository repository = new AccessTokenRepository(proxyConfig, config, registry);
 
       builder.authenticator(new AccessTokenAuthenticator(repository));
       builder.addInterceptor(new AccessTokenInterceptor(repository));

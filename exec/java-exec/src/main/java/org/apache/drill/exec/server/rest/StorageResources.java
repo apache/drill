@@ -206,8 +206,9 @@ public class StorageResources {
         // Now exchange the authorization token for an access token
         Builder builder = new OkHttpClient.Builder();
         OkHttpClient client = builder.build();
-        Request request = OAuthUtils.getAccessTokenRequest(credentialsProvider);
+        Request request = OAuthUtils.getAccessTokenRequest(credentialsProvider, code);
         Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, request);
+
         credentialsProvider.updateCredentials("authorizationCode", code);
         credentialsProvider.updateCredentials(OAuthTokenCredentials.ACCESS_TOKEN, updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
         if (updatedTokens.containsKey(OAuthTokenCredentials.REFRESH_TOKEN)) {
@@ -220,7 +221,7 @@ public class StorageResources {
         storage.validatedPut(name, updatedPlugin.getConfig());
         return Response.status(Status.OK).entity(OAUTH_SUCCESS).build();
       } else {
-        logger.error("{} is not a REST plugin. You can only add auth code to REST plugins.", name);
+        logger.error("{} is not a HTTP plugin. You can only add auth code to HTTP plugins.", name);
         return Response.status(Status.INTERNAL_SERVER_ERROR)
           .entity(message("Unable to add authorization code: %s", name))
           .build();

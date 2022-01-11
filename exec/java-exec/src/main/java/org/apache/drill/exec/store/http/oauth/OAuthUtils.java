@@ -40,14 +40,15 @@ public class OAuthUtils {
   /**
    * Craft a GET request to obtain an access token.
    * @param credentialsProvider A credential provider containing the clientID, clientSecret and authorizationCode
+   * @param authorizationCode The authorization code from the OAuth2.0 enabled API
    * @return A Request Body to obtain an access token
    */
-  public static RequestBody getPostResponse(CredentialsProvider credentialsProvider) {
+  public static RequestBody getPostResponse(CredentialsProvider credentialsProvider, String authorizationCode) {
     return new FormBody.Builder()
       .add("grant_type", "authorization_code")
-      .add("client_id", credentialsProvider.getCredentials().get("clientID"))
-      .add("client_secret", credentialsProvider.getCredentials().get("clientSecret"))
-      .add("code", credentialsProvider.getCredentials().get("authorizationCode"))
+      .add("client_id", credentialsProvider.getCredentials().get(OAuthTokenCredentials.CLIENT_ID))
+      .add("client_secret", credentialsProvider.getCredentials().get(OAuthTokenCredentials.CLIENT_SECRET))
+      .add("code", authorizationCode)
       .build();
   }
 
@@ -78,14 +79,15 @@ public class OAuthUtils {
    * Crafts a POST request to obtain an access token.  This method should be used for the initial call
    * to the OAuth API when you are exchanging the authorization code for an access token.
    * @param credentialsProvider The credentialsProvider containing the client_id, client_secret, and auth_code.
+   * @param authenticationCode The authentication code from the API.
    * @return A request to obtain the access token.
    */
-  public static Request getAccessTokenRequest(CredentialsProvider credentialsProvider) {
+  public static Request getAccessTokenRequest(CredentialsProvider credentialsProvider, String authenticationCode) {
     return new Request.Builder()
       .url(buildAccessTokenURL(credentialsProvider))
       .header("Content-Type", "application/json")
       .addHeader("Accept", "application/json")
-      .post(getPostResponse(credentialsProvider))
+      .post(getPostResponse(credentialsProvider, authenticationCode))
       .build();
   }
 

@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.http;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -30,7 +29,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.drill.common.PlanStringBuilder;
-import org.apache.drill.exec.store.security.OAuthTokenCredentials;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,29 +43,15 @@ import java.util.Map;
 @JsonDeserialize(builder = HttpOAuthConfig.HttpOAuthConfigBuilder.class)
 public class HttpOAuthConfig {
 
-  @JsonProperty("baseURL")
-  private final String baseURL;
-
-  @JsonProperty("clientID")
-  private final String clientID;
-
-  @JsonProperty("clientSecret")
-  private final String clientSecret;
-
+  // TODO Change to URI
   @JsonProperty("callbackURL")
   private final String callbackURL;
 
   @JsonProperty("authorizationURL")
-  private final String authorizationURL;
-
-  @JsonProperty("authorizationPath")
-  private final String authorizationPath;
+  private final String authorizationURI;
 
   @JsonProperty("authorizationParams")
   private final Map<String, String> authorizationParams;
-
-  @JsonProperty("accessTokenPath")
-  private final String accessTokenPath;
 
   @JsonProperty("generateCSRFToken")
   private final boolean generateCSRFToken;
@@ -84,28 +68,18 @@ public class HttpOAuthConfig {
    * @param tokens The updated tokens
    */
   public HttpOAuthConfig(HttpOAuthConfig that, Map<String, String> tokens) {
-    this.baseURL = that.baseURL;
-    this.clientID = that.clientID;
-    this.clientSecret = that.clientSecret;
     this.callbackURL = that.callbackURL;
-    this.authorizationURL = that.authorizationURL;
-    this.authorizationPath = that.authorizationPath;
+    this.authorizationURI = that.authorizationURI;
     this.authorizationParams = that.authorizationParams;
-    this.accessTokenPath = that.accessTokenPath;
     this.generateCSRFToken = that.generateCSRFToken;
     this.scope = that.scope;
     this.tokens = tokens == null ? new HashMap<>() : tokens;
   }
 
   private HttpOAuthConfig(HttpOAuthConfig.HttpOAuthConfigBuilder builder) {
-    this.baseURL = builder.baseURL;
-    this.clientID = builder.clientID;
-    this.clientSecret = builder.clientSecret;
     this.callbackURL = builder.callbackURL;
-    this.authorizationURL = builder.authorizationURL;
-    this.authorizationPath = builder.authorizationPath;
+    this.authorizationURI = builder.authorizationURL;
     this.authorizationParams = builder.authorizationParams;
-    this.accessTokenPath = builder.accessTokenPath;
     this.generateCSRFToken = builder.generateCSRFToken;
     this.scope = builder.scope;
     this.tokens = builder.tokens;
@@ -114,51 +88,16 @@ public class HttpOAuthConfig {
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
-      .field("baseURL", baseURL)
-      .field("clientID", clientID)
-      .maskedField("clientSecret", clientSecret)
       .field("callbackURL", callbackURL)
-      .field("authorizationURL", authorizationURL)
+      .field("authorizationURL", authorizationURI)
       .field("authorizationParams", authorizationParams)
-      .field("authorizationPath", authorizationPath)
-      .field("accessTokenPath", accessTokenPath)
       .field("generateCSRFToken", generateCSRFToken)
       .field("tokens", tokens.keySet())
       .toString();
   }
 
-  @JsonIgnore
-  public String getAccessToken() {
-    if (tokens != null && tokens.containsKey(OAuthTokenCredentials.ACCESS_TOKEN)) {
-      return tokens.get(OAuthTokenCredentials.ACCESS_TOKEN);
-    } else {
-      return null;
-    }
-  }
-
-  @JsonIgnore
-  public String getRefreshToken() {
-    if (tokens != null && tokens.containsKey(OAuthTokenCredentials.REFRESH_TOKEN)) {
-      return tokens.get(OAuthTokenCredentials.REFRESH_TOKEN);
-    } else {
-      return null;
-    }
-  }
-
   @JsonPOJOBuilder(withPrefix = "")
   public static class HttpOAuthConfigBuilder {
-    @Getter
-    @Setter
-    private String baseURL;
-
-    @Getter
-    @Setter
-    private String clientID;
-
-    @Getter
-    @Setter
-    private String clientSecret;
-
     @Getter
     @Setter
     private String callbackURL;
@@ -170,14 +109,6 @@ public class HttpOAuthConfig {
     @Getter
     @Setter
     private Map<String, String> authorizationParams;
-
-    @Getter
-    @Setter
-    private String authorizationPath;
-
-    @Getter
-    @Setter
-    private String accessTokenPath;
 
     @Getter
     @Setter
