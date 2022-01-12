@@ -58,7 +58,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
@@ -350,10 +349,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
             makeColumn(builder, tempColumnName, MinorType.VARCHAR);
             excelFieldNames.add(colPosition, tempColumnName);
             break;
-          case FORMULA:
-          case NUMERIC:
-          case _NONE:
-          case BLANK:
+          default:
             tempColumnName = cell.getStringCellValue();
 
             // Remove leading and trailing whitespace
