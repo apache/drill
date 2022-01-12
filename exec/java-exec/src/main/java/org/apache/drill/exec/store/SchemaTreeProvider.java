@@ -19,10 +19,13 @@ package org.apache.drill.exec.store;
 
 import java.util.List;
 
-import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ViewExpansionContext;
+import org.apache.calcite.jdbc.DynamicRootSchema;
 import org.apache.calcite.jdbc.DynamicSchema;
+import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -32,6 +35,9 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.lang.Deprecated;
 
 /**
  * Creates new schema trees. It keeps track of newly created schema trees and
@@ -101,7 +107,7 @@ public class SchemaTreeProvider implements AutoCloseable {
   /**
    * Create and return a SchemaTree with given <i>schemaConfig</i>.
    * @param schemaConfig
-   * @return
+   * @return Root of the schema tree.
    */
   public SchemaPlus createRootSchema(SchemaConfig schemaConfig) {
       SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig,
@@ -116,22 +122,26 @@ public class SchemaTreeProvider implements AutoCloseable {
    * @param userName Name of the user who is accessing the storage sources.
    * @param provider {@link SchemaConfigInfoProvider} instance
    * @return Root of the schema tree.
+   * @deprecated Prefer the {@link SchemaTreeProvider#createRootSchema} methods
+   * which do not eagerly construct an entire schema tree, but let
+   * {@link DynamicRootSchema} construct it lazily.
    */
-  //TODO jnturton: clean up
-  /*
+  @Deprecated
   public SchemaPlus createFullRootSchema(final String userName, final SchemaConfigInfoProvider provider) {
     final String schemaUser = isImpersonationEnabled ? userName : ImpersonationUtil.getProcessUserName();
     final SchemaConfig schemaConfig = SchemaConfig.newBuilder(schemaUser, provider).build();
     return createFullRootSchema(schemaConfig);
   }
-  */
 
   /**
    * Create and return a Full SchemaTree with given <i>schemaConfig</i>.
    * @param schemaConfig
-   * @return
+   * @return Root of the schema tree.
+   * @deprecated Prefer the {@link SchemaTreeProvider#createRootSchema} methods
+   * which do not eagerly construct an entire schema tree, but let
+   * {@link DynamicRootSchema} construct it lazily.
    */
-  /*
+  @Deprecated
   public SchemaPlus createFullRootSchema(SchemaConfig schemaConfig) {
     try {
       SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig,
@@ -140,8 +150,7 @@ public class SchemaTreeProvider implements AutoCloseable {
       schemaTreesToClose.add(rootSchema);
       return rootSchema;
 
-    }
-    catch(IOException e) {
+    } catch (IOException e) {
       // We can't proceed further without a schema, throw a runtime exception.
       // Improve the error message for client side.
 
@@ -156,34 +165,11 @@ public class SchemaTreeProvider implements AutoCloseable {
           .build(logger);
     }
   }
-  */
 
   @Override
   public void close() throws Exception {
-    //TODO jnturton: clean up
-    /*
-    List<AutoCloseable> toClose = Lists.newArrayList();
-    for(SchemaPlus tree : schemaTreesToClose) {
-      addSchemasToCloseList(tree, toClose);
-    }
-
-    AutoCloseables.close(toClose);
-    */
-  }
-
-  //TODO jnturton: clean up
-  /*
-  private static void addSchemasToCloseList(final SchemaPlus tree, final List<AutoCloseable> toClose) {
-    for(String subSchemaName : tree.getSubSchemaNames()) {
-      addSchemasToCloseList(tree.getSubSchema(subSchemaName), toClose);
-    }
-
-    try {
-      AbstractSchema drillSchemaImpl =  tree.unwrap(AbstractSchema.class);
-      toClose.add(drillSchemaImpl);
-    } catch (ClassCastException e) {
-      // Ignore as the SchemaPlus is not an implementation of Drill schema.
+    for (SchemaPlus sp : schemaTreesToClose) {
+      AutoCloseables.closeWithUserException(sp.unwrap(AbstractSchema.class));
     }
   }
-   */
 }

@@ -281,10 +281,11 @@ public class InfoSchemaFilter {
       }
 
       case "in": {
-        // I don't believe that this case will ever run.  The IN operator is compiled either
-        // to a chain of boolean ORs, or to a hash join with a relation which uses VALUES to
-        // generate the list of constants provided to the IN operator in the query. See
-        // the planner.in_subquery_threshold option.
+        // This case will probably only ever run if the user submits a manually
+        // crafted plan because the IN operator is compiled either to a chain
+        // of boolean ORs, or to a hash join with a relation which uses VALUES
+        // to generate the list of constants provided to the IN operator in
+        // the query. See the planner.in_subquery_threshold option.
         FieldExprNode col = (FieldExprNode) exprNode.args.get(0);
         List<ExprNode> args = exprNode.args.subList(1, exprNode.args.size());
         final String fieldValue = recordValues.get(col.field);

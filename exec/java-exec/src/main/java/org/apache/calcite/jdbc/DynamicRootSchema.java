@@ -21,9 +21,9 @@ import org.apache.calcite.DataContext;
 
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.linq4j.tree.Expressions;
-import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.util.BuiltInMethod;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.common.expression.SchemaPath;
@@ -49,7 +49,7 @@ import java.util.Set;
  * Loads schemas from storage plugins later when {@link #getSubSchema(String, boolean)}
  * is called.
  */
-public class DynamicRootSchema extends DynamicSchema {
+public class DynamicRootSchema extends DynamicSchema implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(DynamicRootSchema.class);
 
   private static final String ROOT_SCHEMA_NAME = "";
@@ -61,7 +61,6 @@ public class DynamicRootSchema extends DynamicSchema {
   /** Creates a root schema. */
   DynamicRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider) {
     super(null, new RootSchema(storages), ROOT_SCHEMA_NAME);
-    ((RootSchema)this.schema).setDynRootSchema(this);
     this.schemaConfig = schemaConfig;
     this.storages = storages;
     this.aliasRegistryProvider = aliasRegistryProvider;
@@ -136,7 +135,7 @@ public class DynamicRootSchema extends DynamicSchema {
         for (SchemaPlus schema : secondLevelSchemas) {
           org.apache.drill.exec.store.AbstractSchema drillSchema;
           try {
-            drillSchema = schema.unwrap(org.apache.drill.exec.store.AbstractSchema.class);
+            drillSchema = schema.unwrap(AbstractSchema.class);
           } catch (ClassCastException e) {
             throw new RuntimeException(String.format("Schema '%s' is not expected under root schema", schema.getName()));
           }
@@ -157,11 +156,16 @@ public class DynamicRootSchema extends DynamicSchema {
     }
   }
 
+  @Override
+  public void close() throws Exception {
+    for (CalciteSchema cs : subSchemaMap.map().values()) {
+  		AutoCloseables.closeWithUserException(cs.plus().unwrap(AbstractSchema.class));
+    }
+  }
+
   public static class RootSchema extends AbstractSchema {
 
     private StoragePluginRegistry storages;
-
-    private DynamicRootSchema dynRootSchema;
 
     public RootSchema(StoragePluginRegistry storages) {
       super(Collections.emptyList(), ROOT_SCHEMA_NAME);
@@ -171,11 +175,6 @@ public class DynamicRootSchema extends DynamicSchema {
     @Override
     public Set<String> getSubSchemaNames() {
       return storages.availablePlugins();
-    }
-
-    @Override
-    public Schema getSubSchema(String name) {
-      return dynRootSchema.getSubSchema(name, false).schema;
     }
 
     @Override
@@ -193,10 +192,6 @@ public class DynamicRootSchema extends DynamicSchema {
     @Override
     public boolean showInInformationSchema() {
       return false;
-    }
-
-    public void setDynRootSchema(DynamicRootSchema dynRootSchema) {
-      this.dynRootSchema = dynRootSchema;
     }
   }
 }
