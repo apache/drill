@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.http;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -27,55 +28,43 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
+@ToString
 @Getter
 @Setter
-@ToString
-@Accessors(fluent = true)
+@Builder
 @EqualsAndHashCode
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonDeserialize(builder = HttpOAuthConfig.HttpOAuthConfigBuilder.class)
 public class HttpOAuthConfig {
 
-  @JsonProperty("callbackURL")
   private final String callbackURL;
-
-  @JsonProperty("authorizationURL")
   private final String authorizationURL;
-
-  @JsonProperty("authorizationParams")
   private final Map<String, String> authorizationParams;
-
-  @JsonProperty("generateCSRFToken")
   private final boolean generateCSRFToken;
-
-  @JsonProperty("scope")
   private final String scope;
-
-  @JsonProperty("tokens")
   private final Map<String, String> tokens;
 
-  /**
-   * Clone constructor used for updating tokens
-   * @param that The original oAuth configs
-   * @param tokens The updated tokens
-   */
-  public HttpOAuthConfig(HttpOAuthConfig that, Map<String, String> tokens) {
-    this.callbackURL = that.callbackURL;
-    this.authorizationURL = that.authorizationURL;
-    this.authorizationParams = that.authorizationParams;
-    this.generateCSRFToken = that.generateCSRFToken;
-    this.scope = that.scope;
-    this.tokens = tokens == null ? new HashMap<>() : tokens;
+  @JsonCreator
+  public HttpOAuthConfig(@JsonProperty("callbackURL") String callbackURL,
+                         @JsonProperty("authorizationURL") String authorizationURL,
+                         @JsonProperty("authorizationParams") Map<String, String> authorizationParams,
+                         @JsonProperty("generateCSRFToken") boolean generateCSRFToken,
+                         @JsonProperty("scope") String scope,
+                         @JsonProperty("tokens") Map<String, String> tokens) {
+    this.callbackURL = callbackURL;
+    this.authorizationURL = authorizationURL;
+    this.authorizationParams = authorizationParams;
+    this.generateCSRFToken = generateCSRFToken;
+    this.scope = scope;
+    this.tokens = tokens;
   }
 
-  private HttpOAuthConfig(HttpOAuthConfig.HttpOAuthConfigBuilder builder) {
+  public HttpOAuthConfig(HttpOAuthConfig.HttpOAuthConfigBuilder builder) {
     this.callbackURL = builder.callbackURL;
     this.authorizationURL = builder.authorizationURL;
     this.authorizationParams = builder.authorizationParams;
@@ -84,19 +73,8 @@ public class HttpOAuthConfig {
     this.tokens = builder.tokens;
   }
 
-  @Getter
-  @Setter
-  @Builder
   @JsonPOJOBuilder(withPrefix = "")
   public static class HttpOAuthConfigBuilder {
-
-    private String callbackURL;
-    private String authorizationURL;
-    private Map<String, String> authorizationParams;
-    private String scope;
-    private boolean generateCSRFToken;
-    private Map<String, String> tokens;
-
     public HttpOAuthConfig build() {
       return new HttpOAuthConfig(this);
     }

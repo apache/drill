@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig {
   private static final Logger logger = LoggerFactory.getLogger(HttpStoragePluginConfig.class);
   public static final String NAME = "http";
+
   public final Map<String, HttpApiConfig> connections;
   public final boolean cacheResults;
   public final String proxyHost;

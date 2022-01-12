@@ -46,7 +46,7 @@
     </#if>
     <#if model.getType() == "HttpStoragePluginConfig" >
     <! -- TODO Also check to see whether the plugin uses OAuth or not -->
-      <a id="getOauth" class="btn btn-success text-white">Get Authorization Token</a>
+      <a id="getOauth" class="btn btn-success text-white">Get Access Token</a>
     </#if>
     <button type="button" class="btn btn-secondary export" name="${model.getPlugin().getName()}" data-toggle="modal"
             data-target="#pluginsModal">

@@ -3,11 +3,11 @@ Many APIs use OAuth2.0 as a means of authentication. Drill can connect to APIs t
 username/password authentication.
 
 The good news, and bottom line here is that you can configure Drill to handle all this automagically, but you do have to understand how to configure it so that it works. First, 
-let's get a high level understanding of how OAuth works.
+let's get a high level understanding of how OAuth works.  Click here to [skip to the section on configuring Drill](#configure-drill).
 
 ### Understanding the OAuth2 Process
 There are many tutorials as to how OAuth works which we will not repeat here.  There are some slight variations but this is a good enough high level overview so you will understand the process works. 
-Thus, we will summarize the process as three steps:
+Thus, we will summarize the process as four steps:
 
 #### Step 1:  Obtain an Authorization Code
 For the first step, a user will have to log into the API's front end, and authorize the application to access the API.  The API will issue you a `clientID` and a 
@@ -25,36 +25,98 @@ either re-authorize the application or use a refresh token to obtain a new one.
 Once you have the `accessToken` you are ready to make authenticated API calls. All you have to do here is add the `accessToken` to the API header and you can make API calls 
 just like any other. 
 
-## Configuring Drill to Use OAuth2.0 for API Calls
-The OAuth2.0 configuration for HTTP/REST plugins is done at the plugin level and thus the access token is used for all endpoints in that connection.  This made the most sense 
-because typically, APIs that use OAuth will have many endpoints.
+#### Step 4: (Optional) Obtain a new Access Token using the Refresh Token
+Sometimes, the `accessToken` will expire.  When this happens, the API will respond with a `401` not authorized response. When this happens, the application will make a `POST` 
+request containing the `clientSecret`, the `clientID` and the `refreshToken` and will obtain new tokens.
 
-### Configuration Options
-For OAuth to work, there are a lot of configuration options, but not all are required.  Let's start with the bare minimum:
+## The Artifacts
+Unlike simple username/password authentication, there are about 5 artifacts that you will need to authenticate using OAuth and it is also helpful to understand where they come 
+from and to whom they "belong".  Let's start with the artifacts that you will need to manually obtain from the API when you register your application:  (These are not the Drill 
+config variables, but the names are similar.  More on that later.)
+* `clientID`:  A token to uniquely identify your application with the API.
+* `clientSecret`:  A sort of password token which will be used to obtain additional tokens.
+* `callbackURL`:  The URL to which access and refresh tokens will be sent. You have to provide this URL when you register your application with the API.  If this does not match 
+  what you provide the API, the calls will fail.
+* `scope`:  An optional parameter which defines the scope of access request for the given access token. The API will provide examples, but you have to pick what accesses you 
+  are requesting.
 
-* `clientID`:  The clientID is a token which you obtain from the API source when you register.
-* `clientSecret`:  The client secret is also a token that you obtain from the API source when you register.
-* `baseURL`:  If your API has a root URL for all the OAuth calls, provide that here.
-* `callbackURL`:  This is the URL which you provide to the API to which the API will send the access token.  It will be something like `<YOUR DRILL HOST>/storage/<plugin 
-  name>/update_oath2_authtoken`.  Note that the API source must be able to access this URL.
-* `accessTokenPath`:  The path to be added to the `baseURL` to obtain the access token.
-* `authorizationPath`:  The path to be added (if any) to the `baseURL` to obtain the authorization code.
+You will need to find two URLs in the API documentation:
 
-These are the minimum config options you will need to connect to an OAuth enabled API.  However, there are other parameters which you can add to get your API to work with Drill.
-They are:
-* `authorizationParams`:  Some APIs requires you to add additional parameters to the authorization request.  This is a key/value map of parameters.  Note, you should not have 
-  to include `Content-Type` or `Accept` headers.
-* `authorizationURL`: In the event that your API uses a completely different URL than your access token URL, set the authorization URL with this parameter.  This overrides the 
-  `authorizationPath` if it is defined.
-* `scope`:  The scope of your access token.  This will be provided in your API documentation.
+* `authorizationURL`:  This is the URL from which you will request the `authorizationCode`.  You should find this in the API documentation.
+* `tokenURL`: The URL from which you can request the `accessToken`. 
 
+There are two other artifacts that you will need, but these artifacts are generated by the API.  One thing to note is that while all the other artifacts are owned by the 
+application, these two are unique (and "owned by") the user.  These artifacts are:
+* `accessToken`: The token which is used to grant access to a protected resource
+* `refreshToken`: The token used to obtain a new `accessToken` without having to re-authorize the application.
 
+Currently, Drill does not allow per-user credentials.  However, it is possible to configure Drill to use the Vault Credential Provider so that each individual user has their 
+own credentials.
+
+<h1 id="configure-drill">Configuring Drill for OAuth</h1>
+Configuring Drill to connect to OAuth2.0 enabled APIs is a little complicated as part of the configuration parameters are stored in the REST plugin and others are stored in the 
+credentialProvider.
+
+To use OAuth2.0, you will have to create an `oAuthConfig` in the plugin configuration.  Within the `oAuthConfig`, define the `callbackURL` and `authorizationURL` parameters:
+* The `authorizationURL` is provided by the API and is the URL where the authorization code is obtained. 
+* The `callbackURL` parameter is the URL where the API will send the access token.  You must provide this when you register and obtain your client ID and client secret.  This 
+  will be in the format: `http(s)://<your drill host>/storage/<storage plugin name>update_oauth2_authtoken`
+* (Optional)`scope`: The scope parameter limits the scope of your access.  This is something which can be found in the remote API documentation.
+
+### The Credential Provider
+The actual tokens are stored using Drill's Credential Provider.  In addition to the `oAuthConfig` section of the plugin configuration, you must also add a section for the 
+`credentialProvider` as shown in the example below.  At a minimum, that section must contain:
+* `clientID`
+* `clientSecret`
+* `tokenURI`
+
+All those parameters are provided by the API once you register.
+
+## Obtaining the Access Token
+Once you have set up the configuration, you will see an additional button labeled `Get Access Token` at the bottom of the configuration screen.
+<img src="images/get_access_token.png" />
+
+If everything is configured correctly, you will be taken to your API's authentication page, where the user will be asked to authenticate with the API and grant your application 
+permission to access protected resources.  Once the user does this, you will see the window below:
+<img src="images/access_token.png" />
+
+When you close that window, you will see an updated configuration which includes the access and refresh tokens.  At this point you are ready to query!
+
+## Example Configuration
+The example configuration below demonstrates how to connect Drill to the API available at clickup.com.
 ```json
-"oauthConfig": {
-  "clientID": "<Your client ID>",
-  "clientSecret": "<Your client secret>",
-  "callbackURL": 
-  "baseURL"
+{
+  "type": "http",
+  "connections": {
+    "team": {
+      "url": "https://api.clickup.com/api/v2/team",
+      "requireTail": false,
+      "method": "GET",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "dataPath": "teams",
+      "authType": "none",
+      "inputType": "json",
+      "xmlDataLevel": 1,
+      "verifySSLCert": true
+    }
+  },
+  "proxyType": "direct",
+  "oAuthConfig": {
+    "callbackURL": "http://localhost:8047/storage/clickup/update_oath2_authtoken",
+    "authorizationURL": "https://app.clickup.com/api"
+  },
+  "credentialsProvider": {
+    "credentialsProviderType": "PlainCredentialsProvider",
+    "credentials": {
+      "clientID": "<your client ID>",
+      "clientSecret": "<your client secret>",
+      "tokenURI": "https://app.clickup.com/api/v2/oauth/token"
+    }
+  },
+  "enabled": true
 }
 
 ```
+
