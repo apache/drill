@@ -312,41 +312,31 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     //If there are no headers, create columns names of field_n
     if (readerConfig.headerRow == -1) {
       String missingFieldName;
-      int i = 0;
 
-      for (Cell c : currentRow) {
-        missingFieldName = MISSING_FIELD_NAME_HEADER + (i + 1);
+      for (short colNum = 0; colNum < currentRow.getLastCellNum(); colNum++) {
+        missingFieldName = MISSING_FIELD_NAME_HEADER + (colNum + 1);
         makeColumn(builder, missingFieldName, MinorType.VARCHAR);
-        excelFieldNames.add(i, missingFieldName);
-        i++;
+        excelFieldNames.add(colNum, missingFieldName);
       }
       builder.buildSchema();
     } else if (rowIterator.hasNext()) {
       //Get the header row and column count
       totalColumnCount = currentRow.getLastCellNum();
-      Cell dataCell = null;
 
       //Read the header row
-      Iterator<Cell> headerRowIterator = currentRow.cellIterator();
-      int colPosition = 0;
+      Row headerRow = currentRow;
       String tempColumnName;
 
       // Get the first data row.
       currentRow = rowIterator.next();
       Row firstDataRow = currentRow;
-      Iterator<Cell> dataRowIterator = firstDataRow.cellIterator();
 
-
-      while (headerRowIterator.hasNext()) {
+      for (short colPosition = 0; colPosition < totalColumnCount; colPosition++) {
         // We need this to get the header names
-        Cell cell = headerRowIterator.next();
+        Cell cell = headerRow.getCell(colPosition, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
 
         // Since header names are most likely all Strings, we need the first row of actual data to get the data types
-        try {
-          dataCell = dataRowIterator.next();
-        } catch (NoSuchElementException e) {
-          // Do nothing... empty value in data cell
-        }
+        Cell dataCell = firstDataRow.getCell(colPosition, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
 
         switch (dataCell.getCellType()) {
           case STRING:
@@ -372,7 +362,6 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
             excelFieldNames.add(colPosition, tempColumnName);
             break;
         }
-        colPosition++;
       }
     }
     addMetadataToSchema(builder);
