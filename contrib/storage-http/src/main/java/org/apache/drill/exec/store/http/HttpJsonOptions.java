@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.http;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,7 +36,6 @@ import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 @EqualsAndHashCode
 @ToString
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-@JsonDeserialize(builder = HttpJsonOptions.HttpJsonOptionsBuilder.class)
 public class HttpJsonOptions {
 
   @JsonInclude
@@ -54,26 +52,19 @@ public class HttpJsonOptions {
 
   @JsonIgnore
   public JsonLoaderOptions getJsonOptions(OptionSet optionSet) {
-
     JsonLoaderOptions options = new JsonLoaderOptions(optionSet);
-
     if (allowNanInf != null) {
       options.allowNanInf = allowNanInf;
     }
-
     if (allTextMode != null) {
       options.allTextMode = allTextMode;
     }
-
     if (readNumbersAsDouble != null) {
       options.readNumbersAsDouble = readNumbersAsDouble;
     }
-
     if (enableEscapeAnyChar != null) {
       options.enableEscapeAnyChar = enableEscapeAnyChar;
     }
-
     return options;
   }
-
 }

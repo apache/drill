@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-@Builder
 @Getter
 @Setter
 @ToString
@@ -85,27 +84,18 @@ public class HttpOAuthConfig {
     this.tokens = builder.tokens;
   }
 
+  @Getter
+  @Setter
+  @Builder
   @JsonPOJOBuilder(withPrefix = "")
   public static class HttpOAuthConfigBuilder {
-    @Getter
-    @Setter
+
     private String callbackURL;
-
-    @Getter
-    @Setter
     private String authorizationURL;
-
-    @Getter
-    @Setter
     private Map<String, String> authorizationParams;
-
-    @Getter
-    @Setter
     private String scope;
-
-    @Getter
-    @Setter
     private boolean generateCSRFToken;
+    private Map<String, String> tokens;
 
     public HttpOAuthConfig build() {
       return new HttpOAuthConfig(this);

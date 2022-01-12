@@ -99,9 +99,9 @@ public class TestOAuthProcess extends ClusterTest {
       .inputType("json")
       .build();
 
-    HttpOAuthConfig oAuthConfig = HttpOAuthConfig.builder()
+    HttpOAuthConfig oAuthConfig = HttpOAuthConfig.HttpOAuthConfigBuilder.builder()
       .callbackURL(hostname + "/update_oath2_authtoken")
-      .build();
+      .build().build();
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("test", connectionConfig);
