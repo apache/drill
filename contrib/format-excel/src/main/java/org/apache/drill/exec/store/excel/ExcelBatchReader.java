@@ -472,7 +472,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       if (colWriterIndex < cellWriterArray.size()) {
         cellWriterArray.get(colWriterIndex).load(cell);
       }
-      
+
       colPosition++;
     }
 
