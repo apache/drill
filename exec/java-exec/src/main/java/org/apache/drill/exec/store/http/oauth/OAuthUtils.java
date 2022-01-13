@@ -41,13 +41,15 @@ public class OAuthUtils {
    * Craft a GET request to obtain an access token.
    * @param credentialsProvider A credential provider containing the clientID, clientSecret and authorizationCode
    * @param authorizationCode The authorization code from the OAuth2.0 enabled API
+   * @param callbackURL  The callback URL. For our purposes this is obtained from the incoming Drill request as it all goes to the same place.
    * @return A Request Body to obtain an access token
    */
-  public static RequestBody getPostResponse(CredentialsProvider credentialsProvider, String authorizationCode) {
+  public static RequestBody getPostResponse(CredentialsProvider credentialsProvider, String authorizationCode, String callbackURL) {
     return new FormBody.Builder()
       .add("grant_type", "authorization_code")
       .add("client_id", credentialsProvider.getCredentials().get(OAuthTokenCredentials.CLIENT_ID))
       .add("client_secret", credentialsProvider.getCredentials().get(OAuthTokenCredentials.CLIENT_SECRET))
+      .add("redirect_uri", callbackURL)
       .add("code", authorizationCode)
       .build();
   }
@@ -82,12 +84,12 @@ public class OAuthUtils {
    * @param authenticationCode The authentication code from the API.
    * @return A request to obtain the access token.
    */
-  public static Request getAccessTokenRequest(CredentialsProvider credentialsProvider, String authenticationCode) {
+  public static Request getAccessTokenRequest(CredentialsProvider credentialsProvider, String authenticationCode, String callbackURL) {
     return new Request.Builder()
       .url(buildAccessTokenURL(credentialsProvider))
       .header("Content-Type", "application/json")
       .addHeader("Accept", "application/json")
-      .post(getPostResponse(credentialsProvider, authenticationCode))
+      .post(getPostResponse(credentialsProvider, authenticationCode, callbackURL))
       .build();
   }
 

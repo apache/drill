@@ -202,12 +202,13 @@ public class StorageResources {
       if (storage.getPlugin(name).getConfig().getClass().getSimpleName().equalsIgnoreCase("HttpStoragePluginConfig")) {
         AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) storage.getPlugin(name).getConfig();
         CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+        String callbackURL = this.request.getRequestURL().toString();
 
         // Now exchange the authorization token for an access token
         Builder builder = new OkHttpClient.Builder();
         OkHttpClient client = builder.build();
-        Request request = OAuthUtils.getAccessTokenRequest(credentialsProvider, code);
-        Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, request);
+        Request accessTokenRequest = OAuthUtils.getAccessTokenRequest(credentialsProvider, code, callbackURL);
+        Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, accessTokenRequest);
 
         credentialsProvider.updateCredentials("authorizationCode", code);
         credentialsProvider.updateCredentials(OAuthTokenCredentials.ACCESS_TOKEN, updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
