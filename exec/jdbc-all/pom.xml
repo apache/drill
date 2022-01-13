@@ -82,10 +82,6 @@
           <artifactId>commons-codec</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>com.squareup.okhttp3</groupId>
-          <artifactId>okhttp</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>org.glassfish.jersey.core</groupId>
           <artifactId>jersey-common</artifactId>
         </exclusion>

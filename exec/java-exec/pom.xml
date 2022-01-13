@@ -32,7 +32,7 @@
     <libpam4j.version>1.8-rev2</libpam4j.version>
     <aether.version>1.1.0</aether.version>
     <wagon.version>3.3.4</wagon.version>
-    <okhttp.version>4.9.2</okhttp.version>
+    <okhttp.version>4.9.3</okhttp.version>
   </properties>
 
   <dependencies>
