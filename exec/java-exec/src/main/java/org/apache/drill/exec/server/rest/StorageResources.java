@@ -210,10 +210,10 @@ public class StorageResources {
         Request accessTokenRequest = OAuthUtils.getAccessTokenRequest(credentialsProvider, code, callbackURL);
         Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, accessTokenRequest);
 
-        credentialsProvider.updateCredentials("authorizationCode", code);
-        credentialsProvider.updateCredentials(OAuthTokenCredentials.ACCESS_TOKEN, updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
+        credentialsProvider.setCredential("authorizationCode", code);
+        credentialsProvider.setCredential(OAuthTokenCredentials.ACCESS_TOKEN, updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
         if (updatedTokens.containsKey(OAuthTokenCredentials.REFRESH_TOKEN)) {
-          credentialsProvider.updateCredentials(OAuthTokenCredentials.REFRESH_TOKEN, updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
+          credentialsProvider.setCredential(OAuthTokenCredentials.REFRESH_TOKEN, updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
         }
 
         PluginConfigWrapper updatedPlugin = new PluginConfigWrapper(name, securedStoragePluginConfig);

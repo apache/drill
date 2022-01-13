@@ -53,7 +53,7 @@ public class PlainCredentialsProvider implements CredentialsProvider {
 
   @Override
   @JsonIgnore
-  public void updateCredentials(String key, String value) {
+  public void setCredential(String key, String value) {
     if (credentials == null) {
       // Credentials should never be null, but check anyway
       throw UserException.internalError()

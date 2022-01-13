@@ -23,6 +23,7 @@ import okhttp3.Authenticator;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.Route;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.jetbrains.annotations.NotNull;
@@ -73,6 +74,11 @@ public class AccessTokenAuthenticator implements Authenticator {
   @NonNull
   private Request newRequestWithAccessToken(@NonNull Request request, @NonNull String accessToken) {
     logger.debug("Creating a new request with access token.");
+    String tokenType = accessTokenRepository.getTokenType();
+    if (StringUtils.isNotEmpty(tokenType)) {
+      accessToken = tokenType + " " + accessToken;
+    }
+
     return request.newBuilder()
       .header("Authorization", accessToken)
       .build();

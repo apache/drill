@@ -22,6 +22,7 @@ import lombok.NonNull;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.jetbrains.annotations.NotNull;
@@ -81,7 +82,12 @@ public class AccessTokenInterceptor implements Interceptor {
 
   @NonNull
   private Request newRequestWithAccessToken(@NonNull Request request, @NonNull String accessToken) {
-    logger.debug("Interceptor making new request with access token: {}, {}", accessToken, request.url());
+    logger.debug("Interceptor making new request with access token: {}", request.url());
+    String tokenType = accessTokenRepository.getTokenType();
+    if (StringUtils.isNotEmpty(tokenType)) {
+      accessToken = tokenType + " " + accessToken;
+    }
+
     return request.newBuilder()
       .header("Authorization", accessToken)
       .build();

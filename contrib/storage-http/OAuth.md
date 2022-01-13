@@ -50,8 +50,7 @@ application, these two are unique (and "owned by") the user.  These artifacts ar
 * `accessToken`: The token which is used to grant access to a protected resource
 * `refreshToken`: The token used to obtain a new `accessToken` without having to re-authorize the application.
 
-Currently, Drill does not allow per-user credentials.  However, it is possible to configure Drill to use the Vault Credential Provider so that each individual user has their 
-own credentials.
+Currently, Drill does not allow per-user credentials.  However, future work may permit this.
 
 <h1 id="configure-drill">Configuring Drill for OAuth</h1>
 Configuring Drill to connect to OAuth2.0 enabled APIs is a little complicated as part of the configuration parameters are stored in the REST plugin and others are stored in the 
@@ -120,3 +119,7 @@ The example configuration below demonstrates how to connect Drill to the API ava
 
 ```
 
+## Optional Parameters
+There are a few optional parameters in the OAuth config which you may need to set in order for Drill to successfully.  These parameters are completely optional.
+
+* `tokenType`:  Some OAuth enabled APIs provide a `Bearer` token.  If that is the case, this should be set to `Bearer`. 

@@ -37,13 +37,17 @@ public interface CredentialsProvider {
    * Returns map with authentication credentials. Key is the credential name, for example {@code "username"}
    * and map value is corresponding credential value.
    */
-  static final Logger logger = LoggerFactory.getLogger(CredentialsProvider.class);
+  Logger logger = LoggerFactory.getLogger(CredentialsProvider.class);
 
   @JsonIgnore
   Map<String, String> getCredentials();
 
+  /**
+   * Set an ephemeral credential.  Implementations are not expected to write this
+   * value to persistent storage.
+   */
   @JsonIgnore
-  default void updateCredentials(String key, String value) throws UserException {
+  default void setCredential(String key, String value) throws UserException {
     throw UserException.internalError()
       .message("Update credential function not implemented for " + Id.NAME)
       .build(logger);

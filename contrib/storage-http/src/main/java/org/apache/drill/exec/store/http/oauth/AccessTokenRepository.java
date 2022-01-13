@@ -64,6 +64,10 @@ public class AccessTokenRepository {
     client = builder.build();
   }
 
+  public String getTokenType() {
+    return pluginConfig.oAuthConfig().getTokenType();
+  }
+
   /**
    * Returns the current access token.  Does not perform an HTTP request.
    * @return The current access token.
@@ -109,11 +113,11 @@ public class AccessTokenRepository {
 
     // Update/Refresh the tokens
     Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, request);
-    credentialsProvider.updateCredentials(OAuthTokenCredentials.ACCESS_TOKEN, updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
+    credentialsProvider.setCredential(OAuthTokenCredentials.ACCESS_TOKEN, updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
 
     // If we get a new refresh token, update it as well
     if (updatedTokens.containsKey(OAuthTokenCredentials.REFRESH_TOKEN)) {
-      credentialsProvider.updateCredentials(OAuthTokenCredentials.REFRESH_TOKEN, updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
+      credentialsProvider.setCredential(OAuthTokenCredentials.REFRESH_TOKEN, updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
     }
 
     if (updatedTokens.containsKey("accessToken")) {
