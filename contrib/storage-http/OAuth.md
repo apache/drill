@@ -122,4 +122,5 @@ The example configuration below demonstrates how to connect Drill to the API ava
 ## Optional Parameters
 There are a few optional parameters in the OAuth config which you may need to set in order for Drill to successfully.  These parameters are completely optional.
 
-* `tokenType`:  Some OAuth enabled APIs provide a `Bearer` token.  If that is the case, this should be set to `Bearer`. 
+* `tokenType`:  Some OAuth enabled APIs provide a `Bearer` token.  If that is the case, this should be set to `Bearer`.
+* `authorizationParams`:  A key value parameters which are sent during the authentication process.
