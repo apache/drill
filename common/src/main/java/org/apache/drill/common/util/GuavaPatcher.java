@@ -41,6 +41,7 @@ public class GuavaPatcher {
       patchingAttempted = true;
       patchStopwatch();
       patchCloseables();
+      patchFuturesCallback();
     }
   }
 
@@ -117,5 +118,29 @@ public class GuavaPatcher {
     // sets prune flag to false to avoid freezing and pruning classes right after obtaining CtClass instance
     classPoolRepository.setPrune(false);
     return classPoolRepository.createScopedClassPool(GuavaPatcher.class.getClassLoader(), null);
+  }
+
+  /**
+   * Makes Guava Futures#addCallback look like the old version for compatibility with hadoop-hdfs (for test purposes).
+   */
+  private static void patchFuturesCallback() {
+    try {
+      ClassPool cp = getClassPool();
+      CtClass cc = cp.get("com.google.common.util.concurrent.Futures");
+
+      // Add back the Futures.addCallback(ListenableFuture future, FutureCallback callback) method for old consumers.
+      CtMethod newMethod = CtNewMethod.make(
+        "public static void addCallback(" +
+                "com.google.common.util.concurrent.ListenableFuture future, " +
+                "com.google.common.util.concurrent.FutureCallback callback" +
+          ") { addCallback(future, callback, com.google.common.util.concurrent.MoreExecutors.directExecutor()); }", cc);
+      cc.addMethod(newMethod);
+
+      // Load the modified class instead of the original.
+      cc.toClass();
+      logger.info("Google's Futures#addCallback patched for old Hadoop Guava version.");
+    } catch (Exception e) {
+      logUnableToPatchException(e);
+    }
   }
 }
