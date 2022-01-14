@@ -41,7 +41,7 @@ public class TestSchema extends DrillTest {
   public static void setup() throws Exception {
     cluster = ClusterFixture.builder(dirTestWatcher).buildCustomMockStorage();
     boolean breakRegisterSchema = true;
-    // With a broken storage which will throw exception in regiterSchema, every query (even on other storage)
+    // With a broken storage which will throw exception in registerSchema, every query (even on other storage)
     // shall fail if Drill is still loading all schemas (include the broken schema) before a query.
     cluster.insertMockStorage("mock_broken", breakRegisterSchema);
     cluster.insertMockStorage("mock_good", !breakRegisterSchema);

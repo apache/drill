@@ -18,74 +18,30 @@
 package org.apache.drill.exec.store;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DrillSchemaFactory extends AbstractSchemaFactory {
   private static final Logger logger = LoggerFactory.getLogger(DrillSchemaFactory.class);
 
-  private final StoragePluginRegistryImpl registry;
-
-  public DrillSchemaFactory(String name, StoragePluginRegistryImpl registry) {
+  public DrillSchemaFactory(String name) {
     super(name);
-    this.registry = registry;
   }
 
+  /**
+   * Historical note.  This method used to eagerly register schemas for every
+   * enabled storage plugin instance, an operation that is expensive at best
+   * and unreliable in the presence of unresponsive storage plugins at worst.
+   * Now the schemas under the root are registered lazily by DynamicRootSchema.
+   *
+   * @param schemaConfig Configuration for schema objects.
+   * @param parent Reference to parent schema.
+   * @throws IOException
+   */
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-    Stopwatch watch = Stopwatch.createStarted();
-    registry.registerSchemas(schemaConfig, parent);
-
-    // Add second level schema as top level schema with name qualified with parent schema name
-    // Ex: "dfs" schema has "default" and "tmp" as sub schemas. Add following extra schemas "dfs.default" and
-    // "dfs.tmp" under root schema.
-    //
-    // Before change, schema tree looks like below:
-    // "root"
-    // -- "dfs"
-    // -- "default"
-    // -- "tmp"
-    // -- "hive"
-    // -- "default"
-    // -- "hivedb1"
-    //
-    // After the change, the schema tree looks like below:
-    // "root"
-    // -- "dfs"
-    // -- "default"
-    // -- "tmp"
-    // -- "dfs.default"
-    // -- "dfs.tmp"
-    // -- "hive"
-    // -- "default"
-    // -- "hivedb1"
-    // -- "hive.default"
-    // -- "hive.hivedb1"
-    List<SchemaPlus> secondLevelSchemas = new ArrayList<>();
-    for (String firstLevelSchemaName : parent.getSubSchemaNames()) {
-      SchemaPlus firstLevelSchema = parent.getSubSchema(firstLevelSchemaName);
-      for (String secondLevelSchemaName : firstLevelSchema.getSubSchemaNames()) {
-        secondLevelSchemas.add(firstLevelSchema.getSubSchema(secondLevelSchemaName));
-      }
-    }
-
-    for (SchemaPlus schema : secondLevelSchemas) {
-      AbstractSchema drillSchema;
-      try {
-        drillSchema = schema.unwrap(AbstractSchema.class);
-      } catch (ClassCastException e) {
-        throw new RuntimeException(String.format("Schema '%s' is not expected under root schema", schema.getName()));
-      }
-      SubSchemaWrapper wrapper = new SubSchemaWrapper(drillSchema);
-      parent.add(wrapper.getName(), wrapper);
-    }
-
-    logger.debug("Took {} ms to register schemas.", watch.elapsed(TimeUnit.MILLISECONDS));
+    throw new UnsupportedOperationException("Only lazy schema registration by DynamicRootSchema is supported.");
   }
 }

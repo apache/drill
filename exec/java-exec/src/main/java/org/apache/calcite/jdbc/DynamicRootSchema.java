@@ -23,7 +23,6 @@ import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.util.BuiltInMethod;
-import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.common.expression.SchemaPath;
@@ -49,7 +48,7 @@ import java.util.Set;
  * Loads schemas from storage plugins later when {@link #getSubSchema(String, boolean)}
  * is called.
  */
-public class DynamicRootSchema extends DynamicSchema implements AutoCloseable {
+public class DynamicRootSchema extends DynamicSchema {
   private static final Logger logger = LoggerFactory.getLogger(DynamicRootSchema.class);
 
   private static final String ROOT_SCHEMA_NAME = "";
@@ -153,13 +152,6 @@ public class DynamicRootSchema extends DynamicSchema implements AutoCloseable {
               .addContext(ex.getClass().getName() + ": " + ex.getMessage())
               .addContext(UserExceptionUtils.getUserHint(ex)); //Provide hint if it exists
       throw exceptBuilder.build(logger);
-    }
-  }
-
-  @Override
-  public void close() throws Exception {
-    for (CalciteSchema cs : subSchemaMap.map().values()) {
-  		AutoCloseables.closeWithUserException(cs.plus().unwrap(AbstractSchema.class));
     }
   }
 

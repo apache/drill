@@ -323,7 +323,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
         .setIgnoreAuthErrors(isImpersonationEnabled)
         .build();
 
-    return schemaTreeProvider.createRootSchema(schemaConfig); //createFullRootSchema(schemaConfig);
+    return schemaTreeProvider.createRootSchema(schemaConfig);
   }
 
   @Override
