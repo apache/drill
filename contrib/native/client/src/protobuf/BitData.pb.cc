@@ -14,107 +14,90 @@
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
-extern PROTOBUF_INTERNAL_EXPORT_UserBitShared_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_QueryId_UserBitShared_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_UserBitShared_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_RecordBatchDef_UserBitShared_2eproto;
+
+PROTOBUF_PRAGMA_INIT_SEG
 namespace exec {
 namespace bit {
 namespace data {
-class BitClientHandshakeDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<BitClientHandshake> _instance;
-} _BitClientHandshake_default_instance_;
-class BitServerHandshakeDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<BitServerHandshake> _instance;
-} _BitServerHandshake_default_instance_;
-class FragmentRecordBatchDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FragmentRecordBatch> _instance;
-} _FragmentRecordBatch_default_instance_;
-class RuntimeFilterBDefDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RuntimeFilterBDef> _instance;
-} _RuntimeFilterBDef_default_instance_;
-class AckWithCreditDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<AckWithCredit> _instance;
-} _AckWithCredit_default_instance_;
+constexpr BitClientHandshake::BitClientHandshake(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : rpc_version_(0)
+  , channel_(1)
+{}
+struct BitClientHandshakeDefaultTypeInternal {
+  constexpr BitClientHandshakeDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~BitClientHandshakeDefaultTypeInternal() {}
+  union {
+    BitClientHandshake _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT BitClientHandshakeDefaultTypeInternal _BitClientHandshake_default_instance_;
+constexpr BitServerHandshake::BitServerHandshake(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : authenticationmechanisms_()
+  , rpc_version_(0){}
+struct BitServerHandshakeDefaultTypeInternal {
+  constexpr BitServerHandshakeDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~BitServerHandshakeDefaultTypeInternal() {}
+  union {
+    BitServerHandshake _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT BitServerHandshakeDefaultTypeInternal _BitServerHandshake_default_instance_;
+constexpr FragmentRecordBatch::FragmentRecordBatch(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : receiving_minor_fragment_id_()
+  , query_id_(nullptr)
+  , def_(nullptr)
+  , receiving_major_fragment_id_(0)
+  , sending_major_fragment_id_(0)
+  , sending_minor_fragment_id_(0)
+  , islastbatch_(false){}
+struct FragmentRecordBatchDefaultTypeInternal {
+  constexpr FragmentRecordBatchDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~FragmentRecordBatchDefaultTypeInternal() {}
+  union {
+    FragmentRecordBatch _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT FragmentRecordBatchDefaultTypeInternal _FragmentRecordBatch_default_instance_;
+constexpr RuntimeFilterBDef::RuntimeFilterBDef(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : bloom_filter_size_in_bytes_()
+  , probe_fields_()
+  , query_id_(nullptr)
+  , major_fragment_id_(0)
+  , minor_fragment_id_(0)
+  , to_foreman_(false)
+  , hj_op_id_(0)
+  , rf_identifier_(PROTOBUF_LONGLONG(0)){}
+struct RuntimeFilterBDefDefaultTypeInternal {
+  constexpr RuntimeFilterBDefDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~RuntimeFilterBDefDefaultTypeInternal() {}
+  union {
+    RuntimeFilterBDef _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT RuntimeFilterBDefDefaultTypeInternal _RuntimeFilterBDef_default_instance_;
+constexpr AckWithCredit::AckWithCredit(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : allowed_credit_(0){}
+struct AckWithCreditDefaultTypeInternal {
+  constexpr AckWithCreditDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~AckWithCreditDefaultTypeInternal() {}
+  union {
+    AckWithCredit _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT AckWithCreditDefaultTypeInternal _AckWithCredit_default_instance_;
 }  // namespace data
 }  // namespace bit
 }  // namespace exec
-static void InitDefaultsscc_info_AckWithCredit_BitData_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::data::_AckWithCredit_default_instance_;
-    new (ptr) ::exec::bit::data::AckWithCredit();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::data::AckWithCredit::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_AckWithCredit_BitData_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_AckWithCredit_BitData_2eproto}, {}};
-
-static void InitDefaultsscc_info_BitClientHandshake_BitData_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::data::_BitClientHandshake_default_instance_;
-    new (ptr) ::exec::bit::data::BitClientHandshake();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::data::BitClientHandshake::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_BitClientHandshake_BitData_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_BitClientHandshake_BitData_2eproto}, {}};
-
-static void InitDefaultsscc_info_BitServerHandshake_BitData_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::data::_BitServerHandshake_default_instance_;
-    new (ptr) ::exec::bit::data::BitServerHandshake();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::data::BitServerHandshake::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_BitServerHandshake_BitData_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_BitServerHandshake_BitData_2eproto}, {}};
-
-static void InitDefaultsscc_info_FragmentRecordBatch_BitData_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::data::_FragmentRecordBatch_default_instance_;
-    new (ptr) ::exec::bit::data::FragmentRecordBatch();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::data::FragmentRecordBatch::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_FragmentRecordBatch_BitData_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_FragmentRecordBatch_BitData_2eproto}, {
-      &scc_info_QueryId_UserBitShared_2eproto.base,
-      &scc_info_RecordBatchDef_UserBitShared_2eproto.base,}};
-
-static void InitDefaultsscc_info_RuntimeFilterBDef_BitData_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::data::_RuntimeFilterBDef_default_instance_;
-    new (ptr) ::exec::bit::data::RuntimeFilterBDef();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::data::RuntimeFilterBDef::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_RuntimeFilterBDef_BitData_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_RuntimeFilterBDef_BitData_2eproto}, {
-      &scc_info_QueryId_UserBitShared_2eproto.base,}};
-
 static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_BitData_2eproto[5];
 static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_BitData_2eproto[1];
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_BitData_2eproto = nullptr;
@@ -234,24 +217,19 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor
   &::descriptor_table_ExecutionProtos_2eproto,
   &::descriptor_table_UserBitShared_2eproto,
 };
-static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_BitData_2eproto_sccs[5] = {
-  &scc_info_AckWithCredit_BitData_2eproto.base,
-  &scc_info_BitClientHandshake_BitData_2eproto.base,
-  &scc_info_BitServerHandshake_BitData_2eproto.base,
-  &scc_info_FragmentRecordBatch_BitData_2eproto.base,
-  &scc_info_RuntimeFilterBDef_BitData_2eproto.base,
-};
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_BitData_2eproto_once;
-static bool descriptor_table_BitData_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_BitData_2eproto = {
-  &descriptor_table_BitData_2eproto_initialized, descriptor_table_protodef_BitData_2eproto, "BitData.proto", 994,
-  &descriptor_table_BitData_2eproto_once, descriptor_table_BitData_2eproto_sccs, descriptor_table_BitData_2eproto_deps, 5, 3,
+  false, false, 994, descriptor_table_protodef_BitData_2eproto, "BitData.proto", 
+  &descriptor_table_BitData_2eproto_once, descriptor_table_BitData_2eproto_deps, 3, 5,
   schemas, file_default_instances, TableStruct_BitData_2eproto::offsets,
-  file_level_metadata_BitData_2eproto, 5, file_level_enum_descriptors_BitData_2eproto, file_level_service_descriptors_BitData_2eproto,
+  file_level_metadata_BitData_2eproto, file_level_enum_descriptors_BitData_2eproto, file_level_service_descriptors_BitData_2eproto,
 };
+PROTOBUF_ATTRIBUTE_WEAK const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable* descriptor_table_BitData_2eproto_getter() {
+  return &descriptor_table_BitData_2eproto;
+}
 
 // Force running AddDescriptors() at dynamic initialization time.
-static bool dynamic_init_dummy_BitData_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_BitData_2eproto), true);
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY static ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptorsRunner dynamic_init_dummy_BitData_2eproto(&descriptor_table_BitData_2eproto);
 namespace exec {
 namespace bit {
 namespace data {
@@ -277,8 +255,6 @@ bool RpcType_IsValid(int value) {
 
 // ===================================================================
 
-void BitClientHandshake::InitAsDefaultInstance() {
-}
 class BitClientHandshake::_Internal {
  public:
   using HasBits = decltype(std::declval<BitClientHandshake>()._has_bits_);
@@ -290,16 +266,16 @@ class BitClientHandshake::_Internal {
   }
 };
 
-BitClientHandshake::BitClientHandshake()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+BitClientHandshake::BitClientHandshake(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.data.BitClientHandshake)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.data.BitClientHandshake)
 }
 BitClientHandshake::BitClientHandshake(const BitClientHandshake& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&rpc_version_, &from.rpc_version_,
     static_cast<size_t>(reinterpret_cast<char*>(&channel_) -
     reinterpret_cast<char*>(&rpc_version_)) + sizeof(channel_));
@@ -307,26 +283,29 @@ BitClientHandshake::BitClientHandshake(const BitClientHandshake& from)
 }
 
 void BitClientHandshake::SharedCtor() {
-  rpc_version_ = 0;
-  channel_ = 1;
+rpc_version_ = 0;
+channel_ = 1;
 }
 
 BitClientHandshake::~BitClientHandshake() {
   // @@protoc_insertion_point(destructor:exec.bit.data.BitClientHandshake)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void BitClientHandshake::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void BitClientHandshake::ArenaDtor(void* object) {
+  BitClientHandshake* _this = reinterpret_cast< BitClientHandshake* >(object);
+  (void)_this;
+}
+void BitClientHandshake::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void BitClientHandshake::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const BitClientHandshake& BitClientHandshake::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_BitClientHandshake_BitData_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void BitClientHandshake::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.data.BitClientHandshake)
@@ -340,7 +319,7 @@ void BitClientHandshake::Clear() {
     channel_ = 1;
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* BitClientHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -349,20 +328,19 @@ const char* BitClientHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAMES
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional int32 rpc_version = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_rpc_version(&has_bits);
-          rpc_version_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          rpc_version_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
       // optional .exec.shared.RpcChannel channel = 2 [default = BIT_DATA];
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::exec::shared::RpcChannel_IsValid(val))) {
             _internal_set_channel(static_cast<::exec::shared::RpcChannel>(val));
@@ -373,11 +351,14 @@ const char* BitClientHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAMES
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -414,7 +395,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.data.BitClientHandshake)
   return target;
@@ -471,7 +452,7 @@ void BitClientHandshake::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from)
 void BitClientHandshake::MergeFrom(const BitClientHandshake& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.data.BitClientHandshake)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -507,21 +488,20 @@ bool BitClientHandshake::IsInitialized() const {
 
 void BitClientHandshake::InternalSwap(BitClientHandshake* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(rpc_version_, other->rpc_version_);
   swap(channel_, other->channel_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata BitClientHandshake::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitData_2eproto_getter, &descriptor_table_BitData_2eproto_once,
+      file_level_metadata_BitData_2eproto[0]);
 }
-
 
 // ===================================================================
 
-void BitServerHandshake::InitAsDefaultInstance() {
-}
 class BitServerHandshake::_Internal {
  public:
   using HasBits = decltype(std::declval<BitServerHandshake>()._has_bits_);
@@ -530,42 +510,45 @@ class BitServerHandshake::_Internal {
   }
 };
 
-BitServerHandshake::BitServerHandshake()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+BitServerHandshake::BitServerHandshake(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  authenticationmechanisms_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.data.BitServerHandshake)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.data.BitServerHandshake)
 }
 BitServerHandshake::BitServerHandshake(const BitServerHandshake& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       authenticationmechanisms_(from.authenticationmechanisms_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   rpc_version_ = from.rpc_version_;
   // @@protoc_insertion_point(copy_constructor:exec.bit.data.BitServerHandshake)
 }
 
 void BitServerHandshake::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_BitServerHandshake_BitData_2eproto.base);
-  rpc_version_ = 0;
+rpc_version_ = 0;
 }
 
 BitServerHandshake::~BitServerHandshake() {
   // @@protoc_insertion_point(destructor:exec.bit.data.BitServerHandshake)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void BitServerHandshake::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void BitServerHandshake::ArenaDtor(void* object) {
+  BitServerHandshake* _this = reinterpret_cast< BitServerHandshake* >(object);
+  (void)_this;
+}
+void BitServerHandshake::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void BitServerHandshake::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const BitServerHandshake& BitServerHandshake::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_BitServerHandshake_BitData_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void BitServerHandshake::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.data.BitServerHandshake)
@@ -576,7 +559,7 @@ void BitServerHandshake::Clear() {
   authenticationmechanisms_.Clear();
   rpc_version_ = 0;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* BitServerHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -585,13 +568,12 @@ const char* BitServerHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAMES
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional int32 rpc_version = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_rpc_version(&has_bits);
-          rpc_version_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          rpc_version_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -613,11 +595,14 @@ const char* BitServerHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAMES
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -657,7 +642,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.data.BitServerHandshake)
   return target;
@@ -714,7 +699,7 @@ void BitServerHandshake::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from)
 void BitServerHandshake::MergeFrom(const BitServerHandshake& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.data.BitServerHandshake)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -744,25 +729,20 @@ bool BitServerHandshake::IsInitialized() const {
 
 void BitServerHandshake::InternalSwap(BitServerHandshake* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   authenticationmechanisms_.InternalSwap(&other->authenticationmechanisms_);
   swap(rpc_version_, other->rpc_version_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata BitServerHandshake::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitData_2eproto_getter, &descriptor_table_BitData_2eproto_once,
+      file_level_metadata_BitData_2eproto[1]);
 }
-
 
 // ===================================================================
 
-void FragmentRecordBatch::InitAsDefaultInstance() {
-  ::exec::bit::data::_FragmentRecordBatch_default_instance_._instance.get_mutable()->query_id_ = const_cast< ::exec::shared::QueryId*>(
-      ::exec::shared::QueryId::internal_default_instance());
-  ::exec::bit::data::_FragmentRecordBatch_default_instance_._instance.get_mutable()->def_ = const_cast< ::exec::shared::RecordBatchDef*>(
-      ::exec::shared::RecordBatchDef::internal_default_instance());
-}
 class FragmentRecordBatch::_Internal {
  public:
   using HasBits = decltype(std::declval<FragmentRecordBatch>()._has_bits_);
@@ -804,17 +784,18 @@ void FragmentRecordBatch::clear_def() {
   if (def_ != nullptr) def_->Clear();
   _has_bits_[0] &= ~0x00000002u;
 }
-FragmentRecordBatch::FragmentRecordBatch()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+FragmentRecordBatch::FragmentRecordBatch(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  receiving_minor_fragment_id_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.data.FragmentRecordBatch)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.data.FragmentRecordBatch)
 }
 FragmentRecordBatch::FragmentRecordBatch(const FragmentRecordBatch& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       receiving_minor_fragment_id_(from.receiving_minor_fragment_id_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_query_id()) {
     query_id_ = new ::exec::shared::QueryId(*from.query_id_);
   } else {
@@ -832,30 +813,33 @@ FragmentRecordBatch::FragmentRecordBatch(const FragmentRecordBatch& from)
 }
 
 void FragmentRecordBatch::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FragmentRecordBatch_BitData_2eproto.base);
-  ::memset(&query_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&islastbatch_) -
-      reinterpret_cast<char*>(&query_id_)) + sizeof(islastbatch_));
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&query_id_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&islastbatch_) -
+    reinterpret_cast<char*>(&query_id_)) + sizeof(islastbatch_));
 }
 
 FragmentRecordBatch::~FragmentRecordBatch() {
   // @@protoc_insertion_point(destructor:exec.bit.data.FragmentRecordBatch)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void FragmentRecordBatch::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete query_id_;
   if (this != internal_default_instance()) delete def_;
 }
 
+void FragmentRecordBatch::ArenaDtor(void* object) {
+  FragmentRecordBatch* _this = reinterpret_cast< FragmentRecordBatch* >(object);
+  (void)_this;
+}
+void FragmentRecordBatch::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void FragmentRecordBatch::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const FragmentRecordBatch& FragmentRecordBatch::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FragmentRecordBatch_BitData_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FragmentRecordBatch::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.data.FragmentRecordBatch)
@@ -881,7 +865,7 @@ void FragmentRecordBatch::Clear() {
         reinterpret_cast<char*>(&receiving_major_fragment_id_)) + sizeof(islastbatch_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* FragmentRecordBatch::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -890,7 +874,6 @@ const char* FragmentRecordBatch::_InternalParse(const char* ptr, ::PROTOBUF_NAME
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional .exec.shared.QueryId query_id = 1;
       case 1:
@@ -903,7 +886,7 @@ const char* FragmentRecordBatch::_InternalParse(const char* ptr, ::PROTOBUF_NAME
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_receiving_major_fragment_id(&has_bits);
-          receiving_major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          receiving_major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -913,7 +896,7 @@ const char* FragmentRecordBatch::_InternalParse(const char* ptr, ::PROTOBUF_NAME
           ptr -= 1;
           do {
             ptr += 1;
-            _internal_add_receiving_minor_fragment_id(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+            _internal_add_receiving_minor_fragment_id(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<24>(ptr));
@@ -926,7 +909,7 @@ const char* FragmentRecordBatch::_InternalParse(const char* ptr, ::PROTOBUF_NAME
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_sending_major_fragment_id(&has_bits);
-          sending_major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          sending_major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -934,7 +917,7 @@ const char* FragmentRecordBatch::_InternalParse(const char* ptr, ::PROTOBUF_NAME
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
           _Internal::set_has_sending_minor_fragment_id(&has_bits);
-          sending_minor_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          sending_minor_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -949,17 +932,20 @@ const char* FragmentRecordBatch::_InternalParse(const char* ptr, ::PROTOBUF_NAME
       case 7:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 56)) {
           _Internal::set_has_islastbatch(&has_bits);
-          islastbatch_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          islastbatch_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -1029,7 +1015,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.data.FragmentRecordBatch)
   return target;
@@ -1122,7 +1108,7 @@ void FragmentRecordBatch::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from
 void FragmentRecordBatch::MergeFrom(const FragmentRecordBatch& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.data.FragmentRecordBatch)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -1171,28 +1157,25 @@ bool FragmentRecordBatch::IsInitialized() const {
 
 void FragmentRecordBatch::InternalSwap(FragmentRecordBatch* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   receiving_minor_fragment_id_.InternalSwap(&other->receiving_minor_fragment_id_);
-  swap(query_id_, other->query_id_);
-  swap(def_, other->def_);
-  swap(receiving_major_fragment_id_, other->receiving_major_fragment_id_);
-  swap(sending_major_fragment_id_, other->sending_major_fragment_id_);
-  swap(sending_minor_fragment_id_, other->sending_minor_fragment_id_);
-  swap(islastbatch_, other->islastbatch_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FragmentRecordBatch, islastbatch_)
+      + sizeof(FragmentRecordBatch::islastbatch_)
+      - PROTOBUF_FIELD_OFFSET(FragmentRecordBatch, query_id_)>(
+          reinterpret_cast<char*>(&query_id_),
+          reinterpret_cast<char*>(&other->query_id_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata FragmentRecordBatch::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitData_2eproto_getter, &descriptor_table_BitData_2eproto_once,
+      file_level_metadata_BitData_2eproto[2]);
 }
-
 
 // ===================================================================
 
-void RuntimeFilterBDef::InitAsDefaultInstance() {
-  ::exec::bit::data::_RuntimeFilterBDef_default_instance_._instance.get_mutable()->query_id_ = const_cast< ::exec::shared::QueryId*>(
-      ::exec::shared::QueryId::internal_default_instance());
-}
 class RuntimeFilterBDef::_Internal {
  public:
   using HasBits = decltype(std::declval<RuntimeFilterBDef>()._has_bits_);
@@ -1225,18 +1208,20 @@ void RuntimeFilterBDef::clear_query_id() {
   if (query_id_ != nullptr) query_id_->Clear();
   _has_bits_[0] &= ~0x00000001u;
 }
-RuntimeFilterBDef::RuntimeFilterBDef()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+RuntimeFilterBDef::RuntimeFilterBDef(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  bloom_filter_size_in_bytes_(arena),
+  probe_fields_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.data.RuntimeFilterBDef)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.data.RuntimeFilterBDef)
 }
 RuntimeFilterBDef::RuntimeFilterBDef(const RuntimeFilterBDef& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       bloom_filter_size_in_bytes_(from.bloom_filter_size_in_bytes_),
       probe_fields_(from.probe_fields_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_query_id()) {
     query_id_ = new ::exec::shared::QueryId(*from.query_id_);
   } else {
@@ -1249,29 +1234,32 @@ RuntimeFilterBDef::RuntimeFilterBDef(const RuntimeFilterBDef& from)
 }
 
 void RuntimeFilterBDef::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_RuntimeFilterBDef_BitData_2eproto.base);
-  ::memset(&query_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&rf_identifier_) -
-      reinterpret_cast<char*>(&query_id_)) + sizeof(rf_identifier_));
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&query_id_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&rf_identifier_) -
+    reinterpret_cast<char*>(&query_id_)) + sizeof(rf_identifier_));
 }
 
 RuntimeFilterBDef::~RuntimeFilterBDef() {
   // @@protoc_insertion_point(destructor:exec.bit.data.RuntimeFilterBDef)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void RuntimeFilterBDef::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete query_id_;
 }
 
+void RuntimeFilterBDef::ArenaDtor(void* object) {
+  RuntimeFilterBDef* _this = reinterpret_cast< RuntimeFilterBDef* >(object);
+  (void)_this;
+}
+void RuntimeFilterBDef::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void RuntimeFilterBDef::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const RuntimeFilterBDef& RuntimeFilterBDef::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RuntimeFilterBDef_BitData_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void RuntimeFilterBDef::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.data.RuntimeFilterBDef)
@@ -1292,7 +1280,7 @@ void RuntimeFilterBDef::Clear() {
         reinterpret_cast<char*>(&major_fragment_id_)) + sizeof(rf_identifier_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* RuntimeFilterBDef::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -1301,7 +1289,6 @@ const char* RuntimeFilterBDef::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional .exec.shared.QueryId query_id = 1;
       case 1:
@@ -1314,7 +1301,7 @@ const char* RuntimeFilterBDef::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_major_fragment_id(&has_bits);
-          major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1322,7 +1309,7 @@ const char* RuntimeFilterBDef::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_minor_fragment_id(&has_bits);
-          minor_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          minor_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1330,7 +1317,7 @@ const char* RuntimeFilterBDef::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_to_foreman(&has_bits);
-          to_foreman_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          to_foreman_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1340,7 +1327,7 @@ const char* RuntimeFilterBDef::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
           ptr -= 1;
           do {
             ptr += 1;
-            _internal_add_bloom_filter_size_in_bytes(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+            _internal_add_bloom_filter_size_in_bytes(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<40>(ptr));
@@ -1369,7 +1356,7 @@ const char* RuntimeFilterBDef::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
       case 7:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 56)) {
           _Internal::set_has_hj_op_id(&has_bits);
-          hj_op_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          hj_op_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1377,17 +1364,20 @@ const char* RuntimeFilterBDef::_InternalParse(const char* ptr, ::PROTOBUF_NAMESP
       case 8:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 64)) {
           _Internal::set_has_rf_identifier(&has_bits);
-          rf_identifier_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          rf_identifier_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -1465,7 +1455,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.data.RuntimeFilterBDef)
   return target;
@@ -1566,7 +1556,7 @@ void RuntimeFilterBDef::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) 
 void RuntimeFilterBDef::MergeFrom(const RuntimeFilterBDef& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.data.RuntimeFilterBDef)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -1616,27 +1606,26 @@ bool RuntimeFilterBDef::IsInitialized() const {
 
 void RuntimeFilterBDef::InternalSwap(RuntimeFilterBDef* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   bloom_filter_size_in_bytes_.InternalSwap(&other->bloom_filter_size_in_bytes_);
   probe_fields_.InternalSwap(&other->probe_fields_);
-  swap(query_id_, other->query_id_);
-  swap(major_fragment_id_, other->major_fragment_id_);
-  swap(minor_fragment_id_, other->minor_fragment_id_);
-  swap(to_foreman_, other->to_foreman_);
-  swap(hj_op_id_, other->hj_op_id_);
-  swap(rf_identifier_, other->rf_identifier_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(RuntimeFilterBDef, rf_identifier_)
+      + sizeof(RuntimeFilterBDef::rf_identifier_)
+      - PROTOBUF_FIELD_OFFSET(RuntimeFilterBDef, query_id_)>(
+          reinterpret_cast<char*>(&query_id_),
+          reinterpret_cast<char*>(&other->query_id_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata RuntimeFilterBDef::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitData_2eproto_getter, &descriptor_table_BitData_2eproto_once,
+      file_level_metadata_BitData_2eproto[3]);
 }
-
 
 // ===================================================================
 
-void AckWithCredit::InitAsDefaultInstance() {
-}
 class AckWithCredit::_Internal {
  public:
   using HasBits = decltype(std::declval<AckWithCredit>()._has_bits_);
@@ -1645,40 +1634,43 @@ class AckWithCredit::_Internal {
   }
 };
 
-AckWithCredit::AckWithCredit()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+AckWithCredit::AckWithCredit(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.data.AckWithCredit)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.data.AckWithCredit)
 }
 AckWithCredit::AckWithCredit(const AckWithCredit& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   allowed_credit_ = from.allowed_credit_;
   // @@protoc_insertion_point(copy_constructor:exec.bit.data.AckWithCredit)
 }
 
 void AckWithCredit::SharedCtor() {
-  allowed_credit_ = 0;
+allowed_credit_ = 0;
 }
 
 AckWithCredit::~AckWithCredit() {
   // @@protoc_insertion_point(destructor:exec.bit.data.AckWithCredit)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void AckWithCredit::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void AckWithCredit::ArenaDtor(void* object) {
+  AckWithCredit* _this = reinterpret_cast< AckWithCredit* >(object);
+  (void)_this;
+}
+void AckWithCredit::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void AckWithCredit::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const AckWithCredit& AckWithCredit::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_AckWithCredit_BitData_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void AckWithCredit::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.data.AckWithCredit)
@@ -1688,7 +1680,7 @@ void AckWithCredit::Clear() {
 
   allowed_credit_ = 0;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* AckWithCredit::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -1697,23 +1689,25 @@ const char* AckWithCredit::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional int32 allowed_credit = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_allowed_credit(&has_bits);
-          allowed_credit_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          allowed_credit_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -1743,7 +1737,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.data.AckWithCredit)
   return target;
@@ -1792,7 +1786,7 @@ void AckWithCredit::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void AckWithCredit::MergeFrom(const AckWithCredit& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.data.AckWithCredit)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -1821,15 +1815,16 @@ bool AckWithCredit::IsInitialized() const {
 
 void AckWithCredit::InternalSwap(AckWithCredit* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(allowed_credit_, other->allowed_credit_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata AckWithCredit::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitData_2eproto_getter, &descriptor_table_BitData_2eproto_once,
+      file_level_metadata_BitData_2eproto[4]);
 }
-
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace data
@@ -1837,19 +1832,19 @@ void AckWithCredit::InternalSwap(AckWithCredit* other) {
 }  // namespace exec
 PROTOBUF_NAMESPACE_OPEN
 template<> PROTOBUF_NOINLINE ::exec::bit::data::BitClientHandshake* Arena::CreateMaybeMessage< ::exec::bit::data::BitClientHandshake >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::data::BitClientHandshake >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::data::BitClientHandshake >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::data::BitServerHandshake* Arena::CreateMaybeMessage< ::exec::bit::data::BitServerHandshake >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::data::BitServerHandshake >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::data::BitServerHandshake >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::data::FragmentRecordBatch* Arena::CreateMaybeMessage< ::exec::bit::data::FragmentRecordBatch >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::data::FragmentRecordBatch >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::data::FragmentRecordBatch >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::data::RuntimeFilterBDef* Arena::CreateMaybeMessage< ::exec::bit::data::RuntimeFilterBDef >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::data::RuntimeFilterBDef >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::data::RuntimeFilterBDef >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::data::AckWithCredit* Arena::CreateMaybeMessage< ::exec::bit::data::AckWithCredit >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::data::AckWithCredit >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::data::AckWithCredit >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

@@ -172,7 +172,7 @@ public final class GeneralRPCProtos {
   /**
    * Protobuf type {@code exec.rpc.Ack}
    */
-  public  static final class Ack extends
+  public static final class Ack extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.rpc.Ack)
       AckOrBuilder {
@@ -259,6 +259,7 @@ public final class GeneralRPCProtos {
      * <code>optional bool ok = 1;</code>
      * @return Whether the ok field is set.
      */
+    @java.lang.Override
     public boolean hasOk() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -266,6 +267,7 @@ public final class GeneralRPCProtos {
      * <code>optional bool ok = 1;</code>
      * @return The ok.
      */
+    @java.lang.Override
     public boolean getOk() {
       return ok_;
     }
@@ -590,6 +592,7 @@ public final class GeneralRPCProtos {
        * <code>optional bool ok = 1;</code>
        * @return Whether the ok field is set.
        */
+      @java.lang.Override
       public boolean hasOk() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -597,6 +600,7 @@ public final class GeneralRPCProtos {
        * <code>optional bool ok = 1;</code>
        * @return The ok.
        */
+      @java.lang.Override
       public boolean getOk() {
         return ok_;
       }
@@ -730,7 +734,7 @@ public final class GeneralRPCProtos {
   /**
    * Protobuf type {@code exec.rpc.RpcHeader}
    */
-  public  static final class RpcHeader extends
+  public static final class RpcHeader extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.rpc.RpcHeader)
       RpcHeaderOrBuilder {
@@ -835,14 +839,14 @@ public final class GeneralRPCProtos {
      * <code>optional .exec.rpc.RpcMode mode = 1;</code>
      * @return Whether the mode field is set.
      */
-    public boolean hasMode() {
+    @java.lang.Override public boolean hasMode() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.rpc.RpcMode mode = 1;</code>
      * @return The mode.
      */
-    public org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode getMode() {
+    @java.lang.Override public org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode getMode() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode result = org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.valueOf(mode_);
       return result == null ? org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.REQUEST : result;
@@ -858,6 +862,7 @@ public final class GeneralRPCProtos {
      * <code>optional int32 coordination_id = 2;</code>
      * @return Whether the coordinationId field is set.
      */
+    @java.lang.Override
     public boolean hasCoordinationId() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -869,6 +874,7 @@ public final class GeneralRPCProtos {
      * <code>optional int32 coordination_id = 2;</code>
      * @return The coordinationId.
      */
+    @java.lang.Override
     public int getCoordinationId() {
       return coordinationId_;
     }
@@ -883,6 +889,7 @@ public final class GeneralRPCProtos {
      * <code>optional int32 rpc_type = 3;</code>
      * @return Whether the rpcType field is set.
      */
+    @java.lang.Override
     public boolean hasRpcType() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -894,6 +901,7 @@ public final class GeneralRPCProtos {
      * <code>optional int32 rpc_type = 3;</code>
      * @return The rpcType.
      */
+    @java.lang.Override
     public int getRpcType() {
       return rpcType_;
     }
@@ -1266,13 +1274,14 @@ public final class GeneralRPCProtos {
        * <code>optional .exec.rpc.RpcMode mode = 1;</code>
        * @return Whether the mode field is set.
        */
-      public boolean hasMode() {
+      @java.lang.Override public boolean hasMode() {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.rpc.RpcMode mode = 1;</code>
        * @return The mode.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode getMode() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode result = org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.valueOf(mode_);
@@ -1312,6 +1321,7 @@ public final class GeneralRPCProtos {
        * <code>optional int32 coordination_id = 2;</code>
        * @return Whether the coordinationId field is set.
        */
+      @java.lang.Override
       public boolean hasCoordinationId() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -1323,6 +1333,7 @@ public final class GeneralRPCProtos {
        * <code>optional int32 coordination_id = 2;</code>
        * @return The coordinationId.
        */
+      @java.lang.Override
       public int getCoordinationId() {
         return coordinationId_;
       }
@@ -1365,6 +1376,7 @@ public final class GeneralRPCProtos {
        * <code>optional int32 rpc_type = 3;</code>
        * @return Whether the rpcType field is set.
        */
+      @java.lang.Override
       public boolean hasRpcType() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -1376,6 +1388,7 @@ public final class GeneralRPCProtos {
        * <code>optional int32 rpc_type = 3;</code>
        * @return The rpcType.
        */
+      @java.lang.Override
       public int getRpcType() {
         return rpcType_;
       }
@@ -1533,7 +1546,7 @@ public final class GeneralRPCProtos {
   /**
    * Protobuf type {@code exec.rpc.CompleteRpcMessage}
    */
-  public  static final class CompleteRpcMessage extends
+  public static final class CompleteRpcMessage extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.rpc.CompleteRpcMessage)
       CompleteRpcMessageOrBuilder {
@@ -1644,6 +1657,7 @@ public final class GeneralRPCProtos {
      * <code>optional .exec.rpc.RpcHeader header = 1;</code>
      * @return Whether the header field is set.
      */
+    @java.lang.Override
     public boolean hasHeader() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -1655,6 +1669,7 @@ public final class GeneralRPCProtos {
      * <code>optional .exec.rpc.RpcHeader header = 1;</code>
      * @return The header.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader getHeader() {
       return header_ == null ? org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance() : header_;
     }
@@ -1665,6 +1680,7 @@ public final class GeneralRPCProtos {
      *
      * <code>optional .exec.rpc.RpcHeader header = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeaderOrBuilder getHeaderOrBuilder() {
       return header_ == null ? org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance() : header_;
     }
@@ -1679,6 +1695,7 @@ public final class GeneralRPCProtos {
      * <code>optional bytes protobuf_body = 2;</code>
      * @return Whether the protobufBody field is set.
      */
+    @java.lang.Override
     public boolean hasProtobufBody() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -1690,6 +1707,7 @@ public final class GeneralRPCProtos {
      * <code>optional bytes protobuf_body = 2;</code>
      * @return The protobufBody.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getProtobufBody() {
       return protobufBody_;
     }
@@ -1704,6 +1722,7 @@ public final class GeneralRPCProtos {
      * <code>optional bytes raw_body = 3;</code>
      * @return Whether the rawBody field is set.
      */
+    @java.lang.Override
     public boolean hasRawBody() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -1715,6 +1734,7 @@ public final class GeneralRPCProtos {
      * <code>optional bytes raw_body = 3;</code>
      * @return The rawBody.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getRawBody() {
       return rawBody_;
     }
@@ -2257,6 +2277,7 @@ public final class GeneralRPCProtos {
        * <code>optional bytes protobuf_body = 2;</code>
        * @return Whether the protobufBody field is set.
        */
+      @java.lang.Override
       public boolean hasProtobufBody() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -2268,6 +2289,7 @@ public final class GeneralRPCProtos {
        * <code>optional bytes protobuf_body = 2;</code>
        * @return The protobufBody.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getProtobufBody() {
         return protobufBody_;
       }
@@ -2313,6 +2335,7 @@ public final class GeneralRPCProtos {
        * <code>optional bytes raw_body = 3;</code>
        * @return Whether the rawBody field is set.
        */
+      @java.lang.Override
       public boolean hasRawBody() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -2324,6 +2347,7 @@ public final class GeneralRPCProtos {
        * <code>optional bytes raw_body = 3;</code>
        * @return The rawBody.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getRawBody() {
         return rawBody_;
       }

@@ -555,7 +555,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.UserCredentials}
    */
-  public  static final class UserCredentials extends
+  public static final class UserCredentials extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.UserCredentials)
       UserCredentialsOrBuilder {
@@ -644,6 +644,7 @@ public final class UserBitShared {
      * <code>optional string user_name = 1;</code>
      * @return Whether the userName field is set.
      */
+    @java.lang.Override
     public boolean hasUserName() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -651,6 +652,7 @@ public final class UserBitShared {
      * <code>optional string user_name = 1;</code>
      * @return The userName.
      */
+    @java.lang.Override
     public java.lang.String getUserName() {
       java.lang.Object ref = userName_;
       if (ref instanceof java.lang.String) {
@@ -669,6 +671,7 @@ public final class UserBitShared {
      * <code>optional string user_name = 1;</code>
      * @return The bytes for userName.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getUserNameBytes() {
       java.lang.Object ref = userName_;
@@ -1163,7 +1166,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.QueryId}
    */
-  public  static final class QueryId extends
+  public static final class QueryId extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.QueryId)
       QueryIdOrBuilder {
@@ -1255,6 +1258,7 @@ public final class UserBitShared {
      * <code>optional sfixed64 part1 = 1;</code>
      * @return Whether the part1 field is set.
      */
+    @java.lang.Override
     public boolean hasPart1() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -1262,6 +1266,7 @@ public final class UserBitShared {
      * <code>optional sfixed64 part1 = 1;</code>
      * @return The part1.
      */
+    @java.lang.Override
     public long getPart1() {
       return part1_;
     }
@@ -1272,6 +1277,7 @@ public final class UserBitShared {
      * <code>optional sfixed64 part2 = 2;</code>
      * @return Whether the part2 field is set.
      */
+    @java.lang.Override
     public boolean hasPart2() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -1279,6 +1285,7 @@ public final class UserBitShared {
      * <code>optional sfixed64 part2 = 2;</code>
      * @return The part2.
      */
+    @java.lang.Override
     public long getPart2() {
       return part2_;
     }
@@ -1629,6 +1636,7 @@ public final class UserBitShared {
        * <code>optional sfixed64 part1 = 1;</code>
        * @return Whether the part1 field is set.
        */
+      @java.lang.Override
       public boolean hasPart1() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -1636,6 +1644,7 @@ public final class UserBitShared {
        * <code>optional sfixed64 part1 = 1;</code>
        * @return The part1.
        */
+      @java.lang.Override
       public long getPart1() {
         return part1_;
       }
@@ -1666,6 +1675,7 @@ public final class UserBitShared {
        * <code>optional sfixed64 part2 = 2;</code>
        * @return Whether the part2 field is set.
        */
+      @java.lang.Override
       public boolean hasPart2() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -1673,6 +1683,7 @@ public final class UserBitShared {
        * <code>optional sfixed64 part2 = 2;</code>
        * @return The part2.
        */
+      @java.lang.Override
       public long getPart2() {
         return part2_;
       }
@@ -1888,7 +1899,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.DrillPBError}
    */
-  public  static final class DrillPBError extends
+  public static final class DrillPBError extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.DrillPBError)
       DrillPBErrorOrBuilder {
@@ -2412,6 +2423,7 @@ public final class UserBitShared {
      * <code>optional string error_id = 1;</code>
      * @return Whether the errorId field is set.
      */
+    @java.lang.Override
     public boolean hasErrorId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -2423,6 +2435,7 @@ public final class UserBitShared {
      * <code>optional string error_id = 1;</code>
      * @return The errorId.
      */
+    @java.lang.Override
     public java.lang.String getErrorId() {
       java.lang.Object ref = errorId_;
       if (ref instanceof java.lang.String) {
@@ -2445,6 +2458,7 @@ public final class UserBitShared {
      * <code>optional string error_id = 1;</code>
      * @return The bytes for errorId.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getErrorIdBytes() {
       java.lang.Object ref = errorId_;
@@ -2465,6 +2479,7 @@ public final class UserBitShared {
      * <code>optional .exec.DrillbitEndpoint endpoint = 2;</code>
      * @return Whether the endpoint field is set.
      */
+    @java.lang.Override
     public boolean hasEndpoint() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -2472,12 +2487,14 @@ public final class UserBitShared {
      * <code>optional .exec.DrillbitEndpoint endpoint = 2;</code>
      * @return The endpoint.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getEndpoint() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
     }
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 2;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getEndpointOrBuilder() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
     }
@@ -2488,14 +2505,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
      * @return Whether the errorType field is set.
      */
-    public boolean hasErrorType() {
+    @java.lang.Override public boolean hasErrorType() {
       return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
      * @return The errorType.
      */
-    public org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType getErrorType() {
+    @java.lang.Override public org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType getErrorType() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType result = org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType.valueOf(errorType_);
       return result == null ? org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType.CONNECTION : result;
@@ -2507,6 +2524,7 @@ public final class UserBitShared {
      * <code>optional string message = 4;</code>
      * @return Whether the message field is set.
      */
+    @java.lang.Override
     public boolean hasMessage() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -2514,6 +2532,7 @@ public final class UserBitShared {
      * <code>optional string message = 4;</code>
      * @return The message.
      */
+    @java.lang.Override
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
       if (ref instanceof java.lang.String) {
@@ -2532,6 +2551,7 @@ public final class UserBitShared {
      * <code>optional string message = 4;</code>
      * @return The bytes for message.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getMessageBytes() {
       java.lang.Object ref = message_;
@@ -2552,6 +2572,7 @@ public final class UserBitShared {
      * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
      * @return Whether the exception field is set.
      */
+    @java.lang.Override
     public boolean hasException() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -2559,12 +2580,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
      * @return The exception.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getException() {
       return exception_ == null ? org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance() : exception_;
     }
     /**
      * <code>optional .exec.shared.ExceptionWrapper exception = 5;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder getExceptionOrBuilder() {
       return exception_ == null ? org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance() : exception_;
     }
@@ -2578,6 +2601,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.UserBitShared.ParsingError> getParsingErrorList() {
       return parsingError_;
     }
@@ -2588,6 +2612,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder> 
         getParsingErrorOrBuilderList() {
       return parsingError_;
@@ -2599,6 +2624,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      */
+    @java.lang.Override
     public int getParsingErrorCount() {
       return parsingError_.size();
     }
@@ -2609,6 +2635,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.ParsingError getParsingError(int index) {
       return parsingError_.get(index);
     }
@@ -2619,6 +2646,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.ParsingError parsing_error = 6;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.ParsingErrorOrBuilder getParsingErrorOrBuilder(
         int index) {
       return parsingError_.get(index);
@@ -3345,13 +3373,14 @@ public final class UserBitShared {
        * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
        * @return Whether the errorType field is set.
        */
-      public boolean hasErrorType() {
+      @java.lang.Override public boolean hasErrorType() {
         return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.DrillPBError.ErrorType error_type = 3;</code>
        * @return The errorType.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType getErrorType() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType result = org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType.valueOf(errorType_);
@@ -4030,7 +4059,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.ExceptionWrapper}
    */
-  public  static final class ExceptionWrapper extends
+  public static final class ExceptionWrapper extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.ExceptionWrapper)
       ExceptionWrapperOrBuilder {
@@ -4152,6 +4181,7 @@ public final class UserBitShared {
      * <code>optional string exception_class = 1;</code>
      * @return Whether the exceptionClass field is set.
      */
+    @java.lang.Override
     public boolean hasExceptionClass() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -4159,6 +4189,7 @@ public final class UserBitShared {
      * <code>optional string exception_class = 1;</code>
      * @return The exceptionClass.
      */
+    @java.lang.Override
     public java.lang.String getExceptionClass() {
       java.lang.Object ref = exceptionClass_;
       if (ref instanceof java.lang.String) {
@@ -4177,6 +4208,7 @@ public final class UserBitShared {
      * <code>optional string exception_class = 1;</code>
      * @return The bytes for exceptionClass.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getExceptionClassBytes() {
       java.lang.Object ref = exceptionClass_;
@@ -4197,6 +4229,7 @@ public final class UserBitShared {
      * <code>optional string message = 2;</code>
      * @return Whether the message field is set.
      */
+    @java.lang.Override
     public boolean hasMessage() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -4204,6 +4237,7 @@ public final class UserBitShared {
      * <code>optional string message = 2;</code>
      * @return The message.
      */
+    @java.lang.Override
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
       if (ref instanceof java.lang.String) {
@@ -4222,6 +4256,7 @@ public final class UserBitShared {
      * <code>optional string message = 2;</code>
      * @return The bytes for message.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getMessageBytes() {
       java.lang.Object ref = message_;
@@ -4241,12 +4276,14 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper> getStackTraceList() {
       return stackTrace_;
     }
     /**
      * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder> 
         getStackTraceOrBuilderList() {
       return stackTrace_;
@@ -4254,18 +4291,21 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
      */
+    @java.lang.Override
     public int getStackTraceCount() {
       return stackTrace_.size();
     }
     /**
      * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper getStackTrace(int index) {
       return stackTrace_.get(index);
     }
     /**
      * <code>repeated .exec.shared.StackTraceElementWrapper stack_trace = 3;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapperOrBuilder getStackTraceOrBuilder(
         int index) {
       return stackTrace_.get(index);
@@ -4277,6 +4317,7 @@ public final class UserBitShared {
      * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
      * @return Whether the cause field is set.
      */
+    @java.lang.Override
     public boolean hasCause() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -4284,12 +4325,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
      * @return The cause.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper getCause() {
       return cause_ == null ? org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance() : cause_;
     }
     /**
      * <code>optional .exec.shared.ExceptionWrapper cause = 4;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapperOrBuilder getCauseOrBuilder() {
       return cause_ == null ? org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.getDefaultInstance() : cause_;
     }
@@ -5384,7 +5427,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.StackTraceElementWrapper}
    */
-  public  static final class StackTraceElementWrapper extends
+  public static final class StackTraceElementWrapper extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.StackTraceElementWrapper)
       StackTraceElementWrapperOrBuilder {
@@ -5497,6 +5540,7 @@ public final class UserBitShared {
      * <code>optional string class_name = 1;</code>
      * @return Whether the className field is set.
      */
+    @java.lang.Override
     public boolean hasClassName() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -5504,6 +5548,7 @@ public final class UserBitShared {
      * <code>optional string class_name = 1;</code>
      * @return The className.
      */
+    @java.lang.Override
     public java.lang.String getClassName() {
       java.lang.Object ref = className_;
       if (ref instanceof java.lang.String) {
@@ -5522,6 +5567,7 @@ public final class UserBitShared {
      * <code>optional string class_name = 1;</code>
      * @return The bytes for className.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getClassNameBytes() {
       java.lang.Object ref = className_;
@@ -5542,6 +5588,7 @@ public final class UserBitShared {
      * <code>optional string file_name = 2;</code>
      * @return Whether the fileName field is set.
      */
+    @java.lang.Override
     public boolean hasFileName() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -5549,6 +5596,7 @@ public final class UserBitShared {
      * <code>optional string file_name = 2;</code>
      * @return The fileName.
      */
+    @java.lang.Override
     public java.lang.String getFileName() {
       java.lang.Object ref = fileName_;
       if (ref instanceof java.lang.String) {
@@ -5567,6 +5615,7 @@ public final class UserBitShared {
      * <code>optional string file_name = 2;</code>
      * @return The bytes for fileName.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getFileNameBytes() {
       java.lang.Object ref = fileName_;
@@ -5587,6 +5636,7 @@ public final class UserBitShared {
      * <code>optional int32 line_number = 3;</code>
      * @return Whether the lineNumber field is set.
      */
+    @java.lang.Override
     public boolean hasLineNumber() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -5594,6 +5644,7 @@ public final class UserBitShared {
      * <code>optional int32 line_number = 3;</code>
      * @return The lineNumber.
      */
+    @java.lang.Override
     public int getLineNumber() {
       return lineNumber_;
     }
@@ -5604,6 +5655,7 @@ public final class UserBitShared {
      * <code>optional string method_name = 4;</code>
      * @return Whether the methodName field is set.
      */
+    @java.lang.Override
     public boolean hasMethodName() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -5611,6 +5663,7 @@ public final class UserBitShared {
      * <code>optional string method_name = 4;</code>
      * @return The methodName.
      */
+    @java.lang.Override
     public java.lang.String getMethodName() {
       java.lang.Object ref = methodName_;
       if (ref instanceof java.lang.String) {
@@ -5629,6 +5682,7 @@ public final class UserBitShared {
      * <code>optional string method_name = 4;</code>
      * @return The bytes for methodName.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getMethodNameBytes() {
       java.lang.Object ref = methodName_;
@@ -5649,6 +5703,7 @@ public final class UserBitShared {
      * <code>optional bool is_native_method = 5;</code>
      * @return Whether the isNativeMethod field is set.
      */
+    @java.lang.Override
     public boolean hasIsNativeMethod() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -5656,6 +5711,7 @@ public final class UserBitShared {
      * <code>optional bool is_native_method = 5;</code>
      * @return The isNativeMethod.
      */
+    @java.lang.Override
     public boolean getIsNativeMethod() {
       return isNativeMethod_;
     }
@@ -6251,6 +6307,7 @@ public final class UserBitShared {
        * <code>optional int32 line_number = 3;</code>
        * @return Whether the lineNumber field is set.
        */
+      @java.lang.Override
       public boolean hasLineNumber() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -6258,6 +6315,7 @@ public final class UserBitShared {
        * <code>optional int32 line_number = 3;</code>
        * @return The lineNumber.
        */
+      @java.lang.Override
       public int getLineNumber() {
         return lineNumber_;
       }
@@ -6372,6 +6430,7 @@ public final class UserBitShared {
        * <code>optional bool is_native_method = 5;</code>
        * @return Whether the isNativeMethod field is set.
        */
+      @java.lang.Override
       public boolean hasIsNativeMethod() {
         return ((bitField0_ & 0x00000010) != 0);
       }
@@ -6379,6 +6438,7 @@ public final class UserBitShared {
        * <code>optional bool is_native_method = 5;</code>
        * @return The isNativeMethod.
        */
+      @java.lang.Override
       public boolean getIsNativeMethod() {
         return isNativeMethod_;
       }
@@ -6507,7 +6567,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.ParsingError}
    */
-  public  static final class ParsingError extends
+  public static final class ParsingError extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.ParsingError)
       ParsingErrorOrBuilder {
@@ -6609,6 +6669,7 @@ public final class UserBitShared {
      * <code>optional int32 start_column = 2;</code>
      * @return Whether the startColumn field is set.
      */
+    @java.lang.Override
     public boolean hasStartColumn() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -6616,6 +6677,7 @@ public final class UserBitShared {
      * <code>optional int32 start_column = 2;</code>
      * @return The startColumn.
      */
+    @java.lang.Override
     public int getStartColumn() {
       return startColumn_;
     }
@@ -6626,6 +6688,7 @@ public final class UserBitShared {
      * <code>optional int32 start_row = 3;</code>
      * @return Whether the startRow field is set.
      */
+    @java.lang.Override
     public boolean hasStartRow() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -6633,6 +6696,7 @@ public final class UserBitShared {
      * <code>optional int32 start_row = 3;</code>
      * @return The startRow.
      */
+    @java.lang.Override
     public int getStartRow() {
       return startRow_;
     }
@@ -6643,6 +6707,7 @@ public final class UserBitShared {
      * <code>optional int32 end_column = 4;</code>
      * @return Whether the endColumn field is set.
      */
+    @java.lang.Override
     public boolean hasEndColumn() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -6650,6 +6715,7 @@ public final class UserBitShared {
      * <code>optional int32 end_column = 4;</code>
      * @return The endColumn.
      */
+    @java.lang.Override
     public int getEndColumn() {
       return endColumn_;
     }
@@ -6660,6 +6726,7 @@ public final class UserBitShared {
      * <code>optional int32 end_row = 5;</code>
      * @return Whether the endRow field is set.
      */
+    @java.lang.Override
     public boolean hasEndRow() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -6667,6 +6734,7 @@ public final class UserBitShared {
      * <code>optional int32 end_row = 5;</code>
      * @return The endRow.
      */
+    @java.lang.Override
     public int getEndRow() {
       return endRow_;
     }
@@ -7065,6 +7133,7 @@ public final class UserBitShared {
        * <code>optional int32 start_column = 2;</code>
        * @return Whether the startColumn field is set.
        */
+      @java.lang.Override
       public boolean hasStartColumn() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -7072,6 +7141,7 @@ public final class UserBitShared {
        * <code>optional int32 start_column = 2;</code>
        * @return The startColumn.
        */
+      @java.lang.Override
       public int getStartColumn() {
         return startColumn_;
       }
@@ -7102,6 +7172,7 @@ public final class UserBitShared {
        * <code>optional int32 start_row = 3;</code>
        * @return Whether the startRow field is set.
        */
+      @java.lang.Override
       public boolean hasStartRow() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -7109,6 +7180,7 @@ public final class UserBitShared {
        * <code>optional int32 start_row = 3;</code>
        * @return The startRow.
        */
+      @java.lang.Override
       public int getStartRow() {
         return startRow_;
       }
@@ -7139,6 +7211,7 @@ public final class UserBitShared {
        * <code>optional int32 end_column = 4;</code>
        * @return Whether the endColumn field is set.
        */
+      @java.lang.Override
       public boolean hasEndColumn() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -7146,6 +7219,7 @@ public final class UserBitShared {
        * <code>optional int32 end_column = 4;</code>
        * @return The endColumn.
        */
+      @java.lang.Override
       public int getEndColumn() {
         return endColumn_;
       }
@@ -7176,6 +7250,7 @@ public final class UserBitShared {
        * <code>optional int32 end_row = 5;</code>
        * @return Whether the endRow field is set.
        */
+      @java.lang.Override
       public boolean hasEndRow() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -7183,6 +7258,7 @@ public final class UserBitShared {
        * <code>optional int32 end_row = 5;</code>
        * @return The endRow.
        */
+      @java.lang.Override
       public int getEndRow() {
         return endRow_;
       }
@@ -7334,7 +7410,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.RecordBatchDef}
    */
-  public  static final class RecordBatchDef extends
+  public static final class RecordBatchDef extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.RecordBatchDef)
       RecordBatchDefOrBuilder {
@@ -7444,6 +7520,7 @@ public final class UserBitShared {
      * <code>optional int32 record_count = 1;</code>
      * @return Whether the recordCount field is set.
      */
+    @java.lang.Override
     public boolean hasRecordCount() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -7451,6 +7528,7 @@ public final class UserBitShared {
      * <code>optional int32 record_count = 1;</code>
      * @return The recordCount.
      */
+    @java.lang.Override
     public int getRecordCount() {
       return recordCount_;
     }
@@ -7460,12 +7538,14 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.SerializedField field = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> getFieldList() {
       return field_;
     }
     /**
      * <code>repeated .exec.shared.SerializedField field = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
         getFieldOrBuilderList() {
       return field_;
@@ -7473,18 +7553,21 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.SerializedField field = 2;</code>
      */
+    @java.lang.Override
     public int getFieldCount() {
       return field_.size();
     }
     /**
      * <code>repeated .exec.shared.SerializedField field = 2;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.SerializedField getField(int index) {
       return field_.get(index);
     }
     /**
      * <code>repeated .exec.shared.SerializedField field = 2;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder getFieldOrBuilder(
         int index) {
       return field_.get(index);
@@ -7496,6 +7579,7 @@ public final class UserBitShared {
      * <code>optional bool carries_two_byte_selection_vector = 3;</code>
      * @return Whether the carriesTwoByteSelectionVector field is set.
      */
+    @java.lang.Override
     public boolean hasCarriesTwoByteSelectionVector() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -7503,6 +7587,7 @@ public final class UserBitShared {
      * <code>optional bool carries_two_byte_selection_vector = 3;</code>
      * @return The carriesTwoByteSelectionVector.
      */
+    @java.lang.Override
     public boolean getCarriesTwoByteSelectionVector() {
       return carriesTwoByteSelectionVector_;
     }
@@ -7518,6 +7603,7 @@ public final class UserBitShared {
      * <code>optional int32 affected_rows_count = 4;</code>
      * @return Whether the affectedRowsCount field is set.
      */
+    @java.lang.Override
     public boolean hasAffectedRowsCount() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -7530,6 +7616,7 @@ public final class UserBitShared {
      * <code>optional int32 affected_rows_count = 4;</code>
      * @return The affectedRowsCount.
      */
+    @java.lang.Override
     public int getAffectedRowsCount() {
       return affectedRowsCount_;
     }
@@ -7959,6 +8046,7 @@ public final class UserBitShared {
        * <code>optional int32 record_count = 1;</code>
        * @return Whether the recordCount field is set.
        */
+      @java.lang.Override
       public boolean hasRecordCount() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -7966,6 +8054,7 @@ public final class UserBitShared {
        * <code>optional int32 record_count = 1;</code>
        * @return The recordCount.
        */
+      @java.lang.Override
       public int getRecordCount() {
         return recordCount_;
       }
@@ -8236,6 +8325,7 @@ public final class UserBitShared {
        * <code>optional bool carries_two_byte_selection_vector = 3;</code>
        * @return Whether the carriesTwoByteSelectionVector field is set.
        */
+      @java.lang.Override
       public boolean hasCarriesTwoByteSelectionVector() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -8243,6 +8333,7 @@ public final class UserBitShared {
        * <code>optional bool carries_two_byte_selection_vector = 3;</code>
        * @return The carriesTwoByteSelectionVector.
        */
+      @java.lang.Override
       public boolean getCarriesTwoByteSelectionVector() {
         return carriesTwoByteSelectionVector_;
       }
@@ -8278,6 +8369,7 @@ public final class UserBitShared {
        * <code>optional int32 affected_rows_count = 4;</code>
        * @return Whether the affectedRowsCount field is set.
        */
+      @java.lang.Override
       public boolean hasAffectedRowsCount() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -8290,6 +8382,7 @@ public final class UserBitShared {
        * <code>optional int32 affected_rows_count = 4;</code>
        * @return The affectedRowsCount.
        */
+      @java.lang.Override
       public int getAffectedRowsCount() {
         return affectedRowsCount_;
       }
@@ -8427,7 +8520,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.NamePart}
    */
-  public  static final class NamePart extends
+  public static final class NamePart extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.NamePart)
       NamePartOrBuilder {
@@ -8638,14 +8731,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.NamePart.Type type = 1;</code>
      * @return Whether the type field is set.
      */
-    public boolean hasType() {
+    @java.lang.Override public boolean hasType() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.shared.NamePart.Type type = 1;</code>
      * @return The type.
      */
-    public org.apache.drill.exec.proto.UserBitShared.NamePart.Type getType() {
+    @java.lang.Override public org.apache.drill.exec.proto.UserBitShared.NamePart.Type getType() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.UserBitShared.NamePart.Type result = org.apache.drill.exec.proto.UserBitShared.NamePart.Type.valueOf(type_);
       return result == null ? org.apache.drill.exec.proto.UserBitShared.NamePart.Type.NAME : result;
@@ -8657,6 +8750,7 @@ public final class UserBitShared {
      * <code>optional string name = 2;</code>
      * @return Whether the name field is set.
      */
+    @java.lang.Override
     public boolean hasName() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -8664,6 +8758,7 @@ public final class UserBitShared {
      * <code>optional string name = 2;</code>
      * @return The name.
      */
+    @java.lang.Override
     public java.lang.String getName() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
@@ -8682,6 +8777,7 @@ public final class UserBitShared {
      * <code>optional string name = 2;</code>
      * @return The bytes for name.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getNameBytes() {
       java.lang.Object ref = name_;
@@ -8702,6 +8798,7 @@ public final class UserBitShared {
      * <code>optional .exec.shared.NamePart child = 3;</code>
      * @return Whether the child field is set.
      */
+    @java.lang.Override
     public boolean hasChild() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -8709,12 +8806,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.NamePart child = 3;</code>
      * @return The child.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.NamePart getChild() {
       return child_ == null ? org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance() : child_;
     }
     /**
      * <code>optional .exec.shared.NamePart child = 3;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder getChildOrBuilder() {
       return child_ == null ? org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance() : child_;
     }
@@ -9097,13 +9196,14 @@ public final class UserBitShared {
        * <code>optional .exec.shared.NamePart.Type type = 1;</code>
        * @return Whether the type field is set.
        */
-      public boolean hasType() {
+      @java.lang.Override public boolean hasType() {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.shared.NamePart.Type type = 1;</code>
        * @return The type.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.UserBitShared.NamePart.Type getType() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.UserBitShared.NamePart.Type result = org.apache.drill.exec.proto.UserBitShared.NamePart.Type.valueOf(type_);
@@ -9516,7 +9616,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.SerializedField}
    */
-  public  static final class SerializedField extends
+  public static final class SerializedField extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.SerializedField)
       SerializedFieldOrBuilder {
@@ -9656,6 +9756,7 @@ public final class UserBitShared {
      * <code>optional .common.MajorType major_type = 1;</code>
      * @return Whether the majorType field is set.
      */
+    @java.lang.Override
     public boolean hasMajorType() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -9667,6 +9768,7 @@ public final class UserBitShared {
      * <code>optional .common.MajorType major_type = 1;</code>
      * @return The majorType.
      */
+    @java.lang.Override
     public org.apache.drill.common.types.TypeProtos.MajorType getMajorType() {
       return majorType_ == null ? org.apache.drill.common.types.TypeProtos.MajorType.getDefaultInstance() : majorType_;
     }
@@ -9677,6 +9779,7 @@ public final class UserBitShared {
      *
      * <code>optional .common.MajorType major_type = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder getMajorTypeOrBuilder() {
       return majorType_ == null ? org.apache.drill.common.types.TypeProtos.MajorType.getDefaultInstance() : majorType_;
     }
@@ -9687,6 +9790,7 @@ public final class UserBitShared {
      * <code>optional .exec.shared.NamePart name_part = 2;</code>
      * @return Whether the namePart field is set.
      */
+    @java.lang.Override
     public boolean hasNamePart() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -9694,12 +9798,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.NamePart name_part = 2;</code>
      * @return The namePart.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.NamePart getNamePart() {
       return namePart_ == null ? org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance() : namePart_;
     }
     /**
      * <code>optional .exec.shared.NamePart name_part = 2;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder getNamePartOrBuilder() {
       return namePart_ == null ? org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance() : namePart_;
     }
@@ -9713,6 +9819,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.SerializedField child = 3;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> getChildList() {
       return child_;
     }
@@ -9723,6 +9830,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.SerializedField child = 3;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
         getChildOrBuilderList() {
       return child_;
@@ -9734,6 +9842,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.SerializedField child = 3;</code>
      */
+    @java.lang.Override
     public int getChildCount() {
       return child_.size();
     }
@@ -9744,6 +9853,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.SerializedField child = 3;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.SerializedField getChild(int index) {
       return child_.get(index);
     }
@@ -9754,6 +9864,7 @@ public final class UserBitShared {
      *
      * <code>repeated .exec.shared.SerializedField child = 3;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder getChildOrBuilder(
         int index) {
       return child_.get(index);
@@ -9765,6 +9876,7 @@ public final class UserBitShared {
      * <code>optional int32 value_count = 4;</code>
      * @return Whether the valueCount field is set.
      */
+    @java.lang.Override
     public boolean hasValueCount() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -9772,6 +9884,7 @@ public final class UserBitShared {
      * <code>optional int32 value_count = 4;</code>
      * @return The valueCount.
      */
+    @java.lang.Override
     public int getValueCount() {
       return valueCount_;
     }
@@ -9782,6 +9895,7 @@ public final class UserBitShared {
      * <code>optional int32 var_byte_length = 5;</code>
      * @return Whether the varByteLength field is set.
      */
+    @java.lang.Override
     public boolean hasVarByteLength() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -9789,6 +9903,7 @@ public final class UserBitShared {
      * <code>optional int32 var_byte_length = 5;</code>
      * @return The varByteLength.
      */
+    @java.lang.Override
     public int getVarByteLength() {
       return varByteLength_;
     }
@@ -9799,6 +9914,7 @@ public final class UserBitShared {
      * <code>optional int32 buffer_length = 7;</code>
      * @return Whether the bufferLength field is set.
      */
+    @java.lang.Override
     public boolean hasBufferLength() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -9806,6 +9922,7 @@ public final class UserBitShared {
      * <code>optional int32 buffer_length = 7;</code>
      * @return The bufferLength.
      */
+    @java.lang.Override
     public int getBufferLength() {
       return bufferLength_;
     }
@@ -10890,6 +11007,7 @@ public final class UserBitShared {
        * <code>optional int32 value_count = 4;</code>
        * @return Whether the valueCount field is set.
        */
+      @java.lang.Override
       public boolean hasValueCount() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -10897,6 +11015,7 @@ public final class UserBitShared {
        * <code>optional int32 value_count = 4;</code>
        * @return The valueCount.
        */
+      @java.lang.Override
       public int getValueCount() {
         return valueCount_;
       }
@@ -10927,6 +11046,7 @@ public final class UserBitShared {
        * <code>optional int32 var_byte_length = 5;</code>
        * @return Whether the varByteLength field is set.
        */
+      @java.lang.Override
       public boolean hasVarByteLength() {
         return ((bitField0_ & 0x00000010) != 0);
       }
@@ -10934,6 +11054,7 @@ public final class UserBitShared {
        * <code>optional int32 var_byte_length = 5;</code>
        * @return The varByteLength.
        */
+      @java.lang.Override
       public int getVarByteLength() {
         return varByteLength_;
       }
@@ -10964,6 +11085,7 @@ public final class UserBitShared {
        * <code>optional int32 buffer_length = 7;</code>
        * @return Whether the bufferLength field is set.
        */
+      @java.lang.Override
       public boolean hasBufferLength() {
         return ((bitField0_ & 0x00000020) != 0);
       }
@@ -10971,6 +11093,7 @@ public final class UserBitShared {
        * <code>optional int32 buffer_length = 7;</code>
        * @return The bufferLength.
        */
+      @java.lang.Override
       public int getBufferLength() {
         return bufferLength_;
       }
@@ -11077,7 +11200,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.NodeStatus}
    */
-  public  static final class NodeStatus extends
+  public static final class NodeStatus extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.NodeStatus)
       NodeStatusOrBuilder {
@@ -11169,6 +11292,7 @@ public final class UserBitShared {
      * <code>optional int32 node_id = 1;</code>
      * @return Whether the nodeId field is set.
      */
+    @java.lang.Override
     public boolean hasNodeId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -11176,6 +11300,7 @@ public final class UserBitShared {
      * <code>optional int32 node_id = 1;</code>
      * @return The nodeId.
      */
+    @java.lang.Override
     public int getNodeId() {
       return nodeId_;
     }
@@ -11186,6 +11311,7 @@ public final class UserBitShared {
      * <code>optional int64 memory_footprint = 2;</code>
      * @return Whether the memoryFootprint field is set.
      */
+    @java.lang.Override
     public boolean hasMemoryFootprint() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -11193,6 +11319,7 @@ public final class UserBitShared {
      * <code>optional int64 memory_footprint = 2;</code>
      * @return The memoryFootprint.
      */
+    @java.lang.Override
     public long getMemoryFootprint() {
       return memoryFootprint_;
     }
@@ -11542,6 +11669,7 @@ public final class UserBitShared {
        * <code>optional int32 node_id = 1;</code>
        * @return Whether the nodeId field is set.
        */
+      @java.lang.Override
       public boolean hasNodeId() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -11549,6 +11677,7 @@ public final class UserBitShared {
        * <code>optional int32 node_id = 1;</code>
        * @return The nodeId.
        */
+      @java.lang.Override
       public int getNodeId() {
         return nodeId_;
       }
@@ -11579,6 +11708,7 @@ public final class UserBitShared {
        * <code>optional int64 memory_footprint = 2;</code>
        * @return Whether the memoryFootprint field is set.
        */
+      @java.lang.Override
       public boolean hasMemoryFootprint() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -11586,6 +11716,7 @@ public final class UserBitShared {
        * <code>optional int64 memory_footprint = 2;</code>
        * @return The memoryFootprint.
        */
+      @java.lang.Override
       public long getMemoryFootprint() {
         return memoryFootprint_;
       }
@@ -11724,7 +11855,7 @@ public final class UserBitShared {
    *
    * Protobuf type {@code exec.shared.QueryResult}
    */
-  public  static final class QueryResult extends
+  public static final class QueryResult extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.QueryResult)
       QueryResultOrBuilder {
@@ -12060,14 +12191,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
      * @return Whether the queryState field is set.
      */
-    public boolean hasQueryState() {
+    @java.lang.Override public boolean hasQueryState() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
      * @return The queryState.
      */
-    public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getQueryState() {
+    @java.lang.Override public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getQueryState() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState result = org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.valueOf(queryState_);
       return result == null ? org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.STARTING : result;
@@ -12079,6 +12210,7 @@ public final class UserBitShared {
      * <code>optional .exec.shared.QueryId query_id = 2;</code>
      * @return Whether the queryId field is set.
      */
+    @java.lang.Override
     public boolean hasQueryId() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -12086,12 +12218,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.QueryId query_id = 2;</code>
      * @return The queryId.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
     }
     /**
      * <code>optional .exec.shared.QueryId query_id = 2;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
     }
@@ -12101,12 +12235,14 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.DrillPBError error = 3;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.UserBitShared.DrillPBError> getErrorList() {
       return error_;
     }
     /**
      * <code>repeated .exec.shared.DrillPBError error = 3;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder> 
         getErrorOrBuilderList() {
       return error_;
@@ -12114,18 +12250,21 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.DrillPBError error = 3;</code>
      */
+    @java.lang.Override
     public int getErrorCount() {
       return error_.size();
     }
     /**
      * <code>repeated .exec.shared.DrillPBError error = 3;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError(int index) {
       return error_.get(index);
     }
     /**
      * <code>repeated .exec.shared.DrillPBError error = 3;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder(
         int index) {
       return error_.get(index);
@@ -12542,13 +12681,14 @@ public final class UserBitShared {
        * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
        * @return Whether the queryState field is set.
        */
-      public boolean hasQueryState() {
+      @java.lang.Override public boolean hasQueryState() {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState query_state = 1;</code>
        * @return The queryState.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getQueryState() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState result = org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.valueOf(queryState_);
@@ -13054,7 +13194,7 @@ public final class UserBitShared {
    *
    * Protobuf type {@code exec.shared.QueryData}
    */
-  public  static final class QueryData extends
+  public static final class QueryData extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.QueryData)
       QueryDataOrBuilder {
@@ -13172,6 +13312,7 @@ public final class UserBitShared {
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      * @return Whether the queryId field is set.
      */
+    @java.lang.Override
     public boolean hasQueryId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -13179,12 +13320,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      * @return The queryId.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryId getQueryId() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
     }
     /**
      * <code>optional .exec.shared.QueryId query_id = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getQueryIdOrBuilder() {
       return queryId_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : queryId_;
     }
@@ -13195,6 +13338,7 @@ public final class UserBitShared {
      * <code>optional int32 row_count = 2;</code>
      * @return Whether the rowCount field is set.
      */
+    @java.lang.Override
     public boolean hasRowCount() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -13202,6 +13346,7 @@ public final class UserBitShared {
      * <code>optional int32 row_count = 2;</code>
      * @return The rowCount.
      */
+    @java.lang.Override
     public int getRowCount() {
       return rowCount_;
     }
@@ -13212,6 +13357,7 @@ public final class UserBitShared {
      * <code>optional .exec.shared.RecordBatchDef def = 3;</code>
      * @return Whether the def field is set.
      */
+    @java.lang.Override
     public boolean hasDef() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -13219,12 +13365,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.RecordBatchDef def = 3;</code>
      * @return The def.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.RecordBatchDef getDef() {
       return def_ == null ? org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.getDefaultInstance() : def_;
     }
     /**
      * <code>optional .exec.shared.RecordBatchDef def = 3;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.RecordBatchDefOrBuilder getDefOrBuilder() {
       return def_ == null ? org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.getDefaultInstance() : def_;
     }
@@ -13235,6 +13383,7 @@ public final class UserBitShared {
      * <code>optional int32 affected_rows_count = 4;</code>
      * @return Whether the affectedRowsCount field is set.
      */
+    @java.lang.Override
     public boolean hasAffectedRowsCount() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -13242,6 +13391,7 @@ public final class UserBitShared {
      * <code>optional int32 affected_rows_count = 4;</code>
      * @return The affectedRowsCount.
      */
+    @java.lang.Override
     public int getAffectedRowsCount() {
       return affectedRowsCount_;
     }
@@ -13782,6 +13932,7 @@ public final class UserBitShared {
        * <code>optional int32 row_count = 2;</code>
        * @return Whether the rowCount field is set.
        */
+      @java.lang.Override
       public boolean hasRowCount() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -13789,6 +13940,7 @@ public final class UserBitShared {
        * <code>optional int32 row_count = 2;</code>
        * @return The rowCount.
        */
+      @java.lang.Override
       public int getRowCount() {
         return rowCount_;
       }
@@ -13939,6 +14091,7 @@ public final class UserBitShared {
        * <code>optional int32 affected_rows_count = 4;</code>
        * @return Whether the affectedRowsCount field is set.
        */
+      @java.lang.Override
       public boolean hasAffectedRowsCount() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -13946,6 +14099,7 @@ public final class UserBitShared {
        * <code>optional int32 affected_rows_count = 4;</code>
        * @return The affectedRowsCount.
        */
+      @java.lang.Override
       public int getAffectedRowsCount() {
         return affectedRowsCount_;
       }
@@ -14146,7 +14300,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.QueryInfo}
    */
-  public  static final class QueryInfo extends
+  public static final class QueryInfo extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.QueryInfo)
       QueryInfoOrBuilder {
@@ -14292,6 +14446,7 @@ public final class UserBitShared {
      * <code>optional string query = 1;</code>
      * @return Whether the query field is set.
      */
+    @java.lang.Override
     public boolean hasQuery() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -14299,6 +14454,7 @@ public final class UserBitShared {
      * <code>optional string query = 1;</code>
      * @return The query.
      */
+    @java.lang.Override
     public java.lang.String getQuery() {
       java.lang.Object ref = query_;
       if (ref instanceof java.lang.String) {
@@ -14317,6 +14473,7 @@ public final class UserBitShared {
      * <code>optional string query = 1;</code>
      * @return The bytes for query.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getQueryBytes() {
       java.lang.Object ref = query_;
@@ -14337,6 +14494,7 @@ public final class UserBitShared {
      * <code>optional int64 start = 2;</code>
      * @return Whether the start field is set.
      */
+    @java.lang.Override
     public boolean hasStart() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -14344,6 +14502,7 @@ public final class UserBitShared {
      * <code>optional int64 start = 2;</code>
      * @return The start.
      */
+    @java.lang.Override
     public long getStart() {
       return start_;
     }
@@ -14354,14 +14513,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
      * @return Whether the state field is set.
      */
-    public boolean hasState() {
+    @java.lang.Override public boolean hasState() {
       return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
      * @return The state.
      */
-    public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState() {
+    @java.lang.Override public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState result = org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.valueOf(state_);
       return result == null ? org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.STARTING : result;
@@ -14373,6 +14532,7 @@ public final class UserBitShared {
      * <code>optional string user = 4 [default = "-"];</code>
      * @return Whether the user field is set.
      */
+    @java.lang.Override
     public boolean hasUser() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -14380,6 +14540,7 @@ public final class UserBitShared {
      * <code>optional string user = 4 [default = "-"];</code>
      * @return The user.
      */
+    @java.lang.Override
     public java.lang.String getUser() {
       java.lang.Object ref = user_;
       if (ref instanceof java.lang.String) {
@@ -14398,6 +14559,7 @@ public final class UserBitShared {
      * <code>optional string user = 4 [default = "-"];</code>
      * @return The bytes for user.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getUserBytes() {
       java.lang.Object ref = user_;
@@ -14418,6 +14580,7 @@ public final class UserBitShared {
      * <code>optional .exec.DrillbitEndpoint foreman = 5;</code>
      * @return Whether the foreman field is set.
      */
+    @java.lang.Override
     public boolean hasForeman() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -14425,12 +14588,14 @@ public final class UserBitShared {
      * <code>optional .exec.DrillbitEndpoint foreman = 5;</code>
      * @return The foreman.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getForeman() {
       return foreman_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : foreman_;
     }
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 5;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getForemanOrBuilder() {
       return foreman_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : foreman_;
     }
@@ -14441,6 +14606,7 @@ public final class UserBitShared {
      * <code>optional string options_json = 6;</code>
      * @return Whether the optionsJson field is set.
      */
+    @java.lang.Override
     public boolean hasOptionsJson() {
       return ((bitField0_ & 0x00000020) != 0);
     }
@@ -14448,6 +14614,7 @@ public final class UserBitShared {
      * <code>optional string options_json = 6;</code>
      * @return The optionsJson.
      */
+    @java.lang.Override
     public java.lang.String getOptionsJson() {
       java.lang.Object ref = optionsJson_;
       if (ref instanceof java.lang.String) {
@@ -14466,6 +14633,7 @@ public final class UserBitShared {
      * <code>optional string options_json = 6;</code>
      * @return The bytes for optionsJson.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getOptionsJsonBytes() {
       java.lang.Object ref = optionsJson_;
@@ -14486,6 +14654,7 @@ public final class UserBitShared {
      * <code>optional double total_cost = 7;</code>
      * @return Whether the totalCost field is set.
      */
+    @java.lang.Override
     public boolean hasTotalCost() {
       return ((bitField0_ & 0x00000040) != 0);
     }
@@ -14493,6 +14662,7 @@ public final class UserBitShared {
      * <code>optional double total_cost = 7;</code>
      * @return The totalCost.
      */
+    @java.lang.Override
     public double getTotalCost() {
       return totalCost_;
     }
@@ -14503,6 +14673,7 @@ public final class UserBitShared {
      * <code>optional string queue_name = 8 [default = "-"];</code>
      * @return Whether the queueName field is set.
      */
+    @java.lang.Override
     public boolean hasQueueName() {
       return ((bitField0_ & 0x00000080) != 0);
     }
@@ -14510,6 +14681,7 @@ public final class UserBitShared {
      * <code>optional string queue_name = 8 [default = "-"];</code>
      * @return The queueName.
      */
+    @java.lang.Override
     public java.lang.String getQueueName() {
       java.lang.Object ref = queueName_;
       if (ref instanceof java.lang.String) {
@@ -14528,6 +14700,7 @@ public final class UserBitShared {
      * <code>optional string queue_name = 8 [default = "-"];</code>
      * @return The bytes for queueName.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getQueueNameBytes() {
       java.lang.Object ref = queueName_;
@@ -15135,6 +15308,7 @@ public final class UserBitShared {
        * <code>optional int64 start = 2;</code>
        * @return Whether the start field is set.
        */
+      @java.lang.Override
       public boolean hasStart() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -15142,6 +15316,7 @@ public final class UserBitShared {
        * <code>optional int64 start = 2;</code>
        * @return The start.
        */
+      @java.lang.Override
       public long getStart() {
         return start_;
       }
@@ -15172,13 +15347,14 @@ public final class UserBitShared {
        * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
        * @return Whether the state field is set.
        */
-      public boolean hasState() {
+      @java.lang.Override public boolean hasState() {
         return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState state = 3;</code>
        * @return The state.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState result = org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.valueOf(state_);
@@ -15502,6 +15678,7 @@ public final class UserBitShared {
        * <code>optional double total_cost = 7;</code>
        * @return Whether the totalCost field is set.
        */
+      @java.lang.Override
       public boolean hasTotalCost() {
         return ((bitField0_ & 0x00000040) != 0);
       }
@@ -15509,6 +15686,7 @@ public final class UserBitShared {
        * <code>optional double total_cost = 7;</code>
        * @return The totalCost.
        */
+      @java.lang.Override
       public double getTotalCost() {
         return totalCost_;
       }
@@ -16011,7 +16189,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.QueryProfile}
    */
-  public  static final class QueryProfile extends
+  public static final class QueryProfile extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.QueryProfile)
       QueryProfileOrBuilder {
@@ -16268,6 +16446,7 @@ public final class UserBitShared {
      * <code>optional .exec.shared.QueryId id = 1;</code>
      * @return Whether the id field is set.
      */
+    @java.lang.Override
     public boolean hasId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -16275,12 +16454,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.QueryId id = 1;</code>
      * @return The id.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryId getId() {
       return id_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : id_;
     }
     /**
      * <code>optional .exec.shared.QueryId id = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.QueryIdOrBuilder getIdOrBuilder() {
       return id_ == null ? org.apache.drill.exec.proto.UserBitShared.QueryId.getDefaultInstance() : id_;
     }
@@ -16291,14 +16472,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.QueryType type = 2;</code>
      * @return Whether the type field is set.
      */
-    public boolean hasType() {
+    @java.lang.Override public boolean hasType() {
       return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryType type = 2;</code>
      * @return The type.
      */
-    public org.apache.drill.exec.proto.UserBitShared.QueryType getType() {
+    @java.lang.Override public org.apache.drill.exec.proto.UserBitShared.QueryType getType() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.UserBitShared.QueryType result = org.apache.drill.exec.proto.UserBitShared.QueryType.valueOf(type_);
       return result == null ? org.apache.drill.exec.proto.UserBitShared.QueryType.SQL : result;
@@ -16310,6 +16491,7 @@ public final class UserBitShared {
      * <code>optional int64 start = 3;</code>
      * @return Whether the start field is set.
      */
+    @java.lang.Override
     public boolean hasStart() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -16317,6 +16499,7 @@ public final class UserBitShared {
      * <code>optional int64 start = 3;</code>
      * @return The start.
      */
+    @java.lang.Override
     public long getStart() {
       return start_;
     }
@@ -16327,6 +16510,7 @@ public final class UserBitShared {
      * <code>optional int64 end = 4;</code>
      * @return Whether the end field is set.
      */
+    @java.lang.Override
     public boolean hasEnd() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -16334,6 +16518,7 @@ public final class UserBitShared {
      * <code>optional int64 end = 4;</code>
      * @return The end.
      */
+    @java.lang.Override
     public long getEnd() {
       return end_;
     }
@@ -16344,6 +16529,7 @@ public final class UserBitShared {
      * <code>optional string query = 5;</code>
      * @return Whether the query field is set.
      */
+    @java.lang.Override
     public boolean hasQuery() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -16351,6 +16537,7 @@ public final class UserBitShared {
      * <code>optional string query = 5;</code>
      * @return The query.
      */
+    @java.lang.Override
     public java.lang.String getQuery() {
       java.lang.Object ref = query_;
       if (ref instanceof java.lang.String) {
@@ -16369,6 +16556,7 @@ public final class UserBitShared {
      * <code>optional string query = 5;</code>
      * @return The bytes for query.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getQueryBytes() {
       java.lang.Object ref = query_;
@@ -16389,6 +16577,7 @@ public final class UserBitShared {
      * <code>optional string plan = 6;</code>
      * @return Whether the plan field is set.
      */
+    @java.lang.Override
     public boolean hasPlan() {
       return ((bitField0_ & 0x00000020) != 0);
     }
@@ -16396,6 +16585,7 @@ public final class UserBitShared {
      * <code>optional string plan = 6;</code>
      * @return The plan.
      */
+    @java.lang.Override
     public java.lang.String getPlan() {
       java.lang.Object ref = plan_;
       if (ref instanceof java.lang.String) {
@@ -16414,6 +16604,7 @@ public final class UserBitShared {
      * <code>optional string plan = 6;</code>
      * @return The bytes for plan.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getPlanBytes() {
       java.lang.Object ref = plan_;
@@ -16434,6 +16625,7 @@ public final class UserBitShared {
      * <code>optional .exec.DrillbitEndpoint foreman = 7;</code>
      * @return Whether the foreman field is set.
      */
+    @java.lang.Override
     public boolean hasForeman() {
       return ((bitField0_ & 0x00000040) != 0);
     }
@@ -16441,12 +16633,14 @@ public final class UserBitShared {
      * <code>optional .exec.DrillbitEndpoint foreman = 7;</code>
      * @return The foreman.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getForeman() {
       return foreman_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : foreman_;
     }
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 7;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getForemanOrBuilder() {
       return foreman_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : foreman_;
     }
@@ -16457,14 +16651,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
      * @return Whether the state field is set.
      */
-    public boolean hasState() {
+    @java.lang.Override public boolean hasState() {
       return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
      * @return The state.
      */
-    public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState() {
+    @java.lang.Override public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState result = org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.valueOf(state_);
       return result == null ? org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.STARTING : result;
@@ -16476,6 +16670,7 @@ public final class UserBitShared {
      * <code>optional int32 total_fragments = 9;</code>
      * @return Whether the totalFragments field is set.
      */
+    @java.lang.Override
     public boolean hasTotalFragments() {
       return ((bitField0_ & 0x00000100) != 0);
     }
@@ -16483,6 +16678,7 @@ public final class UserBitShared {
      * <code>optional int32 total_fragments = 9;</code>
      * @return The totalFragments.
      */
+    @java.lang.Override
     public int getTotalFragments() {
       return totalFragments_;
     }
@@ -16493,6 +16689,7 @@ public final class UserBitShared {
      * <code>optional int32 finished_fragments = 10;</code>
      * @return Whether the finishedFragments field is set.
      */
+    @java.lang.Override
     public boolean hasFinishedFragments() {
       return ((bitField0_ & 0x00000200) != 0);
     }
@@ -16500,6 +16697,7 @@ public final class UserBitShared {
      * <code>optional int32 finished_fragments = 10;</code>
      * @return The finishedFragments.
      */
+    @java.lang.Override
     public int getFinishedFragments() {
       return finishedFragments_;
     }
@@ -16509,12 +16707,14 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile> getFragmentProfileList() {
       return fragmentProfile_;
     }
     /**
      * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder> 
         getFragmentProfileOrBuilderList() {
       return fragmentProfile_;
@@ -16522,18 +16722,21 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
      */
+    @java.lang.Override
     public int getFragmentProfileCount() {
       return fragmentProfile_.size();
     }
     /**
      * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile getFragmentProfile(int index) {
       return fragmentProfile_.get(index);
     }
     /**
      * <code>repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfileOrBuilder getFragmentProfileOrBuilder(
         int index) {
       return fragmentProfile_.get(index);
@@ -16545,6 +16748,7 @@ public final class UserBitShared {
      * <code>optional string user = 12 [default = "-"];</code>
      * @return Whether the user field is set.
      */
+    @java.lang.Override
     public boolean hasUser() {
       return ((bitField0_ & 0x00000400) != 0);
     }
@@ -16552,6 +16756,7 @@ public final class UserBitShared {
      * <code>optional string user = 12 [default = "-"];</code>
      * @return The user.
      */
+    @java.lang.Override
     public java.lang.String getUser() {
       java.lang.Object ref = user_;
       if (ref instanceof java.lang.String) {
@@ -16570,6 +16775,7 @@ public final class UserBitShared {
      * <code>optional string user = 12 [default = "-"];</code>
      * @return The bytes for user.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getUserBytes() {
       java.lang.Object ref = user_;
@@ -16590,6 +16796,7 @@ public final class UserBitShared {
      * <code>optional string error = 13;</code>
      * @return Whether the error field is set.
      */
+    @java.lang.Override
     public boolean hasError() {
       return ((bitField0_ & 0x00000800) != 0);
     }
@@ -16597,6 +16804,7 @@ public final class UserBitShared {
      * <code>optional string error = 13;</code>
      * @return The error.
      */
+    @java.lang.Override
     public java.lang.String getError() {
       java.lang.Object ref = error_;
       if (ref instanceof java.lang.String) {
@@ -16615,6 +16823,7 @@ public final class UserBitShared {
      * <code>optional string error = 13;</code>
      * @return The bytes for error.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getErrorBytes() {
       java.lang.Object ref = error_;
@@ -16635,6 +16844,7 @@ public final class UserBitShared {
      * <code>optional string verboseError = 14;</code>
      * @return Whether the verboseError field is set.
      */
+    @java.lang.Override
     public boolean hasVerboseError() {
       return ((bitField0_ & 0x00001000) != 0);
     }
@@ -16642,6 +16852,7 @@ public final class UserBitShared {
      * <code>optional string verboseError = 14;</code>
      * @return The verboseError.
      */
+    @java.lang.Override
     public java.lang.String getVerboseError() {
       java.lang.Object ref = verboseError_;
       if (ref instanceof java.lang.String) {
@@ -16660,6 +16871,7 @@ public final class UserBitShared {
      * <code>optional string verboseError = 14;</code>
      * @return The bytes for verboseError.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getVerboseErrorBytes() {
       java.lang.Object ref = verboseError_;
@@ -16680,6 +16892,7 @@ public final class UserBitShared {
      * <code>optional string error_id = 15;</code>
      * @return Whether the errorId field is set.
      */
+    @java.lang.Override
     public boolean hasErrorId() {
       return ((bitField0_ & 0x00002000) != 0);
     }
@@ -16687,6 +16900,7 @@ public final class UserBitShared {
      * <code>optional string error_id = 15;</code>
      * @return The errorId.
      */
+    @java.lang.Override
     public java.lang.String getErrorId() {
       java.lang.Object ref = errorId_;
       if (ref instanceof java.lang.String) {
@@ -16705,6 +16919,7 @@ public final class UserBitShared {
      * <code>optional string error_id = 15;</code>
      * @return The bytes for errorId.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getErrorIdBytes() {
       java.lang.Object ref = errorId_;
@@ -16725,6 +16940,7 @@ public final class UserBitShared {
      * <code>optional string error_node = 16;</code>
      * @return Whether the errorNode field is set.
      */
+    @java.lang.Override
     public boolean hasErrorNode() {
       return ((bitField0_ & 0x00004000) != 0);
     }
@@ -16732,6 +16948,7 @@ public final class UserBitShared {
      * <code>optional string error_node = 16;</code>
      * @return The errorNode.
      */
+    @java.lang.Override
     public java.lang.String getErrorNode() {
       java.lang.Object ref = errorNode_;
       if (ref instanceof java.lang.String) {
@@ -16750,6 +16967,7 @@ public final class UserBitShared {
      * <code>optional string error_node = 16;</code>
      * @return The bytes for errorNode.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getErrorNodeBytes() {
       java.lang.Object ref = errorNode_;
@@ -16770,6 +16988,7 @@ public final class UserBitShared {
      * <code>optional string options_json = 17;</code>
      * @return Whether the optionsJson field is set.
      */
+    @java.lang.Override
     public boolean hasOptionsJson() {
       return ((bitField0_ & 0x00008000) != 0);
     }
@@ -16777,6 +16996,7 @@ public final class UserBitShared {
      * <code>optional string options_json = 17;</code>
      * @return The optionsJson.
      */
+    @java.lang.Override
     public java.lang.String getOptionsJson() {
       java.lang.Object ref = optionsJson_;
       if (ref instanceof java.lang.String) {
@@ -16795,6 +17015,7 @@ public final class UserBitShared {
      * <code>optional string options_json = 17;</code>
      * @return The bytes for optionsJson.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getOptionsJsonBytes() {
       java.lang.Object ref = optionsJson_;
@@ -16815,6 +17036,7 @@ public final class UserBitShared {
      * <code>optional int64 planEnd = 18;</code>
      * @return Whether the planEnd field is set.
      */
+    @java.lang.Override
     public boolean hasPlanEnd() {
       return ((bitField0_ & 0x00010000) != 0);
     }
@@ -16822,6 +17044,7 @@ public final class UserBitShared {
      * <code>optional int64 planEnd = 18;</code>
      * @return The planEnd.
      */
+    @java.lang.Override
     public long getPlanEnd() {
       return planEnd_;
     }
@@ -16832,6 +17055,7 @@ public final class UserBitShared {
      * <code>optional int64 queueWaitEnd = 19;</code>
      * @return Whether the queueWaitEnd field is set.
      */
+    @java.lang.Override
     public boolean hasQueueWaitEnd() {
       return ((bitField0_ & 0x00020000) != 0);
     }
@@ -16839,6 +17063,7 @@ public final class UserBitShared {
      * <code>optional int64 queueWaitEnd = 19;</code>
      * @return The queueWaitEnd.
      */
+    @java.lang.Override
     public long getQueueWaitEnd() {
       return queueWaitEnd_;
     }
@@ -16849,6 +17074,7 @@ public final class UserBitShared {
      * <code>optional double total_cost = 20;</code>
      * @return Whether the totalCost field is set.
      */
+    @java.lang.Override
     public boolean hasTotalCost() {
       return ((bitField0_ & 0x00040000) != 0);
     }
@@ -16856,6 +17082,7 @@ public final class UserBitShared {
      * <code>optional double total_cost = 20;</code>
      * @return The totalCost.
      */
+    @java.lang.Override
     public double getTotalCost() {
       return totalCost_;
     }
@@ -16866,6 +17093,7 @@ public final class UserBitShared {
      * <code>optional string queue_name = 21 [default = "-"];</code>
      * @return Whether the queueName field is set.
      */
+    @java.lang.Override
     public boolean hasQueueName() {
       return ((bitField0_ & 0x00080000) != 0);
     }
@@ -16873,6 +17101,7 @@ public final class UserBitShared {
      * <code>optional string queue_name = 21 [default = "-"];</code>
      * @return The queueName.
      */
+    @java.lang.Override
     public java.lang.String getQueueName() {
       java.lang.Object ref = queueName_;
       if (ref instanceof java.lang.String) {
@@ -16891,6 +17120,7 @@ public final class UserBitShared {
      * <code>optional string queue_name = 21 [default = "-"];</code>
      * @return The bytes for queueName.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getQueueNameBytes() {
       java.lang.Object ref = queueName_;
@@ -16911,6 +17141,7 @@ public final class UserBitShared {
      * <code>optional string queryId = 22;</code>
      * @return Whether the queryId field is set.
      */
+    @java.lang.Override
     public boolean hasQueryId() {
       return ((bitField0_ & 0x00100000) != 0);
     }
@@ -16918,6 +17149,7 @@ public final class UserBitShared {
      * <code>optional string queryId = 22;</code>
      * @return The queryId.
      */
+    @java.lang.Override
     public java.lang.String getQueryId() {
       java.lang.Object ref = queryId_;
       if (ref instanceof java.lang.String) {
@@ -16936,6 +17168,7 @@ public final class UserBitShared {
      * <code>optional string queryId = 22;</code>
      * @return The bytes for queryId.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getQueryIdBytes() {
       java.lang.Object ref = queryId_;
@@ -16956,6 +17189,7 @@ public final class UserBitShared {
      * <code>optional int32 autoLimit = 23;</code>
      * @return Whether the autoLimit field is set.
      */
+    @java.lang.Override
     public boolean hasAutoLimit() {
       return ((bitField0_ & 0x00200000) != 0);
     }
@@ -16963,6 +17197,7 @@ public final class UserBitShared {
      * <code>optional int32 autoLimit = 23;</code>
      * @return The autoLimit.
      */
+    @java.lang.Override
     public int getAutoLimit() {
       return autoLimit_;
     }
@@ -18018,13 +18253,14 @@ public final class UserBitShared {
        * <code>optional .exec.shared.QueryType type = 2;</code>
        * @return Whether the type field is set.
        */
-      public boolean hasType() {
+      @java.lang.Override public boolean hasType() {
         return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryType type = 2;</code>
        * @return The type.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.UserBitShared.QueryType getType() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.UserBitShared.QueryType result = org.apache.drill.exec.proto.UserBitShared.QueryType.valueOf(type_);
@@ -18060,6 +18296,7 @@ public final class UserBitShared {
        * <code>optional int64 start = 3;</code>
        * @return Whether the start field is set.
        */
+      @java.lang.Override
       public boolean hasStart() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -18067,6 +18304,7 @@ public final class UserBitShared {
        * <code>optional int64 start = 3;</code>
        * @return The start.
        */
+      @java.lang.Override
       public long getStart() {
         return start_;
       }
@@ -18097,6 +18335,7 @@ public final class UserBitShared {
        * <code>optional int64 end = 4;</code>
        * @return Whether the end field is set.
        */
+      @java.lang.Override
       public boolean hasEnd() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -18104,6 +18343,7 @@ public final class UserBitShared {
        * <code>optional int64 end = 4;</code>
        * @return The end.
        */
+      @java.lang.Override
       public long getEnd() {
         return end_;
       }
@@ -18422,13 +18662,14 @@ public final class UserBitShared {
        * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
        * @return Whether the state field is set.
        */
-      public boolean hasState() {
+      @java.lang.Override public boolean hasState() {
         return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <code>optional .exec.shared.QueryResult.QueryState state = 8;</code>
        * @return The state.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState getState() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState result = org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.valueOf(state_);
@@ -18464,6 +18705,7 @@ public final class UserBitShared {
        * <code>optional int32 total_fragments = 9;</code>
        * @return Whether the totalFragments field is set.
        */
+      @java.lang.Override
       public boolean hasTotalFragments() {
         return ((bitField0_ & 0x00000100) != 0);
       }
@@ -18471,6 +18713,7 @@ public final class UserBitShared {
        * <code>optional int32 total_fragments = 9;</code>
        * @return The totalFragments.
        */
+      @java.lang.Override
       public int getTotalFragments() {
         return totalFragments_;
       }
@@ -18501,6 +18744,7 @@ public final class UserBitShared {
        * <code>optional int32 finished_fragments = 10;</code>
        * @return Whether the finishedFragments field is set.
        */
+      @java.lang.Override
       public boolean hasFinishedFragments() {
         return ((bitField0_ & 0x00000200) != 0);
       }
@@ -18508,6 +18752,7 @@ public final class UserBitShared {
        * <code>optional int32 finished_fragments = 10;</code>
        * @return The finishedFragments.
        */
+      @java.lang.Override
       public int getFinishedFragments() {
         return finishedFragments_;
       }
@@ -19282,6 +19527,7 @@ public final class UserBitShared {
        * <code>optional int64 planEnd = 18;</code>
        * @return Whether the planEnd field is set.
        */
+      @java.lang.Override
       public boolean hasPlanEnd() {
         return ((bitField0_ & 0x00020000) != 0);
       }
@@ -19289,6 +19535,7 @@ public final class UserBitShared {
        * <code>optional int64 planEnd = 18;</code>
        * @return The planEnd.
        */
+      @java.lang.Override
       public long getPlanEnd() {
         return planEnd_;
       }
@@ -19319,6 +19566,7 @@ public final class UserBitShared {
        * <code>optional int64 queueWaitEnd = 19;</code>
        * @return Whether the queueWaitEnd field is set.
        */
+      @java.lang.Override
       public boolean hasQueueWaitEnd() {
         return ((bitField0_ & 0x00040000) != 0);
       }
@@ -19326,6 +19574,7 @@ public final class UserBitShared {
        * <code>optional int64 queueWaitEnd = 19;</code>
        * @return The queueWaitEnd.
        */
+      @java.lang.Override
       public long getQueueWaitEnd() {
         return queueWaitEnd_;
       }
@@ -19356,6 +19605,7 @@ public final class UserBitShared {
        * <code>optional double total_cost = 20;</code>
        * @return Whether the totalCost field is set.
        */
+      @java.lang.Override
       public boolean hasTotalCost() {
         return ((bitField0_ & 0x00080000) != 0);
       }
@@ -19363,6 +19613,7 @@ public final class UserBitShared {
        * <code>optional double total_cost = 20;</code>
        * @return The totalCost.
        */
+      @java.lang.Override
       public double getTotalCost() {
         return totalCost_;
       }
@@ -19561,6 +19812,7 @@ public final class UserBitShared {
        * <code>optional int32 autoLimit = 23;</code>
        * @return Whether the autoLimit field is set.
        */
+      @java.lang.Override
       public boolean hasAutoLimit() {
         return ((bitField0_ & 0x00400000) != 0);
       }
@@ -19568,6 +19820,7 @@ public final class UserBitShared {
        * <code>optional int32 autoLimit = 23;</code>
        * @return The autoLimit.
        */
+      @java.lang.Override
       public int getAutoLimit() {
         return autoLimit_;
       }
@@ -19687,7 +19940,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.MajorFragmentProfile}
    */
-  public  static final class MajorFragmentProfile extends
+  public static final class MajorFragmentProfile extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.MajorFragmentProfile)
       MajorFragmentProfileOrBuilder {
@@ -19787,6 +20040,7 @@ public final class UserBitShared {
      * <code>optional int32 major_fragment_id = 1;</code>
      * @return Whether the majorFragmentId field is set.
      */
+    @java.lang.Override
     public boolean hasMajorFragmentId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -19794,6 +20048,7 @@ public final class UserBitShared {
      * <code>optional int32 major_fragment_id = 1;</code>
      * @return The majorFragmentId.
      */
+    @java.lang.Override
     public int getMajorFragmentId() {
       return majorFragmentId_;
     }
@@ -19803,12 +20058,14 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile> getMinorFragmentProfileList() {
       return minorFragmentProfile_;
     }
     /**
      * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder> 
         getMinorFragmentProfileOrBuilderList() {
       return minorFragmentProfile_;
@@ -19816,18 +20073,21 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
      */
+    @java.lang.Override
     public int getMinorFragmentProfileCount() {
       return minorFragmentProfile_.size();
     }
     /**
      * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile getMinorFragmentProfile(int index) {
       return minorFragmentProfile_.get(index);
     }
     /**
      * <code>repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder getMinorFragmentProfileOrBuilder(
         int index) {
       return minorFragmentProfile_.get(index);
@@ -20207,6 +20467,7 @@ public final class UserBitShared {
        * <code>optional int32 major_fragment_id = 1;</code>
        * @return Whether the majorFragmentId field is set.
        */
+      @java.lang.Override
       public boolean hasMajorFragmentId() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -20214,6 +20475,7 @@ public final class UserBitShared {
        * <code>optional int32 major_fragment_id = 1;</code>
        * @return The majorFragmentId.
        */
+      @java.lang.Override
       public int getMajorFragmentId() {
         return majorFragmentId_;
       }
@@ -20680,7 +20942,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.MinorFragmentProfile}
    */
-  public  static final class MinorFragmentProfile extends
+  public static final class MinorFragmentProfile extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.MinorFragmentProfile)
       MinorFragmentProfileOrBuilder {
@@ -20849,14 +21111,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.FragmentState state = 1;</code>
      * @return Whether the state field is set.
      */
-    public boolean hasState() {
+    @java.lang.Override public boolean hasState() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.shared.FragmentState state = 1;</code>
      * @return The state.
      */
-    public org.apache.drill.exec.proto.UserBitShared.FragmentState getState() {
+    @java.lang.Override public org.apache.drill.exec.proto.UserBitShared.FragmentState getState() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.UserBitShared.FragmentState result = org.apache.drill.exec.proto.UserBitShared.FragmentState.valueOf(state_);
       return result == null ? org.apache.drill.exec.proto.UserBitShared.FragmentState.SENDING : result;
@@ -20868,6 +21130,7 @@ public final class UserBitShared {
      * <code>optional .exec.shared.DrillPBError error = 2;</code>
      * @return Whether the error field is set.
      */
+    @java.lang.Override
     public boolean hasError() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -20875,12 +21138,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.DrillPBError error = 2;</code>
      * @return The error.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.DrillPBError getError() {
       return error_ == null ? org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance() : error_;
     }
     /**
      * <code>optional .exec.shared.DrillPBError error = 2;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.DrillPBErrorOrBuilder getErrorOrBuilder() {
       return error_ == null ? org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance() : error_;
     }
@@ -20891,6 +21156,7 @@ public final class UserBitShared {
      * <code>optional int32 minor_fragment_id = 3;</code>
      * @return Whether the minorFragmentId field is set.
      */
+    @java.lang.Override
     public boolean hasMinorFragmentId() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -20898,6 +21164,7 @@ public final class UserBitShared {
      * <code>optional int32 minor_fragment_id = 3;</code>
      * @return The minorFragmentId.
      */
+    @java.lang.Override
     public int getMinorFragmentId() {
       return minorFragmentId_;
     }
@@ -20907,12 +21174,14 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.UserBitShared.OperatorProfile> getOperatorProfileList() {
       return operatorProfile_;
     }
     /**
      * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.OperatorProfileOrBuilder> 
         getOperatorProfileOrBuilderList() {
       return operatorProfile_;
@@ -20920,18 +21189,21 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
      */
+    @java.lang.Override
     public int getOperatorProfileCount() {
       return operatorProfile_.size();
     }
     /**
      * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.OperatorProfile getOperatorProfile(int index) {
       return operatorProfile_.get(index);
     }
     /**
      * <code>repeated .exec.shared.OperatorProfile operator_profile = 4;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.OperatorProfileOrBuilder getOperatorProfileOrBuilder(
         int index) {
       return operatorProfile_.get(index);
@@ -20943,6 +21215,7 @@ public final class UserBitShared {
      * <code>optional int64 start_time = 5;</code>
      * @return Whether the startTime field is set.
      */
+    @java.lang.Override
     public boolean hasStartTime() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -20950,6 +21223,7 @@ public final class UserBitShared {
      * <code>optional int64 start_time = 5;</code>
      * @return The startTime.
      */
+    @java.lang.Override
     public long getStartTime() {
       return startTime_;
     }
@@ -20960,6 +21234,7 @@ public final class UserBitShared {
      * <code>optional int64 end_time = 6;</code>
      * @return Whether the endTime field is set.
      */
+    @java.lang.Override
     public boolean hasEndTime() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -20967,6 +21242,7 @@ public final class UserBitShared {
      * <code>optional int64 end_time = 6;</code>
      * @return The endTime.
      */
+    @java.lang.Override
     public long getEndTime() {
       return endTime_;
     }
@@ -20977,6 +21253,7 @@ public final class UserBitShared {
      * <code>optional int64 memory_used = 7;</code>
      * @return Whether the memoryUsed field is set.
      */
+    @java.lang.Override
     public boolean hasMemoryUsed() {
       return ((bitField0_ & 0x00000020) != 0);
     }
@@ -20984,6 +21261,7 @@ public final class UserBitShared {
      * <code>optional int64 memory_used = 7;</code>
      * @return The memoryUsed.
      */
+    @java.lang.Override
     public long getMemoryUsed() {
       return memoryUsed_;
     }
@@ -20994,6 +21272,7 @@ public final class UserBitShared {
      * <code>optional int64 max_memory_used = 8;</code>
      * @return Whether the maxMemoryUsed field is set.
      */
+    @java.lang.Override
     public boolean hasMaxMemoryUsed() {
       return ((bitField0_ & 0x00000040) != 0);
     }
@@ -21001,6 +21280,7 @@ public final class UserBitShared {
      * <code>optional int64 max_memory_used = 8;</code>
      * @return The maxMemoryUsed.
      */
+    @java.lang.Override
     public long getMaxMemoryUsed() {
       return maxMemoryUsed_;
     }
@@ -21011,6 +21291,7 @@ public final class UserBitShared {
      * <code>optional .exec.DrillbitEndpoint endpoint = 9;</code>
      * @return Whether the endpoint field is set.
      */
+    @java.lang.Override
     public boolean hasEndpoint() {
       return ((bitField0_ & 0x00000080) != 0);
     }
@@ -21018,12 +21299,14 @@ public final class UserBitShared {
      * <code>optional .exec.DrillbitEndpoint endpoint = 9;</code>
      * @return The endpoint.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getEndpoint() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
     }
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 9;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getEndpointOrBuilder() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
     }
@@ -21034,6 +21317,7 @@ public final class UserBitShared {
      * <code>optional int64 last_update = 10;</code>
      * @return Whether the lastUpdate field is set.
      */
+    @java.lang.Override
     public boolean hasLastUpdate() {
       return ((bitField0_ & 0x00000100) != 0);
     }
@@ -21041,6 +21325,7 @@ public final class UserBitShared {
      * <code>optional int64 last_update = 10;</code>
      * @return The lastUpdate.
      */
+    @java.lang.Override
     public long getLastUpdate() {
       return lastUpdate_;
     }
@@ -21051,6 +21336,7 @@ public final class UserBitShared {
      * <code>optional int64 last_progress = 11;</code>
      * @return Whether the lastProgress field is set.
      */
+    @java.lang.Override
     public boolean hasLastProgress() {
       return ((bitField0_ & 0x00000200) != 0);
     }
@@ -21058,6 +21344,7 @@ public final class UserBitShared {
      * <code>optional int64 last_progress = 11;</code>
      * @return The lastProgress.
      */
+    @java.lang.Override
     public long getLastProgress() {
       return lastProgress_;
     }
@@ -21684,13 +21971,14 @@ public final class UserBitShared {
        * <code>optional .exec.shared.FragmentState state = 1;</code>
        * @return Whether the state field is set.
        */
-      public boolean hasState() {
+      @java.lang.Override public boolean hasState() {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.shared.FragmentState state = 1;</code>
        * @return The state.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.UserBitShared.FragmentState getState() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.UserBitShared.FragmentState result = org.apache.drill.exec.proto.UserBitShared.FragmentState.valueOf(state_);
@@ -21846,6 +22134,7 @@ public final class UserBitShared {
        * <code>optional int32 minor_fragment_id = 3;</code>
        * @return Whether the minorFragmentId field is set.
        */
+      @java.lang.Override
       public boolean hasMinorFragmentId() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -21853,6 +22142,7 @@ public final class UserBitShared {
        * <code>optional int32 minor_fragment_id = 3;</code>
        * @return The minorFragmentId.
        */
+      @java.lang.Override
       public int getMinorFragmentId() {
         return minorFragmentId_;
       }
@@ -22123,6 +22413,7 @@ public final class UserBitShared {
        * <code>optional int64 start_time = 5;</code>
        * @return Whether the startTime field is set.
        */
+      @java.lang.Override
       public boolean hasStartTime() {
         return ((bitField0_ & 0x00000010) != 0);
       }
@@ -22130,6 +22421,7 @@ public final class UserBitShared {
        * <code>optional int64 start_time = 5;</code>
        * @return The startTime.
        */
+      @java.lang.Override
       public long getStartTime() {
         return startTime_;
       }
@@ -22160,6 +22452,7 @@ public final class UserBitShared {
        * <code>optional int64 end_time = 6;</code>
        * @return Whether the endTime field is set.
        */
+      @java.lang.Override
       public boolean hasEndTime() {
         return ((bitField0_ & 0x00000020) != 0);
       }
@@ -22167,6 +22460,7 @@ public final class UserBitShared {
        * <code>optional int64 end_time = 6;</code>
        * @return The endTime.
        */
+      @java.lang.Override
       public long getEndTime() {
         return endTime_;
       }
@@ -22197,6 +22491,7 @@ public final class UserBitShared {
        * <code>optional int64 memory_used = 7;</code>
        * @return Whether the memoryUsed field is set.
        */
+      @java.lang.Override
       public boolean hasMemoryUsed() {
         return ((bitField0_ & 0x00000040) != 0);
       }
@@ -22204,6 +22499,7 @@ public final class UserBitShared {
        * <code>optional int64 memory_used = 7;</code>
        * @return The memoryUsed.
        */
+      @java.lang.Override
       public long getMemoryUsed() {
         return memoryUsed_;
       }
@@ -22234,6 +22530,7 @@ public final class UserBitShared {
        * <code>optional int64 max_memory_used = 8;</code>
        * @return Whether the maxMemoryUsed field is set.
        */
+      @java.lang.Override
       public boolean hasMaxMemoryUsed() {
         return ((bitField0_ & 0x00000080) != 0);
       }
@@ -22241,6 +22538,7 @@ public final class UserBitShared {
        * <code>optional int64 max_memory_used = 8;</code>
        * @return The maxMemoryUsed.
        */
+      @java.lang.Override
       public long getMaxMemoryUsed() {
         return maxMemoryUsed_;
       }
@@ -22391,6 +22689,7 @@ public final class UserBitShared {
        * <code>optional int64 last_update = 10;</code>
        * @return Whether the lastUpdate field is set.
        */
+      @java.lang.Override
       public boolean hasLastUpdate() {
         return ((bitField0_ & 0x00000200) != 0);
       }
@@ -22398,6 +22697,7 @@ public final class UserBitShared {
        * <code>optional int64 last_update = 10;</code>
        * @return The lastUpdate.
        */
+      @java.lang.Override
       public long getLastUpdate() {
         return lastUpdate_;
       }
@@ -22428,6 +22728,7 @@ public final class UserBitShared {
        * <code>optional int64 last_progress = 11;</code>
        * @return Whether the lastProgress field is set.
        */
+      @java.lang.Override
       public boolean hasLastProgress() {
         return ((bitField0_ & 0x00000400) != 0);
       }
@@ -22435,6 +22736,7 @@ public final class UserBitShared {
        * <code>optional int64 last_progress = 11;</code>
        * @return The lastProgress.
        */
+      @java.lang.Override
       public long getLastProgress() {
         return lastProgress_;
       }
@@ -22650,7 +22952,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.OperatorProfile}
    */
-  public  static final class OperatorProfile extends
+  public static final class OperatorProfile extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.OperatorProfile)
       OperatorProfileOrBuilder {
@@ -22794,12 +23096,14 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.UserBitShared.StreamProfile> getInputProfileList() {
       return inputProfile_;
     }
     /**
      * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.StreamProfileOrBuilder> 
         getInputProfileOrBuilderList() {
       return inputProfile_;
@@ -22807,18 +23111,21 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
      */
+    @java.lang.Override
     public int getInputProfileCount() {
       return inputProfile_.size();
     }
     /**
      * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.StreamProfile getInputProfile(int index) {
       return inputProfile_.get(index);
     }
     /**
      * <code>repeated .exec.shared.StreamProfile input_profile = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.StreamProfileOrBuilder getInputProfileOrBuilder(
         int index) {
       return inputProfile_.get(index);
@@ -22830,6 +23137,7 @@ public final class UserBitShared {
      * <code>optional int32 operator_id = 3;</code>
      * @return Whether the operatorId field is set.
      */
+    @java.lang.Override
     public boolean hasOperatorId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -22837,6 +23145,7 @@ public final class UserBitShared {
      * <code>optional int32 operator_id = 3;</code>
      * @return The operatorId.
      */
+    @java.lang.Override
     public int getOperatorId() {
       return operatorId_;
     }
@@ -22847,6 +23156,7 @@ public final class UserBitShared {
      * <code>optional int32 operator_type = 4 [deprecated = true];</code>
      * @return Whether the operatorType field is set.
      */
+    @java.lang.Override
     @java.lang.Deprecated public boolean hasOperatorType() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -22854,6 +23164,7 @@ public final class UserBitShared {
      * <code>optional int32 operator_type = 4 [deprecated = true];</code>
      * @return The operatorType.
      */
+    @java.lang.Override
     @java.lang.Deprecated public int getOperatorType() {
       return operatorType_;
     }
@@ -22864,6 +23175,7 @@ public final class UserBitShared {
      * <code>optional int64 setup_nanos = 5;</code>
      * @return Whether the setupNanos field is set.
      */
+    @java.lang.Override
     public boolean hasSetupNanos() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -22871,6 +23183,7 @@ public final class UserBitShared {
      * <code>optional int64 setup_nanos = 5;</code>
      * @return The setupNanos.
      */
+    @java.lang.Override
     public long getSetupNanos() {
       return setupNanos_;
     }
@@ -22881,6 +23194,7 @@ public final class UserBitShared {
      * <code>optional int64 process_nanos = 6;</code>
      * @return Whether the processNanos field is set.
      */
+    @java.lang.Override
     public boolean hasProcessNanos() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -22888,6 +23202,7 @@ public final class UserBitShared {
      * <code>optional int64 process_nanos = 6;</code>
      * @return The processNanos.
      */
+    @java.lang.Override
     public long getProcessNanos() {
       return processNanos_;
     }
@@ -22898,6 +23213,7 @@ public final class UserBitShared {
      * <code>optional int64 peak_local_memory_allocated = 7;</code>
      * @return Whether the peakLocalMemoryAllocated field is set.
      */
+    @java.lang.Override
     public boolean hasPeakLocalMemoryAllocated() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -22905,6 +23221,7 @@ public final class UserBitShared {
      * <code>optional int64 peak_local_memory_allocated = 7;</code>
      * @return The peakLocalMemoryAllocated.
      */
+    @java.lang.Override
     public long getPeakLocalMemoryAllocated() {
       return peakLocalMemoryAllocated_;
     }
@@ -22914,12 +23231,14 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MetricValue metric = 8;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.UserBitShared.MetricValue> getMetricList() {
       return metric_;
     }
     /**
      * <code>repeated .exec.shared.MetricValue metric = 8;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.MetricValueOrBuilder> 
         getMetricOrBuilderList() {
       return metric_;
@@ -22927,18 +23246,21 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.MetricValue metric = 8;</code>
      */
+    @java.lang.Override
     public int getMetricCount() {
       return metric_.size();
     }
     /**
      * <code>repeated .exec.shared.MetricValue metric = 8;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.MetricValue getMetric(int index) {
       return metric_.get(index);
     }
     /**
      * <code>repeated .exec.shared.MetricValue metric = 8;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.MetricValueOrBuilder getMetricOrBuilder(
         int index) {
       return metric_.get(index);
@@ -22950,6 +23272,7 @@ public final class UserBitShared {
      * <code>optional int64 wait_nanos = 9;</code>
      * @return Whether the waitNanos field is set.
      */
+    @java.lang.Override
     public boolean hasWaitNanos() {
       return ((bitField0_ & 0x00000020) != 0);
     }
@@ -22957,6 +23280,7 @@ public final class UserBitShared {
      * <code>optional int64 wait_nanos = 9;</code>
      * @return The waitNanos.
      */
+    @java.lang.Override
     public long getWaitNanos() {
       return waitNanos_;
     }
@@ -22967,6 +23291,7 @@ public final class UserBitShared {
      * <code>optional string operator_type_name = 10;</code>
      * @return Whether the operatorTypeName field is set.
      */
+    @java.lang.Override
     public boolean hasOperatorTypeName() {
       return ((bitField0_ & 0x00000040) != 0);
     }
@@ -22974,6 +23299,7 @@ public final class UserBitShared {
      * <code>optional string operator_type_name = 10;</code>
      * @return The operatorTypeName.
      */
+    @java.lang.Override
     public java.lang.String getOperatorTypeName() {
       java.lang.Object ref = operatorTypeName_;
       if (ref instanceof java.lang.String) {
@@ -22992,6 +23318,7 @@ public final class UserBitShared {
      * <code>optional string operator_type_name = 10;</code>
      * @return The bytes for operatorTypeName.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getOperatorTypeNameBytes() {
       java.lang.Object ref = operatorTypeName_;
@@ -23830,6 +24157,7 @@ public final class UserBitShared {
        * <code>optional int32 operator_id = 3;</code>
        * @return Whether the operatorId field is set.
        */
+      @java.lang.Override
       public boolean hasOperatorId() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -23837,6 +24165,7 @@ public final class UserBitShared {
        * <code>optional int32 operator_id = 3;</code>
        * @return The operatorId.
        */
+      @java.lang.Override
       public int getOperatorId() {
         return operatorId_;
       }
@@ -23867,6 +24196,7 @@ public final class UserBitShared {
        * <code>optional int32 operator_type = 4 [deprecated = true];</code>
        * @return Whether the operatorType field is set.
        */
+      @java.lang.Override
       @java.lang.Deprecated public boolean hasOperatorType() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -23874,6 +24204,7 @@ public final class UserBitShared {
        * <code>optional int32 operator_type = 4 [deprecated = true];</code>
        * @return The operatorType.
        */
+      @java.lang.Override
       @java.lang.Deprecated public int getOperatorType() {
         return operatorType_;
       }
@@ -23904,6 +24235,7 @@ public final class UserBitShared {
        * <code>optional int64 setup_nanos = 5;</code>
        * @return Whether the setupNanos field is set.
        */
+      @java.lang.Override
       public boolean hasSetupNanos() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -23911,6 +24243,7 @@ public final class UserBitShared {
        * <code>optional int64 setup_nanos = 5;</code>
        * @return The setupNanos.
        */
+      @java.lang.Override
       public long getSetupNanos() {
         return setupNanos_;
       }
@@ -23941,6 +24274,7 @@ public final class UserBitShared {
        * <code>optional int64 process_nanos = 6;</code>
        * @return Whether the processNanos field is set.
        */
+      @java.lang.Override
       public boolean hasProcessNanos() {
         return ((bitField0_ & 0x00000010) != 0);
       }
@@ -23948,6 +24282,7 @@ public final class UserBitShared {
        * <code>optional int64 process_nanos = 6;</code>
        * @return The processNanos.
        */
+      @java.lang.Override
       public long getProcessNanos() {
         return processNanos_;
       }
@@ -23978,6 +24313,7 @@ public final class UserBitShared {
        * <code>optional int64 peak_local_memory_allocated = 7;</code>
        * @return Whether the peakLocalMemoryAllocated field is set.
        */
+      @java.lang.Override
       public boolean hasPeakLocalMemoryAllocated() {
         return ((bitField0_ & 0x00000020) != 0);
       }
@@ -23985,6 +24321,7 @@ public final class UserBitShared {
        * <code>optional int64 peak_local_memory_allocated = 7;</code>
        * @return The peakLocalMemoryAllocated.
        */
+      @java.lang.Override
       public long getPeakLocalMemoryAllocated() {
         return peakLocalMemoryAllocated_;
       }
@@ -24255,6 +24592,7 @@ public final class UserBitShared {
        * <code>optional int64 wait_nanos = 9;</code>
        * @return Whether the waitNanos field is set.
        */
+      @java.lang.Override
       public boolean hasWaitNanos() {
         return ((bitField0_ & 0x00000080) != 0);
       }
@@ -24262,6 +24600,7 @@ public final class UserBitShared {
        * <code>optional int64 wait_nanos = 9;</code>
        * @return The waitNanos.
        */
+      @java.lang.Override
       public long getWaitNanos() {
         return waitNanos_;
       }
@@ -24463,7 +24802,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.StreamProfile}
    */
-  public  static final class StreamProfile extends
+  public static final class StreamProfile extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.StreamProfile)
       StreamProfileOrBuilder {
@@ -24560,6 +24899,7 @@ public final class UserBitShared {
      * <code>optional int64 records = 1;</code>
      * @return Whether the records field is set.
      */
+    @java.lang.Override
     public boolean hasRecords() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -24567,6 +24907,7 @@ public final class UserBitShared {
      * <code>optional int64 records = 1;</code>
      * @return The records.
      */
+    @java.lang.Override
     public long getRecords() {
       return records_;
     }
@@ -24577,6 +24918,7 @@ public final class UserBitShared {
      * <code>optional int64 batches = 2;</code>
      * @return Whether the batches field is set.
      */
+    @java.lang.Override
     public boolean hasBatches() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -24584,6 +24926,7 @@ public final class UserBitShared {
      * <code>optional int64 batches = 2;</code>
      * @return The batches.
      */
+    @java.lang.Override
     public long getBatches() {
       return batches_;
     }
@@ -24594,6 +24937,7 @@ public final class UserBitShared {
      * <code>optional int64 schemas = 3;</code>
      * @return Whether the schemas field is set.
      */
+    @java.lang.Override
     public boolean hasSchemas() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -24601,6 +24945,7 @@ public final class UserBitShared {
      * <code>optional int64 schemas = 3;</code>
      * @return The schemas.
      */
+    @java.lang.Override
     public long getSchemas() {
       return schemas_;
     }
@@ -24977,6 +25322,7 @@ public final class UserBitShared {
        * <code>optional int64 records = 1;</code>
        * @return Whether the records field is set.
        */
+      @java.lang.Override
       public boolean hasRecords() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -24984,6 +25330,7 @@ public final class UserBitShared {
        * <code>optional int64 records = 1;</code>
        * @return The records.
        */
+      @java.lang.Override
       public long getRecords() {
         return records_;
       }
@@ -25014,6 +25361,7 @@ public final class UserBitShared {
        * <code>optional int64 batches = 2;</code>
        * @return Whether the batches field is set.
        */
+      @java.lang.Override
       public boolean hasBatches() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -25021,6 +25369,7 @@ public final class UserBitShared {
        * <code>optional int64 batches = 2;</code>
        * @return The batches.
        */
+      @java.lang.Override
       public long getBatches() {
         return batches_;
       }
@@ -25051,6 +25400,7 @@ public final class UserBitShared {
        * <code>optional int64 schemas = 3;</code>
        * @return Whether the schemas field is set.
        */
+      @java.lang.Override
       public boolean hasSchemas() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -25058,6 +25408,7 @@ public final class UserBitShared {
        * <code>optional int64 schemas = 3;</code>
        * @return The schemas.
        */
+      @java.lang.Override
       public long getSchemas() {
         return schemas_;
       }
@@ -25175,7 +25526,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.MetricValue}
    */
-  public  static final class MetricValue extends
+  public static final class MetricValue extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.MetricValue)
       MetricValueOrBuilder {
@@ -25272,6 +25623,7 @@ public final class UserBitShared {
      * <code>optional int32 metric_id = 1;</code>
      * @return Whether the metricId field is set.
      */
+    @java.lang.Override
     public boolean hasMetricId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -25279,6 +25631,7 @@ public final class UserBitShared {
      * <code>optional int32 metric_id = 1;</code>
      * @return The metricId.
      */
+    @java.lang.Override
     public int getMetricId() {
       return metricId_;
     }
@@ -25289,6 +25642,7 @@ public final class UserBitShared {
      * <code>optional int64 long_value = 2;</code>
      * @return Whether the longValue field is set.
      */
+    @java.lang.Override
     public boolean hasLongValue() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -25296,6 +25650,7 @@ public final class UserBitShared {
      * <code>optional int64 long_value = 2;</code>
      * @return The longValue.
      */
+    @java.lang.Override
     public long getLongValue() {
       return longValue_;
     }
@@ -25306,6 +25661,7 @@ public final class UserBitShared {
      * <code>optional double double_value = 3;</code>
      * @return Whether the doubleValue field is set.
      */
+    @java.lang.Override
     public boolean hasDoubleValue() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -25313,6 +25669,7 @@ public final class UserBitShared {
      * <code>optional double double_value = 3;</code>
      * @return The doubleValue.
      */
+    @java.lang.Override
     public double getDoubleValue() {
       return doubleValue_;
     }
@@ -25689,6 +26046,7 @@ public final class UserBitShared {
        * <code>optional int32 metric_id = 1;</code>
        * @return Whether the metricId field is set.
        */
+      @java.lang.Override
       public boolean hasMetricId() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -25696,6 +26054,7 @@ public final class UserBitShared {
        * <code>optional int32 metric_id = 1;</code>
        * @return The metricId.
        */
+      @java.lang.Override
       public int getMetricId() {
         return metricId_;
       }
@@ -25726,6 +26085,7 @@ public final class UserBitShared {
        * <code>optional int64 long_value = 2;</code>
        * @return Whether the longValue field is set.
        */
+      @java.lang.Override
       public boolean hasLongValue() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -25733,6 +26093,7 @@ public final class UserBitShared {
        * <code>optional int64 long_value = 2;</code>
        * @return The longValue.
        */
+      @java.lang.Override
       public long getLongValue() {
         return longValue_;
       }
@@ -25763,6 +26124,7 @@ public final class UserBitShared {
        * <code>optional double double_value = 3;</code>
        * @return Whether the doubleValue field is set.
        */
+      @java.lang.Override
       public boolean hasDoubleValue() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -25770,6 +26132,7 @@ public final class UserBitShared {
        * <code>optional double double_value = 3;</code>
        * @return The doubleValue.
        */
+      @java.lang.Override
       public double getDoubleValue() {
         return doubleValue_;
       }
@@ -25887,7 +26250,7 @@ public final class UserBitShared {
    *
    * Protobuf type {@code exec.shared.Registry}
    */
-  public  static final class Registry extends
+  public static final class Registry extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.Registry)
       RegistryOrBuilder {
@@ -25980,12 +26343,14 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.Jar jar = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.UserBitShared.Jar> getJarList() {
       return jar_;
     }
     /**
      * <code>repeated .exec.shared.Jar jar = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.JarOrBuilder> 
         getJarOrBuilderList() {
       return jar_;
@@ -25993,18 +26358,21 @@ public final class UserBitShared {
     /**
      * <code>repeated .exec.shared.Jar jar = 1;</code>
      */
+    @java.lang.Override
     public int getJarCount() {
       return jar_.size();
     }
     /**
      * <code>repeated .exec.shared.Jar jar = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.Jar getJar(int index) {
       return jar_.get(index);
     }
     /**
      * <code>repeated .exec.shared.Jar jar = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.JarOrBuilder getJarOrBuilder(
         int index) {
       return jar_.get(index);
@@ -26707,7 +27075,7 @@ public final class UserBitShared {
    *
    * Protobuf type {@code exec.shared.Jar}
    */
-  public  static final class Jar extends
+  public static final class Jar extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.Jar)
       JarOrBuilder {
@@ -26809,6 +27177,7 @@ public final class UserBitShared {
      * <code>optional string name = 1;</code>
      * @return Whether the name field is set.
      */
+    @java.lang.Override
     public boolean hasName() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -26816,6 +27185,7 @@ public final class UserBitShared {
      * <code>optional string name = 1;</code>
      * @return The name.
      */
+    @java.lang.Override
     public java.lang.String getName() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
@@ -26834,6 +27204,7 @@ public final class UserBitShared {
      * <code>optional string name = 1;</code>
      * @return The bytes for name.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getNameBytes() {
       java.lang.Object ref = name_;
@@ -27528,7 +27899,7 @@ public final class UserBitShared {
   /**
    * Protobuf type {@code exec.shared.SaslMessage}
    */
-  public  static final class SaslMessage extends
+  public static final class SaslMessage extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.shared.SaslMessage)
       SaslMessageOrBuilder {
@@ -27636,6 +28007,7 @@ public final class UserBitShared {
      * <code>optional string mechanism = 1;</code>
      * @return Whether the mechanism field is set.
      */
+    @java.lang.Override
     public boolean hasMechanism() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -27643,6 +28015,7 @@ public final class UserBitShared {
      * <code>optional string mechanism = 1;</code>
      * @return The mechanism.
      */
+    @java.lang.Override
     public java.lang.String getMechanism() {
       java.lang.Object ref = mechanism_;
       if (ref instanceof java.lang.String) {
@@ -27661,6 +28034,7 @@ public final class UserBitShared {
      * <code>optional string mechanism = 1;</code>
      * @return The bytes for mechanism.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getMechanismBytes() {
       java.lang.Object ref = mechanism_;
@@ -27681,6 +28055,7 @@ public final class UserBitShared {
      * <code>optional bytes data = 2;</code>
      * @return Whether the data field is set.
      */
+    @java.lang.Override
     public boolean hasData() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -27688,6 +28063,7 @@ public final class UserBitShared {
      * <code>optional bytes data = 2;</code>
      * @return The data.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getData() {
       return data_;
     }
@@ -27698,14 +28074,14 @@ public final class UserBitShared {
      * <code>optional .exec.shared.SaslStatus status = 3;</code>
      * @return Whether the status field is set.
      */
-    public boolean hasStatus() {
+    @java.lang.Override public boolean hasStatus() {
       return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>optional .exec.shared.SaslStatus status = 3;</code>
      * @return The status.
      */
-    public org.apache.drill.exec.proto.UserBitShared.SaslStatus getStatus() {
+    @java.lang.Override public org.apache.drill.exec.proto.UserBitShared.SaslStatus getStatus() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.UserBitShared.SaslStatus result = org.apache.drill.exec.proto.UserBitShared.SaslStatus.valueOf(status_);
       return result == null ? org.apache.drill.exec.proto.UserBitShared.SaslStatus.SASL_UNKNOWN : result;
@@ -28164,6 +28540,7 @@ public final class UserBitShared {
        * <code>optional bytes data = 2;</code>
        * @return Whether the data field is set.
        */
+      @java.lang.Override
       public boolean hasData() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -28171,6 +28548,7 @@ public final class UserBitShared {
        * <code>optional bytes data = 2;</code>
        * @return The data.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getData() {
         return data_;
       }
@@ -28204,13 +28582,14 @@ public final class UserBitShared {
        * <code>optional .exec.shared.SaslStatus status = 3;</code>
        * @return Whether the status field is set.
        */
-      public boolean hasStatus() {
+      @java.lang.Override public boolean hasStatus() {
         return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>optional .exec.shared.SaslStatus status = 3;</code>
        * @return The status.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.UserBitShared.SaslStatus getStatus() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.UserBitShared.SaslStatus result = org.apache.drill.exec.proto.UserBitShared.SaslStatus.valueOf(status_);

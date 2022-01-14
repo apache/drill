@@ -14,212 +14,165 @@
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
-extern PROTOBUF_INTERNAL_EXPORT_Coordination_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_DrillbitEndpoint_Coordination_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_ExecutionProtos_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_FragmentHandle_ExecutionProtos_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_BitControl_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Collector_BitControl_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_BitControl_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_FragmentStatus_BitControl_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_BitControl_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<5> scc_info_PlanFragment_BitControl_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_BitControl_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_QueryContextInformation_BitControl_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_UserBitShared_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<3> scc_info_MinorFragmentProfile_UserBitShared_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_UserBitShared_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_UserCredentials_UserBitShared_2eproto;
+
+PROTOBUF_PRAGMA_INIT_SEG
 namespace exec {
 namespace bit {
 namespace control {
-class BitControlHandshakeDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<BitControlHandshake> _instance;
-} _BitControlHandshake_default_instance_;
-class BitStatusDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<BitStatus> _instance;
-} _BitStatus_default_instance_;
-class FragmentStatusDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FragmentStatus> _instance;
-} _FragmentStatus_default_instance_;
-class InitializeFragmentsDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<InitializeFragments> _instance;
-} _InitializeFragments_default_instance_;
-class CustomMessageDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<CustomMessage> _instance;
-} _CustomMessage_default_instance_;
-class PlanFragmentDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<PlanFragment> _instance;
-} _PlanFragment_default_instance_;
-class CollectorDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Collector> _instance;
-} _Collector_default_instance_;
-class QueryContextInformationDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<QueryContextInformation> _instance;
-} _QueryContextInformation_default_instance_;
-class WorkQueueStatusDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<WorkQueueStatus> _instance;
-} _WorkQueueStatus_default_instance_;
-class FinishedReceiverDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FinishedReceiver> _instance;
-} _FinishedReceiver_default_instance_;
+constexpr BitControlHandshake::BitControlHandshake(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : authenticationmechanisms_()
+  , endpoint_(nullptr)
+  , rpc_version_(0)
+  , channel_(0)
+{}
+struct BitControlHandshakeDefaultTypeInternal {
+  constexpr BitControlHandshakeDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~BitControlHandshakeDefaultTypeInternal() {}
+  union {
+    BitControlHandshake _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT BitControlHandshakeDefaultTypeInternal _BitControlHandshake_default_instance_;
+constexpr BitStatus::BitStatus(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : fragment_status_(){}
+struct BitStatusDefaultTypeInternal {
+  constexpr BitStatusDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~BitStatusDefaultTypeInternal() {}
+  union {
+    BitStatus _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT BitStatusDefaultTypeInternal _BitStatus_default_instance_;
+constexpr FragmentStatus::FragmentStatus(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : profile_(nullptr)
+  , handle_(nullptr){}
+struct FragmentStatusDefaultTypeInternal {
+  constexpr FragmentStatusDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~FragmentStatusDefaultTypeInternal() {}
+  union {
+    FragmentStatus _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT FragmentStatusDefaultTypeInternal _FragmentStatus_default_instance_;
+constexpr InitializeFragments::InitializeFragments(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : fragment_(){}
+struct InitializeFragmentsDefaultTypeInternal {
+  constexpr InitializeFragmentsDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~InitializeFragmentsDefaultTypeInternal() {}
+  union {
+    InitializeFragments _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT InitializeFragmentsDefaultTypeInternal _InitializeFragments_default_instance_;
+constexpr CustomMessage::CustomMessage(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : message_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
+  , type_(0){}
+struct CustomMessageDefaultTypeInternal {
+  constexpr CustomMessageDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~CustomMessageDefaultTypeInternal() {}
+  union {
+    CustomMessage _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT CustomMessageDefaultTypeInternal _CustomMessage_default_instance_;
+constexpr PlanFragment::PlanFragment(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : collector_()
+  , fragment_json_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
+  , options_json_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
+  , handle_(nullptr)
+  , assignment_(nullptr)
+  , foreman_(nullptr)
+  , credentials_(nullptr)
+  , context_(nullptr)
+  , network_cost_(0)
+  , cpu_cost_(0)
+  , disk_cost_(0)
+  , memory_cost_(0)
+  , leaf_fragment_(false)
+  , mem_initial_(PROTOBUF_LONGLONG(20000000))
+  , mem_max_(PROTOBUF_LONGLONG(2000000000)){}
+struct PlanFragmentDefaultTypeInternal {
+  constexpr PlanFragmentDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~PlanFragmentDefaultTypeInternal() {}
+  union {
+    PlanFragment _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PlanFragmentDefaultTypeInternal _PlanFragment_default_instance_;
+constexpr Collector::Collector(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : incoming_minor_fragment_()
+  , _incoming_minor_fragment_cached_byte_size_()
+  , opposite_major_fragment_id_(0)
+  , supports_out_of_order_(false)
+  , is_spooling_(false)
+  , enable_dynamic_fc_(false){}
+struct CollectorDefaultTypeInternal {
+  constexpr CollectorDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~CollectorDefaultTypeInternal() {}
+  union {
+    Collector _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT CollectorDefaultTypeInternal _Collector_default_instance_;
+constexpr QueryContextInformation::QueryContextInformation(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : default_schema_name_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
+  , session_id_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
+  , query_start_time_(PROTOBUF_LONGLONG(0))
+  , time_zone_(0){}
+struct QueryContextInformationDefaultTypeInternal {
+  constexpr QueryContextInformationDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~QueryContextInformationDefaultTypeInternal() {}
+  union {
+    QueryContextInformation _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT QueryContextInformationDefaultTypeInternal _QueryContextInformation_default_instance_;
+constexpr WorkQueueStatus::WorkQueueStatus(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : endpoint_(nullptr)
+  , report_time_(PROTOBUF_LONGLONG(0))
+  , queue_length_(0){}
+struct WorkQueueStatusDefaultTypeInternal {
+  constexpr WorkQueueStatusDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~WorkQueueStatusDefaultTypeInternal() {}
+  union {
+    WorkQueueStatus _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT WorkQueueStatusDefaultTypeInternal _WorkQueueStatus_default_instance_;
+constexpr FinishedReceiver::FinishedReceiver(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : receiver_(nullptr)
+  , sender_(nullptr){}
+struct FinishedReceiverDefaultTypeInternal {
+  constexpr FinishedReceiverDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~FinishedReceiverDefaultTypeInternal() {}
+  union {
+    FinishedReceiver _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT FinishedReceiverDefaultTypeInternal _FinishedReceiver_default_instance_;
 }  // namespace control
 }  // namespace bit
 }  // namespace exec
-static void InitDefaultsscc_info_BitControlHandshake_BitControl_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::control::_BitControlHandshake_default_instance_;
-    new (ptr) ::exec::bit::control::BitControlHandshake();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::control::BitControlHandshake::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_BitControlHandshake_BitControl_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_BitControlHandshake_BitControl_2eproto}, {
-      &scc_info_DrillbitEndpoint_Coordination_2eproto.base,}};
-
-static void InitDefaultsscc_info_BitStatus_BitControl_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::control::_BitStatus_default_instance_;
-    new (ptr) ::exec::bit::control::BitStatus();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::control::BitStatus::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_BitStatus_BitControl_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_BitStatus_BitControl_2eproto}, {
-      &scc_info_FragmentStatus_BitControl_2eproto.base,}};
-
-static void InitDefaultsscc_info_Collector_BitControl_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::control::_Collector_default_instance_;
-    new (ptr) ::exec::bit::control::Collector();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::control::Collector::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Collector_BitControl_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_Collector_BitControl_2eproto}, {}};
-
-static void InitDefaultsscc_info_CustomMessage_BitControl_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::control::_CustomMessage_default_instance_;
-    new (ptr) ::exec::bit::control::CustomMessage();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::control::CustomMessage::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_CustomMessage_BitControl_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_CustomMessage_BitControl_2eproto}, {}};
-
-static void InitDefaultsscc_info_FinishedReceiver_BitControl_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::control::_FinishedReceiver_default_instance_;
-    new (ptr) ::exec::bit::control::FinishedReceiver();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::control::FinishedReceiver::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_FinishedReceiver_BitControl_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_FinishedReceiver_BitControl_2eproto}, {
-      &scc_info_FragmentHandle_ExecutionProtos_2eproto.base,}};
-
-static void InitDefaultsscc_info_FragmentStatus_BitControl_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::control::_FragmentStatus_default_instance_;
-    new (ptr) ::exec::bit::control::FragmentStatus();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::control::FragmentStatus::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_FragmentStatus_BitControl_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_FragmentStatus_BitControl_2eproto}, {
-      &scc_info_MinorFragmentProfile_UserBitShared_2eproto.base,
-      &scc_info_FragmentHandle_ExecutionProtos_2eproto.base,}};
-
-static void InitDefaultsscc_info_InitializeFragments_BitControl_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::control::_InitializeFragments_default_instance_;
-    new (ptr) ::exec::bit::control::InitializeFragments();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::control::InitializeFragments::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_InitializeFragments_BitControl_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_InitializeFragments_BitControl_2eproto}, {
-      &scc_info_PlanFragment_BitControl_2eproto.base,}};
-
-static void InitDefaultsscc_info_PlanFragment_BitControl_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::control::_PlanFragment_default_instance_;
-    new (ptr) ::exec::bit::control::PlanFragment();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::control::PlanFragment::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<5> scc_info_PlanFragment_BitControl_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 5, 0, InitDefaultsscc_info_PlanFragment_BitControl_2eproto}, {
-      &scc_info_FragmentHandle_ExecutionProtos_2eproto.base,
-      &scc_info_DrillbitEndpoint_Coordination_2eproto.base,
-      &scc_info_UserCredentials_UserBitShared_2eproto.base,
-      &scc_info_QueryContextInformation_BitControl_2eproto.base,
-      &scc_info_Collector_BitControl_2eproto.base,}};
-
-static void InitDefaultsscc_info_QueryContextInformation_BitControl_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::control::_QueryContextInformation_default_instance_;
-    new (ptr) ::exec::bit::control::QueryContextInformation();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::control::QueryContextInformation::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_QueryContextInformation_BitControl_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_QueryContextInformation_BitControl_2eproto}, {}};
-
-static void InitDefaultsscc_info_WorkQueueStatus_BitControl_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::control::_WorkQueueStatus_default_instance_;
-    new (ptr) ::exec::bit::control::WorkQueueStatus();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::control::WorkQueueStatus::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_WorkQueueStatus_BitControl_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_WorkQueueStatus_BitControl_2eproto}, {
-      &scc_info_DrillbitEndpoint_Coordination_2eproto.base,}};
-
 static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_BitControl_2eproto[10];
 static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_BitControl_2eproto[1];
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_BitControl_2eproto = nullptr;
@@ -238,13 +191,12 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_BitControl_2eproto::offsets[] 
   2,
   0,
   ~0u,
-  PROTOBUF_FIELD_OFFSET(::exec::bit::control::BitStatus, _has_bits_),
+  ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::exec::bit::control::BitStatus, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   PROTOBUF_FIELD_OFFSET(::exec::bit::control::BitStatus, fragment_status_),
-  ~0u,
   PROTOBUF_FIELD_OFFSET(::exec::bit::control::FragmentStatus, _has_bits_),
   PROTOBUF_FIELD_OFFSET(::exec::bit::control::FragmentStatus, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -254,13 +206,12 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_BitControl_2eproto::offsets[] 
   PROTOBUF_FIELD_OFFSET(::exec::bit::control::FragmentStatus, handle_),
   0,
   1,
-  PROTOBUF_FIELD_OFFSET(::exec::bit::control::InitializeFragments, _has_bits_),
+  ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::exec::bit::control::InitializeFragments, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   PROTOBUF_FIELD_OFFSET(::exec::bit::control::InitializeFragments, fragment_),
-  ~0u,
   PROTOBUF_FIELD_OFFSET(::exec::bit::control::CustomMessage, _has_bits_),
   PROTOBUF_FIELD_OFFSET(::exec::bit::control::CustomMessage, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -356,15 +307,15 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_BitControl_2eproto::offsets[] 
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, 9, sizeof(::exec::bit::control::BitControlHandshake)},
-  { 13, 19, sizeof(::exec::bit::control::BitStatus)},
-  { 20, 27, sizeof(::exec::bit::control::FragmentStatus)},
-  { 29, 35, sizeof(::exec::bit::control::InitializeFragments)},
-  { 36, 43, sizeof(::exec::bit::control::CustomMessage)},
-  { 45, 65, sizeof(::exec::bit::control::PlanFragment)},
-  { 80, 90, sizeof(::exec::bit::control::Collector)},
-  { 95, 104, sizeof(::exec::bit::control::QueryContextInformation)},
-  { 108, 116, sizeof(::exec::bit::control::WorkQueueStatus)},
-  { 119, 126, sizeof(::exec::bit::control::FinishedReceiver)},
+  { 13, -1, sizeof(::exec::bit::control::BitStatus)},
+  { 19, 26, sizeof(::exec::bit::control::FragmentStatus)},
+  { 28, -1, sizeof(::exec::bit::control::InitializeFragments)},
+  { 34, 41, sizeof(::exec::bit::control::CustomMessage)},
+  { 43, 63, sizeof(::exec::bit::control::PlanFragment)},
+  { 78, 88, sizeof(::exec::bit::control::Collector)},
+  { 93, 102, sizeof(::exec::bit::control::QueryContextInformation)},
+  { 106, 114, sizeof(::exec::bit::control::WorkQueueStatus)},
+  { 117, 124, sizeof(::exec::bit::control::FinishedReceiver)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -438,29 +389,19 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor
   &::descriptor_table_ExecutionProtos_2eproto,
   &::descriptor_table_UserBitShared_2eproto,
 };
-static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_BitControl_2eproto_sccs[10] = {
-  &scc_info_BitControlHandshake_BitControl_2eproto.base,
-  &scc_info_BitStatus_BitControl_2eproto.base,
-  &scc_info_Collector_BitControl_2eproto.base,
-  &scc_info_CustomMessage_BitControl_2eproto.base,
-  &scc_info_FinishedReceiver_BitControl_2eproto.base,
-  &scc_info_FragmentStatus_BitControl_2eproto.base,
-  &scc_info_InitializeFragments_BitControl_2eproto.base,
-  &scc_info_PlanFragment_BitControl_2eproto.base,
-  &scc_info_QueryContextInformation_BitControl_2eproto.base,
-  &scc_info_WorkQueueStatus_BitControl_2eproto.base,
-};
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_BitControl_2eproto_once;
-static bool descriptor_table_BitControl_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_BitControl_2eproto = {
-  &descriptor_table_BitControl_2eproto_initialized, descriptor_table_protodef_BitControl_2eproto, "BitControl.proto", 2027,
-  &descriptor_table_BitControl_2eproto_once, descriptor_table_BitControl_2eproto_sccs, descriptor_table_BitControl_2eproto_deps, 10, 3,
+  false, false, 2027, descriptor_table_protodef_BitControl_2eproto, "BitControl.proto", 
+  &descriptor_table_BitControl_2eproto_once, descriptor_table_BitControl_2eproto_deps, 3, 10,
   schemas, file_default_instances, TableStruct_BitControl_2eproto::offsets,
-  file_level_metadata_BitControl_2eproto, 10, file_level_enum_descriptors_BitControl_2eproto, file_level_service_descriptors_BitControl_2eproto,
+  file_level_metadata_BitControl_2eproto, file_level_enum_descriptors_BitControl_2eproto, file_level_service_descriptors_BitControl_2eproto,
 };
+PROTOBUF_ATTRIBUTE_WEAK const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable* descriptor_table_BitControl_2eproto_getter() {
+  return &descriptor_table_BitControl_2eproto;
+}
 
 // Force running AddDescriptors() at dynamic initialization time.
-static bool dynamic_init_dummy_BitControl_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_BitControl_2eproto), true);
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY static ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptorsRunner dynamic_init_dummy_BitControl_2eproto(&descriptor_table_BitControl_2eproto);
 namespace exec {
 namespace bit {
 namespace control {
@@ -497,10 +438,6 @@ bool RpcType_IsValid(int value) {
 
 // ===================================================================
 
-void BitControlHandshake::InitAsDefaultInstance() {
-  ::exec::bit::control::_BitControlHandshake_default_instance_._instance.get_mutable()->endpoint_ = const_cast< ::exec::DrillbitEndpoint*>(
-      ::exec::DrillbitEndpoint::internal_default_instance());
-}
 class BitControlHandshake::_Internal {
  public:
   using HasBits = decltype(std::declval<BitControlHandshake>()._has_bits_);
@@ -524,17 +461,18 @@ void BitControlHandshake::clear_endpoint() {
   if (endpoint_ != nullptr) endpoint_->Clear();
   _has_bits_[0] &= ~0x00000001u;
 }
-BitControlHandshake::BitControlHandshake()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+BitControlHandshake::BitControlHandshake(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  authenticationmechanisms_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.control.BitControlHandshake)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.control.BitControlHandshake)
 }
 BitControlHandshake::BitControlHandshake(const BitControlHandshake& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       authenticationmechanisms_(from.authenticationmechanisms_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_endpoint()) {
     endpoint_ = new ::exec::DrillbitEndpoint(*from.endpoint_);
   } else {
@@ -547,29 +485,32 @@ BitControlHandshake::BitControlHandshake(const BitControlHandshake& from)
 }
 
 void BitControlHandshake::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_BitControlHandshake_BitControl_2eproto.base);
-  ::memset(&endpoint_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&channel_) -
-      reinterpret_cast<char*>(&endpoint_)) + sizeof(channel_));
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&endpoint_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&channel_) -
+    reinterpret_cast<char*>(&endpoint_)) + sizeof(channel_));
 }
 
 BitControlHandshake::~BitControlHandshake() {
   // @@protoc_insertion_point(destructor:exec.bit.control.BitControlHandshake)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void BitControlHandshake::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete endpoint_;
 }
 
+void BitControlHandshake::ArenaDtor(void* object) {
+  BitControlHandshake* _this = reinterpret_cast< BitControlHandshake* >(object);
+  (void)_this;
+}
+void BitControlHandshake::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void BitControlHandshake::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const BitControlHandshake& BitControlHandshake::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_BitControlHandshake_BitControl_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void BitControlHandshake::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.control.BitControlHandshake)
@@ -589,7 +530,7 @@ void BitControlHandshake::Clear() {
         reinterpret_cast<char*>(&rpc_version_)) + sizeof(channel_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* BitControlHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -598,20 +539,19 @@ const char* BitControlHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAME
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional int32 rpc_version = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_rpc_version(&has_bits);
-          rpc_version_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          rpc_version_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
       // optional .exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::exec::shared::RpcChannel_IsValid(val))) {
             _internal_set_channel(static_cast<::exec::shared::RpcChannel>(val));
@@ -645,11 +585,14 @@ const char* BitControlHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAME
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -704,7 +647,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.control.BitControlHandshake)
   return target;
@@ -776,7 +719,7 @@ void BitControlHandshake::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from
 void BitControlHandshake::MergeFrom(const BitControlHandshake& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.control.BitControlHandshake)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -816,62 +759,65 @@ bool BitControlHandshake::IsInitialized() const {
 
 void BitControlHandshake::InternalSwap(BitControlHandshake* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   authenticationmechanisms_.InternalSwap(&other->authenticationmechanisms_);
-  swap(endpoint_, other->endpoint_);
-  swap(rpc_version_, other->rpc_version_);
-  swap(channel_, other->channel_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(BitControlHandshake, channel_)
+      + sizeof(BitControlHandshake::channel_)
+      - PROTOBUF_FIELD_OFFSET(BitControlHandshake, endpoint_)>(
+          reinterpret_cast<char*>(&endpoint_),
+          reinterpret_cast<char*>(&other->endpoint_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata BitControlHandshake::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitControl_2eproto_getter, &descriptor_table_BitControl_2eproto_once,
+      file_level_metadata_BitControl_2eproto[0]);
 }
-
 
 // ===================================================================
 
-void BitStatus::InitAsDefaultInstance() {
-}
 class BitStatus::_Internal {
  public:
-  using HasBits = decltype(std::declval<BitStatus>()._has_bits_);
 };
 
-BitStatus::BitStatus()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+BitStatus::BitStatus(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  fragment_status_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.control.BitStatus)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.control.BitStatus)
 }
 BitStatus::BitStatus(const BitStatus& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
       fragment_status_(from.fragment_status_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:exec.bit.control.BitStatus)
 }
 
 void BitStatus::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_BitStatus_BitControl_2eproto.base);
 }
 
 BitStatus::~BitStatus() {
   // @@protoc_insertion_point(destructor:exec.bit.control.BitStatus)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void BitStatus::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void BitStatus::ArenaDtor(void* object) {
+  BitStatus* _this = reinterpret_cast< BitStatus* >(object);
+  (void)_this;
+}
+void BitStatus::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void BitStatus::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const BitStatus& BitStatus::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_BitStatus_BitControl_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void BitStatus::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.control.BitStatus)
@@ -880,8 +826,7 @@ void BitStatus::Clear() {
   (void) cached_has_bits;
 
   fragment_status_.Clear();
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* BitStatus::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -889,7 +834,6 @@ const char* BitStatus::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // repeated .exec.bit.control.FragmentStatus fragment_status = 1;
       case 1:
@@ -905,11 +849,14 @@ const char* BitStatus::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -939,7 +886,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.control.BitStatus)
   return target;
@@ -987,7 +934,7 @@ void BitStatus::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void BitStatus::MergeFrom(const BitStatus& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.control.BitStatus)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -1014,24 +961,18 @@ bool BitStatus::IsInitialized() const {
 
 void BitStatus::InternalSwap(BitStatus* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   fragment_status_.InternalSwap(&other->fragment_status_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata BitStatus::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitControl_2eproto_getter, &descriptor_table_BitControl_2eproto_once,
+      file_level_metadata_BitControl_2eproto[1]);
 }
-
 
 // ===================================================================
 
-void FragmentStatus::InitAsDefaultInstance() {
-  ::exec::bit::control::_FragmentStatus_default_instance_._instance.get_mutable()->profile_ = const_cast< ::exec::shared::MinorFragmentProfile*>(
-      ::exec::shared::MinorFragmentProfile::internal_default_instance());
-  ::exec::bit::control::_FragmentStatus_default_instance_._instance.get_mutable()->handle_ = const_cast< ::exec::bit::FragmentHandle*>(
-      ::exec::bit::FragmentHandle::internal_default_instance());
-}
 class FragmentStatus::_Internal {
  public:
   using HasBits = decltype(std::declval<FragmentStatus>()._has_bits_);
@@ -1061,16 +1002,16 @@ void FragmentStatus::clear_handle() {
   if (handle_ != nullptr) handle_->Clear();
   _has_bits_[0] &= ~0x00000002u;
 }
-FragmentStatus::FragmentStatus()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+FragmentStatus::FragmentStatus(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.control.FragmentStatus)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.control.FragmentStatus)
 }
 FragmentStatus::FragmentStatus(const FragmentStatus& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_profile()) {
     profile_ = new ::exec::shared::MinorFragmentProfile(*from.profile_);
   } else {
@@ -1085,30 +1026,33 @@ FragmentStatus::FragmentStatus(const FragmentStatus& from)
 }
 
 void FragmentStatus::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FragmentStatus_BitControl_2eproto.base);
-  ::memset(&profile_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&handle_) -
-      reinterpret_cast<char*>(&profile_)) + sizeof(handle_));
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&profile_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&handle_) -
+    reinterpret_cast<char*>(&profile_)) + sizeof(handle_));
 }
 
 FragmentStatus::~FragmentStatus() {
   // @@protoc_insertion_point(destructor:exec.bit.control.FragmentStatus)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void FragmentStatus::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete profile_;
   if (this != internal_default_instance()) delete handle_;
 }
 
+void FragmentStatus::ArenaDtor(void* object) {
+  FragmentStatus* _this = reinterpret_cast< FragmentStatus* >(object);
+  (void)_this;
+}
+void FragmentStatus::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void FragmentStatus::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const FragmentStatus& FragmentStatus::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FragmentStatus_BitControl_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FragmentStatus::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.control.FragmentStatus)
@@ -1128,7 +1072,7 @@ void FragmentStatus::Clear() {
     }
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* FragmentStatus::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -1137,7 +1081,6 @@ const char* FragmentStatus::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional .exec.shared.MinorFragmentProfile profile = 1;
       case 1:
@@ -1155,11 +1098,14 @@ const char* FragmentStatus::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -1199,7 +1145,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.control.FragmentStatus)
   return target;
@@ -1257,7 +1203,7 @@ void FragmentStatus::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void FragmentStatus::MergeFrom(const FragmentStatus& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.control.FragmentStatus)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -1292,60 +1238,64 @@ bool FragmentStatus::IsInitialized() const {
 
 void FragmentStatus::InternalSwap(FragmentStatus* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(profile_, other->profile_);
-  swap(handle_, other->handle_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FragmentStatus, handle_)
+      + sizeof(FragmentStatus::handle_)
+      - PROTOBUF_FIELD_OFFSET(FragmentStatus, profile_)>(
+          reinterpret_cast<char*>(&profile_),
+          reinterpret_cast<char*>(&other->profile_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata FragmentStatus::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitControl_2eproto_getter, &descriptor_table_BitControl_2eproto_once,
+      file_level_metadata_BitControl_2eproto[2]);
 }
-
 
 // ===================================================================
 
-void InitializeFragments::InitAsDefaultInstance() {
-}
 class InitializeFragments::_Internal {
  public:
-  using HasBits = decltype(std::declval<InitializeFragments>()._has_bits_);
 };
 
-InitializeFragments::InitializeFragments()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+InitializeFragments::InitializeFragments(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  fragment_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.control.InitializeFragments)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.control.InitializeFragments)
 }
 InitializeFragments::InitializeFragments(const InitializeFragments& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
       fragment_(from.fragment_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:exec.bit.control.InitializeFragments)
 }
 
 void InitializeFragments::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_InitializeFragments_BitControl_2eproto.base);
 }
 
 InitializeFragments::~InitializeFragments() {
   // @@protoc_insertion_point(destructor:exec.bit.control.InitializeFragments)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void InitializeFragments::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void InitializeFragments::ArenaDtor(void* object) {
+  InitializeFragments* _this = reinterpret_cast< InitializeFragments* >(object);
+  (void)_this;
+}
+void InitializeFragments::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void InitializeFragments::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const InitializeFragments& InitializeFragments::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_InitializeFragments_BitControl_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void InitializeFragments::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.control.InitializeFragments)
@@ -1354,8 +1304,7 @@ void InitializeFragments::Clear() {
   (void) cached_has_bits;
 
   fragment_.Clear();
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* InitializeFragments::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -1363,7 +1312,6 @@ const char* InitializeFragments::_InternalParse(const char* ptr, ::PROTOBUF_NAME
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // repeated .exec.bit.control.PlanFragment fragment = 1;
       case 1:
@@ -1379,11 +1327,14 @@ const char* InitializeFragments::_InternalParse(const char* ptr, ::PROTOBUF_NAME
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -1413,7 +1364,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.control.InitializeFragments)
   return target;
@@ -1461,7 +1412,7 @@ void InitializeFragments::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from
 void InitializeFragments::MergeFrom(const InitializeFragments& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.control.InitializeFragments)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -1488,20 +1439,18 @@ bool InitializeFragments::IsInitialized() const {
 
 void InitializeFragments::InternalSwap(InitializeFragments* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   fragment_.InternalSwap(&other->fragment_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata InitializeFragments::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitControl_2eproto_getter, &descriptor_table_BitControl_2eproto_once,
+      file_level_metadata_BitControl_2eproto[3]);
 }
-
 
 // ===================================================================
 
-void CustomMessage::InitAsDefaultInstance() {
-}
 class CustomMessage::_Internal {
  public:
   using HasBits = decltype(std::declval<CustomMessage>()._has_bits_);
@@ -1513,47 +1462,50 @@ class CustomMessage::_Internal {
   }
 };
 
-CustomMessage::CustomMessage()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+CustomMessage::CustomMessage(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.control.CustomMessage)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.control.CustomMessage)
 }
 CustomMessage::CustomMessage(const CustomMessage& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   message_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_message()) {
-    message_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.message_);
+    message_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_message(), 
+      GetArena());
   }
   type_ = from.type_;
   // @@protoc_insertion_point(copy_constructor:exec.bit.control.CustomMessage)
 }
 
 void CustomMessage::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_CustomMessage_BitControl_2eproto.base);
-  message_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  type_ = 0;
+message_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+type_ = 0;
 }
 
 CustomMessage::~CustomMessage() {
   // @@protoc_insertion_point(destructor:exec.bit.control.CustomMessage)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void CustomMessage::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   message_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
+void CustomMessage::ArenaDtor(void* object) {
+  CustomMessage* _this = reinterpret_cast< CustomMessage* >(object);
+  (void)_this;
+}
+void CustomMessage::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void CustomMessage::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const CustomMessage& CustomMessage::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_CustomMessage_BitControl_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void CustomMessage::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.control.CustomMessage)
@@ -1563,11 +1515,11 @@ void CustomMessage::Clear() {
 
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    message_.ClearNonDefaultToEmptyNoArena();
+    message_.ClearNonDefaultToEmpty();
   }
   type_ = 0;
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* CustomMessage::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -1576,13 +1528,12 @@ const char* CustomMessage::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional int32 type = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_type(&has_bits);
-          type_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          type_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1596,11 +1547,14 @@ const char* CustomMessage::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -1636,7 +1590,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.control.CustomMessage)
   return target;
@@ -1694,15 +1648,14 @@ void CustomMessage::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void CustomMessage::MergeFrom(const CustomMessage& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.control.CustomMessage)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = from._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      message_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.message_);
+      _internal_set_message(from._internal_message());
     }
     if (cached_has_bits & 0x00000002u) {
       type_ = from.type_;
@@ -1731,32 +1684,20 @@ bool CustomMessage::IsInitialized() const {
 
 void CustomMessage::InternalSwap(CustomMessage* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  message_.Swap(&other->message_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  message_.Swap(&other->message_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   swap(type_, other->type_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata CustomMessage::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitControl_2eproto_getter, &descriptor_table_BitControl_2eproto_once,
+      file_level_metadata_BitControl_2eproto[4]);
 }
-
 
 // ===================================================================
 
-void PlanFragment::InitAsDefaultInstance() {
-  ::exec::bit::control::_PlanFragment_default_instance_._instance.get_mutable()->handle_ = const_cast< ::exec::bit::FragmentHandle*>(
-      ::exec::bit::FragmentHandle::internal_default_instance());
-  ::exec::bit::control::_PlanFragment_default_instance_._instance.get_mutable()->assignment_ = const_cast< ::exec::DrillbitEndpoint*>(
-      ::exec::DrillbitEndpoint::internal_default_instance());
-  ::exec::bit::control::_PlanFragment_default_instance_._instance.get_mutable()->foreman_ = const_cast< ::exec::DrillbitEndpoint*>(
-      ::exec::DrillbitEndpoint::internal_default_instance());
-  ::exec::bit::control::_PlanFragment_default_instance_._instance.get_mutable()->credentials_ = const_cast< ::exec::shared::UserCredentials*>(
-      ::exec::shared::UserCredentials::internal_default_instance());
-  ::exec::bit::control::_PlanFragment_default_instance_._instance.get_mutable()->context_ = const_cast< ::exec::bit::control::QueryContextInformation*>(
-      ::exec::bit::control::QueryContextInformation::internal_default_instance());
-}
 class PlanFragment::_Internal {
  public:
   using HasBits = decltype(std::declval<PlanFragment>()._has_bits_);
@@ -1845,24 +1786,27 @@ void PlanFragment::clear_credentials() {
   if (credentials_ != nullptr) credentials_->Clear();
   _has_bits_[0] &= ~0x00000020u;
 }
-PlanFragment::PlanFragment()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+PlanFragment::PlanFragment(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  collector_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.control.PlanFragment)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.control.PlanFragment)
 }
 PlanFragment::PlanFragment(const PlanFragment& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       collector_(from.collector_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   fragment_json_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_fragment_json()) {
-    fragment_json_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.fragment_json_);
+    fragment_json_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_fragment_json(), 
+      GetArena());
   }
   options_json_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_options_json()) {
-    options_json_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.options_json_);
+    options_json_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_options_json(), 
+      GetArena());
   }
   if (from._internal_has_handle()) {
     handle_ = new ::exec::bit::FragmentHandle(*from.handle_);
@@ -1896,22 +1840,24 @@ PlanFragment::PlanFragment(const PlanFragment& from)
 }
 
 void PlanFragment::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_PlanFragment_BitControl_2eproto.base);
-  fragment_json_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  options_json_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  ::memset(&handle_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&leaf_fragment_) -
-      reinterpret_cast<char*>(&handle_)) + sizeof(leaf_fragment_));
-  mem_initial_ = PROTOBUF_LONGLONG(20000000);
-  mem_max_ = PROTOBUF_LONGLONG(2000000000);
+fragment_json_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+options_json_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&handle_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&leaf_fragment_) -
+    reinterpret_cast<char*>(&handle_)) + sizeof(leaf_fragment_));
+mem_initial_ = PROTOBUF_LONGLONG(20000000);
+mem_max_ = PROTOBUF_LONGLONG(2000000000);
 }
 
 PlanFragment::~PlanFragment() {
   // @@protoc_insertion_point(destructor:exec.bit.control.PlanFragment)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void PlanFragment::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   fragment_json_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   options_json_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete handle_;
@@ -1921,14 +1867,15 @@ void PlanFragment::SharedDtor() {
   if (this != internal_default_instance()) delete context_;
 }
 
+void PlanFragment::ArenaDtor(void* object) {
+  PlanFragment* _this = reinterpret_cast< PlanFragment* >(object);
+  (void)_this;
+}
+void PlanFragment::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void PlanFragment::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const PlanFragment& PlanFragment::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_PlanFragment_BitControl_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void PlanFragment::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.control.PlanFragment)
@@ -1940,10 +1887,10 @@ void PlanFragment::Clear() {
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x0000007fu) {
     if (cached_has_bits & 0x00000001u) {
-      fragment_json_.ClearNonDefaultToEmptyNoArena();
+      fragment_json_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      options_json_.ClearNonDefaultToEmptyNoArena();
+      options_json_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000004u) {
       GOOGLE_DCHECK(handle_ != nullptr);
@@ -1975,7 +1922,7 @@ void PlanFragment::Clear() {
     mem_max_ = PROTOBUF_LONGLONG(2000000000);
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* PlanFragment::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -1984,7 +1931,6 @@ const char* PlanFragment::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_I
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional .exec.bit.FragmentHandle handle = 1;
       case 1:
@@ -2040,7 +1986,7 @@ const char* PlanFragment::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_I
       case 9:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 72)) {
           _Internal::set_has_leaf_fragment(&has_bits);
-          leaf_fragment_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          leaf_fragment_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2062,7 +2008,7 @@ const char* PlanFragment::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_I
       case 12:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 96)) {
           _Internal::set_has_mem_initial(&has_bits);
-          mem_initial_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          mem_initial_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2070,7 +2016,7 @@ const char* PlanFragment::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_I
       case 13:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 104)) {
           _Internal::set_has_mem_max(&has_bits);
-          mem_max_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          mem_max_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2113,11 +2059,14 @@ const char* PlanFragment::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_I
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -2251,7 +2200,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.control.PlanFragment)
   return target;
@@ -2392,7 +2341,7 @@ void PlanFragment::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void PlanFragment::MergeFrom(const PlanFragment& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.control.PlanFragment)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -2400,12 +2349,10 @@ void PlanFragment::MergeFrom(const PlanFragment& from) {
   cached_has_bits = from._has_bits_[0];
   if (cached_has_bits & 0x000000ffu) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      fragment_json_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.fragment_json_);
+      _internal_set_fragment_json(from._internal_fragment_json());
     }
     if (cached_has_bits & 0x00000002u) {
-      _has_bits_[0] |= 0x00000002u;
-      options_json_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.options_json_);
+      _internal_set_options_json(from._internal_options_json());
     }
     if (cached_has_bits & 0x00000004u) {
       _internal_mutable_handle()->::exec::bit::FragmentHandle::MergeFrom(from._internal_handle());
@@ -2470,36 +2417,29 @@ bool PlanFragment::IsInitialized() const {
 
 void PlanFragment::InternalSwap(PlanFragment* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   collector_.InternalSwap(&other->collector_);
-  fragment_json_.Swap(&other->fragment_json_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  options_json_.Swap(&other->options_json_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(handle_, other->handle_);
-  swap(assignment_, other->assignment_);
-  swap(foreman_, other->foreman_);
-  swap(credentials_, other->credentials_);
-  swap(context_, other->context_);
-  swap(network_cost_, other->network_cost_);
-  swap(cpu_cost_, other->cpu_cost_);
-  swap(disk_cost_, other->disk_cost_);
-  swap(memory_cost_, other->memory_cost_);
-  swap(leaf_fragment_, other->leaf_fragment_);
+  fragment_json_.Swap(&other->fragment_json_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  options_json_.Swap(&other->options_json_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(PlanFragment, leaf_fragment_)
+      + sizeof(PlanFragment::leaf_fragment_)
+      - PROTOBUF_FIELD_OFFSET(PlanFragment, handle_)>(
+          reinterpret_cast<char*>(&handle_),
+          reinterpret_cast<char*>(&other->handle_));
   swap(mem_initial_, other->mem_initial_);
   swap(mem_max_, other->mem_max_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata PlanFragment::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitControl_2eproto_getter, &descriptor_table_BitControl_2eproto_once,
+      file_level_metadata_BitControl_2eproto[5]);
 }
-
 
 // ===================================================================
 
-void Collector::InitAsDefaultInstance() {
-}
 class Collector::_Internal {
  public:
   using HasBits = decltype(std::declval<Collector>()._has_bits_);
@@ -2517,17 +2457,18 @@ class Collector::_Internal {
   }
 };
 
-Collector::Collector()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+Collector::Collector(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena),
+  incoming_minor_fragment_(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.control.Collector)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.control.Collector)
 }
 Collector::Collector(const Collector& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       incoming_minor_fragment_(from.incoming_minor_fragment_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&opposite_major_fragment_id_, &from.opposite_major_fragment_id_,
     static_cast<size_t>(reinterpret_cast<char*>(&enable_dynamic_fc_) -
     reinterpret_cast<char*>(&opposite_major_fragment_id_)) + sizeof(enable_dynamic_fc_));
@@ -2535,27 +2476,31 @@ Collector::Collector(const Collector& from)
 }
 
 void Collector::SharedCtor() {
-  ::memset(&opposite_major_fragment_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&enable_dynamic_fc_) -
-      reinterpret_cast<char*>(&opposite_major_fragment_id_)) + sizeof(enable_dynamic_fc_));
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&opposite_major_fragment_id_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&enable_dynamic_fc_) -
+    reinterpret_cast<char*>(&opposite_major_fragment_id_)) + sizeof(enable_dynamic_fc_));
 }
 
 Collector::~Collector() {
   // @@protoc_insertion_point(destructor:exec.bit.control.Collector)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void Collector::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void Collector::ArenaDtor(void* object) {
+  Collector* _this = reinterpret_cast< Collector* >(object);
+  (void)_this;
+}
+void Collector::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void Collector::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const Collector& Collector::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Collector_BitControl_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void Collector::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.control.Collector)
@@ -2571,7 +2516,7 @@ void Collector::Clear() {
         reinterpret_cast<char*>(&opposite_major_fragment_id_)) + sizeof(enable_dynamic_fc_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* Collector::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -2580,13 +2525,12 @@ const char* Collector::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional int32 opposite_major_fragment_id = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_opposite_major_fragment_id(&has_bits);
-          opposite_major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          opposite_major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2596,7 +2540,7 @@ const char* Collector::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedInt32Parser(_internal_mutable_incoming_minor_fragment(), ptr, ctx);
           CHK_(ptr);
         } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16) {
-          _internal_add_incoming_minor_fragment(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+          _internal_add_incoming_minor_fragment(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2604,7 +2548,7 @@ const char* Collector::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_supports_out_of_order(&has_bits);
-          supports_out_of_order_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          supports_out_of_order_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2612,7 +2556,7 @@ const char* Collector::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_is_spooling(&has_bits);
-          is_spooling_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          is_spooling_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2620,17 +2564,20 @@ const char* Collector::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
           _Internal::set_has_enable_dynamic_fc(&has_bits);
-          enable_dynamic_fc_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          enable_dynamic_fc_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -2687,7 +2634,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.control.Collector)
   return target;
@@ -2768,7 +2715,7 @@ void Collector::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void Collector::MergeFrom(const Collector& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.control.Collector)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -2811,24 +2758,25 @@ bool Collector::IsInitialized() const {
 
 void Collector::InternalSwap(Collector* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   incoming_minor_fragment_.InternalSwap(&other->incoming_minor_fragment_);
-  swap(opposite_major_fragment_id_, other->opposite_major_fragment_id_);
-  swap(supports_out_of_order_, other->supports_out_of_order_);
-  swap(is_spooling_, other->is_spooling_);
-  swap(enable_dynamic_fc_, other->enable_dynamic_fc_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(Collector, enable_dynamic_fc_)
+      + sizeof(Collector::enable_dynamic_fc_)
+      - PROTOBUF_FIELD_OFFSET(Collector, opposite_major_fragment_id_)>(
+          reinterpret_cast<char*>(&opposite_major_fragment_id_),
+          reinterpret_cast<char*>(&other->opposite_major_fragment_id_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata Collector::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitControl_2eproto_getter, &descriptor_table_BitControl_2eproto_once,
+      file_level_metadata_BitControl_2eproto[6]);
 }
-
 
 // ===================================================================
 
-void QueryContextInformation::InitAsDefaultInstance() {
-}
 class QueryContextInformation::_Internal {
  public:
   using HasBits = decltype(std::declval<QueryContextInformation>()._has_bits_);
@@ -2846,23 +2794,25 @@ class QueryContextInformation::_Internal {
   }
 };
 
-QueryContextInformation::QueryContextInformation()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+QueryContextInformation::QueryContextInformation(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.control.QueryContextInformation)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.control.QueryContextInformation)
 }
 QueryContextInformation::QueryContextInformation(const QueryContextInformation& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   default_schema_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_default_schema_name()) {
-    default_schema_name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.default_schema_name_);
+    default_schema_name_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_default_schema_name(), 
+      GetArena());
   }
   session_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_session_id()) {
-    session_id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.session_id_);
+    session_id_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_session_id(), 
+      GetArena());
   }
   ::memcpy(&query_start_time_, &from.query_start_time_,
     static_cast<size_t>(reinterpret_cast<char*>(&time_zone_) -
@@ -2871,32 +2821,35 @@ QueryContextInformation::QueryContextInformation(const QueryContextInformation& 
 }
 
 void QueryContextInformation::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_QueryContextInformation_BitControl_2eproto.base);
-  default_schema_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  session_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  ::memset(&query_start_time_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&time_zone_) -
-      reinterpret_cast<char*>(&query_start_time_)) + sizeof(time_zone_));
+default_schema_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+session_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&query_start_time_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&time_zone_) -
+    reinterpret_cast<char*>(&query_start_time_)) + sizeof(time_zone_));
 }
 
 QueryContextInformation::~QueryContextInformation() {
   // @@protoc_insertion_point(destructor:exec.bit.control.QueryContextInformation)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void QueryContextInformation::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   default_schema_name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   session_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
+void QueryContextInformation::ArenaDtor(void* object) {
+  QueryContextInformation* _this = reinterpret_cast< QueryContextInformation* >(object);
+  (void)_this;
+}
+void QueryContextInformation::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void QueryContextInformation::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const QueryContextInformation& QueryContextInformation::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_QueryContextInformation_BitControl_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void QueryContextInformation::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.control.QueryContextInformation)
@@ -2907,10 +2860,10 @@ void QueryContextInformation::Clear() {
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      default_schema_name_.ClearNonDefaultToEmptyNoArena();
+      default_schema_name_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      session_id_.ClearNonDefaultToEmptyNoArena();
+      session_id_.ClearNonDefaultToEmpty();
     }
   }
   if (cached_has_bits & 0x0000000cu) {
@@ -2919,7 +2872,7 @@ void QueryContextInformation::Clear() {
         reinterpret_cast<char*>(&query_start_time_)) + sizeof(time_zone_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* QueryContextInformation::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -2928,13 +2881,12 @@ const char* QueryContextInformation::_InternalParse(const char* ptr, ::PROTOBUF_
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional int64 query_start_time = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_query_start_time(&has_bits);
-          query_start_time_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          query_start_time_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2942,7 +2894,7 @@ const char* QueryContextInformation::_InternalParse(const char* ptr, ::PROTOBUF_
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_time_zone(&has_bits);
-          time_zone_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          time_zone_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -2970,11 +2922,14 @@ const char* QueryContextInformation::_InternalParse(const char* ptr, ::PROTOBUF_
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -3030,7 +2985,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.control.QueryContextInformation)
   return target;
@@ -3102,19 +3057,17 @@ void QueryContextInformation::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& 
 void QueryContextInformation::MergeFrom(const QueryContextInformation& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.control.QueryContextInformation)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = from._has_bits_[0];
   if (cached_has_bits & 0x0000000fu) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      default_schema_name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.default_schema_name_);
+      _internal_set_default_schema_name(from._internal_default_schema_name());
     }
     if (cached_has_bits & 0x00000002u) {
-      _has_bits_[0] |= 0x00000002u;
-      session_id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.session_id_);
+      _internal_set_session_id(from._internal_session_id());
     }
     if (cached_has_bits & 0x00000004u) {
       query_start_time_ = from.query_start_time_;
@@ -3146,27 +3099,26 @@ bool QueryContextInformation::IsInitialized() const {
 
 void QueryContextInformation::InternalSwap(QueryContextInformation* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  default_schema_name_.Swap(&other->default_schema_name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  session_id_.Swap(&other->session_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(query_start_time_, other->query_start_time_);
-  swap(time_zone_, other->time_zone_);
+  default_schema_name_.Swap(&other->default_schema_name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  session_id_.Swap(&other->session_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(QueryContextInformation, time_zone_)
+      + sizeof(QueryContextInformation::time_zone_)
+      - PROTOBUF_FIELD_OFFSET(QueryContextInformation, query_start_time_)>(
+          reinterpret_cast<char*>(&query_start_time_),
+          reinterpret_cast<char*>(&other->query_start_time_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata QueryContextInformation::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitControl_2eproto_getter, &descriptor_table_BitControl_2eproto_once,
+      file_level_metadata_BitControl_2eproto[7]);
 }
-
 
 // ===================================================================
 
-void WorkQueueStatus::InitAsDefaultInstance() {
-  ::exec::bit::control::_WorkQueueStatus_default_instance_._instance.get_mutable()->endpoint_ = const_cast< ::exec::DrillbitEndpoint*>(
-      ::exec::DrillbitEndpoint::internal_default_instance());
-}
 class WorkQueueStatus::_Internal {
  public:
   using HasBits = decltype(std::declval<WorkQueueStatus>()._has_bits_);
@@ -3190,16 +3142,16 @@ void WorkQueueStatus::clear_endpoint() {
   if (endpoint_ != nullptr) endpoint_->Clear();
   _has_bits_[0] &= ~0x00000001u;
 }
-WorkQueueStatus::WorkQueueStatus()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+WorkQueueStatus::WorkQueueStatus(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.control.WorkQueueStatus)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.control.WorkQueueStatus)
 }
 WorkQueueStatus::WorkQueueStatus(const WorkQueueStatus& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_endpoint()) {
     endpoint_ = new ::exec::DrillbitEndpoint(*from.endpoint_);
   } else {
@@ -3212,29 +3164,32 @@ WorkQueueStatus::WorkQueueStatus(const WorkQueueStatus& from)
 }
 
 void WorkQueueStatus::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_WorkQueueStatus_BitControl_2eproto.base);
-  ::memset(&endpoint_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&queue_length_) -
-      reinterpret_cast<char*>(&endpoint_)) + sizeof(queue_length_));
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&endpoint_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&queue_length_) -
+    reinterpret_cast<char*>(&endpoint_)) + sizeof(queue_length_));
 }
 
 WorkQueueStatus::~WorkQueueStatus() {
   // @@protoc_insertion_point(destructor:exec.bit.control.WorkQueueStatus)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void WorkQueueStatus::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete endpoint_;
 }
 
+void WorkQueueStatus::ArenaDtor(void* object) {
+  WorkQueueStatus* _this = reinterpret_cast< WorkQueueStatus* >(object);
+  (void)_this;
+}
+void WorkQueueStatus::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void WorkQueueStatus::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const WorkQueueStatus& WorkQueueStatus::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_WorkQueueStatus_BitControl_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void WorkQueueStatus::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.control.WorkQueueStatus)
@@ -3253,7 +3208,7 @@ void WorkQueueStatus::Clear() {
         reinterpret_cast<char*>(&report_time_)) + sizeof(queue_length_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* WorkQueueStatus::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -3262,7 +3217,6 @@ const char* WorkQueueStatus::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional .exec.DrillbitEndpoint endpoint = 1;
       case 1:
@@ -3275,7 +3229,7 @@ const char* WorkQueueStatus::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_queue_length(&has_bits);
-          queue_length_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          queue_length_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3283,17 +3237,20 @@ const char* WorkQueueStatus::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_report_time(&has_bits);
-          report_time_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          report_time_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -3337,7 +3294,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.control.WorkQueueStatus)
   return target;
@@ -3402,7 +3359,7 @@ void WorkQueueStatus::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void WorkQueueStatus::MergeFrom(const WorkQueueStatus& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.control.WorkQueueStatus)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -3441,26 +3398,24 @@ bool WorkQueueStatus::IsInitialized() const {
 
 void WorkQueueStatus::InternalSwap(WorkQueueStatus* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(endpoint_, other->endpoint_);
-  swap(report_time_, other->report_time_);
-  swap(queue_length_, other->queue_length_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(WorkQueueStatus, queue_length_)
+      + sizeof(WorkQueueStatus::queue_length_)
+      - PROTOBUF_FIELD_OFFSET(WorkQueueStatus, endpoint_)>(
+          reinterpret_cast<char*>(&endpoint_),
+          reinterpret_cast<char*>(&other->endpoint_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata WorkQueueStatus::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitControl_2eproto_getter, &descriptor_table_BitControl_2eproto_once,
+      file_level_metadata_BitControl_2eproto[8]);
 }
-
 
 // ===================================================================
 
-void FinishedReceiver::InitAsDefaultInstance() {
-  ::exec::bit::control::_FinishedReceiver_default_instance_._instance.get_mutable()->receiver_ = const_cast< ::exec::bit::FragmentHandle*>(
-      ::exec::bit::FragmentHandle::internal_default_instance());
-  ::exec::bit::control::_FinishedReceiver_default_instance_._instance.get_mutable()->sender_ = const_cast< ::exec::bit::FragmentHandle*>(
-      ::exec::bit::FragmentHandle::internal_default_instance());
-}
 class FinishedReceiver::_Internal {
  public:
   using HasBits = decltype(std::declval<FinishedReceiver>()._has_bits_);
@@ -3490,16 +3445,16 @@ void FinishedReceiver::clear_sender() {
   if (sender_ != nullptr) sender_->Clear();
   _has_bits_[0] &= ~0x00000002u;
 }
-FinishedReceiver::FinishedReceiver()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+FinishedReceiver::FinishedReceiver(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.bit.control.FinishedReceiver)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.bit.control.FinishedReceiver)
 }
 FinishedReceiver::FinishedReceiver(const FinishedReceiver& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_receiver()) {
     receiver_ = new ::exec::bit::FragmentHandle(*from.receiver_);
   } else {
@@ -3514,30 +3469,33 @@ FinishedReceiver::FinishedReceiver(const FinishedReceiver& from)
 }
 
 void FinishedReceiver::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FinishedReceiver_BitControl_2eproto.base);
-  ::memset(&receiver_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&sender_) -
-      reinterpret_cast<char*>(&receiver_)) + sizeof(sender_));
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&receiver_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&sender_) -
+    reinterpret_cast<char*>(&receiver_)) + sizeof(sender_));
 }
 
 FinishedReceiver::~FinishedReceiver() {
   // @@protoc_insertion_point(destructor:exec.bit.control.FinishedReceiver)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void FinishedReceiver::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete receiver_;
   if (this != internal_default_instance()) delete sender_;
 }
 
+void FinishedReceiver::ArenaDtor(void* object) {
+  FinishedReceiver* _this = reinterpret_cast< FinishedReceiver* >(object);
+  (void)_this;
+}
+void FinishedReceiver::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void FinishedReceiver::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const FinishedReceiver& FinishedReceiver::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FinishedReceiver_BitControl_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FinishedReceiver::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.control.FinishedReceiver)
@@ -3557,7 +3515,7 @@ void FinishedReceiver::Clear() {
     }
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* FinishedReceiver::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -3566,7 +3524,6 @@ const char* FinishedReceiver::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPA
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional .exec.bit.FragmentHandle receiver = 1;
       case 1:
@@ -3584,11 +3541,14 @@ const char* FinishedReceiver::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPA
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -3628,7 +3588,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.control.FinishedReceiver)
   return target;
@@ -3686,7 +3646,7 @@ void FinishedReceiver::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void FinishedReceiver::MergeFrom(const FinishedReceiver& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.control.FinishedReceiver)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -3721,16 +3681,21 @@ bool FinishedReceiver::IsInitialized() const {
 
 void FinishedReceiver::InternalSwap(FinishedReceiver* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(receiver_, other->receiver_);
-  swap(sender_, other->sender_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FinishedReceiver, sender_)
+      + sizeof(FinishedReceiver::sender_)
+      - PROTOBUF_FIELD_OFFSET(FinishedReceiver, receiver_)>(
+          reinterpret_cast<char*>(&receiver_),
+          reinterpret_cast<char*>(&other->receiver_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata FinishedReceiver::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_BitControl_2eproto_getter, &descriptor_table_BitControl_2eproto_once,
+      file_level_metadata_BitControl_2eproto[9]);
 }
-
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace control
@@ -3738,34 +3703,34 @@ void FinishedReceiver::InternalSwap(FinishedReceiver* other) {
 }  // namespace exec
 PROTOBUF_NAMESPACE_OPEN
 template<> PROTOBUF_NOINLINE ::exec::bit::control::BitControlHandshake* Arena::CreateMaybeMessage< ::exec::bit::control::BitControlHandshake >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::control::BitControlHandshake >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::control::BitControlHandshake >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::control::BitStatus* Arena::CreateMaybeMessage< ::exec::bit::control::BitStatus >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::control::BitStatus >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::control::BitStatus >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::control::FragmentStatus* Arena::CreateMaybeMessage< ::exec::bit::control::FragmentStatus >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::control::FragmentStatus >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::control::FragmentStatus >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::control::InitializeFragments* Arena::CreateMaybeMessage< ::exec::bit::control::InitializeFragments >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::control::InitializeFragments >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::control::InitializeFragments >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::control::CustomMessage* Arena::CreateMaybeMessage< ::exec::bit::control::CustomMessage >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::control::CustomMessage >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::control::CustomMessage >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::control::PlanFragment* Arena::CreateMaybeMessage< ::exec::bit::control::PlanFragment >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::control::PlanFragment >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::control::PlanFragment >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::control::Collector* Arena::CreateMaybeMessage< ::exec::bit::control::Collector >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::control::Collector >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::control::Collector >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::control::QueryContextInformation* Arena::CreateMaybeMessage< ::exec::bit::control::QueryContextInformation >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::control::QueryContextInformation >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::control::QueryContextInformation >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::control::WorkQueueStatus* Arena::CreateMaybeMessage< ::exec::bit::control::WorkQueueStatus >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::control::WorkQueueStatus >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::control::WorkQueueStatus >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::bit::control::FinishedReceiver* Arena::CreateMaybeMessage< ::exec::bit::control::FinishedReceiver >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::bit::control::FinishedReceiver >(arena);
+  return Arena::CreateMessageInternal< ::exec::bit::control::FinishedReceiver >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

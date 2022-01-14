@@ -142,7 +142,7 @@ public final class CoordinationProtos {
   /**
    * Protobuf type {@code exec.DrillbitEndpoint}
    */
-  public  static final class DrillbitEndpoint extends
+  public static final class DrillbitEndpoint extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.DrillbitEndpoint)
       DrillbitEndpointOrBuilder {
@@ -398,6 +398,7 @@ public final class CoordinationProtos {
      * <code>optional string address = 1;</code>
      * @return Whether the address field is set.
      */
+    @java.lang.Override
     public boolean hasAddress() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -405,6 +406,7 @@ public final class CoordinationProtos {
      * <code>optional string address = 1;</code>
      * @return The address.
      */
+    @java.lang.Override
     public java.lang.String getAddress() {
       java.lang.Object ref = address_;
       if (ref instanceof java.lang.String) {
@@ -423,6 +425,7 @@ public final class CoordinationProtos {
      * <code>optional string address = 1;</code>
      * @return The bytes for address.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getAddressBytes() {
       java.lang.Object ref = address_;
@@ -443,6 +446,7 @@ public final class CoordinationProtos {
      * <code>optional int32 user_port = 2;</code>
      * @return Whether the userPort field is set.
      */
+    @java.lang.Override
     public boolean hasUserPort() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -450,6 +454,7 @@ public final class CoordinationProtos {
      * <code>optional int32 user_port = 2;</code>
      * @return The userPort.
      */
+    @java.lang.Override
     public int getUserPort() {
       return userPort_;
     }
@@ -460,6 +465,7 @@ public final class CoordinationProtos {
      * <code>optional int32 control_port = 3;</code>
      * @return Whether the controlPort field is set.
      */
+    @java.lang.Override
     public boolean hasControlPort() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -467,6 +473,7 @@ public final class CoordinationProtos {
      * <code>optional int32 control_port = 3;</code>
      * @return The controlPort.
      */
+    @java.lang.Override
     public int getControlPort() {
       return controlPort_;
     }
@@ -477,6 +484,7 @@ public final class CoordinationProtos {
      * <code>optional int32 data_port = 4;</code>
      * @return Whether the dataPort field is set.
      */
+    @java.lang.Override
     public boolean hasDataPort() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -484,6 +492,7 @@ public final class CoordinationProtos {
      * <code>optional int32 data_port = 4;</code>
      * @return The dataPort.
      */
+    @java.lang.Override
     public int getDataPort() {
       return dataPort_;
     }
@@ -494,6 +503,7 @@ public final class CoordinationProtos {
      * <code>optional .exec.Roles roles = 5;</code>
      * @return Whether the roles field is set.
      */
+    @java.lang.Override
     public boolean hasRoles() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -501,12 +511,14 @@ public final class CoordinationProtos {
      * <code>optional .exec.Roles roles = 5;</code>
      * @return The roles.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.Roles getRoles() {
       return roles_ == null ? org.apache.drill.exec.proto.CoordinationProtos.Roles.getDefaultInstance() : roles_;
     }
     /**
      * <code>optional .exec.Roles roles = 5;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.RolesOrBuilder getRolesOrBuilder() {
       return roles_ == null ? org.apache.drill.exec.proto.CoordinationProtos.Roles.getDefaultInstance() : roles_;
     }
@@ -517,6 +529,7 @@ public final class CoordinationProtos {
      * <code>optional string version = 6;</code>
      * @return Whether the version field is set.
      */
+    @java.lang.Override
     public boolean hasVersion() {
       return ((bitField0_ & 0x00000020) != 0);
     }
@@ -524,6 +537,7 @@ public final class CoordinationProtos {
      * <code>optional string version = 6;</code>
      * @return The version.
      */
+    @java.lang.Override
     public java.lang.String getVersion() {
       java.lang.Object ref = version_;
       if (ref instanceof java.lang.String) {
@@ -542,6 +556,7 @@ public final class CoordinationProtos {
      * <code>optional string version = 6;</code>
      * @return The bytes for version.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getVersionBytes() {
       java.lang.Object ref = version_;
@@ -562,14 +577,14 @@ public final class CoordinationProtos {
      * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
      * @return Whether the state field is set.
      */
-    public boolean hasState() {
+    @java.lang.Override public boolean hasState() {
       return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
      * @return The state.
      */
-    public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State getState() {
+    @java.lang.Override public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State getState() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State result = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State.valueOf(state_);
       return result == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State.STARTUP : result;
@@ -581,6 +596,7 @@ public final class CoordinationProtos {
      * <code>optional int32 http_port = 8;</code>
      * @return Whether the httpPort field is set.
      */
+    @java.lang.Override
     public boolean hasHttpPort() {
       return ((bitField0_ & 0x00000080) != 0);
     }
@@ -588,6 +604,7 @@ public final class CoordinationProtos {
      * <code>optional int32 http_port = 8;</code>
      * @return The httpPort.
      */
+    @java.lang.Override
     public int getHttpPort() {
       return httpPort_;
     }
@@ -1180,6 +1197,7 @@ public final class CoordinationProtos {
        * <code>optional int32 user_port = 2;</code>
        * @return Whether the userPort field is set.
        */
+      @java.lang.Override
       public boolean hasUserPort() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -1187,6 +1205,7 @@ public final class CoordinationProtos {
        * <code>optional int32 user_port = 2;</code>
        * @return The userPort.
        */
+      @java.lang.Override
       public int getUserPort() {
         return userPort_;
       }
@@ -1217,6 +1236,7 @@ public final class CoordinationProtos {
        * <code>optional int32 control_port = 3;</code>
        * @return Whether the controlPort field is set.
        */
+      @java.lang.Override
       public boolean hasControlPort() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -1224,6 +1244,7 @@ public final class CoordinationProtos {
        * <code>optional int32 control_port = 3;</code>
        * @return The controlPort.
        */
+      @java.lang.Override
       public int getControlPort() {
         return controlPort_;
       }
@@ -1254,6 +1275,7 @@ public final class CoordinationProtos {
        * <code>optional int32 data_port = 4;</code>
        * @return Whether the dataPort field is set.
        */
+      @java.lang.Override
       public boolean hasDataPort() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -1261,6 +1283,7 @@ public final class CoordinationProtos {
        * <code>optional int32 data_port = 4;</code>
        * @return The dataPort.
        */
+      @java.lang.Override
       public int getDataPort() {
         return dataPort_;
       }
@@ -1495,13 +1518,14 @@ public final class CoordinationProtos {
        * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
        * @return Whether the state field is set.
        */
-      public boolean hasState() {
+      @java.lang.Override public boolean hasState() {
         return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <code>optional .exec.DrillbitEndpoint.State state = 7;</code>
        * @return The state.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State getState() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State result = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State.valueOf(state_);
@@ -1537,6 +1561,7 @@ public final class CoordinationProtos {
        * <code>optional int32 http_port = 8;</code>
        * @return Whether the httpPort field is set.
        */
+      @java.lang.Override
       public boolean hasHttpPort() {
         return ((bitField0_ & 0x00000080) != 0);
       }
@@ -1544,6 +1569,7 @@ public final class CoordinationProtos {
        * <code>optional int32 http_port = 8;</code>
        * @return The httpPort.
        */
+      @java.lang.Override
       public int getHttpPort() {
         return httpPort_;
       }
@@ -1671,7 +1697,7 @@ public final class CoordinationProtos {
   /**
    * Protobuf type {@code exec.DrillServiceInstance}
    */
-  public  static final class DrillServiceInstance extends
+  public static final class DrillServiceInstance extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.DrillServiceInstance)
       DrillServiceInstanceOrBuilder {
@@ -1778,6 +1804,7 @@ public final class CoordinationProtos {
      * <code>optional string id = 1;</code>
      * @return Whether the id field is set.
      */
+    @java.lang.Override
     public boolean hasId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -1785,6 +1812,7 @@ public final class CoordinationProtos {
      * <code>optional string id = 1;</code>
      * @return The id.
      */
+    @java.lang.Override
     public java.lang.String getId() {
       java.lang.Object ref = id_;
       if (ref instanceof java.lang.String) {
@@ -1803,6 +1831,7 @@ public final class CoordinationProtos {
      * <code>optional string id = 1;</code>
      * @return The bytes for id.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getIdBytes() {
       java.lang.Object ref = id_;
@@ -1823,6 +1852,7 @@ public final class CoordinationProtos {
      * <code>optional int64 registrationTimeUTC = 2;</code>
      * @return Whether the registrationTimeUTC field is set.
      */
+    @java.lang.Override
     public boolean hasRegistrationTimeUTC() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -1830,6 +1860,7 @@ public final class CoordinationProtos {
      * <code>optional int64 registrationTimeUTC = 2;</code>
      * @return The registrationTimeUTC.
      */
+    @java.lang.Override
     public long getRegistrationTimeUTC() {
       return registrationTimeUTC_;
     }
@@ -1840,6 +1871,7 @@ public final class CoordinationProtos {
      * <code>optional .exec.DrillbitEndpoint endpoint = 3;</code>
      * @return Whether the endpoint field is set.
      */
+    @java.lang.Override
     public boolean hasEndpoint() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -1847,12 +1879,14 @@ public final class CoordinationProtos {
      * <code>optional .exec.DrillbitEndpoint endpoint = 3;</code>
      * @return The endpoint.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getEndpoint() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
     }
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 3;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getEndpointOrBuilder() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
     }
@@ -2321,6 +2355,7 @@ public final class CoordinationProtos {
        * <code>optional int64 registrationTimeUTC = 2;</code>
        * @return Whether the registrationTimeUTC field is set.
        */
+      @java.lang.Override
       public boolean hasRegistrationTimeUTC() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -2328,6 +2363,7 @@ public final class CoordinationProtos {
        * <code>optional int64 registrationTimeUTC = 2;</code>
        * @return The registrationTimeUTC.
        */
+      @java.lang.Override
       public long getRegistrationTimeUTC() {
         return registrationTimeUTC_;
       }
@@ -2587,7 +2623,7 @@ public final class CoordinationProtos {
   /**
    * Protobuf type {@code exec.Roles}
    */
-  public  static final class Roles extends
+  public static final class Roles extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.Roles)
       RolesOrBuilder {
@@ -2699,6 +2735,7 @@ public final class CoordinationProtos {
      * <code>optional bool sql_query = 1 [default = true];</code>
      * @return Whether the sqlQuery field is set.
      */
+    @java.lang.Override
     public boolean hasSqlQuery() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -2706,6 +2743,7 @@ public final class CoordinationProtos {
      * <code>optional bool sql_query = 1 [default = true];</code>
      * @return The sqlQuery.
      */
+    @java.lang.Override
     public boolean getSqlQuery() {
       return sqlQuery_;
     }
@@ -2716,6 +2754,7 @@ public final class CoordinationProtos {
      * <code>optional bool logical_plan = 2 [default = true];</code>
      * @return Whether the logicalPlan field is set.
      */
+    @java.lang.Override
     public boolean hasLogicalPlan() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -2723,6 +2762,7 @@ public final class CoordinationProtos {
      * <code>optional bool logical_plan = 2 [default = true];</code>
      * @return The logicalPlan.
      */
+    @java.lang.Override
     public boolean getLogicalPlan() {
       return logicalPlan_;
     }
@@ -2733,6 +2773,7 @@ public final class CoordinationProtos {
      * <code>optional bool physical_plan = 3 [default = true];</code>
      * @return Whether the physicalPlan field is set.
      */
+    @java.lang.Override
     public boolean hasPhysicalPlan() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -2740,6 +2781,7 @@ public final class CoordinationProtos {
      * <code>optional bool physical_plan = 3 [default = true];</code>
      * @return The physicalPlan.
      */
+    @java.lang.Override
     public boolean getPhysicalPlan() {
       return physicalPlan_;
     }
@@ -2750,6 +2792,7 @@ public final class CoordinationProtos {
      * <code>optional bool java_executor = 4 [default = true];</code>
      * @return Whether the javaExecutor field is set.
      */
+    @java.lang.Override
     public boolean hasJavaExecutor() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -2757,6 +2800,7 @@ public final class CoordinationProtos {
      * <code>optional bool java_executor = 4 [default = true];</code>
      * @return The javaExecutor.
      */
+    @java.lang.Override
     public boolean getJavaExecutor() {
       return javaExecutor_;
     }
@@ -2767,6 +2811,7 @@ public final class CoordinationProtos {
      * <code>optional bool distributed_cache = 5 [default = true];</code>
      * @return Whether the distributedCache field is set.
      */
+    @java.lang.Override
     public boolean hasDistributedCache() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -2774,6 +2819,7 @@ public final class CoordinationProtos {
      * <code>optional bool distributed_cache = 5 [default = true];</code>
      * @return The distributedCache.
      */
+    @java.lang.Override
     public boolean getDistributedCache() {
       return distributedCache_;
     }
@@ -3202,6 +3248,7 @@ public final class CoordinationProtos {
        * <code>optional bool sql_query = 1 [default = true];</code>
        * @return Whether the sqlQuery field is set.
        */
+      @java.lang.Override
       public boolean hasSqlQuery() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -3209,6 +3256,7 @@ public final class CoordinationProtos {
        * <code>optional bool sql_query = 1 [default = true];</code>
        * @return The sqlQuery.
        */
+      @java.lang.Override
       public boolean getSqlQuery() {
         return sqlQuery_;
       }
@@ -3239,6 +3287,7 @@ public final class CoordinationProtos {
        * <code>optional bool logical_plan = 2 [default = true];</code>
        * @return Whether the logicalPlan field is set.
        */
+      @java.lang.Override
       public boolean hasLogicalPlan() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -3246,6 +3295,7 @@ public final class CoordinationProtos {
        * <code>optional bool logical_plan = 2 [default = true];</code>
        * @return The logicalPlan.
        */
+      @java.lang.Override
       public boolean getLogicalPlan() {
         return logicalPlan_;
       }
@@ -3276,6 +3326,7 @@ public final class CoordinationProtos {
        * <code>optional bool physical_plan = 3 [default = true];</code>
        * @return Whether the physicalPlan field is set.
        */
+      @java.lang.Override
       public boolean hasPhysicalPlan() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -3283,6 +3334,7 @@ public final class CoordinationProtos {
        * <code>optional bool physical_plan = 3 [default = true];</code>
        * @return The physicalPlan.
        */
+      @java.lang.Override
       public boolean getPhysicalPlan() {
         return physicalPlan_;
       }
@@ -3313,6 +3365,7 @@ public final class CoordinationProtos {
        * <code>optional bool java_executor = 4 [default = true];</code>
        * @return Whether the javaExecutor field is set.
        */
+      @java.lang.Override
       public boolean hasJavaExecutor() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -3320,6 +3373,7 @@ public final class CoordinationProtos {
        * <code>optional bool java_executor = 4 [default = true];</code>
        * @return The javaExecutor.
        */
+      @java.lang.Override
       public boolean getJavaExecutor() {
         return javaExecutor_;
       }
@@ -3350,6 +3404,7 @@ public final class CoordinationProtos {
        * <code>optional bool distributed_cache = 5 [default = true];</code>
        * @return Whether the distributedCache field is set.
        */
+      @java.lang.Override
       public boolean hasDistributedCache() {
         return ((bitField0_ & 0x00000010) != 0);
       }
@@ -3357,6 +3412,7 @@ public final class CoordinationProtos {
        * <code>optional bool distributed_cache = 5 [default = true];</code>
        * @return The distributedCache.
        */
+      @java.lang.Override
       public boolean getDistributedCache() {
         return distributedCache_;
       }

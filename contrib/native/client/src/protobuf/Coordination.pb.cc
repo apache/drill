@@ -14,66 +14,60 @@
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
-extern PROTOBUF_INTERNAL_EXPORT_Coordination_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_DrillbitEndpoint_Coordination_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_Coordination_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Roles_Coordination_2eproto;
+
+PROTOBUF_PRAGMA_INIT_SEG
 namespace exec {
-class DrillbitEndpointDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<DrillbitEndpoint> _instance;
-} _DrillbitEndpoint_default_instance_;
-class DrillServiceInstanceDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<DrillServiceInstance> _instance;
-} _DrillServiceInstance_default_instance_;
-class RolesDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Roles> _instance;
-} _Roles_default_instance_;
+constexpr DrillbitEndpoint::DrillbitEndpoint(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : address_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
+  , version_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
+  , roles_(nullptr)
+  , user_port_(0)
+  , control_port_(0)
+  , data_port_(0)
+  , state_(0)
+
+  , http_port_(0){}
+struct DrillbitEndpointDefaultTypeInternal {
+  constexpr DrillbitEndpointDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~DrillbitEndpointDefaultTypeInternal() {}
+  union {
+    DrillbitEndpoint _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT DrillbitEndpointDefaultTypeInternal _DrillbitEndpoint_default_instance_;
+constexpr DrillServiceInstance::DrillServiceInstance(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : id_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
+  , endpoint_(nullptr)
+  , registrationtimeutc_(PROTOBUF_LONGLONG(0)){}
+struct DrillServiceInstanceDefaultTypeInternal {
+  constexpr DrillServiceInstanceDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~DrillServiceInstanceDefaultTypeInternal() {}
+  union {
+    DrillServiceInstance _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT DrillServiceInstanceDefaultTypeInternal _DrillServiceInstance_default_instance_;
+constexpr Roles::Roles(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : sql_query_(true)
+  , logical_plan_(true)
+  , physical_plan_(true)
+  , java_executor_(true)
+  , distributed_cache_(true){}
+struct RolesDefaultTypeInternal {
+  constexpr RolesDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~RolesDefaultTypeInternal() {}
+  union {
+    Roles _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT RolesDefaultTypeInternal _Roles_default_instance_;
 }  // namespace exec
-static void InitDefaultsscc_info_DrillServiceInstance_Coordination_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::_DrillServiceInstance_default_instance_;
-    new (ptr) ::exec::DrillServiceInstance();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::DrillServiceInstance::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_DrillServiceInstance_Coordination_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_DrillServiceInstance_Coordination_2eproto}, {
-      &scc_info_DrillbitEndpoint_Coordination_2eproto.base,}};
-
-static void InitDefaultsscc_info_DrillbitEndpoint_Coordination_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::_DrillbitEndpoint_default_instance_;
-    new (ptr) ::exec::DrillbitEndpoint();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::DrillbitEndpoint::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_DrillbitEndpoint_Coordination_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_DrillbitEndpoint_Coordination_2eproto}, {
-      &scc_info_Roles_Coordination_2eproto.base,}};
-
-static void InitDefaultsscc_info_Roles_Coordination_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::_Roles_default_instance_;
-    new (ptr) ::exec::Roles();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::Roles::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Roles_Coordination_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_Roles_Coordination_2eproto}, {}};
-
 static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_Coordination_2eproto[3];
 static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_Coordination_2eproto[1];
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_Coordination_2eproto = nullptr;
@@ -157,24 +151,19 @@ const char descriptor_table_protodef_Coordination_2eproto[] PROTOBUF_SECTION_VAR
   "org.apache.drill.exec.protoB\022Coordinatio"
   "nProtosH\001"
   ;
-static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_Coordination_2eproto_deps[1] = {
-};
-static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_Coordination_2eproto_sccs[3] = {
-  &scc_info_DrillServiceInstance_Coordination_2eproto.base,
-  &scc_info_DrillbitEndpoint_Coordination_2eproto.base,
-  &scc_info_Roles_Coordination_2eproto.base,
-};
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_Coordination_2eproto_once;
-static bool descriptor_table_Coordination_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_Coordination_2eproto = {
-  &descriptor_table_Coordination_2eproto_initialized, descriptor_table_protodef_Coordination_2eproto, "Coordination.proto", 609,
-  &descriptor_table_Coordination_2eproto_once, descriptor_table_Coordination_2eproto_sccs, descriptor_table_Coordination_2eproto_deps, 3, 0,
+  false, false, 609, descriptor_table_protodef_Coordination_2eproto, "Coordination.proto", 
+  &descriptor_table_Coordination_2eproto_once, nullptr, 0, 3,
   schemas, file_default_instances, TableStruct_Coordination_2eproto::offsets,
-  file_level_metadata_Coordination_2eproto, 3, file_level_enum_descriptors_Coordination_2eproto, file_level_service_descriptors_Coordination_2eproto,
+  file_level_metadata_Coordination_2eproto, file_level_enum_descriptors_Coordination_2eproto, file_level_service_descriptors_Coordination_2eproto,
 };
+PROTOBUF_ATTRIBUTE_WEAK const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable* descriptor_table_Coordination_2eproto_getter() {
+  return &descriptor_table_Coordination_2eproto;
+}
 
 // Force running AddDescriptors() at dynamic initialization time.
-static bool dynamic_init_dummy_Coordination_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_Coordination_2eproto), true);
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY static ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptorsRunner dynamic_init_dummy_Coordination_2eproto(&descriptor_table_Coordination_2eproto);
 namespace exec {
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* DrillbitEndpoint_State_descriptor() {
   ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_Coordination_2eproto);
@@ -204,10 +193,6 @@ constexpr int DrillbitEndpoint::State_ARRAYSIZE;
 
 // ===================================================================
 
-void DrillbitEndpoint::InitAsDefaultInstance() {
-  ::exec::_DrillbitEndpoint_default_instance_._instance.get_mutable()->roles_ = const_cast< ::exec::Roles*>(
-      ::exec::Roles::internal_default_instance());
-}
 class DrillbitEndpoint::_Internal {
  public:
   using HasBits = decltype(std::declval<DrillbitEndpoint>()._has_bits_);
@@ -242,23 +227,25 @@ const ::exec::Roles&
 DrillbitEndpoint::_Internal::roles(const DrillbitEndpoint* msg) {
   return *msg->roles_;
 }
-DrillbitEndpoint::DrillbitEndpoint()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+DrillbitEndpoint::DrillbitEndpoint(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.DrillbitEndpoint)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.DrillbitEndpoint)
 }
 DrillbitEndpoint::DrillbitEndpoint(const DrillbitEndpoint& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   address_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_address()) {
-    address_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.address_);
+    address_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_address(), 
+      GetArena());
   }
   version_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_version()) {
-    version_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.version_);
+    version_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_version(), 
+      GetArena());
   }
   if (from._internal_has_roles()) {
     roles_ = new ::exec::Roles(*from.roles_);
@@ -272,33 +259,36 @@ DrillbitEndpoint::DrillbitEndpoint(const DrillbitEndpoint& from)
 }
 
 void DrillbitEndpoint::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_DrillbitEndpoint_Coordination_2eproto.base);
-  address_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  version_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  ::memset(&roles_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&http_port_) -
-      reinterpret_cast<char*>(&roles_)) + sizeof(http_port_));
+address_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+version_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&roles_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&http_port_) -
+    reinterpret_cast<char*>(&roles_)) + sizeof(http_port_));
 }
 
 DrillbitEndpoint::~DrillbitEndpoint() {
   // @@protoc_insertion_point(destructor:exec.DrillbitEndpoint)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void DrillbitEndpoint::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   address_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   version_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete roles_;
 }
 
+void DrillbitEndpoint::ArenaDtor(void* object) {
+  DrillbitEndpoint* _this = reinterpret_cast< DrillbitEndpoint* >(object);
+  (void)_this;
+}
+void DrillbitEndpoint::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void DrillbitEndpoint::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const DrillbitEndpoint& DrillbitEndpoint::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_DrillbitEndpoint_Coordination_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void DrillbitEndpoint::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.DrillbitEndpoint)
@@ -309,10 +299,10 @@ void DrillbitEndpoint::Clear() {
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      address_.ClearNonDefaultToEmptyNoArena();
+      address_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      version_.ClearNonDefaultToEmptyNoArena();
+      version_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000004u) {
       GOOGLE_DCHECK(roles_ != nullptr);
@@ -325,7 +315,7 @@ void DrillbitEndpoint::Clear() {
         reinterpret_cast<char*>(&user_port_)) + sizeof(http_port_));
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* DrillbitEndpoint::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -334,7 +324,6 @@ const char* DrillbitEndpoint::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPA
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional string address = 1;
       case 1:
@@ -351,7 +340,7 @@ const char* DrillbitEndpoint::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPA
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_user_port(&has_bits);
-          user_port_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          user_port_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -359,7 +348,7 @@ const char* DrillbitEndpoint::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPA
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_control_port(&has_bits);
-          control_port_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          control_port_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -367,7 +356,7 @@ const char* DrillbitEndpoint::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPA
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_data_port(&has_bits);
-          data_port_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          data_port_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -392,7 +381,7 @@ const char* DrillbitEndpoint::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPA
       // optional .exec.DrillbitEndpoint.State state = 7;
       case 7:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 56)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::exec::DrillbitEndpoint_State_IsValid(val))) {
             _internal_set_state(static_cast<::exec::DrillbitEndpoint_State>(val));
@@ -405,17 +394,20 @@ const char* DrillbitEndpoint::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPA
       case 8:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 64)) {
           _Internal::set_has_http_port(&has_bits);
-          http_port_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          http_port_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -498,7 +490,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.DrillbitEndpoint)
   return target;
@@ -597,19 +589,17 @@ void DrillbitEndpoint::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void DrillbitEndpoint::MergeFrom(const DrillbitEndpoint& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.DrillbitEndpoint)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = from._has_bits_[0];
   if (cached_has_bits & 0x000000ffu) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      address_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.address_);
+      _internal_set_address(from._internal_address());
     }
     if (cached_has_bits & 0x00000002u) {
-      _has_bits_[0] |= 0x00000002u;
-      version_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.version_);
+      _internal_set_version(from._internal_version());
     }
     if (cached_has_bits & 0x00000004u) {
       _internal_mutable_roles()->::exec::Roles::MergeFrom(from._internal_roles());
@@ -653,31 +643,26 @@ bool DrillbitEndpoint::IsInitialized() const {
 
 void DrillbitEndpoint::InternalSwap(DrillbitEndpoint* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  address_.Swap(&other->address_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  version_.Swap(&other->version_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(roles_, other->roles_);
-  swap(user_port_, other->user_port_);
-  swap(control_port_, other->control_port_);
-  swap(data_port_, other->data_port_);
-  swap(state_, other->state_);
-  swap(http_port_, other->http_port_);
+  address_.Swap(&other->address_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  version_.Swap(&other->version_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(DrillbitEndpoint, http_port_)
+      + sizeof(DrillbitEndpoint::http_port_)
+      - PROTOBUF_FIELD_OFFSET(DrillbitEndpoint, roles_)>(
+          reinterpret_cast<char*>(&roles_),
+          reinterpret_cast<char*>(&other->roles_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata DrillbitEndpoint::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_Coordination_2eproto_getter, &descriptor_table_Coordination_2eproto_once,
+      file_level_metadata_Coordination_2eproto[0]);
 }
-
 
 // ===================================================================
 
-void DrillServiceInstance::InitAsDefaultInstance() {
-  ::exec::_DrillServiceInstance_default_instance_._instance.get_mutable()->endpoint_ = const_cast< ::exec::DrillbitEndpoint*>(
-      ::exec::DrillbitEndpoint::internal_default_instance());
-}
 class DrillServiceInstance::_Internal {
  public:
   using HasBits = decltype(std::declval<DrillServiceInstance>()._has_bits_);
@@ -697,19 +682,20 @@ const ::exec::DrillbitEndpoint&
 DrillServiceInstance::_Internal::endpoint(const DrillServiceInstance* msg) {
   return *msg->endpoint_;
 }
-DrillServiceInstance::DrillServiceInstance()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+DrillServiceInstance::DrillServiceInstance(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.DrillServiceInstance)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.DrillServiceInstance)
 }
 DrillServiceInstance::DrillServiceInstance(const DrillServiceInstance& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (from._internal_has_id()) {
-    id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.id_);
+    id_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_id(), 
+      GetArena());
   }
   if (from._internal_has_endpoint()) {
     endpoint_ = new ::exec::DrillbitEndpoint(*from.endpoint_);
@@ -721,31 +707,34 @@ DrillServiceInstance::DrillServiceInstance(const DrillServiceInstance& from)
 }
 
 void DrillServiceInstance::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_DrillServiceInstance_Coordination_2eproto.base);
-  id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  ::memset(&endpoint_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&registrationtimeutc_) -
-      reinterpret_cast<char*>(&endpoint_)) + sizeof(registrationtimeutc_));
+id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
+    reinterpret_cast<char*>(&endpoint_) - reinterpret_cast<char*>(this)),
+    0, static_cast<size_t>(reinterpret_cast<char*>(&registrationtimeutc_) -
+    reinterpret_cast<char*>(&endpoint_)) + sizeof(registrationtimeutc_));
 }
 
 DrillServiceInstance::~DrillServiceInstance() {
   // @@protoc_insertion_point(destructor:exec.DrillServiceInstance)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void DrillServiceInstance::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
   id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete endpoint_;
 }
 
+void DrillServiceInstance::ArenaDtor(void* object) {
+  DrillServiceInstance* _this = reinterpret_cast< DrillServiceInstance* >(object);
+  (void)_this;
+}
+void DrillServiceInstance::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void DrillServiceInstance::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const DrillServiceInstance& DrillServiceInstance::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_DrillServiceInstance_Coordination_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void DrillServiceInstance::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.DrillServiceInstance)
@@ -756,7 +745,7 @@ void DrillServiceInstance::Clear() {
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      id_.ClearNonDefaultToEmptyNoArena();
+      id_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
       GOOGLE_DCHECK(endpoint_ != nullptr);
@@ -765,7 +754,7 @@ void DrillServiceInstance::Clear() {
   }
   registrationtimeutc_ = PROTOBUF_LONGLONG(0);
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* DrillServiceInstance::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -774,7 +763,6 @@ const char* DrillServiceInstance::_InternalParse(const char* ptr, ::PROTOBUF_NAM
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional string id = 1;
       case 1:
@@ -791,7 +779,7 @@ const char* DrillServiceInstance::_InternalParse(const char* ptr, ::PROTOBUF_NAM
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_registrationtimeutc(&has_bits);
-          registrationtimeutc_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          registrationtimeutc_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -804,11 +792,14 @@ const char* DrillServiceInstance::_InternalParse(const char* ptr, ::PROTOBUF_NAM
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -856,7 +847,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.DrillServiceInstance)
   return target;
@@ -921,15 +912,14 @@ void DrillServiceInstance::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& fro
 void DrillServiceInstance::MergeFrom(const DrillServiceInstance& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.DrillServiceInstance)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = from._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.id_);
+      _internal_set_id(from._internal_id());
     }
     if (cached_has_bits & 0x00000002u) {
       _internal_mutable_endpoint()->::exec::DrillbitEndpoint::MergeFrom(from._internal_endpoint());
@@ -961,23 +951,25 @@ bool DrillServiceInstance::IsInitialized() const {
 
 void DrillServiceInstance::InternalSwap(DrillServiceInstance* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  id_.Swap(&other->id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(endpoint_, other->endpoint_);
-  swap(registrationtimeutc_, other->registrationtimeutc_);
+  id_.Swap(&other->id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(DrillServiceInstance, registrationtimeutc_)
+      + sizeof(DrillServiceInstance::registrationtimeutc_)
+      - PROTOBUF_FIELD_OFFSET(DrillServiceInstance, endpoint_)>(
+          reinterpret_cast<char*>(&endpoint_),
+          reinterpret_cast<char*>(&other->endpoint_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata DrillServiceInstance::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_Coordination_2eproto_getter, &descriptor_table_Coordination_2eproto_once,
+      file_level_metadata_Coordination_2eproto[1]);
 }
-
 
 // ===================================================================
 
-void Roles::InitAsDefaultInstance() {
-}
 class Roles::_Internal {
  public:
   using HasBits = decltype(std::declval<Roles>()._has_bits_);
@@ -998,16 +990,16 @@ class Roles::_Internal {
   }
 };
 
-Roles::Roles()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+Roles::Roles(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
-  // @@protoc_insertion_point(constructor:exec.Roles)
+  RegisterArenaDtor(arena);
+  // @@protoc_insertion_point(arena_constructor:exec.Roles)
 }
 Roles::Roles(const Roles& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&sql_query_, &from.sql_query_,
     static_cast<size_t>(reinterpret_cast<char*>(&distributed_cache_) -
     reinterpret_cast<char*>(&sql_query_)) + sizeof(distributed_cache_));
@@ -1015,29 +1007,32 @@ Roles::Roles(const Roles& from)
 }
 
 void Roles::SharedCtor() {
-  sql_query_ = true;
-  logical_plan_ = true;
-  physical_plan_ = true;
-  java_executor_ = true;
-  distributed_cache_ = true;
+sql_query_ = true;
+logical_plan_ = true;
+physical_plan_ = true;
+java_executor_ = true;
+distributed_cache_ = true;
 }
 
 Roles::~Roles() {
   // @@protoc_insertion_point(destructor:exec.Roles)
   SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 void Roles::SharedDtor() {
+  GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
+void Roles::ArenaDtor(void* object) {
+  Roles* _this = reinterpret_cast< Roles* >(object);
+  (void)_this;
+}
+void Roles::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
 void Roles::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const Roles& Roles::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Roles_Coordination_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void Roles::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.Roles)
@@ -1054,7 +1049,7 @@ void Roles::Clear() {
     distributed_cache_ = true;
   }
   _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* Roles::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
@@ -1063,13 +1058,12 @@ const char* Roles::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inte
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
     switch (tag >> 3) {
       // optional bool sql_query = 1 [default = true];
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
           _Internal::set_has_sql_query(&has_bits);
-          sql_query_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          sql_query_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1077,7 +1071,7 @@ const char* Roles::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inte
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_logical_plan(&has_bits);
-          logical_plan_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          logical_plan_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1085,7 +1079,7 @@ const char* Roles::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inte
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           _Internal::set_has_physical_plan(&has_bits);
-          physical_plan_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          physical_plan_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1093,7 +1087,7 @@ const char* Roles::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inte
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           _Internal::set_has_java_executor(&has_bits);
-          java_executor_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          java_executor_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1101,17 +1095,20 @@ const char* Roles::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inte
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
           _Internal::set_has_distributed_cache(&has_bits);
-          distributed_cache_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          distributed_cache_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
       default: {
       handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
           ctx->SetLastTag(tag);
           goto success;
         }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
         CHK_(ptr != nullptr);
         continue;
       }
@@ -1165,7 +1162,7 @@ failure:
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.Roles)
   return target;
@@ -1234,7 +1231,7 @@ void Roles::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 void Roles::MergeFrom(const Roles& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.Roles)
   GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -1279,7 +1276,7 @@ bool Roles::IsInitialized() const {
 
 void Roles::InternalSwap(Roles* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
+  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   swap(sql_query_, other->sql_query_);
   swap(logical_plan_, other->logical_plan_);
@@ -1289,21 +1286,22 @@ void Roles::InternalSwap(Roles* other) {
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata Roles::GetMetadata() const {
-  return GetMetadataStatic();
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_Coordination_2eproto_getter, &descriptor_table_Coordination_2eproto_once,
+      file_level_metadata_Coordination_2eproto[2]);
 }
-
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace exec
 PROTOBUF_NAMESPACE_OPEN
 template<> PROTOBUF_NOINLINE ::exec::DrillbitEndpoint* Arena::CreateMaybeMessage< ::exec::DrillbitEndpoint >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::DrillbitEndpoint >(arena);
+  return Arena::CreateMessageInternal< ::exec::DrillbitEndpoint >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::DrillServiceInstance* Arena::CreateMaybeMessage< ::exec::DrillServiceInstance >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::DrillServiceInstance >(arena);
+  return Arena::CreateMessageInternal< ::exec::DrillServiceInstance >(arena);
 }
 template<> PROTOBUF_NOINLINE ::exec::Roles* Arena::CreateMaybeMessage< ::exec::Roles >(Arena* arena) {
-  return Arena::CreateInternal< ::exec::Roles >(arena);
+  return Arena::CreateMessageInternal< ::exec::Roles >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

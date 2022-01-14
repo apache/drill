@@ -400,7 +400,7 @@ public final class BitControl {
   /**
    * Protobuf type {@code exec.bit.control.BitControlHandshake}
    */
-  public  static final class BitControlHandshake extends
+  public static final class BitControlHandshake extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.control.BitControlHandshake)
       BitControlHandshakeOrBuilder {
@@ -526,6 +526,7 @@ public final class BitControl {
      * <code>optional int32 rpc_version = 1;</code>
      * @return Whether the rpcVersion field is set.
      */
+    @java.lang.Override
     public boolean hasRpcVersion() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -533,6 +534,7 @@ public final class BitControl {
      * <code>optional int32 rpc_version = 1;</code>
      * @return The rpcVersion.
      */
+    @java.lang.Override
     public int getRpcVersion() {
       return rpcVersion_;
     }
@@ -543,14 +545,14 @@ public final class BitControl {
      * <code>optional .exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];</code>
      * @return Whether the channel field is set.
      */
-    public boolean hasChannel() {
+    @java.lang.Override public boolean hasChannel() {
       return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional .exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];</code>
      * @return The channel.
      */
-    public org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel() {
+    @java.lang.Override public org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel() {
       @SuppressWarnings("deprecation")
       org.apache.drill.exec.proto.UserBitShared.RpcChannel result = org.apache.drill.exec.proto.UserBitShared.RpcChannel.valueOf(channel_);
       return result == null ? org.apache.drill.exec.proto.UserBitShared.RpcChannel.BIT_CONTROL : result;
@@ -562,6 +564,7 @@ public final class BitControl {
      * <code>optional .exec.DrillbitEndpoint endpoint = 3;</code>
      * @return Whether the endpoint field is set.
      */
+    @java.lang.Override
     public boolean hasEndpoint() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -569,12 +572,14 @@ public final class BitControl {
      * <code>optional .exec.DrillbitEndpoint endpoint = 3;</code>
      * @return The endpoint.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getEndpoint() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
     }
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 3;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getEndpointOrBuilder() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
     }
@@ -1025,6 +1030,7 @@ public final class BitControl {
        * <code>optional int32 rpc_version = 1;</code>
        * @return Whether the rpcVersion field is set.
        */
+      @java.lang.Override
       public boolean hasRpcVersion() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -1032,6 +1038,7 @@ public final class BitControl {
        * <code>optional int32 rpc_version = 1;</code>
        * @return The rpcVersion.
        */
+      @java.lang.Override
       public int getRpcVersion() {
         return rpcVersion_;
       }
@@ -1062,13 +1069,14 @@ public final class BitControl {
        * <code>optional .exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];</code>
        * @return Whether the channel field is set.
        */
-      public boolean hasChannel() {
+      @java.lang.Override public boolean hasChannel() {
         return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];</code>
        * @return The channel.
        */
+      @java.lang.Override
       public org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel() {
         @SuppressWarnings("deprecation")
         org.apache.drill.exec.proto.UserBitShared.RpcChannel result = org.apache.drill.exec.proto.UserBitShared.RpcChannel.valueOf(channel_);
@@ -1411,7 +1419,7 @@ public final class BitControl {
   /**
    * Protobuf type {@code exec.bit.control.BitStatus}
    */
-  public  static final class BitStatus extends
+  public static final class BitStatus extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.control.BitStatus)
       BitStatusOrBuilder {
@@ -1504,12 +1512,14 @@ public final class BitControl {
     /**
      * <code>repeated .exec.bit.control.FragmentStatus fragment_status = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.BitControl.FragmentStatus> getFragmentStatusList() {
       return fragmentStatus_;
     }
     /**
      * <code>repeated .exec.bit.control.FragmentStatus fragment_status = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.BitControl.FragmentStatusOrBuilder> 
         getFragmentStatusOrBuilderList() {
       return fragmentStatus_;
@@ -1517,18 +1527,21 @@ public final class BitControl {
     /**
      * <code>repeated .exec.bit.control.FragmentStatus fragment_status = 1;</code>
      */
+    @java.lang.Override
     public int getFragmentStatusCount() {
       return fragmentStatus_.size();
     }
     /**
      * <code>repeated .exec.bit.control.FragmentStatus fragment_status = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.BitControl.FragmentStatus getFragmentStatus(int index) {
       return fragmentStatus_.get(index);
     }
     /**
      * <code>repeated .exec.bit.control.FragmentStatus fragment_status = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.BitControl.FragmentStatusOrBuilder getFragmentStatusOrBuilder(
         int index) {
       return fragmentStatus_.get(index);
@@ -2205,7 +2218,7 @@ public final class BitControl {
   /**
    * Protobuf type {@code exec.bit.control.FragmentStatus}
    */
-  public  static final class FragmentStatus extends
+  public static final class FragmentStatus extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.control.FragmentStatus)
       FragmentStatusOrBuilder {
@@ -2313,6 +2326,7 @@ public final class BitControl {
      * <code>optional .exec.shared.MinorFragmentProfile profile = 1;</code>
      * @return Whether the profile field is set.
      */
+    @java.lang.Override
     public boolean hasProfile() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -2320,12 +2334,14 @@ public final class BitControl {
      * <code>optional .exec.shared.MinorFragmentProfile profile = 1;</code>
      * @return The profile.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile getProfile() {
       return profile_ == null ? org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.getDefaultInstance() : profile_;
     }
     /**
      * <code>optional .exec.shared.MinorFragmentProfile profile = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder getProfileOrBuilder() {
       return profile_ == null ? org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.getDefaultInstance() : profile_;
     }
@@ -2336,6 +2352,7 @@ public final class BitControl {
      * <code>optional .exec.bit.FragmentHandle handle = 2;</code>
      * @return Whether the handle field is set.
      */
+    @java.lang.Override
     public boolean hasHandle() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -2343,12 +2360,14 @@ public final class BitControl {
      * <code>optional .exec.bit.FragmentHandle handle = 2;</code>
      * @return The handle.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.ExecProtos.FragmentHandle getHandle() {
       return handle_ == null ? org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance() : handle_;
     }
     /**
      * <code>optional .exec.bit.FragmentHandle handle = 2;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder getHandleOrBuilder() {
       return handle_ == null ? org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance() : handle_;
     }
@@ -3033,7 +3052,7 @@ public final class BitControl {
   /**
    * Protobuf type {@code exec.bit.control.InitializeFragments}
    */
-  public  static final class InitializeFragments extends
+  public static final class InitializeFragments extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.control.InitializeFragments)
       InitializeFragmentsOrBuilder {
@@ -3126,12 +3145,14 @@ public final class BitControl {
     /**
      * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.BitControl.PlanFragment> getFragmentList() {
       return fragment_;
     }
     /**
      * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder> 
         getFragmentOrBuilderList() {
       return fragment_;
@@ -3139,18 +3160,21 @@ public final class BitControl {
     /**
      * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
      */
+    @java.lang.Override
     public int getFragmentCount() {
       return fragment_.size();
     }
     /**
      * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.BitControl.PlanFragment getFragment(int index) {
       return fragment_.get(index);
     }
     /**
      * <code>repeated .exec.bit.control.PlanFragment fragment = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.BitControl.PlanFragmentOrBuilder getFragmentOrBuilder(
         int index) {
       return fragment_.get(index);
@@ -3819,7 +3843,7 @@ public final class BitControl {
   /**
    * Protobuf type {@code exec.bit.control.CustomMessage}
    */
-  public  static final class CustomMessage extends
+  public static final class CustomMessage extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.control.CustomMessage)
       CustomMessageOrBuilder {
@@ -3912,6 +3936,7 @@ public final class BitControl {
      * <code>optional int32 type = 1;</code>
      * @return Whether the type field is set.
      */
+    @java.lang.Override
     public boolean hasType() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -3919,6 +3944,7 @@ public final class BitControl {
      * <code>optional int32 type = 1;</code>
      * @return The type.
      */
+    @java.lang.Override
     public int getType() {
       return type_;
     }
@@ -3929,6 +3955,7 @@ public final class BitControl {
      * <code>optional bytes message = 2;</code>
      * @return Whether the message field is set.
      */
+    @java.lang.Override
     public boolean hasMessage() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -3936,6 +3963,7 @@ public final class BitControl {
      * <code>optional bytes message = 2;</code>
      * @return The message.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getMessage() {
       return message_;
     }
@@ -4284,6 +4312,7 @@ public final class BitControl {
        * <code>optional int32 type = 1;</code>
        * @return Whether the type field is set.
        */
+      @java.lang.Override
       public boolean hasType() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -4291,6 +4320,7 @@ public final class BitControl {
        * <code>optional int32 type = 1;</code>
        * @return The type.
        */
+      @java.lang.Override
       public int getType() {
         return type_;
       }
@@ -4321,6 +4351,7 @@ public final class BitControl {
        * <code>optional bytes message = 2;</code>
        * @return Whether the message field is set.
        */
+      @java.lang.Override
       public boolean hasMessage() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -4328,6 +4359,7 @@ public final class BitControl {
        * <code>optional bytes message = 2;</code>
        * @return The message.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getMessage() {
         return message_;
       }
@@ -4641,7 +4673,7 @@ public final class BitControl {
   /**
    * Protobuf type {@code exec.bit.control.PlanFragment}
    */
-  public  static final class PlanFragment extends
+  public static final class PlanFragment extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.control.PlanFragment)
       PlanFragmentOrBuilder {
@@ -4852,6 +4884,7 @@ public final class BitControl {
      * <code>optional .exec.bit.FragmentHandle handle = 1;</code>
      * @return Whether the handle field is set.
      */
+    @java.lang.Override
     public boolean hasHandle() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -4859,12 +4892,14 @@ public final class BitControl {
      * <code>optional .exec.bit.FragmentHandle handle = 1;</code>
      * @return The handle.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.ExecProtos.FragmentHandle getHandle() {
       return handle_ == null ? org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance() : handle_;
     }
     /**
      * <code>optional .exec.bit.FragmentHandle handle = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder getHandleOrBuilder() {
       return handle_ == null ? org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance() : handle_;
     }
@@ -4875,6 +4910,7 @@ public final class BitControl {
      * <code>optional float network_cost = 4;</code>
      * @return Whether the networkCost field is set.
      */
+    @java.lang.Override
     public boolean hasNetworkCost() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -4882,6 +4918,7 @@ public final class BitControl {
      * <code>optional float network_cost = 4;</code>
      * @return The networkCost.
      */
+    @java.lang.Override
     public float getNetworkCost() {
       return networkCost_;
     }
@@ -4892,6 +4929,7 @@ public final class BitControl {
      * <code>optional float cpu_cost = 5;</code>
      * @return Whether the cpuCost field is set.
      */
+    @java.lang.Override
     public boolean hasCpuCost() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -4899,6 +4937,7 @@ public final class BitControl {
      * <code>optional float cpu_cost = 5;</code>
      * @return The cpuCost.
      */
+    @java.lang.Override
     public float getCpuCost() {
       return cpuCost_;
     }
@@ -4909,6 +4948,7 @@ public final class BitControl {
      * <code>optional float disk_cost = 6;</code>
      * @return Whether the diskCost field is set.
      */
+    @java.lang.Override
     public boolean hasDiskCost() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -4916,6 +4956,7 @@ public final class BitControl {
      * <code>optional float disk_cost = 6;</code>
      * @return The diskCost.
      */
+    @java.lang.Override
     public float getDiskCost() {
       return diskCost_;
     }
@@ -4926,6 +4967,7 @@ public final class BitControl {
      * <code>optional float memory_cost = 7;</code>
      * @return Whether the memoryCost field is set.
      */
+    @java.lang.Override
     public boolean hasMemoryCost() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -4933,6 +4975,7 @@ public final class BitControl {
      * <code>optional float memory_cost = 7;</code>
      * @return The memoryCost.
      */
+    @java.lang.Override
     public float getMemoryCost() {
       return memoryCost_;
     }
@@ -4943,6 +4986,7 @@ public final class BitControl {
      * <code>optional string fragment_json = 8;</code>
      * @return Whether the fragmentJson field is set.
      */
+    @java.lang.Override
     public boolean hasFragmentJson() {
       return ((bitField0_ & 0x00000020) != 0);
     }
@@ -4950,6 +4994,7 @@ public final class BitControl {
      * <code>optional string fragment_json = 8;</code>
      * @return The fragmentJson.
      */
+    @java.lang.Override
     public java.lang.String getFragmentJson() {
       java.lang.Object ref = fragmentJson_;
       if (ref instanceof java.lang.String) {
@@ -4968,6 +5013,7 @@ public final class BitControl {
      * <code>optional string fragment_json = 8;</code>
      * @return The bytes for fragmentJson.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getFragmentJsonBytes() {
       java.lang.Object ref = fragmentJson_;
@@ -4988,6 +5034,7 @@ public final class BitControl {
      * <code>optional bool leaf_fragment = 9;</code>
      * @return Whether the leafFragment field is set.
      */
+    @java.lang.Override
     public boolean hasLeafFragment() {
       return ((bitField0_ & 0x00000040) != 0);
     }
@@ -4995,6 +5042,7 @@ public final class BitControl {
      * <code>optional bool leaf_fragment = 9;</code>
      * @return The leafFragment.
      */
+    @java.lang.Override
     public boolean getLeafFragment() {
       return leafFragment_;
     }
@@ -5005,6 +5053,7 @@ public final class BitControl {
      * <code>optional .exec.DrillbitEndpoint assignment = 10;</code>
      * @return Whether the assignment field is set.
      */
+    @java.lang.Override
     public boolean hasAssignment() {
       return ((bitField0_ & 0x00000080) != 0);
     }
@@ -5012,12 +5061,14 @@ public final class BitControl {
      * <code>optional .exec.DrillbitEndpoint assignment = 10;</code>
      * @return The assignment.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getAssignment() {
       return assignment_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : assignment_;
     }
     /**
      * <code>optional .exec.DrillbitEndpoint assignment = 10;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getAssignmentOrBuilder() {
       return assignment_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : assignment_;
     }
@@ -5028,6 +5079,7 @@ public final class BitControl {
      * <code>optional .exec.DrillbitEndpoint foreman = 11;</code>
      * @return Whether the foreman field is set.
      */
+    @java.lang.Override
     public boolean hasForeman() {
       return ((bitField0_ & 0x00000100) != 0);
     }
@@ -5035,12 +5087,14 @@ public final class BitControl {
      * <code>optional .exec.DrillbitEndpoint foreman = 11;</code>
      * @return The foreman.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getForeman() {
       return foreman_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : foreman_;
     }
     /**
      * <code>optional .exec.DrillbitEndpoint foreman = 11;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getForemanOrBuilder() {
       return foreman_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : foreman_;
     }
@@ -5055,6 +5109,7 @@ public final class BitControl {
      * <code>optional int64 mem_initial = 12 [default = 20000000];</code>
      * @return Whether the memInitial field is set.
      */
+    @java.lang.Override
     public boolean hasMemInitial() {
       return ((bitField0_ & 0x00000200) != 0);
     }
@@ -5066,6 +5121,7 @@ public final class BitControl {
      * <code>optional int64 mem_initial = 12 [default = 20000000];</code>
      * @return The memInitial.
      */
+    @java.lang.Override
     public long getMemInitial() {
       return memInitial_;
     }
@@ -5080,6 +5136,7 @@ public final class BitControl {
      * <code>optional int64 mem_max = 13 [default = 2000000000];</code>
      * @return Whether the memMax field is set.
      */
+    @java.lang.Override
     public boolean hasMemMax() {
       return ((bitField0_ & 0x00000400) != 0);
     }
@@ -5091,6 +5148,7 @@ public final class BitControl {
      * <code>optional int64 mem_max = 13 [default = 2000000000];</code>
      * @return The memMax.
      */
+    @java.lang.Override
     public long getMemMax() {
       return memMax_;
     }
@@ -5101,6 +5159,7 @@ public final class BitControl {
      * <code>optional .exec.shared.UserCredentials credentials = 14;</code>
      * @return Whether the credentials field is set.
      */
+    @java.lang.Override
     public boolean hasCredentials() {
       return ((bitField0_ & 0x00000800) != 0);
     }
@@ -5108,12 +5167,14 @@ public final class BitControl {
      * <code>optional .exec.shared.UserCredentials credentials = 14;</code>
      * @return The credentials.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.UserCredentials getCredentials() {
       return credentials_ == null ? org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance() : credentials_;
     }
     /**
      * <code>optional .exec.shared.UserCredentials credentials = 14;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder getCredentialsOrBuilder() {
       return credentials_ == null ? org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance() : credentials_;
     }
@@ -5124,6 +5185,7 @@ public final class BitControl {
      * <code>optional string options_json = 15;</code>
      * @return Whether the optionsJson field is set.
      */
+    @java.lang.Override
     public boolean hasOptionsJson() {
       return ((bitField0_ & 0x00001000) != 0);
     }
@@ -5131,6 +5193,7 @@ public final class BitControl {
      * <code>optional string options_json = 15;</code>
      * @return The optionsJson.
      */
+    @java.lang.Override
     public java.lang.String getOptionsJson() {
       java.lang.Object ref = optionsJson_;
       if (ref instanceof java.lang.String) {
@@ -5149,6 +5212,7 @@ public final class BitControl {
      * <code>optional string options_json = 15;</code>
      * @return The bytes for optionsJson.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getOptionsJsonBytes() {
       java.lang.Object ref = optionsJson_;
@@ -5169,6 +5233,7 @@ public final class BitControl {
      * <code>optional .exec.bit.control.QueryContextInformation context = 16;</code>
      * @return Whether the context field is set.
      */
+    @java.lang.Override
     public boolean hasContext() {
       return ((bitField0_ & 0x00002000) != 0);
     }
@@ -5176,12 +5241,14 @@ public final class BitControl {
      * <code>optional .exec.bit.control.QueryContextInformation context = 16;</code>
      * @return The context.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.BitControl.QueryContextInformation getContext() {
       return context_ == null ? org.apache.drill.exec.proto.BitControl.QueryContextInformation.getDefaultInstance() : context_;
     }
     /**
      * <code>optional .exec.bit.control.QueryContextInformation context = 16;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.BitControl.QueryContextInformationOrBuilder getContextOrBuilder() {
       return context_ == null ? org.apache.drill.exec.proto.BitControl.QueryContextInformation.getDefaultInstance() : context_;
     }
@@ -5191,12 +5258,14 @@ public final class BitControl {
     /**
      * <code>repeated .exec.bit.control.Collector collector = 17;</code>
      */
+    @java.lang.Override
     public java.util.List<org.apache.drill.exec.proto.BitControl.Collector> getCollectorList() {
       return collector_;
     }
     /**
      * <code>repeated .exec.bit.control.Collector collector = 17;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.apache.drill.exec.proto.BitControl.CollectorOrBuilder> 
         getCollectorOrBuilderList() {
       return collector_;
@@ -5204,18 +5273,21 @@ public final class BitControl {
     /**
      * <code>repeated .exec.bit.control.Collector collector = 17;</code>
      */
+    @java.lang.Override
     public int getCollectorCount() {
       return collector_.size();
     }
     /**
      * <code>repeated .exec.bit.control.Collector collector = 17;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.BitControl.Collector getCollector(int index) {
       return collector_.get(index);
     }
     /**
      * <code>repeated .exec.bit.control.Collector collector = 17;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.BitControl.CollectorOrBuilder getCollectorOrBuilder(
         int index) {
       return collector_.get(index);
@@ -6098,6 +6170,7 @@ public final class BitControl {
        * <code>optional float network_cost = 4;</code>
        * @return Whether the networkCost field is set.
        */
+      @java.lang.Override
       public boolean hasNetworkCost() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -6105,6 +6178,7 @@ public final class BitControl {
        * <code>optional float network_cost = 4;</code>
        * @return The networkCost.
        */
+      @java.lang.Override
       public float getNetworkCost() {
         return networkCost_;
       }
@@ -6135,6 +6209,7 @@ public final class BitControl {
        * <code>optional float cpu_cost = 5;</code>
        * @return Whether the cpuCost field is set.
        */
+      @java.lang.Override
       public boolean hasCpuCost() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -6142,6 +6217,7 @@ public final class BitControl {
        * <code>optional float cpu_cost = 5;</code>
        * @return The cpuCost.
        */
+      @java.lang.Override
       public float getCpuCost() {
         return cpuCost_;
       }
@@ -6172,6 +6248,7 @@ public final class BitControl {
        * <code>optional float disk_cost = 6;</code>
        * @return Whether the diskCost field is set.
        */
+      @java.lang.Override
       public boolean hasDiskCost() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -6179,6 +6256,7 @@ public final class BitControl {
        * <code>optional float disk_cost = 6;</code>
        * @return The diskCost.
        */
+      @java.lang.Override
       public float getDiskCost() {
         return diskCost_;
       }
@@ -6209,6 +6287,7 @@ public final class BitControl {
        * <code>optional float memory_cost = 7;</code>
        * @return Whether the memoryCost field is set.
        */
+      @java.lang.Override
       public boolean hasMemoryCost() {
         return ((bitField0_ & 0x00000010) != 0);
       }
@@ -6216,6 +6295,7 @@ public final class BitControl {
        * <code>optional float memory_cost = 7;</code>
        * @return The memoryCost.
        */
+      @java.lang.Override
       public float getMemoryCost() {
         return memoryCost_;
       }
@@ -6330,6 +6410,7 @@ public final class BitControl {
        * <code>optional bool leaf_fragment = 9;</code>
        * @return Whether the leafFragment field is set.
        */
+      @java.lang.Override
       public boolean hasLeafFragment() {
         return ((bitField0_ & 0x00000040) != 0);
       }
@@ -6337,6 +6418,7 @@ public final class BitControl {
        * <code>optional bool leaf_fragment = 9;</code>
        * @return The leafFragment.
        */
+      @java.lang.Override
       public boolean getLeafFragment() {
         return leafFragment_;
       }
@@ -6611,6 +6693,7 @@ public final class BitControl {
        * <code>optional int64 mem_initial = 12 [default = 20000000];</code>
        * @return Whether the memInitial field is set.
        */
+      @java.lang.Override
       public boolean hasMemInitial() {
         return ((bitField0_ & 0x00000200) != 0);
       }
@@ -6622,6 +6705,7 @@ public final class BitControl {
        * <code>optional int64 mem_initial = 12 [default = 20000000];</code>
        * @return The memInitial.
        */
+      @java.lang.Override
       public long getMemInitial() {
         return memInitial_;
       }
@@ -6664,6 +6748,7 @@ public final class BitControl {
        * <code>optional int64 mem_max = 13 [default = 2000000000];</code>
        * @return Whether the memMax field is set.
        */
+      @java.lang.Override
       public boolean hasMemMax() {
         return ((bitField0_ & 0x00000400) != 0);
       }
@@ -6675,6 +6760,7 @@ public final class BitControl {
        * <code>optional int64 mem_max = 13 [default = 2000000000];</code>
        * @return The memMax.
        */
+      @java.lang.Override
       public long getMemMax() {
         return memMax_;
       }
@@ -7392,7 +7478,7 @@ public final class BitControl {
   /**
    * Protobuf type {@code exec.bit.control.Collector}
    */
-  public  static final class Collector extends
+  public static final class Collector extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.control.Collector)
       CollectorOrBuilder {
@@ -7519,6 +7605,7 @@ public final class BitControl {
      * <code>optional int32 opposite_major_fragment_id = 1;</code>
      * @return Whether the oppositeMajorFragmentId field is set.
      */
+    @java.lang.Override
     public boolean hasOppositeMajorFragmentId() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -7526,6 +7613,7 @@ public final class BitControl {
      * <code>optional int32 opposite_major_fragment_id = 1;</code>
      * @return The oppositeMajorFragmentId.
      */
+    @java.lang.Override
     public int getOppositeMajorFragmentId() {
       return oppositeMajorFragmentId_;
     }
@@ -7536,6 +7624,7 @@ public final class BitControl {
      * <code>repeated int32 incoming_minor_fragment = 2 [packed = true];</code>
      * @return A list containing the incomingMinorFragment.
      */
+    @java.lang.Override
     public java.util.List<java.lang.Integer>
         getIncomingMinorFragmentList() {
       return incomingMinorFragment_;
@@ -7563,6 +7652,7 @@ public final class BitControl {
      * <code>optional bool supports_out_of_order = 3;</code>
      * @return Whether the supportsOutOfOrder field is set.
      */
+    @java.lang.Override
     public boolean hasSupportsOutOfOrder() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -7570,6 +7660,7 @@ public final class BitControl {
      * <code>optional bool supports_out_of_order = 3;</code>
      * @return The supportsOutOfOrder.
      */
+    @java.lang.Override
     public boolean getSupportsOutOfOrder() {
       return supportsOutOfOrder_;
     }
@@ -7580,6 +7671,7 @@ public final class BitControl {
      * <code>optional bool is_spooling = 4;</code>
      * @return Whether the isSpooling field is set.
      */
+    @java.lang.Override
     public boolean hasIsSpooling() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -7587,6 +7679,7 @@ public final class BitControl {
      * <code>optional bool is_spooling = 4;</code>
      * @return The isSpooling.
      */
+    @java.lang.Override
     public boolean getIsSpooling() {
       return isSpooling_;
     }
@@ -7597,6 +7690,7 @@ public final class BitControl {
      * <code>optional bool enable_dynamic_fc = 5;</code>
      * @return Whether the enableDynamicFc field is set.
      */
+    @java.lang.Override
     public boolean hasEnableDynamicFc() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -7604,6 +7698,7 @@ public final class BitControl {
      * <code>optional bool enable_dynamic_fc = 5;</code>
      * @return The enableDynamicFc.
      */
+    @java.lang.Override
     public boolean getEnableDynamicFc() {
       return enableDynamicFc_;
     }
@@ -8050,6 +8145,7 @@ public final class BitControl {
        * <code>optional int32 opposite_major_fragment_id = 1;</code>
        * @return Whether the oppositeMajorFragmentId field is set.
        */
+      @java.lang.Override
       public boolean hasOppositeMajorFragmentId() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -8057,6 +8153,7 @@ public final class BitControl {
        * <code>optional int32 opposite_major_fragment_id = 1;</code>
        * @return The oppositeMajorFragmentId.
        */
+      @java.lang.Override
       public int getOppositeMajorFragmentId() {
         return oppositeMajorFragmentId_;
       }
@@ -8166,6 +8263,7 @@ public final class BitControl {
        * <code>optional bool supports_out_of_order = 3;</code>
        * @return Whether the supportsOutOfOrder field is set.
        */
+      @java.lang.Override
       public boolean hasSupportsOutOfOrder() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -8173,6 +8271,7 @@ public final class BitControl {
        * <code>optional bool supports_out_of_order = 3;</code>
        * @return The supportsOutOfOrder.
        */
+      @java.lang.Override
       public boolean getSupportsOutOfOrder() {
         return supportsOutOfOrder_;
       }
@@ -8203,6 +8302,7 @@ public final class BitControl {
        * <code>optional bool is_spooling = 4;</code>
        * @return Whether the isSpooling field is set.
        */
+      @java.lang.Override
       public boolean hasIsSpooling() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -8210,6 +8310,7 @@ public final class BitControl {
        * <code>optional bool is_spooling = 4;</code>
        * @return The isSpooling.
        */
+      @java.lang.Override
       public boolean getIsSpooling() {
         return isSpooling_;
       }
@@ -8240,6 +8341,7 @@ public final class BitControl {
        * <code>optional bool enable_dynamic_fc = 5;</code>
        * @return Whether the enableDynamicFc field is set.
        */
+      @java.lang.Override
       public boolean hasEnableDynamicFc() {
         return ((bitField0_ & 0x00000010) != 0);
       }
@@ -8247,6 +8349,7 @@ public final class BitControl {
        * <code>optional bool enable_dynamic_fc = 5;</code>
        * @return The enableDynamicFc.
        */
+      @java.lang.Override
       public boolean getEnableDynamicFc() {
         return enableDynamicFc_;
       }
@@ -8427,7 +8530,7 @@ public final class BitControl {
   /**
    * Protobuf type {@code exec.bit.control.QueryContextInformation}
    */
-  public  static final class QueryContextInformation extends
+  public static final class QueryContextInformation extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.control.QueryContextInformation)
       QueryContextInformationOrBuilder {
@@ -8537,6 +8640,7 @@ public final class BitControl {
      * <code>optional int64 query_start_time = 1;</code>
      * @return Whether the queryStartTime field is set.
      */
+    @java.lang.Override
     public boolean hasQueryStartTime() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -8548,6 +8652,7 @@ public final class BitControl {
      * <code>optional int64 query_start_time = 1;</code>
      * @return The queryStartTime.
      */
+    @java.lang.Override
     public long getQueryStartTime() {
       return queryStartTime_;
     }
@@ -8562,6 +8667,7 @@ public final class BitControl {
      * <code>optional int32 time_zone = 2;</code>
      * @return Whether the timeZone field is set.
      */
+    @java.lang.Override
     public boolean hasTimeZone() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -8573,6 +8679,7 @@ public final class BitControl {
      * <code>optional int32 time_zone = 2;</code>
      * @return The timeZone.
      */
+    @java.lang.Override
     public int getTimeZone() {
       return timeZone_;
     }
@@ -8587,6 +8694,7 @@ public final class BitControl {
      * <code>optional string default_schema_name = 3;</code>
      * @return Whether the defaultSchemaName field is set.
      */
+    @java.lang.Override
     public boolean hasDefaultSchemaName() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -8598,6 +8706,7 @@ public final class BitControl {
      * <code>optional string default_schema_name = 3;</code>
      * @return The defaultSchemaName.
      */
+    @java.lang.Override
     public java.lang.String getDefaultSchemaName() {
       java.lang.Object ref = defaultSchemaName_;
       if (ref instanceof java.lang.String) {
@@ -8620,6 +8729,7 @@ public final class BitControl {
      * <code>optional string default_schema_name = 3;</code>
      * @return The bytes for defaultSchemaName.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getDefaultSchemaNameBytes() {
       java.lang.Object ref = defaultSchemaName_;
@@ -8644,6 +8754,7 @@ public final class BitControl {
      * <code>optional string session_id = 4;</code>
      * @return Whether the sessionId field is set.
      */
+    @java.lang.Override
     public boolean hasSessionId() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -8655,6 +8766,7 @@ public final class BitControl {
      * <code>optional string session_id = 4;</code>
      * @return The sessionId.
      */
+    @java.lang.Override
     public java.lang.String getSessionId() {
       java.lang.Object ref = sessionId_;
       if (ref instanceof java.lang.String) {
@@ -8677,6 +8789,7 @@ public final class BitControl {
      * <code>optional string session_id = 4;</code>
      * @return The bytes for sessionId.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getSessionIdBytes() {
       java.lang.Object ref = sessionId_;
@@ -9092,6 +9205,7 @@ public final class BitControl {
        * <code>optional int64 query_start_time = 1;</code>
        * @return Whether the queryStartTime field is set.
        */
+      @java.lang.Override
       public boolean hasQueryStartTime() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -9103,6 +9217,7 @@ public final class BitControl {
        * <code>optional int64 query_start_time = 1;</code>
        * @return The queryStartTime.
        */
+      @java.lang.Override
       public long getQueryStartTime() {
         return queryStartTime_;
       }
@@ -9145,6 +9260,7 @@ public final class BitControl {
        * <code>optional int32 time_zone = 2;</code>
        * @return Whether the timeZone field is set.
        */
+      @java.lang.Override
       public boolean hasTimeZone() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -9156,6 +9272,7 @@ public final class BitControl {
        * <code>optional int32 time_zone = 2;</code>
        * @return The timeZone.
        */
+      @java.lang.Override
       public int getTimeZone() {
         return timeZone_;
       }
@@ -9501,7 +9618,7 @@ public final class BitControl {
   /**
    * Protobuf type {@code exec.bit.control.WorkQueueStatus}
    */
-  public  static final class WorkQueueStatus extends
+  public static final class WorkQueueStatus extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.control.WorkQueueStatus)
       WorkQueueStatusOrBuilder {
@@ -9606,6 +9723,7 @@ public final class BitControl {
      * <code>optional .exec.DrillbitEndpoint endpoint = 1;</code>
      * @return Whether the endpoint field is set.
      */
+    @java.lang.Override
     public boolean hasEndpoint() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -9613,12 +9731,14 @@ public final class BitControl {
      * <code>optional .exec.DrillbitEndpoint endpoint = 1;</code>
      * @return The endpoint.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint getEndpoint() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
     }
     /**
      * <code>optional .exec.DrillbitEndpoint endpoint = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpointOrBuilder getEndpointOrBuilder() {
       return endpoint_ == null ? org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance() : endpoint_;
     }
@@ -9629,6 +9749,7 @@ public final class BitControl {
      * <code>optional int32 queue_length = 2;</code>
      * @return Whether the queueLength field is set.
      */
+    @java.lang.Override
     public boolean hasQueueLength() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -9636,6 +9757,7 @@ public final class BitControl {
      * <code>optional int32 queue_length = 2;</code>
      * @return The queueLength.
      */
+    @java.lang.Override
     public int getQueueLength() {
       return queueLength_;
     }
@@ -9646,6 +9768,7 @@ public final class BitControl {
      * <code>optional int64 report_time = 3;</code>
      * @return Whether the reportTime field is set.
      */
+    @java.lang.Override
     public boolean hasReportTime() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -9653,6 +9776,7 @@ public final class BitControl {
      * <code>optional int64 report_time = 3;</code>
      * @return The reportTime.
      */
+    @java.lang.Override
     public long getReportTime() {
       return reportTime_;
     }
@@ -10156,6 +10280,7 @@ public final class BitControl {
        * <code>optional int32 queue_length = 2;</code>
        * @return Whether the queueLength field is set.
        */
+      @java.lang.Override
       public boolean hasQueueLength() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -10163,6 +10288,7 @@ public final class BitControl {
        * <code>optional int32 queue_length = 2;</code>
        * @return The queueLength.
        */
+      @java.lang.Override
       public int getQueueLength() {
         return queueLength_;
       }
@@ -10193,6 +10319,7 @@ public final class BitControl {
        * <code>optional int64 report_time = 3;</code>
        * @return Whether the reportTime field is set.
        */
+      @java.lang.Override
       public boolean hasReportTime() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -10200,6 +10327,7 @@ public final class BitControl {
        * <code>optional int64 report_time = 3;</code>
        * @return The reportTime.
        */
+      @java.lang.Override
       public long getReportTime() {
         return reportTime_;
       }
@@ -10314,7 +10442,7 @@ public final class BitControl {
   /**
    * Protobuf type {@code exec.bit.control.FinishedReceiver}
    */
-  public  static final class FinishedReceiver extends
+  public static final class FinishedReceiver extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:exec.bit.control.FinishedReceiver)
       FinishedReceiverOrBuilder {
@@ -10422,6 +10550,7 @@ public final class BitControl {
      * <code>optional .exec.bit.FragmentHandle receiver = 1;</code>
      * @return Whether the receiver field is set.
      */
+    @java.lang.Override
     public boolean hasReceiver() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -10429,12 +10558,14 @@ public final class BitControl {
      * <code>optional .exec.bit.FragmentHandle receiver = 1;</code>
      * @return The receiver.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.ExecProtos.FragmentHandle getReceiver() {
       return receiver_ == null ? org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance() : receiver_;
     }
     /**
      * <code>optional .exec.bit.FragmentHandle receiver = 1;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder getReceiverOrBuilder() {
       return receiver_ == null ? org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance() : receiver_;
     }
@@ -10445,6 +10576,7 @@ public final class BitControl {
      * <code>optional .exec.bit.FragmentHandle sender = 2;</code>
      * @return Whether the sender field is set.
      */
+    @java.lang.Override
     public boolean hasSender() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -10452,12 +10584,14 @@ public final class BitControl {
      * <code>optional .exec.bit.FragmentHandle sender = 2;</code>
      * @return The sender.
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.ExecProtos.FragmentHandle getSender() {
       return sender_ == null ? org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance() : sender_;
     }
     /**
      * <code>optional .exec.bit.FragmentHandle sender = 2;</code>
      */
+    @java.lang.Override
     public org.apache.drill.exec.proto.ExecProtos.FragmentHandleOrBuilder getSenderOrBuilder() {
       return sender_ == null ? org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance() : sender_;
     }
