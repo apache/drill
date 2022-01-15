@@ -229,6 +229,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
         .rowCacheSize(ROW_CACHE_SIZE)
         .bufferSize(BUFFER_SIZE)
         .setReadCoreProperties(true)
+        .setReadStyles(false)
         .open(fsStream);
 
       streamingWorkbook = (StreamingWorkbook) workbook;
