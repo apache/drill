@@ -745,13 +745,15 @@ public class TestExcelFormat extends ClusterTest {
       .addNullable("Col1_1", MinorType.FLOAT8)
       .addNullable("Col1_2", MinorType.FLOAT8)
       .addNullable("Col1_2_1", MinorType.FLOAT8)
+      .addNullable("column1", MinorType.VARCHAR)
+      .addNullable("COLUMN1_1", MinorType.VARCHAR)
       .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1.0, 5.0, 9.0, 13.0)
-      .addRow(2.0, 6.0, 10.0, 14.0)
-      .addRow(3.0, 7.0, 11.0, 15.0)
-      .addRow(4.0, 9.0, 12.0, 16.0)
+      .addRow(1.0, 5.0, 9.0, 13.0, "a", "e")
+      .addRow(2.0, 6.0, 10.0, 14.0, "b", "f")
+      .addRow(3.0, 7.0, 11.0, 15.0, "c", "g")
+      .addRow(4.0, 9.0, 12.0, 16.0, "d", "h")
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);

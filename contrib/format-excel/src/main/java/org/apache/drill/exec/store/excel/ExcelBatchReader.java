@@ -377,7 +377,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private String deconflictColumnNames(String columnName) {
     Pattern pattern = Pattern.compile("_(\\d+)$");
     Matcher matcher = pattern.matcher(columnName);
-    while (excelFieldNames.contains(columnName)) {
+    while (containsIgnoreCase(columnName, excelFieldNames)) {
       if (matcher.find()) {
         int index = Integer.parseInt(matcher.group(1));
         index++;
@@ -387,6 +387,15 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       }
     }
     return columnName;
+  }
+
+  private boolean containsIgnoreCase(String str, List<String> list){
+    for(String i : list) {
+      if (i.equalsIgnoreCase(str)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
