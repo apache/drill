@@ -389,8 +389,8 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     return columnName;
   }
 
-  private boolean containsIgnoreCase(String str, List<String> list){
-    for(String i : list) {
+  private boolean containsIgnoreCase(String str, List<String> list) {
+    for (String i : list) {
       if (i.equalsIgnoreCase(str)) {
         return true;
       }
