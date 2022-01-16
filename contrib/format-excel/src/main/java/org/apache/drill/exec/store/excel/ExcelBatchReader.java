@@ -58,6 +58,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
@@ -346,6 +348,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
             // Remove leading and trailing whitespace
             tempColumnName = tempColumnName.trim();
+            tempColumnName = deconflictColumnNames(tempColumnName);
             makeColumn(builder, tempColumnName, MinorType.VARCHAR);
             excelFieldNames.add(colPosition, tempColumnName);
             break;
@@ -354,6 +357,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
             // Remove leading and trailing whitespace
             tempColumnName = tempColumnName.trim();
+            tempColumnName = deconflictColumnNames(tempColumnName);
             makeColumn(builder, tempColumnName, MinorType.FLOAT8);
             excelFieldNames.add(colPosition, tempColumnName);
             break;
@@ -362,6 +366,27 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
     addMetadataToSchema(builder);
     builder.buildSchema();
+  }
+
+  /**
+   * This function verifies whether a given column name is already present in the projected schema.
+   * If so, it appends _n to the column name.  N will be incremented for every duplicate column
+   * @param columnName The original column
+   * @return The deconflicted column name
+   */
+  private String deconflictColumnNames(String columnName) {
+    Pattern pattern = Pattern.compile("_(\\d+)$");
+    Matcher matcher = pattern.matcher(columnName);
+    while (excelFieldNames.contains(columnName)) {
+      if (matcher.find()) {
+        int index = Integer.parseInt(matcher.group(1));
+        index++;
+        columnName = matcher.replaceFirst("_" + index);
+      } else {
+        columnName = columnName + "_1";
+      }
+    }
+    return columnName;
   }
 
   /**
