@@ -58,6 +58,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
@@ -140,6 +143,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private final ExcelReaderConfig readerConfig;
   private final int maxRecords;
+  private final TreeSet<String> columnNameChecker;
   private Sheet sheet;
   private Row currentRow;
   private StreamingWorkbook streamingWorkbook;
@@ -159,6 +163,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private Map<String, Date> dateMetadata;
   private Map<String, List<String>> listMetadata;
   private CustomErrorContext errorContext;
+
 
 
   static class ExcelReaderConfig {
@@ -184,6 +189,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   public ExcelBatchReader(ExcelReaderConfig readerConfig, int maxRecords) {
     this.readerConfig = readerConfig;
     this.maxRecords = maxRecords;
+    this.columnNameChecker = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     firstLine = true;
   }
 
@@ -346,22 +352,47 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
             // Remove leading and trailing whitespace
             tempColumnName = tempColumnName.trim();
+            tempColumnName = deconflictColumnNames(tempColumnName);
             makeColumn(builder, tempColumnName, MinorType.VARCHAR);
             excelFieldNames.add(colPosition, tempColumnName);
+            columnNameChecker.add(tempColumnName);
             break;
           default:
             tempColumnName = cell.getStringCellValue();
 
             // Remove leading and trailing whitespace
             tempColumnName = tempColumnName.trim();
+            tempColumnName = deconflictColumnNames(tempColumnName);
             makeColumn(builder, tempColumnName, MinorType.FLOAT8);
             excelFieldNames.add(colPosition, tempColumnName);
+            columnNameChecker.add(tempColumnName);
             break;
         }
       }
     }
     addMetadataToSchema(builder);
     builder.buildSchema();
+  }
+
+  /**
+   * This function verifies whether a given column name is already present in the projected schema.
+   * If so, it appends _n to the column name.  N will be incremented for every duplicate column
+   * @param columnName The original column
+   * @return The deconflicted column name
+   */
+  private String deconflictColumnNames(String columnName) {
+    Pattern pattern = Pattern.compile("_(\\d+)$");
+    Matcher matcher = pattern.matcher(columnName);
+    while (columnNameChecker.contains(columnName)) {
+      if (matcher.find()) {
+        int index = Integer.parseInt(matcher.group(1));
+        index++;
+        columnName = matcher.replaceFirst("_" + index);
+      } else {
+        columnName = columnName + "_1";
+      }
+    }
+    return columnName;
   }
 
   /**
