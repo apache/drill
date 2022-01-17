@@ -70,6 +70,14 @@ public class TestStringFunctions extends BaseTestQuery {
         .baselineValues("rty")
         .go();
 
+    testBuilder()
+      .sqlQuery("select split_part(a, '~@~', -2) res1 from (values('abc~@~def~@~ghi'), ('qwe~@~rty~@~uio')) as t(a)")
+      .ordered()
+      .baselineColumns("res1")
+      .baselineValues("def")
+      .baselineValues("rty")
+      .go();
+
     // with a multi-byte splitter
     testBuilder()
         .sqlQuery("select split_part('abc\\u1111drill\\u1111ghi', '\\u1111', 2) res1 from (values(1))")
@@ -77,6 +85,13 @@ public class TestStringFunctions extends BaseTestQuery {
         .baselineColumns("res1")
         .baselineValues("drill")
         .go();
+
+    testBuilder()
+      .sqlQuery("select split_part('abc\\u1111drill\\u1111ghi', '\\u1111', -2) res1 from (values(1))")
+      .ordered()
+      .baselineColumns("res1")
+      .baselineValues("drill")
+      .go();
 
     // going beyond the last available index, returns empty string
     testBuilder()
@@ -86,6 +101,13 @@ public class TestStringFunctions extends BaseTestQuery {
         .baselineValues("")
         .go();
 
+    testBuilder()
+      .sqlQuery("select split_part('a,b,c', ',', -4) res1 from (values(1))")
+      .ordered()
+      .baselineColumns("res1")
+      .baselineValues("")
+      .go();
+
     // if the delimiter does not appear in the string, 1 returns the whole string
     testBuilder()
         .sqlQuery("select split_part('a,b,c', ' ', 1) res1 from (values(1))")
@@ -93,6 +115,13 @@ public class TestStringFunctions extends BaseTestQuery {
         .baselineColumns("res1")
         .baselineValues("a,b,c")
         .go();
+
+    testBuilder()
+      .sqlQuery("select split_part('a,b,c', ' ', -1) res1 from (values(1))")
+      .ordered()
+      .baselineColumns("res1")
+      .baselineValues("a,b,c")
+      .go();
   }
 
   @Test
@@ -115,9 +144,26 @@ public class TestStringFunctions extends BaseTestQuery {
       .baselineValues("rty~@~uio")
       .go();
 
+    testBuilder()
+      .sqlQuery("select split_part(a, '~@~', -2, -1) res1 from (" +
+        "values('abc~@~def~@~ghi'), ('qwe~@~rty~@~uio')) as t(a)")
+      .ordered()
+      .baselineColumns("res1")
+      .baselineValues("def~@~ghi")
+      .baselineValues("rty~@~uio")
+      .go();
+
     // with a multi-byte splitter
     testBuilder()
       .sqlQuery("select split_part('abc\\u1111drill\\u1111ghi', '\\u1111', 2, 2) " +
+        "res1 from (values(1))")
+      .ordered()
+      .baselineColumns("res1")
+      .baselineValues("drill")
+      .go();
+
+    testBuilder()
+      .sqlQuery("select split_part('abc\\u1111drill\\u1111ghi', '\\u1111', -2, -2) " +
         "res1 from (values(1))")
       .ordered()
       .baselineColumns("res1")
@@ -132,6 +178,13 @@ public class TestStringFunctions extends BaseTestQuery {
       .baselineValues("")
       .go();
 
+    testBuilder()
+      .sqlQuery("select split_part('a,b,c', ',', -5, -4) res1 from (values(1))")
+      .ordered()
+      .baselineColumns("res1")
+      .baselineValues("")
+      .go();
+
     // end index going beyond the last available index, returns remaining string
     testBuilder()
       .sqlQuery("select split_part('a,b,c', ',', 1, 10) res1 from (values(1))")
@@ -140,9 +193,23 @@ public class TestStringFunctions extends BaseTestQuery {
       .baselineValues("a,b,c")
       .go();
 
+    testBuilder()
+      .sqlQuery("select split_part('a,b,c', ',', -10, -1) res1 from (values(1))")
+      .ordered()
+      .baselineColumns("res1")
+      .baselineValues("a,b,c")
+      .go();
+
     // if the delimiter does not appear in the string, 1 returns the whole string
     testBuilder()
       .sqlQuery("select split_part('a,b,c', ' ', 1, 2) res1 from (values(1))")
+      .ordered()
+      .baselineColumns("res1")
+      .baselineValues("a,b,c")
+      .go();
+
+    testBuilder()
+      .sqlQuery("select split_part('a,b,c', ' ', -2, -1) res1 from (values(1))")
       .ordered()
       .baselineColumns("res1")
       .baselineValues("a,b,c")
@@ -162,8 +229,8 @@ public class TestStringFunctions extends BaseTestQuery {
         .go();
       expectedErrorEncountered = false;
     } catch (Exception ex) {
-      assertTrue(ex.getMessage().contains("Index in split_part must be positive, " +
-        "value provided was 0"));
+      assertTrue(ex.getMessage(),
+        ex.getMessage().contains("Index in split_part can not be zero"));
       expectedErrorEncountered = true;
     }
     if (!expectedErrorEncountered) {
@@ -181,8 +248,46 @@ public class TestStringFunctions extends BaseTestQuery {
         .go();
       expectedErrorEncountered = false;
     } catch (Exception ex) {
-      assertTrue(ex.getMessage().contains("End in split_part must be greater " +
-        "than or equal to start"));
+      assertTrue(ex.getMessage(),
+        ex.getMessage().contains("End index in split_part must be greater or equal to start index"));
+      expectedErrorEncountered = true;
+    }
+    if (!expectedErrorEncountered) {
+      throw new RuntimeException("Missing expected error on invalid index for " +
+        "split_part function");
+    }
+
+    try {
+      testBuilder()
+        .sqlQuery("select split_part('abc~@~def~@~ghi', '~@~', -1, -2) res1 from " +
+          "(values(1))")
+        .ordered()
+        .baselineColumns("res1")
+        .baselineValues("abc")
+        .go();
+      expectedErrorEncountered = false;
+    } catch (Exception ex) {
+      assertTrue(ex.getMessage(),
+        ex.getMessage().contains("End index in split_part must be greater or equal to start index"));
+      expectedErrorEncountered = true;
+    }
+    if (!expectedErrorEncountered) {
+      throw new RuntimeException("Missing expected error on invalid index for " +
+        "split_part function");
+    }
+
+    try {
+      testBuilder()
+        .sqlQuery("select split_part('abc~@~def~@~ghi', '~@~', -1, 2) res1 from " +
+          "(values(1))")
+        .ordered()
+        .baselineColumns("res1")
+        .baselineValues("abc")
+        .go();
+      expectedErrorEncountered = false;
+    } catch (Exception ex) {
+      assertTrue(ex.getMessage(),
+        ex.getMessage().contains("End index in split_part must has the same sign as the start index"));
       expectedErrorEncountered = true;
     }
     if (!expectedErrorEncountered) {

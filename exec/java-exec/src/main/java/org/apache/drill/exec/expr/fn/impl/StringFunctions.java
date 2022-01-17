@@ -384,7 +384,8 @@ public class StringFunctions{
 
   /**
    * Return the string part at index after splitting the input string using the
-   * specified delimiter. The index must be a positive integer.
+   * specified delimiter. The index starts 1 or -1, counting from beginning if
+   * is positive, from end if is negative.
    */
   @FunctionTemplate(name = "split_part", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
                     outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
@@ -416,16 +417,25 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      if (index.value < 1) {
+      if (index.value == 0) {
         throw org.apache.drill.common.exceptions.UserException.functionError()
-          .message("Index in split_part must be positive, value provided was "
-            + index.value).build();
+          .message("Index in split_part can not be zero").build();
       }
       String inputString = org.apache.drill.exec.expr.fn.impl.
         StringFunctionHelpers.getStringFromVarCharHolder(in);
-      int arrayIndex = index.value - 1;
-      String result =
-              (String) com.google.common.collect.Iterables.get(splitter.split(inputString), arrayIndex, "");
+      String result = "";
+      if (index.value < 0) {
+        java.util.List<String> splits = splitter.splitToList(inputString);
+        int size = splits.size();
+        int arrayIndex = size + index.value;
+        if (arrayIndex >= 0) {
+          result = (String) splits.get(arrayIndex);
+        }
+      } else {
+        int arrayIndex = index.value - 1;
+        result =
+          (String) com.google.common.collect.Iterables.get(splitter.split(inputString), arrayIndex, "");
+      }
       byte[] strBytes = result.getBytes(com.google.common.base.Charsets.UTF_8);
 
       out.buffer = buffer = buffer.reallocIfNeeded(strBytes.length);
@@ -438,8 +448,10 @@ public class StringFunctions{
 
   /**
    * Return the string part from start to end after splitting the input string
-   * using the specified delimiter. The start must be a positive integer. The
-   * end is included and must be greater than or equal to the start index.
+   * using the specified delimiter. The start and end index can be positive or
+   * negative, counting from beginning if is positive, from end if is negative.
+   * End index is included and must have the same sign and greater than or equal
+   * to the start index.
    */
   @FunctionTemplate(name = "split_part", scope = FunctionScope.SIMPLE, nulls =
     NullHandling.NULL_IF_NULL, outputWidthCalculatorType =
@@ -476,26 +488,44 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      if (start.value < 1) {
+      if (start.value == 0) {
         throw org.apache.drill.common.exceptions.UserException.functionError()
-          .message("Start in split_part must be positive, value provided was "
-            + start.value).build();
+          .message("Start index in split_part can not be zero, value provided was " +
+            "[start:" + start.value + "]").build();
+      }
+      if (start.value * end.value <= 0) {
+        throw org.apache.drill.common.exceptions.UserException.functionError()
+          .message("End index in split_part must has the same sign as the start " +
+            "index, value provided was [start:" + start.value + ",end:" + end.value + "]").build();
       }
       if (end.value < start.value) {
         throw org.apache.drill.common.exceptions.UserException.functionError()
-          .message("End in split_part must be greater than or equal to start, " +
-            "value provided was start:" + start.value + ",end:" + end.value).build();
+          .message("End index in split_part must be greater or equal to start " +
+            "index, value provided was [start:" + start.value + ",end:" + end.value + "]").build();
       }
+
       String inputString = org.apache.drill.exec.expr.fn.impl.
         StringFunctionHelpers.getStringFromVarCharHolder(in);
-      int arrayIndex = start.value - 1;
-      java.util.Iterator<String> iterator = com.google.common.collect.Iterables
-        .limit(com.google.common.collect.Iterables.skip(splitter
-            .split(inputString), arrayIndex),end.value - start.value + 1)
-        .iterator();
+      java.util.Iterator<String> iterator = java.util.Collections.emptyIterator();
+      if (start.value < 0) {
+        java.util.List<String> splits = splitter.splitToList(inputString);
+        int size = splits.size();
+        int startIndex = size + start.value;
+        int endIndex = size + end.value + 1;
+        if (startIndex >= 0) {
+          iterator = splits.subList(startIndex, endIndex).iterator();
+        } else if (endIndex > 0) {
+          iterator = splits.subList(0, endIndex).iterator();
+        }
+      } else {
+        int arrayIndex = start.value - 1;
+        iterator = com.google.common.collect.Iterables
+          .limit(com.google.common.collect.Iterables.skip(splitter
+            .split(inputString), arrayIndex), end.value - start.value + 1)
+          .iterator();
+      }
       byte[] strBytes = joiner.join(iterator).getBytes(
         com.google.common.base.Charsets.UTF_8);
-
       out.buffer = buffer = buffer.reallocIfNeeded(strBytes.length);
       out.start = 0;
       out.end = strBytes.length;
