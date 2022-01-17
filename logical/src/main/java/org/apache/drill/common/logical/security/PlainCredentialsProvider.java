@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -38,16 +39,28 @@ public class PlainCredentialsProvider implements CredentialsProvider {
       new PlainCredentialsProvider(Collections.emptyMap());
 
   private final Map<String, String> credentials;
+  private final Map<String, Map<String, String>> perUserCredentials;
 
   @JsonCreator
   public PlainCredentialsProvider(@JsonProperty("credentials") Map<String, String> credentials) {
     this.credentials = credentials;
+    this.perUserCredentials = new HashMap<>();
+  }
+
+  public PlainCredentialsProvider(String username, Map<String, String> credentials) {
+    this(credentials);
+    perUserCredentials.put(username,credentials);
   }
 
   @Override
   @JsonIgnore(false)
   public Map<String, String> getCredentials() {
     return credentials;
+  }
+
+  @Override
+  public Map<String, String> getCredentials(String activeUser) {
+    return perUserCredentials.get(activeUser);
   }
 
   @Override
@@ -59,11 +72,12 @@ public class PlainCredentialsProvider implements CredentialsProvider {
       return false;
     }
     PlainCredentialsProvider that = (PlainCredentialsProvider) o;
-    return Objects.equals(credentials, that.credentials);
+    return Objects.equals(credentials, that.credentials) &&
+      Objects.equals(perUserCredentials, that.perUserCredentials);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(credentials);
+    return Objects.hash(credentials, perUserCredentials);
   }
 }

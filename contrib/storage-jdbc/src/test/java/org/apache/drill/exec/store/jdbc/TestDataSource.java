@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.jdbc;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.BaseTest;
@@ -26,6 +27,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,7 +56,7 @@ public class TestDataSource extends BaseTest {
   @Test
   public void testInitWithoutUserAndPassword() {
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, null, null, false, false, null, null, 1000);
+      DRIVER, url, null, null, false, false, null, null, false,1000);
     try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config)) {
       assertEquals(DRIVER, dataSource.getDriverClassName());
       assertEquals(url, dataSource.getJdbcUrl());
@@ -65,7 +68,7 @@ public class TestDataSource extends BaseTest {
   @Test
   public void testInitWithUserAndPassword() {
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, false, null, null, 1000);
+      DRIVER, url, "user", "password", false, false, null, null, false,1000);
     try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config)) {
       assertEquals("user", dataSource.getUsername());
       assertEquals("password", dataSource.getPassword());
@@ -81,7 +84,7 @@ public class TestDataSource extends BaseTest {
     sourceParameters.put("dataSource.cachePrepStmts", true);
     sourceParameters.put("dataSource.prepStmtCacheSize", 250);
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, false, sourceParameters, null, 1000);
+      DRIVER, url, "user", "password", false, false, sourceParameters, null, false, 1000);
     try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config)) {
       assertEquals(5, dataSource.getMinimumIdle());
       assertFalse(dataSource.isAutoCommit());
@@ -96,7 +99,7 @@ public class TestDataSource extends BaseTest {
     Map<String, Object> sourceParameters = new HashMap<>();
     sourceParameters.put("abc", "abc");
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, false, sourceParameters, null, 1000);
+      DRIVER, url, "user", "password", false, false, sourceParameters, null, false, 1000);
 
     thrown.expect(UserException.class);
     thrown.expectMessage(UserBitShared.DrillPBError.ErrorType.CONNECTION.name());
@@ -109,7 +112,7 @@ public class TestDataSource extends BaseTest {
     Map<String, Object> sourceParameters = new HashMap<>();
     sourceParameters.put("minimumIdle", "abc");
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, false, sourceParameters, null, 1000);
+      DRIVER, url, "user", "password", false, false, sourceParameters, null, false, 1000);
 
     thrown.expect(UserException.class);
     thrown.expectMessage(UserBitShared.DrillPBError.ErrorType.CONNECTION.name());

@@ -19,6 +19,7 @@ package org.apache.drill.common.logical.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,7 @@ import java.util.Map;
     property = "credentialsProviderType",
     defaultImpl = PlainCredentialsProvider.class)
 public interface CredentialsProvider {
+  Logger logger = LoggerFactory.getLogger(CredentialsProvider.class);
   /**
    * Returns map with authentication credentials. Key is the credential name, for example {@code "username"}
    * and map value is corresponding credential value.
@@ -39,4 +41,18 @@ public interface CredentialsProvider {
 
   @JsonIgnore
   Map<String, String> getCredentials();
+
+  @JsonIgnore
+  default Map<String, String> getCredentials(String username) {
+    throw UserException.unsupportedError()
+      .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
+      .build(logger);
+  }
+
+  @JsonIgnore
+  default Map<String, String> getGlobalCredentials() {
+    throw UserException.unsupportedError()
+      .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
+      .build(logger);
+  }
 }

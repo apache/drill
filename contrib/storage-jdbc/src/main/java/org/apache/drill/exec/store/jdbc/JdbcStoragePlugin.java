@@ -27,6 +27,7 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialectFactoryImpl;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
@@ -53,7 +54,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   public JdbcStoragePlugin(JdbcStorageConfig config, DrillbitContext context, String name) {
     super(context, name);
     this.config = config;
-    this.dataSource = initDataSource(config);
+    this.dataSource = initDataSource(config, getLoggedInUsername());
     this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, dataSource);
     this.convention = new DrillJdbcConvention(dialect, name, this);
     this.jdbcDialect = JdbcDialectFactory.getJdbcDialect(this, config.getUrl());
@@ -106,10 +107,10 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   }
 
   /**
-   * Initializes {@link HikariDataSource} instance and configures it based on given
+    * Initializes {@link HikariDataSource} instance and configures it based on given
    * storage plugin configuration.
    * Basic parameters such as driver, url, user name and password are set using setters.
-   * Other source parameters are set dynamically through the properties. See the list
+    * Other source parameters are set dynamically through the properties. See the list
    * of available Hikari properties: <a href="https://github.com/brettwooldridge/HikariCP">.
    *
    * @param config storage plugin config
@@ -118,8 +119,14 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
    */
   @VisibleForTesting
   static HikariDataSource initDataSource(JdbcStorageConfig config) {
+    return initDataSource(config, null);
+  }
+
+  @VisibleForTesting
+  static HikariDataSource initDataSource(JdbcStorageConfig config, String username) {
     try {
       Properties properties = new Properties();
+      UsernamePasswordCredentials credentials;
 
       /*
         Set default HikariCP values which prefer to connect lazily to avoid overwhelming source
@@ -152,7 +159,12 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
       hikariConfig.setDriverClassName(config.getDriver());
       hikariConfig.setJdbcUrl(config.getUrl());
-      UsernamePasswordCredentials credentials = config.getUsernamePasswordCredentials();
+      if (config.getPerUserCredentials() && StringUtils.isNotEmpty(username)) {
+        credentials = config.getUsernamePasswordCredentials(username);
+      } else {
+        credentials = config.getUsernamePasswordCredentials();
+      }
+      
       hikariConfig.setUsername(credentials.getUsername());
       hikariConfig.setPassword(credentials.getPassword());
       // this serves as a hint to the driver, which *might* enable database optimizations

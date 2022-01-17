@@ -101,13 +101,14 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
     String jdbcUrl = jdbcContainer.getJdbcUrl();
     logger.debug("JDBC URL: {}", jdbcUrl);
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, true, null, null, 10000);
+      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, true, null, null, false,10000);
+
     jdbcStorageConfig.setEnabled(true);
 
     cluster.defineStoragePlugin("mysql", jdbcStorageConfig);
 
     JdbcStorageConfig jdbcStorageConfigNoWrite = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, false, null, null, 10000);
+      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, false, null, null, false, 10000);
     jdbcStorageConfigNoWrite.setEnabled(true);
 
     cluster.defineStoragePlugin("mysql_no_write", jdbcStorageConfigNoWrite);
@@ -115,7 +116,7 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
     if (osName.startsWith("linux")) {
       // adds storage plugin with case insensitive table names
       JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-        jdbcContainer.getUsername(), jdbcContainer.getPassword(), true, true, null, null, 10000);
+        jdbcContainer.getUsername(), jdbcContainer.getPassword(), true, true, null, null, false,10000);
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
       cluster.defineStoragePlugin("mysqlCaseInsensitive", jdbcCaseSensitiveStorageConfig);
     }
@@ -214,7 +215,7 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
     // Local databases
     String localMySql = "jdbc:mysql://localhost:3306/?useJDBCCompliantTimezoneShift=true&serverTimezone=EST5EDT";
     JdbcStorageConfig localJdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", localMySql,
-      "root", "password", false, true, null, null, 10000);
+      "root", "password", false, true, null, null, false,10000);
     localJdbcStorageConfig.setEnabled(true);
 
     cluster.defineStoragePlugin("localMysql", localJdbcStorageConfig);

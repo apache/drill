@@ -24,6 +24,7 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
 
   protected final CredentialsProvider credentialsProvider;
   protected boolean directCredentials;
+  protected boolean perUserCredentials;
 
   public AbstractSecuredStoragePluginConfig() {
     this(PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,  true);
@@ -32,6 +33,20 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
   public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean directCredentials) {
     this.credentialsProvider = credentialsProvider;
     this.directCredentials = directCredentials;
+    this.perUserCredentials = false;
+  }
+
+  public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean directCredentials, boolean perUserCredentials) {
+    this.directCredentials = directCredentials;
+    if (directCredentials) {
+      this.perUserCredentials = false;
+    } else {
+      this.perUserCredentials = perUserCredentials;
+    }
+    // Recreate credential provider with per user credentials
+    this.credentialsProvider = credentialsProvider;
+
+
   }
 
   public CredentialsProvider getCredentialsProvider() {
@@ -39,5 +54,13 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
       return null;
     }
     return credentialsProvider;
+  }
+
+  public boolean getPerUserCredentials() {
+    return perUserCredentials;
+  }
+
+  public void setPerUserCredentials(boolean perUserCredentials) {
+    this.perUserCredentials = perUserCredentials;
   }
 }

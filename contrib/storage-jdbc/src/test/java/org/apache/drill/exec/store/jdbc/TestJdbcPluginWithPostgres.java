@@ -67,7 +67,7 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
     JdbcStorageConfig jdbcStorageConfig =
       new JdbcStorageConfig("org.postgresql.Driver",
         jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
-        true, false,null, null, 100000);
+        true, false,null, null, false,100000);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("pg", jdbcStorageConfig);
   }

@@ -21,9 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -32,9 +30,9 @@ import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
 @JsonTypeName(JdbcStorageConfig.NAME)
-@JsonFilter("passwordFilter")
 public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
 
   public static final String NAME = "jdbc";
@@ -57,8 +55,9 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       @JsonProperty("writable") boolean writable,
       @JsonProperty("sourceParameters") Map<String, Object> sourceParameters,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
+      @JsonProperty("perUserCredentials") boolean perUserCredentials,
       @JsonProperty("writerBatchSize") int writerBatchSize) {
-    super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider), credentialsProvider == null);
+    super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider), credentialsProvider == null, perUserCredentials);
     this.driver = driver;
     this.url = url;
     this.writable = writable;
@@ -82,6 +81,8 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   public String getUsername() {
     if (directCredentials) {
       return getUsernamePasswordCredentials().getUsername();
+    } else if (perUserCredentials) {
+      credentialsProvider.getCredentials(ImpersonationUtil.getProcessUserName());
     }
     return null;
   }
@@ -89,6 +90,8 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   public String getPassword() {
     if (directCredentials) {
       return getUsernamePasswordCredentials().getPassword();
+    } else if (perUserCredentials) {
+      credentialsProvider.getCredentials(ImpersonationUtil.getProcessUserName());
     }
     return null;
   }
@@ -105,6 +108,15 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   @JsonIgnore
   public UsernamePasswordCredentials getUsernamePasswordCredentials() {
     return new UsernamePasswordCredentials(credentialsProvider);
+  }
+
+  @JsonIgnore
+  public UsernamePasswordCredentials getUsernamePasswordCredentials(String username) {
+    if (perUserCredentials) {
+      return new UsernamePasswordCredentials(credentialsProvider, username);
+    } else {
+      return new UsernamePasswordCredentials(credentialsProvider);
+    }
   }
 
   @Override
