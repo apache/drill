@@ -424,7 +424,7 @@ public class TestEmptyParquet extends ClusterTest {
     try {
       client.alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, false);
       // Only column 'C' in empty_dict_page.parquet has an empty dictionary page.
-      String sql = "select A,B,C from dfs.`parquet/empty/simple/empty_dict_page.parquet`";
+      String sql = "select A,B,C from dfs.`parquet/empty/empty_dict_page.parquet`";
       RowSet actual = queryBuilder().sql(sql).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
