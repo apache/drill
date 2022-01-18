@@ -261,7 +261,7 @@ class AsyncPageReader extends PageReader {
       synchronized (pageQueueSyncronize) {
         boolean pageQueueFull = pageQueue.remainingCapacity() == 0;
         readStatus = pageQueue.take(); // get the data if no exception has been thrown
-        if (readStatus.pageData == null || readStatus == ReadStatus.EMPTY) {
+        if (readStatus == ReadStatus.EMPTY) {
           throw new DrillRuntimeException("Unexpected end of data");
         }
         //if the queue was full before we took a page out, then there would
@@ -298,14 +298,20 @@ class AsyncPageReader extends PageReader {
       ReadStatus readStatus = nextPageFromQueue();
       pageHeader = readStatus.getPageHeader();
 
-      if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
-        loadDictionary(readStatus);
-        // callers expect us to have a data page after next(), so we start over
-        readStatus = nextPageFromQueue();
-        pageHeader = readStatus.getPageHeader();
+      if (pageHeader.uncompressed_page_size == 0) {
+        logger.info(
+          "skipping a {} of size {} because its uncompressed size is 0 bytes.",
+          pageHeader.getType(),
+          pageHeader.compressed_page_size
+        );
+        skip(pageHeader.compressed_page_size);
+        return;
       }
 
       switch (pageHeader.getType()) {
+        case DICTIONARY_PAGE:
+          loadDictionary(readStatus);
+          break;
         case DATA_PAGE:
           pageData = codecName == CompressionCodecName.UNCOMPRESSED
             ? readStatus.getPageData()
