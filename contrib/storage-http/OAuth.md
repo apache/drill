@@ -69,7 +69,8 @@ The actual tokens are stored using Drill's Credential Provider.  In addition to 
 * `clientSecret`
 * `tokenURI`
 
-All those parameters are provided by the API once you register.
+All those parameters are provided by the API once you register.  Currently, only the `PlainCredentialProvider` is supported for this, but future work will likely include the 
+`VaultCredentialProvider`.  
 
 ## Obtaining the Access Token
 Once you have set up the configuration, you will see an additional button labeled `Get Access Token` at the bottom of the configuration screen.

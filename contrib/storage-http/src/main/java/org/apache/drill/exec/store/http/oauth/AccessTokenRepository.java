@@ -26,6 +26,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
+import org.apache.drill.exec.store.http.HttpOAuthConfig;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
@@ -62,6 +63,10 @@ public class AccessTokenRepository {
     // Add proxy info
     SimpleHttp.addProxyInfo(builder, proxyConfig);
     client = builder.build();
+  }
+
+  public HttpOAuthConfig getOAuthConfig() {
+    return pluginConfig.oAuthConfig();
   }
 
   public String getTokenType() {

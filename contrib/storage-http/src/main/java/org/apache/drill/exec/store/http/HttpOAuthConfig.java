@@ -48,6 +48,7 @@ public class HttpOAuthConfig {
   private final String tokenType;
   private final boolean generateCSRFToken;
   private final String scope;
+  private final boolean accessTokenInHeader;
   private final Map<String, String> tokens;
 
   @JsonCreator
@@ -57,12 +58,14 @@ public class HttpOAuthConfig {
                          @JsonProperty("tokenType") String tokenType,
                          @JsonProperty("generateCSRFToken") boolean generateCSRFToken,
                          @JsonProperty("scope") String scope,
+                         @JsonProperty("accessTokenInHeader") boolean accessTokenInHeader,
                          @JsonProperty("tokens") Map<String, String> tokens) {
     this.callbackURL = callbackURL;
     this.authorizationURL = authorizationURL;
     this.authorizationParams = authorizationParams;
     this.tokenType = tokenType;
     this.generateCSRFToken = generateCSRFToken;
+    this.accessTokenInHeader = accessTokenInHeader;
     this.scope = scope;
     this.tokens = tokens;
   }
@@ -73,6 +76,7 @@ public class HttpOAuthConfig {
     this.authorizationParams = builder.authorizationParams;
     this.generateCSRFToken = builder.generateCSRFToken;
     this.tokenType = builder.tokenType;
+    this.accessTokenInHeader = builder.accessTokenInHeader;
     this.scope = builder.scope;
     this.tokens = builder.tokens;
   }

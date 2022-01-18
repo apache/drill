@@ -19,12 +19,14 @@
 package org.apache.drill.exec.store.http.oauth;
 
 import lombok.NonNull;
+import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
+import org.apache.drill.exec.store.security.OAuthTokenCredentials;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,8 +90,12 @@ public class AccessTokenInterceptor implements Interceptor {
       accessToken = tokenType + " " + accessToken;
     }
 
-    return request.newBuilder()
-      .header("Authorization", accessToken)
-      .build();
+    if (accessTokenRepository.getOAuthConfig().isAccessTokenInHeader()) {
+      HttpUrl rawUrl = HttpUrl.parse(request.url().toString());
+      rawUrl.newBuilder().addQueryParameter("access_token", accessToken);
+      return request.newBuilder().url(rawUrl.url()).build();
+    } else {
+      return request.newBuilder().header("Authorization", accessToken).build();
+    }
   }
 }

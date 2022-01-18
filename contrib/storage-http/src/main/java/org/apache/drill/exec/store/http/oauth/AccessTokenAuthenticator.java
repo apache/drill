@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.http.oauth;
 
 import lombok.NonNull;
 import okhttp3.Authenticator;
+import okhttp3.HttpUrl;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.Route;
@@ -79,8 +80,12 @@ public class AccessTokenAuthenticator implements Authenticator {
       accessToken = tokenType + " " + accessToken;
     }
 
-    return request.newBuilder()
-      .header("Authorization", accessToken)
-      .build();
+    if (accessTokenRepository.getOAuthConfig().isAccessTokenInHeader()) {
+      HttpUrl rawUrl = HttpUrl.parse(request.url().toString());
+      rawUrl.newBuilder().addQueryParameter("access_token", accessToken);
+      return request.newBuilder().url(rawUrl.url()).build();
+    } else {
+      return request.newBuilder().header("Authorization", accessToken).build();
+    }
   }
 }

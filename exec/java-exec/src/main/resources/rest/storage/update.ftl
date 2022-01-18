@@ -138,6 +138,7 @@
       }
     });
 
+  <#if model.getType() == "HttpStoragePluginConfig" >
     $("#getOauth").click(function() {
       var field = document.getElementById("config");
       try {
@@ -195,7 +196,7 @@
       window.alert("Cannot parse JSON.");
     }
   });
-
+  </#if>
 
     function doUpdate() {
       $("#updateForm").ajaxForm({
