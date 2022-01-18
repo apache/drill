@@ -23,8 +23,9 @@ import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginConfig {
 
   protected final CredentialsProvider credentialsProvider;
+  protected final boolean perUserCredentials;
   protected boolean directCredentials;
-  protected boolean perUserCredentials;
+
 
   public AbstractSecuredStoragePluginConfig() {
     this(PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,  true);
@@ -45,8 +46,6 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
     }
     // Recreate credential provider with per user credentials
     this.credentialsProvider = credentialsProvider;
-
-
   }
 
   public CredentialsProvider getCredentialsProvider() {
@@ -58,9 +57,5 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
 
   public boolean getPerUserCredentials() {
     return perUserCredentials;
-  }
-
-  public void setPerUserCredentials(boolean perUserCredentials) {
-    this.perUserCredentials = perUserCredentials;
   }
 }

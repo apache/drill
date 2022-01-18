@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
@@ -762,6 +763,17 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         break;
       case DISABLED:
         include = !plugin.getValue().isEnabled();
+        break;
+      case HAS_USER_CREDS:
+        // Only plugins that extend the AbstractSecuredStorageConfig class can have
+        // user creds, so check that first.
+        if (plugin.getValue() instanceof AbstractSecuredStoragePluginConfig) {
+          // If the plugin does not have per user credentials enabled, do not add it to the list.
+          AbstractSecuredStoragePluginConfig securedConfig = (AbstractSecuredStoragePluginConfig) plugin.getValue();
+          include = securedConfig.getPerUserCredentials();
+        } else {
+          include = false;
+        }
         break;
       default:
         include = true;

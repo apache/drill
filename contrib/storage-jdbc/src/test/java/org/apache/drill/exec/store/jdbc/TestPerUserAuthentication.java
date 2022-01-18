@@ -68,8 +68,6 @@ public class TestPerUserAuthentication extends ClusterTest {
     creds.put("password", "pass1");
     PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider("db_user", creds);
 
-
-
     JdbcStorageConfig config = new JdbcStorageConfig(
       DRIVER, url, "user", "password", false, false, sourceParameters, credentialsProvider, true, 1000);
 

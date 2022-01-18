@@ -159,12 +159,14 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
       hikariConfig.setDriverClassName(config.getDriver());
       hikariConfig.setJdbcUrl(config.getUrl());
+
       if (config.getPerUserCredentials() && StringUtils.isNotEmpty(username)) {
+        logger.debug("Initializing JDBC connection with username: {}", username);
         credentials = config.getUsernamePasswordCredentials(username);
       } else {
+        logger.debug("Initializing JDBC connection without username");
         credentials = config.getUsernamePasswordCredentials();
       }
-      
       hikariConfig.setUsername(credentials.getUsername());
       hikariConfig.setPassword(credentials.getPassword());
       // this serves as a hint to the driver, which *might* enable database optimizations

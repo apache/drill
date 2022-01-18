@@ -96,6 +96,11 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
     return null;
   }
 
+  @JsonProperty("perUserCredentials")
+  public boolean getPerUserCredentials() {
+    return super.getPerUserCredentials();
+  }
+
   @JsonProperty("caseInsensitiveTableNames")
   public boolean areTableNamesCaseInsensitive() {
     return caseInsensitiveTableNames;
