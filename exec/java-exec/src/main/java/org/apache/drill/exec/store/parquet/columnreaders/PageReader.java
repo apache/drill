@@ -425,13 +425,20 @@ class PageReader {
   protected void nextInternal() throws IOException {
     readPageHeader();
 
-    if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
-      loadDictionary();
-      // callers expect us to have a data page after next(), so we start over
-      readPageHeader();
+    if (pageHeader.uncompressed_page_size == 0) {
+      logger.info(
+        "skipping a {} of size {} because its uncompressed size is 0 bytes.",
+        pageHeader.getType(),
+        pageHeader.compressed_page_size
+      );
+      skip(pageHeader.compressed_page_size);
+      return;
     }
 
     switch (pageHeader.getType()) {
+      case DICTIONARY_PAGE:
+        loadDictionary();
+        break;
       case DATA_PAGE:
         pageData = codecName == CompressionCodecName.UNCOMPRESSED
           ? readUncompressedPage()
@@ -445,6 +452,7 @@ class PageReader {
       default:
         logger.info("skipping a {} of size {}", pageHeader.getType(), pageHeader.compressed_page_size);
         skip(pageHeader.compressed_page_size);
+
     }
   }
 
@@ -533,11 +541,28 @@ class PageReader {
     }
 
     clearDataBufferAndReaders();
-    nextInternal();
+    do {
+      nextInternal();
 
-    if (pageData == null || pageHeader == null) {
+      if (pageHeader == null) {
+        throw new DrillRuntimeException(String.format(
+          "Failed to read another page having read %d of %d values from its " +
+          "column chunk.",
+          parentColumnReader.totalValuesRead,
+          totalValueCount
+        ));
+      }
+    } while (
+      // Continue until we hit a non-empty data page
+      pageHeader.uncompressed_page_size == 0
+      || (pageHeader.getType() != PageType.DATA_PAGE
+      && pageHeader.getType() != PageType.DATA_PAGE_V2)
+    );
+
+    if (pageData == null) {
       throw new DrillRuntimeException(String.format(
-        "Failed to read another page having read %d of %d values from its column chunk.",
+        "Failed to read another page having read %d of %d values from its " +
+        "column chunk.",
         parentColumnReader.totalValuesRead,
         totalValueCount
       ));
