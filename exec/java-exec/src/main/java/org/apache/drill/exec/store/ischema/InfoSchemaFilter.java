@@ -24,8 +24,11 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import org.apache.drill.common.FunctionNames;
+import org.apache.drill.exec.expr.fn.impl.RegexpUtil;
+import org.apache.drill.exec.expr.fn.impl.RegexpUtil.SqlPatternType;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode.Type;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 
 import java.util.List;
 import java.util.Map;
@@ -137,54 +140,106 @@ public class InfoSchemaFilter {
    */
   @JsonIgnore
   public Result evaluate(Map<String, String> recordValues) {
-    return evaluateHelper(recordValues, getExprRoot());
+    return evaluateHelper(recordValues, false, getExprRoot());
   }
 
-  private Result evaluateHelper(Map<String, String> recordValues, ExprNode exprNode) {
+  /**
+   * Evaluate the filter for given <COLUMN NAME, VALUE> pairs.
+   *
+   * @param recordValues map of field names and their values
+   * @param prefixMatchesInconclusive whether a prefix match between a column value and a filter value
+   *                                  results in Result.INCONCLUSIVE.  Used for pruning the schema search
+   *                                  tree, e.g. "dfs" need not be recursed to find a schema of "cp.default"
+   * @return evaluation result
+   */
+  @JsonIgnore
+  public Result evaluate(Map<String, String> recordValues, boolean prefixMatchesInconclusive) {
+    return evaluateHelper(recordValues, prefixMatchesInconclusive, getExprRoot());
+  }
+
+  private Result evaluateHelper(
+    Map<String, String> recordValues,
+    boolean prefixMatchesInconclusive,
+    ExprNode exprNode
+  ) {
     if (exprNode.type == Type.FUNCTION) {
-      return evaluateHelperFunction(recordValues, (FunctionExprNode) exprNode);
+      return evaluateHelperFunction(
+        recordValues,
+        prefixMatchesInconclusive,
+        (FunctionExprNode) exprNode
+      );
     }
 
     throw new UnsupportedOperationException(
         String.format("Unknown expression type '%s' in InfoSchemaFilter", exprNode.type));
   }
 
-  private Result evaluateHelperFunction(Map<String, String> recordValues, FunctionExprNode exprNode) {
+  private Result evaluateHelperFunction(
+    Map<String, String> recordValues,
+    boolean prefixMatchesInconclusive,
+    FunctionExprNode exprNode
+  ) {
     switch (exprNode.function) {
       case FunctionNames.LIKE: {
         FieldExprNode col = (FieldExprNode) exprNode.args.get(0);
         ConstantExprNode pattern = (ConstantExprNode) exprNode.args.get(1);
         ConstantExprNode escape = exprNode.args.size() > 2 ? (ConstantExprNode) exprNode.args.get(2) : null;
         final String fieldValue = recordValues.get(col.field);
-        if (fieldValue != null) {
-          if (escape == null) {
-            return Pattern.matches(sqlToRegexLike(pattern.value).getJavaPatternString(), fieldValue) ?
-                Result.TRUE : Result.FALSE;
-          } else {
-            return Pattern.matches(sqlToRegexLike(pattern.value, escape.value).getJavaPatternString(), fieldValue) ?
-                Result.TRUE : Result.FALSE;
-          }
+        if (fieldValue == null) {
+          return Result.INCONCLUSIVE;
         }
 
+        RegexpUtil.SqlPatternInfo spi = escape == null
+          ? sqlToRegexLike(pattern.value)
+          : sqlToRegexLike(pattern.value, escape.value);
+
+        if (Pattern.matches(spi.getJavaPatternString(), fieldValue)) {
+          return Result.TRUE;
+        }
+        if (!prefixMatchesInconclusive) {
+          return Result.FALSE;
+        }
+        if ((spi.getPatternType() == SqlPatternType.STARTS_WITH || spi.getPatternType() == SqlPatternType.CONSTANT) &&
+          !pattern.value.startsWith(fieldValue)) {
+            return Result.FALSE;
+          }
         return Result.INCONCLUSIVE;
       }
       case FunctionNames.EQ:
       case "not equal": // TODO: Is this name correct?
       case "notequal":  // TODO: Is this name correct?
       case FunctionNames.NE: {
-        FieldExprNode arg0 = (FieldExprNode) exprNode.args.get(0);
-        ConstantExprNode arg1 = (ConstantExprNode) exprNode.args.get(1);
-
-        final String value = recordValues.get(arg0.field);
-        if (value != null) {
-          if (exprNode.function.equals(FunctionNames.EQ)) {
-            return arg1.value.equals(value) ? Result.TRUE : Result.FALSE;
-          } else {
-            return arg1.value.equals(value) ? Result.FALSE : Result.TRUE;
-          }
+        FieldExprNode col = (FieldExprNode) exprNode.args.get(0);
+        ConstantExprNode arg = (ConstantExprNode) exprNode.args.get(1);
+        final String value = recordValues.get(col.field);
+        if (Strings.isNullOrEmpty(value)) {
+          return Result.INCONCLUSIVE;
         }
 
-        return Result.INCONCLUSIVE;
+        boolean prefixMatch = arg.value.startsWith(value);
+        boolean exactMatch = prefixMatch && arg.value.equals(value);
+
+        if (exprNode.function.equals(FunctionNames.EQ)) {
+          if (exactMatch) {
+            return Result.TRUE;
+          } else {
+            if (prefixMatchesInconclusive && prefixMatch) {
+              return Result.INCONCLUSIVE;
+            } else {
+              return Result.FALSE;
+            }
+          }
+        } else {
+          if (exactMatch) {
+            return Result.FALSE;
+          } else {
+            if (prefixMatchesInconclusive && prefixMatch) {
+              return Result.INCONCLUSIVE;
+            } else {
+              return Result.TRUE;
+            }
+          }
+        }
       }
 
       case FunctionNames.OR:
@@ -194,7 +249,7 @@ public class InfoSchemaFilter {
         // For all other cases, return INCONCLUSIVE
         Result result = Result.FALSE;
         for(ExprNode arg : exprNode.args) {
-          Result exprResult = evaluateHelper(recordValues, arg);
+          Result exprResult = evaluateHelper(recordValues, prefixMatchesInconclusive, arg);
           if (exprResult == Result.TRUE) {
             return Result.TRUE;
           } else if (exprResult == Result.INCONCLUSIVE) {
@@ -213,7 +268,7 @@ public class InfoSchemaFilter {
         Result result = Result.TRUE;
 
         for(ExprNode arg : exprNode.args) {
-          Result exprResult = evaluateHelper(recordValues, arg);
+          Result exprResult = evaluateHelper(recordValues, prefixMatchesInconclusive, arg);
           if (exprResult == Result.FALSE) {
             return exprResult;
           }
@@ -226,6 +281,11 @@ public class InfoSchemaFilter {
       }
 
       case "in": {
+        // This case will probably only ever run if the user submits a manually
+        // crafted plan because the IN operator is compiled either to a chain
+        // of boolean ORs, or to a hash join with a relation which uses VALUES
+        // to generate the list of constants provided to the IN operator in
+        // the query. See the planner.in_subquery_threshold option.
         FieldExprNode col = (FieldExprNode) exprNode.args.get(0);
         List<ExprNode> args = exprNode.args.subList(1, exprNode.args.size());
         final String fieldValue = recordValues.get(col.field);

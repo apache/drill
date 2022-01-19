@@ -311,7 +311,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
         .setIgnoreAuthErrors(isImpersonationEnabled)
         .build();
 
-    return queryContext.getFullRootSchema(schemaConfig);
+    return queryContext.getRootSchema(schemaConfig);
   }
 
   private SchemaPlus getFragmentContextRootSchema() {
@@ -323,7 +323,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
         .setIgnoreAuthErrors(isImpersonationEnabled)
         .build();
 
-    return schemaTreeProvider.createFullRootSchema(schemaConfig);
+    return schemaTreeProvider.createRootSchema(schemaConfig);
   }
 
   @Override
@@ -696,7 +696,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
 
     @Override
     public SchemaPlus getRootSchema(String userName) {
-      return schemaTreeProvider.createFullRootSchema(userName, this);
+      return schemaTreeProvider.createRootSchema(userName, this);
     }
 
     @Override

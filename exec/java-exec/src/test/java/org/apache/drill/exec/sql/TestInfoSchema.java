@@ -164,6 +164,17 @@ public class TestInfoSchema extends BaseTestQuery {
   }
 
   @Test
+  public void showDatabasesWhereIn() throws Exception {
+      testBuilder()
+        .sqlQuery("SHOW DATABASES WHERE SCHEMA_NAME in ('dfs.tmp', 'dfs.root')")
+        .unOrdered()
+        .baselineColumns("SCHEMA_NAME")
+        .baselineValues("dfs.tmp")
+        .baselineValues("dfs.root")
+        .go();
+  }
+
+  @Test
   public void showDatabasesLike() throws Exception{
     testBuilder()
         .sqlQuery("SHOW DATABASES LIKE '%y%'")

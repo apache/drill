@@ -51,6 +51,16 @@ public interface FilterEvaluator {
   boolean shouldVisitCatalog();
 
   /**
+   * Prune the given schema.
+   *
+   * @param schemaName name of the schema
+   * @param schema schema object
+   * @return whether to prune this schema and all its descendants from the
+   * search tree.
+   */
+  boolean shouldPruneSchema(String schemaName);
+
+  /**
    * Visit the given schema.
    *
    * @param schemaName name of the schema
@@ -106,11 +116,12 @@ public interface FilterEvaluator {
     }
 
     @Override
-    public boolean shouldVisitSchema(String schemaName, SchemaPlus schema) {
-      if (schemaName == null || schemaName.isEmpty()) {
-        return false;
-      }
+    public boolean shouldPruneSchema(String schemaName) {
+      return false;
+    }
 
+    @Override
+    public boolean shouldVisitSchema(String schemaName, SchemaPlus schema) {
       try {
         AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
         return drillSchema.showInInformationSchema();
@@ -156,6 +167,16 @@ public interface FilterEvaluator {
       Map<String, String> recordValues = ImmutableMap.of(CATS_COL_CATALOG_NAME, IS_CATALOG_NAME);
 
       return filter.evaluate(recordValues) != InfoSchemaFilter.Result.FALSE;
+    }
+
+    @Override
+    public boolean shouldPruneSchema(String schemaName) {
+      Map<String, String> recordValues = ImmutableMap.of(
+        CATS_COL_CATALOG_NAME, IS_CATALOG_NAME,
+        SHRD_COL_TABLE_SCHEMA, schemaName,
+        SCHS_COL_SCHEMA_NAME, schemaName);
+
+      return filter.evaluate(recordValues, true) == InfoSchemaFilter.Result.FALSE;
     }
 
     @Override
