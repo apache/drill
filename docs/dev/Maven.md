@@ -28,3 +28,36 @@ Some basic patterns of those names:
 - A `jar` module name ends with the name of that module.
 
 Please make sure the names are concise, unique and easy to read.
+
+## drill-jdbc-all JAR maxsize
+
+The file drill-jdbc-all-${project.version}.jar is outside the expected size range. 
+This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. 
+This is important as it minimizes the size of the dependency of Drill application users.
+
+The maxsize of the jar can be configured via `jdbc-all-jar.maxsize` property 
+in [drill-jdbc-all](../../exec/jdbc-all/pom.xml)
+
+## Maven profiles
+
+To check the full list of Maven profiles:<br>
+```
+mvn help:all-profiles
+```
+
+To check the list of active Maven profiles:<br>
+```
+mvn help:active-profiles
+```
+
+### Hadoop 2
+
+To run Apache Drill on the Hadoop2 cluster [r2.4.1-r2.9.2](https://hadoop.apache.org/docs/) need to prepare 
+the Drill distribution by building the project with `hadoop-2` profile:
+```
+mvn clean install -Phadoop-2
+```
+or
+```
+mvn clean install -P hadoop-2
+```

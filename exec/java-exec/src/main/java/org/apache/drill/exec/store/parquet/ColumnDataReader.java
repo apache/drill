@@ -29,6 +29,9 @@ import org.apache.parquet.format.PageHeader;
 import org.apache.parquet.format.Util;
 import org.apache.parquet.hadoop.util.HadoopStreams;
 
+/**
+ * @deprecated it is never used. So can be removed in Drill 1.21.0
+ */
 public class ColumnDataReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnDataReader.class);
 
@@ -96,7 +99,5 @@ public class ColumnDataReader {
     public void writeAllTo(OutputStream out) throws IOException {
       out.write(pageBytes);
     }
-
   }
-
 }
