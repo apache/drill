@@ -307,27 +307,24 @@ public class FragmentExecutor implements Runnable {
           ImpersonationUtil.createProxyUgi(fragmentContext.getQueryUserName()) :
           ImpersonationUtil.getProcessUserUGI();
 
-      queryUserUgi.doAs(new PrivilegedExceptionAction<Void>() {
-        @Override
-        public Void run() throws Exception {
-          injector.injectChecked(fragmentContext.getExecutionControls(), "fragment-execution", IOException.class);
+      queryUserUgi.doAs((PrivilegedExceptionAction<Void>) () -> {
+        injector.injectChecked(fragmentContext.getExecutionControls(), "fragment-execution", IOException.class);
 
-          while (shouldContinue()) {
-            // Fragment is not cancelled
+        while (shouldContinue()) {
+          // Fragment is not cancelled
 
-            for (FragmentHandle fragmentHandle; (fragmentHandle = receiverFinishedQueue.poll()) != null;) {
-              // See if we have any finished requests. If so execute them.
-              root.receivingFragmentFinished(fragmentHandle);
-            }
-
-            if (!root.next()) {
-              // Fragment has processed all of its data
-              break;
-            }
+          for (FragmentHandle fragmentHandle1; (fragmentHandle1 = receiverFinishedQueue.poll()) != null;) {
+            // See if we have any finished requests. If so execute them.
+            root.receivingFragmentFinished(fragmentHandle1);
           }
 
-          return null;
+          if (!root.next()) {
+            // Fragment has processed all of its data
+            break;
+          }
         }
+
+        return null;
       });
 
     } catch (QueryCancelledException e) {

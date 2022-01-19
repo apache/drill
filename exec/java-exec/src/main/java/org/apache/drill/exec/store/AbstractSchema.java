@@ -416,4 +416,12 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   public String getUser(String impersonated, String notImpersonated) {
     return notImpersonated;
   }
+
+  /**
+   * Does Drill needs to impersonate as user connected to Drill when reading data from DataSource?
+   * @return True when both Drill impersonation and DataSource impersonation are enabled.
+   */
+  public boolean needToImpersonateReadingData() {
+    return false;
+  }
 }

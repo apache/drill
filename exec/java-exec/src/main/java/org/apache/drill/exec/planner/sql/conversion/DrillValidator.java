@@ -41,13 +41,15 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.hadoop.security.UserGroupInformation;
 
 class DrillValidator extends SqlValidatorImpl {
 
+  private final boolean isImpersonationEnabled;
+
   DrillValidator(SqlOperatorTable opTab, SqlValidatorCatalogReader catalogReader,
-                 RelDataTypeFactory typeFactory, SqlConformance conformance) {
+                 RelDataTypeFactory typeFactory, SqlConformance conformance, boolean isImpersonationEnabled) {
     super(opTab, catalogReader, typeFactory, conformance);
+    this.isImpersonationEnabled = isImpersonationEnabled;
   }
 
   @Override
@@ -69,11 +71,14 @@ class DrillValidator extends SqlValidatorImpl {
           }
       }
     }
-    UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
-      ugi.doAs((PrivilegedAction<Void>) () -> {
-         super.validateFrom(node, targetRowType, scope);
-         return null;
+    if (isImpersonationEnabled) {
+      ImpersonationUtil.getProcessUserUGI().doAs((PrivilegedAction<Void>) () -> {
+        super.validateFrom(node, targetRowType, scope);
+        return null;
       });
+    } else {
+      super.validateFrom(node, targetRowType, scope);
+    }
   }
 
   private void replaceAliasWithActualName(SqlIdentifier tempNode) {

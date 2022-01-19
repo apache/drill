@@ -72,11 +72,11 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
   public static void setUpBeforeClass() throws Exception {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     initPhoenixQueryServer();
-    bootSecuredDrillMiniCluster();
+    startSecuredDrillCluster();
     initializeDatabase();
   }
 
-  private static void bootSecuredDrillMiniCluster() throws Exception {
+  private static void startSecuredDrillCluster() throws Exception {
     logFixture = LogFixture.builder()
       .toConsole()
       .logger(QueryServerEnvironment.class, CURRENT_LOG_LEVEL)
@@ -141,7 +141,6 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
       // Build the JDBC URL by hand with the doAs
       final UserGroupInformation serviceUgi = ImpersonationUtil.getProcessUserUGI();
       serviceUgi.doAs((PrivilegedExceptionAction<Void>) () -> {
-        logger.debug("Phoenix conn url: {}", environment.getPqsUrl());
         createSchema(environment.getPqsUrl());
         createTables(environment.getPqsUrl());
         createSampleData(environment.getPqsUrl());
@@ -165,6 +164,7 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
    * @param user2ExpectedException the expected Exception for user2, which can be impersonated, but hasn't permissions to the tables
    * @param user3ExpectedException the expected Exception for user3, isn't impersonated
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public void runForThreeClients(SecuredPhoenixSQLTest.TestWrapper wrapper, Class user2ExpectedException, Class user3ExpectedException) throws Exception {
     try {
       client = cluster.client(0);

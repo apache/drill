@@ -262,12 +262,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-protocol-shaded</artifactId>
-      <version>${hbase.minicluster.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>com.univocity</groupId>
       <artifactId>univocity-parsers</artifactId>
       <version>${univocity-parsers.version}</version>

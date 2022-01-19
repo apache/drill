@@ -51,6 +51,7 @@ public class PhoenixSchemaFactory extends AbstractSchemaFactory {
   private final Map<String, PhoenixSchema> schemaMap;
   private PhoenixSchema rootSchema;
   private final boolean isDrillImpersonationEnabled;
+  private final UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
 
   public PhoenixSchemaFactory(PhoenixStoragePlugin plugin) {
     super(plugin.getName());
@@ -63,9 +64,15 @@ public class PhoenixSchemaFactory extends AbstractSchemaFactory {
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
     try {
       rootSchema = new PhoenixSchema(schemaConfig, plugin, Collections.emptyList(), plugin.getName());
-      String schemaUser = schemaConfig.getUserName();
-      locateSchemas(schemaConfig, rootSchema.getUser(schemaUser, getProcessUserName()));
-    } catch (SQLException e) {
+      if (isDrillImpersonationEnabled) {
+        ugi.doAs((PrivilegedExceptionAction<Void>) () -> {
+          locateSchemas(schemaConfig, rootSchema.getUser(schemaConfig.getUserName(), getProcessUserName()));
+          return null;
+        });
+      } else {
+        locateSchemas(schemaConfig, rootSchema.getUser(schemaConfig.getUserName(), getProcessUserName()));
+      }
+    } catch (SQLException | InterruptedException e) {
       throw new IOException(e);
     }
     parent.add(getName(), rootSchema); // resolve the top-level schema.
@@ -76,31 +83,17 @@ public class PhoenixSchemaFactory extends AbstractSchemaFactory {
   }
 
   private void locateSchemas(SchemaConfig schemaConfig, String userName) throws SQLException {
-    UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
-    try {
-      ugi.doAs((PrivilegedExceptionAction<Void>) () -> {
-        try (ResultSet rs = plugin.getDataSource(userName).getConnection().getMetaData().getSchemas()) {
-          while (rs.next()) {
-            final String schemaName = rs.getString(1); // lookup the schema (or called database).
-            PhoenixSchema schema = new PhoenixSchema(schemaConfig, plugin, Arrays.asList(getName()), schemaName);
-            schemaMap.put(schemaName, schema);
-          }
-          rootSchema.addSchemas(schemaMap);
-        }
-        return null;
-      });
-    } catch (IOException | InterruptedException e) {
-      throw new SQLException(e);
+    try (ResultSet rs = plugin.getDataSource(userName).getConnection().getMetaData().getSchemas()) {
+      while (rs.next()) {
+        final String schemaName = rs.getString(1); // lookup the schema (or called database).
+        PhoenixSchema schema = new PhoenixSchema(schemaConfig, plugin, Arrays.asList(getName()), schemaName);
+        schemaMap.put(schemaName, schema);
+      }
+      rootSchema.addSchemas(schemaMap);
     }
   }
 
-  @Override
-  public boolean needToImpersonateReadingData() {
-    return isDrillImpersonationEnabled;
-  }
-
   class PhoenixSchema extends AbstractSchema {
-    private final SchemaConfig schemaConfig;
     private final JdbcSchema jdbcSchema;
     private final Map<String, PhoenixSchema> schemaMap = CaseInsensitiveMap.newHashMap();
 
@@ -111,7 +104,6 @@ public class PhoenixSchemaFactory extends AbstractSchemaFactory {
       super(parentSchemaPath, schemaName);
       this.jdbcSchema = new JdbcSchema(plugin.getDataSource(schemaConfig.getUserName()), plugin.getDialect(),
         plugin.getConvention(), null, schemaName);
-      this.schemaConfig = schemaConfig;
     }
 
     @Override
@@ -126,14 +118,16 @@ public class PhoenixSchemaFactory extends AbstractSchemaFactory {
 
     @Override
     public Table getTable(String name) {
-      final UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
-      return ugi.doAs((PrivilegedAction<Table>) () -> jdbcSchema.getTable(StringUtils.upperCase(name)));
+      return isDrillImpersonationEnabled
+        ? ugi.doAs((PrivilegedAction<Table>) () -> jdbcSchema.getTable(StringUtils.upperCase(name)))
+        : jdbcSchema.getTable(StringUtils.upperCase(name));
     }
 
     @Override
     public Set<String> getTableNames() {
-      final UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
-      return ugi.doAs((PrivilegedAction<Set<String>>) jdbcSchema::getTableNames);
+      return isDrillImpersonationEnabled
+        ? ugi.doAs((PrivilegedAction<Set<String>>) jdbcSchema::getTableNames)
+        : jdbcSchema.getTableNames();
     }
 
     @Override
@@ -142,17 +136,22 @@ public class PhoenixSchemaFactory extends AbstractSchemaFactory {
     }
 
     @Override
+    public boolean areTableNamesCaseSensitive() {
+      return false;
+    }
+
+    @Override
     public String getUser(String impersonated, String notImpersonated) {
       return needToImpersonateReadingData() ? impersonated : notImpersonated;
     }
 
-    public void addSchemas(Map<String, PhoenixSchema> schemas) {
-      schemaMap.putAll(schemas);
+    @Override
+    public boolean needToImpersonateReadingData() {
+      return isDrillImpersonationEnabled;
     }
 
-    @Override
-    public boolean areTableNamesCaseSensitive() {
-      return false;
+    public void addSchemas(Map<String, PhoenixSchema> schemas) {
+      schemaMap.putAll(schemas);
     }
   }
 }

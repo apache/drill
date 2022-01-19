@@ -88,7 +88,7 @@ public class SqlConverter {
   private final DrillValidator validator;
   private final boolean isInnerQuery;
   private final boolean isExpandedView;
-  private final UdfUtilities util;
+  private final QueryContext util;
   private final FunctionImplementationRegistry functions;
   private final String temporarySchema;
   private final UserSession session;
@@ -139,7 +139,8 @@ public class SqlConverter {
         this::getDefaultSchema);
     this.opTab = new ChainedSqlOperatorTable(Arrays.asList(context.getDrillOperatorTable(), catalog));
     this.costFactory = (settings.useDefaultCosting()) ? null : new DrillCostBase.DrillCostFactory();
-    this.validator = new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance());
+    this.validator =
+      new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance(), context.isImpersonationEnabled());
     validator.setIdentifierExpansion(true);
     cluster = null;
   }
@@ -160,7 +161,8 @@ public class SqlConverter {
     this.catalog = catalog;
     this.opTab = parent.opTab;
     this.planner = parent.planner;
-    this.validator = new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance());
+    this.validator =
+      new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance(), util.isImpersonationEnabled());
     this.temporarySchema = parent.temporarySchema;
     this.session = parent.session;
     this.drillConfig = parent.drillConfig;

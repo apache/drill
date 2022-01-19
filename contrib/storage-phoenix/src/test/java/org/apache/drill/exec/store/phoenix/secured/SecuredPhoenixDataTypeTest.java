@@ -52,7 +52,7 @@ public class SecuredPhoenixDataTypeTest extends SecuredPhoenixBaseTest {
     runForThreeClients(this::doTestDataType);
   }
 
-  public void doTestDataType() throws Exception {
+  private void doTestDataType() throws Exception {
     String sql = "select * from phoenix123.v1.datatype";
     QueryBuilder builder = queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();

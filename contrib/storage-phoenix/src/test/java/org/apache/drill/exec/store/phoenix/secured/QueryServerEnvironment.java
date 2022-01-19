@@ -77,7 +77,8 @@ public class QueryServerEnvironment {
 
   static {
     try {
-       System.setProperty("sun.security.krb5.debug", "true");
+      // uncomment it for debugging purposes
+      // System.setProperty("sun.security.krb5.debug", "true");
       LOCAL_HOST_REVERSE_DNS_LOOKUP_NAME = InetAddress.getByName("127.0.0.1").getCanonicalHostName();
       String userName = System.getProperty("user.name");
       LOGIN_USER = userName != null ? userName : "securecluster";
@@ -356,5 +357,4 @@ public class QueryServerEnvironment {
       KDC.stop();
     }
   }
-
 }

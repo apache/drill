@@ -17,9 +17,7 @@
  */
 package org.apache.drill.exec.store.phoenix;
 
-import java.io.IOException;
 import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -32,6 +30,7 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
@@ -55,11 +54,16 @@ import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
+
+
 public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PhoenixBatchReader.class);
 
   private final PhoenixSubScan subScan;
+  private final boolean impersonationEnabled;
+  private final UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
   private CustomErrorContext errorContext;
   private PhoenixReader reader;
   private PreparedStatement pstmt;
@@ -70,56 +74,63 @@ public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
 
   public PhoenixBatchReader(PhoenixSubScan subScan) {
     this.subScan = subScan;
+    this.impersonationEnabled = subScan.getPlugin().getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
   @Override
   public boolean open(SchemaNegotiator negotiator) {
-    UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
-    return ugi.doAs((PrivilegedAction<Boolean>) () -> {
+    return impersonationEnabled
+      ? ugi.doAs((PrivilegedAction<Boolean>) () -> processOpen(negotiator))
+      : processOpen(negotiator);
+  }
+
+  private boolean processOpen(SchemaNegotiator negotiator) {
+    try {
       errorContext = negotiator.parentErrorContext();
-      try {
-        pstmt =
-          subScan.getPlugin().getDataSource(negotiator.userName()).getConnection().prepareStatement(subScan.getSql());
-        results = pstmt.executeQuery();
-        meta = pstmt.getMetaData();
-      } catch (SQLException e) {
-        throw UserException
-          .dataReadError(e)
-          .message("Failed to execute the phoenix sql query. " + e.getMessage())
-          .addContext(negotiator.parentErrorContext())
-          .build(logger);
-      }
-      try {
-        negotiator.tableSchema(defineMetadata(), true);
-        reader = new PhoenixReader(negotiator.build(), columns, results);
-        bindColumns(reader.getStorage());
-      } catch (SQLException e) {
-        throw UserException
-          .dataReadError(e)
-          .message("Failed to get type of columns from metadata. " + e.getMessage())
-          .addContext(errorContext)
-          .build(logger);
-      }
-      watch = Stopwatch.createStarted();
-      return true;
-    });
+      DataSource ds = subScan.getPlugin().getDataSource(negotiator.userName());
+      PreparedStatement pstmt = ds.getConnection().prepareStatement(subScan.getSql());
+      results = pstmt.executeQuery();
+      meta = pstmt.getMetaData();
+    } catch (SQLException e) {
+      throw UserException
+        .dataReadError(e)
+        .message("Failed to execute the phoenix sql query. " + e.getMessage())
+        .addContext(errorContext)
+        .build(logger);
+    }
+    try {
+      negotiator.tableSchema(defineMetadata(), true);
+      reader = new PhoenixReader(negotiator.build(), columns, results);
+      bindColumns(reader.getStorage());
+    } catch (SQLException e) {
+      throw UserException
+        .dataReadError(e)
+        .message("Failed to get type of columns from metadata. " + e.getMessage())
+        .addContext(errorContext)
+        .build(logger);
+    }
+    watch = Stopwatch.createStarted();
+    return true;
   }
 
   @Override
   public boolean next() {
-    UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
+    return impersonationEnabled
+      ? ugi.doAs((PrivilegedAction<Boolean>) this::processNext)
+      : processNext();
+  }
+
+  private boolean processNext() {
     try {
-      return ugi.doAs((PrivilegedExceptionAction<Boolean>) () -> {
-        while (!reader.getStorage().isFull()) {
-          if (!reader.processRow()) { // return true if one row is processed.
-            watch.stop();
-            logger.debug("Phoenix fetch total record numbers : {}", reader.getRowCount());
-            return false; // the EOF is reached.
-          }
+      while (!reader.getStorage().isFull()) {
+        if (!reader.processRow()) { // return true if one row is processed.
+          watch.stop();
+          logger.debug("Phoenix fetch total record numbers : {}", reader.getRowCount());
+          return false; // the EOF is reached.
         }
-        return true; // batch full but not reached the EOF.
-      });
-    } catch (IOException | InterruptedException e) {
+      }
+      return true; // batch full but not reached the EOF.
+    } catch (SQLException e) {
       throw UserException
         .dataReadError(e)
         .message("Failed to get the data from the result set. " + e.getMessage())
@@ -127,6 +138,7 @@ public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
         .build(logger);
     }
   }
+
 
   @Override
   public void close() {

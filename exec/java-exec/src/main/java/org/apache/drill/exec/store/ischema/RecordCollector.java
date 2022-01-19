@@ -185,24 +185,28 @@ public interface RecordCollector {
     public List<Records.Column> columns(String schemaPath, SchemaPlus schema) {
       AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
       UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
-      return ugi.doAs((PrivilegedAction<List<Records.Column>>) () -> {
-        List<Records.Column> records = new ArrayList<>();
-        for (Pair<String, ? extends Table> tableNameToTable : drillSchema.getTablesByNames(schema.getTableNames())) {
-          String tableName = tableNameToTable.getKey();
-          Table table = tableNameToTable.getValue();
-          Schema.TableType tableType = table.getJdbcTableType();
+      return drillSchema.needToImpersonateReadingData()
+        ? ugi.doAs((PrivilegedAction<List<Records.Column>>) () -> processColumns(schemaPath, schema, drillSchema))
+        : processColumns(schemaPath, schema, drillSchema);
+    }
 
-          if (filterEvaluator.shouldVisitTable(schemaPath, tableName, tableType)) {
-            RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl(DRILL_REL_DATATYPE_SYSTEM));
-            for (RelDataTypeField field : tableRow.getFieldList()) {
-              if (filterEvaluator.shouldVisitColumn(schemaPath, tableName, field.getName())) {
-                records.add(new Records.Column(IS_CATALOG_NAME, schemaPath, tableName, field));
-              }
+    private List<Records.Column> processColumns(String schemaPath, SchemaPlus schema, AbstractSchema drillSchema) {
+      List<Records.Column> records = new ArrayList<>();
+      for (Pair<String, ? extends Table> tableNameToTable : drillSchema.getTablesByNames(schema.getTableNames())) {
+        String tableName = tableNameToTable.getKey();
+        Table table = tableNameToTable.getValue();
+        Schema.TableType tableType = table.getJdbcTableType();
+
+        if (filterEvaluator.shouldVisitTable(schemaPath, tableName, tableType)) {
+          RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl(DRILL_REL_DATATYPE_SYSTEM));
+          for (RelDataTypeField field : tableRow.getFieldList()) {
+            if (filterEvaluator.shouldVisitColumn(schemaPath, tableName, field.getName())) {
+              records.add(new Records.Column(IS_CATALOG_NAME, schemaPath, tableName, field));
             }
           }
         }
-        return records;
-      });
+      }
+      return records;
     }
 
     @Override

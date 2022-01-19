@@ -117,12 +117,8 @@ public class ImplCreator {
     if (context.isImpersonationEnabled()) {
       final UserGroupInformation proxyUgi = ImpersonationUtil.createProxyUgi(root.getUserName(), context.getQueryUserName());
       try {
-        return proxyUgi.doAs(new PrivilegedExceptionAction<RootExec>() {
-          @Override
-          public RootExec run() throws Exception {
-            return ((RootCreator<PhysicalOperator>) getOpCreator(root, context)).getRoot(context, root, childRecordBatches);
-          }
-        });
+        return proxyUgi.doAs((PrivilegedExceptionAction<RootExec>) ()
+          -> ((RootCreator<PhysicalOperator>) getOpCreator(root, context)).getRoot(context, root, childRecordBatches));
       } catch (InterruptedException | IOException e) {
         final String errMsg = String.format("Failed to create RootExec for operator with id '%d'", root.getOperatorId());
         logger.error(errMsg, e);

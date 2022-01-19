@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 
-public abstract class PhoenixBaseTest extends ClusterTest {
+public class PhoenixBaseTest extends ClusterTest {
 
   private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PhoenixBaseTest.class);
 
@@ -63,8 +63,7 @@ public abstract class PhoenixBaseTest extends ClusterTest {
     if (PhoenixTestSuite.isRunningSuite()) {
       QueryServerBasicsIT.testCatalogs();
     }
-    bootDrillMiniCluster();
-    dirTestWatcher.copyResourceToRoot(Paths.get(""));
+    startDrillCluster();
     if (initCount.incrementAndGet() == 1) {
       createSchema(QueryServerBasicsIT.CONN_STRING);
       createTables(QueryServerBasicsIT.CONN_STRING);
@@ -79,7 +78,7 @@ public abstract class PhoenixBaseTest extends ClusterTest {
     }
   }
 
-  public static void bootDrillMiniCluster() throws Exception {
+  public static void startDrillCluster() throws Exception {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
     startCluster(builder);
     Map<String, Object> props = Maps.newHashMap();
@@ -90,11 +89,12 @@ public abstract class PhoenixBaseTest extends ClusterTest {
       QueryServerBasicsIT.CONN_STRING, null, props);
     config.setEnabled(true);
     registry.put(PhoenixStoragePluginConfig.NAME + "123", config);
+    dirTestWatcher.copyResourceToRoot(Paths.get(""));
   }
 
   public static void createSchema(String connString) throws Exception {
     try (final Connection connection = DriverManager.getConnection(connString)) {
-      logger.debug("Phoenix connection established for createSchema with url {}", connString);
+      logger.debug("Phoenix connection established with the specified url : {}", connString);
       assertFalse(connection.isClosed());
       connection.setAutoCommit(true);
       try (final Statement stmt = connection.createStatement()) {

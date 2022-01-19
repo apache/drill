@@ -54,13 +54,17 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
   private final SqlDialect dialect;
   private final PhoenixConvention convention;
   private final PhoenixSchemaFactory schemaFactory;
+  private final boolean impersonationEnabled;
   private final LoadingCache<String, PhoenixDataSource> CACHE = CacheBuilder.newBuilder()
     .maximumSize(5) // Up to 5 clients for impersonation-enabled.
     .expireAfterAccess(10, TimeUnit.MINUTES)
     .build(new CacheLoader<String, PhoenixDataSource>() {
       @Override
       public PhoenixDataSource load(String userName) {
-        return createDataSource(userName);
+        UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
+        return impersonationEnabled
+          ? ugi.doAs((PrivilegedAction<PhoenixDataSource>) () -> createDataSource(userName))
+          : createDataSource(userName);
       }
     });
 
@@ -70,27 +74,12 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
     this.dialect = PhoenixSqlDialect.DEFAULT;
     this.convention = new PhoenixConvention(dialect, name, this);
     this.schemaFactory = new PhoenixSchemaFactory(this);
+    this.impersonationEnabled = context.getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
   @Override
   public StoragePluginConfig getConfig() {
     return config;
-  }
-
-  public PhoenixDataSource getDataSource(String userName) throws SQLException {
-    try {
-      return CACHE.get(userName);
-    } catch (final ExecutionException e) {
-      throw new SQLException("Failure setting up Phoenix DataSource (PQS client)", e);
-    }
-  }
-
-  public SqlDialect getDialect() {
-    return dialect;
-  }
-
-  public PhoenixConvention getConvention() {
-    return convention;
   }
 
   @Override
@@ -120,6 +109,22 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
     AutoCloseables.closeSilently(CACHE::invalidateAll);
   }
 
+  public SqlDialect getDialect() {
+    return dialect;
+  }
+
+  public PhoenixConvention getConvention() {
+    return convention;
+  }
+
+  public PhoenixDataSource getDataSource(String userName) throws SQLException {
+    try {
+      return CACHE.get(userName);
+    } catch (final ExecutionException e) {
+      throw new SQLException("Failure setting up Phoenix DataSource (PQS client)", e);
+    }
+  }
+
   private PhoenixDataSource createDataSource(String userName) {
     // Don't use the pool with the connection
     Map<String, Object> props = config.getProps();
@@ -128,9 +133,8 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
       props.put("password", config.getPassword());
     }
     boolean impersonationEnabled = context.getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
-    UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
-    return ugi.doAs((PrivilegedAction<PhoenixDataSource>) () -> StringUtils.isNotBlank(config.getJdbcURL())
+    return StringUtils.isNotBlank(config.getJdbcURL())
       ? new PhoenixDataSource(config.getJdbcURL(), userName, props, impersonationEnabled) // the props is initiated.
-      : new PhoenixDataSource(config.getHost(), config.getPort(), userName, props, impersonationEnabled));
+      : new PhoenixDataSource(config.getHost(), config.getPort(), userName, props, impersonationEnabled);
   }
 }

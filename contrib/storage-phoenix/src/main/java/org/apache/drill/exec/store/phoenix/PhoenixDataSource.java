@@ -49,9 +49,9 @@ public class PhoenixDataSource implements DataSource {
   private static final String DEFAULT_QUERY_SERVER_REMOTEUSEREXTRACTOR_PARAM = "doAs";
 
   private final String url;
+  private final String user;
   private Map<String, Object> connectionProperties;
   private boolean isFatClient;
-  private String user;
 
   public PhoenixDataSource(String url,
                            String userName,
@@ -73,6 +73,8 @@ public class PhoenixDataSource implements DataSource {
                            boolean impersonationEnabled) {
     Preconditions.checkNotNull(host, userName);
     Preconditions.checkArgument(port > 0, "Please set the correct port.");
+    connectionProperties.forEach((k, v)
+      -> Preconditions.checkArgument(v != null, String.format("does not accept null values : %s", k)));
     this.url = new StringBuilder()
       .append(DEFAULT_URL_HEADER)
       .append(host)
@@ -83,8 +85,6 @@ public class PhoenixDataSource implements DataSource {
       .append(DEFAULT_SERIALIZATION)
       .toString();
     this.user = userName;
-    connectionProperties.forEach((k, v)
-        -> Preconditions.checkArgument(v != null, String.format("does not accept null values : %s", k)));
     this.connectionProperties = connectionProperties;
   }
 
@@ -189,7 +189,7 @@ public class PhoenixDataSource implements DataSource {
     } else {
       throw UserException
         .connectionError()
-        .message("Invalid PQS URL. Please add `doAs=$user` parameter value in case Drill Impersonation enabled")
+        .message("Invalid PQS URL. Please add the value of the `doAs=$user` parameter if Impersonation is enabled.")
         .build(logger);
     }
   }

@@ -79,6 +79,16 @@ Tips :
 }
 ```
 
+### Impersonation
+Configurations :
+1. Enable [Drill User Impersonation](https://drill.apache.org/docs/configuring-user-impersonation/)
+2. Enable [PQS Impersonation](https://phoenix.apache.org/server.html#Impersonation)
+3. PQS URL:
+  1. Provide `host` and `port` and Drill will generate the PQS URL with a doAs parameter of current session user
+  2. Provide the `jdbcURL` with a `doAs` url param and `$user` placeholder as a value, for instance:
+     `jdbc:phoenix:thin:url=http://localhost:8765?doAs=$user`. In case Drill Impersonation is enabled, but `doAs=$user`
+     is missing the User Exception is thrown.
+
 ## Testing
 
  The test framework of phoenix queryserver required the Hadoop 3, but exist `PHOENIX-5993` and `HBASE-22394` :
@@ -156,12 +166,3 @@ apache drill (phoenix123.v1)> select n_name, n_regionkey from nation limit 3 off
 +--------+-------------+
 3 rows selected (0.77 seconds)
 ```
-### Impersonation
-Configurations :
-1. Enable [Drill User Impersonation](https://drill.apache.org/docs/configuring-user-impersonation/)
-2. Enable [PQS Impersonation](https://phoenix.apache.org/server.html#Impersonation)
-3. PQS URL:
-   1. Provide `host` and `port` and Drill will generate the PQS URL with a doAs parameter of current session user
-   2. Provide the `jdbcURL` with a `doAs` url param and `$user` placeholder as a value, for instance: 
-      `jdbc:phoenix:thin:url=http://localhost:8765?doAs=$user`. In case Drill Impersonation is enabled, but `doAs=$user` 
-      is missing the User Exception is thrown.

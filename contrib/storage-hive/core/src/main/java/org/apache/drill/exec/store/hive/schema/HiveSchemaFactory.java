@@ -94,11 +94,6 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
         });
   }
 
-  @Override
-  public boolean needToImpersonateReadingData() {
-    return isDrillImpersonationEnabled && isHS2DoAsSet;
-  }
-
   /**
    * Close this schema factory in preparation for retrying. Attempt to close
    * connections, but just ignore any errors.
@@ -239,6 +234,11 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
     @Override
     public String getTypeName() {
       return HiveStoragePluginConfig.NAME;
+    }
+
+    @Override
+    public boolean needToImpersonateReadingData() {
+      return isDrillImpersonationEnabled && isHS2DoAsSet;
     }
   }
 

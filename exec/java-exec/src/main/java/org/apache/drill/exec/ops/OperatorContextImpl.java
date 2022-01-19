@@ -98,7 +98,7 @@ class OperatorContextImpl extends BaseOperatorContext implements AutoCloseable {
         currentThread.setName(proxyUgi.getUserName() + ":task-delegate-thread");
         final RESULT result;
         try {
-          result = proxyUgi.doAs((PrivilegedExceptionAction<RESULT>) callable::call);
+          result = proxyUgi.doAs((PrivilegedExceptionAction<RESULT>) () -> callable.call());
         } finally {
           currentThread.setName(originalThreadName);
         }
