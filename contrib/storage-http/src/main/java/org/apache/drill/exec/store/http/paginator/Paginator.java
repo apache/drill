@@ -18,12 +18,11 @@
 
 package org.apache.drill.exec.store.http.paginator;
 
-import okhttp3.HttpUrl;
 import okhttp3.HttpUrl.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.util.Iterator;
 
 /**
  * This class is the abstraction for the Paginator class.  There are
@@ -36,50 +35,32 @@ import java.util.List;
  * generate a list of URLs with the appropriate pagination parameters.  In the future
  * this could be parallelized, however in the V1 all these requests are run in series.
  */
-public abstract class Paginator {
+public abstract class Paginator implements Iterator<String> {
 
   private static final Logger logger = LoggerFactory.getLogger(Paginator.class);
   private static final int MAX_ATTEMPTS = 100;
   protected final int pageSize;
-  private boolean hasMore;
 
   public enum paginationMode {
     OFFSET,
     PAGE
   }
 
-  protected final boolean hasLimit;
   protected final paginationMode MODE;
-  protected int index;
+  protected final int limit;
+  protected boolean partialPageReceived;
   protected Builder builder;
-  protected List<HttpUrl> paginatedUrls;
 
-
-  public Paginator(Builder builder, paginationMode mode, int pageSize, boolean hasLimit) {
+  public Paginator(Builder builder, paginationMode mode, int pageSize, int limit) {
     this.MODE = mode;
     this.builder = builder;
     this.pageSize = pageSize;
-    this.hasLimit = hasLimit;
-    hasMore = true;
-    index = 0;
+    this.limit = limit;
+    this.partialPageReceived = false;
   }
 
   public void setBuilder(Builder builder) {
     this.builder = builder;
-  }
-
-  public abstract List<HttpUrl> buildPaginatedURLs();
-
-  /**
-   * This method is to be used when the user does not include a limit in the query
-   * In each paginator, the paginator tracks whether there is more data.  If there is
-   * more data, the paginator marks the hasMore variable false.
-   * @return
-   */
-  public abstract String generateNextUrl();
-
-  public List<HttpUrl> getPaginatedUrls() {
-    return this.paginatedUrls;
   }
 
   /**
@@ -91,41 +72,10 @@ public abstract class Paginator {
    * In the event that the API simply runs out of data, the reader will return false anyway
    * and the pagination will stop.
    */
-  public void endPagination() {
-    hasMore = false;
+  public void notifyPartialPage() {
+    partialPageReceived = true;
+    logger.debug("Ending pagination: partial page received");
   }
 
   public int getPageSize() { return pageSize; }
-
-  public String next() {
-    if (!hasMore()) {
-      return null;
-    }
-    String url = paginatedUrls.get(index).toString();
-    index++;
-    if (index >= paginatedUrls.size()) {
-      hasMore = false;
-    }
-    return url;
-  }
-
-  /**
-   * Returns true if the paginator has more pages, false if not.
-   * @return True if there are more pages to visit, false if not.
-   */
-  public boolean hasMore() {
-    return hasMore;
-  }
-
-  /**
-   * Returns the count of URLs generated.  Only meaningful for OFFSET paginator.
-   * @return The count of pages.
-   */
-  public int count() {
-    if (paginatedUrls == null) {
-      return 0;
-    } else {
-      return paginatedUrls.size();
-    }
-  }
 }

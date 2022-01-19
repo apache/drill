@@ -179,8 +179,7 @@ public class HttpCSVBatchReader extends HttpBatchReader {
 
       if (paginator != null &&
         maxRecords < 0 && (resultLoader.totalRowCount()) < paginator.getPageSize()) {
-        logger.debug("Ending CSV pagination: Pages too small");
-        paginator.endPagination();
+        paginator.notifyPartialPage();
       }
       return false;
     }

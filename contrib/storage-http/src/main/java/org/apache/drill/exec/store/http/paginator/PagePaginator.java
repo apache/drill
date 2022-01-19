@@ -18,14 +18,12 @@
 
 package org.apache.drill.exec.store.http.paginator;
 
-import okhttp3.HttpUrl;
 import okhttp3.HttpUrl.Builder;
 import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.NoSuchElementException;
 
 public class PagePaginator extends Paginator {
 
@@ -35,7 +33,6 @@ public class PagePaginator extends Paginator {
   private final String pageParam;
   private final String pageSizeParam;
   private int currentPage;
-
 
   /**
    * The Page Paginator works similarly to the offset paginator.  It requires the user to supply a page number query
@@ -47,11 +44,10 @@ public class PagePaginator extends Paginator {
    * @param pageSizeParam The API Query parameter which specifies how many results per page
    */
   public PagePaginator(Builder builder, int limit, int pageSize, String pageParam, String pageSizeParam) {
-    super(builder, paginationMode.PAGE, pageSize, limit > 0);
+    super(builder, paginationMode.PAGE, pageSize, limit);
     this.limit = limit;
     this.pageParam = pageParam;
     this.pageSizeParam = pageSizeParam;
-    this.paginatedUrls = buildPaginatedURLs();
     currentPage = 1;
 
     // Page size must be greater than zero
@@ -64,16 +60,16 @@ public class PagePaginator extends Paginator {
   }
 
   @Override
-  public String next() {
-    if (hasLimit) {
-      return super.next();
-    } else {
-      return generateNextUrl();
-    }
+  public boolean hasNext() {
+    return !partialPageReceived && (limit < 0 || (currentPage-1) * pageSize < limit);
   }
 
   @Override
-  public String generateNextUrl() {
+  public String next() {
+    if (!hasNext()) {
+      throw new NoSuchElementException();
+    }
+
     builder.removeAllEncodedQueryParameters(pageParam);
     builder.removeAllEncodedQueryParameters(pageSizeParam);
 
@@ -82,24 +78,5 @@ public class PagePaginator extends Paginator {
     currentPage++;
 
     return builder.build().url().toString();
-  }
-
-
-  @Override
-  public List<HttpUrl> buildPaginatedURLs() {
-    this.paginatedUrls = new ArrayList<>();
-    int pageCount = Math.max(1, (limit / pageSize));
-
-    for (int i = 1; i <= pageCount; i++) {
-      // Clear out old params
-      builder.removeAllEncodedQueryParameters(pageParam);
-      builder.removeAllEncodedQueryParameters(pageSizeParam);
-
-      builder.addQueryParameter(pageParam, String.valueOf(i));
-      builder.addQueryParameter(pageSizeParam, String.valueOf(pageSize));
-      paginatedUrls.add(builder.build());
-    }
-
-    return paginatedUrls;
   }
 }

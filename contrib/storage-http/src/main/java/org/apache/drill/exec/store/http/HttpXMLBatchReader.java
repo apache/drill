@@ -133,8 +133,7 @@ public class HttpXMLBatchReader extends HttpBatchReader {
 
     if (paginator != null &&
       maxRecords < 0 && (resultLoader.totalRowCount()) < paginator.getPageSize()) {
-      logger.debug("Ending XML pagination: Pages too small");
-      paginator.endPagination();
+      paginator.notifyPartialPage();
     }
 
     return result;

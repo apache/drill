@@ -165,7 +165,7 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
         * a new batch reader for each URL.  In the future, this could be parallelized in
         * the group scan such that the calls could be sent to different drillbits.
         */
-        if (!paginator.hasMore()) {
+        if (!paginator.hasNext()) {
           return null;
         }
 

@@ -244,7 +244,7 @@ public class SimpleHttp {
       if (paginator != null && (
         response.code() != 200 || response.body() == null ||
         response.body().contentLength() == 0)) {
-        paginator.endPagination();
+        paginator.notifyPartialPage();
       }
 
       // If the request is unsuccessful, throw a UserException
