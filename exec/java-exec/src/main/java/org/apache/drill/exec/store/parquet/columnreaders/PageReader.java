@@ -543,16 +543,26 @@ class PageReader {
     clearDataBufferAndReaders();
     do {
       nextInternal();
-      // continue until we hit a non-empty data page
+
+      if (pageHeader == null) {
+        throw new DrillRuntimeException(String.format(
+          "Failed to read another page having read %d of %d values from its " +
+          "column chunk.",
+          parentColumnReader.totalValuesRead,
+          totalValueCount
+        ));
+      }
     } while (
+      // Continue until we hit a non-empty data page
       pageHeader.uncompressed_page_size == 0
       || (pageHeader.getType() != PageType.DATA_PAGE
       && pageHeader.getType() != PageType.DATA_PAGE_V2)
     );
 
-    if (pageData == null || pageHeader == null) {
+    if (pageData == null) {
       throw new DrillRuntimeException(String.format(
-        "Failed to read another page having read %d of %d values from its column chunk.",
+        "Failed to read another page having read %d of %d values from its " +
+        "column chunk.",
         parentColumnReader.totalValuesRead,
         totalValueCount
       ));
