@@ -88,7 +88,7 @@ public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
     try {
       errorContext = negotiator.parentErrorContext();
       DataSource ds = subScan.getPlugin().getDataSource(negotiator.userName());
-      PreparedStatement pstmt = ds.getConnection().prepareStatement(subScan.getSql());
+      pstmt = ds.getConnection().prepareStatement(subScan.getSql());
       results = pstmt.executeQuery();
       meta = pstmt.getMetaData();
     } catch (SQLException e) {
@@ -138,7 +138,6 @@ public class PhoenixBatchReader implements ManagedReader<SchemaNegotiator> {
         .build(logger);
     }
   }
-
 
   @Override
   public void close() {
