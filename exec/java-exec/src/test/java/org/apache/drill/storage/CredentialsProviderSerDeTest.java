@@ -48,7 +48,6 @@ public class CredentialsProviderSerDeTest extends ClusterTest {
   public static final VaultContainer<?> vaultContainer =
       new VaultContainer<>(DockerImageName.parse("vault").withTag("1.1.3"))
           .withVaultToken(VAULT_TOKEN_VALUE)
-          .withVaultPort(8200)
           .withSecretInVault(SECRET_PATH,
               "top_secret=password1",
               "db_password=dbpassword1");
@@ -56,7 +55,7 @@ public class CredentialsProviderSerDeTest extends ClusterTest {
   @BeforeClass
   public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher)
-        .configProperty(VaultCredentialsProvider.VAULT_ADDRESS, "http://" + vaultContainer.getHost() + ":" + vaultContainer.getMappedPort(8200))
+        .configProperty(VaultCredentialsProvider.VAULT_ADDRESS, "http://" + vaultContainer.getHost() + ":" + vaultContainer.getFirstMappedPort())
         .configProperty(VaultCredentialsProvider.VAULT_TOKEN, VAULT_TOKEN_VALUE));
   }
 
