@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.hive.writers.primitive;
 import org.apache.drill.exec.vector.complex.writer.TimeStampWriter;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorUtils;
+import org.apache.hadoop.io.LongWritable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -33,10 +34,14 @@ public class HiveTimestampWriter extends AbstractSingleValueWriter<PrimitiveObje
 
   @Override
   public void write(Object value) {
-    String timestampString = PrimitiveObjectInspectorUtils.getString(value, inspector);
-    long timestampMillis = new DateTime(Timestamp.valueOf(timestampString).getTime())
-        .withZoneRetainFields(DateTimeZone.UTC).getMillis();
-    writer.writeTimeStamp(timestampMillis);
+    if (value instanceof LongWritable) {
+      writer.writeTimeStamp(((LongWritable) value).get() / 1000);
+    } else {
+      String timestampString = PrimitiveObjectInspectorUtils.getString(value, inspector);
+      long timestampMillis = new DateTime(Timestamp.valueOf(timestampString).getTime())
+          .withZoneRetainFields(DateTimeZone.UTC).getMillis();
+      writer.writeTimeStamp(timestampMillis);
+    }
   }
 
 }
