@@ -106,6 +106,7 @@
     <docker.repository>apache/drill</docker.repository>
     <antlr.version>4.8-1</antlr.version>
     <maven.version>3.8.4</maven.version>
+    <maven.version.min>3.6.3</maven.version.min>
     <commons.net.version>3.6</commons.net.version>
     <commons.validator.version>1.6</commons.validator.version>
     <commons.text.version>1.6</commons.text.version>
@@ -632,7 +633,7 @@
             <configuration>
               <rules>
                 <requireMavenVersion>
-                  <version>[${maven.version},4)</version>
+                  <version>[${maven.version.min},4)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
                   <version>[1.8,18)</version>
