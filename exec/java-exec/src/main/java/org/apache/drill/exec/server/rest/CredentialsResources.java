@@ -27,6 +27,7 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -43,7 +44,10 @@ import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AUTHENTICATED_ROLE;
+
 @Path("/")
+@RolesAllowed(AUTHENTICATED_ROLE)
 public class CredentialsResources {
   private static final Logger logger = LoggerFactory.getLogger(CredentialsResources.class);
   private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR =
@@ -70,13 +74,13 @@ public class CredentialsResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getPlugins() {
     List<StoragePluginModel> model = getPluginsJSON().stream()
-      .map(plugin -> new StoragePluginModel(plugin, request))
+      .map(plugin -> new StoragePluginModel(plugin, request, sc))
       .collect(Collectors.toList());
     // Creating an empty model with CSRF token, if there are no storage plugins
     if (model.isEmpty()) {
-      model.add(new StoragePluginModel(null, request));
+      model.add(new StoragePluginModel(null, request, sc));
     }
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/list.ftl", sc, model);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/credentials/list.ftl", sc, model);
   }
 
   @GET
@@ -110,7 +114,7 @@ public class CredentialsResources {
     pluginGroup = StringUtils.isNotEmpty(pluginGroup) ? pluginGroup.replace("/", "") : ALL_PLUGINS;
     return StreamSupport.stream(
         Spliterators.spliteratorUnknownSize(storage.storedConfigs(filter).entrySet().iterator(), Spliterator.ORDERED), false)
-      .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue()))
+      .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue(), sc))
       .sorted(PLUGIN_COMPARATOR)
       .collect(Collectors.toList());
   }

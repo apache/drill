@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -29,19 +30,27 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.exec.store.security.PerUserUsernamePasswordCredentials;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
+
+import java.io.IOException;
 
 @XmlRootElement
 public class PluginConfigWrapper {
-
+  private static final Logger logger = LoggerFactory.getLogger(PluginConfigWrapper.class);
   private final String name;
   private final StoragePluginConfig config;
+  private final SecurityContext sc;
 
   @JsonCreator
   public PluginConfigWrapper(@JsonProperty("name") String name,
-      @JsonProperty("config") StoragePluginConfig config) {
+                             @JsonProperty("config") StoragePluginConfig config, SecurityContext sc) {
     this.name = name;
     this.config = config;
+    this.sc = sc;
   }
 
   public String getName() { return name; }
@@ -50,6 +59,59 @@ public class PluginConfigWrapper {
 
   public boolean enabled() {
     return config.isEnabled();
+  }
+
+  public String getUserName() {
+    System.out.println("In username function.");
+    String username = "";
+    String activeUser = null;
+    if (config instanceof AbstractSecuredStoragePluginConfig) {
+      System.out.println("In if statement.");
+      logger.debug("Getting username");
+      AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
+      CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+
+      activeUser = sc.getUserPrincipal().getName();
+      System.out.println("Found active user: " + activeUser);
+
+      PerUserUsernamePasswordCredentials credentials = new PerUserUsernamePasswordCredentials(credentialsProvider, activeUser);
+      username = credentials.getUsername();
+      System.out.println("Got username: " + username);
+    }
+
+    return username;
+  }
+
+  public String getPassword() {
+    String password = "";
+    String activeUser = null;
+    if (config instanceof AbstractSecuredStoragePluginConfig) {
+      AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
+      CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+
+      activeUser = sc.getUserPrincipal().getName();
+      System.out.println("Found active user: " + activeUser);
+
+      PerUserUsernamePasswordCredentials credentials = new PerUserUsernamePasswordCredentials(credentialsProvider, activeUser);
+      password = credentials.getPassword();
+    }
+    return password;
+  }
+
+  public boolean missingCreds() {
+    if (config instanceof AbstractSecuredStoragePluginConfig) {
+      String activeUser = null;
+      AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
+      CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+      try {
+        activeUser = UserGroupInformation.getLoginUser().getShortUserName();
+      } catch (IOException e) {
+        // Do nothing...
+      }
+      PerUserUsernamePasswordCredentials credentials = new PerUserUsernamePasswordCredentials(credentialsProvider, activeUser);
+      return StringUtils.isEmpty(credentials.getUsername()) || StringUtils.isEmpty(credentials.getPassword());
+    }
+    return false;
   }
 
   public void createOrUpdateInStorage(StoragePluginRegistry storage) throws PluginException {

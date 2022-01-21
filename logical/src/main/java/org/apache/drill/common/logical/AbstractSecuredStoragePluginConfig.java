@@ -17,13 +17,18 @@
  */
 package org.apache.drill.common.logical;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+
+import java.io.IOException;
+import java.util.Map;
 
 public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginConfig {
 
   protected final CredentialsProvider credentialsProvider;
-  protected final boolean perUserCredentials;
+  protected final Boolean perUserCredentials;
   protected boolean directCredentials;
 
 
@@ -55,7 +60,50 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
     return credentialsProvider;
   }
 
-  public boolean getPerUserCredentials() {
-    return perUserCredentials;
+  public boolean isPerUserCredentials() {
+    return perUserCredentials != null && perUserCredentials;
+  }
+
+  @Override
+  public boolean isEnabled() {
+    /*
+    This method overrides the isEnabled method of the StoragePlugin when per-user credentials are enabled.
+    The issue that arises is that per-user credentials are enabled and a user_a has set up the creds, but user_b
+    has not, some plugins will not initialize which could potentially destabilize Drill.  This modification treats
+    plugins as disabled when per-user credentials are enabled AND the active user's credentials are null.
+
+    Obviously, this only applies to plugins which use the AbstractSecuredPluginConfig, IE: not file based plugins, or
+    HBase and a few others.  This doesn't actually disable the plugin, but when a user w/o credentials tries to access
+    the plugin, either in a query or via info_schema queries, the plugin will act as if it is disabled for that user.
+     */
+    String activeUser;
+    try {
+      activeUser = UserGroupInformation.getLoginUser().getShortUserName();
+    } catch (IOException e) {
+      activeUser = null;
+    }
+
+    if (! perUserCredentials || StringUtils.isEmpty(activeUser)) {
+      return super.isEnabled();
+    } else {
+      /*
+        If the credential provider isn't null, but the credentials are missing,
+        disable the plugin.  Also disable it if the credential provider is null.
+       */
+      if (credentialsProvider != null) {
+        Map<String, String> credentials = credentialsProvider.getCredentials(activeUser);
+        if (credentials.isEmpty() ||
+            ! credentials.containsKey("username") ||
+            ! credentials.containsKey("password") ||
+          StringUtils.isEmpty(credentials.get("username")) ||
+          StringUtils.isEmpty(credentials.get("password"))) {
+          return false;
+        }
+      } else {
+        // Case for null credential provider.
+        return false;
+      }
+      return super.isEnabled();
+    }
   }
 }

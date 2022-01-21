@@ -58,8 +58,27 @@ public class PlainCredentialsProvider implements CredentialsProvider {
     return credentials;
   }
 
+  /**
+   * Returns the credentials for a given active user.  If that user does not have credentials,
+   * the function will add an entry for that user with keys username, password which are both null.
+   * @param activeUser A String of the currently logged in user
+   * @return A Map of the active user's credentials
+   */
   @Override
   public Map<String, String> getCredentials(String activeUser) {
+    // For null active user, return an empty hashmap.
+    if (activeUser == null) {
+      Map<String, String> tempMap = new HashMap<>();
+      tempMap.put("username", null);
+      tempMap.put("password", null);
+      return tempMap;
+    } else if (! perUserCredentials.containsKey(activeUser)) {
+      // If the user doesn't have anything, create a new entry for them and add it to the per-user table
+      Map<String, String> tempMap = new HashMap<>();
+      tempMap.put("username", null);
+      tempMap.put("password", null);
+      perUserCredentials.put(activeUser, tempMap);
+    }
     return perUserCredentials.get(activeUser);
   }
 

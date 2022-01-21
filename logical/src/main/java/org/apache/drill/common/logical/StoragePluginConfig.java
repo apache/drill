@@ -28,7 +28,7 @@ public abstract class StoragePluginConfig {
 
   // DO NOT include enabled status in equality and hash
   // comparisons; doing so will break the plugin registry.
-  private Boolean enabled;
+  protected Boolean enabled;
 
   /**
    * Check for enabled status of the plugin

@@ -42,6 +42,11 @@ public interface CredentialsProvider {
   @JsonIgnore
   Map<String, String> getCredentials();
 
+  /**
+   * This method returns the credentials associated with a specific user.
+   * @param username The logged in username
+   * @return A Map of the logged in user's credentials.
+   */
   @JsonIgnore
   default Map<String, String> getCredentials(String username) {
     throw UserException.unsupportedError()

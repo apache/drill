@@ -29,6 +29,7 @@ import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.store.security.PerUserUsernamePasswordCredentials;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.exec.util.ImpersonationUtil;
 
@@ -96,11 +97,6 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
     return null;
   }
 
-  @JsonProperty("perUserCredentials")
-  public boolean getPerUserCredentials() {
-    return super.getPerUserCredentials();
-  }
-
   @JsonProperty("caseInsensitiveTableNames")
   public boolean areTableNamesCaseInsensitive() {
     return caseInsensitiveTableNames;
@@ -117,8 +113,9 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
 
   @JsonIgnore
   public UsernamePasswordCredentials getUsernamePasswordCredentials(String username) {
+    System.out.println("Getting credentials for " + username);
     if (perUserCredentials) {
-      return new UsernamePasswordCredentials(credentialsProvider, username);
+      return new PerUserUsernamePasswordCredentials(credentialsProvider, username);
     } else {
       return new UsernamePasswordCredentials(credentialsProvider);
     }

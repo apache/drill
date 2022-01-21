@@ -34,6 +34,7 @@ import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.security.PerUserUsernamePasswordCredentials;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -123,7 +124,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   }
 
   @VisibleForTesting
-  static HikariDataSource initDataSource(JdbcStorageConfig config, String username) {
+  static HikariDataSource initDataSource(JdbcStorageConfig config, String activeUserName) {
     try {
       Properties properties = new Properties();
       UsernamePasswordCredentials credentials;
@@ -160,15 +161,44 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       hikariConfig.setDriverClassName(config.getDriver());
       hikariConfig.setJdbcUrl(config.getUrl());
 
-      if (config.getPerUserCredentials() && StringUtils.isNotEmpty(username)) {
-        logger.debug("Initializing JDBC connection with username: {}", username);
-        credentials = config.getUsernamePasswordCredentials(username);
+      /*
+      JDBC Connections from Drill require a valid connection when the plugin is created. The issue
+      arises when a user has either invalid or null credentials for this storage plugin.  This will potentially
+      destabilize Drill.  The solution is to provide a default set of credentials which has enough permissions
+      so that the connection will not fail, but not enough for the user to query any data.  Drill will first
+      attempt to connect using the user's credentials, and if that fails, will fall back to the default.
+      If the default credentials are null, Drill will throw an exception.
+       */
+      if (config.isPerUserCredentials() && StringUtils.isNotEmpty(activeUserName)) {
+        logger.debug("Initializing JDBC connection with username: {}", activeUserName);
+        credentials = config.getUsernamePasswordCredentials(activeUserName);
+        PerUserUsernamePasswordCredentials perUserCredentials = (PerUserUsernamePasswordCredentials) credentials;
+        // If the user's creds are null, fall back to default creds.
+        String username = null;
+        String password = null;
+        // If the user's credentials are null, fall back on the default credentials
+        if (StringUtils.isEmpty(perUserCredentials.getUsername()) || StringUtils.isEmpty(perUserCredentials.getPassword())) {
+          logger.debug("Connecting using default credentials.");
+          username = perUserCredentials.getDefaultUsername();
+          password = perUserCredentials.getDefaultPassword();
+        }
+
+        if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
+          throw UserException.connectionError()
+            .message("With per-user credentials enabled, you must provide a default set of credentials.")
+            .build(logger);
+        }
+
+        hikariConfig.setUsername(username);
+        hikariConfig.setPassword(password);
+
       } else {
         logger.debug("Initializing JDBC connection without username");
         credentials = config.getUsernamePasswordCredentials();
+        hikariConfig.setUsername(credentials.getUsername());
+        hikariConfig.setPassword(credentials.getPassword());
       }
-      hikariConfig.setUsername(credentials.getUsername());
-      hikariConfig.setPassword(credentials.getPassword());
+
       // this serves as a hint to the driver, which *might* enable database optimizations
       hikariConfig.setReadOnly(!config.isWritable());
 
