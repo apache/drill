@@ -25,7 +25,7 @@
   <!-- Ace Libraries for Syntax Formatting -->
   <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
   <script src="/static/js/ace-code-editor/theme-eclipse.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/serverMessage.js"></script>
+  <script src="/static/js/credentialServerMessage.js"></script>
 </#macro>
 
 <#macro page_body>

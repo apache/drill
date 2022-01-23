@@ -141,6 +141,7 @@ public class CredentialsResources {
         .build();
     }
 
+    System.out.println("Found and updating " + plugin);
     // Get the config
     StoragePluginConfig rawConfig = storage.getStoredConfig(plugin);
     if (!(rawConfig instanceof AbstractSecuredStoragePluginConfig)) {
@@ -160,29 +161,35 @@ public class CredentialsResources {
     // Get the credential provider
     CredentialsProvider credentialProvider = config.getCredentialsProvider();
     credentialProvider.setUserCredentials(username, password, sc.getUserPrincipal().getName());
+    System.out.println("Setting username and password " + username + " " + password + "for " + sc.getUserPrincipal().getName());
+    System.out.println(credentialProvider);
     try {
-      storage.validatedPut(plugin, config);
+      PluginConfigWrapper updatedConfig = new PluginConfigWrapper(plugin, config, sc);
+      storage.validatedPut(plugin, updatedConfig.getConfig());
+      System.out.println("Successfully updated plugin: " + config);
+      // Get creds
+      System.out.println("Updated creds: " + ((AbstractSecuredStoragePluginConfig)storage.getStoredConfig(plugin)).getCredentialsProvider().getCredentials(sc.getUserPrincipal().getName()));
+
     } catch (PluginException e) {
       logger.error("Error while saving plugin", e);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
         .entity(message("Error while saving plugin: %s", e.getMessage()))
         .build();
     }
+    System.out.println("Finished update");
     return Response.ok().entity(message("Success")).build();
   }
   private JsonResult message(String message, Object... args) {
+    System.out.println("Generating success message: " + message);
     return new JsonResult(String.format(message, args));
   }
 
   @XmlRootElement
   public static class JsonResult {
-
     private final String result;
-
     public JsonResult(String result) {
       this.result = result;
     }
-
     public String getResult() {
       return result;
     }

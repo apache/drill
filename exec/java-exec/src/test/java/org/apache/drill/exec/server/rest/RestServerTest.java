@@ -61,6 +61,20 @@ public class RestServerTest extends ClusterTest {
     return new RestQueryRunner(q, cluster.drillbit().getManager(), connection).run();
   }
 
+  protected QueryResult runQueryAs(QueryWrapper q, String username) throws Exception {
+    SystemOptionManager systemOptions = cluster.drillbit().getContext().getOptionManager();
+    WebSessionResources webSessionResources = new WebSessionResources(
+      cluster.drillbit().getContext().getAllocator(),
+      new LocalAddress("test"),
+      UserSession.Builder.newBuilder()
+        .withOptionManager(systemOptions)
+        .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName(username).build())
+        .build(),
+      Mockito.mock(Promise.class));
+    WebUserConnection connection = new WebUserConnection.AnonWebUserConnection(webSessionResources);
+    return new RestQueryRunner(q, cluster.drillbit().getManager(), connection).run();
+  }
+
   protected QueryProfile getQueryProfile(QueryResult result) {
     String queryId = result.getQueryId();
     WorkManager workManager = cluster.drillbit().getManager();
