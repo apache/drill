@@ -48,7 +48,7 @@
       ${pluginModel.getPlugin().getName()}
                   </td>
                   <td style="border:none;">
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-plugin-modal"
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-plugin-modal" data-plugin="${pluginModel.getPlugin().getName()}"
                         data-username="${pluginModel.getPlugin().getUserName()}" data-password="${pluginModel.getPlugin().getPassword()}">
       Update Credentials
                     </button>
@@ -70,9 +70,10 @@
         </div>
         <div class="modal-body">
 
-          <form id="createForm" role="form" action="/credentials/create_update" method="POST">
+          <form id="createForm" role="form" action="/credentials/update_credentials" method="POST">
             <input type="text" class="form-control" name="username" id="usernameField" placeholder="Username" />
             <input type="text" class="form-control" name="password" id="passwordField" placeholder="Password" />
+            <input type="hidden" name="plugin" id="plugin" />
             <div style="text-align: right; margin: 10px">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
               <button type="submit" class="btn btn-primary" onclick="doCreate()">Update Credentials</button>
@@ -95,65 +96,21 @@ $(function () {
       var button = $(event.relatedTarget);
       var username = button.data('username');
       var password = button.data('password');
+      var plugin = button.data('plugin');
 
+      $('#plugin').val(plugin);
       $('#usernameField').val(username);
       $('#passwordField').val(password);
     });
   });
 
-function doUpdate(name) {
-      window.location.href = "/credentials/" + encodeURIComponent(name);
-      }
-
-      function doCreate() {
-      $("#createForm").ajaxForm({
+  function doCreate() {
+    $("#createForm").ajaxForm({
       dataType: 'json',
       success: serverMessage,
       error: serverMessage
-      });
-      }
-
-      // Modal windows management
-      let exportInstance; // global variable
-      $('#pluginsModal').on('show.bs.modal', function(event) {
-      const button = $(event.relatedTarget); // Button that triggered the modal
-      const modal = $(this);
-      exportInstance = button.attr("name");
-
-      const optionalBlock = modal.find('#plugin-set');
-      if (exportInstance === "all") {
-      optionalBlock.removeClass('hide');
-      modal.find('.modal-title').text('Export all Plugins configs');
-      } else {
-      modal.find('#plugin-set').addClass('hide');
-      modal.find('.modal-title').text(exportInstance.toUpperCase() + ' Plugin config');
-      }
-
-      modal.find('#export').click(function() {
-      let format;
-      if (modal.find('#json').is(":checked")) {
-      format = 'json';
-      }
-      if (modal.find('#hocon').is(":checked")) {
-      format = 'conf';
-      }
-      let url;
-      if (exportInstance === "all") {
-      let pluginGroup = "";
-      if (modal.find('#all').is(":checked")) {
-      pluginGroup = 'all';
-      } else if (modal.find('#enabled').is(":checked")) {
-      pluginGroup = 'enabled';
-      } else if (modal.find('#disabled').is(":checked")) {
-      pluginGroup = 'disabled';
-      }
-      url = '/storage/' + pluginGroup + '/plugins/export/' + format;
-      } else {
-      url = '/storage/' + encodeURIComponent(exportInstance) + '/export/' + format;
-      }
-      window.open(url);
-  });
-  });
+    });
+  }
   </script>
   <#include "*/alertModals.ftl">
 </#macro>

@@ -53,6 +53,13 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
     this.credentialsProvider = credentialsProvider;
   }
 
+  // Copy Constructor to update credentials
+  public AbstractSecuredStoragePluginConfig(AbstractSecuredStoragePluginConfig that, CredentialsProvider credentialsProvider) {
+    this.perUserCredentials = that.perUserCredentials;
+    this.directCredentials = that.directCredentials;
+    this.credentialsProvider = credentialsProvider;
+  }
+
   public CredentialsProvider getCredentialsProvider() {
     if (directCredentials) {
       return null;

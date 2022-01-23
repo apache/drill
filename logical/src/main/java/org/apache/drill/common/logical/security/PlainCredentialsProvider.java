@@ -83,6 +83,19 @@ public class PlainCredentialsProvider implements CredentialsProvider {
   }
 
   @Override
+  public void setUserCredentials(String username, String password, String activeUser) {
+    Map<String, String> userCredentials;
+    if (perUserCredentials.containsKey(activeUser)) {
+      userCredentials = perUserCredentials.get(activeUser);
+    } else {
+      userCredentials = new HashMap<>();
+      perUserCredentials.put(activeUser, userCredentials);
+    }
+    userCredentials.put("username", username);
+    userCredentials.put("password", password);
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;

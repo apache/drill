@@ -18,11 +18,12 @@
 
 package org.apache.drill.exec.server.rest;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.StorageResources.StoragePluginModel;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.StoragePluginRegistry.PluginEncodingException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -41,7 +42,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -123,39 +126,65 @@ public class CredentialsResources {
       .sorted(PLUGIN_COMPARATOR)
       .collect(Collectors.toList());
   }
-  
-  // Allows JSON that includes comments. However, since the JSON is immediately
-  // serialized, the comments are lost. Would be better to validate the JSON,
-  // then write the original JSON directly to the persistent store, and read
-  // JSON from the store, rather than letting Jackson produce it. That way,
-  // comments are preserved.
+
   @POST
-  @Path("/storage/create_update")
+  @Path("/credentials/update_credentials")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response createOrUpdatePlugin(@FormParam("name") String name, @FormParam("config") String storagePluginConfig) {
-    name = name.trim();
-    if (name.isEmpty()) {
+  public Response createOrUpdatePlugin(@FormParam("plugin") String plugin,
+                                       @FormParam("username") String username,
+                                       @FormParam("password") String password) {
+    plugin = plugin.trim();
+    if (plugin.isEmpty()) {
       return Response.status(Response.Status.BAD_REQUEST)
         .entity(message("A storage config name may not be empty"))
         .build();
     }
 
-    try {
-      storage.putJson(name, storagePluginConfig);
-      return Response.ok().entity(message("Success")).build();
-    } catch (PluginEncodingException e) {
-      logger.warn("Error in JSON mapping: {}", storagePluginConfig, e);
-      return Response.status(Response.Status.BAD_REQUEST)
-        .entity(message("Invalid JSON: %s", e.getMessage()))
+    // Get the config
+    StoragePluginConfig rawConfig = storage.getStoredConfig(plugin);
+    if (!(rawConfig instanceof AbstractSecuredStoragePluginConfig)) {
+      return Response.status(Status.INTERNAL_SERVER_ERROR)
+        .entity(message(plugin + " does not support per user credentials."))
         .build();
+    }
+
+    AbstractSecuredStoragePluginConfig config = (AbstractSecuredStoragePluginConfig)rawConfig;
+
+    if (!config.isPerUserCredentials()) {
+      return Response.status(Status.INTERNAL_SERVER_ERROR)
+        .entity(message(plugin + " does not support per user credentials."))
+        .build();
+    }
+
+    // Get the credential provider
+    CredentialsProvider credentialProvider = config.getCredentialsProvider();
+    credentialProvider.setUserCredentials(username, password, sc.getUserPrincipal().getName());
+    try {
+      storage.validatedPut(plugin, config);
     } catch (PluginException e) {
       logger.error("Error while saving plugin", e);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
         .entity(message("Error while saving plugin: %s", e.getMessage()))
         .build();
     }
+    return Response.ok().entity(message("Success")).build();
+  }
+  private JsonResult message(String message, Object... args) {
+    return new JsonResult(String.format(message, args));
   }
 
+  @XmlRootElement
+  public static class JsonResult {
 
+    private final String result;
+
+    public JsonResult(String result) {
+      this.result = result;
+    }
+
+    public String getResult() {
+      return result;
+    }
+  }
 }

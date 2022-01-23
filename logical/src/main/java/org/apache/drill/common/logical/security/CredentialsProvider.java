@@ -41,7 +41,6 @@ public interface CredentialsProvider {
 
   @JsonIgnore
   Map<String, String> getCredentials();
-
   /**
    * This method returns the credentials associated with a specific user.
    * @param username The logged in username
@@ -56,6 +55,13 @@ public interface CredentialsProvider {
 
   @JsonIgnore
   default Map<String, String> getGlobalCredentials() {
+    throw UserException.unsupportedError()
+      .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
+      .build(logger);
+  }
+
+  @JsonIgnore
+  default void setUserCredentials(String username, String password, String activeUser) {
     throw UserException.unsupportedError()
       .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
       .build(logger);

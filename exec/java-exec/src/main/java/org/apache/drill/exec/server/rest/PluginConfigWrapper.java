@@ -62,7 +62,7 @@ public class PluginConfigWrapper {
 
   public String getUserName() {
     String username = "";
-    String activeUser = null;
+    String activeUser;
     if (config instanceof AbstractSecuredStoragePluginConfig) {
       logger.debug("Getting username");
       AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
@@ -80,7 +80,7 @@ public class PluginConfigWrapper {
 
   public String getPassword() {
     String password = "";
-    String activeUser = null;
+    String activeUser;
     if (config instanceof AbstractSecuredStoragePluginConfig) {
       AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
       CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
@@ -96,10 +96,9 @@ public class PluginConfigWrapper {
 
   public boolean missingCreds() {
     if (config instanceof AbstractSecuredStoragePluginConfig) {
-      String activeUser = null;
       AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
       CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
-      activeUser = sc.getUserPrincipal().getName();
+      String activeUser = sc.getUserPrincipal().getName();
 
       PerUserUsernamePasswordCredentials credentials = new PerUserUsernamePasswordCredentials(credentialsProvider, activeUser);
       return StringUtils.isEmpty(credentials.getUsername()) || StringUtils.isEmpty(credentials.getPassword());
