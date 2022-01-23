@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.jdbc;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.BaseTest;
@@ -28,7 +27,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -26,6 +26,8 @@ import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -96,6 +98,15 @@ public class DynamicRootSchema extends DynamicSchema {
       .orElse(null);
   }
 
+  private void applyUsernameToConfig(String schemaName) {
+    StoragePluginConfig rawConfig = storages.getDefinedConfig(schemaName);
+    if (! (rawConfig instanceof AbstractSecuredStoragePluginConfig)) {
+      return;
+    }
+    AbstractSecuredStoragePluginConfig securedConfig = (AbstractSecuredStoragePluginConfig)rawConfig;
+    securedConfig.setActiveUser(schemaConfig.getUserName());
+  }
+
   /**
    * Loads schema factory(storage plugin) for specified {@code schemaName}
    * @param schemaName the name of the schema
@@ -104,6 +115,7 @@ public class DynamicRootSchema extends DynamicSchema {
   private void loadSchemaFactory(String schemaName, boolean caseSensitive) {
     try {
       SchemaPlus schemaPlus = this.plus();
+      applyUsernameToConfig(schemaName);
       StoragePlugin plugin = storages.getPlugin(schemaName);
       if (plugin != null) {
         plugin.registerSchemas(schemaConfig, schemaPlus);
