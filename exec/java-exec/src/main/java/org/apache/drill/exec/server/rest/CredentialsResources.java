@@ -22,6 +22,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.StorageResources.StoragePluginModel;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginEncodingException;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
@@ -30,11 +32,15 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.Collections;
 import java.util.Comparator;
@@ -111,11 +117,45 @@ public class CredentialsResources {
       default:
         return Collections.emptyList();
     }
-    pluginGroup = StringUtils.isNotEmpty(pluginGroup) ? pluginGroup.replace("/", "") : ALL_PLUGINS;
     return StreamSupport.stream(
         Spliterators.spliteratorUnknownSize(storage.storedConfigs(filter).entrySet().iterator(), Spliterator.ORDERED), false)
       .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue(), sc))
       .sorted(PLUGIN_COMPARATOR)
       .collect(Collectors.toList());
   }
+  
+  // Allows JSON that includes comments. However, since the JSON is immediately
+  // serialized, the comments are lost. Would be better to validate the JSON,
+  // then write the original JSON directly to the persistent store, and read
+  // JSON from the store, rather than letting Jackson produce it. That way,
+  // comments are preserved.
+  @POST
+  @Path("/storage/create_update")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response createOrUpdatePlugin(@FormParam("name") String name, @FormParam("config") String storagePluginConfig) {
+    name = name.trim();
+    if (name.isEmpty()) {
+      return Response.status(Response.Status.BAD_REQUEST)
+        .entity(message("A storage config name may not be empty"))
+        .build();
+    }
+
+    try {
+      storage.putJson(name, storagePluginConfig);
+      return Response.ok().entity(message("Success")).build();
+    } catch (PluginEncodingException e) {
+      logger.warn("Error in JSON mapping: {}", storagePluginConfig, e);
+      return Response.status(Response.Status.BAD_REQUEST)
+        .entity(message("Invalid JSON: %s", e.getMessage()))
+        .build();
+    } catch (PluginException e) {
+      logger.error("Error while saving plugin", e);
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+        .entity(message("Error while saving plugin: %s", e.getMessage()))
+        .build();
+    }
+  }
+
+
 }

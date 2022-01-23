@@ -31,12 +31,11 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.exec.store.security.PerUserUsernamePasswordCredentials;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 
-import java.io.IOException;
+
 
 @XmlRootElement
 public class PluginConfigWrapper {
@@ -62,21 +61,18 @@ public class PluginConfigWrapper {
   }
 
   public String getUserName() {
-    System.out.println("In username function.");
     String username = "";
     String activeUser = null;
     if (config instanceof AbstractSecuredStoragePluginConfig) {
-      System.out.println("In if statement.");
       logger.debug("Getting username");
       AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
       CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
-
       activeUser = sc.getUserPrincipal().getName();
-      System.out.println("Found active user: " + activeUser);
-
       PerUserUsernamePasswordCredentials credentials = new PerUserUsernamePasswordCredentials(credentialsProvider, activeUser);
       username = credentials.getUsername();
-      System.out.println("Got username: " + username);
+      if (StringUtils.isEmpty(username)) {
+        username = "";
+      }
     }
 
     return username;
@@ -88,12 +84,12 @@ public class PluginConfigWrapper {
     if (config instanceof AbstractSecuredStoragePluginConfig) {
       AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
       CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
-
       activeUser = sc.getUserPrincipal().getName();
-      System.out.println("Found active user: " + activeUser);
-
       PerUserUsernamePasswordCredentials credentials = new PerUserUsernamePasswordCredentials(credentialsProvider, activeUser);
       password = credentials.getPassword();
+      if (StringUtils.isEmpty(password)) {
+        password = "";
+      }
     }
     return password;
   }
@@ -103,11 +99,8 @@ public class PluginConfigWrapper {
       String activeUser = null;
       AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
       CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
-      try {
-        activeUser = UserGroupInformation.getLoginUser().getShortUserName();
-      } catch (IOException e) {
-        // Do nothing...
-      }
+      activeUser = sc.getUserPrincipal().getName();
+
       PerUserUsernamePasswordCredentials credentials = new PerUserUsernamePasswordCredentials(credentialsProvider, activeUser);
       return StringUtils.isEmpty(credentials.getUsername()) || StringUtils.isEmpty(credentials.getPassword());
     }

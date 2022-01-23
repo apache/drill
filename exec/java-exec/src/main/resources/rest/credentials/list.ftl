@@ -48,23 +48,16 @@
       ${pluginModel.getPlugin().getName()}
                   </td>
                   <td style="border:none;">
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-plugin-modal">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-plugin-modal"
+                        data-username="${pluginModel.getPlugin().getUserName()}" data-password="${pluginModel.getPlugin().getPassword()}">
       Update Credentials
                     </button>
                   </td>
-  <td>
-    <h3>Creds</h3>
-    ${pluginModel.getPlugin().getName()} <br>
-    ${pluginModel.getPlugin().getUserName()} <br>
-    ${pluginModel.getPlugin().getPassword()} <br>
-  </td>
                 </tr>
   </#list>
           </tbody>
         </table>
       </div>
-
-<!-- TODO Get model to modal -- >
 
 <#--onclick="doUpdate('${pluginModel.getPlugin().getName()}')"-->
 <#-- Modal window for creating plugin -->
@@ -77,12 +70,12 @@
         </div>
         <div class="modal-body">
 
-          <form id="createForm" role="form" action="/storage/create_update" method="POST">
-            <input type="text" class="form-control" name="username" placeholder="Username" />
-            <input type="text" class="form-control" name="password" placeholder="Password" />
+          <form id="createForm" role="form" action="/credentials/create_update" method="POST">
+            <input type="text" class="form-control" name="username" id="usernameField" placeholder="Username" />
+            <input type="text" class="form-control" name="password" id="passwordField" placeholder="Password" />
             <div style="text-align: right; margin: 10px">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-              <button type="submit" class="btn btn-primary" onclick="doCreate()">Create</button>
+              <button type="submit" class="btn btn-primary" onclick="doCreate()">Update Credentials</button>
             </div>
             <input type="hidden" name="csrfToken" value="${model[0].getCsrfToken()}">
           </form>
@@ -96,12 +89,17 @@
 <#-- Modal window for creating plugin -->
 
   <script>
-function editGroupName(username, password) {
-  window.alert(username + " " + password );
-    //$('input#gid').val(id);
-  //$('input#gname.form-control').val(name);
-  }
+// Populate the modal fields
+$(function () {
+  $('#new-plugin-modal').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget);
+      var username = button.data('username');
+      var password = button.data('password');
 
+      $('#usernameField').val(username);
+      $('#passwordField').val(password);
+    });
+  });
 
 function doUpdate(name) {
       window.location.href = "/credentials/" + encodeURIComponent(name);
