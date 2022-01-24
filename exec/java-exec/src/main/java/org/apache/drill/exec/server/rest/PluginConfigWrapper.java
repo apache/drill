@@ -21,6 +21,8 @@ import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -36,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 
 
-
 @XmlRootElement
 public class PluginConfigWrapper {
   private static final Logger logger = LoggerFactory.getLogger(PluginConfigWrapper.class);
@@ -46,7 +47,8 @@ public class PluginConfigWrapper {
 
   @JsonCreator
   public PluginConfigWrapper(@JsonProperty("name") String name,
-                             @JsonProperty("config") StoragePluginConfig config, SecurityContext sc) {
+                             @JsonProperty("config") StoragePluginConfig config,
+                             @JacksonInject SecurityContext sc) {
     this.name = name;
     this.config = config;
     this.sc = sc;
@@ -60,6 +62,7 @@ public class PluginConfigWrapper {
     return config.isEnabled();
   }
 
+  @JsonIgnore
   public String getUserName() {
     String username = "";
     String activeUser;
@@ -74,10 +77,10 @@ public class PluginConfigWrapper {
         username = "";
       }
     }
-
     return username;
   }
 
+  @JsonIgnore
   public String getPassword() {
     String password = "";
     String activeUser;
@@ -94,6 +97,7 @@ public class PluginConfigWrapper {
     return password;
   }
 
+  @JsonIgnore
   public boolean missingCreds() {
     if (config instanceof AbstractSecuredStoragePluginConfig) {
       AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
