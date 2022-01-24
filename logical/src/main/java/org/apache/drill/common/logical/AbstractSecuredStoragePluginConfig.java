@@ -30,6 +30,7 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
   protected final CredentialsProvider credentialsProvider;
   protected final Boolean perUserCredentials;
   protected boolean directCredentials;
+  private boolean forceEnabled;
 
   // DO NOT include activeUser in equality and hash
   // comparisons; doing so will break the plugin registry.
@@ -38,12 +39,14 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
 
   public AbstractSecuredStoragePluginConfig() {
     this(PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,  true);
+    forceEnabled = false;
   }
 
   public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean directCredentials) {
     this.credentialsProvider = credentialsProvider;
     this.directCredentials = directCredentials;
     this.perUserCredentials = false;
+    this.forceEnabled = false;
   }
 
   public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean directCredentials, boolean perUserCredentials) {
@@ -55,6 +58,7 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
     }
     // Recreate credential provider with per user credentials
     this.credentialsProvider = credentialsProvider;
+    forceEnabled = false;
   }
 
   // Copy Constructor to update credentials
@@ -83,6 +87,10 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
     return activeUser;
   }
 
+  public void forceEnabled() {
+    forceEnabled = true;
+  }
+
   @Override
   public boolean isEnabled() {
     /*
@@ -95,8 +103,13 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
     HBase and a few others.  This doesn't actually disable the plugin, but when a user w/o credentials tries to access
     the plugin, either in a query or via info_schema queries, the plugin will act as if it is disabled for that user.
      */
+    if (forceEnabled) {
+      return super.isEnabled();
+    }
+
     String activeUser;
     try {
+      // TODO Fix me...  We need to get the correct logged in user
       activeUser = UserGroupInformation.getLoginUser().getShortUserName();
     } catch (IOException e) {
       activeUser = null;

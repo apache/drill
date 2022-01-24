@@ -436,7 +436,6 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
     moveToEphemeral(oldEntry);
     pluginStore.put(name, config);
-    System.out.println("Registry added " + name + " Config: " + config);
   }
 
   @Override
