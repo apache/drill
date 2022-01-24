@@ -18,10 +18,13 @@
 
 package org.apache.drill.exec.server.rest;
 
+import com.google.gson.Gson;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.server.rest.StorageResources.JsonResult;
 import org.apache.drill.exec.server.rest.StorageResources.StoragePluginModel;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
@@ -131,22 +134,22 @@ public class CredentialsResources {
   @Path("/credentials/update_credentials")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response createOrUpdatePlugin(@FormParam("plugin") String plugin,
+  public Response createOrUpdatePlugin(@FormParam("plugin") String pluginName,
                                        @FormParam("username") String username,
                                        @FormParam("password") String password) {
-    plugin = plugin.trim();
-    if (plugin.isEmpty()) {
+    String activeUser = sc.getUserPrincipal().getName();
+    pluginName = pluginName.trim();
+    if (pluginName.isEmpty()) {
       return Response.status(Response.Status.BAD_REQUEST)
         .entity(message("A storage config name may not be empty"))
         .build();
     }
 
-    System.out.println("Found and updating " + plugin);
     // Get the config
-    StoragePluginConfig rawConfig = storage.getStoredConfig(plugin);
+    StoragePluginConfig rawConfig = storage.getStoredConfig(pluginName);
     if (!(rawConfig instanceof AbstractSecuredStoragePluginConfig)) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message(plugin + " does not support per user credentials."))
+        .entity(message(pluginName + " does not support per user credentials."))
         .build();
     }
 
@@ -154,33 +157,35 @@ public class CredentialsResources {
 
     if (!config.isPerUserCredentials()) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message(plugin + " does not support per user credentials."))
+        .entity(message(pluginName + " does not support per user credentials."))
         .build();
     }
 
     // Get the credential provider
     CredentialsProvider credentialProvider = config.getCredentialsProvider();
-    credentialProvider.setUserCredentials(username, password, sc.getUserPrincipal().getName());
-    System.out.println("Setting username and password " + username + " " + password + "for " + sc.getUserPrincipal().getName());
-    System.out.println(credentialProvider);
-    try {
-      PluginConfigWrapper updatedConfig = new PluginConfigWrapper(plugin, config, sc);
-      storage.validatedPut(plugin, updatedConfig.getConfig());
-      System.out.println("Successfully updated plugin: " + config);
-      // Get creds
-      System.out.println("Updated creds: " + ((AbstractSecuredStoragePluginConfig)storage.getStoredConfig(plugin)).getCredentialsProvider().getCredentials(sc.getUserPrincipal().getName()));
+    credentialProvider.setUserCredentials(username, password, activeUser);
+    System.out.println("New credential provider: " + credentialProvider);
 
+    // Since the config classes are not accessible from java-exec, we have to serialize them,
+    // replace the credential provider with the updated one, and update the storage plugin registry
+    AbstractSecuredStoragePluginConfig newConfig = config.updateCredentialProvider(credentialProvider);
+    System.out.println("New Plugin configs: " + newConfig + " Creds: " + credentialProvider);
+
+    try {
+      storage.validatedPut(pluginName, newConfig);
+      storage.setEnabled(pluginName, true);
     } catch (PluginException e) {
       logger.error("Error while saving plugin", e);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
         .entity(message("Error while saving plugin: %s", e.getMessage()))
         .build();
     }
+
     System.out.println("Finished update");
     return Response.ok().entity(message("Success")).build();
   }
+
   private JsonResult message(String message, Object... args) {
-    System.out.println("Generating success message: " + message);
     return new JsonResult(String.format(message, args));
   }
 

@@ -103,6 +103,11 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
     return Objects.hash(connection);
   }
 
+  @Override
+  public AbstractSecuredStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return null;
+  }
+
   public static class MongoPluginOptimizations {
 
     private boolean supportsProjectPushdown = true;

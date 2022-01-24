@@ -140,4 +140,9 @@ public class PhoenixStoragePluginConfig extends AbstractSecuredStoragePluginConf
         .field("props", props)
         .toString();
   }
+
+  @Override
+  public AbstractSecuredStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return null;
+  }
 }

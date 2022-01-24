@@ -39,17 +39,17 @@ public class PlainCredentialsProvider implements CredentialsProvider {
       new PlainCredentialsProvider(Collections.emptyMap());
 
   private final Map<String, String> credentials;
-  private final Map<String, Map<String, String>> perUserCredentials;
+  private final Map<String, Map<String, String>> userCredentials;
 
   @JsonCreator
   public PlainCredentialsProvider(@JsonProperty("credentials") Map<String, String> credentials) {
     this.credentials = credentials;
-    this.perUserCredentials = new HashMap<>();
+    this.userCredentials = new HashMap<>();
   }
 
   public PlainCredentialsProvider(String username, Map<String, String> credentials) {
     this(credentials);
-    perUserCredentials.put(username,credentials);
+    userCredentials.put(username,credentials);
   }
 
   @Override
@@ -66,33 +66,34 @@ public class PlainCredentialsProvider implements CredentialsProvider {
    */
   @Override
   public Map<String, String> getCredentials(String activeUser) {
-    // For null active user, return an empty hashmap.
     if (activeUser == null) {
       Map<String, String> tempMap = new HashMap<>();
       tempMap.put("username", null);
       tempMap.put("password", null);
       return tempMap;
-    } else if (! perUserCredentials.containsKey(activeUser)) {
+    } else if (! userCredentials.containsKey(activeUser)) {
       // If the user doesn't have anything, create a new entry for them and add it to the per-user table
       Map<String, String> tempMap = new HashMap<>();
       tempMap.put("username", null);
       tempMap.put("password", null);
-      perUserCredentials.put(activeUser, tempMap);
+      userCredentials.put(activeUser, tempMap);
     }
-    return perUserCredentials.get(activeUser);
+    return userCredentials.get(activeUser);
   }
 
   @Override
   public void setUserCredentials(String username, String password, String activeUser) {
     Map<String, String> userCredentials;
-    if (perUserCredentials.containsKey(activeUser)) {
-      userCredentials = perUserCredentials.get(activeUser);
+    if (this.userCredentials.containsKey(activeUser)) {
+      userCredentials = this.userCredentials.get(activeUser);
+      userCredentials.put("username", username);
+      userCredentials.put("password", password);
     } else {
       userCredentials = new HashMap<>();
-      perUserCredentials.put(activeUser, userCredentials);
+      userCredentials.put("username", username);
+      userCredentials.put("password", password);
+      this.userCredentials.put(activeUser, userCredentials);
     }
-    userCredentials.put("username", username);
-    userCredentials.put("password", password);
   }
 
   @Override
@@ -105,11 +106,16 @@ public class PlainCredentialsProvider implements CredentialsProvider {
     }
     PlainCredentialsProvider that = (PlainCredentialsProvider) o;
     return Objects.equals(credentials, that.credentials) &&
-      Objects.equals(perUserCredentials, that.perUserCredentials);
+      Objects.equals(userCredentials, that.userCredentials);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(credentials, perUserCredentials);
+    return Objects.hash(credentials, userCredentials);
+  }
+
+  @Override
+  public String toString() {
+    return credentials + " " + userCredentials;
   }
 }

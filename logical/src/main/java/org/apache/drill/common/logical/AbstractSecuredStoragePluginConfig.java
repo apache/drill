@@ -125,4 +125,6 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
       return super.isEnabled();
     }
   }
+
+  public abstract AbstractSecuredStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider);
 }

@@ -64,7 +64,17 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
     this.writable = writable;
     this.caseInsensitiveTableNames = caseInsensitiveTableNames;
     this.sourceParameters = sourceParameters == null ? Collections.emptyMap() : sourceParameters;
-    this.writerBatchSize = writerBatchSize == 0 ? writerBatchSize = DEFAULT_MAX_WRITER_BATCH_SIZE : writerBatchSize;
+    this.writerBatchSize = writerBatchSize == 0 ? DEFAULT_MAX_WRITER_BATCH_SIZE : writerBatchSize;
+  }
+
+  private JdbcStorageConfig(JdbcStorageConfig that, CredentialsProvider credentialsProvider) {
+    super(credentialsProvider, credentialsProvider == null, that.perUserCredentials);
+    this.driver = that.driver;
+    this.url = that.url;
+    this.writable = that.writable;
+    this.caseInsensitiveTableNames = that.caseInsensitiveTableNames;
+    this.sourceParameters = that.sourceParameters;
+    this.writerBatchSize = that.writerBatchSize;
   }
 
   public String getDriver() {
@@ -153,5 +163,10 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       .field("writerBatchSize", writerBatchSize)
       .field("caseInsensitiveTableNames", caseInsensitiveTableNames)
       .toString();
+  }
+
+  @Override
+  public JdbcStorageConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new JdbcStorageConfig(this, credentialsProvider);
   }
 }
