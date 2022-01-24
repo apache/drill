@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +28,7 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.parser.SqlDropAlias;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -36,8 +36,9 @@ import java.util.Locale;
 /**
  * Handler for handling DROP ALIAS statements.
  */
-@Slf4j
 public class DropAliasHandler extends BaseAliasHandler {
+
+  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(DropAliasHandler.class);
 
   public DropAliasHandler(SqlHandlerConfig config) {
     super(config);

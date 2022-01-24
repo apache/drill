@@ -27,22 +27,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.val;
 
 public class PStoreTestUtil {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PStoreTestUtil.class);
 
   public static void test(PersistentStoreProvider provider) throws Exception {
-    val store = provider.getOrCreateStore(
+    PersistentStore<String> store = provider.getOrCreateStore(
       PersistentStoreConfig.newJacksonBuilder(new ObjectMapper(), String.class)
         .name("sys.test")
         .build()
     );
     try {
-      val expectedMap = new HashMap<String, String>() {{
-        put("first", "value1");
-        put("second", "value2");
-      }}; // todo: rewrite with Java11
+      Map<String, String> expectedMap = new HashMap<>();
+      expectedMap.put("first", "value1");
+      expectedMap.put("second", "value2");
       expectedMap.forEach(store::put);
       waitForNumProps(store, expectedMap.size());
 

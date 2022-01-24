@@ -20,15 +20,9 @@ package org.apache.drill.exec.store.mongo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
-@Getter
-@Setter
-@SuperBuilder
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(MongoSubScan.ShardedMongoSubScanSpec.class),
@@ -45,4 +39,46 @@ public class BaseMongoSubScanSpec {
   @JsonProperty
   private final List<String> hosts;
 
+  protected BaseMongoSubScanSpec(BaseMongoSubScanSpecBuilder<?> b) {
+    this.dbName = b.dbName;
+    this.collectionName = b.collectionName;
+    this.hosts = b.hosts;
+  }
+
+  public String getDbName() {
+    return this.dbName;
+  }
+
+  public String getCollectionName() {
+    return this.collectionName;
+  }
+
+  public List<String> getHosts() {
+    return this.hosts;
+  }
+
+  public static abstract class BaseMongoSubScanSpecBuilder<B extends BaseMongoSubScanSpecBuilder<B>> {
+    private String dbName;
+
+    private String collectionName;
+
+    private List<String> hosts;
+
+    public B dbName(String dbName) {
+      this.dbName = dbName;
+      return self();
+    }
+
+    public B collectionName(String collectionName) {
+      this.collectionName = collectionName;
+      return self();
+    }
+
+    public B hosts(List<String> hosts) {
+      this.hosts = hosts;
+      return self();
+    }
+
+    protected abstract B self();
+  }
 }

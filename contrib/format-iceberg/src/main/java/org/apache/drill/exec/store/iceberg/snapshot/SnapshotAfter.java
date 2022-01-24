@@ -18,13 +18,15 @@
 package org.apache.drill.exec.store.iceberg.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.AllArgsConstructor;
 import org.apache.iceberg.TableScan;
 
 @JsonTypeName("appendsAfter")
-@AllArgsConstructor
 public class SnapshotAfter implements Snapshot {
   private final long fromSnapshotId;
+
+  public SnapshotAfter(long fromSnapshotId) {
+    this.fromSnapshotId = fromSnapshotId;
+  }
 
   @Override
   public TableScan apply(TableScan tableScan) {

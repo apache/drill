@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.enumerable;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.schema.SchemaPlus;
@@ -38,6 +37,8 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
 import org.codehaus.commons.compiler.CompileException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -51,8 +52,9 @@ import java.util.stream.StreamSupport;
  * {@link ManagedReader} implementation that compiles and executes specified code,
  * calls the method on it for obtaining the values, and reads the results using column converters.
  */
-@Slf4j
 public class EnumerableRecordReader implements ManagedReader<SchemaNegotiator> {
+
+  private static final Logger logger = LoggerFactory.getLogger(EnumerableRecordReader.class);
 
   private static final String CLASS_NAME = "Baz";
 

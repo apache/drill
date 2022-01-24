@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.iceberg.snapshot;
 
-import lombok.Builder;
-import lombok.Getter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class SnapshotFactory {
@@ -56,8 +54,6 @@ public class SnapshotFactory {
     }
   }
 
-  @Builder
-  @Getter
   public static class SnapshotContext {
     private final Long snapshotId;
 
@@ -66,5 +62,66 @@ public class SnapshotFactory {
     private final Long fromSnapshotId;
 
     private final Long toSnapshotId;
+
+    SnapshotContext(SnapshotContextBuilder builder) {
+      this.snapshotId = builder.snapshotId;
+      this.snapshotAsOfTime = builder.snapshotAsOfTime;
+      this.fromSnapshotId = builder.fromSnapshotId;
+      this.toSnapshotId = builder.toSnapshotId;
+    }
+
+    public static SnapshotContextBuilder builder() {
+      return new SnapshotContextBuilder();
+    }
+
+    public Long getSnapshotId() {
+      return this.snapshotId;
+    }
+
+    public Long getSnapshotAsOfTime() {
+      return this.snapshotAsOfTime;
+    }
+
+    public Long getFromSnapshotId() {
+      return this.fromSnapshotId;
+    }
+
+    public Long getToSnapshotId() {
+      return this.toSnapshotId;
+    }
+
+    public static class SnapshotContextBuilder {
+      private Long snapshotId;
+
+      private Long snapshotAsOfTime;
+
+      private Long fromSnapshotId;
+
+      private Long toSnapshotId;
+
+      public SnapshotContextBuilder snapshotId(Long snapshotId) {
+        this.snapshotId = snapshotId;
+        return this;
+      }
+
+      public SnapshotContextBuilder snapshotAsOfTime(Long snapshotAsOfTime) {
+        this.snapshotAsOfTime = snapshotAsOfTime;
+        return this;
+      }
+
+      public SnapshotContextBuilder fromSnapshotId(Long fromSnapshotId) {
+        this.fromSnapshotId = fromSnapshotId;
+        return this;
+      }
+
+      public SnapshotContextBuilder toSnapshotId(Long toSnapshotId) {
+        this.toSnapshotId = toSnapshotId;
+        return this;
+      }
+
+      public SnapshotContext build() {
+        return new SnapshotContext(this);
+      }
+    }
   }
 }

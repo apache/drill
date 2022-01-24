@@ -21,11 +21,7 @@ package org.apache.drill.exec.store.jdbc;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
 public class JdbcWriterField {
   private final MinorType dataType;
   private final String fieldName;
@@ -36,5 +32,17 @@ public class JdbcWriterField {
     this.dataType = dataType;
     this.fieldName = fieldName;
     this.mode = mode;
+  }
+
+  public MinorType getDataType() {
+    return this.dataType;
+  }
+
+  public String getFieldName() {
+    return this.fieldName;
+  }
+
+  public DataMode getMode() {
+    return this.mode;
   }
 }

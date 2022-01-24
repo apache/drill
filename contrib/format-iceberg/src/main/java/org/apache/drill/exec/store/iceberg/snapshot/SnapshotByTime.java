@@ -18,14 +18,16 @@
 package org.apache.drill.exec.store.iceberg.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.AllArgsConstructor;
 import org.apache.iceberg.TableScan;
 
 @JsonTypeName("asOfTime")
-@AllArgsConstructor
 public class SnapshotByTime implements Snapshot {
 
   private final long snapshotAtTime;
+
+  public SnapshotByTime(long snapshotAtTime) {
+    this.snapshotAtTime = snapshotAtTime;
+  }
 
   @Override
   public TableScan apply(TableScan tableScan) {

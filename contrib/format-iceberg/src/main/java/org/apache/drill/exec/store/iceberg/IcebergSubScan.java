@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.Builder;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -85,19 +84,20 @@ public class IcebergSubScan extends AbstractBase implements SubScan {
     this.maxRecords = maxRecords;
   }
 
-  @Builder(toBuilder = true)
-  private IcebergSubScan(String userName, IcebergFormatPlugin formatPlugin,
-    List<SchemaPath> columns, LogicalExpression condition, TupleMetadata schema,
-    List<IcebergWork> workList, TableScan tableScan, String path, int maxRecords) {
-    super(userName);
-    this.formatPlugin = formatPlugin;
-    this.columns = columns;
-    this.condition = condition;
-    this.schema = schema;
-    this.workList = workList;
-    this.tableScan = tableScan;
-    this.path = path;
-    this.maxRecords = maxRecords;
+  private IcebergSubScan(IcebergSubScanBuilder builder) {
+    super(builder.userName);
+    this.formatPlugin = builder.formatPlugin;
+    this.columns = builder.columns;
+    this.condition = builder.condition;
+    this.schema = builder.schema;
+    this.workList = builder.workList;
+    this.tableScan = builder.tableScan;
+    this.path = builder.path;
+    this.maxRecords = builder.maxRecords;
+  }
+
+  public static IcebergSubScanBuilder builder() {
+    return new IcebergSubScanBuilder();
   }
 
   private TableScan getTableScan(List<SchemaPath> columns, String path, LogicalExpression condition) {
@@ -165,5 +165,87 @@ public class IcebergSubScan extends AbstractBase implements SubScan {
 
   public TupleMetadata getSchema() {
     return schema;
+  }
+
+  public IcebergSubScanBuilder toBuilder() {
+    return new IcebergSubScanBuilder()
+      .userName(this.userName)
+      .formatPlugin(this.formatPlugin)
+      .columns(this.columns)
+      .condition(this.condition)
+      .schema(this.schema)
+      .workList(this.workList)
+      .tableScan(this.tableScan)
+      .path(this.path)
+      .maxRecords(this.maxRecords);
+  }
+
+  public static class IcebergSubScanBuilder {
+    private String userName;
+
+    private IcebergFormatPlugin formatPlugin;
+
+    private List<SchemaPath> columns;
+
+    private LogicalExpression condition;
+
+    private TupleMetadata schema;
+
+    private List<IcebergWork> workList;
+
+    private TableScan tableScan;
+
+    private String path;
+
+    private int maxRecords;
+
+    public IcebergSubScanBuilder userName(String userName) {
+      this.userName = userName;
+      return this;
+    }
+
+    public IcebergSubScanBuilder formatPlugin(IcebergFormatPlugin formatPlugin) {
+      this.formatPlugin = formatPlugin;
+      return this;
+    }
+
+    public IcebergSubScanBuilder columns(List<SchemaPath> columns) {
+      this.columns = columns;
+      return this;
+    }
+
+    public IcebergSubScanBuilder condition(LogicalExpression condition) {
+      this.condition = condition;
+      return this;
+    }
+
+    public IcebergSubScanBuilder schema(TupleMetadata schema) {
+      this.schema = schema;
+      return this;
+    }
+
+    public IcebergSubScanBuilder workList(List<IcebergWork> workList) {
+      this.workList = workList;
+      return this;
+    }
+
+    public IcebergSubScanBuilder tableScan(TableScan tableScan) {
+      this.tableScan = tableScan;
+      return this;
+    }
+
+    public IcebergSubScanBuilder path(String path) {
+      this.path = path;
+      return this;
+    }
+
+    public IcebergSubScanBuilder maxRecords(int maxRecords) {
+      this.maxRecords = maxRecords;
+      return this;
+    }
+
+    public IcebergSubScan build() {
+      return new IcebergSubScan(this);
+    }
   }
 }

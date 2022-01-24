@@ -20,17 +20,12 @@ package org.apache.drill.exec.store.parquet;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Objects;
 
-@EqualsAndHashCode
 @JsonTypeName("parquet") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ParquetFormatConfig implements FormatPluginConfig {
 
@@ -47,7 +42,7 @@ public class ParquetFormatConfig implements FormatPluginConfig {
    * old format and automatically shift the corrupted values into corrected
    * ones automatically.
    */
- @Getter private final boolean autoCorrectCorruptDates;
+ private final boolean autoCorrectCorruptDates;
 
   /**
    * Parquet statistics for UTF-8 data in files created prior to 1.9.1 parquet
@@ -57,28 +52,28 @@ public class ParquetFormatConfig implements FormatPluginConfig {
    *
    * {@link org.apache.drill.exec.ExecConstants#PARQUET_READER_STRINGS_SIGNED_MIN_MAX}
    */
-  @Getter private final boolean enableStringsSignedMinMax;
+  private final boolean enableStringsSignedMinMax;
 
   // {@link org.apache.drill.exec.ExecConstants#PARQUET_BLOCK_SIZE}
-  @Getter private final Integer blockSize;
+  private final Integer blockSize;
 
   // {@link org.apache.drill.exec.ExecConstants#PARQUET_PAGE_SIZE}
-  @Getter private final Integer pageSize;
+  private final Integer pageSize;
 
   // {@link org.apache.drill.exec.ExecConstants#PARQUET_WRITER_USE_SINGLE_FS_BLOCK}
-  @Getter private final Boolean useSingleFSBlock;
+  private final Boolean useSingleFSBlock;
 
   // {@link org.apache.drill.exec.ExecConstants#PARQUET_WRITER_COMPRESSION_TYPE}
-  @Getter private final String writerCompressionType;
+  private final String writerCompressionType;
 
   // {@link org.apache.drill.exec.ExecConstants#PARQUET_WRITER_LOGICAL_TYPE_FOR_DECIMALS}
-  @Getter private final String writerLogicalTypeForDecimals;
+  private final String writerLogicalTypeForDecimals;
 
   // {@link org.apache.drill.exec.ExecConstants#PARQUET_WRITER_USE_PRIMITIVE_TYPES_FOR_DECIMALS}
-  @Getter private final Boolean writerUsePrimitivesForDecimals;
+  private final Boolean writerUsePrimitivesForDecimals;
 
   // {@link org.apache.drill.exec.ExecConstants#PARQUET_WRITER_FORMAT_VERSION}
-  @Getter private final String writerFormatVersion;
+  private final String writerFormatVersion;
 
   public ParquetFormatConfig() {
     // config opts which are also system opts must default to null so as not
@@ -87,7 +82,6 @@ public class ParquetFormatConfig implements FormatPluginConfig {
   }
 
   @JsonCreator
-  @Builder
   public ParquetFormatConfig(
     @JsonProperty("autoCorrectCorruptDates") Boolean autoCorrectCorruptDates,
     @JsonProperty("enableStringsSignedMinMax") boolean enableStringsSignedMinMax,
@@ -110,6 +104,10 @@ public class ParquetFormatConfig implements FormatPluginConfig {
     this.writerFormatVersion = writerFormatVersion;
   }
 
+  public static ParquetFormatConfigBuilder builder() {
+    return new ParquetFormatConfigBuilder();
+  }
+
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
@@ -123,5 +121,137 @@ public class ParquetFormatConfig implements FormatPluginConfig {
       .field("writerUsePrimitivesForDecimals", writerUsePrimitivesForDecimals)
       .field("writerFormatVersion", writerFormatVersion)
       .toString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ParquetFormatConfig that = (ParquetFormatConfig) o;
+    return autoCorrectCorruptDates == that.autoCorrectCorruptDates
+      && enableStringsSignedMinMax == that.enableStringsSignedMinMax
+      && Objects.equals(blockSize, that.blockSize)
+      && Objects.equals(pageSize, that.pageSize)
+      && Objects.equals(useSingleFSBlock, that.useSingleFSBlock)
+      && Objects.equals(writerCompressionType, that.writerCompressionType)
+      && Objects.equals(writerLogicalTypeForDecimals, that.writerLogicalTypeForDecimals)
+      && Objects.equals(writerUsePrimitivesForDecimals, that.writerUsePrimitivesForDecimals)
+      && Objects.equals(writerFormatVersion, that.writerFormatVersion);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(autoCorrectCorruptDates, enableStringsSignedMinMax, blockSize, pageSize,
+      useSingleFSBlock, writerCompressionType, writerLogicalTypeForDecimals,
+      writerUsePrimitivesForDecimals, writerFormatVersion);
+  }
+
+  public boolean isAutoCorrectCorruptDates() {
+    return this.autoCorrectCorruptDates;
+  }
+
+  public boolean isEnableStringsSignedMinMax() {
+    return this.enableStringsSignedMinMax;
+  }
+
+  public Integer getBlockSize() {
+    return this.blockSize;
+  }
+
+  public Integer getPageSize() {
+    return this.pageSize;
+  }
+
+  public Boolean getUseSingleFSBlock() {
+    return this.useSingleFSBlock;
+  }
+
+  public String getWriterCompressionType() {
+    return this.writerCompressionType;
+  }
+
+  public String getWriterLogicalTypeForDecimals() {
+    return this.writerLogicalTypeForDecimals;
+  }
+
+  public Boolean getWriterUsePrimitivesForDecimals() {
+    return this.writerUsePrimitivesForDecimals;
+  }
+
+  public String getWriterFormatVersion() {
+    return this.writerFormatVersion;
+  }
+
+  public static class ParquetFormatConfigBuilder {
+    private Boolean autoCorrectCorruptDates;
+
+    private boolean enableStringsSignedMinMax;
+
+    private Integer blockSize;
+
+    private Integer pageSize;
+
+    private Boolean useSingleFSBlock;
+
+    private String writerCompressionType;
+
+    private String writerLogicalTypeForDecimals;
+
+    private Boolean writerUsePrimitivesForDecimals;
+
+    private String writerFormatVersion;
+
+    public ParquetFormatConfigBuilder autoCorrectCorruptDates(Boolean autoCorrectCorruptDates) {
+      this.autoCorrectCorruptDates = autoCorrectCorruptDates;
+      return this;
+    }
+
+    public ParquetFormatConfigBuilder enableStringsSignedMinMax(boolean enableStringsSignedMinMax) {
+      this.enableStringsSignedMinMax = enableStringsSignedMinMax;
+      return this;
+    }
+
+    public ParquetFormatConfigBuilder blockSize(Integer blockSize) {
+      this.blockSize = blockSize;
+      return this;
+    }
+
+    public ParquetFormatConfigBuilder pageSize(Integer pageSize) {
+      this.pageSize = pageSize;
+      return this;
+    }
+
+    public ParquetFormatConfigBuilder useSingleFSBlock(Boolean useSingleFSBlock) {
+      this.useSingleFSBlock = useSingleFSBlock;
+      return this;
+    }
+
+    public ParquetFormatConfigBuilder writerCompressionType(String writerCompressionType) {
+      this.writerCompressionType = writerCompressionType;
+      return this;
+    }
+
+    public ParquetFormatConfigBuilder writerLogicalTypeForDecimals(String writerLogicalTypeForDecimals) {
+      this.writerLogicalTypeForDecimals = writerLogicalTypeForDecimals;
+      return this;
+    }
+
+    public ParquetFormatConfigBuilder writerUsePrimitivesForDecimals(Boolean writerUsePrimitivesForDecimals) {
+      this.writerUsePrimitivesForDecimals = writerUsePrimitivesForDecimals;
+      return this;
+    }
+
+    public ParquetFormatConfigBuilder writerFormatVersion(String writerFormatVersion) {
+      this.writerFormatVersion = writerFormatVersion;
+      return this;
+    }
+
+    public ParquetFormatConfig build() {
+      return new ParquetFormatConfig(autoCorrectCorruptDates, enableStringsSignedMinMax, blockSize, pageSize, useSingleFSBlock, writerCompressionType, writerLogicalTypeForDecimals, writerUsePrimitivesForDecimals, writerFormatVersion);
+    }
   }
 }
