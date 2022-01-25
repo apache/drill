@@ -182,4 +182,9 @@ public class FileSystemConfig extends AbstractSecuredStoragePluginConfig {
     }
     return PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
   }
+
+  @Override
+  public AbstractSecuredStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return null;
+  }
 }

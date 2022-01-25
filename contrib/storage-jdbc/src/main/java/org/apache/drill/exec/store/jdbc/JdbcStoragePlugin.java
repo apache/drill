@@ -55,7 +55,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   public JdbcStoragePlugin(JdbcStorageConfig config, DrillbitContext context, String name) {
     super(context, name);
     this.config = config;
-    this.dataSource = initDataSource(config, config.getActiveUser());
+    this.dataSource = initDataSource(config, context.getLoggedInUser());
     this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, dataSource);
     this.convention = new DrillJdbcConvention(dialect, name, this);
     this.jdbcDialect = JdbcDialectFactory.getJdbcDialect(this, config.getUrl());

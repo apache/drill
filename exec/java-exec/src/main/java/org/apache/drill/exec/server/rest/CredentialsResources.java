@@ -164,7 +164,6 @@ public class CredentialsResources {
     // Get the credential provider
     CredentialsProvider credentialProvider = config.getCredentialsProvider();
     credentialProvider.setUserCredentials(username, password, activeUser);
-    System.out.println("New credential provider: " + credentialProvider);
 
     // Since the config classes are not accessible from java-exec, we have to serialize them,
     // replace the credential provider with the updated one, and update the storage plugin registry
