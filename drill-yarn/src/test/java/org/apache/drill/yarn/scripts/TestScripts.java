@@ -273,34 +273,6 @@ public class TestScripts extends BaseTest {
   }
 
   /**
-   * Create a custom Java lib path. This uses the new DRILL_JAVA_LIB_PATH
-   * variable.
-   */
-
-  @Test
-  public void testLibPath() throws IOException {
-    context.createMockDistrib();
-    File siteDir = new File(context.testDrillHome, "conf");
-    context.createMockConf(siteDir);
-    File logsDir = context.createDir(new File(context.testDir, "logs"));
-    context.removeDir(new File(context.testDrillHome, "log"));
-
-    {
-      String logPath = logsDir.getAbsolutePath();
-      RunResult result = new DrillbitRun(DrillbitRun.DRILLBIT_RUN)
-          .addEnv("DRILL_LOG_DIR", logPath).withLogDir(logsDir).run();
-      assertEquals(0, result.returnCode);
-      result.validateArgs(
-          new String[] { "-Dlog.path=" + logPath + "/drillbit.log",
-              "-Dlog.query.path=" + logPath + "/drillbit_queries.json", });
-      result.validateStdOut();
-      result.validateStdErr();
-      result.validateDrillLog();
-    }
-
-  }
-
-  /**
    * Try setting custom environment variable values in drill-env.sh in the
    * $DRILL_HOME/conf location.
    */
