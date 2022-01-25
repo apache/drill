@@ -197,6 +197,14 @@
           <groupId>io.airlift</groupId>
           <artifactId>aircompresssor</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>io.swagger.core.v3</groupId>
+          <artifactId>swagger-jaxrs2</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.swagger.core.v3</groupId>
+          <artifactId>swagger-jaxrs2-servlet-initializer-v2</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
