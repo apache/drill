@@ -492,7 +492,7 @@ public class TestAnalyze extends ClusterTest {
           .match();
 
       query = "select 1 from dfs.tmp.employee1 where store_id < 15";
-      String[] expectedPlan2 = {"Filter\\(condition.*\\).*rowcount = 676.*,.*",
+      String[] expectedPlan2 = {"Filter\\(condition.*\\).*rowcount = 699.*,.*",
               "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
       queryBuilder()
           .sql(query)
