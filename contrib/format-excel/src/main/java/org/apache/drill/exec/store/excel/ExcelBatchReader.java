@@ -325,6 +325,12 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       }
       builder.buildSchema();
     } else if (rowIterator.hasNext()) {
+
+      // Advance first row to header row, if defined.
+      if (readerConfig.headerRow > 0) {
+        skipToRow(readerConfig.headerRow);
+      }
+
       //Get the header row and column count
       totalColumnCount = currentRow.getLastCellNum();
 
