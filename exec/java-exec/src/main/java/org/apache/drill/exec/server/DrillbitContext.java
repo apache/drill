@@ -30,6 +30,7 @@ import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.RemoteFunctionRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.DrillCounters;
+import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
@@ -65,6 +66,7 @@ public class DrillbitContext implements AutoCloseable {
   private final DrillbitEndpoint endpoint;
   private final StoragePluginRegistry storagePlugins;
   private final AliasRegistryProvider aliasRegistryProvider;
+  private final OAuthTokenProvider oAuthTokenProvider;
   private final OperatorCreatorRegistry operatorCreatorRegistry;
   private final Controller controller;
   private final WorkEventBus workBus;
@@ -129,6 +131,7 @@ public class DrillbitContext implements AutoCloseable {
     profileStoreContext = new QueryProfileStoreContext(config, profileStoreProvider, coord);
     this.metastoreRegistry = new MetastoreRegistry(config);
     this.aliasRegistryProvider = new AliasRegistryProvider(this);
+    this.oAuthTokenProvider = new OAuthTokenProvider(this);
 
     this.counters = DrillCounters.getInstance();
   }
@@ -186,7 +189,7 @@ public class DrillbitContext implements AutoCloseable {
 
   public boolean isForeman(DrillbitEndpoint endpoint) {
     DrillbitEndpoint foreman = getEndpoint();
-    if(endpoint.getAddress().equals(foreman.getAddress()) &&
+    if (endpoint.getAddress().equals(foreman.getAddress()) &&
             endpoint.getUserPort() == foreman.getUserPort()) {
       return true;
     }
@@ -220,6 +223,8 @@ public class DrillbitContext implements AutoCloseable {
   public AliasRegistryProvider getAliasRegistryProvider() {
     return aliasRegistryProvider;
   }
+
+  public OAuthTokenProvider getoAuthTokenProvider() { return oAuthTokenProvider; }
 
   public EventLoopGroup getBitLoopGroup() {
     return context.getBitLoopGroup();
@@ -312,6 +317,7 @@ public class DrillbitContext implements AutoCloseable {
     getCompiler().close();
     getMetastoreRegistry().close();
     getAliasRegistryProvider().close();
+    getoAuthTokenProvider().close();
   }
 
   public ResourceManager getResourceManager() {

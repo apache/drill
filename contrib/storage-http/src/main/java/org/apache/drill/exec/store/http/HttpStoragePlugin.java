@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.http;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.exec.oauth.OAuthTokenProvider;
+import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
@@ -39,12 +41,20 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
   private final HttpStoragePluginConfig config;
   private final HttpSchemaFactory schemaFactory;
   private final StoragePluginRegistry registry;
+  private final OAuthTokenProvider tokenProvider;
 
   public HttpStoragePlugin(HttpStoragePluginConfig configuration, DrillbitContext context, String name) {
     super(context, name);
     this.config = configuration;
     this.registry = context.getStorage();
     this.schemaFactory = new HttpSchemaFactory(this);
+
+    // Get OAuth Token Provider if needed
+    if (config.oAuthConfig() != null) {
+      tokenProvider = context.getoAuthTokenProvider();
+    } else {
+      tokenProvider = null;
+    }
   }
 
   @Override
@@ -59,6 +69,10 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
 
   public StoragePluginRegistry getRegistry() {
     return registry;
+  }
+
+  public TokenRegistry getTokenRegistry() {
+    return tokenProvider.getOauthTokenRegistry();
   }
 
   @Override
