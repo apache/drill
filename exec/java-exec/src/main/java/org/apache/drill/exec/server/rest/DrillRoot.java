@@ -36,6 +36,8 @@ import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
@@ -163,6 +165,9 @@ public class DrillRoot {
   @Path("/quiescent")
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed(ADMIN_ROLE)
+  @Operation(summary="My summary", tags={"my tags"}, responses = {
+    @ApiResponse(description = "my description for response")
+  })
   public Response drillbitToQuiescentMode() throws Exception {
     drillbit.setQuiescentMode(true);
     String resp = "Request to put drillbit in Quiescent mode is triggered";
