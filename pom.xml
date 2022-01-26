@@ -140,7 +140,8 @@
     <iceberg.version>0.12.1</iceberg.version>
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
     <mongo.version>4.3.3</mongo.version>
-    <junit.args />
+    <swagger.version>2.1.12</swagger.version>
+    <junit.args/>
   </properties>
 
   <scm>

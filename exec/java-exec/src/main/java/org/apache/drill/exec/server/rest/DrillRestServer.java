@@ -31,6 +31,7 @@ import freemarker.core.HTMLOutputFormat;
 import freemarker.template.Configuration;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Promise;
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import io.netty.util.concurrent.EventExecutor;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -140,6 +141,8 @@ public class DrillRestServer extends ResourceConfig {
         }
       }
     });
+
+    register(OpenApiResource.class);
   }
 
   /**
