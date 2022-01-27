@@ -213,7 +213,6 @@ public class StorageResources {
         Request accessTokenRequest = OAuthUtils.getAccessTokenRequest(credentialsProvider, code, callbackURL);
         Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, accessTokenRequest);
 
-
         // Add to token registry
         TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
           .getContext()
@@ -288,7 +287,6 @@ public class StorageResources {
 
       // Delete a token registry table if it exists
       tokenRegistry.deleteTokenTable(name);
-
 
       storage.remove(name);
       return Response.ok().entity(message("Success")).build();
