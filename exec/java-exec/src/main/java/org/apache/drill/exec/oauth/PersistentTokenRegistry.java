@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * Implementation of {@link TokenRegistry} that persists aliases tables
+ * Implementation of {@link TokenRegistry} that persists token tables
  * to the pre-configured persistent store.
  */
 public class PersistentTokenRegistry implements TokenRegistry {

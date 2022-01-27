@@ -26,7 +26,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
-import org.apache.drill.exec.store.security.OAuthTokenCredentials;
+import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

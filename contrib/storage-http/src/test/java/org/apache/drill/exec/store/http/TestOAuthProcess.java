@@ -35,7 +35,7 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.store.security.OAuthTokenCredentials;
+import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixtureBuilder;
@@ -128,7 +128,10 @@ public class TestOAuthProcess extends ClusterTest {
       assertEquals(200, response.code());
 
       // Verify that the access and refresh tokens were saved
-      PersistentTokenTable tokenTable = ((HttpStoragePlugin) cluster.storageRegistry().getPlugin("localOauth")).getTokenRegistry().getTokenTable("localOauth");
+      PersistentTokenTable tokenTable = ((HttpStoragePlugin) cluster
+        .storageRegistry()
+        .getPlugin("localOauth"))
+        .getTokenTable();
 
       assertEquals("you_have_access", tokenTable.getAccessToken());
       assertEquals("refresh_me", tokenTable.getRefreshToken());

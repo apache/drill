@@ -66,7 +66,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginNotFoundException;
 import org.apache.drill.exec.store.http.oauth.OAuthUtils;
-import org.apache.drill.exec.store.security.OAuthTokenCredentials;
+import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 import org.eclipse.jetty.util.resource.Resource;
 import org.glassfish.jersey.server.mvc.Viewable;
 
@@ -234,8 +234,10 @@ public class StorageResources {
         String successPage = null;
         try (InputStream inputStream = Resource.newClassPathResource(OAUTH_SUCCESS_PAGE).getInputStream()) {
           InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-          successPage = new BufferedReader(reader).lines()
+          BufferedReader bufferedReader = new BufferedReader(reader);
+          successPage = bufferedReader.lines()
             .collect(Collectors.joining("\n"));
+          bufferedReader.close();
           reader.close();
         } catch (IOException e) {
           Response.status(Status.OK).entity("You may close this window.").build();

@@ -32,7 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.oauth.TokenRegistry;
+import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
@@ -87,7 +87,7 @@ public class SimpleHttp {
   private final Paginator paginator;
   private final HttpUrl url;
   private final StoragePluginRegistry registry;
-  private final TokenRegistry tokenRegistry;
+  private final PersistentTokenTable tokenTable;
   private String responseMessage;
   private int responseCode;
   private String responseProtocol;
@@ -103,7 +103,7 @@ public class SimpleHttp {
     this.proxyConfig = proxyConfig;
     this.errorContext = errorContext;
     this.registry = scanDefn.tableSpec().getRegistry();
-    this.tokenRegistry = scanDefn.tableSpec().tokenRegistry();
+    this.tokenTable = scanDefn.tableSpec().getTokenTable();
     this.paginator = paginator;
     this.client = setupHttpClient();
   }
@@ -130,7 +130,7 @@ public class SimpleHttp {
     if (oAuthConfig != null) {
       // Add interceptors for OAuth2
       logger.debug("Adding OAuth2 Interceptor");
-      AccessTokenRepository repository = new AccessTokenRepository(proxyConfig, config, registry);
+      AccessTokenRepository repository = new AccessTokenRepository(proxyConfig, config, tokenTable);
 
       builder.authenticator(new AccessTokenAuthenticator(repository));
       builder.addInterceptor(new AccessTokenInterceptor(repository));

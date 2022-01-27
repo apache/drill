@@ -21,6 +21,7 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.oauth.OAuthTokenProvider;
+import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -50,14 +51,9 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
     this.schemaFactory = new HttpSchemaFactory(this);
 
     // Get OAuth Token Provider if needed
-    OAuthTokenProvider tokenProvider;
-    if (config.oAuthConfig() != null) {
-      tokenProvider = context.getoAuthTokenProvider();
-      tokenRegistry = tokenProvider.getOauthTokenRegistry();
-      tokenRegistry.createTokenTable(getName());
-    } else {
-      tokenRegistry = null;
-    }
+    OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
+    tokenRegistry = tokenProvider.getOauthTokenRegistry();
+    tokenRegistry.createTokenTable(getName());
   }
 
   @Override
@@ -77,6 +73,8 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
   public TokenRegistry getTokenRegistry() {
     return tokenRegistry;
   }
+
+  public PersistentTokenTable getTokenTable() { return tokenRegistry.getTokenTable(getName()); }
 
   @Override
   public boolean supportsRead() {

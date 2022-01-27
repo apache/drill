@@ -25,8 +25,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.Route;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,13 +54,7 @@ public class AccessTokenAuthenticator implements Authenticator {
 
       // Need to refresh an access token
       final String updatedAccessToken;
-      try {
-        updatedAccessToken = accessTokenRepository.refreshAccessToken();
-      } catch (PluginException e) {
-        throw UserException.connectionError()
-          .message("Unable to obtain access token: " + e.getMessage())
-          .build(logger);
-      }
+      updatedAccessToken = accessTokenRepository.refreshAccessToken();
       return newRequestWithAccessToken(response.request(), updatedAccessToken);
     }
   }

@@ -25,14 +25,11 @@ import okhttp3.Request;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.http.HttpOAuthConfig;
-import org.apache.drill.exec.store.http.HttpStoragePlugin;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
-import org.apache.drill.exec.store.security.OAuthTokenCredentials;
+import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +42,6 @@ public class AccessTokenRepository {
   private static final Logger logger = LoggerFactory.getLogger(AccessTokenRepository.class);
 
   private final OkHttpClient client;
-  private final StoragePluginRegistry pluginRegistry;
   private final OAuthTokenCredentials credentials;
   private final CredentialsProvider credentialsProvider;
   private HttpStoragePluginConfig pluginConfig;
@@ -55,24 +51,13 @@ public class AccessTokenRepository {
 
   public AccessTokenRepository(HttpProxyConfig proxyConfig,
                                HttpStoragePluginConfig pluginConfig,
-                               StoragePluginRegistry registry) {
+                               PersistentTokenTable tokenTable) {
     Builder builder = new OkHttpClient.Builder();
-    this.pluginRegistry = registry;
+    this.tokenTable = tokenTable;
     this.pluginConfig = pluginConfig;
     this.credentialsProvider = pluginConfig.getCredentialsProvider();
-
-    try {
-      HttpStoragePlugin plugin = (HttpStoragePlugin) pluginRegistry.getPluginByConfig(pluginConfig);
-      tokenTable = plugin.getTokenRegistry().getTokenTable(plugin.getName());
-      accessToken = tokenTable.getAccessToken();
-      refreshToken = tokenTable.getRefreshToken();
-    } catch (PluginException e) {
-      logger.error("Should not happen. Unable to access token registry.");
-      // Should not happen
-      throw UserException.validationError(e)
-        .message("Cannot locate plugin.")
-        .build(logger);
-    }
+    accessToken = tokenTable.getAccessToken();
+    refreshToken = tokenTable.getRefreshToken();
 
     this.credentials = new OAuthTokenCredentials(credentialsProvider, tokenTable);
 
@@ -96,13 +81,7 @@ public class AccessTokenRepository {
   public String getAccessToken() {
     logger.debug("Getting Access token");
     if (accessToken == null) {
-      try {
-        return refreshAccessToken();
-      } catch (PluginException e) {
-        throw UserException.internalError(e)
-          .message("Unable to access storage plugin: " + e.getMessage())
-          .build(logger);
-      }
+      return refreshAccessToken();
     }
     return accessToken;
   }
@@ -118,7 +97,7 @@ public class AccessTokenRepository {
    *
    * @return String of the new access token.
    */
-  public String refreshAccessToken() throws PluginException {
+  public String refreshAccessToken() {
     Request request;
     logger.debug("Refreshing Access Token.");
     validateKeys();

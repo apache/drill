@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.store.security;
+package org.apache.drill.exec.store.security.oauth;
 
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 
 import java.util.HashMap;
 import java.util.Map;
