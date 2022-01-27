@@ -39,18 +39,17 @@
     </div>
     <a class="btn btn-secondary" href="/storage">Back</a>
     <button class="btn btn-primary" type="submit" onclick="doUpdate();">Update</button>
-    <#if model.getPlugin().enabled()>
+  <#if model.getPlugin().enabled()>
       <a id="enabled" class="btn btn-warning">Disable</a>
-    <#else>
+  <#else>
       <a id="enabled" class="btn btn-success text-white">Enable</a>
-    </#if>
-    <#if model.getType() == "HttpStoragePluginConfig" >
-    <! -- TODO Also check to see whether the plugin uses OAuth or not -->
-      <a id="getOauth" class="btn btn-success text-white">Get Access Token</a>
-    </#if>
+  </#if>
+  <#if model.getType() == "HttpStoragePluginConfig" && model.getPlugin().isOauth() >
+      <a id="getOauth" class="btn btn-success text-white">Authorize</a>
+  </#if>
     <button type="button" class="btn btn-secondary export" name="${model.getPlugin().getName()}" data-toggle="modal"
-            data-target="#pluginsModal">
-      Export
+  data-target="#pluginsModal">
+  Export
     </button>
     <a id="del" class="btn btn-danger text-white" onclick="deleteFunction()">Delete</a>
     <input type="hidden" name="csrfToken" value="${model.getCsrfToken()}">
@@ -61,7 +60,7 @@
 
   <#include "*/confirmationModals.ftl">
 
-  <#-- Modal window-->
+<#-- Modal window-->
   <div class="modal fade" id="pluginsModal" tabindex="-1" role="dialog" aria-labelledby="exportPlugin" aria-hidden="true">
     <div class="modal-dialog modal-sm" role="document">
       <div class="modal-content">
@@ -75,13 +74,13 @@
             <div class="radio">
               <label>
                 <input type="radio" name="format" id="json" value="json" checked="checked">
-                JSON
+  JSON
               </label>
             </div>
             <div class="radio">
               <label>
                 <input type="radio" name="format" id="hocon" value="conf">
-                HOCON
+  HOCON
               </label>
             </div>
           </div>
@@ -182,7 +181,6 @@
           }
         }
         console.log(finalURL);
-        // TODO Convert to modal?
         var tokenGetterWindow = window.open(finalURL, 'Authorize Drill', "toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600");
 
         var timer = setInterval(function () {

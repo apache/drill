@@ -33,7 +33,7 @@
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
-    <jdbc-all-jar.maxsize>46700000</jdbc-all-jar.maxsize>
+    <jdbc-all-jar.maxsize>50000000</jdbc-all-jar.maxsize>
   </properties>
 
   <dependencies>

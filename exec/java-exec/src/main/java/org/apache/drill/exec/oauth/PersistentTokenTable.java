@@ -20,6 +20,7 @@ package org.apache.drill.exec.oauth;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.exec.store.sys.PersistentStore;
 
@@ -57,11 +58,13 @@ public class PersistentTokenTable implements Tokens {
   }
 
   @Override
+  @JsonIgnore
   public String get(String token) {
     return tokens.get(token);
   }
 
   @Override
+  @JsonIgnore
   public boolean put(String token, String value, boolean replace) {
     if (replace || ! tokens.containsKey(token)) {
       tokens.put(token, value);
@@ -72,24 +75,28 @@ public class PersistentTokenTable implements Tokens {
   }
 
   @Override
+  @JsonIgnore
   public String getAccessToken() {
     return get(ACCESS_TOKEN_KEY);
   }
 
   @Override
+  @JsonIgnore
   public String getRefreshToken() {
     return get(REFRESH_TOKEN_KEY);
   }
 
   @Override
+  @JsonIgnore
   public void setAccessToken(String token) {
     // Only update the access token if it is not the same as the previous token
-    if (!tokens.containsKey(ACCESS_TOKEN_KEY) || !getAccessToken().equals(token)) {
+    if (!tokens.containsKey(ACCESS_TOKEN_KEY) || !token.equals(getAccessToken())) {
       put(ACCESS_TOKEN_KEY, token, true);
     }
   }
 
   @Override
+  @JsonIgnore
   public void setRefreshToken(String token) {
     // Only update the access token if it is not the same as the previous token
     if (!tokens.containsKey(REFRESH_TOKEN_KEY) || !getAccessToken().equals(token)) {
@@ -98,6 +105,7 @@ public class PersistentTokenTable implements Tokens {
   }
 
   @Override
+  @JsonIgnore
   public boolean remove(String token) {
     boolean isRemoved = tokens.remove(token) != null;
     store.put(key, this);

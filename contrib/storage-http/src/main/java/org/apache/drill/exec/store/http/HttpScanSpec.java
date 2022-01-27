@@ -41,7 +41,7 @@ public class HttpScanSpec {
                       @JsonProperty("connection") String connectionName,
                       @JsonProperty("tableName") String tableName,
                       @JsonProperty("config") HttpStoragePluginConfig config,
-                      @JsonProperty("tokenRegistry") TokenRegistry tokenRegistry,
+                      @JacksonInject TokenRegistry tokenRegistry,
                       @JacksonInject StoragePluginRegistry engineRegistry) {
     this.pluginName = pluginName;
     this.connectionName = connectionName;
@@ -71,7 +71,7 @@ public class HttpScanSpec {
     return config;
   }
 
-  @JsonProperty("tokenRegistry")
+  @JsonIgnore
   public TokenRegistry tokenRegistry() {
     return tokenRegistry;
   }
