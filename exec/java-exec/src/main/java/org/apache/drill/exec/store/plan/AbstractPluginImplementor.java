@@ -155,4 +155,6 @@ public abstract class AbstractPluginImplementor implements PluginImplementor {
       .map(groupScanFunction)
       .orElse(null);
   }
+
+  protected abstract boolean hasPluginGroupScan(RelNode node);
 }

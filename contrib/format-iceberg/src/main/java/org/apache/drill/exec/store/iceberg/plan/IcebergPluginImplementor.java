@@ -119,7 +119,7 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
 
   @Override
   public boolean canImplement(DrillLimitRelBase limit) {
-    if (hasIcebergGroupScan(limit)) {
+    if (hasPluginGroupScan(limit)) {
       FirstLimitFinder finder = new FirstLimitFinder();
       limit.getInput().accept(finder);
       int oldLimit = getArtificialLimit(finder.getFetch(), finder.getOffset());
@@ -141,7 +141,7 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
 
   @Override
   public boolean canImplement(Project project) {
-    return hasIcebergGroupScan(project);
+    return hasPluginGroupScan(project);
   }
 
   @Override
@@ -149,7 +149,8 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
     return groupScan;
   }
 
-  private boolean hasIcebergGroupScan(RelNode node) {
+  @Override
+  protected boolean hasPluginGroupScan(RelNode node) {
     return findGroupScan(node) instanceof IcebergGroupScan;
   }
 

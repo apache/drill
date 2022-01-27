@@ -231,7 +231,7 @@ public class MongoPluginImplementor extends AbstractPluginImplementor {
 
   @Override
   public boolean canImplement(Aggregate aggregate) {
-    return hasMongoGroupScan(aggregate)
+    return hasPluginGroupScan(aggregate)
       && aggregate.getGroupType() == Aggregate.Group.SIMPLE
       && aggregate.getAggCallList().stream()
       .noneMatch(AggregateCall::isDistinct)
@@ -241,7 +241,7 @@ public class MongoPluginImplementor extends AbstractPluginImplementor {
 
   @Override
   public boolean canImplement(Filter filter) {
-    if (hasMongoGroupScan(filter)) {
+    if (hasPluginGroupScan(filter)) {
       LogicalExpression conditionExp = DrillOptiq.toDrill(
         new DrillParseContext(PrelUtil.getPlannerSettings(filter.getCluster().getPlanner())),
         filter.getInput(),
@@ -255,31 +255,31 @@ public class MongoPluginImplementor extends AbstractPluginImplementor {
 
   @Override
   public boolean canImplement(DrillLimitRelBase limit) {
-    return hasMongoGroupScan(limit);
+    return hasPluginGroupScan(limit);
   }
 
   @Override
   public boolean canImplement(Project project) {
-    return hasMongoGroupScan(project) &&
+    return hasPluginGroupScan(project) &&
       project.getProjects().stream()
         .allMatch(RexToMongoTranslator::supportsExpression);
   }
 
   @Override
   public boolean canImplement(Sort sort) {
-    return hasMongoGroupScan(sort);
+    return hasPluginGroupScan(sort);
   }
 
   @Override
   public boolean canImplement(Union union) {
     // allow converting for union all only, since Drill adds extra aggregation for union distinct,
     // so we will convert both union all and aggregation later
-    return union.all && hasMongoGroupScan(union);
+    return union.all && hasPluginGroupScan(union);
   }
 
   @Override
   public boolean canImplement(TableScan scan) {
-    return hasMongoGroupScan(scan);
+    return hasPluginGroupScan(scan);
   }
 
   @Override
@@ -297,7 +297,8 @@ public class MongoPluginImplementor extends AbstractPluginImplementor {
       newSpec, columns, runAggregate);
   }
 
-  private boolean hasMongoGroupScan(RelNode node) {
+  @Override
+  protected boolean hasPluginGroupScan(RelNode node) {
     return findGroupScan(node) instanceof MongoGroupScan;
   }
 
