@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.plan;
 
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Join;
@@ -25,7 +26,11 @@ import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Union;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.function.CheckedFunction;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
+import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.plan.rel.PluginAggregateRel;
 import org.apache.drill.exec.store.plan.rel.PluginFilterRel;
 import org.apache.drill.exec.store.plan.rel.PluginJoinRel;
@@ -38,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Abstract base implementation of {@link PluginImplementor} that can be used by
@@ -141,4 +147,14 @@ public abstract class AbstractPluginImplementor implements PluginImplementor {
         .message("Plugin implementor doesn't support push down for %s", rel)
         .build(logger);
   }
+
+  protected GroupScan findGroupScan(RelNode node) {
+    CheckedFunction<DrillTable, GroupScan, IOException> groupScanFunction = DrillTable::getGroupScan;
+    return Optional.ofNullable(DrillRelOptUtil.findScan(node))
+      .map(DrillRelOptUtil::getDrillTable)
+      .map(groupScanFunction)
+      .orElse(null);
+  }
+
+  protected abstract boolean hasPluginGroupScan(RelNode node);
 }

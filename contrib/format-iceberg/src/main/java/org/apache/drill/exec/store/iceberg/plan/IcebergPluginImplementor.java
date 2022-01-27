@@ -22,7 +22,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
-import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Util;
@@ -30,12 +29,9 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
-import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
-import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.drill.exec.store.SubsetRemover;
 import org.apache.drill.exec.store.iceberg.IcebergGroupScan;
 import org.apache.drill.exec.store.plan.AbstractPluginImplementor;
 import org.apache.drill.exec.store.plan.rel.PluginFilterRel;
@@ -97,9 +93,7 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
 
     if (expression != null) {
       try {
-        TableScan tableScan = DrillRelOptUtil.findScan(filter.accept(SubsetRemover.INSTANCE));
-        DrillTable drillTable = DrillRelOptUtil.getDrillTable(tableScan);
-        GroupScan scan = drillTable.getGroupScan();
+        GroupScan scan = findGroupScan(filter);
         if (scan instanceof IcebergGroupScan) {
           IcebergGroupScan groupScan = (IcebergGroupScan) scan;
           // ensures that expression compatible with table schema
@@ -107,7 +101,7 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
         } else {
           return false;
         }
-      } catch (ValidationException | IOException e) {
+      } catch (ValidationException e) {
         return false;
       }
     }
@@ -125,11 +119,14 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
 
   @Override
   public boolean canImplement(DrillLimitRelBase limit) {
-    FirstLimitFinder finder = new FirstLimitFinder();
-    limit.getInput().accept(finder);
-    int oldLimit = getArtificialLimit(finder.getFetch(), finder.getOffset());
-    int newLimit = getArtificialLimit(limit);
-    return newLimit >= 0 && (oldLimit < 0 || newLimit < oldLimit);
+    if (hasPluginGroupScan(limit)) {
+      FirstLimitFinder finder = new FirstLimitFinder();
+      limit.getInput().accept(finder);
+      int oldLimit = getArtificialLimit(finder.getFetch(), finder.getOffset());
+      int newLimit = getArtificialLimit(limit);
+      return newLimit >= 0 && (oldLimit < 0 || newLimit < oldLimit);
+    }
+    return false;
   }
 
   @Override
@@ -144,12 +141,17 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
 
   @Override
   public boolean canImplement(Project project) {
-    return true;
+    return hasPluginGroupScan(project);
   }
 
   @Override
   public GroupScan getPhysicalOperator() {
     return groupScan;
+  }
+
+  @Override
+  protected boolean hasPluginGroupScan(RelNode node) {
+    return findGroupScan(node) instanceof IcebergGroupScan;
   }
 
   private int rexLiteralIntValue(RexLiteral offset) {
