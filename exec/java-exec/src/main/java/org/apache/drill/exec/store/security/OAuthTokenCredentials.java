@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.security;
 
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.oauth.PersistentTokenTable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,9 +35,7 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
   private final String clientID;
   private final String clientSecret;
   private final String tokenURI;
-  private String accessToken;
-  private String refreshToken;
-
+  private PersistentTokenTable tokenTable;
 
   public OAuthTokenCredentials(CredentialsProvider credentialsProvider) {
    super(credentialsProvider);
@@ -44,8 +43,6 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
      this.clientID = null;
      this.clientSecret = null;
      this.tokenURI = null;
-     this.accessToken = null;
-     this.refreshToken = null;
    } else {
      Map<String, String> credentials = credentialsProvider.getCredentials() == null
        ? new HashMap<>() : credentialsProvider.getCredentials();
@@ -53,9 +50,12 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
      this.clientID = credentials.getOrDefault(CLIENT_ID, null);
      this.clientSecret = credentials.getOrDefault(CLIENT_SECRET, null);
      this.tokenURI = credentials.getOrDefault(TOKEN_URI, null);
-     this.accessToken = credentials.getOrDefault(ACCESS_TOKEN, null);
-     this.refreshToken = credentials.getOrDefault(REFRESH_TOKEN, null);
    }
+  }
+
+  public OAuthTokenCredentials(CredentialsProvider credentialsProvider, PersistentTokenTable tokenTable) {
+    this(credentialsProvider);
+    this.tokenTable = tokenTable;
   }
 
   public String getClientID() {
@@ -67,11 +67,17 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
   }
 
   public String getAccessToken() {
-    return accessToken;
+    if (tokenTable == null) {
+      return null;
+    }
+    return tokenTable.getAccessToken();
   }
 
   public String getRefreshToken() {
-    return refreshToken;
+    if (tokenTable == null) {
+      return null;
+    }
+    return tokenTable.getRefreshToken();
   }
 
   public String getTokenUri() {

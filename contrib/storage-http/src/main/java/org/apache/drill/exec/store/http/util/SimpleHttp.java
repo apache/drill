@@ -32,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
@@ -86,6 +87,7 @@ public class SimpleHttp {
   private final Paginator paginator;
   private final HttpUrl url;
   private final StoragePluginRegistry registry;
+  private final TokenRegistry tokenRegistry;
   private String responseMessage;
   private int responseCode;
   private String responseProtocol;
@@ -100,9 +102,10 @@ public class SimpleHttp {
     this.tempDir = tempDir;
     this.proxyConfig = proxyConfig;
     this.errorContext = errorContext;
-    this.client = setupHttpClient();
     this.registry = scanDefn.tableSpec().getRegistry();
+    this.tokenRegistry = scanDefn.tableSpec().tokenRegistry();
     this.paginator = paginator;
+    this.client = setupHttpClient();
   }
 
   /**

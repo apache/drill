@@ -26,36 +26,22 @@ import java.util.Map;
 public interface TokenRegistry extends AutoCloseable {
 
   /**
-   * Returns public aliases table.
+   * Creates a token table for specified {@code pluginName}.
+   * @param pluginName The name of the plugin instance.
    */
-  Tokens getPublicAliases();
+  void createTokenTable(String pluginName);
 
-  /**
-   * Creates if required aliases table for specified {@code userName}.
+  PersistentTokenTable getTokenTable(String name);
+
+/**
+ *  * Deletes aliases table for specified {@code userName}.
    *
-   * @param userName name of the user whose aliases table should be created
+   * @param pluginName name of the user whose aliases table should be removed
    */
-  void createUserAliases(String userName);
-
-  /**
-   * Creates if required public aliases table.
-   */
-  void createPublicAliases();
-
-  /**
-   * Deletes aliases table for specified {@code userName}.
-   *
-   * @param userName name of the user whose aliases table should be removed
-   */
-  void deleteUserAliases(String userName);
-
-  /**
-   * Deletes public aliases table.
-   */
-  void deletePublicAliases();
+  void deleteTokenTable(String pluginName);
 
   /**
    * Returns iterator for aliases table entries.
    */
-  Iterator<Map.Entry<String, Tokens>> getAllAliases();
+  Iterator<Map.Entry<String, Tokens>> getAllTokens();
 }

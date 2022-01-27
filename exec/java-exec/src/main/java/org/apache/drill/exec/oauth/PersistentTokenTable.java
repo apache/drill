@@ -28,8 +28,12 @@ import java.util.Map;
 
 /**
  * Implementation of tokens table that updates its version in persistent store after modifications.
+ * For OAuth tokens, the only possible tokens are the access_token, the refresh_token and authorization_code.
  */
 public class PersistentTokenTable implements Tokens {
+  public final String ACCESS_TOKEN_KEY = "access_token";
+  public final String REFRESH_TOKEN_KEY = "refresh_token";
+
   private final Map<String, String> tokens;
 
   private final String key;
@@ -59,12 +63,38 @@ public class PersistentTokenTable implements Tokens {
 
   @Override
   public boolean put(String token, String value, boolean replace) {
-    if (replace || !tokens.containsKey(token)) {
+    if (replace || ! tokens.containsKey(token)) {
       tokens.put(token, value);
       store.put(key, this);
       return true;
     }
     return false;
+  }
+
+  @Override
+  public String getAccessToken() {
+    return get(ACCESS_TOKEN_KEY);
+  }
+
+  @Override
+  public String getRefreshToken() {
+    return get(REFRESH_TOKEN_KEY);
+  }
+
+  @Override
+  public void setAccessToken(String token) {
+    // Only update the access token if it is not the same as the previous token
+    if (!tokens.containsKey(ACCESS_TOKEN_KEY) || !getAccessToken().equals(token)) {
+      put(ACCESS_TOKEN_KEY, token, true);
+    }
+  }
+
+  @Override
+  public void setRefreshToken(String token) {
+    // Only update the access token if it is not the same as the previous token
+    if (!tokens.containsKey(REFRESH_TOKEN_KEY) || !getAccessToken().equals(token)) {
+      put(REFRESH_TOKEN_KEY, token,true);
+    }
   }
 
   @Override

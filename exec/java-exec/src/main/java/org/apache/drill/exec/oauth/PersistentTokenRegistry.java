@@ -28,7 +28,6 @@ import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -36,8 +35,6 @@ import java.util.function.Supplier;
  * to the pre-configured persistent store.
  */
 public class PersistentTokenRegistry implements TokenRegistry {
-  public static final String PUBLIC_ALIASES_KEY = "$public_aliases";
-
   private final PersistentStore<PersistentTokenTable> store;
 
   public PersistentTokenRegistry(DrillbitContext context, String registryPath) {
@@ -63,44 +60,36 @@ public class PersistentTokenRegistry implements TokenRegistry {
     return store;
   }
 
+  @Override
+  public PersistentTokenTable getTokenTable(String name) {
+    name = name.toLowerCase();
+    if (!store.contains(name)) {
+      createTokenTable(name);
+    }
+    return store.get(name);
+  }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public Iterator<Map.Entry<String, Tokens>> getAllAliases() {
+  public Iterator<Map.Entry<String, Tokens>> getAllTokens() {
     return (Iterator) store.getAll();
   }
 
   @Override
-  public void createUserAliases(String userName) {
-    if (!store.contains(userName)) {
-      PersistentTokenTable aliasesTable =
-        new PersistentTokenTable(new HashMap<>(), userName, new StoreProvider(this::getStore));
-      store.put(userName, aliasesTable);
+  public void createTokenTable(String pluginName) {
+    pluginName = pluginName.toLowerCase();
+    if (!store.contains(pluginName)) {
+      PersistentTokenTable tokenTable =
+        new PersistentTokenTable(new HashMap<>(), pluginName, new StoreProvider(this::getStore));
+      store.put(pluginName, tokenTable);
     }
   }
 
   @Override
-  public void createPublicAliases() {
-    if (!store.contains(PUBLIC_ALIASES_KEY)) {
-      PersistentTokenTable publicAliases =
-        new PersistentTokenTable(new HashMap<>(), PUBLIC_ALIASES_KEY, new StoreProvider(this::getStore));
-      store.put(PUBLIC_ALIASES_KEY, publicAliases);
+  public void deleteTokenTable(String pluginName) {
+    pluginName = pluginName.toLowerCase();
+    if (store.contains(pluginName)) {
+      store.delete(pluginName);
     }
-  }
-
-  @Override
-  public void deleteUserAliases(String userName) {
-    store.delete(userName);
-  }
-
-  @Override
-  public void deletePublicAliases() {
-    store.delete(PUBLIC_ALIASES_KEY);
-  }
-
-  @Override
-  public Tokens getPublicAliases() {
-    return Optional.<Tokens>ofNullable(store.get(PUBLIC_ALIASES_KEY))
-      .orElse(EmptyTokens.INSTANCE);
   }
 
   @Override

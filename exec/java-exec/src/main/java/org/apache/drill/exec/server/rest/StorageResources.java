@@ -51,7 +51,10 @@ import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.oauth.PersistentTokenTable;
+import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginEncodingException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
@@ -199,7 +202,7 @@ public class StorageResources {
   @Produces(MediaType.TEXT_HTML)
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
     try {
-      if (storage.getPlugin(name).getConfig().getClass().getSimpleName().equalsIgnoreCase("HttpStoragePluginConfig")) {
+      if (storage.getPlugin(name).getConfig() instanceof AbstractSecuredStoragePluginConfig) {
         AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) storage.getPlugin(name).getConfig();
         CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
         String callbackURL = this.request.getRequestURL().toString();
@@ -210,16 +213,21 @@ public class StorageResources {
         Request accessTokenRequest = OAuthUtils.getAccessTokenRequest(credentialsProvider, code, callbackURL);
         Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, accessTokenRequest);
 
-        credentialsProvider.setCredential("authorizationCode", code);
-        credentialsProvider.setCredential(OAuthTokenCredentials.ACCESS_TOKEN, updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
-        if (updatedTokens.containsKey(OAuthTokenCredentials.REFRESH_TOKEN)) {
-          credentialsProvider.setCredential(OAuthTokenCredentials.REFRESH_TOKEN, updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
-        }
 
-        PluginConfigWrapper updatedPlugin = new PluginConfigWrapper(name, securedStoragePluginConfig);
+        // Add to token registry
+        TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
+          .getContext()
+          .getoAuthTokenProvider()
+          .getOauthTokenRegistry();
 
-        // Update the storage plugin config
-        storage.validatedPut(name, updatedPlugin.getConfig());
+        // Add a token registry table if none exists
+        tokenRegistry.createTokenTable(name);
+        PersistentTokenTable tokenTable = tokenRegistry.getTokenTable(name);
+
+        // Add tokens to persistent storage
+        tokenTable.setAccessToken(updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
+        tokenTable.setRefreshToken(updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
+
         return Response.status(Status.OK).entity(OAUTH_SUCCESS).build();
       } else {
         logger.error("{} is not a HTTP plugin. You can only add auth code to HTTP plugins.", name);
@@ -273,6 +281,15 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public Response deletePlugin(@PathParam("name") String name) {
     try {
+      TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
+        .getContext()
+        .getoAuthTokenProvider()
+        .getOauthTokenRegistry();
+
+      // Delete a token registry table if it exists
+      tokenRegistry.deleteTokenTable(name);
+
+
       storage.remove(name);
       return Response.ok().entity(message("Success")).build();
     } catch (PluginException e) {

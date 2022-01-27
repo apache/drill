@@ -24,7 +24,7 @@ import okhttp3.Request;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
-import org.apache.drill.exec.oauth.TokenRegistry;
+import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.http.HttpOAuthConfig;
@@ -44,14 +44,14 @@ public class AccessTokenRepository {
 
   private static final Logger logger = LoggerFactory.getLogger(AccessTokenRepository.class);
 
-  private final String refreshToken;
   private final OkHttpClient client;
   private final StoragePluginRegistry pluginRegistry;
   private final OAuthTokenCredentials credentials;
   private final CredentialsProvider credentialsProvider;
   private HttpStoragePluginConfig pluginConfig;
-  private TokenRegistry tokenRegistry;
+  private PersistentTokenTable tokenTable;
   private String accessToken;
+  private String refreshToken;
 
   public AccessTokenRepository(HttpProxyConfig proxyConfig,
                                HttpStoragePluginConfig pluginConfig,
@@ -60,19 +60,21 @@ public class AccessTokenRepository {
     this.pluginRegistry = registry;
     this.pluginConfig = pluginConfig;
     this.credentialsProvider = pluginConfig.getCredentialsProvider();
-    this.credentials = new OAuthTokenCredentials(credentialsProvider);
-    accessToken = credentials.getAccessToken();
-    refreshToken = credentials.getRefreshToken();
 
     try {
       HttpStoragePlugin plugin = (HttpStoragePlugin) pluginRegistry.getPluginByConfig(pluginConfig);
-      tokenRegistry = plugin.getTokenRegistry();
+      tokenTable = plugin.getTokenRegistry().getTokenTable(plugin.getName());
+      accessToken = tokenTable.getAccessToken();
+      refreshToken = tokenTable.getRefreshToken();
     } catch (PluginException e) {
+      logger.error("Should not happen. Unable to access token registry.");
       // Should not happen
       throw UserException.validationError(e)
         .message("Cannot locate plugin.")
         .build(logger);
     }
+
+    this.credentials = new OAuthTokenCredentials(credentialsProvider, tokenTable);
 
     // Add proxy info
     SimpleHttp.addProxyInfo(builder, proxyConfig);
@@ -132,24 +134,18 @@ public class AccessTokenRepository {
 
     // Update/Refresh the tokens
     Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, request);
-    credentialsProvider.setCredential(OAuthTokenCredentials.ACCESS_TOKEN, updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
+    tokenTable.setAccessToken(updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
 
     // If we get a new refresh token, update it as well
     if (updatedTokens.containsKey(OAuthTokenCredentials.REFRESH_TOKEN)) {
-      credentialsProvider.setCredential(OAuthTokenCredentials.REFRESH_TOKEN, updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
+      tokenTable.setRefreshToken(updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
+      refreshToken = updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN);
     }
 
     if (updatedTokens.containsKey("accessToken")) {
       accessToken = updatedTokens.get("accessToken");
     }
 
-    // This null check is here for testing only.  In actual Drill, the registry will not be null.
-    if (pluginRegistry != null) {
-      String name = pluginRegistry.getPluginByConfig(pluginConfig).getName();
-      HttpStoragePluginConfig updatedConfig = new HttpStoragePluginConfig(pluginConfig, pluginConfig.oAuthConfig);
-      pluginRegistry.validatedPut(name, updatedConfig);
-      pluginConfig = updatedConfig;
-    }
     return accessToken;
   }
 

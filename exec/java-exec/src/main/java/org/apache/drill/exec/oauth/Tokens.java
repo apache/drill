@@ -22,20 +22,38 @@ package org.apache.drill.exec.oauth;
  */
 public interface Tokens {
   /**
-   * Key of {@link this} aliases table.
+   * Key of {@link this} tokens table.
    */
   String getKey();
 
   /**
-   * Returns value from aliases table that corresponds to provided alias.
+   * Gets the current access token.
    *
-   * @param token alias of the value to obtain
-   * @return value from aliases table that corresponds to provided alias
+   * @return The current access token
+   */
+  String getAccessToken();
+
+  /**
+   * Sets the access token.
+   *
+   * @param accessToken Sets the access token.
+   */
+  void setAccessToken(String accessToken);
+
+  String getRefreshToken();
+
+  void setRefreshToken(String refreshToken);
+
+  /**
+   * Returns value from tokens table that corresponds to provided plugin.
+   *
+   * @param token token of the value to obtain
+   * @return value from token table that corresponds to provided plugin
    */
   String get(String token);
 
   /**
-   * Associates provided alias with provided alias in aliases table.
+   * Associates provided token with provided plugin in token table.
    *
    * @param token   alias of the value to associate with
    * @param value   value that will be associated with provided alias
@@ -46,10 +64,10 @@ public interface Tokens {
   boolean put(String token, String value, boolean replace);
 
   /**
-   * Removes value for specified alias from aliases table.
-   * @param token alias of the value to remove
+   * Removes value for specified token from tokens table.
+   * @param token token of the value to remove
    * @return {@code true} if the value associated with
-   * provided alias was removed from the aliases table
+   * provided token was removed from the tokens table
    */
   boolean remove(String token);
 }

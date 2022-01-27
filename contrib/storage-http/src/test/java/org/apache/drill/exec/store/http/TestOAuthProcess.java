@@ -29,6 +29,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -127,14 +128,13 @@ public class TestOAuthProcess extends ClusterTest {
       assertEquals(200, response.code());
 
       // Verify that the access and refresh tokens were saved
-      HttpStoragePluginConfig updatedConfig = (HttpStoragePluginConfig) cluster.storageRegistry().getPlugin("localOauth").getConfig();
-      CredentialsProvider credentialsProvider = updatedConfig.getCredentialsProvider();
+      PersistentTokenTable tokenTable = ((HttpStoragePlugin) cluster.storageRegistry().getPlugin("localOauth")).getTokenRegistry().getTokenTable("localOauth");
 
-      assertEquals("you_have_access", credentialsProvider.getCredentials().get(OAuthTokenCredentials.ACCESS_TOKEN));
-      assertEquals("refresh_me", credentialsProvider.getCredentials().get(OAuthTokenCredentials.REFRESH_TOKEN));
+      assertEquals("you_have_access", tokenTable.getAccessToken());
+      assertEquals("refresh_me", tokenTable.getRefreshToken());
 
     } catch (Exception e) {
-      System.out.println(e.getMessage());
+      logger.debug(e.getMessage());
       fail();
     }
   }
@@ -151,11 +151,13 @@ public class TestOAuthProcess extends ClusterTest {
       assertEquals(200, response.code());
 
       // Verify that the access and refresh tokens were saved
-      HttpStoragePluginConfig updatedConfig = (HttpStoragePluginConfig) cluster.storageRegistry().getPlugin("localOauth").getConfig();
-      CredentialsProvider credentialsProvider = updatedConfig.getCredentialsProvider();
+      PersistentTokenTable tokenTable = ((HttpStoragePlugin) cluster.storageRegistry()
+        .getPlugin("localOauth"))
+        .getTokenRegistry()
+        .getTokenTable("localOauth");
 
-      assertEquals("you_have_access", credentialsProvider.getCredentials().get(OAuthTokenCredentials.ACCESS_TOKEN));
-      assertEquals("refresh_me", credentialsProvider.getCredentials().get(OAuthTokenCredentials.REFRESH_TOKEN));
+      assertEquals("you_have_access", tokenTable.getAccessToken());
+      assertEquals("refresh_me", tokenTable.getRefreshToken());
       // Now execute a query and get query results.
       server.enqueue(new MockResponse()
         .setResponseCode(200)
@@ -195,11 +197,10 @@ public class TestOAuthProcess extends ClusterTest {
       assertEquals(200, response.code());
 
       // Verify that the access and refresh tokens were saved
-      HttpStoragePluginConfig updatedConfig = (HttpStoragePluginConfig) cluster.storageRegistry().getPlugin("localOauth").getConfig();
-      CredentialsProvider credentialsProvider = updatedConfig.getCredentialsProvider();
+      PersistentTokenTable tokenTable = ((HttpStoragePlugin) cluster.storageRegistry().getPlugin("localOauth")).getTokenRegistry().getTokenTable("localOauth");
 
-      assertEquals("you_have_access", credentialsProvider.getCredentials().get(OAuthTokenCredentials.ACCESS_TOKEN));
-      assertEquals("refresh_me", credentialsProvider.getCredentials().get(OAuthTokenCredentials.REFRESH_TOKEN));
+      assertEquals("you_have_access", tokenTable.getAccessToken());
+      assertEquals("refresh_me", tokenTable.getRefreshToken());
 
       // Now execute a query and get a refresh token
       // The API should return a 401 error.  This should trigger Drill to automatically
@@ -215,10 +216,8 @@ public class TestOAuthProcess extends ClusterTest {
       DirectRowSet results = queryBuilder().sql(sql).rowSet();
 
       // Verify that the access and refresh tokens were saved
-      updatedConfig = (HttpStoragePluginConfig) cluster.storageRegistry().getPlugin("localOauth").getConfig();
-      credentialsProvider = updatedConfig.getCredentialsProvider();
-      assertEquals("token 2.0", credentialsProvider.getCredentials().get(OAuthTokenCredentials.ACCESS_TOKEN));
-      assertEquals("refresh 2.0", credentialsProvider.getCredentials().get(OAuthTokenCredentials.REFRESH_TOKEN));
+      assertEquals("token 2.0", tokenTable.getAccessToken());
+      assertEquals("refresh 2.0", tokenTable.getRefreshToken());
 
       TupleMetadata expectedSchema = new SchemaBuilder()
         .add("col_1", MinorType.FLOAT8, DataMode.OPTIONAL)

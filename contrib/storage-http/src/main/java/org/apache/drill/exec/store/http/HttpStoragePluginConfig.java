@@ -71,8 +71,6 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
     super(CredentialProviderUtils.getCredentialsProvider(
         getClientID(new OAuthTokenCredentials(credentialsProvider)),
         getClientSecret(new OAuthTokenCredentials(credentialsProvider)),
-        getAccessToken(new OAuthTokenCredentials(credentialsProvider)),
-        getRefreshToken(new OAuthTokenCredentials(credentialsProvider)),
         getTokenURL(new OAuthTokenCredentials(credentialsProvider)),
         normalize(proxyUsername),
         normalize(proxyPassword),
@@ -231,16 +229,6 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
   @JsonIgnore
   private static String getClientSecret(OAuthTokenCredentials credentials) {
     return credentials.getClientSecret();
-  }
-
-  @JsonIgnore
-  private static String getAccessToken(OAuthTokenCredentials credentials) {
-    return credentials.getAccessToken();
-  }
-
-  @JsonIgnore
-  private static String getRefreshToken(OAuthTokenCredentials credentials) {
-    return credentials.getRefreshToken();
   }
 
   @JsonIgnore
