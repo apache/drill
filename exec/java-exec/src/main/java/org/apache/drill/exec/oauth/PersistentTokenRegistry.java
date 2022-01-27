@@ -76,6 +76,8 @@ public class PersistentTokenRegistry implements TokenRegistry {
 
   @Override
   public void createTokenTable(String pluginName) {
+    // In Drill, Storage plugin names are stored in lower case. These checks make sure
+    // that the tokens are associated with the correct plugin
     pluginName = pluginName.toLowerCase();
     if (!store.contains(pluginName)) {
       PersistentTokenTable tokenTable =

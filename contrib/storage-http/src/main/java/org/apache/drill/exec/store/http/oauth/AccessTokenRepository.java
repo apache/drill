@@ -125,7 +125,7 @@ public class AccessTokenRepository {
 
     // If the refresh token is present process with that
     if (! Strings.isNullOrEmpty(refreshToken)) {
-      request = OAuthUtils.getAccessTokenRequestFromRefreshToken(pluginConfig.getCredentialsProvider());
+      request = OAuthUtils.getAccessTokenRequestFromRefreshToken(pluginConfig.getCredentialsProvider(), refreshToken);
     } else {
       throw UserException.connectionError()
         .message("Your connection expired. Please refresh your access token in the Drill configuration.")

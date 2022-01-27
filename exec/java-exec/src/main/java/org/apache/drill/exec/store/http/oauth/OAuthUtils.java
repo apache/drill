@@ -57,14 +57,15 @@ public class OAuthUtils {
   /**
    * Crafts a POST response for refreshing an access token when a refresh token is present.
    * @param credentialsProvider A credential provider containing the clientID, clientSecret and refreshToken
+   * @param refreshToken The refresh token
    * @return A Request Body with the correct parameters for obtaining an access token
    */
-  public static RequestBody getPostResponseForTokenRefresh(CredentialsProvider credentialsProvider) {
+  public static RequestBody getPostResponseForTokenRefresh(CredentialsProvider credentialsProvider, String refreshToken) {
     return new FormBody.Builder()
       .add("grant_type", "refresh_token")
       .add("client_id", credentialsProvider.getCredentials().get(OAuthTokenCredentials.CLIENT_ID))
       .add("client_secret", credentialsProvider.getCredentials().get(OAuthTokenCredentials.CLIENT_SECRET))
-      .add("refresh_token", credentialsProvider.getCredentials().get(OAuthTokenCredentials.REFRESH_TOKEN))
+      .add("refresh_token", refreshToken)
       .build();
   }
 
@@ -99,16 +100,17 @@ public class OAuthUtils {
    * to the OAuth API when you are refreshing the access token. The refresh token must be populated for this
    * to be successful.
    * @param credentialsProvider The credential provider containing the client_id, client_secret, and refresh token.
+   * @param refreshToken The OAuth2.0 refresh token
    * @return A request to obtain the access token.
    */
-  public static Request getAccessTokenRequestFromRefreshToken(CredentialsProvider credentialsProvider) {
+  public static Request getAccessTokenRequestFromRefreshToken(CredentialsProvider credentialsProvider, String refreshToken) {
     String tokenURI = credentialsProvider.getCredentials().get(OAuthTokenCredentials.TOKEN_URI);
     logger.debug("Requesting new access token with refresh token from {}", tokenURI);
     return new Request.Builder()
       .url(tokenURI)
       .header("Content-Type", "application/json")
       .addHeader("Accept", "application/json")
-      .post(getPostResponseForTokenRefresh(credentialsProvider))
+      .post(getPostResponseForTokenRefresh(credentialsProvider, refreshToken))
       .build();
   }
 
