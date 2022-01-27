@@ -232,8 +232,7 @@ public class StorageResources {
 
         // Get success page
         String successPage = null;
-        try {
-          InputStream inputStream = Resource.newClassPathResource(OAUTH_SUCCESS_PAGE).getInputStream();
+        try (InputStream inputStream = Resource.newClassPathResource(OAUTH_SUCCESS_PAGE).getInputStream()) {
           successPage = new BufferedReader(new InputStreamReader(inputStream,
             StandardCharsets.UTF_8)).lines()
             .collect(Collectors.joining("\n"));
