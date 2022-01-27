@@ -26,7 +26,6 @@ import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
-import org.apache.drill.exec.store.security.OAuthTokenCredentials;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -17,6 +17,11 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -62,6 +67,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginNotFoundException;
 import org.apache.drill.exec.store.http.oauth.OAuthUtils;
 import org.apache.drill.exec.store.security.OAuthTokenCredentials;
+import org.eclipse.jetty.util.resource.Resource;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import org.slf4j.Logger;
@@ -75,10 +81,6 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_RO
 @RolesAllowed(ADMIN_ROLE)
 public class StorageResources {
   private static final Logger logger = LoggerFactory.getLogger(StorageResources.class);
-  private static final String OAUTH_SUCCESS = "<html>\n" + "<head>\n" + "  <title>Success!</title>\n" + "  <link rel=\"shortcut icon\" href=\"/static/img/drill.ico\">\n" + "  " +
-    "<link href=\"/static/css/bootstrap.min.css\" rel=\"stylesheet\">\n" + "  <link href=\"/static/css/drillStyle.css\" rel=\"stylesheet\">\n" +
-    "  <link href=\"https://fonts.googleapis.com/icon?family=Material+Icons\" rel=\"stylesheet\">\n" + "</head>\n" + "<body>\n" + "<h3>Success</h3>\n" + "  You have successfully obtained an OAuth2 authorization code.\n" +
-    "  You may now close this window. <br/>\n" + "  <button class=\"btn btn-primary\" type=\"submit\"\n" + "  onclick=\"self.close();\">Close Window</button>\n" + "</body>\n" + "</html>\n";
 
   @Inject
   UserAuthEnabled authEnabled;
@@ -97,6 +99,7 @@ public class StorageResources {
   private static final String ALL_PLUGINS = "all";
   private static final String ENABLED_PLUGINS = "enabled";
   private static final String DISABLED_PLUGINS = "disabled";
+  private static final String OAUTH_SUCCESS_PAGE = "/rest/storage/success.ftl";
 
   private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR =
       Comparator.comparing(PluginConfigWrapper::getName);
@@ -227,7 +230,18 @@ public class StorageResources {
         tokenTable.setAccessToken(updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
         tokenTable.setRefreshToken(updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
 
-        return Response.status(Status.OK).entity(OAUTH_SUCCESS).build();
+        // Get success page
+        String successPage = null;
+        try {
+          InputStream inputStream = Resource.newClassPathResource(OAUTH_SUCCESS_PAGE).getInputStream();
+          successPage = new BufferedReader(new InputStreamReader(inputStream,
+            StandardCharsets.UTF_8)).lines()
+            .collect(Collectors.joining("\n"));
+        } catch (IOException e) {
+          Response.status(Status.OK).entity("You may close this window.").build();
+        }
+
+        return Response.status(Status.OK).entity(successPage).build();
       } else {
         logger.error("{} is not a HTTP plugin. You can only add auth code to HTTP plugins.", name);
         return Response.status(Status.INTERNAL_SERVER_ERROR)
