@@ -29,6 +29,7 @@ import java.sql.ResultSetMetaData;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.phoenix.end2end.QueryServerThread;
 import org.apache.phoenix.query.BaseTest;
 import org.apache.phoenix.queryserver.QueryServerProperties;
 import org.apache.phoenix.util.ReadOnlyProps;

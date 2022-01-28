@@ -93,6 +93,14 @@
       </exclusions>
     </dependency>
     <dependency>
+      <!-- PHOENIX-6605 -->
+      <groupId>com.github.luocooong.phoenix-queryserver</groupId>
+      <artifactId>phoenix-queryserver-it</artifactId>
+      <version>6.0.0-drill-r1</version>
+      <scope>test</scope>
+      <classifier>tests</classifier>
+    </dependency>
+    <dependency>
       <groupId>org.apache.phoenix</groupId>
       <artifactId>phoenix-core</artifactId>
       <version>${phoenix.version}</version>

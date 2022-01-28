@@ -25,6 +25,7 @@ import org.apache.hadoop.hbase.security.access.AccessController;
 import org.apache.hadoop.hbase.security.access.Permission.Action;
 import org.apache.hadoop.hbase.security.token.TokenProvider;
 import org.apache.phoenix.end2end.NeedsOwnMiniClusterTest;
+import org.apache.phoenix.end2end.TlsUtil;
 import org.apache.phoenix.jdbc.PhoenixDatabaseMetaData;
 import org.apache.phoenix.queryserver.QueryServerOptions;
 import org.apache.phoenix.queryserver.QueryServerProperties;
@@ -36,6 +37,10 @@ import java.util.List;
 
 import static org.apache.drill.exec.store.phoenix.secured.QueryServerEnvironment.LOGIN_USER;
 
+/**
+ * This is a copy of {@link org.apache.phoenix.end2end.HttpParamImpersonationQueryServerIT},
+ * but customized with 3 users, see {@link SecuredPhoenixBaseTest#runForThreeClients} for details
+ */
 @Category(NeedsOwnMiniClusterTest.class)
 public class HttpParamImpersonationQueryServerIT {
 
@@ -78,7 +83,7 @@ public class HttpParamImpersonationQueryServerIT {
       + QueryServerOptions.DEFAULT_QUERY_SERVER_REMOTEUSEREXTRACTOR_PARAM + "=%s;authentication=SPNEGO;serialization=PROTOBUF%s";
     if (environment.getTls()) {
       return String.format(url, "https", "%s", ";truststore=" + TlsUtil.getTrustStoreFile().getAbsolutePath()
-        + ";truststore_password="+TlsUtil.getTrustStorePassword());
+        + ";truststore_password=" + TlsUtil.getTrustStorePassword());
     } else {
       return String.format(url, "http", "%s", "");
     }

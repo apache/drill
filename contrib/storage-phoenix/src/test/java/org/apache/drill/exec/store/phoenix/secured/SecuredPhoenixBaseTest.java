@@ -26,7 +26,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.security.ServerAuthenticationHandler;
 import org.apache.drill.exec.rpc.security.kerberos.KerberosFactory;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
-import org.apache.drill.exec.server.TestDrillbitResilience;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.phoenix.PhoenixStoragePluginConfig;
 import org.apache.drill.exec.util.ImpersonationUtil;
@@ -91,7 +90,7 @@ public abstract class SecuredPhoenixBaseTest extends ClusterTest {
     Map.Entry<String, File> user2 = environment.getUser(2);
     Map.Entry<String, File> user3 = environment.getUser(3);
 
-    dirTestWatcher.start(TestDrillbitResilience.class); // until DirTestWatcher ClassRule is implemented for JUnit5
+    dirTestWatcher.start(SecuredPhoenixTestSuite.class); // until DirTestWatcher ClassRule is implemented for JUnit5
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
         .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
         .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)

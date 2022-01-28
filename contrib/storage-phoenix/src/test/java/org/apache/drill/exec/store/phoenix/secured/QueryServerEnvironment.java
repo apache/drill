@@ -47,6 +47,7 @@ import org.apache.hadoop.http.HttpConfig;
 import org.apache.hadoop.minikdc.MiniKdc;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.phoenix.end2end.TlsUtil;
 import org.apache.phoenix.query.ConfigurationFactory;
 import org.apache.phoenix.queryserver.QueryServerProperties;
 import org.apache.phoenix.queryserver.server.QueryServer;
@@ -56,14 +57,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Due to this bug https://bugzilla.redhat.com/show_bug.cgi?id=668830 We need to use
- * `localhost.localdomain` as host name when running these tests on Jenkins (Centos) but for Mac OS
- * it should be `localhost` to pass. The reason is kerberos principals in this tests are looked up
- * from /etc/hosts and a reverse DNS lookup of 127.0.0.1 is resolved to `localhost.localdomain`
- * rather than `localhost` on Centos. KDC sees `localhost` != `localhost.localdomain` and as the
- * result test fails with authentication error. It's also important to note these principals are
- * shared between HDFs and HBase in this mini HBase cluster. Some more reading
- * https://access.redhat.com/solutions/57330
+ * This is a copy of class from `org.apache.phoenix:phoenix-queryserver-it`,
+ * see original javadoc in {@link org.apache.phoenix.end2end.QueryServerEnvironment}.
+ *
+ * It is possible to use original QueryServerEnvironment, but need to solve several issues:
+ * <ul>
+ *   <li>TlsUtil.getClasspathDir(QueryServerEnvironment.class); in QueryServerEnvironment fails due to the path from jar.
+ *   Can be fixed with copying TlsUtil in Drill project and changing getClasspathDir method to use
+ *   SecuredPhoenixTestSuite.class instead of QueryServerEnvironment.class</li>
+ *   <li>SERVICE_PRINCIPAL from QueryServerEnvironment is for `securecluster` not system user. So Test fails later
+ *   in process of starting Drill cluster while creating udf area RemoteFunctionRegistry#createArea, it fails
+ *   on checking Precondition ImpersonationUtil.getProcessUserName().equals(fileStatus.getOwner()),
+ *   where ImpersonationUtil.getProcessUserName() is 'securecluster' and fileStatus.getOwner() is
+ *   your local machine login user</li>
+ * </ul>
  */
 public class QueryServerEnvironment {
   private static final Logger LOG = LoggerFactory.getLogger(QueryServerEnvironment.class);
