@@ -33,7 +33,7 @@
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
-    <jdbc-all-jar.maxsize>44100000</jdbc-all-jar.maxsize>
+    <jdbc-all-jar.maxsize>46600000</jdbc-all-jar.maxsize>
   </properties>
 
   <dependencies>
@@ -367,11 +367,12 @@
               <exclude>com.google.code.findbugs:jsr305:*</exclude>
               <exclude>com.esri.geometry:esri-geometry-api:*</exclude>
               <exclude>dnsjava:dnsjava:jar:*</exclude>
-              <exclude>io.netty:netty-*:jar:*</exclude>
+              <exclude>io.netty:netty-tcnative:jar:*</exclude>
+              <exclude>io.netty:netty-tcnative-classes:jar:*</exclude>
               <exclude>com.bettercloud:vault-java-driver:jar:*</exclude>
               <exclude>com.tdunning:t-digest:jar:*</exclude>
               <exclude>io.airlift:aircompressor:jar:*</exclude>
-              <exclude>com.rdblue:brotli-code:jar:*</exclude>
+              <exclude>com.rdblue:brotli-codec:jar:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>
@@ -657,11 +658,12 @@
                     <exclude>com.google.code.findbugs:jsr305:*</exclude>
                     <exclude>com.esri.geometry:esri-geometry-api:*</exclude>
                     <exclude>dnsjava:dnsjava:jar:*</exclude>
-                    <exclude>io.netty:netty-*:jar:*</exclude>
+                    <exclude>io.netty:netty-tcnative:jar:*</exclude>
+                    <exclude>io.netty:netty-tcnative-classes:jar:*</exclude>
                     <exclude>com.bettercloud:vault-java-driver:jar:*</exclude>
                     <exclude>com.tdunning:t-digest:jar:*</exclude>
                     <exclude>io.airlift:aircompressor:jar:*</exclude>
-                    <exclude>com.rdblue:brotli-code:jar:*</exclude>
+                    <exclude>com.rdblue:brotli-codec:jar:*</exclude>
                   </excludes>
                 </artifactSet>
                 <relocations>
