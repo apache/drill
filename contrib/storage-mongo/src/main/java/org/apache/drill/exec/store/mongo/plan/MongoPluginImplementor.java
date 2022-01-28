@@ -231,7 +231,8 @@ public class MongoPluginImplementor extends AbstractPluginImplementor {
 
   @Override
   public boolean canImplement(Aggregate aggregate) {
-    return aggregate.getGroupType() == Aggregate.Group.SIMPLE
+    return hasPluginGroupScan(aggregate)
+      && aggregate.getGroupType() == Aggregate.Group.SIMPLE
       && aggregate.getAggCallList().stream()
       .noneMatch(AggregateCall::isDistinct)
       && aggregate.getAggCallList().stream()
@@ -240,41 +241,45 @@ public class MongoPluginImplementor extends AbstractPluginImplementor {
 
   @Override
   public boolean canImplement(Filter filter) {
-    LogicalExpression conditionExp = DrillOptiq.toDrill(
-      new DrillParseContext(PrelUtil.getPlannerSettings(filter.getCluster().getPlanner())),
-      filter.getInput(),
-      filter.getCondition());
-    MongoFilterBuilder filterBuilder = new MongoFilterBuilder(conditionExp);
-    filterBuilder.parseTree();
-    return filterBuilder.isAllExpressionsConverted();
+    if (hasPluginGroupScan(filter)) {
+      LogicalExpression conditionExp = DrillOptiq.toDrill(
+        new DrillParseContext(PrelUtil.getPlannerSettings(filter.getCluster().getPlanner())),
+        filter.getInput(),
+        filter.getCondition());
+      MongoFilterBuilder filterBuilder = new MongoFilterBuilder(conditionExp);
+      filterBuilder.parseTree();
+      return filterBuilder.isAllExpressionsConverted();
+    }
+    return false;
   }
 
   @Override
   public boolean canImplement(DrillLimitRelBase limit) {
-    return true;
+    return hasPluginGroupScan(limit);
   }
 
   @Override
   public boolean canImplement(Project project) {
-    return project.getProjects().stream()
-      .allMatch(RexToMongoTranslator::supportsExpression);
+    return hasPluginGroupScan(project) &&
+      project.getProjects().stream()
+        .allMatch(RexToMongoTranslator::supportsExpression);
   }
 
   @Override
   public boolean canImplement(Sort sort) {
-    return true;
+    return hasPluginGroupScan(sort);
   }
 
   @Override
   public boolean canImplement(Union union) {
     // allow converting for union all only, since Drill adds extra aggregation for union distinct,
     // so we will convert both union all and aggregation later
-    return union.all;
+    return union.all && hasPluginGroupScan(union);
   }
 
   @Override
   public boolean canImplement(TableScan scan) {
-    return true;
+    return hasPluginGroupScan(scan);
   }
 
   @Override
@@ -292,7 +297,12 @@ public class MongoPluginImplementor extends AbstractPluginImplementor {
       newSpec, columns, runAggregate);
   }
 
-  public static int direction(RelFieldCollation fieldCollation) {
+  @Override
+  protected boolean hasPluginGroupScan(RelNode node) {
+    return findGroupScan(node) instanceof MongoGroupScan;
+  }
+
+  private static int direction(RelFieldCollation fieldCollation) {
     switch (fieldCollation.getDirection()) {
       case DESCENDING:
       case STRICTLY_DESCENDING:

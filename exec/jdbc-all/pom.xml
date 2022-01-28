@@ -33,6 +33,7 @@
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
+    <jdbc-all-jar.maxsize>46700000</jdbc-all-jar.maxsize>
   </properties>
 
   <dependencies>
@@ -562,7 +563,7 @@
                   This is likely due to you adding new dependencies to a java-exec and not updating the excludes in this module. This is important as it minimizes the size of the dependency of Drill application users.
 
                   </message>
-                  <maxsize>46700000</maxsize>
+                  <maxsize>${jdbc-all-jar.maxsize}</maxsize>
                   <minsize>15000000</minsize>
                   <files>
                    <file>${project.build.directory}/drill-jdbc-all-${project.version}.jar</file>
@@ -873,6 +874,12 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>hadoop-2</id>
+      <properties>
+        <jdbc-all-jar.maxsize>47700000</jdbc-all-jar.maxsize>
+      </properties>
     </profile>
   </profiles>
 

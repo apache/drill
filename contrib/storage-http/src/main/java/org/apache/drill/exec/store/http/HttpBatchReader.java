@@ -251,7 +251,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     if (paginator != null &&
       maxRecords < 0 && (resultSetLoader.totalRowCount()) < paginator.getPageSize()) {
       logger.debug("Partially filled page received, ending pagination");
-      paginator.endPagination();
+      paginator.notifyPartialPage();
     }
     return result;
   }

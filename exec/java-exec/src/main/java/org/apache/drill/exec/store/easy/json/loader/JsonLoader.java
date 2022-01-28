@@ -48,9 +48,9 @@ public interface JsonLoader {
   String JSON_LITERAL_MODE = "json";
 
   /**
-   * Read one record of data.
+   * Read one batch of row data.
    *
-   * @return {@code true} if a record was loaded, {@code false} if EOF.
+   * @return {@code true} if at least one record was loaded, {@code false} if EOF.
    * @throws {org.apache.drill.common.exceptions.UserException
    * for most errors
    * @throws RuntimeException for unexpected errors, most often due

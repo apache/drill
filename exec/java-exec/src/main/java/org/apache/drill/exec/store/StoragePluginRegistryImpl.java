@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -198,7 +197,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
   public StoragePluginRegistryImpl(DrillbitContext context) {
     this.context = new DrillbitPluginRegistryContext(context);
     this.pluginCache = new StoragePluginMap();
-    this.schemaFactory = new DrillSchemaFactory(null, this);
+    this.schemaFactory = new DrillSchemaFactory(null);
     locators.add(new ClassicConnectorLocator(this.context));
     locators.add(new SystemPluginLocator(this.context));
     this.pluginStore = new StoragePluginStoreImpl(context);
@@ -905,27 +904,6 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         .build(logger);
     }
     return connector.pluginEntryFor(name, pluginConfig, type);
-  }
-
-  // TODO: Replace this. Inefficient to obtain schemas we don't need.
-  protected void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
-    // Refresh against the persistent store.
-    // TODO: This will hammer the system if queries come in rapidly.
-    // Need some better solution: grace period, alert from ZK that there
-    // is something new, etc. Even better, don't register all the schemas.
-    refresh();
-
-    // Register schemas with the refreshed plugins
-    // TODO: this code requires instantiating all plugins, even though
-    // the query won't use them. Need a way to do deferred registration.
-    for (PluginHandle plugin : pluginCache.plugins()) {
-      try {
-        plugin.plugin().registerSchemas(schemaConfig, parent);
-      } catch (Exception e) {
-        logger.warn("Error during `{}` schema initialization: {}",
-            plugin.name(), e.getMessage(), e.getCause());
-      }
-    }
   }
 
   @Override

@@ -19,7 +19,9 @@ package org.apache.calcite.jdbc;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
+import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
@@ -28,7 +30,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
  * Unlike SimpleCalciteSchema, DynamicSchema could have an empty or partial schemaMap, but it could maintain a map of
  * name->SchemaFactory, and only register schema when the correspondent name is requested.
  */
-public class DynamicSchema extends SimpleCalciteSchema {
+public class DynamicSchema extends SimpleCalciteSchema implements AutoCloseable {
 
   public DynamicSchema(CalciteSchema parent, Schema schema, String name) {
     super(parent, schema, name);
@@ -49,4 +51,12 @@ public class DynamicSchema extends SimpleCalciteSchema {
     DynamicRootSchema rootSchema = new DynamicRootSchema(storages, schemaConfig, aliasRegistryProvider);
     return rootSchema.plus();
   }
+
+  @Override
+  public void close() throws Exception {
+    for (CalciteSchema cs : subSchemaMap.map().values()) {
+      AutoCloseables.closeWithUserException(cs.plus().unwrap(AbstractSchema.class));
+    }
+  }
+
 }

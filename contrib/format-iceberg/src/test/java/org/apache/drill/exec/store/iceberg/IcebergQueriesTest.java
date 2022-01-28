@@ -685,4 +685,52 @@ public class IcebergQueriesTest extends ClusterTest {
       .go();
   }
 
+  @Test
+  public void testLateralSql() throws Exception {
+    String sql =
+      "SELECT t.c_name, t2.ord.o_shop AS o_shop\n" +
+        "FROM cp.`lateraljoin/nested-customer.json` t,\n" +
+        "unnest(t.orders) t2(ord)\n" +
+        "LIMIT 1";
+
+    testBuilder()
+      .sqlQuery(sql)
+      .unOrdered()
+      .baselineColumns("c_name", "o_shop")
+      .baselineValues("customer1", "Meno Park 1st")
+      .go();
+  }
+
+  @Test
+  public void testLateralSqlIceberg() throws Exception {
+    String sql =
+      "SELECT t.int_field, t2.ord.struct_string_field struct_string_field\n" +
+        "FROM dfs.tmp.testAllTypes t,\n" +
+        "unnest(t.repeated_struct_field) t2(ord)\n" +
+        "ORDER BY t.int_field\n" +
+        "LIMIT 1";
+
+    testBuilder()
+      .sqlQuery(sql)
+      .unOrdered()
+      .baselineColumns("int_field", "struct_string_field")
+      .baselineValues(1, "abc")
+      .go();
+  }
+
+  @Test
+  public void testFilterPushCorrelate() throws Exception {
+    String sql =
+      "SELECT t.c_name, t2.ord.o_shop AS o_shop\n" +
+        "FROM cp.`lateraljoin/nested-customer.json` t,\n" +
+        "unnest(t.orders) t2(ord)\n" +
+        "WHERE t.c_name='customer1' AND t2.ord.o_shop='Meno Park 1st'";
+
+    testBuilder()
+      .unOrdered()
+      .sqlQuery(sql)
+      .baselineColumns("c_name", "o_shop")
+      .baselineValues("customer1", "Meno Park 1st")
+      .go();
+  }
 }

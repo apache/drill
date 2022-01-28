@@ -39,6 +39,8 @@ public class MockBreakageStorage extends MockStorageEngine {
 
   private boolean breakRegister;
 
+  public int registerAttemptCount = 0;
+
   public MockBreakageStorage(MockBreakageStorageEngineConfig configuration, DrillbitContext context, String name) {
     super(configuration, context, name);
     breakRegister = false;
@@ -51,6 +53,7 @@ public class MockBreakageStorage extends MockStorageEngine {
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
     if (breakRegister) {
+      registerAttemptCount++;
       throw new IOException("mock breakRegister!");
     }
     super.registerSchemas(schemaConfig, parent);

@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Loads schemas from storage plugins later when {@link #getSubSchema(String, boolean)}
@@ -58,7 +59,7 @@ public class DynamicRootSchema extends DynamicSchema {
 
   /** Creates a root schema. */
   DynamicRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider) {
-    super(null, new RootSchema(), ROOT_SCHEMA_NAME);
+    super(null, new RootSchema(storages), ROOT_SCHEMA_NAME);
     this.schemaConfig = schemaConfig;
     this.storages = storages;
     this.aliasRegistryProvider = aliasRegistryProvider;
@@ -78,13 +79,13 @@ public class DynamicRootSchema extends DynamicSchema {
   private CalciteSchema getSchema(String schemaName, boolean caseSensitive) {
     // Drill registers schemas in lower case, see AbstractSchema constructor
     schemaName = schemaName == null ? null : schemaName.toLowerCase();
-    CalciteSchema retSchema = getSubSchemaMap().get(schemaName);
+    CalciteSchema retSchema = subSchemaMap.map().get(schemaName);
     if (retSchema != null) {
       return retSchema;
     }
 
     loadSchemaFactory(schemaName, caseSensitive);
-    retSchema = getSubSchemaMap().get(schemaName);
+    retSchema = subSchemaMap.map().get(schemaName);
     return retSchema;
   }
 
@@ -133,7 +134,7 @@ public class DynamicRootSchema extends DynamicSchema {
         for (SchemaPlus schema : secondLevelSchemas) {
           org.apache.drill.exec.store.AbstractSchema drillSchema;
           try {
-            drillSchema = schema.unwrap(org.apache.drill.exec.store.AbstractSchema.class);
+            drillSchema = schema.unwrap(AbstractSchema.class);
           } catch (ClassCastException e) {
             throw new RuntimeException(String.format("Schema '%s' is not expected under root schema", schema.getName()));
           }
@@ -154,10 +155,18 @@ public class DynamicRootSchema extends DynamicSchema {
     }
   }
 
-  static class RootSchema extends AbstractSchema {
+  public static class RootSchema extends AbstractSchema {
 
-    public RootSchema() {
+    private StoragePluginRegistry storages;
+
+    public RootSchema(StoragePluginRegistry storages) {
       super(Collections.emptyList(), ROOT_SCHEMA_NAME);
+      this.storages = storages;
+    }
+
+    @Override
+    public Set<String> getSubSchemaNames() {
+      return storages.availablePlugins();
     }
 
     @Override
@@ -170,6 +179,11 @@ public class DynamicRootSchema extends DynamicSchema {
       return Expressions.call(
           DataContext.ROOT,
           BuiltInMethod.DATA_CONTEXT_GET_ROOT_SCHEMA.method);
+    }
+
+    @Override
+    public boolean showInInformationSchema() {
+      return false;
     }
   }
 }

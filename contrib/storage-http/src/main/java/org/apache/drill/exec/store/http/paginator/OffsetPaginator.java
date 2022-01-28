@@ -18,14 +18,12 @@
 
 package org.apache.drill.exec.store.http.paginator;
 
-import okhttp3.HttpUrl;
 import okhttp3.HttpUrl.Builder;
 import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.NoSuchElementException;
 
 public class OffsetPaginator extends Paginator {
 
@@ -48,11 +46,10 @@ public class OffsetPaginator extends Paginator {
    * @param offsetParam The field name which corresponds to the offset field from the API
    */
   public OffsetPaginator(Builder builder, int limit, int pageSize, String limitParam, String offsetParam) {
-    super(builder, paginationMode.OFFSET, pageSize, limit > 0);
+    super(builder, paginationMode.OFFSET, pageSize, limit);
     this.limit = limit;
     this.limitParam = limitParam;
     this.offsetParam = offsetParam;
-    this.paginatedUrls = buildPaginatedURLs();
     this.offset = 0;
 
     // Page size must be greater than zero
@@ -64,21 +61,17 @@ public class OffsetPaginator extends Paginator {
     }
   }
 
-  public int getLimit() {
-    return limit;
+  @Override
+  public boolean hasNext() {
+    return !partialPageReceived && (limit < 0 || offset < limit);
   }
 
   @Override
   public String next() {
-    if (hasLimit) {
-      return super.next();
-    } else {
-      return generateNextUrl();
+    if (!hasNext()) {
+      throw new NoSuchElementException();
     }
-  }
 
-  @Override
-  public String generateNextUrl() {
     builder.removeAllEncodedQueryParameters(offsetParam);
     builder.removeAllEncodedQueryParameters(limitParam);
 
@@ -87,31 +80,5 @@ public class OffsetPaginator extends Paginator {
     offset += pageSize;
 
     return builder.build().url().toString();
-  }
-
-
-  /**
-   * Build the paginated URLs.  If the parameters are invalid, return a list with the original URL.
-   *
-   * @return List of paginated URLs
-   */
-  @Override
-  public List<HttpUrl> buildPaginatedURLs() {
-    paginatedUrls = new ArrayList<>();
-    // If user wants 1000 records, and the page size is 100, we need to send 10 requests
-    int requestedPages = limit / pageSize;
-
-    for (int i = 0; i < requestedPages; i++) {
-      // Clear out old params
-      builder.removeAllEncodedQueryParameters(offsetParam);
-      builder.removeAllEncodedQueryParameters(limitParam);
-
-      builder.addQueryParameter(offsetParam, String.valueOf(offset));
-      builder.addQueryParameter(limitParam, String.valueOf(pageSize));
-      offset += pageSize;
-      paginatedUrls.add(builder.build());
-    }
-
-    return paginatedUrls;
   }
 }

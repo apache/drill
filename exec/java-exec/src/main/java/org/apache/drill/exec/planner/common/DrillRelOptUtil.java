@@ -325,6 +325,9 @@ public abstract class DrillRelOptUtil {
     for (RelNode rel : rels) {
       if (rel instanceof TableScan) {
         return (TableScan) rel;
+      } else if (rel instanceof RelSubset) {
+        RelSubset relSubset = (RelSubset) rel;
+        return findScan(Util.first(relSubset.getBest(), relSubset.getOriginal()));
       } else {
         return findScan(rel.getInputs().toArray(new RelNode[0]));
       }

@@ -414,4 +414,34 @@ public class TestEmptyParquet extends ClusterTest {
     String plan = queryBuilder().sql(sql).explainText();
     assertTrue(plan.contains("usedMetadataFile=true"));
   }
+
+  /**
+   * Test a Parquet file containing a zero-byte dictionary page, c.f.
+   * DRILL-8023.
+   */
+  @Test
+  public void testEmptyDictPage() throws Exception {
+    try {
+      client.alterSession(ExecConstants.PARQUET_NEW_RECORD_READER, false);
+      // Only column 'C' in empty_dict_page.parquet has an empty dictionary page.
+      String sql = "select A,B,C from dfs.`parquet/empty/empty_dict_page.parquet`";
+      RowSet actual = queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("A", TypeProtos.MinorType.BIGINT)
+        .addNullable("B", TypeProtos.MinorType.VARCHAR)
+        .addNullable("C", TypeProtos.MinorType.INT)
+        .buildSchema();
+
+      RowSet expected = client.rowSetBuilder(expectedSchema)
+        .addRow(1, "a", null)
+        .addRow(2, "b", null)
+        .addRow(3, "c", null)
+        .build();
+
+      RowSetUtilities.verify(expected, actual);
+    } finally {
+      client.resetSession(ExecConstants.PARQUET_NEW_RECORD_READER);
+    }
+  }
 }

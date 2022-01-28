@@ -17,7 +17,14 @@
  */
 package org.apache.drill.exec.store.ischema;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.mock.MockBreakageStorage;
+import org.apache.drill.test.ClientFixture;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterMockStorageFixture;
 import org.junit.Test;
 
 public class TestInfoSchemaFilterPushDown extends PlanTestBase {
@@ -110,6 +117,34 @@ public class TestInfoSchemaFilterPushDown extends PlanTestBase {
         "like\\(Field=COLUMN_NAME,Literal=commit%s\\)\\)";
 
     testHelper(query, scan, true);
+  }
+
+  /**
+    * As reported in DRILL-8057, even queries against INFORMATION_SCHEMA that
+    * included a filter that could be pushed down would be penalised by eager
+    * schema registration executed on every enabled storage plugin instance.
+    * This resulted in slow or even failed INFORMATION_SCHEMA schema queries
+    * when some storage plugin was unresponsive, even if it was not needed for
+    * the query being run.  This test checks that lazy schema registration is
+    * working by installing a mock storage plugin to act as a canary.
+    */
+  @Test
+  public void testLazySchemaRegistration() throws Exception {
+    ClusterMockStorageFixture cluster = ClusterFixture.builder(dirTestWatcher).buildCustomMockStorage();
+    // This mock storage plugin throws an exception from registerSchemas which
+    // would have been enough to correctly make this test fail were it not that
+    // the exception gets swallowed by StoragePluginRegistryImpl so we need to
+    // inspect a counter instead.
+    cluster.insertMockStorage("registerSchema canary", true);
+    ClientFixture client = cluster.clientFixture();
+
+    final String query = "SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_SCHEMA='INFORMATION_SCHEMA'";
+    client.queryBuilder().sql(query).run();
+    StoragePluginRegistry spr = cluster.drillbit().getContext().getStorage();
+    MockBreakageStorage mbs = (MockBreakageStorage) spr.getPlugin("registerSchema canary");
+
+    // no attempt to register schemas on the canary should have been made
+    assertEquals(0, mbs.registerAttemptCount);
   }
 
   private void testHelper(final String query, String filterInScan, boolean filterPrelExpected) throws Exception {
