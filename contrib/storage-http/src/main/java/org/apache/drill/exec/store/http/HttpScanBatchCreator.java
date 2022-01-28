@@ -163,7 +163,7 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
       } else if (paginatorConfig != null) {
         /*
         * If the paginator is not null we create a new batch reader for each
-        * URL that it generates.  In the future, this could be parallelized in
+        * URL that it generates. In the future, this could be parallelized in
         * the group scan such that the calls could be sent to different drillbits.
         */
         if (!paginator.hasNext()) {
