@@ -185,7 +185,7 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>io.netty:netty-tcnative:jar:linux-x86_64:2.0.47.Final</include>
+        <include>io.netty:netty-tcnative:jar:linux-x86_64:2.0.48.Final</include>
       </includes>
       <scope>test</scope>
     </dependencySet>
@@ -194,7 +194,7 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>io.netty:netty-tcnative:jar:linux-x86_64-fedora:2.0.47.Final</include>
+        <include>io.netty:netty-tcnative:jar:linux-x86_64-fedora:2.0.48.Final</include>
       </includes>
       <scope>test</scope>
     </dependencySet>
@@ -212,7 +212,7 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>io.netty:netty-tcnative:jar:osx-x86_64:2.0.47.Final</include>
+        <include>io.netty:netty-tcnative:jar:osx-x86_64:2.0.48.Final</include>
       </includes>
       <scope>test</scope>
     </dependencySet>
