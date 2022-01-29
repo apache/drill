@@ -635,7 +635,6 @@ This product bundles
   jersey-ext-mvc (org.glassfish.jersey.ext:jersey-mvc:2.8 - https://jersey.java.net/project/jersey-mvc/)
   jersey-ext-mvc-freemarker (org.glassfish.jersey.ext:jersey-mvc-freemarker:2.8 - https://jersey.java.net/project/jersey-mvc-freemarker/)
   jersey-media-multipart (org.glassfish.jersey.media:jersey-media-multipart:2.8 - https://jersey.java.net/project/jersey-media-multipart/)
-  jersey-repackaged-guava (org.glassfish.jersey.bundles.repackaged:jersey-guava:2.8 - https://jersey.java.net/project/project/jersey-guava/)
   OSGi resource locator bundle - used by various API providers that rely on META-INF/services mechanism to locate providers. (org.glassfish.hk2:osgi-resource-locator:1.0.1 - http://glassfish.org/osgi-resource-locator/)
   ServiceLocator Default Implementation (org.glassfish.hk2:hk2-locator:2.2.0 - https://hk2.java.net/hk2-locator)
   servlet-api (javax.servlet:servlet-api:2.4 - no url defined)
