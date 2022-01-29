@@ -46,6 +46,9 @@ public final class DrillProperties extends Properties {
 
   public static final String PASSWORD = "password";
 
+  /**
+   * Impersonation target name for Drill Inbound Impersonation
+   */
   public static final String IMPERSONATION_TARGET = "impersonation_target";
 
   public static final String AUTH_MECHANISM = "auth";

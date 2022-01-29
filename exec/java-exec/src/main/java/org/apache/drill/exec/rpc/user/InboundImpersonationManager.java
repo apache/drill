@@ -58,8 +58,10 @@ public class InboundImpersonationManager {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InboundImpersonationManager.class);
 
   private static final String STAR = "*";
-
   private static final ObjectMapper impersonationPolicyMapper = new ObjectMapper();
+
+  private List<ImpersonationPolicy> impersonationPolicies;
+  private String policiesString; // used to test if policies changed
 
   static {
     impersonationPolicyMapper.configure(JsonGenerator.Feature.QUOTE_FIELD_NAMES, false);
@@ -152,10 +154,6 @@ public class InboundImpersonationManager {
         deserializeImpersonationPolicies(policiesString));
   }
 
-
-  private List<ImpersonationPolicy> impersonationPolicies;
-  private String policiesString; // used to test if policies changed
-
   /**
    * Check if the current session user, as a proxy user, is authorized to impersonate the given target user
    * based on the system's impersonation policies.
@@ -164,8 +162,7 @@ public class InboundImpersonationManager {
    * @param session    user session
    */
   public void replaceUserOnSession(final String targetName, final UserSession session) {
-    final String policiesString = session.getOptions()
-        .getOption(ExecConstants.IMPERSONATION_POLICY_VALIDATOR);
+    final String policiesString = session.getOptions().getOption(ExecConstants.IMPERSONATION_POLICY_VALIDATOR);
     if (!policiesString.equals(this.policiesString)) {
       try {
         impersonationPolicies = deserializeImpersonationPolicies(policiesString);

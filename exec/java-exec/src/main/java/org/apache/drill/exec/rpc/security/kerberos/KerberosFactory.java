@@ -138,21 +138,12 @@ public class KerberosFactory implements AuthenticatorFactory {
 
     // ignore parts[2]; GSSAPI gets the realm info from the ticket
     try {
-      final SaslClient saslClient = ugi.doAs(new PrivilegedExceptionAction<SaslClient>() {
-
-        @Override
-        public SaslClient run() throws Exception {
-          return FastSaslClientFactory.getInstance().createSaslClient(new String[]{KerberosUtil.KERBEROS_SASL_NAME},
-              null /** authorization ID */, serviceName, serviceHostName, properties,
-              new CallbackHandler() {
-                @Override
-                public void handle(final Callback[] callbacks)
-                    throws IOException, UnsupportedCallbackException {
-                  throw new UnsupportedCallbackException(callbacks[0]);
-                }
-              });
-        }
-      });
+      final SaslClient saslClient = ugi.doAs((PrivilegedExceptionAction<SaslClient>) () ->
+        FastSaslClientFactory.getInstance().createSaslClient(new String[]{ KerberosUtil.KERBEROS_SASL_NAME },
+          null /* authorization ID */, serviceName, serviceHostName, properties,
+          callbacks -> {
+            throw new UnsupportedCallbackException(callbacks[0]);
+          }));
       logger.debug("GSSAPI SaslClient created to authenticate to {} running on {} with QOP value {}",
           serviceName, serviceHostName, qopValue);
       return saslClient;

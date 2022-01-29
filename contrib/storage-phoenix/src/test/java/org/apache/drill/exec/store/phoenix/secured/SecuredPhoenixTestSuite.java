@@ -15,54 +15,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.phoenix;
+package org.apache.drill.exec.store.phoenix.secured;
+
+import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.SlowTest;
+import org.apache.drill.exec.store.phoenix.QueryServerBasicsIT;
+import org.apache.drill.test.BaseTest;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
+import org.slf4j.LoggerFactory;
 
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.drill.categories.SlowTest;
-import org.apache.drill.test.BaseTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
-import org.slf4j.LoggerFactory;
 
-
-@RunWith(Suite.class)
-@SuiteClasses ({
-   PhoenixDataTypeTest.class,
-   PhoenixSQLTest.class,
-   PhoenixCommandTest.class
+@Suite
+@SelectClasses({
+  SecuredPhoenixDataTypeTest.class,
+  SecuredPhoenixSQLTest.class,
+  SecuredPhoenixCommandTest.class
 })
-@Ignore
-@Category({ SlowTest.class })
-public class PhoenixTestSuite extends BaseTest {
+@Disabled
+@Tag(SlowTest.TAG)
+@Tag(RowSetTests.TAG)
+public class SecuredPhoenixTestSuite extends BaseTest {
 
-  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PhoenixTestSuite.class);
+  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SecuredPhoenixTestSuite.class);
 
   private static volatile boolean runningSuite = false;
-  private static AtomicInteger initCount = new AtomicInteger(0);
+  private static final AtomicInteger initCount = new AtomicInteger(0);
 
-  @BeforeClass
+  @BeforeAll
   public static void initPhoenixQueryServer() throws Exception {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    synchronized (PhoenixTestSuite.class) {
+    synchronized (SecuredPhoenixTestSuite.class) {
       if (initCount.get() == 0) {
         logger.info("Boot the test cluster...");
-        QueryServerBasicsIT.doSetup();
+        HttpParamImpersonationQueryServerIT.startQueryServerEnvironment();
       }
       initCount.incrementAndGet();
       runningSuite = true;
     }
   }
 
-  @AfterClass
+  @AfterAll
   public static void tearDownCluster() throws Exception {
-    synchronized (PhoenixTestSuite.class) {
+    synchronized (SecuredPhoenixTestSuite.class) {
       if (initCount.decrementAndGet() == 0) {
         logger.info("Shutdown all instances of test cluster.");
         QueryServerBasicsIT.afterClass();

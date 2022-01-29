@@ -110,7 +110,6 @@ public interface PhysicalOperator extends GraphValue<PhysicalOperator> {
   /**
    * Name of the user whom to impersonate while setting up the implementation (RecordBatch) of this
    * PhysicalOperator. Default value is "null" in which case we impersonate as user who launched the query.
-   * @return
    */
   @JsonProperty("userName")
   String getUserName();

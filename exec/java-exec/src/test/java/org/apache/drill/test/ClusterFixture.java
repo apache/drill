@@ -72,6 +72,8 @@ import org.apache.hadoop.fs.FileSystem;
  * execute queries. Can be used in JUnit tests, or in ad-hoc programs. Provides
  * a builder to set the necessary embedded Drillbit and client options, then
  * creates the requested Drillbit and client.
+ * TODO: To support User Impersonation add Configuration dfsConf and set hadoop.proxyuser settings
+ * similar to {@link org.apache.drill.exec.impersonation.BaseTestImpersonation}
  */
 public class ClusterFixture extends BaseFixture implements AutoCloseable {
   public static final int MAX_WIDTH_PER_NODE = 2;
@@ -302,6 +304,10 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     return new ClientFixture.ClientBuilder(this);
   }
 
+  public ClientFixture.ClientBuilder clientBuilder(Properties properties) {
+    return new ClientFixture.ClientBuilder(this, properties);
+  }
+
   public RestClientFixture.Builder restClientBuilder() {
     return new RestClientFixture.Builder(this);
   }
@@ -313,6 +319,19 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
         .build();
     }
     return clients.get(0);
+  }
+
+  /**
+   * It can be used to add one more client for {@link ClusterFixture}. <br>
+   * Note: {@link ClusterTest#client}
+   *
+   * @param properties client Properties (clientProps)
+   * @return new ClientFixture for current ClusterFixture
+   */
+  public ClientFixture addClientFixture(Properties properties) {
+    return clientBuilder(properties)
+      .property(DrillProperties.DRILLBIT_CONNECTION, String.format("localhost:%s", drillbit().getUserPort()))
+      .build();
   }
 
   /**
@@ -341,6 +360,10 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   public DrillClient client() {
     return clientFixture().client();
+  }
+
+  public ClientFixture client(int number) {
+    return clients.get(number);
   }
 
   /**

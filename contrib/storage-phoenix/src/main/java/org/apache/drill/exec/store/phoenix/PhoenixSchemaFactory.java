@@ -18,45 +18,63 @@
 package org.apache.drill.exec.store.phoenix;
 
 import java.io.IOException;
-import java.sql.Connection;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.sql.DataSource;
 
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.hadoop.security.UserGroupInformation;
+
+import static org.apache.drill.exec.util.ImpersonationUtil.getProcessUserName;
 
 public class PhoenixSchemaFactory extends AbstractSchemaFactory {
 
   private final PhoenixStoragePlugin plugin;
   private final Map<String, PhoenixSchema> schemaMap;
   private PhoenixSchema rootSchema;
+  private final boolean isDrillImpersonationEnabled;
+  private final UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
 
   public PhoenixSchemaFactory(PhoenixStoragePlugin plugin) {
     super(plugin.getName());
     this.plugin = plugin;
-    this.schemaMap = Maps.newHashMap();
+    this.schemaMap = new HashMap<>();
+    isDrillImpersonationEnabled = plugin.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-    rootSchema = new PhoenixSchema(plugin, Collections.emptyList(), plugin.getName());
-    locateSchemas();
+    try {
+      rootSchema = new PhoenixSchema(schemaConfig, plugin, Collections.emptyList(), plugin.getName());
+      if (isDrillImpersonationEnabled) {
+        ugi.doAs((PrivilegedExceptionAction<Void>) () -> {
+          locateSchemas(schemaConfig, rootSchema.getUser(schemaConfig.getUserName(), getProcessUserName()));
+          return null;
+        });
+      } else {
+        locateSchemas(schemaConfig, rootSchema.getUser(schemaConfig.getUserName(), getProcessUserName()));
+      }
+    } catch (SQLException | InterruptedException e) {
+      throw new IOException(e);
+    }
     parent.add(getName(), rootSchema); // resolve the top-level schema.
     for (String schemaName : rootSchema.getSubSchemaNames()) {
       PhoenixSchema schema = (PhoenixSchema) rootSchema.getSubSchema(schemaName);
@@ -64,29 +82,28 @@ public class PhoenixSchemaFactory extends AbstractSchemaFactory {
     }
   }
 
-  private void locateSchemas() {
-    DataSource ds = plugin.getDataSource();
-    try (Connection conn = ds.getConnection();
-          ResultSet rs = ds.getConnection().getMetaData().getSchemas()) {
+  private void locateSchemas(SchemaConfig schemaConfig, String userName) throws SQLException {
+    try (ResultSet rs = plugin.getDataSource(userName).getConnection().getMetaData().getSchemas()) {
       while (rs.next()) {
         final String schemaName = rs.getString(1); // lookup the schema (or called database).
-        PhoenixSchema schema = new PhoenixSchema(plugin, Arrays.asList(getName()), schemaName);
+        PhoenixSchema schema = new PhoenixSchema(schemaConfig, plugin, Arrays.asList(getName()), schemaName);
         schemaMap.put(schemaName, schema);
       }
       rootSchema.addSchemas(schemaMap);
-    } catch (SQLException e) {
-      throw new DrillRuntimeException(e.getMessage(), e);
     }
   }
 
-  protected static class PhoenixSchema extends AbstractSchema {
-
+  class PhoenixSchema extends AbstractSchema {
     private final JdbcSchema jdbcSchema;
     private final Map<String, PhoenixSchema> schemaMap = CaseInsensitiveMap.newHashMap();
 
-    public PhoenixSchema(PhoenixStoragePlugin plugin, List<String> parentSchemaPath, String schemaName) {
+    public PhoenixSchema(SchemaConfig schemaConfig,
+                         PhoenixStoragePlugin plugin,
+                         List<String> parentSchemaPath,
+                         String schemaName) throws SQLException {
       super(parentSchemaPath, schemaName);
-      this.jdbcSchema = new JdbcSchema(plugin.getDataSource(), plugin.getDialect(), plugin.getConvention(), null, schemaName);
+      this.jdbcSchema = new JdbcSchema(plugin.getDataSource(schemaConfig.getUserName()), plugin.getDialect(),
+        plugin.getConvention(), null, schemaName);
     }
 
     @Override
@@ -101,14 +118,16 @@ public class PhoenixSchemaFactory extends AbstractSchemaFactory {
 
     @Override
     public Table getTable(String name) {
-      Table table = jdbcSchema.getTable(StringUtils.upperCase(name));
-      return table;
+      return isDrillImpersonationEnabled
+        ? ugi.doAs((PrivilegedAction<Table>) () -> jdbcSchema.getTable(StringUtils.upperCase(name)))
+        : jdbcSchema.getTable(StringUtils.upperCase(name));
     }
 
     @Override
     public Set<String> getTableNames() {
-      Set<String> tables = jdbcSchema.getTableNames();
-      return tables;
+      return isDrillImpersonationEnabled
+        ? ugi.doAs((PrivilegedAction<Set<String>>) jdbcSchema::getTableNames)
+        : jdbcSchema.getTableNames();
     }
 
     @Override
@@ -116,13 +135,23 @@ public class PhoenixSchemaFactory extends AbstractSchemaFactory {
       return PhoenixStoragePluginConfig.NAME;
     }
 
-    public void addSchemas(Map<String, PhoenixSchema> schemas) {
-      schemaMap.putAll(schemas);
-    }
-
     @Override
     public boolean areTableNamesCaseSensitive() {
       return false;
+    }
+
+    @Override
+    public String getUser(String impersonated, String notImpersonated) {
+      return needToImpersonateReadingData() ? impersonated : notImpersonated;
+    }
+
+    @Override
+    public boolean needToImpersonateReadingData() {
+      return isDrillImpersonationEnabled;
+    }
+
+    public void addSchemas(Map<String, PhoenixSchema> schemas) {
+      schemaMap.putAll(schemas);
     }
   }
 }

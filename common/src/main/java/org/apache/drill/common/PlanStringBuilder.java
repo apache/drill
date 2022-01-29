@@ -79,7 +79,7 @@ public class PlanStringBuilder {
   public PlanStringBuilder field(String key, Object value) {
     if (value != null) {
       startField(key);
-      buf.append(value.toString());
+      buf.append(value);
     }
     return this;
   }

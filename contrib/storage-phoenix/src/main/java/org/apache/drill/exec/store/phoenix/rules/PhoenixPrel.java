@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.phoenix.rules;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -67,15 +66,15 @@ public class PhoenixPrel extends AbstractRelNode implements Prel {
   }
 
   @Override
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator)
-      throws IOException {
-    List<SchemaPath> schemaPaths = new ArrayList<SchemaPath>(rowType.getFieldCount());
-    List<String> columns = new ArrayList<String>(rowType.getFieldCount());
+  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) {
+    List<SchemaPath> schemaPaths = new ArrayList<>(rowType.getFieldCount());
+    List<String> columns = new ArrayList<>(rowType.getFieldCount());
     for (String col : rowType.getFieldNames()) {
       schemaPaths.add(SchemaPath.getSimplePath(col));
       columns.add(SchemaPath.getSimplePath(col).rootName());
     }
-    PhoenixGroupScan output = new PhoenixGroupScan(sql, schemaPaths, new PhoenixScanSpec(sql, columns, rows), convention.getPlugin());
+    PhoenixGroupScan output = new PhoenixGroupScan(creator.getContext().getQueryUserName(), sql, schemaPaths,
+      new PhoenixScanSpec(sql, columns, rows), convention.getPlugin());
     return creator.addMetadata(this, output);
   }
 

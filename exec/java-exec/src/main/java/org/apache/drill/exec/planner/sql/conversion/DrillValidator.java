@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.conversion;
 
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,13 +39,17 @@ import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Static;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 class DrillValidator extends SqlValidatorImpl {
 
+  private final boolean isImpersonationEnabled;
+
   DrillValidator(SqlOperatorTable opTab, SqlValidatorCatalogReader catalogReader,
-                 RelDataTypeFactory typeFactory, SqlConformance conformance) {
+                 RelDataTypeFactory typeFactory, SqlConformance conformance, boolean isImpersonationEnabled) {
     super(opTab, catalogReader, typeFactory, conformance);
+    this.isImpersonationEnabled = isImpersonationEnabled;
   }
 
   @Override
@@ -66,7 +71,14 @@ class DrillValidator extends SqlValidatorImpl {
           }
       }
     }
-    super.validateFrom(node, targetRowType, scope);
+    if (isImpersonationEnabled) {
+      ImpersonationUtil.getProcessUserUGI().doAs((PrivilegedAction<Void>) () -> {
+        super.validateFrom(node, targetRowType, scope);
+        return null;
+      });
+    } else {
+      super.validateFrom(node, targetRowType, scope);
+    }
   }
 
   private void replaceAliasWithActualName(SqlIdentifier tempNode) {

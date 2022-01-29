@@ -95,22 +95,11 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
   }
 
   /**
-   * Does Drill needs to impersonate as user connected to Drill when reading data from Hive warehouse location?
-   * @return True when both Drill impersonation and Hive impersonation are enabled.
-   */
-  private boolean needToImpersonateReadingData() {
-    return isDrillImpersonationEnabled && isHS2DoAsSet;
-  }
-
-  /**
    * Close this schema factory in preparation for retrying. Attempt to close
    * connections, but just ignore any errors.
    */
   public void close() {
-    AutoCloseables.closeSilently(
-        processUserMetastoreClient::close,
-        metaStoreClientLoadingCache::invalidateAll
-    );
+    AutoCloseables.closeSilently(processUserMetastoreClient, metaStoreClientLoadingCache::invalidateAll);
   }
 
   @Override
@@ -220,7 +209,8 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
           : new DrillHiveTable(getName(), plugin, getUser(schemaUser, getProcessUserName()), entry);
     }
 
-    private String getUser(String impersonated, String notImpersonated) {
+    @Override
+    public String getUser(String impersonated, String notImpersonated) {
       return needToImpersonateReadingData() ? impersonated : notImpersonated;
     }
 
@@ -244,6 +234,11 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
     @Override
     public String getTypeName() {
       return HiveStoragePluginConfig.NAME;
+    }
+
+    @Override
+    public boolean needToImpersonateReadingData() {
+      return isDrillImpersonationEnabled && isHS2DoAsSet;
     }
   }
 

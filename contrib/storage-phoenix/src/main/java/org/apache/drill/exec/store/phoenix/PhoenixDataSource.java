@@ -21,13 +21,14 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
@@ -39,46 +40,51 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * is not always left in a healthy state by the previous user. It is better to
  * create new Phoenix Connections to ensure that you avoid any potential issues.
  */
+@Slf4j
 public class PhoenixDataSource implements DataSource {
 
   private static final String DEFAULT_URL_HEADER = "jdbc:phoenix:thin:url=http://";
   private static final String DEFAULT_SERIALIZATION = "serialization=PROTOBUF";
+  private static final String IMPERSONATED_USER_VARIABLE = "$user";
+  private static final String DEFAULT_QUERY_SERVER_REMOTEUSEREXTRACTOR_PARAM = "doAs";
 
-  private String url;
+  private final String url;
+  private final String user;
   private Map<String, Object> connectionProperties;
-  private boolean isFatClient; // Is a fat client
+  private boolean isFatClient;
 
-  public PhoenixDataSource(String url) {
-    Preconditions.checkNotNull(url);
-    this.url = url;
-  }
-
-  public PhoenixDataSource(String host, int port) {
-    Preconditions.checkNotNull(host);
-    Preconditions.checkArgument(port > 0, "Please set the correct port.");
-    this.url = new StringBuilder()
-        .append(DEFAULT_URL_HEADER)
-        .append(host)
-        .append(":")
-        .append(port)
-        .append(";")
-        .append(DEFAULT_SERIALIZATION)
-        .toString();
-  }
-
-  public PhoenixDataSource(String url, Map<String, Object> connectionProperties) {
-    this(url);
+  public PhoenixDataSource(String url,
+                           String userName,
+                           Map<String, Object> connectionProperties,
+                           boolean impersonationEnabled) {
+    Preconditions.checkNotNull(url, userName);
     Preconditions.checkNotNull(connectionProperties);
     connectionProperties.forEach((k, v)
         -> Preconditions.checkArgument(v != null, String.format("does not accept null values : %s", k)));
+    this.url = impersonationEnabled ? doAsUserUrl(url, userName) : url;
+    this.user = userName;
     this.connectionProperties = connectionProperties;
   }
 
-  public PhoenixDataSource(String host, int port, Map<String, Object> connectionProperties) {
-    this(host, port);
-    Preconditions.checkNotNull(connectionProperties);
+  public PhoenixDataSource(String host,
+                           int port,
+                           String userName,
+                           Map<String, Object> connectionProperties,
+                           boolean impersonationEnabled) {
+    Preconditions.checkNotNull(host, userName);
+    Preconditions.checkArgument(port > 0, "Please set the correct port.");
     connectionProperties.forEach((k, v)
-        -> Preconditions.checkArgument(v != null, String.format("does not accept null values : %s", k)));
+      -> Preconditions.checkArgument(v != null, String.format("does not accept null values : %s", k)));
+    this.url = new StringBuilder()
+      .append(DEFAULT_URL_HEADER)
+      .append(host)
+      .append(":")
+      .append(port)
+      .append(impersonationEnabled ? "?doAs=" + userName : "")
+      .append(";")
+      .append(DEFAULT_SERIALIZATION)
+      .toString();
+    this.user = userName;
     this.connectionProperties = connectionProperties;
   }
 
@@ -91,27 +97,27 @@ public class PhoenixDataSource implements DataSource {
   }
 
   @Override
-  public PrintWriter getLogWriter() throws SQLException {
+  public PrintWriter getLogWriter() {
     throw new UnsupportedOperationException("getLogWriter");
   }
 
   @Override
-  public void setLogWriter(PrintWriter out) throws SQLException {
+  public void setLogWriter(PrintWriter out) {
     throw new UnsupportedOperationException("setLogWriter");
   }
 
   @Override
-  public void setLoginTimeout(int seconds) throws SQLException {
+  public void setLoginTimeout(int seconds) {
     throw new UnsupportedOperationException("setLoginTimeout");
   }
 
   @Override
-  public int getLoginTimeout() throws SQLException {
+  public int getLoginTimeout() {
     return 0;
   }
 
   @Override
-  public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+  public Logger getParentLogger() {
     throw new UnsupportedOperationException("getParentLogger");
   }
 
@@ -126,22 +132,21 @@ public class PhoenixDataSource implements DataSource {
   }
 
   @Override
-  public boolean isWrapperFor(Class<?> iface) throws SQLException {
+  public boolean isWrapperFor(Class<?> iface) {
     return iface.isInstance(this);
   }
 
   @Override
   public Connection getConnection() throws SQLException {
     useDriverClass();
-    Connection conn = DriverManager.getConnection(url, useConfProperties());
-    return conn;
+    return getConnection(this.user, null);
   }
 
   @Override
-  public Connection getConnection(String username, String password) throws SQLException {
+  public Connection getConnection(String userName, String password) throws SQLException {
     useDriverClass();
-    Connection conn = DriverManager.getConnection(url, username, password);
-    return conn;
+    logger.debug("Drill/Phoenix connection url: {}", url);
+    return DriverManager.getConnection(url, useConfProperties());
   }
 
   /**
@@ -150,12 +155,12 @@ public class PhoenixDataSource implements DataSource {
    *
    * @throws SQLException
    */
-  private void useDriverClass() throws SQLException {
+  public Class<?> useDriverClass() throws SQLException {
     try {
-      if (!isFatClient) {
-        Class.forName(PhoenixStoragePluginConfig.THIN_DRIVER_CLASS);
+      if (isFatClient) {
+        return Class.forName(PhoenixStoragePluginConfig.FAT_DRIVER_CLASS);
       } else {
-        Class.forName(PhoenixStoragePluginConfig.FAT_DRIVER_CLASS);
+        return Class.forName(PhoenixStoragePluginConfig.THIN_DRIVER_CLASS);
       }
     } catch (ClassNotFoundException e) {
       throw new SQLException("Cause by : " + e.getMessage());
@@ -169,12 +174,23 @@ public class PhoenixDataSource implements DataSource {
    */
   private Properties useConfProperties() {
     Properties props = new Properties();
-    props.put("phoenix.trace.frequency", "never");
-    props.put("phoenix.query.timeoutMs", 30000);
-    props.put("phoenix.query.keepAliveMs", 120000);
     if (getConnectionProperties() != null) {
       props.putAll(getConnectionProperties());
     }
+    props.putIfAbsent("phoenix.trace.frequency", "never");
+    props.putIfAbsent("phoenix.query.timeoutMs", 30000);
+    props.putIfAbsent("phoenix.query.keepAliveMs", 120000);
     return props;
+  }
+
+  private String doAsUserUrl(String url, String userName) {
+    if (url.contains(DEFAULT_QUERY_SERVER_REMOTEUSEREXTRACTOR_PARAM)) {
+      return url.replace(IMPERSONATED_USER_VARIABLE, userName);
+    } else {
+      throw UserException
+        .connectionError()
+        .message("Invalid PQS URL. Please add the value of the `doAs=$user` parameter if Impersonation is enabled.")
+        .build(logger);
+    }
   }
 }

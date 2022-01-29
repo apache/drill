@@ -407,4 +407,21 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   public boolean areTableNamesCaseSensitive() {
     return true;
   }
+
+  /**
+   * @param impersonated User whom to impersonate. Usually {@link SchemaConfig#getUserName()}
+   * @param notImpersonated Regular user (table owner for Views or Drillbit process user for Tables)
+   * @return endUser
+   */
+  public String getUser(String impersonated, String notImpersonated) {
+    return notImpersonated;
+  }
+
+  /**
+   * Does Drill needs to impersonate as user connected to Drill when reading data from DataSource?
+   * @return True when both Drill impersonation and DataSource impersonation are enabled.
+   */
+  public boolean needToImpersonateReadingData() {
+    return false;
+  }
 }

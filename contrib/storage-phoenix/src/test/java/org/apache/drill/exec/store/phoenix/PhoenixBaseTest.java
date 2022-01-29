@@ -38,9 +38,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.hadoop.fs.Path;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.slf4j.LoggerFactory;
 
@@ -51,38 +53,48 @@ public class PhoenixBaseTest extends ClusterTest {
 
   private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PhoenixBaseTest.class);
 
-  private static AtomicInteger initCount = new AtomicInteger(0);
-  protected static String U_U_I_D = UUID.randomUUID().toString();
+  public final static String U_U_I_D = UUID.randomUUID().toString();
+  private final static AtomicInteger initCount = new AtomicInteger(0);
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    PhoenixTestSuite.initPhoenixQueryServer();
     if (PhoenixTestSuite.isRunningSuite()) {
       QueryServerBasicsIT.testCatalogs();
     }
-    bootMiniCluster();
+    startDrillCluster();
     if (initCount.incrementAndGet() == 1) {
-      createSchema();
-      createTables();
-      createSampleData();
+      createSchema(QueryServerBasicsIT.CONN_STRING);
+      createTables(QueryServerBasicsIT.CONN_STRING);
+      createSampleData(QueryServerBasicsIT.CONN_STRING);
     }
   }
 
-  public static void bootMiniCluster() throws Exception {
-    ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher);
+  @AfterClass
+  public static void tearDownCluster() throws Exception {
+    if (!PhoenixTestSuite.isRunningSuite()) {
+      PhoenixTestSuite.tearDownCluster();
+    }
+  }
+
+  public static void startDrillCluster() throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
     startCluster(builder);
-    dirTestWatcher.copyResourceToRoot(Paths.get(""));
     Map<String, Object> props = Maps.newHashMap();
     props.put("phoenix.query.timeoutMs", 90000);
     props.put("phoenix.query.keepAliveMs", "30000");
     StoragePluginRegistry registry = cluster.drillbit().getContext().getStorage();
-    PhoenixStoragePluginConfig config = new PhoenixStoragePluginConfig(null, 0, null, null, QueryServerBasicsIT.CONN_STRING, null, props);
+    PhoenixStoragePluginConfig config = new PhoenixStoragePluginConfig(null, 0, null, null,
+      QueryServerBasicsIT.CONN_STRING, null, props);
     config.setEnabled(true);
     registry.put(PhoenixStoragePluginConfig.NAME + "123", config);
+    dirTestWatcher.copyResourceToRoot(Paths.get(""));
   }
 
-  public static void createSchema() throws Exception {
-    try (final Connection connection = DriverManager.getConnection(QueryServerBasicsIT.CONN_STRING)) {
+  public static void createSchema(String connString) throws Exception {
+    try (final Connection connection = DriverManager.getConnection(connString)) {
+      logger.debug("Phoenix connection established with the specified url : {}", connString);
       assertFalse(connection.isClosed());
       connection.setAutoCommit(true);
       try (final Statement stmt = connection.createStatement()) {
@@ -91,8 +103,8 @@ public class PhoenixBaseTest extends ClusterTest {
     }
   }
 
-  public static void createTables() throws Exception {
-    try (final Connection connection = DriverManager.getConnection(QueryServerBasicsIT.CONN_STRING)) {
+  public static void createTables(String connString) throws Exception {
+    try (final Connection connection = DriverManager.getConnection(connString)) {
       assertFalse(connection.isClosed());
       connection.setAutoCommit(true);
       try (final Statement stmt = connection.createStatement()) {
@@ -149,7 +161,7 @@ public class PhoenixBaseTest extends ClusterTest {
     }
   }
 
-  public static void createSampleData() throws Exception {
+  public static void createSampleData(String connString) throws Exception {
     final String[] paths = new String[] { "data/region.tbl", "data/nation.tbl" };
     final String[] sqls = new String[] {
         "UPSERT INTO V1.REGION VALUES(?,?,?)",
@@ -163,7 +175,7 @@ public class PhoenixBaseTest extends ClusterTest {
     logger.info("Loading the .tbl file : " + Arrays.toString(paths));
 
     List<String[]> allRows = parseTblFile(String.valueOf(region_path));
-    try (final Connection connection = DriverManager.getConnection(QueryServerBasicsIT.CONN_STRING)) {
+    try (final Connection connection = DriverManager.getConnection(connString)) {
       assertFalse(connection.isClosed());
       connection.setAutoCommit(false);
       // region table

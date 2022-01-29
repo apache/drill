@@ -18,60 +18,68 @@
 package org.apache.drill.exec.store.phoenix;
 
 import java.io.IOException;
+import java.security.PrivilegedAction;
+import java.sql.SQLException;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
-import javax.sql.DataSource;
-
-import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDialect;
-import org.apache.calcite.sql.SqlDialectFactoryImpl;
+import org.apache.calcite.sql.dialect.PhoenixSqlDialect;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.phoenix.rules.PhoenixConvention;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
+import org.apache.hadoop.security.UserGroupInformation;
 
 public class PhoenixStoragePlugin extends AbstractStoragePlugin {
 
   private final PhoenixStoragePluginConfig config;
-  private final DataSource dataSource;
   private final SqlDialect dialect;
   private final PhoenixConvention convention;
   private final PhoenixSchemaFactory schemaFactory;
+  private final boolean impersonationEnabled;
+  private final LoadingCache<String, PhoenixDataSource> CACHE = CacheBuilder.newBuilder()
+    .maximumSize(5) // Up to 5 clients for impersonation-enabled.
+    .expireAfterAccess(10, TimeUnit.MINUTES)
+    .build(new CacheLoader<String, PhoenixDataSource>() {
+      @Override
+      public PhoenixDataSource load(String userName) {
+        UserGroupInformation ugi = ImpersonationUtil.getProcessUserUGI();
+        return impersonationEnabled
+          ? ugi.doAs((PrivilegedAction<PhoenixDataSource>) () -> createDataSource(userName))
+          : createDataSource(userName);
+      }
+    });
 
   public PhoenixStoragePlugin(PhoenixStoragePluginConfig config, DrillbitContext context, String name) {
     super(context, name);
     this.config = config;
-    this.dataSource = initNoPoolingDataSource(config);
-    this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, dataSource);
+    this.dialect = PhoenixSqlDialect.DEFAULT;
     this.convention = new PhoenixConvention(dialect, name, this);
     this.schemaFactory = new PhoenixSchemaFactory(this);
+    this.impersonationEnabled = context.getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
   @Override
   public StoragePluginConfig getConfig() {
     return config;
-  }
-
-  public DataSource getDataSource() {
-    return dataSource;
-  }
-
-  public SqlDialect getDialect() {
-    return dialect;
-  }
-
-  public PhoenixConvention getConvention() {
-    return convention;
   }
 
   @Override
@@ -91,25 +99,42 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
-    PhoenixScanSpec scanSpec = selection.getListWith(context.getLpPersistence().getMapper(), new TypeReference<PhoenixScanSpec>() {});
-    return new PhoenixGroupScan(scanSpec, this);
+    PhoenixScanSpec scanSpec =
+      selection.getListWith(context.getLpPersistence().getMapper(), new TypeReference<PhoenixScanSpec>() {});
+    return new PhoenixGroupScan(userName, scanSpec, this);
   }
 
-  private static DataSource initNoPoolingDataSource(PhoenixStoragePluginConfig config) {
+  @Override
+  public void close() {
+    AutoCloseables.closeSilently(CACHE::invalidateAll);
+  }
+
+  public SqlDialect getDialect() {
+    return dialect;
+  }
+
+  public PhoenixConvention getConvention() {
+    return convention;
+  }
+
+  public PhoenixDataSource getDataSource(String userName) throws SQLException {
+    try {
+      return CACHE.get(userName);
+    } catch (final ExecutionException e) {
+      throw new SQLException("Failure setting up Phoenix DataSource (PQS client)", e);
+    }
+  }
+
+  private PhoenixDataSource createDataSource(String userName) {
     // Don't use the pool with the connection
-    PhoenixDataSource dataSource = null;
-    if (StringUtils.isNotBlank(config.getJdbcURL())) {
-      dataSource = new PhoenixDataSource(config.getJdbcURL(), config.getProps()); // the props is initiated.
-    } else {
-      dataSource = new PhoenixDataSource(config.getHost(), config.getPort(), config.getProps());
-    }
+    Map<String, Object> props = config.getProps();
     if (config.getUsername() != null && config.getPassword() != null) {
-      if (dataSource.getConnectionProperties() == null) {
-        dataSource.setConnectionProperties(Maps.newHashMap());
-      }
-      dataSource.getConnectionProperties().put("user", config.getUsername());
-      dataSource.getConnectionProperties().put("password", config.getPassword());
+      props.put("user", config.getUsername());
+      props.put("password", config.getPassword());
     }
-    return dataSource;
+    boolean impersonationEnabled = context.getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
+    return StringUtils.isNotBlank(config.getJdbcURL())
+      ? new PhoenixDataSource(config.getJdbcURL(), userName, props, impersonationEnabled) // the props is initiated.
+      : new PhoenixDataSource(config.getHost(), config.getPort(), userName, props, impersonationEnabled);
   }
 }

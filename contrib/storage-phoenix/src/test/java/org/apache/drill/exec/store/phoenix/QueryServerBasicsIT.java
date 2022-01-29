@@ -29,12 +29,17 @@ import java.sql.ResultSetMetaData;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.phoenix.end2end.QueryServerThread;
 import org.apache.phoenix.query.BaseTest;
 import org.apache.phoenix.queryserver.QueryServerProperties;
 import org.apache.phoenix.util.ReadOnlyProps;
 import org.apache.phoenix.util.ThinClientUtil;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This is a copy of {@link org.apache.phoenix.end2end.QueryServerBasicsIT} until
+ * <a href="https://issues.apache.org/jira/browse/PHOENIX-6613">PHOENIX-6613</a> is fixed
+ */
 public class QueryServerBasicsIT extends BaseTest {
 
   private static final org.slf4j.Logger logger = LoggerFactory.getLogger(QueryServerBasicsIT.class);

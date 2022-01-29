@@ -117,12 +117,8 @@ public class ImplCreator {
     if (context.isImpersonationEnabled()) {
       final UserGroupInformation proxyUgi = ImpersonationUtil.createProxyUgi(root.getUserName(), context.getQueryUserName());
       try {
-        return proxyUgi.doAs(new PrivilegedExceptionAction<RootExec>() {
-          @Override
-          public RootExec run() throws Exception {
-            return ((RootCreator<PhysicalOperator>) getOpCreator(root, context)).getRoot(context, root, childRecordBatches);
-          }
-        });
+        return proxyUgi.doAs((PrivilegedExceptionAction<RootExec>) ()
+          -> ((RootCreator<PhysicalOperator>) getOpCreator(root, context)).getRoot(context, root, childRecordBatches));
       } catch (InterruptedException | IOException e) {
         final String errMsg = String.format("Failed to create RootExec for operator with id '%d'", root.getOperatorId());
         logger.error(errMsg, e);
@@ -145,15 +141,12 @@ public class ImplCreator {
     if (context.isImpersonationEnabled()) {
       final UserGroupInformation proxyUgi = ImpersonationUtil.createProxyUgi(op.getUserName(), context.getQueryUserName());
       try {
-        return proxyUgi.doAs(new PrivilegedExceptionAction<RecordBatch>() {
-          @Override
-          public RecordBatch run() throws Exception {
-            @SuppressWarnings("unchecked")
-            final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(
-                context, op, childRecordBatches);
-            operators.addFirst(batch);
-            return batch;
-          }
+        return proxyUgi.doAs((PrivilegedExceptionAction<RecordBatch>) () -> {
+          @SuppressWarnings("unchecked")
+          final CloseableRecordBatch batch = ((BatchCreator<PhysicalOperator>) getOpCreator(op, context)).getBatch(
+              context, op, childRecordBatches);
+          operators.addFirst(batch);
+          return batch;
         });
       } catch (InterruptedException | IOException e) {
         final String errMsg = String.format("Failed to create RecordBatch for operator with id '%d'", op.getOperatorId());
