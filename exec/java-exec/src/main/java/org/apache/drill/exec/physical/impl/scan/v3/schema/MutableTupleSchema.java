@@ -98,7 +98,6 @@ public class MutableTupleSchema {
 
     public ColumnMetadata column() { return col; }
     public boolean isImplicit() { return marker != null; }
-    public void setIndex(int index) { marker.setIndex(index); }
 
     @Override
     public String toString() {
