@@ -108,6 +108,7 @@ public class ExtendedMockBatchReader implements ManagedReader<SchemaNegotiator> 
     if (batchSize > 0) {
       schemaNegotiator.batchSize(batchSize);
     }
+    schemaNegotiator.limit(config.getRecords());
 
     loader = schemaNegotiator.build();
     writer = loader.writer();
@@ -119,16 +120,8 @@ public class ExtendedMockBatchReader implements ManagedReader<SchemaNegotiator> 
 
   @Override
   public boolean next() {
-    final int rowCount = config.getRecords() - loader.totalRowCount();
-    if (rowCount <= 0) {
-      return false;
-    }
-
     final Random rand = new Random();
-    for (int i = 0; i < rowCount; i++) {
-      if (writer.isFull()) {
-        break;
-      }
+    while (!writer.isFull()) {
       writer.start();
       for (int j = 0; j < fields.length; j++) {
         if (fields[j].nullable && rand.nextInt(100) < fields[j].nullablePercent) {
@@ -140,7 +133,7 @@ public class ExtendedMockBatchReader implements ManagedReader<SchemaNegotiator> 
       writer.save();
     }
 
-    return true;
+    return !loader.atLimit();
   }
 
   @Override

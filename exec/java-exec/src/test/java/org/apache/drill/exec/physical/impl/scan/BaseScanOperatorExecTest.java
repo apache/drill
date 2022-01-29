@@ -35,6 +35,8 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test of the scan operator framework. Here the focus is on the
@@ -46,9 +48,8 @@ import org.apache.drill.test.rowSet.RowSetUtilities;
  * details of another, supporting class, then tests for that class
  * appear elsewhere.
  */
-
 public class BaseScanOperatorExecTest extends SubOperatorTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseScanOperatorExecTest.class);
+  static final Logger logger = LoggerFactory.getLogger(BaseScanOperatorExecTest.class);
 
   /**
    * Base class for the "mock" readers used in this test. The mock readers
@@ -57,7 +58,6 @@ public class BaseScanOperatorExecTest extends SubOperatorTest {
    * They also expose internal state such as identifying which methods
    * were actually called.
    */
-
   protected static abstract class BaseMockBatchReader implements ManagedReader<SchemaNegotiator> {
     protected boolean openCalled;
     protected boolean closeCalled;
@@ -94,7 +94,6 @@ public class BaseScanOperatorExecTest extends SubOperatorTest {
    * Mock reader that pretends to have a schema at open time
    * like an HBase or JDBC reader.
    */
-
   protected static class MockEarlySchemaReader extends BaseMockBatchReader {
 
     @Override

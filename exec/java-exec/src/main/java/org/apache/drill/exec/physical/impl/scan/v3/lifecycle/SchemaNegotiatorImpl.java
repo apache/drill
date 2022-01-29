@@ -53,6 +53,11 @@ import org.apache.drill.exec.vector.ValueVector;
  * a vector written by the reader, in the second, it is a null column
  * filled in by the scan projector (assuming, of course, that "c"
  * is nullable or an array.)
+ * <p>
+ * Pushes limits into the result set loader. The caller must
+ * either check the return value from {#code startBatch()}, or
+ * call {@code atLimit()} after {@code harvest()} to detect when the scan
+ * has reached the limit. Treat the limit condition the same as EOF.
  */
 public class SchemaNegotiatorImpl implements SchemaNegotiator {
 

@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.resultSet.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
@@ -29,7 +30,9 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
@@ -46,7 +49,6 @@ import org.junit.experimental.categories.Category;
  * in fact, depend on the row count) and vector overflow (which an occur when
  * the row limit turns out to be too large.)
  */
-
 @Category(RowSetTests.class)
 public class TestResultSetLoaderLimits extends SubOperatorTest {
 
@@ -54,7 +56,6 @@ public class TestResultSetLoaderLimits extends SubOperatorTest {
    * Verify that the writer stops when reaching the row limit.
    * In this case there is no look-ahead row.
    */
-
   @Test
   public void testRowLimit() {
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator());
@@ -100,7 +101,6 @@ public class TestResultSetLoaderLimits extends SubOperatorTest {
   /**
    * Verify that the caller can set a row limit lower than the default.
    */
-
   @Test
   public void testCustomRowLimit() {
 
@@ -183,7 +183,6 @@ public class TestResultSetLoaderLimits extends SubOperatorTest {
   /**
    * Test that the row limit can change between batches.
    */
-
   @Test
   public void testDynamicLimit() {
 
@@ -223,6 +222,108 @@ public class TestResultSetLoaderLimits extends SubOperatorTest {
     assertEquals(newLimit, count);
     assertEquals(count, rootWriter.rowCount());
     rsLoader.harvest().clear();
+
+    // Test limits
+    rsLoader.setTargetRowCount(-3);
+    assertEquals(1, rsLoader.targetRowCount());
+    rsLoader.setTargetRowCount(Integer.MAX_VALUE);
+    assertEquals(ValueVector.MAX_ROW_COUNT, rsLoader.targetRowCount());
+
+    rsLoader.close();
+  }
+
+  /**
+   * Limit 0 is used to obtain only the schema.
+   */
+  @Test
+  public void testLimit0() {
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .limit(0)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+
+    // Can define a schema-only batch.
+    assertTrue(rsLoader.startBatch());
+
+    RowSetLoader rootWriter = rsLoader.writer();
+    rootWriter.addColumn(SchemaBuilder.columnSchema("s", MinorType.VARCHAR, DataMode.REQUIRED));
+
+    // But, can't add any rows.
+    assertTrue(rootWriter.isFull());
+    RowSet result = fixture.wrap(rsLoader.harvest());
+    assertEquals(0, result.rowCount());
+    assertTrue(rsLoader.atLimit());
+    TupleMetadata schema = new SchemaBuilder()
+        .add("s", MinorType.VARCHAR)
+        .buildSchema();
+    assertTrue(schema.equals(result.schema()));
+    result.clear();
+
+    // Can't start a data batch.
+    assertFalse(rsLoader.startBatch());
+
+    // Can't start a row.
+    assertFalse(rootWriter.start());
+
+    rsLoader.close();
+  }
+
+  /**
+   * Pathological limit case: a single row.
+   */
+  @Test
+  public void testLimit1() {
+
+    // Start with a small limit.
+
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .limit(1)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+
+    assertTrue(rsLoader.startBatch());
+    assertEquals(1, rsLoader.maxBatchSize());
+    RowSetLoader rootWriter = rsLoader.writer();
+    rootWriter.addColumn(SchemaBuilder.columnSchema("s", MinorType.VARCHAR, DataMode.REQUIRED));
+    rootWriter.addRow("foo");
+    assertTrue(rootWriter.isFull());
+    assertFalse(rootWriter.start());
+    RowSet result = fixture.wrap(rsLoader.harvest());
+    assertEquals(1, result.rowCount());
+    result.clear();
+    assertTrue(rsLoader.atLimit());
+    rsLoader.close();
+  }
+
+  /**
+   * Test filling one batch normally, then hitting the scan limit on the second.
+   */
+  @Test
+  public void testLimit100() {
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(75)
+        .limit(100)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+
+    RowSetLoader rootWriter = rsLoader.writer();
+    rootWriter.addColumn(SchemaBuilder.columnSchema("s", MinorType.VARCHAR, DataMode.REQUIRED));
+
+    rsLoader.startBatch();
+    int count = fillToLimit(rootWriter);
+    assertEquals(75, count);
+    assertEquals(count, rootWriter.rowCount());
+    rsLoader.harvest().clear();
+    assertFalse(rsLoader.atLimit());
+
+    // Second batch will hit the limit
+
+    rsLoader.startBatch();
+    count = fillToLimit(rootWriter);
+    assertEquals(25, count);
+    assertEquals(count, rootWriter.rowCount());
+    rsLoader.harvest().clear();
+    assertTrue(rsLoader.atLimit());
 
     rsLoader.close();
   }

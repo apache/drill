@@ -77,7 +77,6 @@ import org.junit.experimental.categories.Category;
  * the structure. The object tree will show all the components and their
  * current state.
  */
-
 @Category(RowSetTests.class)
 public class TestResultSetLoaderProtocol extends SubOperatorTest {
 
@@ -317,7 +316,6 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
    * additional information. The code here simply uses the <tt>MaterializedField</tt>
    * to create a <tt>ColumnMetadata</tt> implicitly.
    */
-
   @Test
   public void testCaseInsensitiveSchema() {
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator());
@@ -573,7 +571,6 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
    * Also verifies the test-time method to set a row of values using
    * a single method.
    */
-
   @Test
   public void testInitialSchema() {
     TupleMetadata schema = new SchemaBuilder()
@@ -606,7 +603,7 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
 
   /**
    * The writer protocol allows a client to write to a row any number of times
-   * before invoking <tt>save()</tt>. In this case, each new value simply
+   * before invoking {@code save()}. In this case, each new value simply
    * overwrites the previous value. Here, we test the most basic case: a simple,
    * flat tuple with no arrays. We use a very large Varchar that would, if
    * overwrite were not working, cause vector overflow.
@@ -628,7 +625,6 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
    * Note that there is no explicit method to discard a row. Instead,
    * the rule is that a row is not saved until <tt>save()</tt> is called.
    */
-
   @Test
   public void testOverwriteRow() {
     TupleMetadata schema = new SchemaBuilder()
@@ -685,7 +681,6 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
    * Test that memory is released if the loader is closed with an active
    * batch (that is, before the batch is harvested.)
    */
-
   @Test
   public void testCloseWithoutHarvest() {
     TupleMetadata schema = new SchemaBuilder()

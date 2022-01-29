@@ -64,6 +64,7 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   protected TupleMetadata tableSchema;
   protected boolean isSchemaComplete;
   protected int batchSize = ValueVector.MAX_ROW_COUNT;
+  protected long limit = -1;
 
   public SchemaNegotiatorImpl(ManagedScanFramework framework) {
     this.framework = framework;
@@ -136,6 +137,11 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   @Override
   public String userName() {
     return framework.builder.userName;
+  }
+
+  @Override
+  public void limit(long limit) {
+    this.limit = limit;
   }
 
   /**

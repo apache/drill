@@ -165,6 +165,12 @@ public interface SchemaNegotiator {
   void batchSize(int maxRecordsPerBatch);
 
   /**
+   * Push down a LIMIT into the scan. This is a per-reader limit,
+   * not an overall scan limit.
+   */
+  void limit(long limit);
+
+  /**
    * Build the schema, plan the required projections and static
    * columns and return a loader used to populate value vectors.
    * If the select list includes a subset of table columns, then

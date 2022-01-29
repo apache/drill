@@ -39,7 +39,6 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
  * array. Instead, the order of calls, or selectively making or not making
  * calls, can change.
  */
-
 public interface WriterEvents extends WriterPosition {
 
   /**
@@ -47,7 +46,6 @@ public interface WriterEvents extends WriterPosition {
    * operations to newly-added columns to synchronize them with the rest
    * of the writers.
    */
-
   enum State {
 
     /**
@@ -57,20 +55,18 @@ public interface WriterEvents extends WriterPosition {
     IDLE,
 
     /**
-     * <tt>startWrite()</tt> has been called to start a write operation
-     * (start a batch), but <tt>startValue()</tt> has not yet been called
-     * to start a row (or value within an array). <tt>startWrite()</tt> must
+     * {@code startWrite()} has been called to start a write operation
+     * (start a batch), but {@code startValue()} has not yet been called
+     * to start a row (or value within an array). {@code startWrite()} must
      * be called on newly added columns.
      */
-
     IN_WRITE,
 
     /**
-     * Both <tt>startWrite()</tt> and <tt>startValue()</tt> has been called on
+     * Both {@code startWrite()} and {@code startValue()} has been called on
      * the tuple to prepare for writing values, and both must be called on
      * newly-added vectors.
      */
-
     IN_ROW
   }
 
@@ -80,7 +76,6 @@ public interface WriterEvents extends WriterPosition {
    * listener is bound, and a vector overflows, then an exception is
    * thrown.
    */
-
   interface ColumnWriterListener {
 
     /**
@@ -90,7 +85,6 @@ public interface WriterEvents extends WriterPosition {
      *
      * @param writer the writer that triggered the overflow
      */
-
     void overflowed(ScalarWriter writer);
 
     /**
@@ -102,9 +96,8 @@ public interface WriterEvents extends WriterPosition {
      * @param delta the amount by which the vector is to grow
      * @return true if the vector can be grown, false if the writer
      * should instead trigger an overflow by calling
-     * <tt>overflowed()</tt>
+     * {@code overflowed()}
      */
-
     boolean canExpand(ScalarWriter writer, int delta);
   }
 
@@ -114,7 +107,6 @@ public interface WriterEvents extends WriterPosition {
    * @param index the writer index (top level or nested for
    * arrays)
    */
-
   void bindIndex(ColumnWriterIndex index);
 
   /**
@@ -127,21 +119,18 @@ public interface WriterEvents extends WriterPosition {
    * @param listener
    *          the vector event listener to bind
    */
-
   void bindListener(ColumnWriterListener listener);
 
   /**
    * Start a write (batch) operation. Performs any vector initialization
    * required at the start of a batch (especially for offset vectors.)
    */
-
   void startWrite();
 
   /**
    * Start a new row. To be called only when a row is not active. To
    * restart a row, call {@link #restartRow()} instead.
    */
-
   void startRow();
 
   /**
@@ -152,7 +141,6 @@ public interface WriterEvents extends WriterPosition {
    * offset vector based on the cumulative value saves is done when
    * saving the row.
    */
-
   void endArrayValue();
 
   /**
@@ -161,27 +149,23 @@ public interface WriterEvents extends WriterPosition {
    * Done when abandoning the current row, such as when filtering out
    * a row at read time.
    */
-
   void restartRow();
 
   /**
    * Saves a row. Commits offset vector locations and advances each to
    * the next position. Can be called only when a row is active.
    */
-
   void saveRow();
 
   /**
    * End a batch: finalize any vector values.
    */
-
   void endWrite();
 
   /**
    * The vectors backing this vector are about to roll over. Finish
    * the current batch up to, but not including, the current row.
    */
-
   void preRollover();
 
   /**
@@ -191,7 +175,6 @@ public interface WriterEvents extends WriterPosition {
    * for the current row now resides at the start of a new vector instead
    * of its previous location elsewhere in an old vector.
    */
-
   void postRollover();
 
   abstract void dump(HierarchicalFormatter format);

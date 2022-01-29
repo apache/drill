@@ -136,6 +136,7 @@ public class ScanLifecycle {
   private final ScanSchemaTracker schemaTracker;
   private final ReaderFactory<?> readerFactory;
   private int batchCount;
+  private long rowCount;
 
   /**
    * Cache used to preserve the same vectors from one output batch to the
@@ -171,15 +172,24 @@ public class ScanLifecycle {
   public boolean hasOutputSchema() { return schemaTracker.isResolved(); }
   public CustomErrorContext errorContext() { return options.errorContext(); }
   public BufferAllocator allocator() { return context.getAllocator(); }
-  public void tallyBatch() { batchCount++; }
   public int batchCount() { return batchCount; }
+  public long rowCount() { return rowCount; }
+
+  public void tallyBatch(int rowCount) {
+    batchCount++;
+    this.rowCount += rowCount;
+  }
 
   public RowBatchReader nextReader() {
-    if (readerFactory.hasNext()) {
-      return new ReaderLifecycle(this);
-    } else {
+    // Check limit. But, do at least one (zero row) batch
+    // to capture schema.
+    if (batchCount > 0 && rowCount >= options.limit()) {
       return null;
     }
+    if (!readerFactory.hasNext()) {
+      return null;
+    }
+    return new ReaderLifecycle(this, options.limit() - rowCount);
   }
 
   protected SchemaNegotiatorImpl newNegotiator(ReaderLifecycle readerLifecycle) {

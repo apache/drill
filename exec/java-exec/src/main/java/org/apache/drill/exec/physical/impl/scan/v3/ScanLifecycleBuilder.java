@@ -153,6 +153,11 @@ public class ScanLifecycleBuilder {
    */
   protected CustomErrorContext errorContext;
 
+  /**
+   * Pushed-down scan LIMIT.
+   */
+  private long limit = Long.MAX_VALUE;
+
   public void options(OptionSet options) {
     this.options = options;
   }
@@ -287,6 +292,18 @@ public class ScanLifecycleBuilder {
   }
 
   public SchemaValidator schemaValidator() { return schemaValidator; }
+
+  public void limit(long limit) {
+    // Operator definitions use -1 for "no limit", this mechanism
+    // uses a very big number for "no limit."
+    if (limit < 0) {
+      this.limit = Long.MAX_VALUE;
+    } else {
+      this.limit = limit;
+    }
+  }
+
+  public long limit() { return limit; }
 
   public ScanLifecycle build(OperatorContext context) {
     return new ScanLifecycle(context, this);

@@ -74,6 +74,9 @@ public class RowSetLoaderImpl extends AbstractTupleWriter implements RowSetLoade
 
   @Override
   public boolean start() {
+    if (rsLoader.atLimit()) {
+      return false;
+    }
     if (rsLoader.isFull()) {
 
       // Full batch? Return false.

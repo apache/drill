@@ -54,7 +54,8 @@ public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
    */
   private boolean eof;
 
-  public ShimBatchReader(ManagedScanFramework manager, ManagedReader<? extends SchemaNegotiator> reader) {
+  public ShimBatchReader(ManagedScanFramework manager,
+      ManagedReader<? extends SchemaNegotiator> reader) {
     this.framework = manager;
     this.reader = reader;
     readerOrchestrator = manager.scanOrchestrator().startReader();
@@ -72,7 +73,7 @@ public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
 
     // Build and return the result set loader to be used by the reader.
 
-    if (! framework.open(this)) {
+    if (!framework.open(this)) {
 
       // If we had a soft failure, then there should be no schema.
       // The reader should not have negotiated one. Not a huge
@@ -113,13 +114,21 @@ public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
     // The reader may report EOF, but the result set loader might
     // have a lookahead row.
 
-    if (eof && ! tableLoader.hasRows()) {
+    if (eof && !tableLoader.hasRows()) {
+      return false;
+    }
+
+    // Hit the per-reader limit?
+    if (tableLoader.atLimit()) {
       return false;
     }
 
     // Prepare for the batch.
 
-    readerOrchestrator.startBatch();
+    if (!readerOrchestrator.startBatch()) {
+      eof = true;
+      return false;
+    }
 
     // Read the batch. The reader should report EOF if it hits the
     // end of data, even if the reader returns rows. This will prevent allocating
@@ -127,8 +136,8 @@ public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
     // already reported EOF. In that case, we're just processing any last
     // lookahead row in the result set loader.
 
-    if (! eof) {
-      eof = ! reader.next();
+    if (!eof) {
+      eof = !reader.next();
     }
 
     // Add implicit columns, if any.
@@ -136,13 +145,13 @@ public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
     // Having a correct row count, even if 0, is important to
     // the scan operator.
 
-    readerOrchestrator.endBatch(eof);
+    eof = readerOrchestrator.endBatch(eof);
 
     // Return EOF (false) only when the reader reports EOF
     // and the result set loader has drained its rows from either
     // this batch or lookahead rows.
 
-    return ! eof || tableLoader.hasRows();
+    return !eof || tableLoader.hasRows();
   }
 
   @Override
@@ -197,7 +206,7 @@ public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
     this.schemaNegotiator = schemaNegotiator;
     readerOrchestrator.setBatchSize(schemaNegotiator.batchSize);
     tableLoader = readerOrchestrator.makeTableLoader(schemaNegotiator.errorContext(),
-        schemaNegotiator.tableSchema);
+        schemaNegotiator.tableSchema, schemaNegotiator.limit);
     return tableLoader;
   }
 }

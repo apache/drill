@@ -38,7 +38,6 @@ import org.apache.drill.exec.ops.OperatorContext;
  * across scanners. See {@link ScanSchemaOrchestrator} for the managed
  * framework.
  */
-
 public interface ScanOperatorEvents {
 
   /**
@@ -51,7 +50,6 @@ public interface ScanOperatorEvents {
    *
    * @param context the operator context for the scan operator
    */
-
   void bind(OperatorContext context);
 
   /**
@@ -67,13 +65,11 @@ public interface ScanOperatorEvents {
    * @return a batch reader for one of the scan elements within the
    * scan physical plan for this scan operator
    */
-
   RowBatchReader nextReader();
 
   /**
    * Called when the scan operator itself is closed. Indicates that no more
    * readers are available.
    */
-
   void close();
 }
