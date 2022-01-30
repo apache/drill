@@ -198,7 +198,11 @@ public class MongoRecordReader extends AbstractRecordReader {
         if (!fields.isEmpty()) {
           operations.add(Aggregates.project(fields));
         }
-        projection = collection.aggregate(operations);
+        if (plugin.getConfig().allowDiskUse()) {
+          projection = collection.aggregate(operations).allowDiskUse(true);
+        } else {
+          projection = collection.aggregate(operations);
+        }
       } else {
         projection = collection.find(filters).projection(fields);
       }
