@@ -199,7 +199,7 @@ public class MongoRecordReader extends AbstractRecordReader {
           operations.add(Aggregates.project(fields));
         }
         if (plugin.getConfig().allowDiskUse()) {
-          projection  = collection.aggregate(operations).allowDiskUse(true);
+          projection = collection.aggregate(operations).allowDiskUse(true);
         } else {
           projection = collection.aggregate(operations);
         }
