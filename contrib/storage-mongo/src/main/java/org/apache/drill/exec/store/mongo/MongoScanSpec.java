@@ -19,10 +19,10 @@ package org.apache.drill.exec.store.mongo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.common.PlanStringBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringJoiner;
 
 public class MongoScanSpec {
   private final String dbName;
@@ -64,11 +64,11 @@ public class MongoScanSpec {
 
   @Override
   public String toString() {
-    return new StringJoiner(", ", MongoScanSpec.class.getSimpleName() + "[", "]")
-      .add("dbName='" + dbName + "'")
-      .add("collectionName='" + collectionName + "'")
-      .add("filters='" + filters + "'")
-      .add("operations=" + operations)
+    return new PlanStringBuilder(this)
+      .field("dbName", dbName)
+      .field("collectionName", collectionName)
+      .field("filters", filters)
+      .field("operations", operations)
       .toString();
   }
 }

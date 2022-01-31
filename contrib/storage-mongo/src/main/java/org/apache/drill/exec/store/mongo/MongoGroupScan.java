@@ -73,6 +73,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonTypeName("mongo-scan")
 public class MongoGroupScan extends AbstractGroupScan implements
@@ -84,7 +85,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   private static final Comparator<List<BaseMongoSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
 
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(MongoGroupScan.class);
+  private static final Logger logger = LoggerFactory.getLogger(MongoGroupScan.class);
 
   private MongoStoragePlugin storagePlugin;
 

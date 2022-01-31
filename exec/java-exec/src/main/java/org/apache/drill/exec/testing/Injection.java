@@ -19,6 +19,7 @@ package org.apache.drill.exec.testing;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class Injection {
 
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(Injection.class);
+  private static final Logger logger = LoggerFactory.getLogger(Injection.class);
 
   protected final String address;  // the address of the drillbit on which to inject
   protected final int port; // user port of the drillbit; useful when there are multiple drillbits on same machine

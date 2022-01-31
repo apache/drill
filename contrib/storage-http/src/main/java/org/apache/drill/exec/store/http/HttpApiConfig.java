@@ -25,22 +25,23 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import okhttp3.HttpUrl;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.StringJoiner;
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonDeserialize(builder = HttpApiConfig.HttpApiConfigBuilder.class)
 public class HttpApiConfig {
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(HttpApiConfig.class);
+  private static final Logger logger = LoggerFactory.getLogger(HttpApiConfig.class);
 
   protected static final String DEFAULT_INPUT_FORMAT = "json";
   protected static final String CSV_INPUT_FORMAT = "csv";
@@ -208,24 +209,24 @@ public class HttpApiConfig {
 
   @Override
   public String toString() {
-    return new StringJoiner(", ", HttpApiConfig.class.getSimpleName() + "[", "]")
-      .add("url='" + url + "'")
-      .add("requireTail=" + requireTail)
-      .add("method='" + method + "'")
-      .add("postBody='" + postBody + "'")
-      .add("headers=" + headers)
-      .add("params=" + params)
-      .add("dataPath='" + dataPath + "'")
-      .add("authType='" + authType + "'")
-      .add("inputType='" + inputType + "'")
-      .add("xmlDataLevel=" + xmlDataLevel)
-      .add("limitQueryParam='" + limitQueryParam + "'")
-      .add("errorOn400=" + errorOn400)
-      .add("jsonOptions=" + jsonOptions)
-      .add("verifySSLCert=" + verifySSLCert)
-      .add("credentialsProvider=" + credentialsProvider)
-      .add("paginator=" + paginator)
-      .add("directCredentials=" + directCredentials)
+    return new PlanStringBuilder(this)
+      .field("url", url)
+      .field("requireTail", requireTail)
+      .field("method", method)
+      .field("postBody", postBody)
+      .field("headers", headers)
+      .field("params", params)
+      .field("dataPath", dataPath)
+      .field("authType", authType)
+      .field("inputType", inputType)
+      .field("xmlDataLevel", xmlDataLevel)
+      .field("limitQueryParam", limitQueryParam)
+      .field("errorOn400", errorOn400)
+      .field("jsonOptions", jsonOptions)
+      .field("verifySSLCert", verifySSLCert)
+      .field("credentialsProvider", credentialsProvider)
+      .field("paginator", paginator)
+      .field("directCredentials", directCredentials)
       .toString();
   }
 

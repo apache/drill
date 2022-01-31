@@ -31,6 +31,7 @@ import org.apache.iceberg.BaseCombinedScanTask;
 import org.apache.iceberg.CombinedScanTask;
 import org.apache.iceberg.FileScanTask;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ import java.util.stream.Collectors;
 
 public class IcebergBlockMapBuilder {
 
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(IcebergBlockMapBuilder.class);
+  private static final Logger logger = LoggerFactory.getLogger(IcebergBlockMapBuilder.class);
 
   private final Map<FileScanTask, RangeMap<Long, BlockLocation>> blockMapMap;
 

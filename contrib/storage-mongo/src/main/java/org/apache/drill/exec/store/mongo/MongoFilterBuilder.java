@@ -26,6 +26,7 @@ import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.store.mongo.common.MongoOp;
 import org.bson.Document;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class MongoFilterBuilder extends
     AbstractExprVisitor<Document, Void, RuntimeException> implements
     DrillMongoConstants {
 
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(MongoFilterBuilder.class);
+  private static final Logger logger = LoggerFactory.getLogger(MongoFilterBuilder.class);
 
   private final LogicalExpression le;
   private boolean allExpressionsConverted = true;

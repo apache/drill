@@ -21,11 +21,11 @@ package org.apache.drill.exec.store.http;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonDeserialize(builder = HttpJsonOptions.HttpJsonOptionsBuilder.class)
@@ -110,11 +110,11 @@ public class HttpJsonOptions {
 
   @Override
   public String toString() {
-    return new StringJoiner(", ", HttpJsonOptions.class.getSimpleName() + "[", "]")
-      .add("allowNanInf=" + allowNanInf)
-      .add("allTextMode=" + allTextMode)
-      .add("readNumbersAsDouble=" + readNumbersAsDouble)
-      .add("enableEscapeAnyChar=" + enableEscapeAnyChar)
+    return new PlanStringBuilder(this)
+      .field("allowNanInf", allowNanInf)
+      .field("allTextMode", allTextMode)
+      .field("readNumbersAsDouble", readNumbersAsDouble)
+      .field("enableEscapeAnyChar", enableEscapeAnyChar)
       .toString();
   }
 

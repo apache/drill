@@ -29,6 +29,7 @@ import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.parser.SqlDropAlias;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -38,7 +39,7 @@ import java.util.Locale;
  */
 public class DropAliasHandler extends BaseAliasHandler {
 
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(DropAliasHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(DropAliasHandler.class);
 
   public DropAliasHandler(SqlHandlerConfig config) {
     super(config);

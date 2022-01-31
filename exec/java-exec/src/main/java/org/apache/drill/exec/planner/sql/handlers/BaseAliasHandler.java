@@ -26,12 +26,13 @@ import org.apache.drill.exec.alias.AliasTarget;
 import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
 public class BaseAliasHandler extends DefaultSqlHandler {
 
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(BaseAliasHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(BaseAliasHandler.class);
 
   public BaseAliasHandler(SqlHandlerConfig config) {
     super(config);

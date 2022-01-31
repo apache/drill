@@ -31,6 +31,7 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateAlias;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -41,7 +42,7 @@ import java.util.Locale;
  */
 public class CreateAliasHandler extends BaseAliasHandler {
 
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(CreateAliasHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(CreateAliasHandler.class);
 
   public CreateAliasHandler(SqlHandlerConfig config) {
     super(config);

@@ -45,6 +45,7 @@ import org.apache.drill.exec.store.http.oauth.AccessTokenRepository;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -76,7 +77,7 @@ import java.util.regex.Pattern;
  * InputStream with that URL's contents.
  */
 public class SimpleHttp {
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleHttp.class);
+  private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
 
   private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?\\}");
 

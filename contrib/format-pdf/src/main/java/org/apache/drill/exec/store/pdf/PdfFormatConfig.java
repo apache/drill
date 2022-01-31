@@ -25,10 +25,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import technology.tabula.extractors.BasicExtractionAlgorithm;
 import technology.tabula.extractors.ExtractionAlgorithm;
 import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
@@ -36,7 +38,6 @@ import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.StringJoiner;
 
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -44,7 +45,7 @@ import java.util.StringJoiner;
 @JsonTypeName(PdfFormatPlugin.DEFAULT_NAME)
 public class PdfFormatConfig implements FormatPluginConfig {
 
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(PdfFormatConfig.class);
+  private static final Logger logger = LoggerFactory.getLogger(PdfFormatConfig.class);
 
   @JsonProperty
   private final List<String> extensions;
@@ -144,13 +145,13 @@ public class PdfFormatConfig implements FormatPluginConfig {
 
   @Override
   public String toString() {
-    return new StringJoiner(", ", PdfFormatConfig.class.getSimpleName() + "[", "]")
-      .add("extensions=" + extensions)
-      .add("combinePages=" + combinePages)
-      .add("extractHeaders=" + extractHeaders)
-      .add("extractionAlgorithm='" + extractionAlgorithm + "'")
-      .add("password='" + password + "'")
-      .add("defaultTableIndex=" + defaultTableIndex)
+    return new PlanStringBuilder(this)
+      .field("extensions", extensions)
+      .field("combinePages", combinePages)
+      .field("extractHeaders", extractHeaders)
+      .field("extractionAlgorithm", extractionAlgorithm)
+      .field("password", password)
+      .field("defaultTableIndex", defaultTableIndex)
       .toString();
   }
 

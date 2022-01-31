@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.apache.iceberg.CombinedScanTask;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -81,7 +82,7 @@ public class IcebergWork {
    */
   public static class IcebergWorkDeserializer extends StdDeserializer<IcebergWork> {
 
-    private static final Logger logger = org.slf4j.LoggerFactory.getLogger(IcebergWorkDeserializer.class);
+    private static final Logger logger = LoggerFactory.getLogger(IcebergWorkDeserializer.class);
 
     public IcebergWorkDeserializer() {
       super(IcebergWork.class);

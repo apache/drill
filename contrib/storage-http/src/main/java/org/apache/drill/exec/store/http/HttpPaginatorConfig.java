@@ -24,18 +24,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonDeserialize(builder = HttpPaginatorConfig.HttpPaginatorBuilder.class)
 public class HttpPaginatorConfig {
 
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(HttpPaginatorConfig.class);
+  private static final Logger logger = LoggerFactory.getLogger(HttpPaginatorConfig.class);
 
   // For Offset Pagination
   @JsonProperty
@@ -128,14 +129,14 @@ public class HttpPaginatorConfig {
 
   @Override
   public String toString() {
-    return new StringJoiner(", ", HttpPaginatorConfig.class.getSimpleName() + "[", "]")
-      .add("limitParam='" + limitParam + "'")
-      .add("offsetParam='" + offsetParam + "'")
-      .add("pageParam='" + pageParam + "'")
-      .add("pageSizeParam='" + pageSizeParam + "'")
-      .add("pageSize=" + pageSize)
-      .add("maxRecords=" + maxRecords)
-      .add("method='" + method + "'")
+    return new PlanStringBuilder(this)
+      .field("limitParam", limitParam)
+      .field("offsetParam", offsetParam)
+      .field("pageParam", pageParam)
+      .field("pageSizeParam", pageSizeParam)
+      .field("pageSize", pageSize)
+      .field("maxRecords", maxRecords)
+      .field("method", method)
       .toString();
   }
 

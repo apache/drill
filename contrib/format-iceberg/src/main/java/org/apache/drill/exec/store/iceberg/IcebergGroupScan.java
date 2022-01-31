@@ -49,6 +49,7 @@ import org.apache.iceberg.TableScan;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.hadoop.HadoopTables;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -59,7 +60,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 public class IcebergGroupScan extends AbstractGroupScan {
 
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(IcebergGroupScan.class);
+  private static final Logger logger = LoggerFactory.getLogger(IcebergGroupScan.class);
 
   private final IcebergFormatPlugin formatPlugin;
 

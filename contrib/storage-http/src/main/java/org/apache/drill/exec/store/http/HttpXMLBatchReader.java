@@ -33,13 +33,14 @@ import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.xml.XMLReader;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.InputStream;
 
 public class HttpXMLBatchReader extends HttpBatchReader {
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(HttpXMLBatchReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(HttpXMLBatchReader.class);
 
   private final HttpSubScan subScan;
   private final int maxRecords;

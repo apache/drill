@@ -22,10 +22,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -152,13 +152,13 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
     @Override
     public String toString() {
-      return new StringJoiner(", ", ShardedMongoSubScanSpec.class.getSimpleName() + "[", "]")
-        .add("bName=" + getDbName())
-        .add("collectionName=" + getCollectionName())
-        .add("hosts=" + getHosts())
-        .add("minFilters=" + minFilters)
-        .add("maxFilters=" + maxFilters)
-        .add("filter='" + filter + "'")
+      return new PlanStringBuilder(this)
+        .field("bName", getDbName())
+        .field("collectionName", getCollectionName())
+        .field("hosts", getHosts())
+        .field("minFilters", minFilters)
+        .field("maxFilters", maxFilters)
+        .field("filter", filter)
         .toString();
     }
 
@@ -217,11 +217,11 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
     @Override
     public String toString() {
-      return new StringJoiner(", ", MongoSubScanSpec.class.getSimpleName() + "[", "]")
-        .add("bName='" + getDbName() + "'")
-        .add("collectionName='" + getCollectionName() + "'")
-        .add("hosts=" + getHosts())
-        .add("operations=" + operations)
+      return new PlanStringBuilder(this)
+        .field("bName", getDbName())
+        .field("collectionName", getCollectionName())
+        .field("hosts", getHosts())
+        .field("operations", operations)
         .toString();
     }
 
