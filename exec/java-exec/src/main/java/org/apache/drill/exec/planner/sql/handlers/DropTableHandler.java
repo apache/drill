@@ -68,7 +68,8 @@ public class DropTableHandler extends DefaultSqlHandler {
     } else {
       AbstractSchema drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
       Table tableToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, originalTableName);
-      if (tableToDrop == null || tableToDrop.getJdbcTableType() != Schema.TableType.TABLE) {
+      if (tableToDrop == null || (tableToDrop.getJdbcTableType() != Schema.TableType.TABLE &&
+        tableToDrop.getJdbcTableType() != Schema.TableType.OTHER)) {
         if (dropTableNode.checkTableExistence()) {
           return DirectPlan.createDirectPlan(context, false, String.format("Table [%s] not found", originalTableName));
         } else {

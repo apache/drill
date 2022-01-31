@@ -102,8 +102,8 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
    * mapped to VARBINARY.
    */
   public static final ImmutableMap<MinorType, Integer> JDBC_TYPE_MAPPINGS = ImmutableMap.<MinorType, Integer>builder()
-      .put(MinorType.FLOAT8, java.sql.Types.NUMERIC)
-      .put(MinorType.FLOAT4, java.sql.Types.NUMERIC)
+      .put(MinorType.FLOAT8, java.sql.Types.DOUBLE)
+      .put(MinorType.FLOAT4, java.sql.Types.FLOAT)
       .put(MinorType.TINYINT, java.sql.Types.TINYINT)
       .put(MinorType.SMALLINT, java.sql.Types.SMALLINT)
       .put(MinorType.INT, java.sql.Types.INTEGER)
@@ -174,7 +174,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       queryBuilder.addColumn(columnName, field.getType().getMinorType(), nullable, precision, scale);
     }
 
-    sql = queryBuilder.getCreateTableQuery();
+    sql = queryBuilder.build().getCreateTableQuery();
     sql = JdbcDDLQueryUtils.cleanDDLQuery(sql, dialect);
     logger.debug("Final query: {}", sql);
 

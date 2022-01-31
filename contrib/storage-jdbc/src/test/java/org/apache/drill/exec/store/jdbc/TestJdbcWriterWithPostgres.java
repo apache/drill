@@ -148,7 +148,7 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addNullable("int_field", MinorType.INT, 10)
       .addNullable("bigint_field", MinorType.BIGINT, 19)
-      .addNullable("float4_field", MinorType.FLOAT8, 12)
+      .addNullable("float4_field", MinorType.FLOAT4, 12)
       .addNullable("float8_field", MinorType.FLOAT8, 22)
       .addNullable("varchar_field", MinorType.VARCHAR, 38)
       .addNullable("date_field", MinorType.DATE, 10)

@@ -33,17 +33,17 @@ public class JdbcQueryBuilder {
   public static final int DEFAULT_VARCHAR_PRECISION = 100;
 
   private static final String CREATE_TABLE_QUERY = "CREATE TABLE %s (";
-  private final StringBuilder createTableQuery;
-  private SqlDialect dialect;
+  private StringBuilder createTableQuery;
+  private final String tableName;
+  private final SqlDialect dialect;
   private StringBuilder columns;
 
   public JdbcQueryBuilder(String tableName, SqlDialect dialect) {
     if (Strings.isNullOrEmpty(tableName)) {
       throw new UnsupportedOperationException("Table name cannot be empty");
     }
+    this.tableName = tableName;
     this.dialect = dialect;
-    createTableQuery = new StringBuilder();
-    createTableQuery.append(String.format(CREATE_TABLE_QUERY, tableName));
     columns = new StringBuilder();
   }
 
@@ -91,10 +91,16 @@ public class JdbcQueryBuilder {
    * Generates the CREATE TABLE query.
    * @return The create table query.
    */
-  public String getCreateTableQuery() {
+  public JdbcQueryBuilder build() {
+    createTableQuery = new StringBuilder();
+    createTableQuery.append(String.format(CREATE_TABLE_QUERY, tableName));
     createTableQuery.append(columns);
     createTableQuery.append("\n)");
-    return createTableQuery.toString();
+    return this;
+  }
+
+  public String getCreateTableQuery() {
+    return createTableQuery != null ? createTableQuery.toString() : null;
   }
 
   @Override
