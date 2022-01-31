@@ -104,7 +104,7 @@ public class HttpSchemaFactory extends AbstractSchemaFactory {
         // Register a new table
         return registerTable(name, new DynamicDrillTable(plugin, plugin.getName(),
             new HttpScanSpec(plugin.getName(), name, null,
-                plugin.getConfig().copyForPlan(name))));
+                plugin.getConfig().copyForPlan(name), plugin.getTokenTable(), plugin.getRegistry())));
       } else {
         return null; // Unknown table
       }

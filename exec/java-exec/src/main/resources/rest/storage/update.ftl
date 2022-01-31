@@ -31,6 +31,7 @@
   <h3>Configuration</h3>
   <form id="updateForm" role="form" action="/storage/create_update" method="POST">
     <input type="hidden" name="name" value="${model.getPlugin().getName()}" />
+    <input type="hidden" name="pluginType" value="${model.getType()}" />
     <div class="form-group">
       <div id="editor" class="form-control"></div>
       <textarea class="form-control" id="config" name="config" data-editor="json" style="display: none;" >
@@ -38,14 +39,17 @@
     </div>
     <a class="btn btn-secondary" href="/storage">Back</a>
     <button class="btn btn-primary" type="submit" onclick="doUpdate();">Update</button>
-    <#if model.getPlugin().enabled()>
+  <#if model.getPlugin().enabled()>
       <a id="enabled" class="btn btn-warning">Disable</a>
-    <#else>
+  <#else>
       <a id="enabled" class="btn btn-success text-white">Enable</a>
-    </#if>
+  </#if>
+  <#if model.getType() == "HttpStoragePluginConfig" && model.getPlugin().isOauth() >
+      <a id="getOauth" class="btn btn-success text-white">Authorize</a>
+  </#if>
     <button type="button" class="btn btn-secondary export" name="${model.getPlugin().getName()}" data-toggle="modal"
-            data-target="#pluginsModal">
-      Export
+  data-target="#pluginsModal">
+  Export
     </button>
     <a id="del" class="btn btn-danger text-white" onclick="deleteFunction()">Delete</a>
     <input type="hidden" name="csrfToken" value="${model.getCsrfToken()}">
@@ -56,7 +60,7 @@
 
   <#include "*/confirmationModals.ftl">
 
-  <#-- Modal window-->
+<#-- Modal window-->
   <div class="modal fade" id="pluginsModal" tabindex="-1" role="dialog" aria-labelledby="exportPlugin" aria-hidden="true">
     <div class="modal-dialog modal-sm" role="document">
       <div class="modal-content">
@@ -70,13 +74,13 @@
             <div class="radio">
               <label>
                 <input type="radio" name="format" id="json" value="json" checked="checked">
-                JSON
+  JSON
               </label>
             </div>
             <div class="radio">
               <label>
                 <input type="radio" name="format" id="hocon" value="conf">
-                HOCON
+  HOCON
               </label>
             </div>
           </div>
@@ -132,6 +136,65 @@
         });
       }
     });
+
+  <#if model.getType() == "HttpStoragePluginConfig" >
+    $("#getOauth").click(function() {
+      var field = document.getElementById("config");
+      try {
+        var storage_config = JSON.parse(config.value);
+
+        // Construct the Callback URL
+        var clientID = storage_config.credentialsProvider.credentials.clientID;
+       if (clientID.length == 0) {
+         window.alert("Invalid client ID.");
+         return false;
+        }
+
+        var callbackURL = storage_config.oAuthConfig.callbackURL;
+        if (callbackURL.length == 0) {
+          window.alert("Invalid callback URL.");
+          return false;
+        }
+
+        var authorizationURL = storage_config.oAuthConfig.authorizationURL;
+        if (authorizationURL) {
+          finalURL = authorizationURL + "?client_id=" + clientID + "&redirect_uri=" + callbackURL;
+        } else {
+          window.alert("Invalid authorization URL.")
+          return false;
+        }
+
+        // Add scope(s) if populated
+        var scope = storage_config.oAuthConfig.scope;
+        if (scope) {
+          var encodedScope = encodeURIComponent(scope);
+          finalURL = finalURL + "&scope=" + encodedScope;
+        }
+
+        // Add any additional parameters to the oAuth configuration string
+        var params = storage_config.oAuthConfig.authorizationParams
+        if (params) {
+          var param;
+          for (var key in storage_config.oAuthConfig.authorizationParams) {
+            param = params[key];
+            finalURL = finalURL + "&" + key + "=" + encodeURIComponent(param);
+          }
+        }
+        console.log(finalURL);
+        var tokenGetterWindow = window.open(finalURL, 'Authorize Drill', "toolbar=no,menubar=no,scrollbars=yes,resizable=yes,top=500,left=500,width=450,height=600");
+
+        var timer = setInterval(function () {
+        if (tokenGetterWindow.closed) {
+          clearInterval(timer);
+          window.location.reload(); // Refresh the parent page
+        }
+      }, 1000);
+    } catch (error) {
+      console.error(error);
+      window.alert("Cannot parse JSON.");
+    }
+  });
+  </#if>
 
     function doUpdate() {
       $("#updateForm").ajaxForm({

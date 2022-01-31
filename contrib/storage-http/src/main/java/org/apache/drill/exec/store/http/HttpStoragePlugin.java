@@ -20,12 +20,16 @@ package org.apache.drill.exec.store.http;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.exec.oauth.OAuthTokenProvider;
+import org.apache.drill.exec.oauth.PersistentTokenTable;
+import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.base.filter.FilterPushDownUtils;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
@@ -36,13 +40,20 @@ import java.util.Set;
 public class HttpStoragePlugin extends AbstractStoragePlugin {
 
   private final HttpStoragePluginConfig config;
-
   private final HttpSchemaFactory schemaFactory;
+  private final StoragePluginRegistry registry;
+  private final TokenRegistry tokenRegistry;
 
   public HttpStoragePlugin(HttpStoragePluginConfig configuration, DrillbitContext context, String name) {
     super(context, name);
     this.config = configuration;
+    this.registry = context.getStorage();
     this.schemaFactory = new HttpSchemaFactory(this);
+
+    // Get OAuth Token Provider if needed
+    OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
+    tokenRegistry = tokenProvider.getOauthTokenRegistry();
+    tokenRegistry.createTokenTable(getName());
   }
 
   @Override
@@ -54,6 +65,16 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
   public HttpStoragePluginConfig getConfig() {
     return config;
   }
+
+  public StoragePluginRegistry getRegistry() {
+    return registry;
+  }
+
+  public TokenRegistry getTokenRegistry() {
+    return tokenRegistry;
+  }
+
+  public PersistentTokenTable getTokenTable() { return tokenRegistry.getTokenTable(getName()); }
 
   @Override
   public boolean supportsRead() {

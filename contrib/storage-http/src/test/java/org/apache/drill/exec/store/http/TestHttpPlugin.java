@@ -128,7 +128,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("pokemon", pokemonConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-        new HttpStoragePluginConfig(false, configs, 10, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        new HttpStoragePluginConfig(false, configs, 10, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("live", mockStorageConfigWithWorkspace);
   }
@@ -290,7 +290,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("mockJsonAllText", mockTableWithJsonOptions);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-        new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "", PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
   }
@@ -1223,7 +1223,7 @@ public class TestHttpPlugin extends ClusterTest {
    * @return Started Mock server
    * @throws IOException If the server cannot start, throws IOException
    */
-  private MockWebServer startServer() throws IOException {
+  public static MockWebServer startServer() throws IOException {
     MockWebServer server = new MockWebServer();
     server.start(MOCK_SERVER_PORT);
     return server;

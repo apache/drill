@@ -20,6 +20,8 @@ package org.apache.drill.common.logical.security;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Map;
@@ -31,6 +33,7 @@ import java.util.Objects;
  * Its constructor accepts a map with credential names as keys and values as corresponding credential values.
  */
 public class PlainCredentialsProvider implements CredentialsProvider {
+  private static final Logger logger = LoggerFactory.getLogger(PlainCredentialsProvider.class);
   public static final CredentialsProvider EMPTY_CREDENTIALS_PROVIDER =
       new PlainCredentialsProvider(Collections.emptyMap());
 

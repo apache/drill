@@ -270,8 +270,7 @@ All of these can be set by adding the `jsonOptions` to your connection configura
 #### Authorization
 
 `authType`: If your API requires authentication, specify the authentication
-type. At the time of implementation, the plugin only supports basic authentication, however, the
-plugin will likely support OAUTH2 in the future. Defaults to `none`.
+type. Defaults to `none`.
 If the `authType` is set to `basic`, `username` and `password` must be set in the configuration as well.
 
 `username`: The username for basic authentication.
@@ -290,6 +289,12 @@ Drill will send the following request to your API:
 ```
 https://<api>?maxRecords=10
 ```
+
+### OAuth2.0
+If the API which you are querying requires OAuth2.0 for authentication [read the documentation for configuring Drill to use OAuth2.0](OAuth.md).
+
+### Pagination
+If you want to use automatic pagination in Drill, [click here to read the documentation for pagination](Pagination.md).
 
 #### errorOn400
 When a user makes HTTP calls, the response code will be from 100-599.  400 series error codes can contain useful information and in some cases you would not want Drill to throw 

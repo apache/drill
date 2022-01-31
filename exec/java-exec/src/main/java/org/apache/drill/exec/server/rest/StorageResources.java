@@ -17,9 +17,15 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
@@ -36,19 +42,32 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import okhttp3.OkHttpClient;
+import okhttp3.OkHttpClient.Builder;
+import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.exec.oauth.PersistentTokenTable;
+import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginEncodingException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginNotFoundException;
+import org.apache.drill.exec.store.http.oauth.OAuthUtils;
+import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
+import org.eclipse.jetty.util.resource.Resource;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import org.slf4j.Logger;
@@ -80,6 +99,7 @@ public class StorageResources {
   private static final String ALL_PLUGINS = "all";
   private static final String ENABLED_PLUGINS = "enabled";
   private static final String DISABLED_PLUGINS = "disabled";
+  private static final String OAUTH_SUCCESS_PAGE = "/rest/storage/success.html";
 
   private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR =
       Comparator.comparing(PluginConfigWrapper::getName);
@@ -180,6 +200,64 @@ public class StorageResources {
     }
   }
 
+  @GET
+  @Path("/storage/{name}/update_oath2_authtoken")
+  @Produces(MediaType.TEXT_HTML)
+  public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
+    try {
+      if (storage.getPlugin(name).getConfig() instanceof AbstractSecuredStoragePluginConfig) {
+        AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) storage.getPlugin(name).getConfig();
+        CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+        String callbackURL = this.request.getRequestURL().toString();
+
+        // Now exchange the authorization token for an access token
+        Builder builder = new OkHttpClient.Builder();
+        OkHttpClient client = builder.build();
+        Request accessTokenRequest = OAuthUtils.getAccessTokenRequest(credentialsProvider, code, callbackURL);
+        Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, accessTokenRequest);
+
+        // Add to token registry
+        TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
+          .getContext()
+          .getoAuthTokenProvider()
+          .getOauthTokenRegistry();
+
+        // Add a token registry table if none exists
+        tokenRegistry.createTokenTable(name);
+        PersistentTokenTable tokenTable = tokenRegistry.getTokenTable(name);
+
+        // Add tokens to persistent storage
+        tokenTable.setAccessToken(updatedTokens.get(OAuthTokenCredentials.ACCESS_TOKEN));
+        tokenTable.setRefreshToken(updatedTokens.get(OAuthTokenCredentials.REFRESH_TOKEN));
+
+        // Get success page
+        String successPage = null;
+        try (InputStream inputStream = Resource.newClassPathResource(OAUTH_SUCCESS_PAGE).getInputStream()) {
+          InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+          BufferedReader bufferedReader = new BufferedReader(reader);
+          successPage = bufferedReader.lines()
+            .collect(Collectors.joining("\n"));
+          bufferedReader.close();
+          reader.close();
+        } catch (IOException e) {
+          Response.status(Status.OK).entity("You may close this window.").build();
+        }
+
+        return Response.status(Status.OK).entity(successPage).build();
+      } else {
+        logger.error("{} is not a HTTP plugin. You can only add auth code to HTTP plugins.", name);
+        return Response.status(Status.INTERNAL_SERVER_ERROR)
+          .entity(message("Unable to add authorization code: %s", name))
+          .build();
+      }
+    } catch (PluginException e) {
+      logger.error("Error when adding auth token to {}", name);
+      return Response.status(Status.INTERNAL_SERVER_ERROR)
+        .entity(message("Unable to add authorization code: %s", e.getMessage()))
+        .build();
+    }
+  }
+
   /**
    * @deprecated use the method with POST request {@link #enablePlugin} instead
    */
@@ -218,6 +296,14 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public Response deletePlugin(@PathParam("name") String name) {
     try {
+      TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
+        .getContext()
+        .getoAuthTokenProvider()
+        .getOauthTokenRegistry();
+
+      // Delete a token registry table if it exists
+      tokenRegistry.deleteTokenTable(name);
+
       storage.remove(name);
       return Response.ok().entity(message("Success")).build();
     } catch (PluginException e) {
@@ -368,11 +454,22 @@ public class StorageResources {
    */
   public static class StoragePluginModel {
     private final PluginConfigWrapper plugin;
+    private final String type;
     private final String csrfToken;
 
     public StoragePluginModel(PluginConfigWrapper plugin, HttpServletRequest request) {
       this.plugin = plugin;
+
+      if (plugin != null) {
+        this.type = plugin.getConfig().getClass().getSimpleName();
+      } else {
+        this.type = "Unknown";
+      }
       csrfToken = WebUtils.getCsrfTokenFromHttpRequest(request);
+    }
+
+    public String getType() {
+      return type;
     }
 
     public PluginConfigWrapper getPlugin() {

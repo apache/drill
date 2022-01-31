@@ -15,28 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.logical.security;
+package org.apache.drill.exec.oauth;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Provider of authentication credentials.
+ * Persistent Registry for OAuth Tokens
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
-    property = "credentialsProviderType",
-    defaultImpl = PlainCredentialsProvider.class)
-public interface CredentialsProvider {
-  /**
-   * Returns map with authentication credentials. Key is the credential name, for example {@code "username"}
-   * and map value is corresponding credential value.
-   */
-  Logger logger = LoggerFactory.getLogger(CredentialsProvider.class);
+public interface TokenRegistry extends AutoCloseable {
 
-  @JsonIgnore
-  Map<String, String> getCredentials();
+  /**
+   * Creates a token table for specified {@code pluginName}.
+   * @param pluginName The name of the plugin instance.
+   */
+  void createTokenTable(String pluginName);
+
+  PersistentTokenTable getTokenTable(String name);
+
+  /**
+   * Deletes aliases table for specified {@code userName}.
+   * @param pluginName name of the user whose aliases table should be removed
+   */
+  void deleteTokenTable(String pluginName);
+
+  /**
+   * Returns iterator for aliases table entries.
+   */
+  Iterator<Map.Entry<String, Tokens>> getAllTokens();
 }

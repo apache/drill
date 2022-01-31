@@ -32,11 +32,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.oauth.PersistentTokenTable;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
+import org.apache.drill.exec.store.http.HttpOAuthConfig;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.HttpSubScan;
 import org.apache.drill.exec.store.http.paginator.Paginator;
+import org.apache.drill.exec.store.http.oauth.AccessTokenAuthenticator;
+import org.apache.drill.exec.store.http.oauth.AccessTokenInterceptor;
+import org.apache.drill.exec.store.http.oauth.AccessTokenRepository;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.jetbrains.annotations.NotNull;
 
@@ -80,6 +86,8 @@ public class SimpleHttp {
   private final CustomErrorContext errorContext;
   private final Paginator paginator;
   private final HttpUrl url;
+  private final StoragePluginRegistry registry;
+  private final PersistentTokenTable tokenTable;
   private String responseMessage;
   private int responseCode;
   private String responseProtocol;
@@ -94,8 +102,10 @@ public class SimpleHttp {
     this.tempDir = tempDir;
     this.proxyConfig = proxyConfig;
     this.errorContext = errorContext;
-    this.client = setupHttpClient();
+    this.registry = scanDefn.tableSpec().getRegistry();
+    this.tokenTable = scanDefn.tableSpec().getTokenTable();
     this.paginator = paginator;
+    this.client = setupHttpClient();
   }
 
   /**
@@ -113,10 +123,19 @@ public class SimpleHttp {
     if (config.cacheResults()) {
       setupCache(builder);
     }
-
-    // If the API uses basic authentication add the authentication code.
     HttpApiConfig apiConfig = scanDefn.tableSpec().connectionConfig();
-    if (apiConfig.authType().equalsIgnoreCase("basic")) {
+    // If OAuth information is provided, we will assume that the user does not want to use
+    // basic authentication
+    HttpOAuthConfig oAuthConfig = scanDefn.tableSpec().config().oAuthConfig();
+    if (oAuthConfig != null) {
+      // Add interceptors for OAuth2
+      logger.debug("Adding OAuth2 Interceptor");
+      AccessTokenRepository repository = new AccessTokenRepository(proxyConfig, config, tokenTable);
+
+      builder.authenticator(new AccessTokenAuthenticator(repository));
+      builder.addInterceptor(new AccessTokenInterceptor(repository));
+    } else if (apiConfig.authType().equalsIgnoreCase("basic")) {
+      // If the API uses basic authentication add the authentication code.
       logger.debug("Adding Interceptor");
       UsernamePasswordCredentials credentials = apiConfig.getUsernamePasswordCredentials();
       builder.addInterceptor(new BasicAuthInterceptor(credentials.getUsername(), credentials.getPassword()));
@@ -130,7 +149,7 @@ public class SimpleHttp {
 
     // Code to skip SSL Certificate validation
     // Sourced from https://stackoverflow.com/questions/60110848/how-to-disable-ssl-verification
-    if (! scanDefn.tableSpec().connectionConfig().verifySSLCert()) {
+    if (! apiConfig.verifySSLCert()) {
       try {
         TrustManager[] trustAllCerts = getAllTrustingTrustManager();
         SSLContext sslContext = SSLContext.getInstance("SSL");
@@ -148,6 +167,25 @@ public class SimpleHttp {
     }
 
     // Set the proxy configuration
+    addProxyInfo(builder, proxyConfig);
+
+    return builder.build();
+  }
+
+  public String url() {
+    return url.toString();
+  }
+
+  /**
+   * Applies the proxy configuration to the OkHttp3 builder.  This ensures that proxy configurations
+   * will be consistent across HTTP REST connections.
+   * @param builder The input OkHttp3 builder
+   * @param proxyConfig The proxy configuration
+   */
+  public static void addProxyInfo(Builder builder, HttpProxyConfig proxyConfig) {
+    if (proxyConfig == null) {
+      return;
+    }
 
     Proxy.Type proxyType;
     switch (proxyConfig.type) {
@@ -172,12 +210,6 @@ public class SimpleHttp {
         });
       }
     }
-
-    return builder.build();
-  }
-
-  public String url() {
-    return url.toString();
   }
 
   private TrustManager[] getAllTrustingTrustManager() {
@@ -200,6 +232,11 @@ public class SimpleHttp {
   }
 
 
+  /**
+   * Returns an InputStream based on the URL and config in the scanSpec. If anything goes wrong
+   * the method throws a UserException.
+   * @return An Inputstream of the data from the URL call.
+   */
   public InputStream getInputStream() {
 
     Request.Builder requestBuilder = new Request.Builder()
@@ -229,6 +266,9 @@ public class SimpleHttp {
     Request request = requestBuilder.build();
 
     try {
+      logger.debug("Executing request: {}", request);
+      logger.debug("Headers: {}", request.headers());
+
       // Execute the request
       Response response = client
         .newCall(request)

@@ -19,12 +19,16 @@ package org.apache.drill.exec.server.rest;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 
 @XmlRootElement
 public class PluginConfigWrapper {
@@ -49,5 +53,28 @@ public class PluginConfigWrapper {
 
   public void createOrUpdateInStorage(StoragePluginRegistry storage) throws PluginException {
     storage.validatedPut(name, config);
+  }
+
+  /**
+   * Determines whether the storage plugin in question needs the OAuth button in the UI.  In
+   * order to be considered an OAuth plugin, the plugin must:
+   * 1. Use AbstractSecuredStoragePluginConfig
+   * 2. The credential provider must not be null
+   * 3. The credentialsProvider must contain a client_id and client_secret
+   * @return true if the plugin uses OAuth, false if not.
+   */
+  public boolean isOauth() {
+    if (! (config instanceof AbstractSecuredStoragePluginConfig)) {
+      return false;
+    }
+    AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
+    CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+    if (credentialsProvider == null) {
+      return false;
+    }
+    OAuthTokenCredentials tokenCredentials = new OAuthTokenCredentials(credentialsProvider);
+
+    return !StringUtils.isEmpty(tokenCredentials.getClientID()) ||
+      !StringUtils.isEmpty(tokenCredentials.getClientSecret());
   }
 }
