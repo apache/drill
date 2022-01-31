@@ -200,7 +200,7 @@ public class TestScanLifecycleLimit extends BaseTestScanLifecycle {
    * LIMIT 75, halfway through second batch.
    */
   @Test
-  public void testLimitOnScondBatch() {
+  public void testLimitOnSecondBatch() {
     Pair<TwoReaderFactory, ScanLifecycle> pair = setupScan(75);
     TwoReaderFactory factory = pair.getLeft();
     ScanLifecycle scan = pair.getRight();

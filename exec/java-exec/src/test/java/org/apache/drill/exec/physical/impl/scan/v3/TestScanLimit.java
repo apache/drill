@@ -188,7 +188,7 @@ public class TestScanLimit extends BaseScanTest {
    * LIMIT 75, halfway through second batch.
    */
   @Test
-  public void testLimitOnScondBatch() {
+  public void testLimitOnSecondBatch() {
     TestFixture fixture = new TestFixture(75);
     ScanOperatorExec scan = fixture.scan;
 

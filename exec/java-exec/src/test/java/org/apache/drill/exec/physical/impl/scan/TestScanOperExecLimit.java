@@ -88,7 +88,7 @@ public class TestScanOperExecLimit extends BaseScanOperatorExecTest {
 
     BaseScanFixtureBuilder builder = simpleBuilder(reader1, reader2);
     builder.builder.limit(0);
-    ScanFixture scanFixture =  builder.build();
+    ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 
     assertTrue(scan.buildSchema());
@@ -117,7 +117,7 @@ public class TestScanOperExecLimit extends BaseScanOperatorExecTest {
 
     BaseScanFixtureBuilder builder = simpleBuilder(reader1, reader2);
     builder.builder.limit(1);
-    ScanFixture scanFixture =  builder.build();
+    ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 
     assertTrue(scan.buildSchema());
@@ -145,7 +145,7 @@ public class TestScanOperExecLimit extends BaseScanOperatorExecTest {
 
     BaseScanFixtureBuilder builder = simpleBuilder(reader1, reader2);
     builder.builder.limit(50);
-    ScanFixture scanFixture =  builder.build();
+    ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 
     assertTrue(scan.buildSchema());
@@ -173,7 +173,7 @@ public class TestScanOperExecLimit extends BaseScanOperatorExecTest {
 
     BaseScanFixtureBuilder builder = simpleBuilder(reader1, reader2);
     builder.builder.limit(75);
-    ScanFixture scanFixture =  builder.build();
+    ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 
     assertTrue(scan.buildSchema());
@@ -206,7 +206,7 @@ public class TestScanOperExecLimit extends BaseScanOperatorExecTest {
 
     BaseScanFixtureBuilder builder = simpleBuilder(reader1, reader2);
     builder.builder.limit(100);
-    ScanFixture scanFixture =  builder.build();
+    ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 
     assertTrue(scan.buildSchema());
@@ -239,7 +239,7 @@ public class TestScanOperExecLimit extends BaseScanOperatorExecTest {
 
     BaseScanFixtureBuilder builder = simpleBuilder(reader1, reader2);
     builder.builder.limit(125);
-    ScanFixture scanFixture =  builder.build();
+    ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 
     assertTrue(scan.buildSchema());
