@@ -57,7 +57,7 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.AbstractRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.jdbc.utils.JdbcDDLQueryUtils;
-import org.apache.drill.exec.store.jdbc.utils.JdbcQueryBuilder;
+import org.apache.drill.exec.store.jdbc.utils.CreateTableStmtBuilder;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
@@ -151,7 +151,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     MinorType type;
     String sql;
     boolean nullable = false;
-    JdbcQueryBuilder queryBuilder = new JdbcQueryBuilder(tableName, dialect);
+    CreateTableStmtBuilder queryBuilder = new CreateTableStmtBuilder(tableName, dialect);
 
     for (MaterializedField field : schema) {
       columnName = JdbcDDLQueryUtils.addBackTicksToField(field.getName());

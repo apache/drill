@@ -34,7 +34,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.FileReader;
-import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.sql.Connection;

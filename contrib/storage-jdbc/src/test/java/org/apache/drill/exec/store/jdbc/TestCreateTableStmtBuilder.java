@@ -18,12 +18,12 @@
 
 package org.apache.drill.exec.store.jdbc;
 
-import org.apache.drill.exec.store.jdbc.utils.JdbcQueryBuilder;
+import org.apache.drill.exec.store.jdbc.utils.CreateTableStmtBuilder;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestJdbcQueryBuilder {
+public class TestCreateTableStmtBuilder {
 
   @Test
   public void testSimpleTable() {
@@ -31,10 +31,10 @@ public class TestJdbcQueryBuilder {
     String schema = "schema";
     String catalog = "catalog";
 
-    String completeTable = JdbcQueryBuilder.buildCompleteTableName(table, catalog, schema);
+    String completeTable = CreateTableStmtBuilder.buildCompleteTableName(table, catalog, schema);
     assertEquals("`catalog`.`schema`.`table`", completeTable);
-    assertEquals("`catalog`.`table`", JdbcQueryBuilder.buildCompleteTableName(table, catalog, ""));
-    assertEquals("`catalog`.`table`", JdbcQueryBuilder.buildCompleteTableName(table, catalog, null));
+    assertEquals("`catalog`.`table`", CreateTableStmtBuilder.buildCompleteTableName(table, catalog, ""));
+    assertEquals("`catalog`.`table`", CreateTableStmtBuilder.buildCompleteTableName(table, catalog, null));
   }
 
   @Test
@@ -43,9 +43,9 @@ public class TestJdbcQueryBuilder {
     String schema = "schema with spaces";
     String catalog = "catalog with spaces";
 
-    String completeTable = JdbcQueryBuilder.buildCompleteTableName(table, catalog, schema);
+    String completeTable = CreateTableStmtBuilder.buildCompleteTableName(table, catalog, schema);
     assertEquals("`catalog with spaces`.`schema with spaces`.`table with spaces`", completeTable);
-    assertEquals("`catalog with spaces`.`table with spaces`", JdbcQueryBuilder.buildCompleteTableName(table, catalog, ""));
-    assertEquals("`catalog with spaces`.`table with spaces`", JdbcQueryBuilder.buildCompleteTableName(table, catalog, null));
+    assertEquals("`catalog with spaces`.`table with spaces`", CreateTableStmtBuilder.buildCompleteTableName(table, catalog, ""));
+    assertEquals("`catalog with spaces`.`table with spaces`", CreateTableStmtBuilder.buildCompleteTableName(table, catalog, null));
   }
 }
