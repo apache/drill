@@ -21,7 +21,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Registry for public and user-owned aliases.
+ * Persistent Registry for OAuth Tokens
  */
 public interface TokenRegistry extends AutoCloseable {
 
@@ -33,9 +33,8 @@ public interface TokenRegistry extends AutoCloseable {
 
   PersistentTokenTable getTokenTable(String name);
 
-/**
- *  * Deletes aliases table for specified {@code userName}.
-   *
+  /**
+   * Deletes aliases table for specified {@code userName}.
    * @param pluginName name of the user whose aliases table should be removed
    */
   void deleteTokenTable(String pluginName);

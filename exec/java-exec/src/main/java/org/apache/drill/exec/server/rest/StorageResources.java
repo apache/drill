@@ -99,7 +99,7 @@ public class StorageResources {
   private static final String ALL_PLUGINS = "all";
   private static final String ENABLED_PLUGINS = "enabled";
   private static final String DISABLED_PLUGINS = "disabled";
-  private static final String OAUTH_SUCCESS_PAGE = "/rest/storage/success.ftl";
+  private static final String OAUTH_SUCCESS_PAGE = "/rest/storage/success.html";
 
   private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR =
       Comparator.comparing(PluginConfigWrapper::getName);

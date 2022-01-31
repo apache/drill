@@ -467,7 +467,6 @@
             <exclude>**/*.dbf</exclude>
             <exclude>**/*.cnf</exclude>
             <exclude>**/*.access_log</exclude>
-            <exclude>**/success.ftl</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -782,7 +781,6 @@
               <exclude>**/*.shp</exclude>
               <exclude>**/*.dbf</exclude>
               <exclude>**/*.access_log</exclude>
-              <exclude>**/success.ftl</exclude>
             </excludes>
             <mapping>
               <java>SLASHSTAR_STYLE</java>

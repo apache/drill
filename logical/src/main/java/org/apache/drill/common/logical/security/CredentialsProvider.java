@@ -19,8 +19,6 @@ package org.apache.drill.common.logical.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,16 +39,4 @@ public interface CredentialsProvider {
 
   @JsonIgnore
   Map<String, String> getCredentials();
-
-  /**
-   * Set an ephemeral credential.  Implementations are not expected to write this
-   * value to persistent storage.
-   */
-  @JsonIgnore
-  default void setCredential(String key, String value) throws UserException {
-    throw UserException.internalError()
-      .message("Update credential function not implemented for " + Id.NAME)
-      .build(logger);
-  }
-
 }

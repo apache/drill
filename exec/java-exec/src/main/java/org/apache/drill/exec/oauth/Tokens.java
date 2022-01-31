@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.oauth;
 
-/**
- * Aliases table. Provides API for managing and obtaining aliases.
- */
 public interface Tokens {
   /**
    * Key of {@link this} tokens table.
@@ -55,11 +52,11 @@ public interface Tokens {
   /**
    * Associates provided token with provided plugin in token table.
    *
-   * @param token   alias of the value to associate with
-   * @param value   value that will be associated with provided alias
-   * @param replace whether existing value for the same alias should be replaced
-   * @return {@code true} if provided alias was associated with
-   * the provided value in aliases table
+   * @param token   Token of the value to associate with
+   * @param value   Value that will be associated with provided alias
+   * @param replace Whether existing value for the same token should be replaced
+   * @return {@code true} if provided token was associated with
+   * the provided value in tokens table
    */
   boolean put(String token, String value, boolean replace);
 
@@ -67,7 +64,7 @@ public interface Tokens {
    * Removes value for specified token from tokens table.
    * @param token token of the value to remove
    * @return {@code true} if the value associated with
-   * provided token was removed from the tokens table
+   * provided token was removed from the tokens table.
    */
   boolean remove(String token);
 }
