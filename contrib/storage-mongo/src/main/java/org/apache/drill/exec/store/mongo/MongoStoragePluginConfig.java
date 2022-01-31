@@ -53,14 +53,14 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
   public MongoStoragePluginConfig(@JsonProperty("connection") String connection,
     @JsonProperty("pluginOptimizations") MongoPluginOptimizations pluginOptimizations,
     @JsonProperty("batchSize") Integer batchSize,
-    @JsonProperty("allowDiskUse") Boolean allowDiskUse,
+    @JsonProperty("allowDiskUse") boolean allowDiskUse,
     @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider) {
     super(getCredentialsProvider(credentialsProvider), credentialsProvider == null);
     this.connection = connection;
     this.clientURI = new ConnectionString(connection);
     this.pluginOptimizations = ObjectUtils.defaultIfNull(pluginOptimizations, new MongoPluginOptimizations());
     this.batchSize = batchSize != null ? batchSize : 100;
-    this.allowDiskUse = allowDiskUse != null && allowDiskUse;
+    this.allowDiskUse = allowDiskUse;
   }
 
   public MongoPluginOptimizations getPluginOptimizations() {
@@ -80,6 +80,7 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
     return batchSize;
   }
 
+  @JsonProperty("allowDiskUse")
   public boolean allowDiskUse() {
     return allowDiskUse;
   }
