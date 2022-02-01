@@ -25,6 +25,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -123,6 +124,16 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
    * @throws PluginException if plugin cannot be obtained
    */
   StoragePlugin getPlugin(String name) throws PluginException, UserException;
+
+  /**
+   * Get a plugin by name. Create it based on the PStore saved definition if it doesn't exist.
+   *
+   * @param name The name of the plugin
+   * @param session The UserSession of the active session
+   * @return The StoragePlugin instance.
+   * @throws PluginException if plugin cannot be obtained
+   */
+  StoragePlugin getPlugin(String name, UserSession session) throws PluginException, UserException;
 
   /**
    * Get a plugin by configuration. If it doesn't exist, create it.

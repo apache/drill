@@ -105,7 +105,7 @@ public class DynamicRootSchema extends DynamicSchema {
   private void loadSchemaFactory(String schemaName, boolean caseSensitive) {
     try {
       SchemaPlus schemaPlus = this.plus();
-      StoragePlugin plugin = storages.getPlugin(schemaName);
+      StoragePlugin plugin = storages.getPlugin(schemaName, getSession());
       if (plugin != null) {
         plugin.setUserSession(getSession());
         plugin.registerSchemas(schemaConfig, schemaPlus);

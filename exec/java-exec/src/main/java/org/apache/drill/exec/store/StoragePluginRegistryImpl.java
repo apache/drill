@@ -36,6 +36,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.PluginHandle.PluginType;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
@@ -562,6 +563,24 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     // actual plugin instance.
     return entry == null ? null : entry.plugin();
   }
+
+
+  // Gets a plugin with the named configuration
+  @Override
+  public StoragePlugin getPlugin(String name, UserSession session) throws PluginException {
+    try {
+      name = validateName(name);
+    } catch (PluginException e) {
+      // Name is not valid, so no plugin matches the name.
+      return null;
+    }
+    PluginHandle entry = getEntry(name);
+
+    // Lazy instantiation: the first call to plugin() creates the
+    // actual plugin instance.
+    return entry == null ? null : entry.plugin();
+  }
+
 
   private PluginHandle getEntry(String name) {
     PluginHandle plugin = pluginCache.get(name);
