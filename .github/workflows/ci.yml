@@ -59,7 +59,10 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Build and test
         # The total GitHub Actions memory is 7000Mb. But GitHub CI requires some memory for the container to perform tests
-        run: mvn install --batch-mode --no-transfer-progress -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 # -X -V for debugging
+        run: |
+          echo Selecting parallel GC to minimise peak mem usage.
+          MAVEN_OPTS="-XX:+UseParallelGC"
+          mvn install --batch-mode --no-transfer-progress -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 # -X -V for debugging
 
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
