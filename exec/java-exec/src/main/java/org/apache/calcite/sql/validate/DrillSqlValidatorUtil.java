@@ -67,8 +67,6 @@ public class DrillSqlValidatorUtil {
     }
     if (schema instanceof DynamicSchema) {
       ((DynamicSchema)schema).setSession(session);
-    } else if (schema instanceof DynamicRootSchema) {
-      ((DynamicRootSchema)schema).setSession(session);
     }
   }
 }
