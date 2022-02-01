@@ -34,6 +34,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.BaseTest;
@@ -197,6 +198,12 @@ public class BasePluginRegistryTest extends BaseTest {
     @Override
     public StoragePlugin create(String name, StoragePluginConfig config)
         throws Exception {
+      return ctor.newInstance(config, null, name);
+    }
+
+    @Override
+    public StoragePlugin create(String name, StoragePluginConfig config, UserSession session)
+      throws Exception {
       return ctor.newInstance(config, null, name);
     }
 

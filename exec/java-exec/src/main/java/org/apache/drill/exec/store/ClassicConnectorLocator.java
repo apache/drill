@@ -34,6 +34,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
@@ -283,6 +284,39 @@ public class ClassicConnectorLocator implements ConnectorLocator {
           pluginConfig.getClass().getSimpleName()), t);
     }
   }
+
+  /**
+   * Creates plugin instance with the given {@code name} and configuration {@code pluginConfig}.
+   * The plugin need to be present in a list of available plugins and be enabled in the configuration
+   *
+   * @param name name of the plugin
+   * @param pluginConfig plugin configuration
+   * @param session The active user session
+   * @return plugin client or {@code null} if plugin is disabled
+   */
+  @Override
+  public StoragePlugin create(String name, StoragePluginConfig pluginConfig, UserSession session) throws ExecutionSetupException {
+    StoragePlugin plugin;
+    Constructor<? extends StoragePlugin> constructor = availablePlugins.get(pluginConfig.getClass());
+    if (constructor == null) {
+      throw new ExecutionSetupException(String.format("Failure finding StoragePlugin constructor for config %s",
+        pluginConfig.getClass().getName()));
+    }
+    try {
+      plugin = constructor.newInstance(pluginConfig, context.drillbitContext(), name);
+      plugin.start();
+      return plugin;
+    } catch (ReflectiveOperationException | IOException e) {
+      Throwable t = e instanceof InvocationTargetException ? ((InvocationTargetException) e).getTargetException() : e;
+      if (t instanceof ExecutionSetupException) {
+        throw ((ExecutionSetupException) t);
+      }
+      throw new ExecutionSetupException(String.format(
+        "Failure setting up new storage plugin configuration for config %s",
+        pluginConfig.getClass().getSimpleName()), t);
+    }
+  }
+
 
   @Override
   public boolean storable() {

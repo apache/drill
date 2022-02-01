@@ -28,6 +28,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.scanner.persistence.AnnotatedClassDescriptor;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,6 +135,11 @@ public class SystemPluginLocator implements ConnectorLocator {
 
   @Override
   public StoragePlugin create(String name, StoragePluginConfig pluginConfig) {
+    throw new IllegalStateException("Should not create instances of system plugins");
+  }
+
+  @Override
+  public StoragePlugin create(String name, StoragePluginConfig pluginConfig, UserSession session) {
     throw new IllegalStateException("Should not create instances of system plugins");
   }
 

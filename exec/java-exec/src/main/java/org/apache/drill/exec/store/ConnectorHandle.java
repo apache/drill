@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store;
 
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.PluginHandle.PluginType;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.slf4j.Logger;
@@ -101,4 +102,12 @@ public class ConnectorHandle {
     Preconditions.checkArgument(configClass.isInstance(config));
     return locator.create(name, config);
   }
+
+  public StoragePlugin newInstance(String name, StoragePluginConfig config, UserSession session) throws Exception {
+    Preconditions.checkNotNull(name);
+    Preconditions.checkNotNull(config);
+    Preconditions.checkArgument(configClass.isInstance(config));
+    return locator.create(name, config, session);
+  }
+
 }

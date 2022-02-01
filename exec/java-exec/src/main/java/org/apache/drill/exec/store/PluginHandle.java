@@ -19,6 +19,7 @@ package org.apache.drill.exec.store;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,6 +141,48 @@ public class PluginHandle {
     logger.info("Creating storage plugin for {}", name);
     try {
       plugin = connector.newInstance(name, config);
+    } catch (UserException e) {
+      throw e;
+    } catch (Exception e) {
+      throw UserException.internalError(e)
+        .addContext("Plugin name", name)
+        .addContext("Plugin class", connector.connectorClass().getName())
+        .build(logger);
+    }
+    try {
+      plugin.start();
+    } catch (UserException e) {
+      plugin = null;
+      throw e;
+    } catch (Exception e) {
+      plugin = null;
+      throw UserException.dataReadError(e)
+        .addContext("Failed to start storage plugin")
+        .addContext("Plugin name", name)
+        .addContext("Plugin class", connector.connectorClass().getName())
+        .build(logger);
+    }
+    return plugin;
+  }
+
+
+  /**
+   * Retrieve the storage plugin instance, creating it if needed. Creation can take
+   * time if the plugin creates a connection to another system, especially if that system
+   * suffers timeouts.
+   *
+   * @param session The active user session.
+   * @return the initialized storage plugin
+   * @throws UserException if the storage plugin creation failed due to class errors
+   * (unlikely) or external system errors (more likely)
+   */
+  public synchronized StoragePlugin plugin(UserSession session) {
+    if (plugin != null) {
+      return plugin;
+    }
+    logger.info("Creating storage plugin for {}", name);
+    try {
+      plugin = connector.newInstance(name, config, session);
     } catch (UserException e) {
       throw e;
     } catch (Exception e) {

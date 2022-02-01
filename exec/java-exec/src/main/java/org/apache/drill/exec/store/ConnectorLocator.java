@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
+import org.apache.drill.exec.rpc.user.UserSession;
 
 /**
  * Locates storage plugins. Allows multiple ways of finding plugins.
@@ -139,6 +140,19 @@ public interface ConnectorLocator {
    * @throws ExecutionSetupException for all errors
    */
   StoragePlugin create(String name, StoragePluginConfig pluginConfig) throws Exception;
+
+  /**
+   * Create a connector instance given a named configuration. The configuration
+   * and/or name is used to locate the connector class.
+   *
+   * @param name name of the storage plugin (configuration).
+   * @param pluginConfig the deserialized Java configuration object.
+   * @param session The active user session
+   * @return a connector of the proper class that matches the configuration or
+   * name, initialized with the configuration
+   * @throws ExecutionSetupException for all errors
+   */
+  StoragePlugin create(String name, StoragePluginConfig pluginConfig, UserSession session) throws Exception;
 
   /**
    * @return true if configs for this locator should be persisted, false if

@@ -578,7 +578,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
     // Lazy instantiation: the first call to plugin() creates the
     // actual plugin instance.
-    return entry == null ? null : entry.plugin();
+    return entry == null ? null : entry.plugin(session);
   }
 
 
