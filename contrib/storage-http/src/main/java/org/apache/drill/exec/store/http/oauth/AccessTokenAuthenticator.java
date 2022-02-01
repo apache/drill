@@ -18,14 +18,12 @@
 
 package org.apache.drill.exec.store.http.oauth;
 
-import lombok.NonNull;
 import okhttp3.Authenticator;
 import okhttp3.HttpUrl;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.Route;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +37,7 @@ public class AccessTokenAuthenticator implements Authenticator {
   }
 
   @Override
-  public Request authenticate(Route route, @NotNull Response response) {
+  public Request authenticate(Route route, Response response) {
     logger.debug("Authenticating {}", response.headers());
     final String accessToken = accessTokenRepository.getAccessToken();
     if (!isRequestWithAccessToken(response) || accessToken == null) {
@@ -59,13 +57,12 @@ public class AccessTokenAuthenticator implements Authenticator {
     }
   }
 
-  private boolean isRequestWithAccessToken(@NonNull Response response) {
+  private boolean isRequestWithAccessToken(Response response) {
     String header = response.request().header("Authorization");
     return header != null && header.startsWith("Bearer");
   }
 
-  @NonNull
-  private Request newRequestWithAccessToken(@NonNull Request request, @NonNull String accessToken) {
+  private Request newRequestWithAccessToken(Request request, String accessToken) {
     logger.debug("Creating a new request with access token.");
     String tokenType = accessTokenRepository.getTokenType();
     if (StringUtils.isNotEmpty(tokenType)) {

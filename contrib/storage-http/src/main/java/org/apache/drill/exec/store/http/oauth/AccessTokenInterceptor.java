@@ -18,13 +18,11 @@
 
 package org.apache.drill.exec.store.http.oauth;
 
-import lombok.NonNull;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +43,6 @@ public class AccessTokenInterceptor implements Interceptor {
     this.accessTokenRepository = accessTokenRepository;
   }
 
-  @NotNull
   @Override
   public Response intercept(Chain chain) throws IOException {
     logger.debug("Intercepting call {}", chain.toString());
@@ -73,8 +70,7 @@ public class AccessTokenInterceptor implements Interceptor {
     return response;
   }
 
-  @NonNull
-  private Request newRequestWithAccessToken(@NonNull Request request, @NonNull String accessToken) {
+  private Request newRequestWithAccessToken(Request request, String accessToken) {
     logger.debug("Interceptor making new request with access token: {}", request.url());
     String tokenType = accessTokenRepository.getTokenType();
     if (StringUtils.isNotEmpty(tokenType)) {
