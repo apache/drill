@@ -89,7 +89,7 @@ class WriterIndexImpl implements ColumnWriterIndex {
     return rowIndex;
   }
 
-  public boolean valid() { return rowIndex < rsLoader.targetRowCount(); }
+  public boolean valid() { return rowIndex < rsLoader.maxBatchSize(); }
 
   @Override
   public void rollover() {

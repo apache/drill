@@ -71,6 +71,12 @@ public interface ResultSetLoader {
   int targetRowCount();
 
   /**
+   * The maximum number of rows for the present batch. Will be the lesser
+   * of the {@link #targetRowCount()) and the overall scan limit remaining.
+   */
+  int maxBatchSize();
+
+  /**
    * The largest vector size produced by this loader (as specified by
    * the value vector limit.)
    *
@@ -94,7 +100,7 @@ public interface ResultSetLoader {
    * current batch.
    * @return total row count
    */
-  int totalRowCount();
+  long totalRowCount();
 
   /**
    * Report whether the loader currently holds rows. If within a batch,
@@ -109,8 +115,11 @@ public interface ResultSetLoader {
   /**
    * Start a new row batch. Valid only when first started, or after the
    * previous batch has been harvested.
+   *
+   * @return {@code true} if another batch can be read, {@code false} if
+   * the reader has reached the given scan limit.
    */
-  void startBatch();
+  boolean startBatch();
 
   /**
    * Writer for the top-level tuple (the entire row). Valid only when
@@ -227,6 +236,16 @@ public interface ResultSetLoader {
    * @return the row batch to send downstream
    */
   VectorContainer harvest();
+
+  /**
+   * After a {@link #harvest()}, call, call this method to determine if
+   * the scan limit has been hit. If so, treat this as the final batch
+   * for the reader, even if more data is available to read.
+   *
+   * @return {@code true} if the scan has reached a set scan row limit,
+   * {@code false} if there is no limit, or more rows can be read.
+   */
+  boolean atLimit();
 
   /**
    * The schema of the harvested batch. Valid until the start of the

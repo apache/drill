@@ -114,6 +114,7 @@ public interface RowSetLoader extends TupleWriter {
    * @param maxRecords Maximum rows to be returned. (From the limit clause of the query)
    * @return True if the row count exceeds the maxRecords, false if not.
    */
+  @Deprecated() // use the limit in options instead
   boolean limitReached(int maxRecords);
 
   /**

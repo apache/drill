@@ -94,9 +94,10 @@ import org.slf4j.LoggerFactory;
 public class ReaderLifecycle implements RowBatchReader {
   private static final Logger logger = LoggerFactory.getLogger(ReaderLifecycle.class);
 
-  private enum State { START, DATA, FINAL, EOF }
+  private enum State { START, DATA, FINAL, LIMIT, EOF }
 
   private final ScanLifecycle scanLifecycle;
+  private final long limit;
   protected final TupleMetadata readerInputSchema;
   private ManagedReader reader;
   private final SchemaNegotiatorImpl schemaNegotiator;
@@ -107,8 +108,9 @@ public class ReaderLifecycle implements RowBatchReader {
   private OutputBatchBuilder outputBuilder;
   private State state = State.START;
 
-  public ReaderLifecycle(ScanLifecycle scanLifecycle) {
+  public ReaderLifecycle(ScanLifecycle scanLifecycle, long limit) {
     this.scanLifecycle = scanLifecycle;
+    this.limit = limit;
     this.readerInputSchema = schemaTracker().readerInputSchema();
     this.schemaNegotiator = scanLifecycle.newNegotiator(this);
   }
@@ -127,6 +129,9 @@ public class ReaderLifecycle implements RowBatchReader {
 
   @Override
   public String name() {
+    if (reader == null) {
+      return getClass().getSimpleName();
+    }
     return reader.getClass().getSimpleName();
   }
 
@@ -164,13 +169,15 @@ public class ReaderLifecycle implements RowBatchReader {
 
   public ResultSetLoader buildLoader() {
     Preconditions.checkState(state == State.START);
+    ScanLifecycleBuilder scanOptions = scanOptions();
     ResultSetOptionBuilder options = new ResultSetOptionBuilder()
-        .rowCountLimit(Math.min(schemaNegotiator.batchSize, scanOptions().scanBatchRecordLimit()))
+        .rowCountLimit(Math.min(schemaNegotiator.batchSize, scanOptions.scanBatchRecordLimit()))
         .vectorCache(scanLifecycle.vectorCache())
-        .batchSizeLimit(scanOptions().scanBatchByteLimit())
+        .batchSizeLimit(scanOptions.scanBatchByteLimit())
         .errorContext(errorContext())
         .projectionFilter(schemaTracker().projectionFilter(errorContext()))
-        .readerSchema(schemaNegotiator.readerSchema);
+        .readerSchema(schemaNegotiator.readerSchema)
+        .limit(limit);
 
     // Resolve the scan schema if possible.
     applyEarlySchema();
@@ -214,8 +221,15 @@ public class ReaderLifecycle implements RowBatchReader {
 
     // The reader may report EOF, but the result set loader might
     // have a lookahead row.
-    if (state == State.EOF) {
+    switch (state) {
+    case EOF:
       return false;
+    case LIMIT:
+      outputBuilder = null;
+      state = State.EOF;
+      return false;
+    default:
+      break;
     }
 
     // Prepare for the batch.
@@ -226,10 +240,16 @@ public class ReaderLifecycle implements RowBatchReader {
     // a new batch just to learn about EOF. Don't read if the reader
     // already reported EOF. In that case, we're just processing any last
     // lookahead row in the result set loader.
+    //
+    // If the scan has hit is pushed-down limit, then the reader might
+    // return EOF, or it might remain blissfully ignorant about why the
+    // batch was full. Double-check the limit here.
     if (state == State.DATA) {
       try {
         if (!reader.next()) {
           state = State.FINAL;
+        } else if (tableLoader.atLimit()) {
+          state = State.LIMIT;
         }
       } catch (UserException e) {
         throw e;
@@ -282,8 +302,8 @@ public class ReaderLifecycle implements RowBatchReader {
     if (tableLoader.batchCount() == 1 || prevTableSchemaVersion < tableLoader.schemaVersion()) {
       reviseOutputProjection(tableLoader.outputSchema());
     }
-    buildOutputBatch(readerOutput);
-    scanLifecycle.tallyBatch();
+    int rowCount = buildOutputBatch(readerOutput);
+    scanLifecycle.tallyBatch(rowCount);
   }
 
   /**
@@ -337,7 +357,7 @@ public class ReaderLifecycle implements RowBatchReader {
         .nullType(scanOptions().nullType());
   }
 
-  private void buildOutputBatch(VectorContainer readerContainer) {
+  private int buildOutputBatch(VectorContainer readerContainer) {
 
     // Create the implicit columns loader loader after the first
     // batch so we can report if the file is empty.
@@ -358,6 +378,7 @@ public class ReaderLifecycle implements RowBatchReader {
       createOutputBuilder();
     }
     outputBuilder.load(rowCount);
+    return rowCount;
   }
 
   private void createOutputBuilder() {

@@ -42,6 +42,7 @@ import java.util.List;
 public class ReaderSchemaOrchestrator implements VectorSource {
 
   private final ScanSchemaOrchestrator scanOrchestrator;
+  private long limit;
   private int readerBatchSize;
   private ResultSetLoaderImpl tableLoader;
   private int prevTableSchemaVersion = -1;
@@ -55,8 +56,10 @@ public class ReaderSchemaOrchestrator implements VectorSource {
   private ResolvedRow rootTuple;
   private VectorContainer tableContainer;
 
-  public ReaderSchemaOrchestrator(ScanSchemaOrchestrator scanSchemaOrchestrator) {
+  public ReaderSchemaOrchestrator(
+      ScanSchemaOrchestrator scanSchemaOrchestrator, long limit) {
     scanOrchestrator = scanSchemaOrchestrator;
+    this.limit = limit;
     readerBatchSize = scanOrchestrator.options.scanBatchRecordLimit;
   }
 
@@ -68,10 +71,11 @@ public class ReaderSchemaOrchestrator implements VectorSource {
 
   @VisibleForTesting
   public ResultSetLoader makeTableLoader(TupleMetadata readerSchema) {
-    return makeTableLoader(scanOrchestrator.scanProj.context(), readerSchema);
+    return makeTableLoader(scanOrchestrator.scanProj.context(), readerSchema, -1);
   }
 
-  public ResultSetLoader makeTableLoader(CustomErrorContext errorContext, TupleMetadata readerSchema) {
+  public ResultSetLoader makeTableLoader(CustomErrorContext errorContext,
+      TupleMetadata readerSchema, long localLimit) {
     ResultSetOptionBuilder options = new ResultSetOptionBuilder();
     options.rowCountLimit(Math.min(readerBatchSize, scanOrchestrator.options.scanBatchRecordLimit));
     options.vectorCache(scanOrchestrator.vectorCache);
@@ -86,6 +90,12 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     // adds a column later.
     options.projectionFilter(scanOrchestrator.scanProj.readerProjection);
     options.readerSchema(readerSchema);
+    if (limit < 0) {
+      limit = localLimit;
+    } else if (localLimit >= 0) {
+      limit = Math.min(localLimit, limit);
+    }
+    options.limit(limit);
 
     // Create the table loader
     tableLoader = new ResultSetLoaderImpl(scanOrchestrator.allocator, options.build());
@@ -101,8 +111,8 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     endBatch();
   }
 
-  public void startBatch() {
-    tableLoader.startBatch();
+  public boolean startBatch() {
+    return tableLoader.startBatch();
   }
 
   /**
@@ -121,7 +131,7 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    *
    * @param eof is end of file
    */
-  public void endBatch(boolean eof) {
+  public boolean endBatch(boolean eof) {
 
     // Get the batch results in a container.
     tableContainer = tableLoader.harvest();
@@ -140,7 +150,10 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     if (projected) {
       projectMetadata(false);
     }
-    rootTuple.setRowCount(tableContainer.getRecordCount());
+    int rowCount = tableContainer.getRecordCount();
+    rootTuple.setRowCount(rowCount);
+    scanOrchestrator.tallyBatch(rowCount);
+    return eof || tableLoader.atLimit();
   }
 
   /**

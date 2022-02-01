@@ -208,6 +208,11 @@ public class ScanSchemaOrchestrator {
     private CustomErrorContext errorContext;
 
     /**
+     * Pushed-down scan LIMIT.
+     */
+    private long limit = -1;
+
+    /**
      * Specify an optional metadata manager. Metadata is a set of constant
      * columns with per-reader values. For file-based sources, this is usually
      * the implicit and partition columns; but it could be other items for other
@@ -291,6 +296,12 @@ public class ScanSchemaOrchestrator {
       return providedSchema;
     }
 
+    public void limit(long limit) {
+      this.limit = Math.max(-1, limit);
+    }
+
+    public long limit() { return limit; }
+
     public void errorContext(CustomErrorContext context) {
       this.errorContext = context;
     }
@@ -301,8 +312,7 @@ public class ScanSchemaOrchestrator {
 
     @VisibleForTesting
     public ScanOperatorExec buildScan() {
-      return new ScanOperatorExec(buildEvents(),
-          ! disableEmptyResults);
+      return new ScanOperatorExec(buildEvents(), !disableEmptyResults);
     }
 
     public OperatorRecordBatch buildScanOperator(FragmentContext fragContext, PhysicalOperator pop) {
@@ -335,6 +345,7 @@ public class ScanSchemaOrchestrator {
     public final boolean useSchemaSmoothing;
     public final boolean allowRequiredNullColumns;
     public final TupleMetadata providedSchema;
+    public final long limit;
 
     /**
      * Context for error messages.
@@ -352,6 +363,7 @@ public class ScanSchemaOrchestrator {
       context = builder.errorContext;
       providedSchema = builder.providedSchema;
       allowRequiredNullColumns = builder.allowRequiredNullColumns;
+      limit = builder.limit < 0 ? Long.MAX_VALUE : builder.limit;
     }
 
     protected TupleMetadata providedSchema() {
@@ -383,6 +395,8 @@ public class ScanSchemaOrchestrator {
   protected final ScanLevelProjection scanProj;
   private ReaderSchemaOrchestrator currentReader;
   protected final SchemaSmoother schemaSmoother;
+  protected int batchCount;
+  protected long rowCount;
 
   // Output
 
@@ -435,7 +449,7 @@ public class ScanSchemaOrchestrator {
 
   public ReaderSchemaOrchestrator startReader() {
     closeReader();
-    currentReader = new ReaderSchemaOrchestrator(this);
+    currentReader = new ReaderSchemaOrchestrator(this, options.limit - rowCount);
     return currentReader;
   }
 
@@ -456,6 +470,15 @@ public class ScanSchemaOrchestrator {
 
   public VectorContainer output() {
     return outputContainer;
+  }
+
+  public void tallyBatch(int rowCount) {
+    this.batchCount++;
+    this.rowCount += rowCount;
+  }
+
+  public boolean atLimit() {
+    return batchCount > 0 && rowCount >= options.limit;
   }
 
   public void closeReader() {

@@ -52,6 +52,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     protected final ProjectionFilter projectionSet;
     protected final TupleMetadata schema;
     protected final long maxBatchSize;
+    protected final long scanLimit;
 
     /**
      * Context for error messages.
@@ -66,6 +67,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       schema = null;
       maxBatchSize = -1;
       errorContext = null;
+      scanLimit = Long.MAX_VALUE;
     }
 
     public ResultSetOptions(ResultSetOptionBuilder builder) {
@@ -74,6 +76,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       vectorCache = builder.vectorCache;
       schema = builder.readerSchema;
       maxBatchSize = builder.maxBatchSize;
+      scanLimit = builder.scanLimit;
       errorContext = builder.errorContext == null
           ? EmptyErrorContext.INSTANCE : builder.errorContext;
       if (builder.projectionFilter != null) {
@@ -126,7 +129,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     IN_OVERFLOW,
 
     /**
-     * Batch is full due to reaching the row count limit
+     * Batch is full due to reaching the row count or scan limit
      * when saving a row.
      * No more writes allowed until harvesting the current batch.
      */
@@ -160,6 +163,12 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
      * and the state moves to ACTIVE.
      */
     LOOK_AHEAD,
+
+    /**
+     * The loader has reached the given scan limit. No further batches
+     * can be started.
+     */
+    LIMITED,
 
     /**
      * Mutator is closed: no more operations are allowed.
@@ -238,7 +247,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * Counts the rows included in previously-harvested batches. Does not
    * include the number of rows in the current batch.
    */
-  private int previousRowCount;
+  private long previousRowCount;
 
   /**
    * Number of rows in the harvest batch. If an overflow batch is in effect,
@@ -255,6 +264,13 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * input data.
    */
   private int targetRowCount;
+
+  /**
+   * The number of rows allowed for the current batch. Is the lesser of the
+   * maximum batch size, the target row count, or the remaining margin on
+   * the scan limit.
+   */
+  private int batchSizeLimit;
 
   /**
    * Total bytes allocated to the current batch.
@@ -358,30 +374,30 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       case HARVESTED:
       case LOOK_AHEAD:
       case START:
+      case LIMITED:
 
         // Batch is published. Use harvest schema.
         return harvestSchemaVersion;
       default:
 
-        // Not really in a position to give a schema
-        // version.
+        // Not really in a position to give a schema version.
         throw new IllegalStateException("Unexpected state: " + state);
     }
   }
 
   @Override
-  public void startBatch() {
-    startBatch(false);
+  public boolean startBatch() {
+    return startBatch(false);
   }
 
   /**
    * Start a batch to report only schema without data.
    */
-  public void startEmptyBatch() {
-    startBatch(true);
+  public boolean startEmptyBatch() {
+    return startBatch(true);
   }
 
-  public void startBatch(boolean schemaOnly) {
+  public boolean startBatch(boolean schemaOnly) {
     switch (state) {
       case HARVESTED:
       case START:
@@ -412,6 +428,9 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
         // the writers.
         break;
 
+      case LIMITED:
+        return false;
+
       default:
         throw new IllegalStateException("Unexpected state: " + state);
     }
@@ -420,7 +439,9 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     // updates
     harvestSchemaVersion = activeSchemaVersion;
     pendingRowCount = 0;
+    batchSizeLimit = (int) Math.min(targetRowCount, options.scanLimit - totalRowCount());
     state = State.ACTIVE;
+    return true;
   }
 
   @Override
@@ -466,6 +487,8 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
         harvestSchemaVersion = activeSchemaVersion;
         rootWriter.startRow();
         break;
+      case LIMITED:
+        throw new IllegalStateException("Attempt to write past the scan limit.");
       default:
         throw new IllegalStateException("Unexpected state: " + state);
     }
@@ -523,6 +546,8 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       case OVERFLOW:
       case FULL_BATCH:
         return true;
+      case LIMITED:
+        return true;
       default:
         return false;
     }
@@ -530,7 +555,8 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
   @Override
   public boolean writeable() {
-    return state == State.ACTIVE || state == State.OVERFLOW;
+    return (state == State.ACTIVE || state == State.OVERFLOW) &&
+           !atLimit();
   }
 
   private boolean isBatchActive() {
@@ -560,7 +586,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
   @Override
   public void setTargetRowCount(int rowCount) {
-    targetRowCount = Math.max(1, rowCount);
+    targetRowCount = Math.min(Math.max(1, rowCount), ValueVector.MAX_ROW_COUNT);
   }
 
   @Override
@@ -568,6 +594,9 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
   @Override
   public int targetVectorSize() { return options.vectorSizeLimit; }
+
+  @Override
+  public int maxBatchSize() { return batchSizeLimit; }
 
   @Override
   public int skipRows(int requestedCount) {
@@ -692,6 +721,10 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
     harvestBatchCount++;
     previousRowCount += rowCount;
+
+    if (atLimit()) {
+      state = State.LIMITED;
+    }
     return container;
   }
 
@@ -709,6 +742,19 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     rootState.harvestWithLookAhead();
     state = State.LOOK_AHEAD;
     return pendingRowCount;
+  }
+
+  @Override
+  public boolean atLimit() {
+    switch (state) {
+    case LIMITED:
+      return true;
+    case ACTIVE:
+    case HARVESTED:
+      return totalRowCount() >= options.scanLimit;
+    default:
+      return false;
+    }
   }
 
   @Override
@@ -739,8 +785,8 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   }
 
   @Override
-  public int totalRowCount() {
-    int total = previousRowCount;
+  public long totalRowCount() {
+    long total = previousRowCount;
     if (isBatchActive()) {
       total += pendingRowCount + writerIndex.size();
     }

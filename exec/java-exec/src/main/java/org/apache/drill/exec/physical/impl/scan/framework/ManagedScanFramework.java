@@ -193,6 +193,9 @@ public class ManagedScanFramework implements ScanOperatorEvents {
 
   @Override
   public RowBatchReader nextReader() {
+    if (scanOrchestrator.atLimit()) {
+      return null;
+    }
     ManagedReader<? extends SchemaNegotiator> reader = readerFactory.next();
     return reader == null ? null : new ShimBatchReader(this, reader);
   }

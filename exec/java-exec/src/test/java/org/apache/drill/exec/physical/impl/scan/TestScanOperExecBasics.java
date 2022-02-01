@@ -378,7 +378,6 @@ public class TestScanOperExecBasics extends BaseScanOperatorExecTest {
    * early schema. Results in an empty (rather than null)
    * result set.
    */
-
   @Test
   public void testMultiEOFOnFirstBatch() {
     MockEarlySchemaReader reader1 = new MockEarlySchemaReader();

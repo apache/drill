@@ -38,6 +38,7 @@ public class ResultSetOptionBuilder {
   protected ProjectionFilter projectionFilter;
   protected TupleMetadata readerSchema;
   protected long maxBatchSize;
+  protected long scanLimit = Long.MAX_VALUE;
 
   /**
    * Error message context
@@ -111,6 +112,15 @@ public class ResultSetOptionBuilder {
 
   public ResultSetOptionBuilder projectionFilter(ProjectionFilter projectionFilter) {
     this.projectionFilter = projectionFilter;
+    return this;
+  }
+
+  public ResultSetOptionBuilder limit(long limit) {
+    if (limit < 0) {
+      this.scanLimit = Long.MAX_VALUE;
+    } else {
+      this.scanLimit = limit;
+    }
     return this;
   }
 

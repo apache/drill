@@ -41,7 +41,6 @@ public class TestScanOperExecEarlySchema extends BaseScanOperatorExecTest {
   /**
    * Mock reader that returns no schema and no records.
    */
-
   private static class MockNullEarlySchemaReader extends BaseMockBatchReader {
 
     @Override

@@ -44,7 +44,6 @@ public class TestScanOperExecOverflow extends BaseScanOperatorExecTest {
    * Mock reader that produces "jumbo" batches that cause a vector to
    * fill and a row to overflow from one batch to the next.
    */
-
   private static class OverflowReader extends BaseMockBatchReader {
 
     private final String value;
@@ -111,7 +110,6 @@ public class TestScanOperExecOverflow extends BaseScanOperatorExecTest {
    * that overflow. Specifically, test a corner case. A batch ends right
    * at file EOF, but that last batch overflowed.
    */
-
   @Test
   public void testMultipleReadersWithOverflow() {
     runOverflowTest(false);
@@ -191,5 +189,4 @@ public class TestScanOperExecOverflow extends BaseScanOperatorExecTest {
     assertEquals(0, scan.batchAccessor().rowCount());
     scanFixture.close();
   }
-
 }

@@ -32,6 +32,24 @@ import org.slf4j.LoggerFactory;
  * Implementation of the revised scan operator that uses a mutator aware of
  * batch sizes. This is the successor to {@link ScanBatch} and should be used
  * by all new scan implementations.
+ * <p>
+ * The basic concept is to split the scan operator into layers:
+ * <ul>
+ * <li>The {@code OperatorRecordBatch} which implements Drill's Volcano-like
+ * protocol.</li>
+ * <li>The scan operator "wrapper" (this class) which implements actions for the
+ * operator record batch specifically for scan. It iterates over readers,
+ * delegating semantic work to other classes.</li>
+ * <li>The implementation of per-reader semantics in the two EVF versions and
+ * other ad-hoc implementations.</li>
+ * <li>The result set loader and related classes which pack values into
+ * value vectors.</li>
+ * <li>Value vectors, which store the data.</li>
+ * </ul>
+ * <p>
+ * The layered format can be confusing. However, each layer is somewhat
+ * complex, so dividing the work into layers keeps the overall complexity
+ * somewhat under control.
  *
  * <h4>Scanner Framework</h4>
  *
@@ -116,13 +134,11 @@ public class ScanOperatorExec implements OperatorExec {
      * The scan has been started, but next() has not yet been
      * called.
      */
-
     START,
 
     /**
      * A reader is active and has more batches to deliver.
      */
-
     READER,
 
     /**
@@ -131,14 +147,13 @@ public class ScanOperatorExec implements OperatorExec {
      * was returned from next(). The next call to next() will
      * be the last.
      */
-
     EMPTY,
 
     /**
      * All readers are complete; no more batches to deliver.
+     * Or, hit the limit pushed down to the scan.
      * close() is not yet called.
      */
-
     END,
 
     /**
@@ -146,7 +161,6 @@ public class ScanOperatorExec implements OperatorExec {
      * states. No further calls to next() allowed. Waiting
      * for the call to close().
      */
-
     FAILED,
 
     /**

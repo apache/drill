@@ -89,6 +89,8 @@ public class BaseTestScanLifecycle extends SubOperatorTest {
     public boolean hasNext() {
       return counter < 2;
     }
+
+    public int count() { return counter; }
   }
 
   public static final TupleMetadata SCHEMA = new SchemaBuilder()
