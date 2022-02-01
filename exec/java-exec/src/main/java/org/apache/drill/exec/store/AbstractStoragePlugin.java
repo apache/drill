@@ -25,11 +25,13 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.exec.expr.fn.impl.ContextFunctions.User;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.PlannerPhase;
 
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
@@ -43,6 +45,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
 
   protected final DrillbitContext context;
   private final String name;
+  protected UserSession userSession;
 
   protected AbstractStoragePlugin(DrillbitContext inContext, String inName) {
     this.context = inContext;
@@ -105,6 +108,16 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
     default:
       return ImmutableSet.of();
     }
+  }
+
+  @Override
+  public void setUserSession(UserSession session) {
+    this.userSession = session;
+  }
+
+  @Override
+  public UserSession getUserSession() {
+    return this.userSession;
   }
 
   @Override

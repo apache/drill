@@ -29,6 +29,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 
@@ -61,6 +62,14 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * @return an extension of StoragePluginConfig
   */
   StoragePluginConfig getConfig();
+
+  /**
+   * Sets the user session.
+   * @param session The user session for the query.
+   */
+  void setUserSession(UserSession session);
+
+  UserSession getUserSession();
 
   /**
    * An implementation of this method will return one or more specialized rules that Drill query

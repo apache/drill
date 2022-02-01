@@ -31,6 +31,7 @@ import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.sql.validate.DrillSqlValidatorUtil;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.config.DrillConfig;
@@ -168,8 +169,8 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
     for (List<String> currentSchema : getSchemaPaths()) {
       List<String> fullSchemaPath = new ArrayList<>(currentSchema);
       fullSchemaPath.addAll(schemaPath);
-      CalciteSchema schema = SqlValidatorUtil.getSchema(getRootSchema(),
-          fullSchemaPath, nameMatcher());
+      CalciteSchema schema = DrillSqlValidatorUtil.getSchema(getRootSchema(),
+          fullSchemaPath, nameMatcher(), session);
 
       if (schema != null) {
        return;
