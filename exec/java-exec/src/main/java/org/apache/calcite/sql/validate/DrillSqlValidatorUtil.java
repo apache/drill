@@ -19,7 +19,6 @@
 package org.apache.calcite.sql.validate;
 
 import org.apache.calcite.jdbc.CalciteSchema;
-import org.apache.calcite.jdbc.DynamicRootSchema;
 import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.drill.exec.rpc.user.UserSession;
 
