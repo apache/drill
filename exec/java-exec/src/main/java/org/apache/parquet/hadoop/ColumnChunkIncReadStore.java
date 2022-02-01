@@ -18,6 +18,7 @@
 package org.apache.parquet.hadoop;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -215,20 +216,20 @@ public class ColumnChunkIncReadStore implements PageReadStore {
               // Note that the repetition and definition levels are stored uncompressed in
               // the v2 page format.
               int pageBufOffset = 0;
-              ByteBuffer bb = (ByteBuffer) pageBuf.position(pageBufOffset);
+              ByteBuffer bb = (ByteBuffer) ((Buffer)pageBuf).position(pageBufOffset);
               BytesInput repLevelBytes = BytesInput.from(
                 (ByteBuffer) bb.slice().limit(pageBufOffset + repLevelSize)
               );
               pageBufOffset += repLevelSize;
 
-              bb = (ByteBuffer) pageBuf.position(pageBufOffset);
+              bb = (ByteBuffer) ((Buffer)pageBuf).position(pageBufOffset);
               final BytesInput defLevelBytes = BytesInput.from(
                 (ByteBuffer) bb.slice().limit(pageBufOffset + defLevelSize)
               );
               pageBufOffset += defLevelSize;
 
               // we've now reached the beginning of compressed column data
-              bb = (ByteBuffer) pageBuf.position(pageBufOffset);
+              bb = (ByteBuffer) ((Buffer)pageBuf).position(pageBufOffset);
               final BytesInput colDataBytes = decompressor.decompress(
                 BytesInput.from((ByteBuffer) bb.slice()),
                 pageSize - repLevelSize - defLevelSize
