@@ -19,7 +19,6 @@
 package org.apache.drill.exec.store.http;
 
 
-import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ChildErrorContext;
@@ -33,13 +32,16 @@ import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
 import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.xml.XMLReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.InputStream;
 
-@Slf4j
 public class HttpXMLBatchReader extends HttpBatchReader {
+  private static final Logger logger = LoggerFactory.getLogger(HttpXMLBatchReader.class);
+
   private final HttpSubScan subScan;
   private final int maxRecords;
   private final int dataLevel;

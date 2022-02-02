@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.val;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
@@ -36,7 +33,6 @@ import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
 public class SqlDropAlias extends DrillSqlCall {
 
   private final SqlNode isPublic;
@@ -59,15 +55,17 @@ public class SqlDropAlias extends DrillSqlCall {
     }
   };
 
-  @Builder
-  private SqlDropAlias(SqlParserPos pos, SqlIdentifier alias,
-    SqlNode ifExists, SqlNode isPublic, SqlNode aliasKind, SqlNode user) {
-    super(pos);
-    this.alias = alias;
-    this.ifExists = ifExists;
-    this.isPublic = isPublic;
-    this.aliasKind = aliasKind;
-    this.user = user;
+  private SqlDropAlias(SqlDropAliasBuilder builder) {
+    super(builder.pos);
+    this.alias = builder.alias;
+    this.ifExists = builder.ifExists;
+    this.isPublic = builder.isPublic;
+    this.aliasKind = builder.aliasKind;
+    this.user = builder.user;
+  }
+
+  public static SqlDropAliasBuilder builder() {
+    return new SqlDropAliasBuilder();
   }
 
   @Override
@@ -77,7 +75,7 @@ public class SqlDropAlias extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    val opList = new ArrayList<SqlNode>();
+    List<SqlNode> opList = new ArrayList<>();
     opList.add(alias);
     opList.add(aliasKind);
     opList.add(ifExists);
@@ -112,5 +110,73 @@ public class SqlDropAlias extends DrillSqlCall {
   @Override
   public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
     return new DropAliasHandler(config);
+  }
+
+  public SqlNode getIsPublic() {
+    return this.isPublic;
+  }
+
+  public SqlNode getIfExists() {
+    return this.ifExists;
+  }
+
+  public SqlIdentifier getAlias() {
+    return this.alias;
+  }
+
+  public SqlNode getAliasKind() {
+    return this.aliasKind;
+  }
+
+  public SqlNode getUser() {
+    return this.user;
+  }
+
+  public static class SqlDropAliasBuilder {
+    private SqlParserPos pos;
+
+    private SqlIdentifier alias;
+
+    private SqlNode ifExists;
+
+    private SqlNode isPublic;
+
+    private SqlNode aliasKind;
+
+    private SqlNode user;
+
+    public SqlDropAliasBuilder pos(SqlParserPos pos) {
+      this.pos = pos;
+      return this;
+    }
+
+    public SqlDropAliasBuilder alias(SqlIdentifier alias) {
+      this.alias = alias;
+      return this;
+    }
+
+    public SqlDropAliasBuilder ifExists(SqlNode ifExists) {
+      this.ifExists = ifExists;
+      return this;
+    }
+
+    public SqlDropAliasBuilder isPublic(SqlNode isPublic) {
+      this.isPublic = isPublic;
+      return this;
+    }
+
+    public SqlDropAliasBuilder aliasKind(SqlNode aliasKind) {
+      this.aliasKind = aliasKind;
+      return this;
+    }
+
+    public SqlDropAliasBuilder user(SqlNode user) {
+      this.user = user;
+      return this;
+    }
+
+    public SqlDropAlias build() {
+      return new SqlDropAlias(this);
+    }
   }
 }

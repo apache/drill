@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.val;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
@@ -36,7 +33,6 @@ import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
 public class SqlCreateAlias extends DrillSqlCall {
 
   private final SqlIdentifier alias;
@@ -61,16 +57,18 @@ public class SqlCreateAlias extends DrillSqlCall {
     }
   };
 
-  @Builder
-  private SqlCreateAlias(SqlParserPos pos, SqlIdentifier alias, SqlIdentifier source,
-    SqlNode replace, SqlNode isPublic, SqlNode aliasKind, SqlNode user) {
-    super(pos);
-    this.alias = alias;
-    this.source = source;
-    this.replace = replace;
-    this.isPublic = isPublic;
-    this.aliasKind = aliasKind;
-    this.user = user;
+  private SqlCreateAlias(SqlCreateAliasBuilder builder) {
+    super(builder.pos);
+    this.alias = builder.alias;
+    this.source = builder.source;
+    this.replace = builder.replace;
+    this.isPublic = builder.isPublic;
+    this.aliasKind = builder.aliasKind;
+    this.user = builder.user;
+  }
+
+  public static SqlCreateAliasBuilder builder() {
+    return new SqlCreateAliasBuilder();
   }
 
   @Override
@@ -80,7 +78,7 @@ public class SqlCreateAlias extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    val opList = new ArrayList<SqlNode>();
+    List<SqlNode> opList = new ArrayList<>();
     opList.add(alias);
     opList.add(source);
     opList.add(aliasKind);
@@ -119,4 +117,82 @@ public class SqlCreateAlias extends DrillSqlCall {
     return new CreateAliasHandler(config);
   }
 
+  public SqlIdentifier getAlias() {
+    return this.alias;
+  }
+
+  public SqlIdentifier getSource() {
+    return this.source;
+  }
+
+  public SqlNode getAliasKind() {
+    return this.aliasKind;
+  }
+
+  public SqlNode getReplace() {
+    return this.replace;
+  }
+
+  public SqlNode getIsPublic() {
+    return this.isPublic;
+  }
+
+  public SqlNode getUser() {
+    return this.user;
+  }
+
+  public static class SqlCreateAliasBuilder {
+    private SqlParserPos pos;
+
+    private SqlIdentifier alias;
+
+    private SqlIdentifier source;
+
+    private SqlNode replace;
+
+    private SqlNode isPublic;
+
+    private SqlNode aliasKind;
+
+    private SqlNode user;
+
+    public SqlCreateAliasBuilder pos(SqlParserPos pos) {
+      this.pos = pos;
+      return this;
+    }
+
+    public SqlCreateAliasBuilder alias(SqlIdentifier alias) {
+      this.alias = alias;
+      return this;
+    }
+
+    public SqlCreateAliasBuilder source(SqlIdentifier source) {
+      this.source = source;
+      return this;
+    }
+
+    public SqlCreateAliasBuilder replace(SqlNode replace) {
+      this.replace = replace;
+      return this;
+    }
+
+    public SqlCreateAliasBuilder isPublic(SqlNode isPublic) {
+      this.isPublic = isPublic;
+      return this;
+    }
+
+    public SqlCreateAliasBuilder aliasKind(SqlNode aliasKind) {
+      this.aliasKind = aliasKind;
+      return this;
+    }
+
+    public SqlCreateAliasBuilder user(SqlNode user) {
+      this.user = user;
+      return this;
+    }
+
+    public SqlCreateAlias build() {
+      return new SqlCreateAlias(this);
+    }
+  }
 }

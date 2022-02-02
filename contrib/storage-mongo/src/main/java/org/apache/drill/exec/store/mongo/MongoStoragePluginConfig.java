@@ -17,23 +17,20 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.mongodb.ConnectionString;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 
+import java.util.List;
+import java.util.Objects;
+
 @JsonTypeName(MongoStoragePluginConfig.NAME)
-@EqualsAndHashCode(of = "connection", callSuper = false)
 public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig {
 
   public static final String NAME = "mongo";
@@ -89,8 +86,23 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
     return credentialsProvider != null ? credentialsProvider : PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
   }
 
-  @Getter
-  @Setter
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    MongoStoragePluginConfig that = (MongoStoragePluginConfig) o;
+    return Objects.equals(connection, that.connection);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(connection);
+  }
+
   public static class MongoPluginOptimizations {
 
     private boolean supportsProjectPushdown = true;
@@ -104,5 +116,53 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
     private boolean supportsUnionPushdown = true;
 
     private boolean supportsLimitPushdown = true;
+
+    public boolean isSupportsProjectPushdown() {
+      return this.supportsProjectPushdown;
+    }
+
+    public boolean isSupportsFilterPushdown() {
+      return this.supportsFilterPushdown;
+    }
+
+    public boolean isSupportsAggregatePushdown() {
+      return this.supportsAggregatePushdown;
+    }
+
+    public boolean isSupportsSortPushdown() {
+      return this.supportsSortPushdown;
+    }
+
+    public boolean isSupportsUnionPushdown() {
+      return this.supportsUnionPushdown;
+    }
+
+    public boolean isSupportsLimitPushdown() {
+      return this.supportsLimitPushdown;
+    }
+
+    public void setSupportsProjectPushdown(boolean supportsProjectPushdown) {
+      this.supportsProjectPushdown = supportsProjectPushdown;
+    }
+
+    public void setSupportsFilterPushdown(boolean supportsFilterPushdown) {
+      this.supportsFilterPushdown = supportsFilterPushdown;
+    }
+
+    public void setSupportsAggregatePushdown(boolean supportsAggregatePushdown) {
+      this.supportsAggregatePushdown = supportsAggregatePushdown;
+    }
+
+    public void setSupportsSortPushdown(boolean supportsSortPushdown) {
+      this.supportsSortPushdown = supportsSortPushdown;
+    }
+
+    public void setSupportsUnionPushdown(boolean supportsUnionPushdown) {
+      this.supportsUnionPushdown = supportsUnionPushdown;
+    }
+
+    public void setSupportsLimitPushdown(boolean supportsLimitPushdown) {
+      this.supportsLimitPushdown = supportsLimitPushdown;
+    }
   }
 }

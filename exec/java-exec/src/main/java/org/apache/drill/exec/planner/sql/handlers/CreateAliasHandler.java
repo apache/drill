@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.commons.lang3.StringUtils;
@@ -31,6 +30,8 @@ import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlCreateAlias;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,8 +40,9 @@ import java.util.Locale;
 /**
  * Handler for handling CREATE ALIAS statements.
  */
-@Slf4j
 public class CreateAliasHandler extends BaseAliasHandler {
+
+  private static final Logger logger = LoggerFactory.getLogger(CreateAliasHandler.class);
 
   public CreateAliasHandler(SqlHandlerConfig config) {
     super(config);

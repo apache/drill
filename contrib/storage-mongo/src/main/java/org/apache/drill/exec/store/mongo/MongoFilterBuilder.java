@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import java.util.List;
-
-import lombok.extern.slf4j.Slf4j;
 import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
@@ -28,11 +25,16 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.store.mongo.common.MongoOp;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
+import java.util.List;
+
 public class MongoFilterBuilder extends
     AbstractExprVisitor<Document, Void, RuntimeException> implements
     DrillMongoConstants {
+
+  private static final Logger logger = LoggerFactory.getLogger(MongoFilterBuilder.class);
 
   private final LogicalExpression le;
   private boolean allExpressionsConverted = true;

@@ -27,9 +27,9 @@ import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.LoggerFactory;
 
 /**
  * Phoenix’s Connection objects are different from most other JDBC Connections
@@ -40,8 +40,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * is not always left in a healthy state by the previous user. It is better to
  * create new Phoenix Connections to ensure that you avoid any potential issues.
  */
-@Slf4j
 public class PhoenixDataSource implements DataSource {
+  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PhoenixDataSource.class);
 
   private static final String DEFAULT_URL_HEADER = "jdbc:phoenix:thin:url=http://";
   private static final String DEFAULT_SERIALIZATION = "serialization=PROTOBUF";

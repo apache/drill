@@ -17,18 +17,19 @@
  */
 package org.apache.drill.exec.testing;
 
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The base class for all types of injections (currently, pause and exception).
  */
-@Slf4j
-@ToString
 public abstract class Injection {
+
+  private static final Logger logger = LoggerFactory.getLogger(Injection.class);
 
   protected final String address;  // the address of the drillbit on which to inject
   protected final int port; // user port of the drillbit; useful when there are multiple drillbits on same machine
@@ -93,5 +94,18 @@ public abstract class Injection {
 
   public long getMsPause() {
     return msPause;
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", Injection.class.getSimpleName() + "[", "]")
+      .add("address='" + address + "'")
+      .add("port=" + port)
+      .add("siteClass=" + siteClass)
+      .add("desc='" + desc + "'")
+      .add("nSkip=" + nSkip)
+      .add("nFire=" + nFire)
+      .add("msPause=" + msPause)
+      .toString();
   }
 }

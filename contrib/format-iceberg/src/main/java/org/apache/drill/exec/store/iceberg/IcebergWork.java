@@ -26,9 +26,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.iceberg.CombinedScanTask;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -36,19 +36,53 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
+import java.util.Objects;
+import java.util.StringJoiner;
 
-@Value
 @JsonSerialize(using = IcebergWork.IcebergWorkSerializer.class)
 @JsonDeserialize(using = IcebergWork.IcebergWorkDeserializer.class)
 public class IcebergWork {
-  CombinedScanTask scanTask;
+  private final CombinedScanTask scanTask;
+
+  public IcebergWork(CombinedScanTask scanTask) {
+    this.scanTask = scanTask;
+  }
+
+  public CombinedScanTask getScanTask() {
+    return this.scanTask;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    IcebergWork that = (IcebergWork) o;
+    return Objects.equals(scanTask, that.scanTask);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(scanTask);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", IcebergWork.class.getSimpleName() + "[", "]")
+      .add("scanTask=" + scanTask)
+      .toString();
+  }
 
   /**
    * Special deserializer for {@link IcebergWork} class that deserializes
    * {@code scanTask} field from byte array string created using {@link java.io.Serializable}.
    */
-  @Slf4j
   public static class IcebergWorkDeserializer extends StdDeserializer<IcebergWork> {
+
+    private static final Logger logger = LoggerFactory.getLogger(IcebergWorkDeserializer.class);
 
     public IcebergWorkDeserializer() {
       super(IcebergWork.class);

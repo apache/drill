@@ -22,10 +22,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.Builder;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
@@ -50,15 +48,19 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
 import org.apache.iceberg.TableScan;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.hadoop.HadoopTables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Slf4j
 @JsonTypeName("iceberg-scan")
 @SuppressWarnings("unused")
 public class IcebergGroupScan extends AbstractGroupScan {
+
+  private static final Logger logger = LoggerFactory.getLogger(IcebergGroupScan.class);
 
   private final IcebergFormatPlugin formatPlugin;
 
@@ -92,22 +94,25 @@ public class IcebergGroupScan extends AbstractGroupScan {
       @JsonProperty("path") String path,
       @JsonProperty("condition") LogicalExpression condition,
       @JsonProperty("maxRecords") Integer maxRecords,
-      @JacksonInject StoragePluginRegistry pluginRegistry) {
-    this(userName,
-        pluginRegistry.resolveFormat(storageConfig, formatConfig, IcebergFormatPlugin.class),
-        schema, path, condition, columns, maxRecords);
+      @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException {
+    this(builder()
+      .userName(userName)
+      .formatPlugin(pluginRegistry.resolveFormat(storageConfig, formatConfig, IcebergFormatPlugin.class))
+      .schema(schema)
+      .path(path)
+      .condition(condition)
+      .columns(columns)
+      .maxRecords(maxRecords));
   }
 
-  @Builder(toBuilder = true)
-  private IcebergGroupScan(String userName, IcebergFormatPlugin formatPlugin,
-    TupleMetadata schema, String path, LogicalExpression condition, List<SchemaPath> columns, int maxRecords) {
-    super(userName);
-    this.formatPlugin = formatPlugin;
-    this.columns = columns;
-    this.path = path;
-    this.schema = schema;
-    this.condition = condition;
-    this.maxRecords = maxRecords;
+  private IcebergGroupScan(IcebergGroupScanBuilder builder) throws IOException {
+    super(builder.userName);
+    this.formatPlugin = builder.formatPlugin;
+    this.columns = builder.columns;
+    this.path = builder.path;
+    this.schema = builder.schema;
+    this.condition = builder.condition;
+    this.maxRecords = builder.maxRecords;
     this.fs = ImpersonationUtil.createFileSystem(ImpersonationUtil.resolveUserName(userName), formatPlugin.getFsConf());
     this.tableScan = initTableScan(formatPlugin, path, condition);
 
@@ -166,9 +171,17 @@ public class IcebergGroupScan extends AbstractGroupScan {
     this.endpointAffinities = that.endpointAffinities;
   }
 
+  public static IcebergGroupScanBuilder builder() {
+    return new IcebergGroupScanBuilder();
+  }
+
   @Override
   public IcebergGroupScan clone(List<SchemaPath> columns) {
-    return toBuilder().columns(columns).build();
+    try {
+      return toBuilder().columns(columns).build();
+    } catch (IOException e) {
+      throw new DrillRuntimeException(e);
+    }
   }
 
   @Override
@@ -263,8 +276,7 @@ public class IcebergGroupScan extends AbstractGroupScan {
     return new IcebergGroupScan(this);
   }
 
-  @SneakyThrows
-  private void init() {
+  private void init() throws IOException {
     tableScan = projectColumns(tableScan, columns);
     chunks = new IcebergBlockMapBuilder(fs, formatPlugin.getContext().getBits())
       .generateFileWork(tableScan.planTasks());
@@ -358,4 +370,69 @@ public class IcebergGroupScan extends AbstractGroupScan {
       .toString();
   }
 
+  public IcebergGroupScanBuilder toBuilder() {
+    return new IcebergGroupScanBuilder()
+      .userName(this.userName)
+      .formatPlugin(this.formatPlugin)
+      .schema(this.schema)
+      .path(this.path)
+      .condition(this.condition)
+      .columns(this.columns)
+      .maxRecords(this.maxRecords);
+  }
+
+  public static class IcebergGroupScanBuilder {
+    private String userName;
+
+    private IcebergFormatPlugin formatPlugin;
+
+    private TupleMetadata schema;
+
+    private String path;
+
+    private LogicalExpression condition;
+
+    private List<SchemaPath> columns;
+
+    private int maxRecords;
+
+    public IcebergGroupScanBuilder userName(String userName) {
+      this.userName = userName;
+      return this;
+    }
+
+    public IcebergGroupScanBuilder formatPlugin(IcebergFormatPlugin formatPlugin) {
+      this.formatPlugin = formatPlugin;
+      return this;
+    }
+
+    public IcebergGroupScanBuilder schema(TupleMetadata schema) {
+      this.schema = schema;
+      return this;
+    }
+
+    public IcebergGroupScanBuilder path(String path) {
+      this.path = path;
+      return this;
+    }
+
+    public IcebergGroupScanBuilder condition(LogicalExpression condition) {
+      this.condition = condition;
+      return this;
+    }
+
+    public IcebergGroupScanBuilder columns(List<SchemaPath> columns) {
+      this.columns = columns;
+      return this;
+    }
+
+    public IcebergGroupScanBuilder maxRecords(int maxRecords) {
+      this.maxRecords = maxRecords;
+      return this;
+    }
+
+    public IcebergGroupScan build() throws IOException {
+      return new IcebergGroupScan(this);
+    }
+  }
 }

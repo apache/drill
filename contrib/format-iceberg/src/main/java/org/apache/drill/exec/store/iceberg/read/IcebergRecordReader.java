@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.iceberg.read;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
@@ -36,7 +35,6 @@ import org.apache.iceberg.io.CloseableIterable;
 
 import java.util.Iterator;
 
-@Slf4j
 public class IcebergRecordReader implements ManagedReader<SchemaNegotiator> {
   private final IcebergWork work;
 

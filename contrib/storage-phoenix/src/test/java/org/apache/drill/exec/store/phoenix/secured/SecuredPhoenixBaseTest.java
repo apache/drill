@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.phoenix.secured;
 
 import ch.qos.logback.classic.Level;
 import com.sun.security.auth.module.Krb5LoginModule;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
@@ -27,6 +26,7 @@ import org.apache.drill.exec.rpc.security.ServerAuthenticationHandler;
 import org.apache.drill.exec.rpc.security.kerberos.KerberosFactory;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.phoenix.PhoenixDataSource;
 import org.apache.drill.exec.store.phoenix.PhoenixStoragePluginConfig;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -40,6 +40,8 @@ import org.apache.phoenix.queryserver.server.QueryServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -60,8 +62,9 @@ import static org.apache.drill.exec.store.phoenix.secured.HttpParamImpersonation
 import static org.apache.drill.exec.store.phoenix.secured.HttpParamImpersonationQueryServerIT.grantUsersToPhoenixSystemTables;
 import static org.apache.drill.exec.store.phoenix.secured.SecuredPhoenixTestSuite.initPhoenixQueryServer;
 
-@Slf4j
 public abstract class SecuredPhoenixBaseTest extends ClusterTest {
+  private static final Logger logger = LoggerFactory.getLogger(PhoenixDataSource.class);
+
   protected static LogFixture logFixture;
   private final static Level CURRENT_LOG_LEVEL = Level.INFO;
 

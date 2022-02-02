@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.http.util;
 
-import lombok.extern.slf4j.Slf4j;
 import okhttp3.Cache;
 import okhttp3.Credentials;
 import okhttp3.FormBody;
@@ -45,6 +44,8 @@ import org.apache.drill.exec.store.http.oauth.AccessTokenInterceptor;
 import org.apache.drill.exec.store.http.oauth.AccessTokenRepository;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -75,8 +76,9 @@ import java.util.regex.Pattern;
  * method is the getInputStream() method which accepts a url and opens an
  * InputStream with that URL's contents.
  */
-@Slf4j
 public class SimpleHttp {
+  private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
+
   private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?\\}");
 
   private final OkHttpClient client;
@@ -94,7 +96,6 @@ public class SimpleHttp {
   private String responseURL;
 
 
-  @lombok.Builder
   public SimpleHttp(HttpSubScan scanDefn, HttpUrl url, File tempDir,
     HttpProxyConfig proxyConfig, CustomErrorContext errorContext, Paginator paginator) {
     this.scanDefn = scanDefn;
@@ -106,6 +107,10 @@ public class SimpleHttp {
     this.tokenTable = scanDefn.tableSpec().getTokenTable();
     this.paginator = paginator;
     this.client = setupHttpClient();
+  }
+
+  public static SimpleHttpBuilder builder() {
+    return new SimpleHttpBuilder();
   }
 
   /**
@@ -580,6 +585,54 @@ public class SimpleHttp {
       // Replace with new request containing the authorization headers and previous headers
       Request authenticatedRequest = request.newBuilder().header("Authorization", credentials).build();
       return chain.proceed(authenticatedRequest);
+    }
+  }
+
+  public static class SimpleHttpBuilder {
+    private HttpSubScan scanDefn;
+
+    private HttpUrl url;
+
+    private File tempDir;
+
+    private HttpProxyConfig proxyConfig;
+
+    private CustomErrorContext errorContext;
+
+    private Paginator paginator;
+
+    public SimpleHttpBuilder scanDefn(HttpSubScan scanDefn) {
+      this.scanDefn = scanDefn;
+      return this;
+    }
+
+    public SimpleHttpBuilder url(HttpUrl url) {
+      this.url = url;
+      return this;
+    }
+
+    public SimpleHttpBuilder tempDir(File tempDir) {
+      this.tempDir = tempDir;
+      return this;
+    }
+
+    public SimpleHttpBuilder proxyConfig(HttpProxyConfig proxyConfig) {
+      this.proxyConfig = proxyConfig;
+      return this;
+    }
+
+    public SimpleHttpBuilder errorContext(CustomErrorContext errorContext) {
+      this.errorContext = errorContext;
+      return this;
+    }
+
+    public SimpleHttpBuilder paginator(Paginator paginator) {
+      this.paginator = paginator;
+      return this;
+    }
+
+    public SimpleHttp build() {
+      return new SimpleHttp(scanDefn, url, tempDir, proxyConfig, errorContext, paginator);
     }
   }
 }

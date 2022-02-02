@@ -18,14 +18,17 @@
 package org.apache.drill.exec.store.iceberg.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.AllArgsConstructor;
 import org.apache.iceberg.TableScan;
 
 @JsonTypeName("appendsBetween")
-@AllArgsConstructor
 public class SnapshotsBetween implements Snapshot {
   private final long fromSnapshotId;
   private final long toSnapshotId;
+
+  public SnapshotsBetween(long fromSnapshotId, long toSnapshotId) {
+    this.fromSnapshotId = fromSnapshotId;
+    this.toSnapshotId = toSnapshotId;
+  }
 
   @Override
   public TableScan apply(TableScan tableScan) {

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.sys;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.val;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.categories.FlakyTest;
 import org.apache.drill.categories.SlowTest;
@@ -63,7 +62,7 @@ public class TestPStoreProviders extends TestWithZookeeper {
   public void verifyZkStore() throws Exception {
     try(CuratorFramework curator = createCurator()) {
       curator.start();
-      val provider = new ZookeeperPersistentStoreProvider(zkHelper.getConfig(), curator);
+      PersistentStoreProvider provider = new ZookeeperPersistentStoreProvider(zkHelper.getConfig(), curator);
       PStoreTestUtil.test(provider);
     }
   }

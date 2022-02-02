@@ -140,7 +140,7 @@ public class IcebergFormatPlugin implements FormatPlugin {
   }
 
   @Override
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns) {
+  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns) throws IOException {
     return IcebergGroupScan.builder()
       .userName(userName)
       .formatPlugin(this)

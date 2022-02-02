@@ -23,10 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import lombok.Getter;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
-import lombok.extern.jackson.Jacksonized;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -116,10 +115,7 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     return Collections.emptyIterator();
   }
 
-  @Getter
-  @ToString
-  @Jacksonized
-  @SuperBuilder
+  @JsonDeserialize(builder=ShardedMongoSubScanSpec.ShardedMongoSubScanSpecBuilder.class)
   public static class ShardedMongoSubScanSpec extends BaseMongoSubScanSpec {
 
     @JsonProperty
@@ -131,17 +127,122 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     @JsonProperty
     private final String filter;
 
+    protected ShardedMongoSubScanSpec(ShardedMongoSubScanSpecBuilder b) {
+      super(b);
+      this.minFilters = b.minFilters;
+      this.maxFilters = b.maxFilters;
+      this.filter = b.filter;
+    }
+
+    public static ShardedMongoSubScanSpecBuilder builder() {
+      return new ShardedMongoSubScanSpecBuilder();
+    }
+
+    public Map<String, Object> getMinFilters() {
+      return this.minFilters;
+    }
+
+    public Map<String, Object> getMaxFilters() {
+      return this.maxFilters;
+    }
+
+    public String getFilter() {
+      return this.filter;
+    }
+
+    @Override
+    public String toString() {
+      return new PlanStringBuilder(this)
+        .field("bName", getDbName())
+        .field("collectionName", getCollectionName())
+        .field("hosts", getHosts())
+        .field("minFilters", minFilters)
+        .field("maxFilters", maxFilters)
+        .field("filter", filter)
+        .toString();
+    }
+
+    @JsonPOJOBuilder(withPrefix = "")
+    public static class ShardedMongoSubScanSpecBuilder extends BaseMongoSubScanSpecBuilder<ShardedMongoSubScanSpecBuilder> {
+      private Map<String, Object> minFilters;
+
+      private Map<String, Object> maxFilters;
+
+      private String filter;
+
+      public ShardedMongoSubScanSpecBuilder minFilters(Map<String, Object> minFilters) {
+        this.minFilters = minFilters;
+        return self();
+      }
+
+      public ShardedMongoSubScanSpecBuilder maxFilters(Map<String, Object> maxFilters) {
+        this.maxFilters = maxFilters;
+        return self();
+      }
+
+      public ShardedMongoSubScanSpecBuilder filter(String filter) {
+        this.filter = filter;
+        return self();
+      }
+
+      @Override
+      public ShardedMongoSubScanSpecBuilder self() {
+        return this;
+      }
+
+      public ShardedMongoSubScanSpec build() {
+        return new ShardedMongoSubScanSpec(this);
+      }
+    }
   }
 
-  @Getter
-  @ToString
-  @Jacksonized
-  @SuperBuilder
+  @JsonDeserialize(builder=MongoSubScanSpec.MongoSubScanSpecBuilder.class)
   public static class MongoSubScanSpec extends BaseMongoSubScanSpec {
 
     @JsonProperty
     private final List<String> operations;
 
+    protected MongoSubScanSpec(MongoSubScanSpecBuilder b) {
+      super(b);
+      this.operations = b.operations;
+    }
+
+    public static MongoSubScanSpecBuilder builder() {
+      return new MongoSubScanSpecBuilder();
+    }
+
+    public List<String> getOperations() {
+      return this.operations;
+    }
+
+    @Override
+    public String toString() {
+      return new PlanStringBuilder(this)
+        .field("bName", getDbName())
+        .field("collectionName", getCollectionName())
+        .field("hosts", getHosts())
+        .field("operations", operations)
+        .toString();
+    }
+
+    @JsonPOJOBuilder(withPrefix = "")
+    public static class MongoSubScanSpecBuilder extends BaseMongoSubScanSpecBuilder<MongoSubScanSpecBuilder> {
+      private List<String> operations;
+
+      public MongoSubScanSpecBuilder operations(List<String> operations) {
+        this.operations = operations;
+        return self();
+      }
+
+      @Override
+      protected MongoSubScanSpecBuilder self() {
+        return this;
+      }
+
+      public MongoSubScanSpec build() {
+        return new MongoSubScanSpec(this);
+      }
+    }
   }
 
 }

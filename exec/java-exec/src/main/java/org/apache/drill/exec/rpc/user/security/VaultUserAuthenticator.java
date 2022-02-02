@@ -17,28 +17,26 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
-import com.bettercloud.vault.response.LookupResponse;
 import com.bettercloud.vault.Vault;
 import com.bettercloud.vault.VaultConfig;
 import com.bettercloud.vault.VaultException;
+import com.bettercloud.vault.response.LookupResponse;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Objects;
-
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implement {@link org.apache.drill.exec.rpc.user.security.UserAuthenticator}
  * based on HashiCorp Vault.  Configure the Vault client using the Drill BOOT
  * options that appear below.
  */
-@Slf4j
-@EqualsAndHashCode
 @UserAuthenticatorTemplate(type = "vault")
 public class VaultUserAuthenticator implements UserAuthenticator {
+  private static final Logger logger = LoggerFactory.getLogger(VaultUserAuthenticator.class);
 
   // Drill boot options used to configure Vault auth.
   public static final String VAULT_ADDRESS = "drill.exec.security.user.auth.vault.address";
@@ -199,5 +197,24 @@ public class VaultUserAuthenticator implements UserAuthenticator {
   public void close() throws IOException {
     this.vault = null;
     logger.debug("Has been closed.");
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    VaultUserAuthenticator that = (VaultUserAuthenticator) o;
+    return Objects.equals(vaultConfig, that.vaultConfig)
+      && Objects.equals(vault, that.vault)
+      && authMethod == that.authMethod;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(vaultConfig, vault, authMethod);
   }
 }

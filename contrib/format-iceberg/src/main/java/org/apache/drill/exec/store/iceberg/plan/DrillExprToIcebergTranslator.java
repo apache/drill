@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.iceberg.plan;
 
-import lombok.Value;
 import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -208,13 +207,20 @@ public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression
     return null;
   }
 
-  @Value
   private static class ConstantExpression<T> implements Expression {
-    T value;
+    private final T value;
+
+    public ConstantExpression(T value) {
+      this.value = value;
+    }
 
     @Override
     public Operation op() {
       return null;
+    }
+
+    public T getValue() {
+      return value;
     }
   }
 }

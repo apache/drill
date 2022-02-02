@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.iceberg.format;
 
-import lombok.AllArgsConstructor;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -33,11 +32,14 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 
-@AllArgsConstructor
 public class IcebergFormatMatcher extends FormatMatcher {
   private static final String METADATA_DIR_NAME = "metadata";
 
   private final IcebergFormatPlugin formatPlugin;
+
+  public IcebergFormatMatcher(IcebergFormatPlugin formatPlugin) {
+    this.formatPlugin = formatPlugin;
+  }
 
   @Override
   public boolean supportDirectoryReads() {

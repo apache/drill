@@ -20,22 +20,15 @@ package org.apache.drill.exec.store.http;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.experimental.Accessors;
-import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 
-@Slf4j
-@Builder
-@Getter
-@Accessors(fluent = true)
-@EqualsAndHashCode
-@ToString
+import java.util.Objects;
+
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+@JsonDeserialize(builder = HttpJsonOptions.HttpJsonOptionsBuilder.class)
 public class HttpJsonOptions {
 
   @JsonInclude
@@ -49,6 +42,17 @@ public class HttpJsonOptions {
 
   @JsonInclude
   private final Boolean enableEscapeAnyChar;
+
+  HttpJsonOptions(HttpJsonOptionsBuilder builder) {
+    this.allowNanInf = builder.allowNanInf;
+    this.allTextMode = builder.allTextMode;
+    this.readNumbersAsDouble = builder.readNumbersAsDouble;
+    this.enableEscapeAnyChar = builder.enableEscapeAnyChar;
+  }
+
+  public static HttpJsonOptionsBuilder builder() {
+    return new HttpJsonOptionsBuilder();
+  }
 
   @JsonIgnore
   public JsonLoaderOptions getJsonOptions(OptionSet optionSet) {
@@ -66,5 +70,85 @@ public class HttpJsonOptions {
       options.enableEscapeAnyChar = enableEscapeAnyChar;
     }
     return options;
+  }
+
+  public Boolean allowNanInf() {
+    return this.allowNanInf;
+  }
+
+  public Boolean allTextMode() {
+    return this.allTextMode;
+  }
+
+  public Boolean readNumbersAsDouble() {
+    return this.readNumbersAsDouble;
+  }
+
+  public Boolean enableEscapeAnyChar() {
+    return this.enableEscapeAnyChar;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    HttpJsonOptions that = (HttpJsonOptions) o;
+    return Objects.equals(allowNanInf, that.allowNanInf)
+      && Objects.equals(allTextMode, that.allTextMode)
+      && Objects.equals(readNumbersAsDouble, that.readNumbersAsDouble)
+      && Objects.equals(enableEscapeAnyChar, that.enableEscapeAnyChar);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(allowNanInf, allTextMode, readNumbersAsDouble, enableEscapeAnyChar);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("allowNanInf", allowNanInf)
+      .field("allTextMode", allTextMode)
+      .field("readNumbersAsDouble", readNumbersAsDouble)
+      .field("enableEscapeAnyChar", enableEscapeAnyChar)
+      .toString();
+  }
+
+  public static class HttpJsonOptionsBuilder {
+    private Boolean allowNanInf;
+
+    private Boolean allTextMode;
+
+    private Boolean readNumbersAsDouble;
+
+    private Boolean enableEscapeAnyChar;
+
+    public HttpJsonOptionsBuilder allowNanInf(Boolean allowNanInf) {
+      this.allowNanInf = allowNanInf;
+      return this;
+    }
+
+    public HttpJsonOptionsBuilder allTextMode(Boolean allTextMode) {
+      this.allTextMode = allTextMode;
+      return this;
+    }
+
+    public HttpJsonOptionsBuilder readNumbersAsDouble(Boolean readNumbersAsDouble) {
+      this.readNumbersAsDouble = readNumbersAsDouble;
+      return this;
+    }
+
+    public HttpJsonOptionsBuilder enableEscapeAnyChar(Boolean enableEscapeAnyChar) {
+      this.enableEscapeAnyChar = enableEscapeAnyChar;
+      return this;
+    }
+
+    public HttpJsonOptions build() {
+      return new HttpJsonOptions(this);
+    }
   }
 }

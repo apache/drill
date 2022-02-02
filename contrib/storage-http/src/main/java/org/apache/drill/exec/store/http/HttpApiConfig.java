@@ -22,35 +22,26 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.experimental.Accessors;
-import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-@Slf4j
-@Builder
-@Getter
-@Accessors(fluent = true)
-@EqualsAndHashCode
-@ToString
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonDeserialize(builder = HttpApiConfig.HttpApiConfigBuilder.class)
 public class HttpApiConfig {
+  private static final Logger logger = LoggerFactory.getLogger(HttpApiConfig.class);
 
   protected static final String DEFAULT_INPUT_FORMAT = "json";
   protected static final String CSV_INPUT_FORMAT = "csv";
@@ -111,13 +102,133 @@ public class HttpApiConfig {
   @JsonInclude
   @JsonProperty
   private final boolean verifySSLCert;
-  @Getter(AccessLevel.NONE)
   private final CredentialsProvider credentialsProvider;
   @JsonProperty
   private final HttpPaginatorConfig paginator;
 
-  @Getter(AccessLevel.NONE)
   protected boolean directCredentials;
+
+  public static HttpApiConfigBuilder builder() {
+    return new HttpApiConfigBuilder();
+  }
+
+  public String url() {
+    return this.url;
+  }
+
+  public boolean requireTail() {
+    return this.requireTail;
+  }
+
+  public String method() {
+    return this.method;
+  }
+
+  public String postBody() {
+    return this.postBody;
+  }
+
+  public Map<String, String> headers() {
+    return this.headers;
+  }
+
+  public List<String> params() {
+    return this.params;
+  }
+
+  public String dataPath() {
+    return this.dataPath;
+  }
+
+  public String authType() {
+    return this.authType;
+  }
+
+  public String inputType() {
+    return this.inputType;
+  }
+
+  public int xmlDataLevel() {
+    return this.xmlDataLevel;
+  }
+
+  public String limitQueryParam() {
+    return this.limitQueryParam;
+  }
+
+  public boolean errorOn400() {
+    return this.errorOn400;
+  }
+
+  public HttpJsonOptions jsonOptions() {
+    return this.jsonOptions;
+  }
+
+  public boolean verifySSLCert() {
+    return this.verifySSLCert;
+  }
+
+  public HttpPaginatorConfig paginator() {
+    return this.paginator;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    HttpApiConfig that = (HttpApiConfig) o;
+    return requireTail == that.requireTail
+      && xmlDataLevel == that.xmlDataLevel
+      && errorOn400 == that.errorOn400
+      && verifySSLCert == that.verifySSLCert
+      && directCredentials == that.directCredentials
+      && Objects.equals(url, that.url)
+      && Objects.equals(method, that.method)
+      && Objects.equals(postBody, that.postBody)
+      && Objects.equals(headers, that.headers)
+      && Objects.equals(params, that.params)
+      && Objects.equals(dataPath, that.dataPath)
+      && Objects.equals(authType, that.authType)
+      && Objects.equals(inputType, that.inputType)
+      && Objects.equals(limitQueryParam, that.limitQueryParam)
+      && Objects.equals(jsonOptions, that.jsonOptions)
+      && Objects.equals(credentialsProvider, that.credentialsProvider)
+      && Objects.equals(paginator, that.paginator);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(url, requireTail, method, postBody, headers, params, dataPath,
+      authType, inputType, xmlDataLevel, limitQueryParam, errorOn400, jsonOptions, verifySSLCert,
+      credentialsProvider, paginator, directCredentials);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("url", url)
+      .field("requireTail", requireTail)
+      .field("method", method)
+      .field("postBody", postBody)
+      .field("headers", headers)
+      .field("params", params)
+      .field("dataPath", dataPath)
+      .field("authType", authType)
+      .field("inputType", inputType)
+      .field("xmlDataLevel", xmlDataLevel)
+      .field("limitQueryParam", limitQueryParam)
+      .field("errorOn400", errorOn400)
+      .field("jsonOptions", jsonOptions)
+      .field("verifySSLCert", verifySSLCert)
+      .field("credentialsProvider", credentialsProvider)
+      .field("paginator", paginator)
+      .field("directCredentials", directCredentials)
+      .toString();
+  }
 
   public enum HttpMethod {
     /**
@@ -222,28 +333,161 @@ public class HttpApiConfig {
 
   @JsonPOJOBuilder(withPrefix = "")
   public static class HttpApiConfigBuilder {
-    @Getter
-    @Setter
     private String userName;
 
-    @Getter
-    @Setter
     private String password;
 
-    @Getter
-    @Setter
     private boolean requireTail = true;
 
-    @Getter
-    @Setter
     private boolean verifySSLCert = true;
 
-    @Getter
-    @Setter
     private String inputType = DEFAULT_INPUT_FORMAT;
+
+    private String url;
+
+    private String method;
+
+    private String postBody;
+
+    private Map<String, String> headers;
+
+    private List<String> params;
+
+    private String dataPath;
+
+    private String authType;
+
+    private int xmlDataLevel;
+
+    private String limitQueryParam;
+
+    private boolean errorOn400;
+
+    private HttpJsonOptions jsonOptions;
+
+    private CredentialsProvider credentialsProvider;
+
+    private HttpPaginatorConfig paginator;
+
+    private boolean directCredentials;
 
     public HttpApiConfig build() {
       return new HttpApiConfig(this);
+    }
+
+    public String userName() {
+      return this.userName;
+    }
+
+    public String password() {
+      return this.password;
+    }
+
+    public boolean requireTail() {
+      return this.requireTail;
+    }
+
+    public boolean verifySSLCert() {
+      return this.verifySSLCert;
+    }
+
+    public String inputType() {
+      return this.inputType;
+    }
+
+    public HttpApiConfigBuilder userName(String userName) {
+      this.userName = userName;
+      return this;
+    }
+
+    public HttpApiConfigBuilder password(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public HttpApiConfigBuilder requireTail(boolean requireTail) {
+      this.requireTail = requireTail;
+      return this;
+    }
+
+    public HttpApiConfigBuilder verifySSLCert(boolean verifySSLCert) {
+      this.verifySSLCert = verifySSLCert;
+      return this;
+    }
+
+    public HttpApiConfigBuilder inputType(String inputType) {
+      this.inputType = inputType;
+      return this;
+    }
+
+    public HttpApiConfigBuilder url(String url) {
+      this.url = url;
+      return this;
+    }
+
+    public HttpApiConfigBuilder method(String method) {
+      this.method = method;
+      return this;
+    }
+
+    public HttpApiConfigBuilder postBody(String postBody) {
+      this.postBody = postBody;
+      return this;
+    }
+
+    public HttpApiConfigBuilder headers(Map<String, String> headers) {
+      this.headers = headers;
+      return this;
+    }
+
+    public HttpApiConfigBuilder params(List<String> params) {
+      this.params = params;
+      return this;
+    }
+
+    public HttpApiConfigBuilder dataPath(String dataPath) {
+      this.dataPath = dataPath;
+      return this;
+    }
+
+    public HttpApiConfigBuilder authType(String authType) {
+      this.authType = authType;
+      return this;
+    }
+
+    public HttpApiConfigBuilder xmlDataLevel(int xmlDataLevel) {
+      this.xmlDataLevel = xmlDataLevel;
+      return this;
+    }
+
+    public HttpApiConfigBuilder limitQueryParam(String limitQueryParam) {
+      this.limitQueryParam = limitQueryParam;
+      return this;
+    }
+
+    public HttpApiConfigBuilder errorOn400(boolean errorOn400) {
+      this.errorOn400 = errorOn400;
+      return this;
+    }
+
+    public HttpApiConfigBuilder jsonOptions(HttpJsonOptions jsonOptions) {
+      this.jsonOptions = jsonOptions;
+      return this;
+    }
+
+    public HttpApiConfigBuilder credentialsProvider(CredentialsProvider credentialsProvider) {
+      this.credentialsProvider = credentialsProvider;
+      return this;
+    }
+
+    public HttpApiConfigBuilder paginator(HttpPaginatorConfig paginator) {
+      this.paginator = paginator;
+      return this;
+    }
+
+    public HttpApiConfigBuilder directCredentials(boolean directCredentials) {
+      this.directCredentials = directCredentials;
+      return this;
     }
   }
 }

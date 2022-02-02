@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.alias;
 
-import lombok.AllArgsConstructor;
-
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -27,11 +25,15 @@ import java.util.function.Supplier;
  * Aliases table that fallback user aliases calls to public aliases
  * if alias not found in user aliases table.
  */
-@AllArgsConstructor
 public class ResolvedAliases implements Aliases {
   private final Aliases userAliases;
 
   private final Supplier<Aliases> publicAliases;
+
+  public ResolvedAliases(Aliases userAliases, Supplier<Aliases> publicAliases) {
+    this.userAliases = userAliases;
+    this.publicAliases = publicAliases;
+  }
 
   @Override
   public String getKey() {

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.iceberg;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.TimedCallable;
 import org.apache.drill.exec.store.schedule.EndpointByteMap;
@@ -31,6 +30,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.iceberg.BaseCombinedScanTask;
 import org.apache.iceberg.CombinedScanTask;
 import org.apache.iceberg.FileScanTask;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,8 +42,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-@Slf4j
 public class IcebergBlockMapBuilder {
+
+  private static final Logger logger = LoggerFactory.getLogger(IcebergBlockMapBuilder.class);
 
   private final Map<FileScanTask, RangeMap<Long, BlockLocation>> blockMapMap;
 

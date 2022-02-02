@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.plan.rule;
 
-import lombok.Getter;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTrait;
@@ -40,7 +39,6 @@ import java.util.function.Predicate;
  */
 public abstract class PluginConverterRule extends ConverterRule {
 
-  @Getter
   private final PluginImplementor pluginImplementor;
 
   protected PluginConverterRule(Class<? extends RelNode> clazz,

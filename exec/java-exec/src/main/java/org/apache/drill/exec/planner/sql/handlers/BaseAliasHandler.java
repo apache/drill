@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.exceptions.UserException;
@@ -26,11 +25,14 @@ import org.apache.drill.exec.alias.AliasRegistry;
 import org.apache.drill.exec.alias.AliasTarget;
 import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-@Slf4j
 public class BaseAliasHandler extends DefaultSqlHandler {
+
+  private static final Logger logger = LoggerFactory.getLogger(BaseAliasHandler.class);
 
   public BaseAliasHandler(SqlHandlerConfig config) {
     super(config);

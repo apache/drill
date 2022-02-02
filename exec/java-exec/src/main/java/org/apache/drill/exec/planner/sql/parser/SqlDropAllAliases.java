@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.val;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
@@ -35,7 +32,6 @@ import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
 public class SqlDropAllAliases extends DrillSqlCall {
 
   private final SqlNode isPublic;
@@ -54,12 +50,15 @@ public class SqlDropAllAliases extends DrillSqlCall {
     }
   };
 
-  @Builder
-  private SqlDropAllAliases(SqlParserPos pos, SqlNode isPublic, SqlNode aliasKind, SqlNode user) {
-    super(pos);
-    this.isPublic = isPublic;
-    this.aliasKind = aliasKind;
-    this.user = user;
+  private SqlDropAllAliases(SqlDropAllAliasesBuilder builder) {
+    super(builder.pos);
+    this.isPublic = builder.isPublic;
+    this.aliasKind = builder.aliasKind;
+    this.user = builder.user;
+  }
+
+  public static SqlDropAllAliasesBuilder builder() {
+    return new SqlDropAllAliasesBuilder();
   }
 
   @Override
@@ -69,7 +68,7 @@ public class SqlDropAllAliases extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    val opList = new ArrayList<SqlNode>();
+    List<SqlNode> opList = new ArrayList<>();
     opList.add(aliasKind);
     opList.add(isPublic);
     opList.add(user);
@@ -98,5 +97,51 @@ public class SqlDropAllAliases extends DrillSqlCall {
   @Override
   public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
     return new DropAllAliasesHandler(config);
+  }
+
+  public SqlNode getIsPublic() {
+    return this.isPublic;
+  }
+
+  public SqlNode getAliasKind() {
+    return this.aliasKind;
+  }
+
+  public SqlNode getUser() {
+    return this.user;
+  }
+
+  public static class SqlDropAllAliasesBuilder {
+    private SqlParserPos pos;
+
+    private SqlNode isPublic;
+
+    private SqlNode aliasKind;
+
+    private SqlNode user;
+
+    public SqlDropAllAliasesBuilder pos(SqlParserPos pos) {
+      this.pos = pos;
+      return this;
+    }
+
+    public SqlDropAllAliasesBuilder isPublic(SqlNode isPublic) {
+      this.isPublic = isPublic;
+      return this;
+    }
+
+    public SqlDropAllAliasesBuilder aliasKind(SqlNode aliasKind) {
+      this.aliasKind = aliasKind;
+      return this;
+    }
+
+    public SqlDropAllAliasesBuilder user(SqlNode user) {
+      this.user = user;
+      return this;
+    }
+
+    public SqlDropAllAliases build() {
+      return new SqlDropAllAliases(this);
+    }
   }
 }
