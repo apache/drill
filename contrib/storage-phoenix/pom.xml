@@ -33,7 +33,7 @@
     <phoenix.version>5.1.2</phoenix.version>
     <!-- Keep the 2.4.2 to reduce dependency conflict -->
     <hbase.minicluster.version>2.4.2</hbase.minicluster.version>
-    <jetty.test.version>9.4.31.v20200723</jetty.test.version>
+    <jetty.test.version>9.4.44.v20210927</jetty.test.version>
   </properties>
   
   <dependencies>
