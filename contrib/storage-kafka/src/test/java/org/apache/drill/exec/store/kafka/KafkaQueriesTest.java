@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -120,7 +121,7 @@ public class KafkaQueriesTest extends KafkaTestBase {
     queryBuilder().sql(query).run();
   }
 
-  private Map<TopicPartition, Long> fetchOffsets(int flag) {
+  private Map<TopicPartition, Long> fetchOffsets(int flag) throws InterruptedException {
     Consumer<byte[], byte[]> kafkaConsumer = null;
     try {
       kafkaConsumer = new KafkaConsumer<>(storagePluginConfig.getKafkaConsumerProps(),
@@ -132,8 +133,8 @@ public class KafkaQueriesTest extends KafkaTestBase {
       // evaluates lazily, seeking to the
       // first/last offset in all partitions only when poll(long) or
       // position(TopicPartition) are called
-      kafkaConsumer.poll(0);
-      Set<TopicPartition> assignments = kafkaConsumer.assignment();
+      kafkaConsumer.poll(Duration.ofSeconds(5));
+      Set<TopicPartition> assignments = waitForConsumerAssignment(kafkaConsumer);
 
       if (flag == -2) {
         // fetch start offsets for each topicPartition
@@ -154,6 +155,25 @@ public class KafkaQueriesTest extends KafkaTestBase {
     } finally {
       embeddedKafkaCluster.registerToClose(kafkaConsumer);
     }
+  }
+
+  private Set<TopicPartition> waitForConsumerAssignment(Consumer consumer) throws InterruptedException {
+    Set<TopicPartition> assignments = consumer.assignment();
+
+    long waitingForAssigmentTimeout = 5000;
+    long timeout = 0;
+
+    while (assignments.isEmpty() && timeout < waitingForAssigmentTimeout) {
+      Thread.sleep(500);
+      timeout += 500;
+      assignments = consumer.assignment();
+    }
+
+    if (timeout >= waitingForAssigmentTimeout) {
+      fail("Consumer assignment wasn't completed within the timeout " + waitingForAssigmentTimeout);
+    }
+
+    return assignments;
   }
 
   @Test
