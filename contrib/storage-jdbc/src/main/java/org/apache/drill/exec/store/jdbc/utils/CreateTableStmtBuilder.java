@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.jdbc.utils;
 
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.dialect.PostgresqlSqlDialect;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.store.jdbc.JdbcRecordWriter;
@@ -28,22 +29,22 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.JDBCType;
 
-public class JdbcQueryBuilder {
-  private static final Logger logger = LoggerFactory.getLogger(JdbcQueryBuilder.class);
+public class CreateTableStmtBuilder {
+  private static final Logger logger = LoggerFactory.getLogger(CreateTableStmtBuilder.class);
   public static final int DEFAULT_VARCHAR_PRECISION = 100;
 
   private static final String CREATE_TABLE_QUERY = "CREATE TABLE %s (";
-  private final StringBuilder createTableQuery;
-  private SqlDialect dialect;
+  private StringBuilder createTableQuery;
+  private final String tableName;
+  private final SqlDialect dialect;
   private StringBuilder columns;
 
-  public JdbcQueryBuilder(String tableName, SqlDialect dialect) {
+  public CreateTableStmtBuilder(String tableName, SqlDialect dialect) {
     if (Strings.isNullOrEmpty(tableName)) {
       throw new UnsupportedOperationException("Table name cannot be empty");
     }
+    this.tableName = tableName;
     this.dialect = dialect;
-    createTableQuery = new StringBuilder();
-    createTableQuery.append(String.format(CREATE_TABLE_QUERY, tableName));
     columns = new StringBuilder();
   }
 
@@ -57,9 +58,18 @@ public class JdbcQueryBuilder {
    */
   public void addColumn(String colName, MinorType type, boolean nullable, int precision, int scale) {
     StringBuilder queryText = new StringBuilder();
-    String jdbcColType = "";
+    String jdbcColTypeName = "";
     try {
-      jdbcColType = JDBCType.valueOf(JdbcRecordWriter.JDBC_TYPE_MAPPINGS.get(type)).getName();
+      Integer jdbcColType = JdbcRecordWriter.JDBC_TYPE_MAPPINGS.get(type);
+      jdbcColTypeName = JDBCType.valueOf(jdbcColType).getName();
+
+      if (dialect instanceof PostgresqlSqlDialect) {
+        // pg data type name special case
+        if (jdbcColType.equals(java.sql.Types.DOUBLE)) {
+          // TODO: Calcite will incorrectly output DOUBLE instead of DOUBLE PRECISION under the pg dialect
+          jdbcColTypeName = "FLOAT";
+        }
+      }
     } catch (NullPointerException e) {
       // JDBC Does not support writing complex fields to databases
       throw UserException.dataWriteError()
@@ -68,10 +78,10 @@ public class JdbcQueryBuilder {
         .build(logger);
     }
 
-    queryText.append(colName).append(" ").append(jdbcColType);
+    queryText.append(colName).append(" ").append(jdbcColTypeName);
 
     // Add precision or scale if applicable
-    if (jdbcColType.equals("VARCHAR")) {
+    if (jdbcColTypeName.equals("VARCHAR")) {
       int max_precision = Math.max(precision, DEFAULT_VARCHAR_PRECISION);
       queryText.append("(").append(max_precision).append(")");
     }
@@ -91,10 +101,16 @@ public class JdbcQueryBuilder {
    * Generates the CREATE TABLE query.
    * @return The create table query.
    */
-  public String getCreateTableQuery() {
+  public CreateTableStmtBuilder build() {
+    createTableQuery = new StringBuilder();
+    createTableQuery.append(String.format(CREATE_TABLE_QUERY, tableName));
     createTableQuery.append(columns);
     createTableQuery.append("\n)");
-    return createTableQuery.toString();
+    return this;
+  }
+
+  public String getCreateTableQuery() {
+    return createTableQuery != null ? createTableQuery.toString() : null;
   }
 
   @Override

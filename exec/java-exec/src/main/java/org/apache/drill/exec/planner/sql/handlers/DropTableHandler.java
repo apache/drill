@@ -68,7 +68,9 @@ public class DropTableHandler extends DefaultSqlHandler {
     } else {
       AbstractSchema drillSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
       Table tableToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, originalTableName);
-      if (tableToDrop == null || tableToDrop.getJdbcTableType() != Schema.TableType.TABLE) {
+      // TableType.OTHER started getting reported for H2 DB when it was upgraded to v2.
+      if (tableToDrop == null || (tableToDrop.getJdbcTableType() != Schema.TableType.TABLE &&
+        tableToDrop.getJdbcTableType() != Schema.TableType.OTHER)) {
         if (dropTableNode.checkTableExistence()) {
           return DirectPlan.createDirectPlan(context, false, String.format("Table [%s] not found", originalTableName));
         } else {

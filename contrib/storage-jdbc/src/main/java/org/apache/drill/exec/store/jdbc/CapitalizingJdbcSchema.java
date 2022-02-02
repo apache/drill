@@ -41,7 +41,7 @@ import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.jdbc.utils.JdbcDDLQueryUtils;
-import org.apache.drill.exec.store.jdbc.utils.JdbcQueryBuilder;
+import org.apache.drill.exec.store.jdbc.utils.CreateTableStmtBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,7 +123,7 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
       @Override
       public Writer getWriter(PhysicalOperator child) throws IOException {
-        String tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(tableName, catalog, schema);
+        String tableWithSchema = CreateTableStmtBuilder.buildCompleteTableName(tableName, catalog, schema);
         return new JdbcWriter(child, tableWithSchema, inner, plugin);
       }
 
@@ -143,7 +143,7 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
         .build(logger);
     }
 
-    String tableWithSchema = JdbcQueryBuilder.buildCompleteTableName(tableName, catalog, schema);
+    String tableWithSchema = CreateTableStmtBuilder.buildCompleteTableName(tableName, catalog, schema);
     String dropTableQuery = String.format("DROP TABLE %s", tableWithSchema);
     dropTableQuery = JdbcDDLQueryUtils.cleanDDLQuery(dropTableQuery, plugin.getDialect());
 

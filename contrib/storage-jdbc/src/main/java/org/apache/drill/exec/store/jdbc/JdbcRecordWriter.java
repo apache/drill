@@ -57,7 +57,7 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.store.AbstractRecordWriter;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.jdbc.utils.JdbcDDLQueryUtils;
-import org.apache.drill.exec.store.jdbc.utils.JdbcQueryBuilder;
+import org.apache.drill.exec.store.jdbc.utils.CreateTableStmtBuilder;
 import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
@@ -102,8 +102,8 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
    * mapped to VARBINARY.
    */
   public static final ImmutableMap<MinorType, Integer> JDBC_TYPE_MAPPINGS = ImmutableMap.<MinorType, Integer>builder()
-      .put(MinorType.FLOAT8, java.sql.Types.NUMERIC)
-      .put(MinorType.FLOAT4, java.sql.Types.NUMERIC)
+      .put(MinorType.FLOAT8, java.sql.Types.DOUBLE)
+      .put(MinorType.FLOAT4, java.sql.Types.FLOAT)
       .put(MinorType.TINYINT, java.sql.Types.TINYINT)
       .put(MinorType.SMALLINT, java.sql.Types.SMALLINT)
       .put(MinorType.INT, java.sql.Types.INTEGER)
@@ -151,7 +151,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     MinorType type;
     String sql;
     boolean nullable = false;
-    JdbcQueryBuilder queryBuilder = new JdbcQueryBuilder(tableName, dialect);
+    CreateTableStmtBuilder queryBuilder = new CreateTableStmtBuilder(tableName, dialect);
 
     for (MaterializedField field : schema) {
       columnName = JdbcDDLQueryUtils.addBackTicksToField(field.getName());
@@ -174,7 +174,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
       queryBuilder.addColumn(columnName, field.getType().getMinorType(), nullable, precision, scale);
     }
 
-    sql = queryBuilder.getCreateTableQuery();
+    sql = queryBuilder.build().getCreateTableQuery();
     sql = JdbcDDLQueryUtils.cleanDDLQuery(sql, dialect);
     logger.debug("Final query: {}", sql);
 

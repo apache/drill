@@ -33,7 +33,7 @@
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
-    <jdbc-all-jar.maxsize>50000000</jdbc-all-jar.maxsize>
+    <jdbc-all-jar.maxsize>49300000</jdbc-all-jar.maxsize>
   </properties>
 
   <dependencies>
@@ -315,7 +315,7 @@
           <!--dependencyReducedPomLocation>${project.build.directory}/generated/shade/dependency-reduced-pom.xml</dependencyReducedPomLocation-->
           <minimizeJar>false</minimizeJar>
 
-	  <!-- Exclude dependencies at artifact level. Format is "groupId:artifactId[[:type]:classifier]" -->
+    <!-- Exclude dependencies at artifact level. Format is "groupId:artifactId[[:type]:classifier]" -->
           <artifactSet>
             <includes>
               <include>*:*</include>
@@ -344,9 +344,6 @@
               <exclude>javax.inject:*</exclude>
               <exclude>com.beust:*</exclude>
               <exclude>jline:*</exclude>
-              <exclude>io.netty:netty:jar:3.7.0.Final</exclude>
-              <exclude>io.netty:netty-transport-native-epoll:*</exclude>
-              <exclude>io.netty:netty-transport-native-unix-common:*</exclude>
               <exclude>org.xerial.snappy:*</exclude>
               <exclude>org.apache.avro:*</exclude>
               <exclude>org.tukaani:*</exclude>
@@ -367,10 +364,15 @@
               <exclude>commons-io:commons-io</exclude>
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
-              <exclude>io.netty:netty-tcnative:jar:*</exclude>
               <exclude>com.google.code.findbugs:jsr305:*</exclude>
               <exclude>com.esri.geometry:esri-geometry-api:*</exclude>
               <exclude>dnsjava:dnsjava:jar:*</exclude>
+              <exclude>io.netty:netty-tcnative:jar:*</exclude>
+              <exclude>io.netty:netty-tcnative-classes:jar:*</exclude>
+              <exclude>com.bettercloud:vault-java-driver:jar:*</exclude>
+              <exclude>com.tdunning:t-digest:jar:*</exclude>
+              <exclude>io.airlift:aircompressor:jar:*</exclude>
+              <exclude>com.rdblue:brotli-codec:jar:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>
@@ -630,7 +632,6 @@
                     <exclude>javax.inject:*</exclude>
                     <exclude>com.beust:*</exclude>
                     <exclude>jline:*</exclude>
-                    <exclude>io.netty:netty:jar:3.7.0.Final</exclude>
                     <exclude>org.xerial.snappy:*</exclude>
                     <exclude>org.apache.avro:*</exclude>
                     <exclude>org.tukaani:*</exclude>
@@ -656,6 +657,13 @@
                     <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
                     <exclude>com.google.code.findbugs:jsr305:*</exclude>
                     <exclude>com.esri.geometry:esri-geometry-api:*</exclude>
+                    <exclude>dnsjava:dnsjava:jar:*</exclude>
+                    <exclude>io.netty:netty-tcnative:jar:*</exclude>
+                    <exclude>io.netty:netty-tcnative-classes:jar:*</exclude>
+                    <exclude>com.bettercloud:vault-java-driver:jar:*</exclude>
+                    <exclude>com.tdunning:t-digest:jar:*</exclude>
+                    <exclude>io.airlift:aircompressor:jar:*</exclude>
+                    <exclude>com.rdblue:brotli-codec:jar:*</exclude>
                   </excludes>
                 </artifactSet>
                 <relocations>

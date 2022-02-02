@@ -20,6 +20,7 @@ package io.netty.buffer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
@@ -858,7 +859,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
       if (srcIndex == 0 && src.capacity() == length) {
         udle.setBytes(index + offset, src);
       } else {
-        ByteBuffer newBuf = src.duplicate();
+        Buffer newBuf = src.duplicate();
         newBuf.position(srcIndex);
         newBuf.limit(srcIndex + length);
         udle.setBytes(index + offset, src);

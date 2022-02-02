@@ -34,7 +34,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.FileReader;
-import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -101,7 +100,6 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
 
   @Test
   public void validateResult() throws Exception {
-    // Skip date, time, and timestamp types since h2 mangles these due to improper timezone support.
     testBuilder()
         .sqlQuery(
             "select person_id, first_name, last_name, address, city, state, zip, json, bigint_field, smallint_field, " +
@@ -112,18 +110,18 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
             "bigint_field", "smallint_field", "numeric_field", "boolean_field", "double_field", "float_field",
             "real_field", "time_field", "timestamp_field", "date_field", "clob_field")
         .baselineValues(1, "first_name_1", "last_name_1", "1401 John F Kennedy Blvd",   "Philadelphia",     "PA", 19107,
-            "{ a : 5, b : 6 }", 123456L, 1, new BigDecimal("10.01"), false, 1.0, 1.1, 111.00,
+            "{ a : 5, b : 6 }", 123456L, 1, 10.01, false, 1.0, 1.1f, 111.00,
             DateUtility.parseLocalTime("13:00:01.0"), DateUtility.parseLocalDateTime("2012-02-29 13:00:01.0"),
             DateUtility.parseLocalDate("2012-02-29"), "some clob data 1")
         .baselineValues(2, "first_name_2", "last_name_2", "One Ferry Building", "San Francisco", "CA", 94111,
-            "{ foo : \"abc\" }", 95949L, 2, new BigDecimal("20.02"), true, 2.0, 2.1, 222.00,
+            "{ foo : \"abc\" }", 95949L, 2, 20.02, true, 2.0, 2.1f, 222.00,
             DateUtility.parseLocalTime("23:59:59.0"),  DateUtility.parseLocalDateTime("1999-09-09 23:59:59.0"),
             DateUtility.parseLocalDate("1999-09-09"), "some more clob data")
         .baselineValues(3, "first_name_3", "last_name_3", "176 Bowery", "New York", "NY", 10012, "{ z : [ 1, 2, 3 ] }",
-            45456L, 3, new BigDecimal("30.04"), true, 3.0, 3.1, 333.00, DateUtility.parseLocalTime("11:34:21.0"),
+            45456L, 3, 30.04, true, 3.0, 3.1f, 333.00, DateUtility.parseLocalTime("11:34:21.0"),
             DateUtility.parseLocalDateTime("2011-10-30 11:34:21.0"), DateUtility.parseLocalDate("2011-10-30"), "clobber")
         .baselineValues(4, null, null, "2 15th St NW", "Washington", "DC", 20007, "{ z : { a : 1, b : 2, c : 3 } }",
-            -67L, 4, new BigDecimal("40.04"), false, 4.0, 4.1, 444.00, DateUtility.parseLocalTime("16:00:01.0"),
+            -67L, 4, 40.04, false, 4.0, 4.1f, 444.00, DateUtility.parseLocalTime("16:00:01.0"),
             DateUtility.parseLocalDateTime("2015-06-01 16:00:01.0"),  DateUtility.parseLocalDate("2015-06-01"), "xxx")
         .baselineValues(5, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null)
@@ -275,7 +273,7 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
     testBuilder()
         .sqlQuery(sql)
         .unOrdered()
-        .expectsNumRecords(33)
+        .expectsNumRecords(35)
         .csvBaselineFile("h2_information_schema_tables.csv")
         .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
         .go();
@@ -288,7 +286,7 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("table_type")
-        .baselineValuesForSingleColumn("SYSTEM TABLE", "TABLE")
+        .baselineValuesForSingleColumn("SYSTEM TABLE", "TABLE", "VIEW", "OTHER")
         .go();
   }
 

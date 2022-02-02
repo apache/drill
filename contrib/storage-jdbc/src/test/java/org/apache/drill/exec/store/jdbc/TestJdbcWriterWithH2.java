@@ -57,6 +57,10 @@ import static org.junit.Assert.fail;
 
 public class TestJdbcWriterWithH2 extends ClusterTest {
 
+  public static final String TEST_TABLE = "h2.tmp.drill_h2_test.test_table";
+
+  public static final String DROP_TEST_TABLE = String.format("DROP TABLE %s", TEST_TABLE);
+
   @BeforeClass
   public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
@@ -84,8 +88,7 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
     jdbcStorageConfigNoWrite.setEnabled(true);
 
     cluster.defineStoragePlugin("h2", jdbcStorageConfig);
-    cluster.defineStoragePlugin("h2o", jdbcStorageConfig);
-    cluster.defineStoragePlugin("h2o_unwritable", jdbcStorageConfigNoWrite);
+    cluster.defineStoragePlugin("h2_unwritable", jdbcStorageConfigNoWrite);
 
     EnumMockPlugin.EnumMockStoragePluginConfig config = new EnumMockPlugin.EnumMockStoragePluginConfig();
     config.setEnabled(true);
@@ -94,36 +97,37 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
 
   @Test
   public void testBasicCTAS() throws Exception {
-    String query = "CREATE TABLE h2.tmp.`drill_h2_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    String query = String.format("CREATE TABLE %s (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))", TEST_TABLE);
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
-    assertTrue(insertResults.succeeded());
 
-    // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM h2.tmp.`drill_h2_test`.`test_table`";
-    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
+    try {
+      assertTrue(insertResults.succeeded());
 
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
-      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
-      .buildSchema();
+      // Query the table to see if the insertion was successful
+      String testQuery = String.format("SELECT * FROM %s", TEST_TABLE);
+      DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1L, 2L)
-      .addRow(3L, 4L)
-      .build();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
+        .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+        .buildSchema();
 
-    RowSetUtilities.verify(expected, results);
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1L, 2L)
+        .addRow(3L, 4L)
+        .build();
 
-    // Now drop the table
-    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`test_table`";
-    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
-    assertTrue(dropResults.succeeded());
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      QuerySummary dropResults = queryBuilder().sql(DROP_TEST_TABLE).run();
+      assertTrue(dropResults.succeeded());
+    }
   }
 
   @Test
   public void testBasicCTASWithDataTypes() throws Exception {
-    String query = "CREATE TABLE h2.tmp.`drill_h2_test`.`data_types` AS " +
+    String query = String.format("CREATE TABLE %s AS ", TEST_TABLE) +
       "SELECT CAST(1 AS INTEGER) AS int_field," +
       "CAST(2 AS BIGINT) AS bigint_field," +
       "CAST(3.0 AS FLOAT) AS float4_field," +
@@ -137,90 +141,91 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
-    // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM  h2.tmp.`drill_h2_test`.`data_types`";
-    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
+    try {
+      // Query the table to see if the insertion was successful
+      String testQuery = String.format("SELECT * FROM  %s", TEST_TABLE);
+      DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("int_field", MinorType.INT, 10)
-      .addNullable("bigint_field", MinorType.BIGINT, 19)
-      .addNullable("float4_field", MinorType.VARDECIMAL, 38, 37)
-      .addNullable("float8_field", MinorType.VARDECIMAL, 38, 37)
-      .addNullable("varchar_field", MinorType.VARCHAR, 38)
-      .addNullable("date_field", MinorType.DATE, 10)
-      .addNullable("time_field", MinorType.TIME, 8)
-      .addNullable("timestamp_field", MinorType.TIMESTAMP, 26, 8)
-      .addNullable("boolean_field", MinorType.BIT, 1)
-      .buildSchema();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("int_field", MinorType.INT, 32)
+        .addNullable("bigint_field", MinorType.BIGINT, 38)
+        .addNullable("float4_field", MinorType.FLOAT4, 38)
+        .addNullable("float8_field", MinorType.FLOAT8, 38)
+        .addNullable("varchar_field", MinorType.VARCHAR, 38)
+        .addNullable("date_field", MinorType.DATE, 10)
+        .addNullable("time_field", MinorType.TIME, 8)
+        .addNullable("timestamp_field", MinorType.TIMESTAMP, 26, 6)
+        .addNullable("boolean_field", MinorType.BIT, 1)
+        .buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2021-01-01"), LocalTime.parse("12:00"), 1451516155000L, true)
-      .build();
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1, 2L, 3.0, 4.0, "5.0", LocalDate.parse("2021-01-01"), LocalTime.parse("12:00"), 1451516155000L, true)
+        .build();
 
-    RowSetUtilities.verify(expected, results);
-
-    // Now drop the table
-    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`data_types`";
-    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
-    assertTrue(dropResults.succeeded());
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      QuerySummary dropResults = queryBuilder().sql(DROP_TEST_TABLE).run();
+      assertTrue(dropResults.succeeded());
+    }
   }
 
   @Test
   public void testBasicCTASWithSpacesInFieldNames() throws Exception {
-    String query = "CREATE TABLE h2.tmp.`drill_h2_test`.`test table` (`My id`, `My name`) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    String query = String.format("CREATE TABLE %s (`My id`, `My name`) AS SELECT * FROM (VALUES(1,2), (3,4))", TEST_TABLE);
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
-    // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM h2.tmp.`drill_h2_test`.`test table`";
-    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
+    try {
+      // Query the table to see if the insertion was successful
+      String testQuery = String.format("SELECT * FROM %s", TEST_TABLE);
+      DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("My id", MinorType.BIGINT, DataMode.OPTIONAL)
-      .add("My name", MinorType.BIGINT, DataMode.OPTIONAL)
-      .buildSchema();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("My id", MinorType.BIGINT, DataMode.OPTIONAL)
+        .add("My name", MinorType.BIGINT, DataMode.OPTIONAL)
+        .buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1L, 2L)
-      .addRow(3L, 4L)
-      .build();
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1L, 2L)
+        .addRow(3L, 4L)
+        .build();
 
-    RowSetUtilities.verify(expected, results);
-
-    // Now drop the table
-    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`test table`";
-    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
-    assertTrue(dropResults.succeeded());
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      QuerySummary dropResults = queryBuilder().sql(DROP_TEST_TABLE).run();
+      assertTrue(dropResults.succeeded());
+    }
   }
 
   @Test
   public void testCTASFromFileWithNulls() throws Exception {
-    String sql = "CREATE TABLE h2.tmp.`drill_h2_test`.`t1` AS SELECT int_field, float_field, varchar_field, boolean_field FROM cp.`json/dataTypes.json`";
+    String sql = String.format("CREATE TABLE %s AS SELECT int_field, float_field, varchar_field, boolean_field FROM cp.`json/dataTypes.json`", TEST_TABLE);
     QuerySummary insertResults = queryBuilder().sql(sql).run();
     assertTrue(insertResults.succeeded());
 
-    sql = "SELECT * FROM h2.tmp.`drill_h2_test`.`t1`";
-    DirectRowSet results = queryBuilder().sql(sql).rowSet();
+    try {
+      sql = String.format("SELECT * FROM %s", TEST_TABLE);
+      DirectRowSet results = queryBuilder().sql(sql).rowSet();
 
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("int_field", MinorType.BIGINT, 19)
-      .addNullable("float_field", MinorType.VARDECIMAL, 38, 37)
-      .addNullable("varchar_field", MinorType.VARCHAR, 38)
-      .addNullable("boolean_field", MinorType.BIT, 1)
-      .build();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("int_field", MinorType.BIGINT, 38)
+        .addNullable("float_field", MinorType.FLOAT8, 38)
+        .addNullable("varchar_field", MinorType.VARCHAR, 38)
+        .addNullable("boolean_field", MinorType.BIT, 1)
+        .build();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1L, 1.0, "foo1", true)
-      .addRow(null, null, null, null)
-      .addRow(2L, 2.0, "foo2", false)
-      .build();
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1L, 1.0, "foo1", true)
+        .addRow(null, null, null, null)
+        .addRow(2L, 2.0, "foo2", false)
+        .build();
 
-    RowSetUtilities.verify(expected, results);
-
-    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`t1`";
-    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
-    assertTrue(dropResults.succeeded());
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      QuerySummary dropResults = queryBuilder().sql(DROP_TEST_TABLE).run();
+      assertTrue(dropResults.succeeded());
+    }
   }
 
   @Test
@@ -241,93 +246,99 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
-    // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM h2.tmp.`drill_h2_test`.`test table`";
-    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
+    try {
+      // Query the table to see if the insertion was successful
+      String testQuery = "SELECT * FROM h2.tmp.`drill_h2_test`.`test table`";
+      DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
-      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
-      .buildSchema();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
+        .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+        .buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1L, 2L)
-      .addRow(3L, 4L)
-      .build();
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1L, 2L)
+        .addRow(3L, 4L)
+        .build();
 
-    RowSetUtilities.verify(expected, results);
-
-    // Now drop the table
-    String dropQuery = "DROP TABLE  h2.tmp.`drill_h2_test`.`test table`";
-    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
-    assertTrue(dropResults.succeeded());
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      String dropQuery = "DROP TABLE  h2.tmp.`drill_h2_test`.`test table`";
+      QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
+      assertTrue(dropResults.succeeded());
+    }
   }
 
   @Test
   public void testBasicCTASIfNotExists() throws Exception {
-    String query = "CREATE TABLE IF NOT EXISTS h2.tmp.`drill_h2_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    String query = String.format("CREATE TABLE IF NOT EXISTS %s (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))", TEST_TABLE);
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
-    // Query the table to see if the insertion was successful
-    String testQuery = "SELECT * FROM  h2.tmp.`drill_h2_test`.`test_table`";
-    DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
+    try {
+      // Query the table to see if the insertion was successful
+      String testQuery = String.format("SELECT * FROM %s", TEST_TABLE);
+      DirectRowSet results = queryBuilder().sql(testQuery).rowSet();
 
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
-      .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
-      .buildSchema();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("ID", MinorType.BIGINT, DataMode.OPTIONAL)
+        .add("NAME", MinorType.BIGINT, DataMode.OPTIONAL)
+        .buildSchema();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(1L, 2L)
-      .addRow(3L, 4L)
-      .build();
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1L, 2L)
+        .addRow(3L, 4L)
+        .build();
 
-    RowSetUtilities.verify(expected, results);
-
-    // Now drop the table
-    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`test_table`";
-    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
-    assertTrue(dropResults.succeeded());
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      QuerySummary dropResults = queryBuilder().sql(DROP_TEST_TABLE).run();
+      assertTrue(dropResults.succeeded());
+    }
   }
 
   @Test
   public void testCTASWithDuplicateTable() throws Exception {
-    String query = "CREATE TABLE h2.tmp.`drill_h2_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+    String query = String.format("CREATE TABLE %s (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))", TEST_TABLE);
     // Create the table and insert the values
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
-    // Run the query again, should fail.
     try {
-      queryBuilder().sql(query).run();
-      fail();
-    } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("VALIDATION ERROR"));
+      // Run the query again, should fail.
+      try {
+        queryBuilder().sql(query).run();
+        fail();
+      } catch (UserRemoteException e) {
+        assertTrue(e.getMessage().contains("VALIDATION ERROR"));
+      }
+
+      // Try again with IF NOT EXISTS, Should not do anything, but not throw an exception
+      query = String.format("CREATE TABLE IF NOT EXISTS %s (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))", TEST_TABLE);
+      DirectRowSet results = queryBuilder().sql(query).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("ok", MinorType.BIT)
+        .add("summary", MinorType.VARCHAR, DataMode.OPTIONAL)
+        .buildSchema();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(false, "A table or view with given name [test_table] already exists in schema [h2.tmp.drill_h2_test]")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      QuerySummary dropResults = queryBuilder().sql(DROP_TEST_TABLE).run();
+      assertTrue(dropResults.succeeded());
     }
-
-    // Try again with IF NOT EXISTS, Should not do anything, but not throw an exception
-    query = "CREATE TABLE IF NOT EXISTS h2.tmp.`drill_h2_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
-    DirectRowSet results = queryBuilder().sql(query).rowSet();
-
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .add("ok", MinorType.BIT)
-      .add("summary", MinorType.VARCHAR, DataMode.OPTIONAL)
-      .buildSchema();
-
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(false, "A table or view with given name [test_table] already exists in schema [h2.tmp.drill_h2_test]")
-      .build();
-
-    RowSetUtilities.verify(expected, results);
   }
 
   @Test
   public void testWithComplexData() throws Exception {
     // JDBC Writer does not support writing complex types at this time.
     try {
-      String sql = "CREATE TABLE h2.tmp.`drill_h2_test`.`complex` AS SELECT * FROM cp.`json/complexData.json`";
+      String sql = String.format("CREATE TABLE %s AS SELECT * FROM cp.`json/complexData.json`", TEST_TABLE);
       queryBuilder().sql(sql).run();
       fail();
     } catch (UserRemoteException e) {
@@ -337,34 +348,35 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
 
   @Test
   public void testCTASFromFileWithUglyData() throws Exception {
-    String sql = "CREATE TABLE h2.tmp.`drill_h2_test`.`t2` AS SELECT ugly1, ugly2 FROM cp.`json/uglyData.json`";
+    String sql = String.format("CREATE TABLE %s AS SELECT ugly1, ugly2 FROM cp.`json/uglyData.json`", TEST_TABLE);
     QuerySummary insertResults = queryBuilder().sql(sql).run();
     assertTrue(insertResults.succeeded());
 
-    sql = "SELECT * FROM h2.tmp.`drill_h2_test`.`t2`";
-    DirectRowSet results = queryBuilder().sql(sql).rowSet();
+    try {
+      sql = String.format("SELECT * FROM %s", TEST_TABLE);
+      DirectRowSet results = queryBuilder().sql(sql).rowSet();
 
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("ugly1", MinorType.VARCHAR, 38)
-      .addNullable("ugly2", MinorType.VARCHAR, 38)
-      .build();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("ugly1", MinorType.VARCHAR, 38)
+        .addNullable("ugly2", MinorType.VARCHAR, 38)
+        .build();
 
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("O'Malley", "Abraham Lincoln's best speech started with: \"Four score and seven years ago...")
-      .build();
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("O'Malley", "Abraham Lincoln's best speech started with: \"Four score and seven years ago...")
+        .build();
 
-    RowSetUtilities.verify(expected, results);
-
-    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`t2`";
-    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
-    assertTrue(dropResults.succeeded());
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      QuerySummary dropResults = queryBuilder().sql(DROP_TEST_TABLE).run();
+      assertTrue(dropResults.succeeded());
+    }
   }
 
   @Test
   public void testWithArrayField() throws Exception {
     // JDBC Writer does not support writing arrays at this time.
     try {
-      String sql = "CREATE TABLE h2.tmp.`drill_h2_test`.`complex` AS SELECT * FROM cp.`json/repeatedData.json`";
+      String sql = String.format("CREATE TABLE %s AS SELECT * FROM cp.`json/repeatedData.json`", TEST_TABLE);
       queryBuilder().sql(sql).run();
       fail();
     } catch (UserRemoteException e) {
@@ -374,19 +386,19 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
 
   @Test
   public void testWithLargeFile() throws Exception {
-    String query = "CREATE TABLE h2.tmp.`drill_h2_test`.`t2` (id,first_name,last_name,email,gender,ip_address) AS " +
-      "SELECT id,first_name,last_name,email,gender,ip_address FROM cp.`csv/large_csv.csvh`";
+    String query = String.format("CREATE TABLE %s (id,first_name,last_name,email,gender,ip_address) AS " +
+      "SELECT id,first_name,last_name,email,gender,ip_address FROM cp.`csv/large_csv.csvh`", TEST_TABLE);
     QuerySummary insertResults = queryBuilder().sql(query).run();
     assertTrue(insertResults.succeeded());
 
-    query = "SELECT COUNT(*) FROM h2.tmp.`drill_h2_test`.`t2`";
-    long rowCount = queryBuilder().sql(query).singletonLong();
-    assertEquals(6000, rowCount);
-
-    // Now drop the table
-    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`t2`";
-    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
-    assertTrue(dropResults.succeeded());
+    try {
+      query = String.format("SELECT COUNT(*) FROM %s", TEST_TABLE);
+      long rowCount = queryBuilder().sql(query).singletonLong();
+      assertEquals(6000, rowCount);
+    } finally {
+      QuerySummary dropResults = queryBuilder().sql(DROP_TEST_TABLE).run();
+      assertTrue(dropResults.succeeded());
+    }
   }
 
   @Test
@@ -403,42 +415,43 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
     long resultsCount = queryBuilder().sql(testQuery).singletonLong();
     assertEquals(100000, resultsCount);
 
-    String ctasQuery = "CREATE TABLE h2.tmp.`drill_h2_test`.`t2` AS " +
+    String ctasQuery = String.format("CREATE TABLE %s AS ", TEST_TABLE) +
       "SELECT * FROM dfs.`csv/very_large_file.csvh`";
     QuerySummary insertResults = queryBuilder().sql(ctasQuery).run();
     assertTrue(insertResults.succeeded());
 
-    // Query the table to see if the insertion was successful
-    testQuery = "SELECT COUNT(*) FROM h2.tmp.`drill_h2_test`.`t2`";
-    resultsCount = queryBuilder().sql(testQuery).singletonLong();
-    assertEquals(100000, resultsCount);
+    try {
+      // Query the table to see if the insertion was successful
+      testQuery = String.format("SELECT COUNT(*) FROM %s", TEST_TABLE);
+      resultsCount = queryBuilder().sql(testQuery).singletonLong();
+      assertEquals(100000, resultsCount);
+    } finally {
+      QuerySummary dropResults = queryBuilder().sql(DROP_TEST_TABLE).run();
+      assertTrue(dropResults.succeeded());
 
-    String dropQuery = "DROP TABLE h2.tmp.`drill_h2_test`.`t2`";
-    QuerySummary dropResults = queryBuilder().sql(dropQuery).run();
-    assertTrue(dropResults.succeeded());
-
-    boolean deletedFile = JdbcTestUtils.deleteCsvFile(String.valueOf(generatedFile));
-    if (!deletedFile) {
-      fail();
+      boolean deletedFile = JdbcTestUtils.deleteCsvFile(String.valueOf(generatedFile));
+      if (!deletedFile) {
+        fail();
+      }
     }
   }
 
   @Test
   public void testUnwritableConnection() throws Exception {
     try {
-      String query = "CREATE TABLE IF NOT EXISTS h2o_unwritable.tmp.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      String query = "CREATE TABLE IF NOT EXISTS h2_unwritable.tmp.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [h2o_unwritable.tmp] is immutable."));
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [h2_unwritable.tmp] is immutable."));
     }
 
     try {
-      String query = "CREATE TABLE h2o_unwritable.tmp.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      String query = "CREATE TABLE h2_unwritable.tmp.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [h2o_unwritable.tmp] is immutable."));
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [h2_unwritable.tmp] is immutable."));
     }
   }
 }

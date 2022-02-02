@@ -33,7 +33,7 @@
   <properties>
     <mysql.connector.version>8.0.25</mysql.connector.version>
     <clickhouse.jdbc.version>0.3.1</clickhouse.jdbc.version>
-    <h2.version>1.4.200</h2.version>
+    <h2.version>2.1.210</h2.version>
     <postgresql.version>42.2.24</postgresql.version>
   </properties>
 

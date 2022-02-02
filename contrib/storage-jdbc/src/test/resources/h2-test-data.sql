@@ -16,7 +16,7 @@ create table person (
 
   bigint_field    BIGINT,
   smallint_field  SMALLINT,
-  numeric_field   NUMERIC(10, 2),
+  numeric_field   NUMERIC(20, 2),
   boolean_field   BOOLEAN,
   double_field    DOUBLE,
   float_field     FLOAT,

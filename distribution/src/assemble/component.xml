@@ -116,7 +116,6 @@
         <include>org.glassfish.jersey.core</include>
         <include>org.glassfish.jersey.ext</include>
         <include>org.glassfish.jersey.media</include>
-        <include>org.glassfish.jersey.bundles.repackaged</include>
         <include>org.glassfish.hk2</include>
         <include>javax.servlet</include>
         <include>javax.ws.rs</include>
@@ -158,7 +157,6 @@
         <exclude>org.glassfish.jersey.core</exclude>
         <exclude>org.glassfish.jersey.ext</exclude>
         <exclude>org.glassfish.jersey.media</exclude>
-        <exclude>org.glassfish.jersey.bundles.repackaged</exclude>
         <exclude>org.glassfish.hk2</exclude>
         <exclude>javax.servlet</exclude>
         <exclude>javax.ws.rs </exclude>
@@ -186,7 +184,7 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>io.netty:netty-tcnative:jar:linux-x86_64:2.0.1.Final</include>
+        <include>io.netty:netty-tcnative:jar:linux-x86_64:2.0.48.Final</include>
       </includes>
       <scope>test</scope>
     </dependencySet>
@@ -195,7 +193,7 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>io.netty:netty-tcnative:jar:linux-x86_64-fedora:2.0.1.Final</include>
+        <include>io.netty:netty-tcnative:jar:linux-x86_64-fedora:2.0.48.Final</include>
       </includes>
       <scope>test</scope>
     </dependencySet>
@@ -204,7 +202,7 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>io.netty:netty-tcnative:jar:windows-x86_64:2.0.1.Final</include>
+        <include>io.netty:netty-tcnative:jar:windows-x86_64:2.0.36.Final</include>
       </includes>
       <scope>test</scope>
     </dependencySet>
@@ -213,7 +211,7 @@
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
-        <include>io.netty:netty-tcnative:jar:osx-x86_64:2.0.1.Final</include>
+        <include>io.netty:netty-tcnative:jar:osx-x86_64:2.0.48.Final</include>
       </includes>
       <scope>test</scope>
     </dependencySet>
