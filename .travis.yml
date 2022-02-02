@@ -71,8 +71,7 @@ install:
   # For protobuf phase: builds Drill project, performs license checkstyle goal and regenerates Java and C++ Protobuf files
   - |
     if [ $PHASE = "tests" ]; then
-      echo Selecting parallel GC to minimise peak mem usage.
-      MAVEN_OPTS="-XX:+UseParallelGC"
+      MAVEN_OPTS="-XX:+UseG1GC"
       mvn install --batch-mode --no-transfer-progress
         -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest,org.apache.drill.categories.SecurityTest";
     elif [ $PHASE = "build_checkstyle_protobuf" ]; then
