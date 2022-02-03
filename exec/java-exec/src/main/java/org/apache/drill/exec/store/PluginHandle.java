@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * long Drillbit start times. Plugin creation is synchronized as is closing.
  * <p>
  * A handle has a type used to determine which operations are allowed on
- * the handle. For example, inrinsic (system) plugins cannot be deleted or
+ * the handle. For example, intrinsic (system) plugins cannot be deleted or
  * disabled.
  *
  * <h4>Caveats</h4>

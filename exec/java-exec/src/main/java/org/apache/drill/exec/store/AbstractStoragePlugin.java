@@ -51,6 +51,12 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
     this.name = inName == null ? null : inName.toLowerCase();
   }
 
+  protected AbstractStoragePlugin(DrillbitContext inContext, String inName, UserSession session) {
+    this.context = inContext;
+    this.name = inName == null ? null : inName.toLowerCase();
+    this.userSession = session;
+  }
+
   @Override
   public boolean supportsRead() {
     return false;
