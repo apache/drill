@@ -99,14 +99,15 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
       @JacksonInject StoragePluginRegistry engineRegistry,
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("selectionRoot") Path selectionRoot,
-      @JsonProperty("schema") TupleMetadata schema
+      @JsonProperty("schema") TupleMetadata schema,
+      @JsonProperty("limit") int limit
       ) throws IOException {
     super(ImpersonationUtil.resolveUserName(userName), columns, ValueExpressions.BooleanExpression.TRUE);
     this.selection = FileSelection.create(null, files, selectionRoot);
     this.formatPlugin = engineRegistry.resolveFormat(storageConfig, formatConfig, EasyFormatPlugin.class);
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
-    this.maxRecords = getMaxRecords();
+    this.limit = limit;
     this.metadataProvider = defaultTableMetadataProviderBuilder(new FileSystemMetadataProviderManager())
         .withSelection(selection)
         .withSchema(schema)
@@ -142,7 +143,6 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
     this.usedMetastore = metadataProviderManager.usesMetastore();
     initFromSelection(selection, formatPlugin);
     checkMetadataConsistency(selection, formatPlugin.getFsConf());
-    this.maxRecords = getMaxRecords();
   }
 
   public EasyGroupScan(
@@ -294,7 +294,7 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
     EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin,
-        columns, selectionRoot, partitionDepth, getSchema(), maxRecords);
+        columns, selectionRoot, partitionDepth, getSchema(), limit);
     subScan.setOperatorId(getOperatorId());
     return subScan;
   }
@@ -326,7 +326,7 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
       .field("files", getFiles())
       .field("schema", getSchema())
       .field("usedMetastore", usedMetastore())
-      .field("maxRecords", maxRecords)
+      .field("limit", limit)
       .toString();
   }
 
@@ -407,7 +407,7 @@ public class EasyGroupScan extends AbstractGroupScanWithMetadata<TableMetadataPr
       newScan.files = files;
       newScan.matchAllMetadata = matchAllMetadata;
       newScan.nonInterestingColumnsMetadata = nonInterestingColumnsMetadata;
-      newScan.maxRecords = maxRecords;
+      newScan.limit = limit;
 
       Map<Path, FileMetadata> filesMetadata = newScan.getFilesMetadata();
       if (MapUtils.isNotEmpty(filesMetadata)) {

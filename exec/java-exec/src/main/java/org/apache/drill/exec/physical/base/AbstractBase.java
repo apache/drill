@@ -26,7 +26,6 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public abstract class AbstractBase implements PhysicalOperator {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBase.class);
 
   public static long INIT_ALLOCATION = 1_000_000L;
   public static long MAX_ALLOCATION = 10_000_000_000L;

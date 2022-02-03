@@ -121,7 +121,7 @@ public class TestXMLReader extends ClusterTest {
         .build();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-      .addRow((Object)strArray("Seattle, WA", "Seattle WA", "", "", "2011-09-29", "2011-09-29 17:53:00 +0000", "US", "Clear", "62", "17", "Humidity: 62%", "/ig/images/weather" +
+      .addRow(strArray("Seattle, WA", "Seattle WA", "", "", "2011-09-29", "2011-09-29 17:53:00 +0000", "US", "Clear", "62", "17", "Humidity: 62%", "/ig/images/weather" +
         "/sunny.gif", "Wind: N at 4 mph"), null, null, null, null, null, null, null, null, null, null, null, null, null)
       .build();
 
@@ -540,7 +540,7 @@ public class TestXMLReader extends ClusterTest {
     queryBuilder()
       .sql(sql)
       .planMatcher()
-      .include("Limit", "maxRecords=2")
+      .include("Limit", "limit=2")
       .match();
   }
 

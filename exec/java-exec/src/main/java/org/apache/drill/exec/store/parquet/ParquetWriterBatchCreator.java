@@ -26,7 +26,6 @@ import org.apache.drill.exec.physical.impl.WriterRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class ParquetWriterBatchCreator implements BatchCreator<ParquetWriter>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetWriterBatchCreator.class);
 
   @Override
   public WriterRecordBatch getBatch(ExecutorFragmentContext context, ParquetWriter config, List<RecordBatch> children)

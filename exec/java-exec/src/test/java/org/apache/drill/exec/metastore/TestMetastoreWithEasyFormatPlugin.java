@@ -1079,14 +1079,14 @@ public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
       queryBuilder()
           .sql("select * from dfs.tmp.`%s` limit 1", tableName)
           .planMatcher()
-          .include("Limit", "numFiles=1", "maxRecords=1")
+          .include("Limit", "numFiles=1", "limit=1")
           .match();
 
       // each file has 10 records, so 3 files should be picked
       queryBuilder()
           .sql("select * from dfs.tmp.`%s` limit 21", tableName)
           .planMatcher()
-          .include("Limit", "numFiles=3", "maxRecords=21")
+          .include("Limit", "numFiles=3", "limit=21")
           .match();
     } finally {
       run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);

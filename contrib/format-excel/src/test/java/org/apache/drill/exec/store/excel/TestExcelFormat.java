@@ -621,7 +621,7 @@ public class TestExcelFormat extends ClusterTest {
     queryBuilder()
       .sql(sql)
       .planMatcher()
-      .include("Limit", "maxRecords=5")
+      .include("Limit", "limit=5")
       .match();
   }
 

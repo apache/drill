@@ -131,7 +131,6 @@ public class TestHTTPDLogReader extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
-
   @Test
   public void testLimitPushdown() throws Exception {
     String sql = "SELECT * FROM cp.`httpd/hackers-access-small.httpd` LIMIT 5";
@@ -139,7 +138,7 @@ public class TestHTTPDLogReader extends ClusterTest {
     queryBuilder()
       .sql(sql)
       .planMatcher()
-      .include("Limit", "maxRecords=5")
+      .include("Limit", "limit=5")
       .match();
   }
 
@@ -242,7 +241,6 @@ public class TestHTTPDLogReader extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
-
 
   @Test
   public void testExplicitSomeQueryWithCompressedFile() throws Exception {
