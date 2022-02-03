@@ -45,7 +45,8 @@ public class EasySubScan extends AbstractSubScan {
   private final Path selectionRoot;
   private final int partitionDepth;
   private final TupleMetadata schema;
-  private final int maxRecords;
+  // Defined as -1 means no limit, 0 means schema only, >0 is a limit.
+  private final int limit;
 
   @JsonCreator
   public EasySubScan(
@@ -58,7 +59,7 @@ public class EasySubScan extends AbstractSubScan {
     @JsonProperty("selectionRoot") Path selectionRoot,
     @JsonProperty("partitionDepth") int partitionDepth,
     @JsonProperty("schema") TupleMetadata schema,
-    @JsonProperty("maxRecords") int maxRecords
+    @JsonProperty("limit") int limit
     ) throws ExecutionSetupException {
     super(userName);
     this.formatPlugin = engineRegistry.resolveFormat(storageConfig, formatConfig, EasyFormatPlugin.class);
@@ -67,11 +68,11 @@ public class EasySubScan extends AbstractSubScan {
     this.selectionRoot = selectionRoot;
     this.partitionDepth = partitionDepth;
     this.schema = schema;
-    this.maxRecords = maxRecords;
+    this.limit = limit;
   }
 
   public EasySubScan(String userName, List<FileWorkImpl> files, EasyFormatPlugin<?> plugin,
-      List<SchemaPath> columns, Path selectionRoot, int partitionDepth, TupleMetadata schema, int maxRecords) {
+      List<SchemaPath> columns, Path selectionRoot, int partitionDepth, TupleMetadata schema, int limit) {
     super(userName);
     this.formatPlugin = plugin;
     this.files = files;
@@ -79,7 +80,7 @@ public class EasySubScan extends AbstractSubScan {
     this.selectionRoot = selectionRoot;
     this.partitionDepth = partitionDepth;
     this.schema = schema;
-    this.maxRecords = maxRecords;
+    this.limit = limit;
   }
 
   @JsonProperty
@@ -106,9 +107,23 @@ public class EasySubScan extends AbstractSubScan {
   @JsonProperty("schema")
   public TupleMetadata getSchema() { return schema; }
 
-  @JsonProperty("maxRecords")
-  public int getMaxRecords() { return maxRecords; }
+  @JsonProperty("limit")
+  public int getLimit() { return limit; }
 
+  // Shim method to return the original, incorrect encoding of the limit that
+  // used maxRecords = 0 to mean unlimited. LIMIT 0 is perfectly valid.
+  @JsonIgnore
+  public int getMaxRecords() {
+    if (limit < 0) {
+      // Previous version used 0 = no limit
+      return 0;
+    }
+    if (limit == 0) {
+      // Previous version didn't support LIMIT 0
+      return 1;
+    }
+    return limit;
+  }
   @Override
   public String getOperatorType() { return formatPlugin.getReaderOperatorType(); }
 }

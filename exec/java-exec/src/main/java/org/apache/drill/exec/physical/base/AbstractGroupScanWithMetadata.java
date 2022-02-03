@@ -72,6 +72,8 @@ import org.apache.drill.metastore.util.SchemaPathUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -93,6 +95,7 @@ import static org.apache.drill.exec.ExecConstants.SKIP_RUNTIME_ROWGROUP_PRUNING_
  * Represents table group scan with metadata usage.
  */
 public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvider> extends AbstractFileGroupScan {
+  static final Logger logger = LoggerFactory.getLogger(AbstractGroupScanWithMetadata.class);
 
   protected P metadataProvider;
 
@@ -119,7 +122,11 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
 
   protected boolean usedMetastore; // false by default
 
-  protected int maxRecords;
+  // The pushed-down limit. LIMIT 0 is valid, it means to return only schema.
+  // The default is a -1, which means unlimited.
+  // Note that, in "Big Data", a table might have more then 2B rows, so we
+  // cannot use Integer.MAX_VALUE as the limit.
+  protected int limit = -1;
 
   protected AbstractGroupScanWithMetadata(String userName, List<SchemaPath> columns, LogicalExpression filter) {
     super(userName);
@@ -142,7 +149,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     this.usedMetastore = that.usedMetastore;
     this.nonInterestingColumnsMetadata = that.nonInterestingColumnsMetadata;
     this.fileSet = that.fileSet == null ? null : new HashSet<>(that.fileSet);
-    this.maxRecords = that.maxRecords;
+    this.limit = that.limit;
   }
 
   @JsonProperty("columns")
@@ -161,8 +168,8 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     return true;
   }
 
-  @JsonIgnore
-  public int getMaxRecords() { return maxRecords; }
+  @JsonProperty("limit")
+  public int getLimit() { return limit; }
 
   @JsonIgnore
   public boolean isMatchAllMetadata() {
@@ -456,7 +463,8 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
 
   @Override
   public GroupScan applyLimit(int maxRecords) {
-    maxRecords = Math.max(maxRecords, 1); // Make sure it request at least 1 row -> 1 file.
+    // LIMIT 0 is supported by EVF to return schema only.
+    maxRecords = Math.max(maxRecords, 0);
     GroupScanWithMetadataFilterer<?> prunedMetadata = getFilterer();
 
     if (getTableMetadata() != null) {
@@ -465,7 +473,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
         logger.debug("limit push down does not apply, since total number of rows [{}] is less or equal to the required [{}].",
             tableRowCount, maxRecords);
         // Return the group scan with the limit pushed down
-        if (this.maxRecords != maxRecords) {
+        if (this.limit != maxRecords) {
           prunedMetadata.limit(maxRecords);
           return prunedMetadata.build();
         }
@@ -481,7 +489,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
       logger.debug("limit push down does not apply, since number of files was not reduced.");
 
       // Return the group scan with the limit pushed down
-      if (this.maxRecords != maxRecords) {
+      if (this.limit != maxRecords) {
         prunedMetadata.limit(maxRecords);
         return prunedMetadata.build();
       }
@@ -733,7 +741,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     protected TupleMetadata tableSchema;
     protected UdfUtilities udfUtilities;
     protected FunctionLookupContext context;
-    protected int maxRecords;
+    protected int limit = -1;
 
     // for the case when filtering is possible for partitions, but files count exceeds
     // PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD, new group scan with at least filtered partitions
@@ -777,7 +785,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     }
 
     public B limit(int maxRecords) {
-      this.maxRecords = maxRecords;
+      this.limit = maxRecords;
       return self();
     }
 
