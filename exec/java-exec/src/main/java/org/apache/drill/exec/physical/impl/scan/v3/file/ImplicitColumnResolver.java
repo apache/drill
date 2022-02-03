@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.scan.v3.file;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -141,7 +142,11 @@ public class ImplicitColumnResolver {
 
     protected ParseResult(List<ImplicitColumnMarker> columns, TupleMetadata schema,
         boolean isMetadataScan) {
-      this.columns = columns;
+      ImplicitColumnMarker reordered[] = new ImplicitColumnMarker[columns.size()];
+      for (ImplicitColumnMarker col : columns) {
+        reordered[col.index()] = col;
+      }
+      this.columns = Arrays.asList(reordered);
       this.schema = schema;
       this.isMetadataScan = isMetadataScan;
     }

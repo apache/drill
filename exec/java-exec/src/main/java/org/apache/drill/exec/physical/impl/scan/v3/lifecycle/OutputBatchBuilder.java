@@ -28,6 +28,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
@@ -234,6 +235,7 @@ public class OutputBatchBuilder {
   private final List<BatchSource> sources;
   private final Object vectorSources[];
   private final VectorContainer outputContainer;
+  private final List<MapVector> mapVectors = new ArrayList<>();
 
   public OutputBatchBuilder(TupleMetadata outputSchema, List<BatchSource> sources,
       BufferAllocator allocator) {
@@ -277,11 +279,18 @@ public class OutputBatchBuilder {
   @SuppressWarnings("unchecked")
   private void physicalProjection() {
     outputContainer.removeAll();
+    mapVectors.clear();
     for (int i = 0; i < outputSchema.size(); i++) {
-      ValueVector outputVector;
       ColumnMetadata outputCol = outputSchema.metadata(i);
+      ValueVector outputVector;
       if (outputCol.isMap()) {
         outputVector = buildTopMap(outputCol, (List<VectorSource>) vectorSources[i]);
+
+        // Map vectors are a nuisance: they carry their own value could which
+        // must be set separately from the underling data vectors.
+        if (outputVector instanceof MapVector) {
+          mapVectors.add((MapVector) outputVector);
+        }
       } else {
         outputVector = getVector((VectorSource) vectorSources[i]);
       }
@@ -309,6 +318,9 @@ public class OutputBatchBuilder {
 
   public void load(int rowCount) {
     outputContainer.setRecordCount(rowCount);
+    for (MapVector v : mapVectors) {
+      v.setMapValueCount(rowCount);
+    }
   }
 
   public VectorContainer outputContainer() { return outputContainer; }

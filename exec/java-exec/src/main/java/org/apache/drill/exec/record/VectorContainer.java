@@ -396,7 +396,7 @@ public class VectorContainer implements VectorAccessible {
 
   public void setRecordCount(int recordCount) {
     this.recordCount = recordCount;
-    initialized = true;
+    this.initialized = true;
   }
 
   /**

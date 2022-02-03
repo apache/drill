@@ -335,7 +335,7 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
 
   private void validateBatch() {
     if (validateBatches || VALIDATE_VECTORS) {
-      if (! BatchValidator.validate(incoming)) {
+      if (!BatchValidator.validate(incoming)) {
         throw new IllegalStateException(
             "Batch validation failed. Source operator: " +
             incoming.getClass().getSimpleName());
