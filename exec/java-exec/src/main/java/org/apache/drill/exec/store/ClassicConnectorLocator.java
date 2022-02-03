@@ -196,12 +196,19 @@ public class ClassicConnectorLocator implements ConnectorLocator {
     Map<Class<? extends StoragePluginConfig>, Constructor<? extends StoragePlugin>> ctors = new IdentityHashMap<>();
     for (Constructor<?> c : plugin.getConstructors()) {
       Class<?>[] params = c.getParameterTypes();
-      if (params.length != 3
-          || !StoragePluginConfig.class.isAssignableFrom(params[0])
-          || params[1] != DrillbitContext.class
-          || params[2] != String.class) {
-        logger.debug("Skipping StoragePlugin constructor {} for plugin class {} since it doesn't implement a "
-            + "constructor(StoragePluginConfig, DrillbitContext, String)", c, plugin);
+
+      if (params.length >= 3 && (!StoragePluginConfig.class.isAssignableFrom(params[0])
+        || params[1] != DrillbitContext.class
+        || params[2] != String.class)) {
+        logger.debug("Skipping StoragePlugin constructor {} for plugin class {} since it doesn't implement a " +
+          "constructor(StoragePluginConfig, DrillbitContext, String)", c, plugin);
+        continue;
+      } else if (params.length >= 4 && (!StoragePluginConfig.class.isAssignableFrom(params[0])
+        || params[1] != DrillbitContext.class
+        || params[2] != String.class
+        || params[3] != UserSession.class)) {
+        logger.debug("Skipping StoragePlugin constructor {} for plugin class {} since it doesn't implement a " +
+          "constructor(StoragePluginConfig, DrillbitContext, String)", c, plugin);
         continue;
       }
       Class<? extends StoragePluginConfig> configClass = (Class<? extends StoragePluginConfig>) params[0];
@@ -303,7 +310,7 @@ public class ClassicConnectorLocator implements ConnectorLocator {
         pluginConfig.getClass().getName()));
     }
     try {
-      plugin = constructor.newInstance(pluginConfig, context.drillbitContext(), name);
+      plugin = constructor.newInstance(pluginConfig, context.drillbitContext(), name, session);
       plugin.start();
       return plugin;
     } catch (ReflectiveOperationException | IOException e) {

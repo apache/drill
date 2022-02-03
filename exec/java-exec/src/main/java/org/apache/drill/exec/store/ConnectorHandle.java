@@ -109,5 +109,4 @@ public class ConnectorHandle {
     Preconditions.checkArgument(configClass.isInstance(config));
     return locator.create(name, config, session);
   }
-
 }

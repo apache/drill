@@ -26,6 +26,7 @@ import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -44,8 +45,8 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
   private final StoragePluginRegistry registry;
   private final TokenRegistry tokenRegistry;
 
-  public HttpStoragePlugin(HttpStoragePluginConfig configuration, DrillbitContext context, String name) {
-    super(context, name);
+  public HttpStoragePlugin(HttpStoragePluginConfig configuration, DrillbitContext context, String name, UserSession session) {
+    super(context, name, session);
     this.config = configuration;
     this.registry = context.getStorage();
     this.schemaFactory = new HttpSchemaFactory(this);
