@@ -24,15 +24,23 @@ import org.apache.drill.exec.store.ColumnExplorer.ImplicitInternalFileColumns;
  * Marks a column as implicit and provides a function to resolve an
  * implicit column given a description of the input file.
  */
-public interface ImplicitColumnMarker {
-  String resolve(FileDescrip fileInfo);
+public abstract class ImplicitColumnMarker {
+  private int index = -1;
+
+  public void setIndex(int index) {
+    this.index = index;
+  }
+
+  public int index() { return index; }
+
+  public abstract String resolve(FileDescrip fileInfo);
 
   /**
    * Marker for a file-based, non-internal implicit column that
    * extracts parts of the file name as defined by the implicit
    * column definition.
    */
-  public class FileImplicitMarker implements ImplicitColumnMarker {
+  public static class FileImplicitMarker extends ImplicitColumnMarker {
     public final ImplicitFileColumns defn;
 
     public FileImplicitMarker(ImplicitFileColumns defn) {
@@ -43,6 +51,9 @@ public interface ImplicitColumnMarker {
     public String resolve(FileDescrip fileInfo) {
       return defn.getValue(fileInfo.filePath());
     }
+
+    @Override
+    public String toString() { return defn.name(); }
   }
 
   /**
@@ -50,7 +61,7 @@ public interface ImplicitColumnMarker {
    * root folder. Partitions that reference non-existent directory levels
    * are null.
    */
-  public class PartitionColumnMarker implements ImplicitColumnMarker {
+  public static class PartitionColumnMarker extends ImplicitColumnMarker {
     private final int partition;
 
     public PartitionColumnMarker(int partition) {
@@ -61,9 +72,12 @@ public interface ImplicitColumnMarker {
     public String resolve(FileDescrip fileInfo) {
       return fileInfo.partition(partition);
     }
+
+    @Override
+    public String toString() { return "dir" + partition; }
   }
 
-  public class InternalColumnMarker implements ImplicitColumnMarker {
+  public static class InternalColumnMarker extends ImplicitColumnMarker {
     public final ImplicitInternalFileColumns defn;
 
     public InternalColumnMarker(ImplicitInternalFileColumns defn) {
@@ -95,5 +109,8 @@ public interface ImplicitColumnMarker {
     private String valueOf(Object value) {
       return value == null ? null : String.valueOf(value);
     }
+
+    @Override
+    public String toString() { return defn.name(); }
   }
 }
