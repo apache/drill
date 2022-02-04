@@ -19,7 +19,6 @@ package org.apache.drill.exec.store;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.calcite.plan.RelOptRule;
@@ -175,21 +174,4 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
   public DrillbitContext getContext() {
     return context;
   }
-
-  /* @Override
-  public int hashCode() {
-    return Objects.hash(context, name);
-  }
-
-  @Override
-  public boolean equals(Object that) {
-    if (this == that) {
-      return true;
-    } else if (that == null || getClass() != that.getClass()) {
-      return false;
-    }
-    AbstractStoragePlugin thatConfig = (AbstractStoragePlugin) that;
-    return Objects.equals(context, thatConfig.context) &&
-      Objects.equals(name, thatConfig.name);
-  }*/
 }
