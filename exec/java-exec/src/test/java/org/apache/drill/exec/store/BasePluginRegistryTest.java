@@ -198,13 +198,13 @@ public class BasePluginRegistryTest extends BaseTest {
     @Override
     public StoragePlugin create(String name, StoragePluginConfig config)
         throws Exception {
-      return ctor.newInstance(config, null, name);
+      return ctor.newInstance(config, null, name, null);
     }
 
     @Override
     public StoragePlugin create(String name, StoragePluginConfig config, UserSession session)
       throws Exception {
-      return ctor.newInstance(config, null, name);
+      return ctor.newInstance(config, null, name, session);
     }
 
     @Override
