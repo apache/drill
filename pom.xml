@@ -2140,6 +2140,8 @@
               <algorithms>
                 <algorithm>SHA-512</algorithm>
               </algorithms>
+              <!-- the module tools-parent has no files for checksumming -->
+              <failIfNoFiles>false</failIfNoFiles>
               <fileSets>
                 <!--Override fileSet from the Apache Parent POM-->
                 <fileSet>
