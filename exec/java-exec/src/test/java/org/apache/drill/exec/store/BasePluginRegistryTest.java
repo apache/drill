@@ -119,8 +119,8 @@ public class BasePluginRegistryTest extends BaseTest {
     private final StoragePluginFixtureConfig config;
     private int closeCount;
 
-    public StoragePluginFixture(StoragePluginFixtureConfig config, DrillbitContext inContext, String inName) {
-      super(inContext, inName);
+    public StoragePluginFixture(StoragePluginFixtureConfig config, DrillbitContext inContext, String inName, UserSession session) {
+      super(inContext, inName, session);
       this.config = config;
       if (config.mode().equals("crash-ctor")) {
         throw new IllegalStateException();

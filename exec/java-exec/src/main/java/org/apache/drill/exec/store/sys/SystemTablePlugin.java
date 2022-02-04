@@ -31,6 +31,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -51,11 +52,11 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
 
   @SuppressWarnings("unused") // used in StoragePluginRegistryImpl to dynamically init system plugins
   public SystemTablePlugin(DrillbitContext context) {
-    this(SystemTablePluginConfig.INSTANCE, context, SYS_SCHEMA_NAME);
+    this(SystemTablePluginConfig.INSTANCE, context, SYS_SCHEMA_NAME, null);
   }
 
-  public SystemTablePlugin(SystemTablePluginConfig config, DrillbitContext context, String name) {
-    super(context, name);
+  public SystemTablePlugin(SystemTablePluginConfig config, DrillbitContext context, String name, UserSession session) {
+    super(context, name, session);
     this.config = config;
     this.schema = new SystemSchema(this);
   }

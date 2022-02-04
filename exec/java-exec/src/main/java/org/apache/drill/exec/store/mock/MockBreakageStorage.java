@@ -42,7 +42,7 @@ public class MockBreakageStorage extends MockStorageEngine {
   public int registerAttemptCount = 0;
 
   public MockBreakageStorage(MockBreakageStorageEngineConfig configuration, DrillbitContext context, String name) {
-    super(configuration, context, name);
+    super(configuration, context, name, null);
     breakRegister = false;
   }
 

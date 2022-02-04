@@ -24,6 +24,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -48,11 +49,11 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
 
   @SuppressWarnings("unused") // used in StoragePluginRegistryImpl to dynamically init system plugins
   public InfoSchemaStoragePlugin(DrillbitContext context) {
-    this(InfoSchemaConfig.INSTANCE, context, InfoSchemaConstants.IS_SCHEMA_NAME);
+    this(InfoSchemaConfig.INSTANCE, context, InfoSchemaConstants.IS_SCHEMA_NAME, null);
   }
 
-  public InfoSchemaStoragePlugin(InfoSchemaConfig config, DrillbitContext context, String name) {
-    super(context, name);
+  public InfoSchemaStoragePlugin(InfoSchemaConfig config, DrillbitContext context, String name, UserSession session) {
+    super(context, name, session);
     this.config = config;
   }
 

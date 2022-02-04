@@ -35,6 +35,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -54,8 +55,8 @@ public class MockStorageEngine extends AbstractStoragePlugin {
   private final MockStorageEngineConfig configuration;
   private final MockSchema schema;
 
-  public MockStorageEngine(MockStorageEngineConfig configuration, DrillbitContext context, String name) {
-    super(context, name);
+  public MockStorageEngine(MockStorageEngineConfig configuration, DrillbitContext context, String name, UserSession session) {
+    super(context, name, session);
     this.configuration = configuration;
     this.schema = new MockSchema(this, name);
   }

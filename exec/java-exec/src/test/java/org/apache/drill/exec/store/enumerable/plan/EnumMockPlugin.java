@@ -25,6 +25,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -46,8 +47,8 @@ public class EnumMockPlugin extends AbstractStoragePlugin {
 
   private final Convention convention;
 
-  public EnumMockPlugin(EnumMockStoragePluginConfig config, DrillbitContext inContext, String inName) {
-    super(inContext, inName);
+  public EnumMockPlugin(EnumMockStoragePluginConfig config, DrillbitContext inContext, String inName, UserSession session) {
+    super(inContext, inName, session);
     this.config = config;
     EnumMockSchema schema = new EnumMockSchema(inName, this);
     this.schemaFactory = (SchemaConfig schemaConfig, SchemaPlus parent) -> parent.add(inName, schema);
