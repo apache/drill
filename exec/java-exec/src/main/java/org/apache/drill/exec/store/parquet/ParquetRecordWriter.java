@@ -104,7 +104,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private final StorageStrategy storageStrategy;
   private ParquetFileWriter parquetFileWriter;
   private MessageType schema;
-  private final Map<String, String> extraMetaData = new HashMap<>();
+  private Map<String, String> extraMetaData = new HashMap<>();
   private int blockSize;
   private int pageSize;
   private int dictionaryPageSize;
@@ -112,7 +112,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private boolean useSingleFSBlock = false;
   private CompressionCodecName codec = CompressionCodecName.SNAPPY;
   private WriterVersion writerVersion = WriterVersion.PARQUET_1_0;
-  private final CompressionCodecFactory codecFactory;
+  private CompressionCodecFactory codecFactory;
 
   private long recordCount = 0;
   private long recordCountForNextMemCheck = MINIMUM_RECORD_COUNT_FOR_CHECK;
@@ -123,15 +123,15 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
   private RecordConsumer consumer;
   private BatchSchema batchSchema;
 
-  private final Configuration conf;
+  private Configuration conf;
   private FileSystem fs;
   private String location;
-  private final List<Path> cleanUpLocations;
+  private List<Path> cleanUpLocations;
   private String prefix;
   private int index = 0;
-  private final OperatorContext oContext;
-  private final List<String> partitionColumns;
-  private final boolean hasPartitions;
+  private OperatorContext oContext;
+  private List<String> partitionColumns;
+  private boolean hasPartitions;
   private PrimitiveTypeName logicalTypeForDecimals;
   private boolean usePrimitiveTypesForDecimals;
 
@@ -244,7 +244,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     }
     TypedFieldId fieldId = batch.getValueVectorId(SchemaPath.getSimplePath(WriterPrel.PARTITION_COMPARATOR_FIELD));
     if (fieldId != null) {
-      VectorWrapper<?> w = batch.getValueAccessorById(BitVector.class, fieldId.getFieldIds());
+      VectorWrapper w = batch.getValueAccessorById(BitVector.class, fieldId.getFieldIds());
       setPartitionVector((BitVector) w.getValueVector());
     }
   }
@@ -297,7 +297,6 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     setUp(schema, consumer);
   }
 
-  @Override
   protected PrimitiveType getPrimitiveType(MaterializedField field) {
     MinorType minorType = field.getType().getMinorType();
     String name = field.getName();

@@ -68,7 +68,7 @@ public class NullableFixedByteAlignedReaders {
   }
 
   /**
-   * Class for reading the fixed length byte array type in Parquet. Currently Drill does not have
+   * Class for reading the fixed length byte array type in parquet. Currently Drill does not have
    * a fixed length binary type, so this is read into a varbinary with the same size recorded for
    * each value.
    */
@@ -105,7 +105,7 @@ public class NullableFixedByteAlignedReaders {
 
   /**
    * Class for reading parquet fixed binary type INT96, which is used for storing hive,
-   * Impala timestamp values with nanoseconds precision (12 bytes). It reads such values as a drill timestamp (8 bytes).
+   * impala timestamp values with nanoseconds precision (12 bytes). It reads such values as a drill timestamp (8 bytes).
    */
   static class NullableFixedBinaryAsTimeStampReader extends NullableFixedByteAlignedReader<NullableTimeStampVector> {
     NullableFixedBinaryAsTimeStampReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,

@@ -36,13 +36,10 @@ public class TestExtendedTypes extends BaseTestQuery {
     dirTestWatcher.copyResourceToRoot(Paths.get("vector", "complex"));
   }
 
-  /**
-   * This test verifies that JSON does the proper UTC --> local conversion
-   * on read, and local --> UTC on write. Before DRILL-8100, this test
-   * had to run in the UTC time zone. Now it works everywhere.
-   */
   @Test
   public void checkReadWriteExtended() throws Exception {
+    mockUtcDateTimeZone();
+
     final String originalFile = "vector/complex/extended.json";
     final String newTable = "TestExtendedTypes/newjson";
 

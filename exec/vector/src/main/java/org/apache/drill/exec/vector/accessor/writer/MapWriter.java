@@ -32,6 +32,7 @@ import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 /**
  * Writer for a Drill Map type. Maps are actually tuples, just like rows.
  */
+
 public abstract class MapWriter extends AbstractTupleWriter {
 
   /**
@@ -39,6 +40,7 @@ public abstract class MapWriter extends AbstractTupleWriter {
    * rather, this writer is a holder for the columns within the map, and those
    * columns are what is written.
    */
+
   protected static class SingleMapWriter extends MapWriter {
     private final MapVector mapVector;
 
@@ -81,6 +83,7 @@ public abstract class MapWriter extends AbstractTupleWriter {
    * Since the map is an array, it has an associated offset vector, which the
    * parent array writer is responsible for maintaining.
    */
+
   protected static class ArrayMapWriter extends MapWriter {
 
     protected ArrayMapWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {

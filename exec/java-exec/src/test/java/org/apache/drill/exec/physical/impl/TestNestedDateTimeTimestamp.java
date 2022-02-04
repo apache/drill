@@ -29,17 +29,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.drill.categories.FlakyTest;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * For DRILL-6242, output for Date, Time, Timestamp should use different classes
  */
+@Category(FlakyTest.class)
 public class TestNestedDateTimeTimestamp extends BaseTestQuery {
   private static final String              DATAFILE       = "cp.`datetime.parquet`";
   private static final Map<String, Object> expectedRecord = new TreeMap<String, Object>();
@@ -54,14 +56,9 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
      * "time" : "00:00:03.600", "timestamp" : "2018-03-23T17:40:52.123Z" } }
      *
      * Note that when the above data is read in to Drill, Drill modifies the
-     * timestamp to local time zone, and preserves the date and time
+     * timestamp to local time zone, and preserving the <date> and <time>
      * values. This effectively changes the timestamp, if the time zone is not
      * UTC.
-     *
-     * This behavior is a bug. See DRILL-8099. After the fix for DRILL-8100,
-     * the JSON values are correctly converted between UTC in JSON and local
-     * times in Drill. Parquet is still incorrect, resulting in rather odd
-     * behavior in this test. That odd behavior is a bug, not a feature.
      */
 
     LocalDate date = DateUtility.parseLocalDate("1970-01-11");
@@ -82,7 +79,7 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
   }
 
   /**
-   * Test reading of from the Parquet file that contains nested time, date, and
+   * Test reading of from the parquet file that contains nested time, date, and
    * timestamp
    */
   @Test
@@ -118,35 +115,10 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
   }
 
   /**
-   * Test the JSON output is consistent.
+   * Test the json output is consistent as before
    */
   @Test
-  @Ignore("DRILL-8100")
   public void testNestedDateTimeCTASJson() throws Exception {
-    // Data in the input Parquet file came from a UTC value in JSON.
-    // It is not clear if the original conversion was done when both Parquet and
-    // JSON read UTC values as local time (without conversion), or after the
-    // revision of the JSON reader to do proper UTC-to-local conversion on read.
-    // It is likely that it was done before the fix, so that we did:
-    // JSON UTC --> read as (not converted to) local time by the JSON reader
-    // local time --> written to Parquet as UTC without conversion.
-    //
-    // In this case, two wrongs made a right, and, it seems, the value in the
-    // Parquet file is likely the same as the value in the original JSON.
-    //
-    // See DRILL-8099 for a description of the bugs in Parquet.
-    //
-    // After DRILL-8100, the JSON writer does the proper local --> UTC conversion
-    // during CTAS. This means we read the Parquet UTC as local time (without
-    // conversion), and apply the local --> UTC conversion on writing JSON.
-    //
-    // Since Parquet is broken, but JSON behaves correct, the result is that
-    // the value in the CTAS JSON file is wrong unless this machine runs in UTC.
-    //
-    // When Drill's behavior was consistently wrong, a simple CTAS would work,
-    // but other operations would be wrong (because of the incorrect local time.)
-    // With DRILL-8099, JSON is now correct, but Parquet is wrong, which means
-    // that a CTAS between the two will produce corrupted results.
     String query = String.format("select * from %s limit 1", DATAFILE);
     String testName = "ctas_nested_datetime";
     try {
@@ -166,15 +138,10 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
   }
 
   /**
-   * Test the extended JSON output is consistent.
+   * Test the extended json output is consistent as before
    */
   @Test
   public void testNestedDateTimeCTASExtendedJson() throws Exception {
-    // Note that this test works because it is a JSON-to-JSON round
-    // trip, and JSON handles UTC-local conversion on read, and
-    // local-UTC conversion on right. The result is that this test,
-    // which before DRILL-8100 only worked when the machine timezone was
-    // UTC, now works in all time zones.
     String query = String.format("select * from %s limit 1", DATAFILE);
     String testName = "ctas_nested_datetime_extended";
     try {
@@ -194,7 +161,7 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
   }
 
   /**
-   * Test Parquet output is consistent.
+   * Test parquet output is consistent as before
    */
   @Test
   public void testNestedDateTimeCTASParquet() throws Exception {

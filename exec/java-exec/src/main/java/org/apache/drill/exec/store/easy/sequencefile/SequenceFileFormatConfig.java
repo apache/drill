@@ -67,4 +67,5 @@ public class SequenceFileFormatConfig implements FormatPluginConfig {
   public String toString() {
     return new PlanStringBuilder(this).field("extensions", extensions).toString();
   }
+
 }

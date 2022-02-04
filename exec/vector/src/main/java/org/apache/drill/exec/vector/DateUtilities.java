@@ -17,25 +17,22 @@
  */
 package org.apache.drill.exec.vector;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 
 import org.joda.time.Period;
 
 /**
  * Utility class for Date, DateTime, TimeStamp, Interval data types.
  * <p>
- * WARNING: This class is included in the JDBC driver. There is another, similar
- * class called {@code org.apache.drill.exec.expr.fn.impl.DateUtility}. If vectors refer
+ * WARNING: This class is included from the JDBC driver. There is another, similar
+ * class called <tt>org.apache.drill.exec.expr.fn.impl.DateUtility</tt>. If vectors refer
  * to that class, they will fail when called from JDBC. So, place code here if
  * it is needed by JDBC, in the other class if only needed by the Drill engine.
  * (This is a very poor design, but it is what it is.)
  */
+
 public class DateUtilities {
 
   public static final int yearsToMonths = 12;
@@ -217,76 +214,11 @@ public class DateUtilities {
     return LocalDate.ofEpochDay(value / daysToStandardMillis);
   }
 
-  // NOTE: This assumes the instant is already in the local time zone:
-  // it does not do the required local-to-UTC conversion.
   public static long toDrillTimestamp(Instant instant) {
     return instant.toEpochMilli();
   }
 
-  // NOTE: This produces an instant in the local time zone:
-  // it does not do the required local-to-UTC conversion.
   public static Instant fromDrillTimestamp(long value) {
     return Instant.ofEpochMilli(value);
-  }
-
-  public static final LocalDateTime LOCAL_EPOCH = LocalDateTime.of(1970, 1, 1, 0, 0, 0);
-  public static final ZoneId LOCAL_ZONE_ID = ZoneId.systemDefault();
-
-  /**
-   * Convert from a Java {@code LocalDateTime} to Drill's form for storage
-   * in a TIMESTAMP vector.
-   */
-  public static long localDateTimeToDrillTimetamp(LocalDateTime localDT) {
-    return Duration.between(LOCAL_EPOCH, localDT).toMillis();
-  }
-
-  // The Drill "local timestamp" is ill-defined in java.time. There is no java.time
-  // representation of the number of seconds (or ms.) since an epoch in local time.
-  // Further, the conversion is non-uniform: in time zones with daylight savings
-  // time, the offset is different depending on the date. java.time will get
-  // the offset at a given UTC timestamp, but going from local time is much
-  // harder.
-
-  /**
-   * Convert an {@code Instant} (number of ms. since the epoch, UTC) to
-   * a Drill "local timestamp" the number of ms since the "local epoch".
-   *
-   * @param instant UTC timestamp
-   * @return "Drill timestamp"
-   */
-  public static long utcInstantToDrillTimetamp(Instant instant) {
-    // The instant is in UTC, which is needed to get the TZ offset at
-    // that specific instant. (Won't work the other way, alas.)
-    return instant.toEpochMilli() +
-        LOCAL_ZONE_ID.getRules().getOffset(instant).getTotalSeconds() * 1000L;
-  }
-
-  /**
-   * Convert a UTC timestamp, in ms since the epoch UTC to a Drill
-   * timestamp (in local time).
-   * @param utcTimestampMs
-   * @return
-   */
-  public static long utcTimestampToDrillTimestamp(long utcTimestampMs) {
-    return utcInstantToDrillTimetamp(Instant.ofEpochMilli(utcTimestampMs));
-  }
-
-  public static Instant drillTimestampToUTCInstant(long drillTimestamp) {
-    long sec = drillTimestamp / 1000;
-    int ns = (int) ((drillTimestamp % 1000) * 1_000_000);
-    return localDateTimeToUTCInstant(DateUtilities.LOCAL_EPOCH.plusSeconds(sec).plusNanos(ns));
-  }
-
-  public static Instant localDateTimeToUTCInstant(LocalDateTime localDt) {
-    ZonedDateTime localZdt = localDt.atZone(DateUtilities.LOCAL_ZONE_ID);
-    return localZdt.toInstant();
-  }
-
-  public static long drillTimestampToUTCMs(long drillTimestamp) {
-     return drillTimestampToUTCInstant(drillTimestamp).toEpochMilli();
-  }
-
-  public static LocalDateTime timestampLiteralToLocalDateTime(String literal) {
-    return LocalDateTime.parse(literal);
   }
 }

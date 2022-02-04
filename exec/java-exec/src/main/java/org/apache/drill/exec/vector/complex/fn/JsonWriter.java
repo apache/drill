@@ -87,6 +87,7 @@ public class JsonWriter {
       case BIT:
         gen.writeBoolean(reader);
         break;
+
       case DATE:
         gen.writeDate(reader);
         break;
@@ -146,8 +147,6 @@ public class JsonWriter {
       case VARCHAR:
         gen.writeVarChar(reader);
         break;
-      default:
-        throw new IllegalStateException(String.format("Unable to handle type %s.", mt));
       }
       break;
 

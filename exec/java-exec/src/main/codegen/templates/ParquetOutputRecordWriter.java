@@ -125,12 +125,12 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
         return;
       }
   <#elseif mode.prefix == "Repeated" >
-      // empty lists are represented by simply not starting a field, rather than starting one and putting in 0 elements
-      if (reader.size() == 0) {
-        return;
-      }
-      consumer.startField(fieldName, fieldId);
-      for (int i = 0; i < reader.size(); i++) {
+    // empty lists are represented by simply not starting a field, rather than starting one and putting in 0 elements
+    if (reader.size() == 0) {
+      return;
+    }
+    consumer.startField(fieldName, fieldId);
+    for (int i = 0; i < reader.size(); i++) {
   </#if>
 
   <#if  minor.class == "TinyInt" ||
@@ -142,65 +142,49 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
         minor.class == "Decimal9" ||
         minor.class == "UInt4">
     <#if mode.prefix == "Repeated" >
-        reader.read(i, holder);
-        consumer.addInteger(holder.value);
+            reader.read(i, holder);
+            consumer.addInteger(holder.value);
     <#else>
-        consumer.startField(fieldName, fieldId);
-        reader.read(holder);
-        consumer.addInteger(holder.value);
-        consumer.endField(fieldName, fieldId);
+    consumer.startField(fieldName, fieldId);
+    reader.read(holder);
+    consumer.addInteger(holder.value);
+    consumer.endField(fieldName, fieldId);
     </#if>
   <#elseif
         minor.class == "Float4">
       <#if mode.prefix == "Repeated" >
-        reader.read(i, holder);
-        consumer.addFloat(holder.value);
+              reader.read(i, holder);
+              consumer.addFloat(holder.value);
       <#else>
-        consumer.startField(fieldName, fieldId);
-        reader.read(holder);
-        consumer.addFloat(holder.value);
-        consumer.endField(fieldName, fieldId);
+    consumer.startField(fieldName, fieldId);
+    reader.read(holder);
+    consumer.addFloat(holder.value);
+    consumer.endField(fieldName, fieldId);
       </#if>
   <#elseif
         minor.class == "BigInt" ||
         minor.class == "Decimal18" ||
+        minor.class == "TimeStamp" ||
         minor.class == "UInt8">
       <#if mode.prefix == "Repeated" >
-        reader.read(i, holder);
-        consumer.addLong(holder.value);
+              reader.read(i, holder);
+              consumer.addLong(holder.value);
       <#else>
-        consumer.startField(fieldName, fieldId);
-        reader.read(holder);
-        consumer.addLong(holder.value);
-        consumer.endField(fieldName, fieldId);
+    consumer.startField(fieldName, fieldId);
+    reader.read(holder);
+    consumer.addLong(holder.value);
+    consumer.endField(fieldName, fieldId);
       </#if>
-  <#elseif minor.class == "TimeStamp" >
-    <#if mode.prefix == "Repeated" >
-        reader.read(i, holder);
-        // Write Drill timestamp directly: writes local time to Parquet's UTC type.
-        // This is a bug: see DRILL-8099.
-        // The commented-out line is the correct way to do this. However, doing
-        // the correct way breaks other Drill code as explained in DRILL-8099.
-        consumer.addLong(holder.value);
-        //consumer.addLong(DateUtilities.drillTimestampToUTCMs(holder.value));
-    <#else>
-        consumer.startField(fieldName, fieldId);
-        reader.read(holder);
-        // See comment above.
-        consumer.addLong(holder.value);
-        //consumer.addLong(DateUtilities.drillTimestampToUTCMs(holder.value));
-        consumer.endField(fieldName, fieldId);
-    </#if>
   <#elseif minor.class == "Date">
     <#if mode.prefix == "Repeated" >
-        reader.read(i, holder);
-        consumer.addInteger((int) (holder.value / DateTimeConstants.MILLIS_PER_DAY));
+      reader.read(i, holder);
+      consumer.addInteger((int) (holder.value / DateTimeConstants.MILLIS_PER_DAY));
     <#else>
-        consumer.startField(fieldName, fieldId);
-        reader.read(holder);
-        // convert from internal Drill date format to Julian Day centered around Unix Epoc
-        consumer.addInteger((int) (holder.value / DateTimeConstants.MILLIS_PER_DAY));
-        consumer.endField(fieldName, fieldId);
+      consumer.startField(fieldName, fieldId);
+      reader.read(holder);
+      // convert from internal Drill date format to Julian Day centered around Unix Epoc
+      consumer.addInteger((int) (holder.value / DateTimeConstants.MILLIS_PER_DAY));
+      consumer.endField(fieldName, fieldId);
     </#if>
   <#elseif
         minor.class == "Float8">
@@ -208,44 +192,44 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
               reader.read(i, holder);
               consumer.addDouble(holder.value);
       <#else>
-        consumer.startField(fieldName, fieldId);
-        reader.read(holder);
-        consumer.addDouble(holder.value);
-        consumer.endField(fieldName, fieldId);
+    consumer.startField(fieldName, fieldId);
+    reader.read(holder);
+    consumer.addDouble(holder.value);
+    consumer.endField(fieldName, fieldId);
       </#if>
   <#elseif
         minor.class == "Bit">
       <#if mode.prefix == "Repeated" >
-        reader.read(i, holder);
-        consumer.addBoolean(holder.value == 1);
+              reader.read(i, holder);
+              consumer.addBoolean(holder.value == 1);
       <#else>
-        consumer.startField(fieldName, fieldId);
-        reader.read(holder);
-        consumer.addBoolean(holder.value == 1);
-        consumer.endField(fieldName, fieldId);
+    consumer.startField(fieldName, fieldId);
+    reader.read(holder);
+    consumer.addBoolean(holder.value == 1);
+    consumer.endField(fieldName, fieldId);
       </#if>
   <#elseif
         minor.class == "Decimal28Sparse" ||
         minor.class == "Decimal38Sparse">
       <#if mode.prefix == "Repeated" >
       <#else>
-        consumer.startField(fieldName, fieldId);
-        reader.read(holder);
-        byte[] bytes = DecimalUtility.getBigDecimalFromSparse(
-                holder.buffer, holder.start, ${minor.class}Holder.nDecimalDigits, holder.scale).unscaledValue().toByteArray();
-        byte[] output = new byte[ParquetTypeHelper.getLengthForMinorType(MinorType.${minor.class?upper_case})];
-        if (holder.getSign(holder.start, holder.buffer)) {
-          Arrays.fill(output, 0, output.length - bytes.length, (byte) -1);
-        } else {
-          Arrays.fill(output, 0, output.length - bytes.length, (byte) 0);
-        }
-        System.arraycopy(bytes, 0, output, output.length - bytes.length, bytes.length);
-        consumer.addBinary(Binary.fromByteArray(output));
-        consumer.endField(fieldName, fieldId);
+      consumer.startField(fieldName, fieldId);
+      reader.read(holder);
+      byte[] bytes = DecimalUtility.getBigDecimalFromSparse(
+              holder.buffer, holder.start, ${minor.class}Holder.nDecimalDigits, holder.scale).unscaledValue().toByteArray();
+      byte[] output = new byte[ParquetTypeHelper.getLengthForMinorType(MinorType.${minor.class?upper_case})];
+      if (holder.getSign(holder.start, holder.buffer)) {
+        Arrays.fill(output, 0, output.length - bytes.length, (byte) -1);
+      } else {
+        Arrays.fill(output, 0, output.length - bytes.length, (byte) 0);
+      }
+      System.arraycopy(bytes, 0, output, output.length - bytes.length, bytes.length);
+      consumer.addBinary(Binary.fromByteArray(output));
+      consumer.endField(fieldName, fieldId);
       </#if>
   <#elseif minor.class?contains("Interval")>
-        consumer.startField(fieldName, fieldId);
-        reader.read(holder);
+      consumer.startField(fieldName, fieldId);
+      reader.read(holder);
       <#if minor.class == "IntervalDay">
         Arrays.fill(output, 0, 4, (byte) 0);
         IntervalUtility.intToLEByteArray(holder.days, output, 4);
@@ -259,8 +243,8 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
         IntervalUtility.intToLEByteArray(holder.days, output, 4);
         IntervalUtility.intToLEByteArray(holder.milliseconds, output, 8);
       </#if>
-        consumer.addBinary(Binary.fromByteArray(output));
-        consumer.endField(fieldName, fieldId);
+      consumer.addBinary(Binary.fromByteArray(output));
+      consumer.endField(fieldName, fieldId);
 
   <#elseif
         minor.class == "TimeTZ" ||
@@ -273,34 +257,34 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
   <#elseif minor.class == "VarChar" || minor.class == "Var16Char"
         || minor.class == "VarBinary" || minor.class == "VarDecimal">
     <#if mode.prefix == "Repeated">
-    reader.read(i, holder);
+      reader.read(i, holder);
       <#if minor.class == "VarDecimal">
-        decimalValueWriter.writeValue(consumer, holder.buffer,
-            holder.start, holder.end, reader.getField().getPrecision());
+      decimalValueWriter.writeValue(consumer, holder.buffer,
+          holder.start, holder.end, reader.getField().getPrecision());
       <#else>
       consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
       </#if>
     <#else>
-        reader.read(holder);
-        consumer.startField(fieldName, fieldId);
+      reader.read(holder);
+      consumer.startField(fieldName, fieldId);
       <#if minor.class == "VarDecimal">
-        decimalValueWriter.writeValue(consumer, holder.buffer,
-            holder.start, holder.end, reader.getField().getPrecision());
+      decimalValueWriter.writeValue(consumer, holder.buffer,
+          holder.start, holder.end, reader.getField().getPrecision());
       <#else>
-        consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
+      consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
       </#if>
-        consumer.endField(fieldName, fieldId);
+      consumer.endField(fieldName, fieldId);
     </#if>
   </#if>
   <#if mode.prefix == "Repeated">
-      }
-      consumer.endField(fieldName, fieldId);
+    }
+    consumer.endField(fieldName, fieldId);
   </#if>
     }
 
     <#if mode.prefix == "Repeated">
-    @Override
-    public void writeListField() {
+     @Override
+     public void writeListField() {
       if (reader.size() == 0) {
         return;
       }
@@ -388,11 +372,12 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
         consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
       </#if>
   </#if>
+
         consumer.endField(ELEMENT, ZERO_IDX);
         consumer.endGroup();
       }
       consumer.endField(LIST, ZERO_IDX);
-    }
+     }
     </#if>
   }
     </#list>

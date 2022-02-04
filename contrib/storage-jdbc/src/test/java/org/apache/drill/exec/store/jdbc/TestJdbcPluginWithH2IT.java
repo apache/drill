@@ -30,7 +30,6 @@ import org.apache.drill.test.ClusterTest;
 import org.h2.tools.RunScript;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -58,7 +57,7 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
     // Force timezone to UTC for these tests.
-    //defaultTimeZone = TimeZone.getDefault();
+    defaultTimeZone = TimeZone.getDefault();
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
     dirTestWatcher.copyResourceToRoot(Paths.get(TABLE_PATH));
@@ -100,9 +99,6 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   }
 
   @Test
-  // See Drill-8101: The timestamp type is broken: this test only works
-  // in UTC.
-  @Ignore("Only works in the UTC timezone")
   public void validateResult() throws Exception {
     testBuilder()
         .sqlQuery(

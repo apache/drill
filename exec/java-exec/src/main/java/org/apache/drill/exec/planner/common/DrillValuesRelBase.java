@@ -35,7 +35,6 @@ import org.apache.calcite.util.NlsString;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.util.GuavaUtils;
-import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.complex.fn.ExtendedJsonOutput;
 import org.apache.drill.exec.vector.complex.fn.JsonOutput;
 import org.joda.time.DateTime;
@@ -218,16 +217,7 @@ public abstract class DrillValuesRelBase extends Values implements DrillRelNode 
         if (isLiteralNull(literal)) {
           out.writeTimestampNull();
         } else {
-          // The literal is a Java Calendar, which *should* date/times in UTC. However, since Drill
-          // works in local time, the "UTC" is reinterpreted as being in the local time zone.
-          // That is, a literal timestamp of "2018-01-02 10:11:12.123" is assumed to be in UTC
-          // by Calcite. We, however, say that it is actually local time. So, we just use the
-          // offset from epoch directly, we don't convert the Calendar from UTC to local time.
-          //
-          // However, the JSON writer wants "real" UTC. So, we take our "fake" UTC (actually
-          // local time), convert it to millis, which is now a "Drill timestamp", and convert
-          // that to UTC.
-          out.writeTimestamp(DateUtilities.drillTimestampToUTCInstant(new DateTime(literal.getValue()).getMillis()));
+          out.writeTimestamp(LocalDateTime.ofInstant(Instant.ofEpochMilli(new DateTime(literal.getValue()).getMillis()), ZoneOffset.UTC));
         }
         return;
 

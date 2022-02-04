@@ -63,8 +63,6 @@ public class ParquetToDrillTypeConverter {
             return TypeProtos.MinorType.VARDECIMAL;
           case TIMESTAMP_MILLIS:
           case TIMESTAMP_MICROS:
-            // Note: The Parquet type has additional metadata to say if the timestamp
-            // is UTC or local time. Drill ignores that flag today. See DRILL-8099.
             return TypeProtos.MinorType.TIMESTAMP;
           case TIME_MICROS:
             return TypeProtos.MinorType.TIME;
@@ -138,4 +136,5 @@ public class ParquetToDrillTypeConverter {
     }
     return typeBuilder.build();
   }
+
 }

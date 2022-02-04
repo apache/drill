@@ -52,8 +52,6 @@ import org.joda.time.DateTimeConstants;
 import org.apache.parquet.example.data.simple.NanoTime;
 import org.apache.parquet.io.api.Binary;
 import org.joda.time.DateTimeZone;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,10 +71,10 @@ import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ParquetF
 import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.RowGroupMetadata;
 
 /**
- * Utility class where we can capture common logic between the two Parquet readers
+ * Utility class where we can capture common logic between the two parquet readers
  */
 public class ParquetReaderUtility {
-  private static final Logger logger = LoggerFactory.getLogger(ParquetReaderUtility.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetReaderUtility.class);
 
   /**
    * Number of days between Julian day epoch (January 1, 4713 BC) and Unix day epoch (January 1, 1970).
@@ -108,7 +106,7 @@ public class ParquetReaderUtility {
   public static final String ALLOWED_DRILL_VERSION_FOR_BINARY = "1.15.0";
 
   /**
-   * For most recently created Parquet files, we can determine if we have corrupted dates (see DRILL-4203)
+   * For most recently created parquet files, we can determine if we have corrupted dates (see DRILL-4203)
    * based on the file metadata. For older files that lack statistics we must actually test the values
    * in the data pages themselves to see if they are likely corrupt.
    */
@@ -516,7 +514,7 @@ public class ParquetReaderUtility {
     // as we will know from the Drill version written in the files that the dates are correct
     int rowGroupIndex = 0;
     Map<String, SchemaElement> schemaElements = ParquetReaderUtility.getColNameToSchemaElementMapping(footer);
-    for (SchemaPath schemaPath : columns) {
+    findDateColWithStatsLoop : for (SchemaPath schemaPath : columns) {
       List<ColumnDescriptor> parquetColumns = footer.getFileMetaData().getSchema().getColumns();
       for (int i = 0; i < parquetColumns.size(); ++i) {
         ColumnDescriptor column = parquetColumns.get(i);
@@ -550,7 +548,7 @@ public class ParquetReaderUtility {
   }
 
   /**
-   * Utilities for converting from Parquet INT96 binary (Impala, hive timestamp)
+   * Utilities for converting from parquet INT96 binary (impala, hive timestamp)
    * to date time value. This utilizes the Joda library.
    */
   public static class NanoTimeUtils {
@@ -559,12 +557,12 @@ public class ParquetReaderUtility {
 
   /**
    * @param binaryTimeStampValue
-   *          Hive, Impala timestamp values with nanoseconds precision
+   *          hive, impala timestamp values with nanoseconds precision
    *          are stored in parquet Binary as INT96 (12 constant bytes)
    * @param retainLocalTimezone
    *          parquet files don't keep local timeZone according to the
    *          <a href="https://github.com/Parquet/parquet-format/blob/master/LogicalTypes.md#timestamp">Parquet spec</a>,
-   *          but some tools (hive, for example) retain local timezone for Parquet files by default
+   *          but some tools (hive, for example) retain local timezone for parquet files by default
    *          Note: Impala doesn't retain local timezone by default
    * @return  Timestamp in milliseconds - the number of milliseconds since January 1, 1970, 00:00:00 GMT
    *          represented by @param binaryTimeStampValue.
@@ -573,17 +571,12 @@ public class ParquetReaderUtility {
    */
     public static long getDateTimeValueFromBinary(Binary binaryTimeStampValue, boolean retainLocalTimezone) {
       // This method represents binaryTimeStampValue as ByteBuffer, where timestamp is stored as sum of
-      // Julian day number (4 bytes) and nanos of day (8 bytes)
+      // julian day number (4 bytes) and nanos of day (8 bytes)
       NanoTime nt = NanoTime.fromBinary(binaryTimeStampValue);
       int julianDay = nt.getJulianDay();
       long nanosOfDay = nt.getTimeOfDayNanos();
       long dateTime = (julianDay - JULIAN_DAY_NUMBER_FOR_UNIX_EPOCH) * DateTimeConstants.MILLIS_PER_DAY
           + nanosOfDay / NANOS_PER_MILLISECOND;
-      // Note: this is very likely wrong. Local timezone in Impala means we don't know the
-      // the timezone. So, we assume it is local, which is what Drill's timestamp holds.
-      // As a result, we should do no conversion.
-      // However, if the time is in UTC, then we must convert from UTC to the local
-      // time zone for storage in a Drill timestamp. See DRILL-8099.
       if (retainLocalTimezone) {
         return DateTimeZone.getDefault().convertUTCToLocal(dateTime);
       } else {
@@ -596,8 +589,8 @@ public class ParquetReaderUtility {
    * Builds major type using given {@code OriginalType originalType} or {@code PrimitiveTypeName type}.
    * For DECIMAL will be returned major type with scale and precision.
    *
-   * @param type         Parquet primitive type
-   * @param originalType Parquet original type
+   * @param type         parquet primitive type
+   * @param originalType parquet original type
    * @param scale        type scale (used for DECIMAL type)
    * @param precision    type precision (used for DECIMAL type)
    * @return major type

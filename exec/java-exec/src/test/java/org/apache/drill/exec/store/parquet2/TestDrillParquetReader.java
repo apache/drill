@@ -38,7 +38,6 @@ import org.apache.drill.test.BaseTestQuery;
 import org.joda.time.Period;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -1183,9 +1182,6 @@ public class TestDrillParquetReader extends BaseTestQuery {
   }
 
   @Test
-  @Ignore("DRILL-8099")
-  // This test only works in UTC does to flaws how Drill handles Parquet timestamps.
-  // Since it won't run in most setups, the test is disabled until Parquet is fixed.
   public void hiveTimestampArray() throws Exception {
     mockUtcDateTimeZone();
 

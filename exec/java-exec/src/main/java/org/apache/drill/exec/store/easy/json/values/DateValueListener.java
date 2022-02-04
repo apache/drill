@@ -22,7 +22,6 @@ import java.time.LocalDate;
 
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
 import org.apache.drill.exec.store.easy.json.parser.TokenIterator;
-import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 import com.fasterxml.jackson.core.JsonToken;
@@ -58,7 +57,7 @@ public class DateValueListener extends ScalarListener {
           // time, so that we retain the date, even if the span of the date
           // is different locally than UTC. A mess.
           LocalDate localDate = LocalDate.parse(tokenizer.stringValue());
-          writer.setLong(Duration.between(DateUtilities.LOCAL_EPOCH,
+          writer.setLong(Duration.between(TimestampValueListener.LOCAL_EPOCH,
               localDate.atStartOfDay()).toMillis());
         } catch (Exception e) {
           throw loader.dataConversionError(schema(), "date", tokenizer.stringValue());

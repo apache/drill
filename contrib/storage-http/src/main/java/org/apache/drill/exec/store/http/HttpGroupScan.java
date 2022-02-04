@@ -130,6 +130,7 @@ public class HttpGroupScan extends AbstractGroupScan {
     this.maxRecords = maxRecords;
   }
 
+
   /**
    * Deserialize a group scan. Not called in normal operation. Probably used
    * only if Drill executes a logical plan.
@@ -200,6 +201,7 @@ public class HttpGroupScan extends AbstractGroupScan {
 
   @JsonProperty("maxRecords")
   public int maxRecords() { return maxRecords; }
+
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {

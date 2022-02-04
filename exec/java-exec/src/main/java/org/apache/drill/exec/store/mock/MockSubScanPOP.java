@@ -71,6 +71,14 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
                         @JsonProperty("extended") Boolean extended,
                         @JsonProperty("entries") List<MockScanEntry> readEntries) {
     this.readEntries = readEntries;
+//    OperatorCost cost = new OperatorCost(0,0,0,0);
+//    Size size = new Size(0,0);
+//    for(MockGroupScanPOP.MockScanEntry r : readEntries){
+//      cost = cost.add(r.getCost());
+//      size = size.add(r.getSize());
+//    }
+//    this.cost = cost;
+//    this.size = size;
     this.url = url;
     this.extended = extended == null ? false : extended;
   }
