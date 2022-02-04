@@ -273,7 +273,7 @@ public class ClassicConnectorLocator implements ConnectorLocator {
           pluginConfig.getClass().getName()));
     }
     try {
-      plugin = constructor.newInstance(pluginConfig, context.drillbitContext(), name);
+      plugin = constructor.newInstance(pluginConfig, context.drillbitContext(), name, null);
       plugin.start();
       return plugin;
     } catch (ReflectiveOperationException | IOException e) {
