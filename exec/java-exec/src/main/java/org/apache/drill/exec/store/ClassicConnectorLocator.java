@@ -197,18 +197,13 @@ public class ClassicConnectorLocator implements ConnectorLocator {
     for (Constructor<?> c : plugin.getConstructors()) {
       Class<?>[] params = c.getParameterTypes();
 
-      if (params.length >= 3 && (!StoragePluginConfig.class.isAssignableFrom(params[0])
-        || params[1] != DrillbitContext.class
-        || params[2] != String.class)) {
-        logger.debug("Skipping StoragePlugin constructor {} for plugin class {} since it doesn't implement a " +
-          "constructor(StoragePluginConfig, DrillbitContext, String)", c, plugin);
-        continue;
-      } else if (params.length >= 4 && (!StoragePluginConfig.class.isAssignableFrom(params[0])
+      if (params.length != 4
+        || !StoragePluginConfig.class.isAssignableFrom(params[0])
         || params[1] != DrillbitContext.class
         || params[2] != String.class
-        || params[3] != UserSession.class)) {
-        logger.debug("Skipping StoragePlugin constructor {} for plugin class {} since it doesn't implement a " +
-          "constructor(StoragePluginConfig, DrillbitContext, String)", c, plugin);
+        || params[3] != UserSession.class) {
+        logger.debug("Skipping StoragePlugin constructor {} for plugin class {} since it doesn't implement a "
+          + "constructor(StoragePluginConfig, DrillbitContext, String)", c, plugin);
         continue;
       }
       Class<? extends StoragePluginConfig> configClass = (Class<? extends StoragePluginConfig>) params[0];

@@ -176,7 +176,7 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
     return context;
   }
 
-  @Override
+  /* @Override
   public int hashCode() {
     return Objects.hash(context, name);
   }
@@ -191,5 +191,5 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
     AbstractStoragePlugin thatConfig = (AbstractStoragePlugin) that;
     return Objects.equals(context, thatConfig.context) &&
       Objects.equals(name, thatConfig.name);
-  }
+  }*/
 }
