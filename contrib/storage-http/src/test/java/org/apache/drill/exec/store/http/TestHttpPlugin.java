@@ -68,17 +68,11 @@ import static org.junit.Assert.fail;
  */
 public class TestHttpPlugin extends ClusterTest {
 
-  // Use high-numbered ports to avoid colliding with other tools on the
-  // build machine.
-  private static final int MOCK_SERVER_PORT = 44332;
+  private static final int MOCK_SERVER_PORT = 8091;
   private static String TEST_JSON_RESPONSE;
   private static String TEST_CSV_RESPONSE;
   private static String TEST_XML_RESPONSE;
   private static String TEST_JSON_RESPONSE_WITH_DATATYPES;
-
-  public static String makeUrl(String url) {
-    return String.format(url, MOCK_SERVER_PORT);
-  }
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -154,7 +148,7 @@ public class TestHttpPlugin extends ClusterTest {
     // The connection acts like a schema.
     // Ignores the message body except for data.
     HttpApiConfig mockSchema = HttpApiConfig.builder()
-      .url(makeUrl("http://localhost:%d/json"))
+      .url("http://localhost:8091/json")
       .method("GET")
       .headers(headers)
       .authType("basic")
@@ -171,7 +165,7 @@ public class TestHttpPlugin extends ClusterTest {
     // This is the preferred approach, the base URL contains as much info as possible;
     // all other parameters are specified in SQL. See README for an example.
     HttpApiConfig mockTable = HttpApiConfig.builder()
-      .url(makeUrl("http://localhost:%d/json"))
+      .url("http://localhost:8091/json")
       .method("GET")
       .headers(headers)
       .authType("basic")
@@ -183,7 +177,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockPostConfig = HttpApiConfig.builder()
-      .url(makeUrl("http://localhost:%d/"))
+      .url("http://localhost:8091/")
       .method("POST")
       .headers(headers)
       .postBody("key1=value1\nkey2=value2")
@@ -206,13 +200,13 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockPostConfigWithoutPostBody = HttpApiConfig.builder()
-      .url(makeUrl("http://localhost:%d/"))
+      .url("http://localhost:8091/")
       .method("POST")
       .headers(headers)
       .build();
 
     HttpApiConfig mockCsvConfig = HttpApiConfig.builder()
-      .url(makeUrl("http://localhost:%d/csv"))
+      .url("http://localhost:8091/csv")
       .method("GET")
       .headers(headers)
       .authType("basic")
@@ -232,7 +226,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockXmlConfig = HttpApiConfig.builder()
-      .url(makeUrl("http://localhost:%d/xml"))
+      .url("http://localhost:8091/xml")
       .method("GET")
       .headers(headers)
       .authType("basic")
@@ -244,7 +238,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockGithubWithParam = HttpApiConfig.builder()
-      .url(makeUrl("http://localhost:%d/orgs/{org}/repos"))
+      .url("http://localhost:8091/orgs/{org}/repos")
       .method("GET")
       .headers(headers)
       .params(Arrays.asList("lat", "lng", "date"))
@@ -253,7 +247,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockGithubWithDuplicateParam = HttpApiConfig.builder()
-      .url(makeUrl("http://localhost:%d/orgs/{org}/repos"))
+      .url("http://localhost:8091/orgs/{org}/repos")
       .method("GET")
       .headers(headers)
       .params(Arrays.asList("org", "lng", "date"))
@@ -262,7 +256,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockGithubWithParamInQuery = HttpApiConfig.builder()
-      .url(makeUrl("http://localhost:%d/orgs/{org}/repos?p1={p1}"))
+      .url("http://localhost:8091/orgs/{org}/repos?p1={p1}")
       .method("GET")
       .headers(headers)
       .params(Arrays.asList("p2", "p3"))
@@ -271,7 +265,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockTableWithJsonOptions = HttpApiConfig.builder()
-      .url(makeUrl("http://localhost:%d/json"))
+      .url("http://localhost:8091/json")
       .method("GET")
       .headers(headers)
       .requireTail(false)
@@ -513,7 +507,7 @@ public class TestHttpPlugin extends ClusterTest {
           .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(makeUrl("http://localhost:%d/orgs/apache/repos"))
+          .addRow("http://localhost:8091/orgs/apache/repos")
           .build();
 
       RowSetUtilities.verify(expected, results);
@@ -539,7 +533,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(makeUrl("http://localhost:%d/orgs/true/repos"))
+        .addRow("http://localhost:8091/orgs/true/repos")
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -565,7 +559,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(makeUrl("http://localhost:%d/orgs/1234/repos"))
+        .addRow("http://localhost:8091/orgs/1234/repos")
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -616,7 +610,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(makeUrl("http://localhost:%d/orgs/apache/repos?org=apache"))
+        .addRow("http://localhost:8091/orgs/apache/repos?org=apache")
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -642,7 +636,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(makeUrl("http://localhost:%d/orgs/apache/repos?p1=param1&p2=param2"))
+        .addRow("http://localhost:8091/orgs/apache/repos?p1=param1&p2=param2")
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -799,7 +793,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02"))
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02")
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -822,8 +816,8 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/csvcsv?arg1=4"))
-        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/csvcsv?arg1=4"))
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/csvcsv?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/csvcsv?arg1=4")
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -846,11 +840,11 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/xml?arg1=4"))
-        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/xml?arg1=4"))
-        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/xml?arg1=4"))
-        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/xml?arg1=4"))
-        .addRow(200, "OK", "http/1.1", makeUrl("http://localhost:%d/xml?arg1=4"))
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
+        .addRow(200, "OK", "http/1.1", "http://localhost:8091/xml?arg1=4")
         .build();
 
       RowSetUtilities.verify(expected, results);
@@ -1178,7 +1172,7 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(404, "Client Error", "http/1.1", makeUrl("http://localhost:%d/json"))
+        .addRow(404, "Client Error", "http/1.1", "http://localhost:8091/json")
         .build();
 
       RowSetUtilities.verify(expected, results);

@@ -36,8 +36,6 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -45,7 +43,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWriter {
 
-  private static final Logger logger = LoggerFactory.getLogger(JsonRecordWriter.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonRecordWriter.class);
   private static final String LINE_FEED = String.format("%n");
 
   private Path cleanUpLocation;
@@ -56,8 +54,8 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
   private boolean useExtendedOutput;
 
   private int index;
-  private FileSystem fs;
-  private OutputStream stream;
+  private FileSystem fs = null;
+  private OutputStream stream = null;
 
   private final JsonFactory factory = new JsonFactory();
   private final StorageStrategy storageStrategy;

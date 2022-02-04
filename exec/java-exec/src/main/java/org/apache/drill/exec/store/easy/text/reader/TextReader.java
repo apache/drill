@@ -31,10 +31,10 @@ import java.io.IOException;
  ******************************************************************************/
 
 /**
- * A byte-based Text parser implementation. Builds heavily upon the uniVocity
- * parsers. Customized for UTF8 parsing and DrillBuf support.
+ * A byte-based Text parser implementation. Builds heavily upon the uniVocity parsers. Customized for UTF8 parsing and
+ * DrillBuf support.
  */
-public final class TextReader implements AutoCloseable {
+public final class TextReader {
 
   private static final Logger logger = LoggerFactory.getLogger(TextReader.class);
 
@@ -515,7 +515,6 @@ public final class TextReader implements AutoCloseable {
    * current record reader to clean up state.
    * @throws IOException for input file read errors
    */
-  @Override
   public void close() throws IOException {
     input.close();
   }
