@@ -23,6 +23,7 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -36,8 +37,8 @@ public class ElasticsearchStoragePlugin extends AbstractStoragePlugin {
   private final ElasticsearchDrillSchemaFactory schemaFactory;
 
   public ElasticsearchStoragePlugin(
-      ElasticsearchStorageConfig config, DrillbitContext context, String name) {
-    super(context, name);
+    ElasticsearchStorageConfig config, DrillbitContext context, String name, UserSession session) {
+    super(context, name, session);
     this.config = config;
     this.schemaFactory = new ElasticsearchDrillSchemaFactory(name, this);
   }

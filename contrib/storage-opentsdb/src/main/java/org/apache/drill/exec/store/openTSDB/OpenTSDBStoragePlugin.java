@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -37,8 +38,8 @@ public class OpenTSDBStoragePlugin extends AbstractStoragePlugin {
   private final ServiceImpl db;
 
   public OpenTSDBStoragePlugin(OpenTSDBStoragePluginConfig configuration, DrillbitContext context,
-      String name) throws IOException {
-    super(context, name);
+                               String name, UserSession session) throws IOException {
+    super(context, name, session);
     this.schemaFactory = new OpenTSDBSchemaFactory(this, getName());
     this.engineConfig = configuration;
     this.db = new ServiceImpl(configuration.getConnection());

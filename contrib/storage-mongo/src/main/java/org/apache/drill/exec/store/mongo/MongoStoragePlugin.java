@@ -33,6 +33,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.PluginRulesProviderImpl;
@@ -72,10 +73,11 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   private final StoragePluginRulesSupplier storagePluginRulesSupplier;
 
   public MongoStoragePlugin(
-      MongoStoragePluginConfig mongoConfig,
-      DrillbitContext context,
-      String name) {
-    super(context, name);
+    MongoStoragePluginConfig mongoConfig,
+    DrillbitContext context,
+    String name,
+    UserSession session) {
+    super(context, name, session);
     this.mongoConfig = mongoConfig;
     String connection = addCredentialsFromCredentialsProvider(this.mongoConfig.getConnection(), name);
     this.clientURI = new ConnectionString(connection);

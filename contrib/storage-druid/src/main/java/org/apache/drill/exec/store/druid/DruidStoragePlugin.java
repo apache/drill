@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -45,8 +46,8 @@ public class DruidStoragePlugin extends AbstractStoragePlugin {
   private final DruidSchemaFactory schemaFactory;
   private final ScanQueryBuilder scanQueryBuilder;
 
-  public DruidStoragePlugin(DruidStoragePluginConfig pluginConfig, DrillbitContext context, String name) {
-    super(context, name);
+  public DruidStoragePlugin(DruidStoragePluginConfig pluginConfig, DrillbitContext context, String name, UserSession session) {
+    super(context, name, session);
     this.pluginConfig = pluginConfig;
     this.context = context;
     RestClient restClient = new RestClientWrapper();

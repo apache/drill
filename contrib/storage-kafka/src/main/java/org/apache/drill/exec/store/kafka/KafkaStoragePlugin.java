@@ -24,6 +24,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -43,8 +44,8 @@ public class KafkaStoragePlugin extends AbstractStoragePlugin {
   private final KafkaStoragePluginConfig config;
   private final KafkaAsyncCloser closer;
 
-  public KafkaStoragePlugin(KafkaStoragePluginConfig config, DrillbitContext context, String name) {
-    super(context, name);
+  public KafkaStoragePlugin(KafkaStoragePluginConfig config, DrillbitContext context, String name, UserSession session) {
+    super(context, name, session);
     logger.debug("Initializing {}", KafkaStoragePlugin.class.getName());
     this.config = config;
     this.kafkaSchemaFactory = new KafkaSchemaFactory(this, name);

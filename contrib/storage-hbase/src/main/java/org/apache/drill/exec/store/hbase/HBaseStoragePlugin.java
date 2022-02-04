@@ -24,6 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -44,9 +45,9 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
 
   private final String name;
 
-  public HBaseStoragePlugin(HBaseStoragePluginConfig storeConfig, DrillbitContext context, String name)
+  public HBaseStoragePlugin(HBaseStoragePluginConfig storeConfig, DrillbitContext context, String name, UserSession session)
       throws IOException {
-    super(context, name);
+    super(context, name, session);
     this.schemaFactory = new HBaseSchemaFactory(this, name);
     this.storeConfig = storeConfig;
     this.name = name;

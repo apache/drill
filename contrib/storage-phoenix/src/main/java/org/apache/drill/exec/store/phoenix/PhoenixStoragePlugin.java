@@ -36,6 +36,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -68,8 +69,8 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
       }
     });
 
-  public PhoenixStoragePlugin(PhoenixStoragePluginConfig config, DrillbitContext context, String name) {
-    super(context, name);
+  public PhoenixStoragePlugin(PhoenixStoragePluginConfig config, DrillbitContext context, String name, UserSession session) {
+    super(context, name, session);
     this.config = config;
     this.dialect = PhoenixSqlDialect.DEFAULT;
     this.convention = new PhoenixConvention(dialect, name, this);

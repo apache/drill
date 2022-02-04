@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -36,9 +37,9 @@ public class KuduStoragePlugin extends AbstractStoragePlugin {
 
   private final KuduClient client;
 
-  public KuduStoragePlugin(KuduStoragePluginConfig configuration, DrillbitContext context, String name)
+  public KuduStoragePlugin(KuduStoragePluginConfig configuration, DrillbitContext context, String name, UserSession session)
     throws IOException {
-    super(context, name);
+    super(context, name, session);
     this.schemaFactory = new KuduSchemaFactory(this, name);
     this.engineConfig = configuration;
     this.client = new KuduClient.KuduClientBuilder(configuration.getMasterAddresses()).build();

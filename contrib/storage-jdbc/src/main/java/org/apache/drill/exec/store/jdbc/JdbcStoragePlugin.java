@@ -30,6 +30,7 @@ import org.apache.calcite.sql.SqlDialectFactoryImpl;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -50,8 +51,8 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private final DrillJdbcConvention convention;
   private final JdbcDialect jdbcDialect;
 
-  public JdbcStoragePlugin(JdbcStorageConfig config, DrillbitContext context, String name) {
-    super(context, name);
+  public JdbcStoragePlugin(JdbcStorageConfig config, DrillbitContext context, String name, UserSession session) {
+    super(context, name, session);
     this.config = config;
     this.dataSource = initDataSource(config);
     this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, dataSource);

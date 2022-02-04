@@ -25,6 +25,7 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -39,8 +40,8 @@ public class SplunkStoragePlugin extends AbstractStoragePlugin {
   private final SplunkPluginConfig config;
   private final SplunkSchemaFactory schemaFactory;
 
-  public SplunkStoragePlugin(SplunkPluginConfig configuration, DrillbitContext context, String name) {
-    super(context, name);
+  public SplunkStoragePlugin(SplunkPluginConfig configuration, DrillbitContext context, String name, UserSession session) {
+    super(context, name, session);
     this.config = configuration;
     this.schemaFactory = new SplunkSchemaFactory(this);
   }

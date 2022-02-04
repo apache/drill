@@ -44,6 +44,7 @@ import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.sql.logical.ConvertHiveParquetScanToDrillParquetScan;
 import org.apache.drill.exec.planner.sql.logical.HivePushPartitionFilterIntoScan;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
@@ -70,8 +71,8 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   private HiveSchemaFactory schemaFactory;
   private final HiveConf hiveConf;
 
-  public HiveStoragePlugin(HiveStoragePluginConfig config, DrillbitContext context, String name) throws ExecutionSetupException {
-    super(context, name);
+  public HiveStoragePlugin(HiveStoragePluginConfig config, DrillbitContext context, String name, UserSession session) throws ExecutionSetupException {
+    super(context, name, session);
     this.config = config;
     this.hiveConf = HiveUtilities.generateHiveConf(config.getConfigProps());
     this.schemaFactory = new HiveSchemaFactory(this, name, hiveConf);

@@ -43,6 +43,7 @@ import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -81,8 +82,8 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   private final FileSystemConfig config;
   private final Configuration fsConf;
 
-  public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException {
-    super(context, name);
+  public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name, UserSession session) throws ExecutionSetupException {
+    super(context, name, session);
     this.config = config;
 
     try {
