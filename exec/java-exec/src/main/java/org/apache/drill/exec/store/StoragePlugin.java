@@ -64,11 +64,10 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   StoragePluginConfig getConfig();
 
   /**
-   * Sets the user session.
-   * @param session The user session for the query.
+   * Gets the active user session of the user who submitted the query. If user authentication
+   * is disabled, there is still a user session, however, the user name will be anonymous. 
+   * @return the UserSession object of the user who submitted the query.
    */
-  void setUserSession(UserSession session);
-
   UserSession getUserSession();
 
   /**

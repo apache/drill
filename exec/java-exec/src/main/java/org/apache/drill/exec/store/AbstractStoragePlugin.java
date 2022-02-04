@@ -116,11 +116,6 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
   }
 
   @Override
-  public void setUserSession(UserSession session) {
-    this.userSession = session;
-  }
-
-  @Override
   public UserSession getUserSession() {
     return this.userSession;
   }
