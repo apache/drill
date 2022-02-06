@@ -49,7 +49,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
 
   @SuppressWarnings("unused") // used in StoragePluginRegistryImpl to dynamically init system plugins
   public InfoSchemaStoragePlugin(DrillbitContext context) {
-    this(InfoSchemaConfig.INSTANCE, context, InfoSchemaConstants.IS_SCHEMA_NAME, null);
+    this(InfoSchemaConfig.INSTANCE, context, InfoSchemaConstants.IS_SCHEMA_NAME, UserSession.Builder.newBuilder().build());
   }
 
   public InfoSchemaStoragePlugin(InfoSchemaConfig config, DrillbitContext context, String name, UserSession session) {
