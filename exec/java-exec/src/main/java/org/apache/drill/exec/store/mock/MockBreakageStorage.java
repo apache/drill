@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mock;
 
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.SchemaConfig;
 
@@ -41,8 +42,8 @@ public class MockBreakageStorage extends MockStorageEngine {
 
   public int registerAttemptCount = 0;
 
-  public MockBreakageStorage(MockBreakageStorageEngineConfig configuration, DrillbitContext context, String name) {
-    super(configuration, context, name, null);
+  public MockBreakageStorage(MockBreakageStorageEngineConfig configuration, DrillbitContext context, String name, UserSession session) {
+    super(configuration, context, name, session);
     breakRegister = false;
   }
 
