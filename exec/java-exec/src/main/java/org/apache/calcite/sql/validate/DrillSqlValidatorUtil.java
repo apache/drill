@@ -46,7 +46,7 @@ public class DrillSqlValidatorUtil {
     for (String schemaName : schemaPath) {
       if (schema == rootSchema
         && nameMatcher.matches(schemaName, schema.getName())) {
-        //DrillSqlValidatorUtil.setUserSession(schema, session);
+        DrillSqlValidatorUtil.setUserSession(schema, session);
         continue;
       }
       schema = schema.getSubSchema(schemaName,
