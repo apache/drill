@@ -16,6 +16,9 @@
         }
       },
       "formats" : {
+        "iceberg" : {
+          "type": "iceberg"
+        },
         "psv" : {
           "type" : "text",
           "extensions" : [ "tbl" ],
@@ -73,6 +76,9 @@
         }
       },
       "formats" : {
+        "iceberg" : {
+          "type": "iceberg"
+        },
         "psv" : {
           "type" : "text",
           "extensions" : [ "tbl" ],
