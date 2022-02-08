@@ -19,6 +19,7 @@ package org.apache.drill.exec.server.rest;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -63,6 +64,7 @@ public class PluginConfigWrapper {
    * 3. The credentialsProvider must contain a client_id and client_secret
    * @return true if the plugin uses OAuth, false if not.
    */
+  @JsonIgnore
   public boolean isOauth() {
     if (! (config instanceof AbstractSecuredStoragePluginConfig)) {
       return false;
