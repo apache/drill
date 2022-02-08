@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.exec.store.iceberg.format.IcebergFormatPluginConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -103,6 +104,9 @@ public class StoragePluginTestUtils {
 
     newFormats.put("psv", new TextFormatConfig(
         ImmutableList.of("tbl"), null, "|", null, null, null, null, null));
+
+    IcebergFormatPluginConfig.IcebergFormatPluginConfigBuilder icebergFormatPluginConfigBuilder = new IcebergFormatPluginConfig.IcebergFormatPluginConfigBuilder();
+    newFormats.put("iceberg", icebergFormatPluginConfigBuilder.build());
 
     SequenceFileFormatConfig seqConfig = new SequenceFileFormatConfig(ImmutableList.of("seq"));
     newFormats.put("sequencefile", seqConfig);
