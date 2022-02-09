@@ -186,7 +186,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    */
   @Override
   public SchemaPlus getRootSchema(final String userName) {
-    return schemaTreeProvider.createRootSchema(userName, this);
+    return schemaTreeProvider.createRootSchema(userName, this, session);
   }
 
   /**
@@ -196,7 +196,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    * @return A {@link org.apache.calcite.schema.SchemaPlus} with given <i>schemaConfig</i>.
    */
   public SchemaPlus getRootSchema(SchemaConfig schemaConfig) {
-    return schemaTreeProvider.createRootSchema(schemaConfig);
+    return schemaTreeProvider.createRootSchema(schemaConfig, session);
   }
 
   /**

@@ -33,7 +33,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
  */
 public class DynamicSchema extends SimpleCalciteSchema implements AutoCloseable {
 
-  private UserSession session;
+  private final UserSession session;
 
   public DynamicSchema(CalciteSchema parent, Schema schema, String name, UserSession session) {
     super(parent, schema, name);
@@ -54,13 +54,9 @@ public class DynamicSchema extends SimpleCalciteSchema implements AutoCloseable 
     return session;
   }
 
-  public void setSession(UserSession session) {
-    this.session = session;
-  }
-
   public static SchemaPlus createRootSchema(StoragePluginRegistry storages,
-      SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider) {
-    DynamicRootSchema rootSchema = new DynamicRootSchema(storages, schemaConfig, aliasRegistryProvider, null);
+      SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider, UserSession session) {
+    DynamicRootSchema rootSchema = new DynamicRootSchema(storages, schemaConfig, aliasRegistryProvider, session);
     return rootSchema.plus();
   }
 
@@ -70,5 +66,4 @@ public class DynamicSchema extends SimpleCalciteSchema implements AutoCloseable 
       AutoCloseables.closeWithUserException(cs.plus().unwrap(AbstractSchema.class));
     }
   }
-
 }
