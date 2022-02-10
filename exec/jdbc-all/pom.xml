@@ -33,7 +33,7 @@
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
-    <jdbc-all-jar.maxsize>49300000</jdbc-all-jar.maxsize>
+    <jdbc-all-jar.maxsize>49400000</jdbc-all-jar.maxsize>
   </properties>
 
   <dependencies>
@@ -886,7 +886,7 @@
     <profile>
       <id>hadoop-2</id>
       <properties>
-        <jdbc-all-jar.maxsize>47700000</jdbc-all-jar.maxsize>
+        <jdbc-all-jar.maxsize>50300000</jdbc-all-jar.maxsize>
       </properties>
     </profile>
   </profiles>
