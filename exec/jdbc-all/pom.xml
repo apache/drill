@@ -886,7 +886,7 @@
     <profile>
       <id>hadoop-2</id>
       <properties>
-        <jdbc-all-jar.maxsize>50300000</jdbc-all-jar.maxsize>
+        <jdbc-all-jar.maxsize>50400000</jdbc-all-jar.maxsize>
       </properties>
     </profile>
   </profiles>
