@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.plan.rule;
 
 import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.rel.RelNode;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
@@ -30,6 +31,12 @@ public class PluginLimitRule extends PluginConverterRule {
 
   public PluginLimitRule(RelTrait in, Convention out, PluginImplementor pluginImplementor) {
     super(DrillLimitRelBase.class, in, out, "PluginLimitRule", pluginImplementor);
+  }
+
+  @Override
+  public boolean matches(RelOptRuleCall call) {
+    DrillLimitRelBase limit = call.rel(0);
+    return !limit.isPushDown() && super.matches(call);
   }
 
   @Override
@@ -52,6 +59,7 @@ public class PluginLimitRule extends PluginConverterRule {
         limit.getTraitSet().replace(getOutConvention()),
         input,
         limit.getOffset(),
-        limit.getFetch());
+        limit.getFetch(),
+        true);
   }
 }

@@ -146,6 +146,12 @@ public abstract class DrillJdbcRuleBase extends ConverterRule {
     }
 
     @Override
+    public boolean matches(RelOptRuleCall call) {
+      DrillLimitRelBase limit = call.rel(0);
+      return !limit.isPushDown() && super.matches(call);
+    }
+
+    @Override
     public RelNode convert(RelNode rel) {
       DrillLimitRelBase limit = (DrillLimitRelBase) rel;
 

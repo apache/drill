@@ -36,7 +36,6 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.planner.RuleInstance;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
-import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.store.enumerable.plan.DrillJdbcRuleBase;
 import org.apache.drill.exec.store.enumerable.plan.VertexDrelConverterRule;
 import org.apache.drill.exec.store.jdbc.rules.JdbcLimitRule;
@@ -66,8 +65,7 @@ public class DrillJdbcConvention extends JdbcConvention {
 
     List<RelTrait> inputTraits = Arrays.asList(
       Convention.NONE,
-      DrillRel.DRILL_LOGICAL,
-      Prel.DRILL_PHYSICAL);
+      DrillRel.DRILL_LOGICAL);
 
     ImmutableSet.Builder<RelOptRule> builder = ImmutableSet.<RelOptRule>builder()
       .addAll(calciteJdbcRules)

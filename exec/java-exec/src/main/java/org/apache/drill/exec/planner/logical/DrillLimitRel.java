@@ -48,6 +48,11 @@ public class DrillLimitRel extends DrillLimitRelBase implements DrillRel {
   }
 
   @Override
+  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs, boolean pushDown) {
+    return new DrillLimitRel(getCluster(), traitSet, sole(inputs), offset, fetch, pushDown);
+  }
+
+  @Override
   public LogicalOperator implement(DrillImplementor implementor) {
     LogicalOperator inputOp = implementor.visitChild(this, 0, getInput());
 

@@ -395,4 +395,16 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .exclude("Limit\\(")
         .match();
   }
+
+  @Test // DRILL-8131
+  public void testParquetLimitWithSort() throws Exception {
+    queryBuilder()
+      .sql("SELECT n_name\n" +
+        "FROM cp.`/tpch/nation.parquet`\n" +
+        "ORDER BY n_name DESC\n" +
+        "LIMIT 1")
+      .planMatcher()
+      .include("Limit\\(")
+      .match();
+  }
 }

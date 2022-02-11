@@ -31,17 +31,19 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 
+import java.util.List;
+
 /**
  * Base class for logical and physical Limits implemented in Drill
  */
 public abstract class DrillLimitRelBase extends SingleRel implements DrillRelNode {
   protected RexNode offset;
   protected RexNode fetch;
-  private boolean pushDown;  // whether limit has been pushed past its child.
-                             // Limit is special in that when it's pushed down, the original LIMIT still remains.
-                             // Once the limit is pushed down, this flag will be TRUE for the original LIMIT
-                             // and be FALSE for the pushed down LIMIT.
-                             // This flag will prevent optimization rules to fire in a loop.
+  private final boolean pushDown;  // whether limit has been pushed past its child.
+                                   // Limit is special in that when it's pushed down, the original LIMIT still remains.
+                                   // Once the limit is pushed down, this flag will be TRUE for the original LIMIT
+                                   // and be FALSE for the pushed down LIMIT.
+                                   // This flag will prevent optimization rules to fire in a loop.
 
   public DrillLimitRelBase(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset, RexNode fetch) {
     this(cluster, traitSet, child, offset, fetch, false);
@@ -53,6 +55,8 @@ public abstract class DrillLimitRelBase extends SingleRel implements DrillRelNod
     this.fetch = fetch;
     this.pushDown = pushDown;
   }
+
+  public abstract RelNode copy(RelTraitSet traitSet, List<RelNode> inputs, boolean pushDown);
 
   public RexNode getOffset() {
     return this.offset;
