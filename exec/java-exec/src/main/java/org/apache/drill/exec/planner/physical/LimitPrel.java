@@ -57,6 +57,11 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
   }
 
   @Override
+  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs, boolean pushDown) {
+    return new LimitPrel(getCluster(), traitSet, sole(inputs), offset, fetch, pushDown, isPartitioned);
+  }
+
+  @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getInput();
 

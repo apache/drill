@@ -17,13 +17,19 @@
  */
 package org.apache.drill.exec.store.jdbc.rules;
 
-import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.rel.RelCollations;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.dialect.MssqlSqlDialect;
 import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.store.enumerable.plan.DrillJdbcRuleBase;
+import org.apache.drill.exec.store.enumerable.plan.DrillJdbcSort;
 import org.apache.drill.exec.store.jdbc.DrillJdbcConvention;
+
+import java.math.BigDecimal;
+import java.util.Collections;
 
 public class JdbcLimitRule extends DrillJdbcRuleBase.DrillJdbcLimitRule {
   private final DrillJdbcConvention convention;
@@ -34,17 +40,28 @@ public class JdbcLimitRule extends DrillJdbcRuleBase.DrillJdbcLimitRule {
   }
 
   @Override
-  public boolean matches(RelOptRuleCall call) {
-    DrillLimitRelBase limit = call.rel(0);
-    if (super.matches(call)) {
+  public RelNode convert(RelNode rel) {
+    DrillLimitRelBase limit = (DrillLimitRelBase) rel;
+    if (limit.getOffset() == null
+      || !limit.getTraitSet().contains(RelCollations.EMPTY)
+      || !(convention.getPlugin().getDialect() instanceof MssqlSqlDialect)) {
+      return super.convert(limit);
+    } else {
       // MS SQL doesn't support either OFFSET or FETCH without ORDER BY.
       // But for the case of FETCH without OFFSET, Calcite generates TOP N
       // instead of FETCH, and it is supported by MS SQL.
-      // So do not push down only the limit with both OFFSET and FETCH but without ORDER BY.
-      return limit.getOffset() == null
-        || !limit.getTraitSet().contains(RelCollations.EMPTY)
-        || !(convention.getPlugin().getDialect() instanceof MssqlSqlDialect);
+      // So do splitting the limit with both OFFSET and FETCH but without ORDER BY
+      int offset = Math.max(0, RexLiteral.intValue(limit.getOffset()));
+      int fetch = Math.max(0, RexLiteral.intValue(limit.getFetch()));
+
+      // child Limit uses conservative approach: use offset 0 and fetch = parent limit offset + parent limit fetch.
+      RexNode childFetch = limit.getCluster().getRexBuilder().makeExactLiteral(BigDecimal.valueOf(offset + fetch));
+
+      RelNode jdbcSort = new DrillJdbcSort(limit.getCluster(), limit.getTraitSet().plus(RelCollations.EMPTY).replace(this.out).simplify(),
+        convert(limit.getInput(), limit.getInput().getTraitSet().replace(this.out).simplify()),
+        RelCollations.EMPTY, null, childFetch);
+
+      return limit.copy(limit.getTraitSet(), Collections.singletonList(jdbcSort), true);
     }
-    return false;
   }
 }

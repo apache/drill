@@ -36,8 +36,8 @@ import java.util.List;
 public class PluginLimitRel extends DrillLimitRelBase implements PluginRel {
 
   public PluginLimitRel(RelOptCluster cluster, RelTraitSet traitSet,
-      RelNode child, RexNode offset, RexNode fetch) {
-    super(cluster, traitSet, child, offset, fetch);
+      RelNode child, RexNode offset, RexNode fetch, boolean pushDown) {
+    super(cluster, traitSet, child, offset, fetch, pushDown);
     assert getConvention() == child.getConvention();
   }
 
@@ -48,7 +48,12 @@ public class PluginLimitRel extends DrillLimitRelBase implements PluginRel {
 
   @Override
   public PluginLimitRel copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new PluginLimitRel(getCluster(), traitSet, inputs.get(0), offset, fetch);
+    return new PluginLimitRel(getCluster(), traitSet, inputs.get(0), offset, fetch, isPushDown());
+  }
+
+  @Override
+  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs, boolean pushDown) {
+    return new PluginLimitRel(getCluster(), traitSet, inputs.get(0), offset, fetch, pushDown);
   }
 
   @Override
