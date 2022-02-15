@@ -67,9 +67,6 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
    * @param bitsPerByte bits of data yielded per byte read
    */
   protected final void advanceWriterIndex(DrillBuf valueBuf, double bitsPerByte) {
-    // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
-    // and we will go into the else condition below. The readField method of the parent class requires the
-    // writer index to be set correctly.
     readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
     readLength = (int) Math.ceil(readLengthInBits / bitsPerByte);
     int writerIndex = valueBuf.writerIndex();

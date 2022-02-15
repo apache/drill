@@ -312,9 +312,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
   protected abstract void readField(long recordsToRead);
 
   /**
-   * Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
-   * and we will go into the else condition below. The readField method of the parent class requires the
-   * writer index to be set correctly.
+   * Advance our writer index after reading using an external values reader.
    */
   protected final void advanceWriterIndex() {
     int writerIndex = castedBaseVector.getBuffer().writerIndex();

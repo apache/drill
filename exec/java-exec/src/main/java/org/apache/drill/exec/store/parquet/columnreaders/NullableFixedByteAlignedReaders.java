@@ -90,6 +90,9 @@ public class NullableFixedByteAlignedReaders {
           ByteBuffer buf = currDictValToWrite.toByteBuffer();
           mutator.setSafe(valuesReadInCurrentPass + i, buf, buf.position(), currDictValToWrite.length());
         }
+        // The next page that gets read might be a page that does not use dictionary encoding
+        // and we will go into the else condition below. The readField method of the parent class requires the
+        // writer index to be set correctly.
         advanceWriterIndex();
       } else {
         super.readField(recordsToReadInThisPass);
