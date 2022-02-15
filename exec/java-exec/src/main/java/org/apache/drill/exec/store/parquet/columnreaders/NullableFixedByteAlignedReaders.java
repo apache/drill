@@ -90,10 +90,6 @@ public class NullableFixedByteAlignedReaders {
           ByteBuffer buf = currDictValToWrite.toByteBuffer();
           mutator.setSafe(valuesReadInCurrentPass + i, buf, buf.position(), currDictValToWrite.length());
         }
-        // The next page that gets read might be a page that does not use dictionary encoding
-        // and we will go into the else condition below. The readField method of the parent class requires the
-        // writer index to be set correctly.
-        advanceWriterIndex();
       } else {
         super.readField(recordsToReadInThisPass);
         // TODO - replace this with fixed binary type in drill
@@ -127,7 +123,6 @@ public class NullableFixedByteAlignedReaders {
         Binary binaryTimeStampValue = valReader.readBytes();
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
       }
-      advanceWriterIndex();
     }
   }
 
@@ -146,7 +141,6 @@ public class NullableFixedByteAlignedReaders {
       for (int i = 0; i < recordsToReadInThisPass; i++){
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger());
       }
-      advanceWriterIndex();
     }
   }
 
@@ -165,7 +159,6 @@ public class NullableFixedByteAlignedReaders {
       for (int i = 0; i < recordsToReadInThisPass; i++){
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger());
       }
-      advanceWriterIndex();
     }
   }
 
@@ -184,7 +177,6 @@ public class NullableFixedByteAlignedReaders {
       for (int i = 0; i < recordsToReadInThisPass; i++){
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger());
       }
-      advanceWriterIndex();
     }
   }
 
@@ -203,7 +195,6 @@ public class NullableFixedByteAlignedReaders {
       for (int i = 0; i < recordsToReadInThisPass; i++) {
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger() / 1000);
       }
-      advanceWriterIndex();
     }
   }
 
@@ -222,7 +213,6 @@ public class NullableFixedByteAlignedReaders {
       for (int i = 0; i < recordsToReadInThisPass; i++){
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readLong());
       }
-      advanceWriterIndex();
     }
   }
 
@@ -241,7 +231,6 @@ public class NullableFixedByteAlignedReaders {
       for (int i = 0; i < recordsToReadInThisPass; i++){
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readLong());
       }
-      advanceWriterIndex();
     }
   }
 
@@ -260,7 +249,6 @@ public class NullableFixedByteAlignedReaders {
       for (int i = 0; i < recordsToReadInThisPass; i++){
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readLong());
       }
-      advanceWriterIndex();
     }
   }
 
@@ -279,7 +267,6 @@ public class NullableFixedByteAlignedReaders {
       for (int i = 0; i < recordsToReadInThisPass; i++) {
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readLong() / 1000);
       }
-      advanceWriterIndex();
     }
   }
 
@@ -367,7 +354,6 @@ public class NullableFixedByteAlignedReaders {
       for (int i = 0; i < recordsToReadInThisPass; i++){
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readFloat());
       }
-      advanceWriterIndex();
     }
   }
 
@@ -386,7 +372,6 @@ public class NullableFixedByteAlignedReaders {
       for (int i = 0; i < recordsToReadInThisPass; i++){
         valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readDouble());
       }
-      advanceWriterIndex();
     }
   }
 

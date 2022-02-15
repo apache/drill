@@ -61,18 +61,6 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
     vectorData.writeBytes(bytebuf, (int) readStartInBytes, (int) readLength);
   }
 
-  /**
-   * Advance our writer index after reading using an external values reader.
-   * @param valueBuf buffer backing the target value vector
-   * @param bitsPerByte bits of data yielded per byte read
-   */
-  protected final void advanceWriterIndex(DrillBuf valueBuf, double bitsPerByte) {
-    readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-    readLength = (int) Math.ceil(readLengthInBits / bitsPerByte);
-    int writerIndex = valueBuf.writerIndex();
-    valueBuf.setIndex(0, writerIndex + (int)readLength);
-  }
-
   public static class FixedBinaryReader extends FixedByteAlignedReader<VariableWidthVector> {
     // TODO - replace this with fixed binary type in drill
     VariableWidthVector castedVector;

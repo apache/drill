@@ -310,12 +310,4 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
 
     @Override
   protected abstract void readField(long recordsToRead);
-
-  /**
-   * Advance our writer index after reading using an external values reader.
-   */
-  protected final void advanceWriterIndex() {
-    int writerIndex = castedBaseVector.getBuffer().writerIndex();
-    castedBaseVector.getBuffer().setIndex(0, writerIndex + (int) readLength);
-  }
 }
