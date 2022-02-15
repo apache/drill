@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.union;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -71,7 +72,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
   private final List<TransferPair> transfers = new ArrayList<>();
   private final List<ValueVector> allocationVectors = new ArrayList<>();
   private int recordCount;
-  private UnionInputIterator unionInputIterator;
+  private Iterator<Pair<IterOutcome, BatchStatusWrappper>> unionInputIterator;
 
   public UnionAllRecordBatch(UnionAll config, List<RecordBatch> children, FragmentContext context) throws OutOfMemoryException {
     super(config, context, true, children.get(0), children.get(1));
@@ -425,6 +426,13 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     public void remove() {
       throw new UnsupportedOperationException();
     }
+  }
+
+  @Override
+  protected void cancelIncoming() {
+    super.cancelIncoming();
+    // prevent iterating union inputs after the cancellation request
+    unionInputIterator = Collections.emptyIterator();
   }
 
   @Override
