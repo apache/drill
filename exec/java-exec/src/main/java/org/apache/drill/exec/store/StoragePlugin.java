@@ -155,6 +155,17 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    */
   FormatPlugin getFormatPlugin(FormatPluginConfig config);
 
+  /**
+   * This function is used to update the user session in a c hed storage plugin.
+   * @param session The current user session.
+   * @return
+   */
   StoragePlugin clone(UserSession session);
 
+  /**
+   * Returns the username of the active (logged in) user.  This is to be used for storage
+   * plugins which DO NOT use Hadoop-style user-impersonation, such as ElasticSearch, JDBC or Splunk.
+   * @return The logged in user.  If there is no logged in user, or authentication is disabled, will return anonymous.
+   */
+  String getActiveUsername();
 }

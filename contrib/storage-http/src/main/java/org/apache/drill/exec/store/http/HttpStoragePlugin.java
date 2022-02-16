@@ -55,6 +55,8 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
     OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
     tokenRegistry = tokenProvider.getOauthTokenRegistry();
     tokenRegistry.createTokenTable(getName());
+    // TODO Remove me...
+    System.out.println("Active username: " + getActiveUsername());
   }
 
   private HttpStoragePlugin (HttpStoragePlugin that, UserSession session) {
@@ -63,6 +65,8 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
     this.registry = that.context.getStorage();
     this.schemaFactory = that.schemaFactory;
     this.tokenRegistry = that.tokenRegistry;
+    // TODO Remove me...
+    System.out.println("Active username (Clone): " + getActiveUsername());
   }
 
   @Override

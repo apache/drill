@@ -169,7 +169,7 @@ public class PluginHandle {
   /**
    * Retrieve the storage plugin instance, creating it if needed. Creation can take
    * time if the plugin creates a connection to another system, especially if that system
-   * suffers timeouts.
+   * suffers timeouts.  In the event the connection is pulled from cache,
    *
    * @param session The active user session.
    * @return the initialized storage plugin
@@ -178,7 +178,7 @@ public class PluginHandle {
    */
   public synchronized StoragePlugin plugin(UserSession session) {
     if (plugin != null) {
-      return plugin;
+      return plugin.clone(session);
     }
     logger.info("Creating storage plugin for {}", name);
     try {
