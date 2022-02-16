@@ -46,14 +46,15 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
   private final String name;
   protected UserSession userSession;
 
-  protected AbstractStoragePlugin(DrillbitContext inContext, String inName) {
-    this.context = inContext;
-    this.name = inName == null ? null : inName.toLowerCase();
-  }
-
   protected AbstractStoragePlugin(DrillbitContext inContext, String inName, UserSession session) {
     this.context = inContext;
     this.name = inName == null ? null : inName.toLowerCase();
+    this.userSession = session;
+  }
+
+  protected AbstractStoragePlugin(AbstractStoragePlugin that, UserSession session) {
+    this.context = that.context;
+    this.name = that.name;
     this.userSession = session;
   }
 
@@ -168,5 +169,11 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
 
   public DrillbitContext getContext() {
     return context;
+  }
+
+  @Override
+  public AbstractStoragePlugin clone (UserSession session) {
+    this.userSession = session;
+    return this;
   }
 }

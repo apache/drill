@@ -57,6 +57,19 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
     tokenRegistry.createTokenTable(getName());
   }
 
+  private HttpStoragePlugin (HttpStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.config = that.config;
+    this.registry = that.context.getStorage();
+    this.schemaFactory = that.schemaFactory;
+    this.tokenRegistry = that.tokenRegistry;
+  }
+
+  @Override
+  public HttpStoragePlugin clone(UserSession session) {
+    return new HttpStoragePlugin(this, session);
+  }
+
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     schemaFactory.registerSchemas(schemaConfig, parent);

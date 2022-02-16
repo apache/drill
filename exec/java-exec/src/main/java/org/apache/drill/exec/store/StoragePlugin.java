@@ -154,4 +154,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * @throws UnsupportedOperationException, if storage plugin doesn't support format plugins.
    */
   FormatPlugin getFormatPlugin(FormatPluginConfig config);
+
+  StoragePlugin clone(UserSession session);
+
 }
