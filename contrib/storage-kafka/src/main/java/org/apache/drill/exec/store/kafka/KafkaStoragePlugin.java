@@ -52,6 +52,18 @@ public class KafkaStoragePlugin extends AbstractStoragePlugin {
     this.closer = new KafkaAsyncCloser();
   }
 
+  private KafkaStoragePlugin(KafkaStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.config = that.config;
+    this.kafkaSchemaFactory = that.kafkaSchemaFactory;
+    this.closer = that.closer;
+  }
+
+  @Override
+  public KafkaStoragePlugin clone(UserSession session) {
+    return new KafkaStoragePlugin(this, session);
+  }
+
   @Override
   public KafkaStoragePluginConfig getConfig() {
     return this.config;

@@ -60,6 +60,20 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     this.jdbcDialect = JdbcDialectFactory.getJdbcDialect(this, config.getUrl());
   }
 
+  private JdbcStoragePlugin(JdbcStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.config = that.config;
+    this.dataSource = that.dataSource;
+    this.dialect = that.dialect;
+    this.convention = that.convention;
+    this.jdbcDialect = that.jdbcDialect;
+  }
+
+  @Override
+  public JdbcStoragePlugin clone(UserSession session) {
+    return new JdbcStoragePlugin(this, session);
+  }
+
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
     this.jdbcDialect.registerSchemas(config, parent);

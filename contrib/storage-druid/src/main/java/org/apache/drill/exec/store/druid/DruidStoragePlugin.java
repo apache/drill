@@ -57,6 +57,21 @@ public class DruidStoragePlugin extends AbstractStoragePlugin {
     this.scanQueryBuilder = new ScanQueryBuilder();
   }
 
+  private DruidStoragePlugin(DruidStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.pluginConfig = that.pluginConfig;
+    this.context = that.context;
+    this.druidAdminClient = that.druidAdminClient;
+    this.druidQueryClient = that.druidQueryClient;
+    this.schemaFactory = that.schemaFactory;
+    this.scanQueryBuilder = that.scanQueryBuilder;
+  }
+
+  @Override
+  public DruidStoragePlugin clone(UserSession session) {
+    return new DruidStoragePlugin(this, session);
+  }
+
   @Override
   public DruidGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
     DruidScanSpec scanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<DruidScanSpec>() {});

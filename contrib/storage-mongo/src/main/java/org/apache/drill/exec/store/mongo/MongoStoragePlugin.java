@@ -89,6 +89,20 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
     this.storagePluginRulesSupplier = storagePluginRulesSupplier(name, mongoConfig);
   }
 
+  private MongoStoragePlugin(MongoStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.mongoConfig = that.mongoConfig;
+    this.schemaFactory = that.schemaFactory;
+    this.addressClientMap = that.addressClientMap;
+    this.clientURI = that.clientURI;
+    this.storagePluginRulesSupplier = that.storagePluginRulesSupplier;
+  }
+
+  @Override
+  public MongoStoragePlugin clone(UserSession session) {
+    return new MongoStoragePlugin(this, session);
+  }
+
   private static StoragePluginRulesSupplier storagePluginRulesSupplier(String name, MongoStoragePluginConfig mongoConfig) {
     Convention convention = new Convention.Impl("MONGO." + name, PluginRel.class);
     return StoragePluginRulesSupplier.builder()

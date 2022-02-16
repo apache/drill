@@ -46,6 +46,17 @@ public class SplunkStoragePlugin extends AbstractStoragePlugin {
     this.schemaFactory = new SplunkSchemaFactory(this);
   }
 
+  private SplunkStoragePlugin(SplunkStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.config = that.config;
+    this.schemaFactory = that.schemaFactory;
+  }
+
+  @Override
+  public SplunkStoragePlugin clone(UserSession session) {
+    return new SplunkStoragePlugin(this, session);
+  }
+
   @Override
   public SplunkPluginConfig getConfig() {
     return config;

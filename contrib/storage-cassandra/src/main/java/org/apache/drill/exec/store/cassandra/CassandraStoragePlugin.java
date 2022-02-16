@@ -45,6 +45,18 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
     this.schemaFactory = new CassandraRootDrillSchemaFactory(name, this);
   }
 
+  private CassandraStoragePlugin(CassandraStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.config = that.config;
+    this.schemaFactory = that.schemaFactory;
+  }
+
+  @Override
+  public CassandraStoragePlugin clone(UserSession session) {
+    return new CassandraStoragePlugin(this, session);
+  }
+
+
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
     schemaFactory.registerSchemas(schemaConfig, parent);

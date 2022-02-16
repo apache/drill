@@ -54,6 +54,19 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
     this.connectionKey = new HBaseConnectionKey();
   }
 
+  private HBaseStoragePlugin(HBaseStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.storeConfig = that.storeConfig;
+    this.schemaFactory = that.schemaFactory;
+    this.connectionKey = that.connectionKey;
+    this.name = that.name;
+  }
+
+  @Override
+  public HBaseStoragePlugin clone(UserSession session) {
+    return new HBaseStoragePlugin(this, session);
+  }
+
   @Override
   public boolean supportsRead() {
     return true;

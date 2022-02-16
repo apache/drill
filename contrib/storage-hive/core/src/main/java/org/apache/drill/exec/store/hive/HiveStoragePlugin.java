@@ -78,6 +78,18 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
     this.schemaFactory = new HiveSchemaFactory(this, name, hiveConf);
   }
 
+  private HiveStoragePlugin(HiveStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.config = that.config;
+    this.schemaFactory = that.schemaFactory;
+    this.hiveConf = that.hiveConf;
+  }
+
+  @Override
+  public HiveStoragePlugin clone(UserSession session) {
+    return new HiveStoragePlugin(this, session);
+  }
+
   public HiveConf getHiveConf() {
     return hiveConf;
   }

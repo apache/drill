@@ -43,6 +43,17 @@ public class ElasticsearchStoragePlugin extends AbstractStoragePlugin {
     this.schemaFactory = new ElasticsearchDrillSchemaFactory(name, this);
   }
 
+  private ElasticsearchStoragePlugin (ElasticsearchStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.config = that.config;
+    this.schemaFactory = that.schemaFactory;
+  }
+
+  @Override
+  public ElasticsearchStoragePlugin clone(UserSession session) {
+    return new ElasticsearchStoragePlugin(this, session);
+  }
+
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws JsonProcessingException {
     schemaFactory.registerSchemas(schemaConfig, parent);

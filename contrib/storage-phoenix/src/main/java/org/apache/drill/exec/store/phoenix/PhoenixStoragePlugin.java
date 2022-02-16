@@ -78,6 +78,20 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
     this.impersonationEnabled = context.getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
+  private PhoenixStoragePlugin(PhoenixStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.config = that.config;
+    this.dialect = that.dialect;
+    this.convention = that.convention;
+    this.schemaFactory = that.schemaFactory;
+    this.impersonationEnabled = that.impersonationEnabled;
+  }
+
+  @Override
+  public PhoenixStoragePlugin clone(UserSession session) {
+    return new PhoenixStoragePlugin(this, session);
+  }
+
   @Override
   public StoragePluginConfig getConfig() {
     return config;

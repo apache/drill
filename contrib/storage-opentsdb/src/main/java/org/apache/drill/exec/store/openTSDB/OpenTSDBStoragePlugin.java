@@ -45,6 +45,18 @@ public class OpenTSDBStoragePlugin extends AbstractStoragePlugin {
     this.db = new ServiceImpl(configuration.getConnection());
   }
 
+  private OpenTSDBStoragePlugin(OpenTSDBStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.engineConfig = that.engineConfig;
+    this.schemaFactory = that.schemaFactory;
+    this.db = that.db;
+  }
+
+  @Override
+  public OpenTSDBStoragePlugin clone(UserSession session) {
+    return new OpenTSDBStoragePlugin(this, session);
+  }
+
   @Override
   public boolean supportsRead() {
     return true;

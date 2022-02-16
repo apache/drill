@@ -45,6 +45,18 @@ public class KuduStoragePlugin extends AbstractStoragePlugin {
     this.client = new KuduClient.KuduClientBuilder(configuration.getMasterAddresses()).build();
   }
 
+  private KuduStoragePlugin(KuduStoragePlugin that, UserSession session) {
+    super(that, session);
+    this.engineConfig = that.engineConfig;
+    this.schemaFactory = that.schemaFactory;
+    this.client = that.client;
+  }
+
+  @Override
+  public KuduStoragePlugin clone(UserSession session) {
+    return new KuduStoragePlugin(this, session);
+  }
+
   public KuduClient getClient() {
     return client;
   }
