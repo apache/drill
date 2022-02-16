@@ -1323,4 +1323,23 @@ public class TestUnionAll extends BaseTestQuery {
         .run();
   }
 
+  @Test // DRILL-8137
+  public void testUnionCancellation() throws Exception {
+    String query = "WITH foo AS\n" +
+      "  (SELECT 1 AS a FROM cp.`/tpch/nation.parquet`\n" +
+      "   UNION ALL\n" +
+      "   SELECT 1 AS a FROM cp.`/tpch/nation.parquet`\n" +
+      "   WHERE n_nationkey > (SELECT 1) )\n" +
+      "SELECT * FROM foo\n" +
+      "LIMIT 1";
+
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .baselineColumns("a")
+      .baselineValues(1)
+      .build()
+      .run();
+  }
+
 }
