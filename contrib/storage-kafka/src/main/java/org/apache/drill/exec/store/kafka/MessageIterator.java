@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -79,7 +80,7 @@ public class MessageIterator implements Iterator<ConsumerRecord<byte[], byte[]>>
     ConsumerRecords<byte[], byte[]> consumerRecords;
     Stopwatch stopwatch = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     try {
-      consumerRecords = kafkaConsumer.poll(kafkaPollTimeOut);
+      consumerRecords = kafkaConsumer.poll(Duration.ofMillis(kafkaPollTimeOut));
     } catch (KafkaException ke) {
       throw UserException.dataReadError(ke).message(ke.getMessage()).build(logger);
     } finally {

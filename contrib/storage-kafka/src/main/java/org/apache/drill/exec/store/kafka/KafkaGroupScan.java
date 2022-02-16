@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -26,6 +27,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -44,6 +46,7 @@ import org.apache.drill.exec.store.schedule.AssignmentCreator;
 import org.apache.drill.exec.store.schedule.CompleteWork;
 import org.apache.drill.exec.store.schedule.EndpointByteMap;
 import org.apache.drill.exec.store.schedule.EndpointByteMapImpl;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
@@ -176,14 +179,13 @@ public class KafkaGroupScan extends AbstractGroupScan {
             .message("Table '%s' does not exist", topicName)
             .build(logger);
       }
-
       kafkaConsumer.subscribe(Collections.singletonList(topicName));
       // based on KafkaConsumer JavaDoc, seekToBeginning/seekToEnd functions
       // evaluates lazily, seeking to the first/last offset in all partitions only
       // when poll(long) or
       // position(TopicPartition) are called
-      kafkaConsumer.poll(0);
-      Set<TopicPartition> assignments = kafkaConsumer.assignment();
+      kafkaConsumer.poll(Duration.ofSeconds(5));
+      Set<TopicPartition> assignments = waitForConsumerAssignment(kafkaConsumer);
       topicPartitions = kafkaConsumer.partitionsFor(topicName);
 
       // fetch start offsets for each topicPartition
@@ -225,6 +227,34 @@ public class KafkaGroupScan extends AbstractGroupScan {
       }
       partitionWorkMap.put(topicPartition, work);
     }
+  }
+
+
+  /** Workaround for Kafka > 2.0 version due to KIP-505.
+   * It can be replaced with Kafka implementation once it will be introduced.
+   * @param consumer Kafka consumer whom need to get assignments
+   * @return
+   * @throws InterruptedException
+   */
+  private Set<TopicPartition> waitForConsumerAssignment(Consumer consumer) throws InterruptedException {
+    Set<TopicPartition> assignments = consumer.assignment();
+
+    long waitingForAssigmentTimeout = kafkaStoragePlugin.getContext().getOptionManager().getLong(ExecConstants.KAFKA_POLL_TIMEOUT);
+    long timeout = 0;
+
+    while (assignments.isEmpty() && timeout < waitingForAssigmentTimeout) {
+      Thread.sleep(500);
+      timeout += 500;
+      assignments = consumer.assignment();
+    }
+
+    if (timeout >= waitingForAssigmentTimeout) {
+      throw UserException.dataReadError()
+        .message("Consumer assignment wasn't completed within the timeout %s", waitingForAssigmentTimeout)
+        .build(logger);
+    }
+
+    return assignments;
   }
 
   @Override
