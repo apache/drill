@@ -156,7 +156,7 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   FormatPlugin getFormatPlugin(FormatPluginConfig config);
 
   /**
-   * This function is used to update the user session in a c hed storage plugin.
+   * This function is used to update the user session in attached storage plugin.
    * @param session The current user session.
    * @return
    */
