@@ -66,6 +66,9 @@ public class HttpApiConfig {
   private final String postBody;
 
   @JsonProperty
+  private final String jsonPostBody;
+
+  @JsonProperty
   private final Map<String, String> headers;
 
   /**
@@ -127,6 +130,8 @@ public class HttpApiConfig {
   public String postBody() {
     return this.postBody;
   }
+
+  public String jsonPostBody() { return jsonPostBody; }
 
   public Map<String, String> headers() {
     return this.headers;
@@ -196,6 +201,7 @@ public class HttpApiConfig {
       && Objects.equals(inputType, that.inputType)
       && Objects.equals(limitQueryParam, that.limitQueryParam)
       && Objects.equals(jsonOptions, that.jsonOptions)
+      && Objects.equals(jsonPostBody, that.jsonPostBody)
       && Objects.equals(credentialsProvider, that.credentialsProvider)
       && Objects.equals(paginator, that.paginator);
   }
@@ -203,7 +209,7 @@ public class HttpApiConfig {
   @Override
   public int hashCode() {
     return Objects.hash(url, requireTail, method, postBody, headers, params, dataPath,
-      authType, inputType, xmlDataLevel, limitQueryParam, errorOn400, jsonOptions, verifySSLCert,
+      authType, inputType, xmlDataLevel, limitQueryParam, errorOn400, jsonOptions, jsonPostBody, verifySSLCert,
       credentialsProvider, paginator, directCredentials);
   }
 
@@ -223,6 +229,7 @@ public class HttpApiConfig {
       .field("limitQueryParam", limitQueryParam)
       .field("errorOn400", errorOn400)
       .field("jsonOptions", jsonOptions)
+      .field("jsonOptions", jsonPostBody)
       .field("verifySSLCert", verifySSLCert)
       .field("credentialsProvider", credentialsProvider)
       .field("paginator", paginator)
@@ -271,6 +278,7 @@ public class HttpApiConfig {
     // Accept either basic or none.  The default is none.
     this.authType = StringUtils.defaultIfEmpty(builder.authType, "none");
     this.postBody = builder.postBody;
+    this.jsonPostBody = builder.jsonPostBody;
     this.params = CollectionUtils.isEmpty(builder.params) ? null :
       ImmutableList.copyOf(builder.params);
     this.dataPath = StringUtils.defaultIfEmpty(builder.dataPath, null);
@@ -348,6 +356,8 @@ public class HttpApiConfig {
     private String method;
 
     private String postBody;
+
+    private String jsonPostBody;
 
     private Map<String, String> headers;
 
@@ -432,6 +442,11 @@ public class HttpApiConfig {
 
     public HttpApiConfigBuilder postBody(String postBody) {
       this.postBody = postBody;
+      return this;
+    }
+
+    public HttpApiConfigBuilder jsonPostBody(String jsonPostBody) {
+      this.jsonPostBody = jsonPostBody;
       return this;
     }
 

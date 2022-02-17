@@ -137,6 +137,18 @@ postBody: "key1=value1
 key2=value2"
 ```
 
+`jsonPostBody`: Some APIs require that data be sent as part of a JSON post body. Simply add the JSON string 
+which is to be included as shown below.  
+
+**Note that APIs can have either a JSON post body OR key/value pairs in the post body
+but not both.**
+
+```json
+jsonPostBody: "{ \"foo\": \"bar\" }"
+
+```
+
+
 #### Headers
 
 `headers`: Often APIs will require custom headers as part of the authentication. This field allows

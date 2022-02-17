@@ -22,9 +22,11 @@ import okhttp3.Credentials;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import org.apache.commons.lang3.StringUtils;
@@ -251,8 +253,14 @@ public class SimpleHttp {
     HttpApiConfig apiConfig = scanDefn.tableSpec().connectionConfig();
     if (apiConfig.getMethodType() == HttpMethod.POST) {
       // Handle POST requests
-      FormBody.Builder formBodyBuilder = buildPostBody(apiConfig.postBody());
-      requestBuilder.post(formBodyBuilder.build());
+      // Users can add either a JSON Post Body OR key/value pairs to a POST request, but not both.
+      if (StringUtils.isNotEmpty(apiConfig.jsonPostBody())) {
+        RequestBody body = RequestBody.create(apiConfig.jsonPostBody(), MediaType.parse("application/json"));
+        requestBuilder.post(body);
+      } else {
+        FormBody.Builder formBodyBuilder = buildPostBody(apiConfig.postBody());
+        requestBuilder.post(formBodyBuilder.build());
+      }
     }
 
     // Log the URL and method to aid in debugging user issues.
