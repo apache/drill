@@ -38,8 +38,6 @@ import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
