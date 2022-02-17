@@ -18,8 +18,10 @@
 package org.apache.drill.exec.store.parquet.compression;
 
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,17 +52,30 @@ public class DrillCompressionCodecFactory implements CompressionCodecFactory {
 
   // The set of codecs to be handled by aircompressor
   private static final Set<CompressionCodecName> AIRCOMPRESSOR_CODECS = new HashSet<>(
-      Arrays.asList(CompressionCodecName.LZ4, CompressionCodecName.LZO,
-          CompressionCodecName.SNAPPY, CompressionCodecName.ZSTD));
+      Arrays.asList(
+        CompressionCodecName.LZ4,
+        CompressionCodecName.LZO,
+        CompressionCodecName.SNAPPY,
+        CompressionCodecName.ZSTD
+      )
+  );
 
-  // pool of reused aircompressor compressors (parquet-mr's factory has its own)
+  // pool of reusable thread-safe aircompressor compressors (parquet-mr's factory has its own)
   private final Map<CompressionCodecName, AirliftBytesInputCompressor> airCompressors = new HashMap<>();
 
   // fallback parquet-mr compression codec factory
-  private CompressionCodecFactory parqCodecFactory;
+  // TODO: uncomment once PARQUET-2126 is fixed.
+  // private final CompressionCodecFactory parqCodecFactory;
 
   // direct memory allocator to be used during (de)compression
-  private ByteBufferAllocator allocator;
+  private final ByteBufferAllocator allocator;
+
+  // Start: members for working around a CodecFactory concurrency bug c.f. DRILL-8139
+  // TODO: remove once PARQUET-2126 is fixed.
+  private final Deque<CompressionCodecFactory> singleUseFactories;
+  private final Configuration config;
+  private final int pageSize;
+  // End
 
   // static builder method, solely to mimick the parquet-mr API as closely as possible
   public static CompressionCodecFactory createDirectCodecFactory(Configuration config, ByteBufferAllocator allocator,
@@ -69,49 +84,69 @@ public class DrillCompressionCodecFactory implements CompressionCodecFactory {
   }
 
   public DrillCompressionCodecFactory(Configuration config, ByteBufferAllocator allocator, int pageSize) {
+    this.config = config;
     this.allocator = allocator;
-    this.parqCodecFactory = CodecFactory.createDirectCodecFactory(config, allocator, pageSize);
-
-    logger.debug(
-        "constructed a {} using a fallback factory of {}",
-        getClass().getName(),
-        parqCodecFactory.getClass().getName()
-    );
+    this.pageSize = pageSize;
+    this.singleUseFactories = new LinkedList<>();
+    // TODO: uncomment once PARQUET-2126 is fixed.
+    // this.parqCodecFactory = CodecFactory.createDirectCodecFactory(config, allocator, pageSize);
   }
 
   @Override
-  public BytesInputCompressor getCompressor(CompressionCodecName codecName) {
+  public synchronized BytesInputCompressor getCompressor(CompressionCodecName codecName) {
     if (AIRCOMPRESSOR_CODECS.contains(codecName)) {
       return airCompressors.computeIfAbsent(
           codecName,
           c -> new AirliftBytesInputCompressor(codecName, allocator)
       );
     } else {
-      return parqCodecFactory.getCompressor(codecName);
+      // Work around PARQUET-2126: construct a new codec factory every time to
+      // avoid a concurrrency bug c.f. DRILL-8139.  Fortunately, constructing
+      // and releasing codec factories appears to be light weight.
+      CompressionCodecFactory ccf = CodecFactory.createDirectCodecFactory(config, allocator, pageSize);
+      // hold onto a reference for later release()
+      singleUseFactories.add(ccf);
+      return ccf.getCompressor(codecName);
+
+      // TODO: replace the above with the below PARQUET-2126 is fixed
+      // return parqCodecFactory.getDecompressor(codecName);
     }
   }
 
   @Override
-  public BytesInputDecompressor getDecompressor(CompressionCodecName codecName) {
+  public synchronized BytesInputDecompressor getDecompressor(CompressionCodecName codecName) {
     if (AIRCOMPRESSOR_CODECS.contains(codecName)) {
       return airCompressors.computeIfAbsent(
           codecName,
           c -> new AirliftBytesInputCompressor(codecName, allocator)
       );
     } else {
-      return parqCodecFactory.getDecompressor(codecName);
+      // Work around PARQUET-2126: construct a new codec factory every time to
+      // avoid a concurrrency bug c.f. DRILL-8139.  Fortunately, constructing
+      // and releasing codec factories appears to be light weight.
+      CompressionCodecFactory ccf = CodecFactory.createDirectCodecFactory(config, allocator, pageSize);
+      // hold onto a reference for later release()
+      singleUseFactories.add(ccf);
+      return ccf.getDecompressor(codecName);
+
+      // TODO: replace the above with the below PARQUET-2126 is fixed
+      // return parqCodecFactory.getDecompressor(codecName);
     }
   }
 
   @Override
-  public void release() {
-    parqCodecFactory.release();
-    logger.debug("released {}", parqCodecFactory);
+  public synchronized void release() {
+    // TODO: uncomment once PARQUET-2126 is fixed.
+    // parqCodecFactory.release();
+    // logger.debug("released {}", parqCodecFactory);
 
-    for (AirliftBytesInputCompressor abic : airCompressors.values()) {
-      abic.release();
-      logger.debug("released {}", abic);
-    }
+    airCompressors.values().forEach(AirliftBytesInputCompressor::release);
+    logger.debug("released {} aircompressors", airCompressors.size());
     airCompressors.clear();
+
+    // TODO: remove once PARQUET-2126 is fixed.
+    singleUseFactories.forEach(CompressionCodecFactory::release);
+    logger.debug("released {} single-use codec factories.", singleUseFactories.size());
+    singleUseFactories.clear();
   }
 }

@@ -51,7 +51,7 @@
     <shaded.guava.version>28.2-jre</shaded.guava.version>
     <guava.version>30.1.1-jre</guava.version>
     <forkCount>2</forkCount>
-    <parquet.version>1.12.0</parquet.version>
+    <parquet.version>1.12.2</parquet.version>
     <parquet.format.version>2.8.0</parquet.format.version>
     <!--
       For development purposes to be able to use custom Calcite versions (e.g. not present in jitpack

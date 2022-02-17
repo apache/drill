@@ -19,7 +19,8 @@ package org.apache.drill.exec.store.parquet.compression;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Stack;
+import java.util.Deque;
+import java.util.LinkedList;
 
 import org.apache.parquet.bytes.ByteBufferAllocator;
 import org.apache.parquet.bytes.BytesInput;
@@ -59,7 +60,7 @@ public class AirliftBytesInputCompressor implements CompressionCodecFactory.Byte
   private ByteBufferAllocator allocator;
 
   // all the direct memory buffers we've allocated, and must release
-  private Stack<ByteBuffer> allocatedBuffers;
+  private Deque<ByteBuffer> allocatedBuffers;
 
   public AirliftBytesInputCompressor(CompressionCodecName codecName, ByteBufferAllocator allocator) {
     this.codecName = codecName;
@@ -86,7 +87,7 @@ public class AirliftBytesInputCompressor implements CompressionCodecFactory.Byte
     }
 
     this.allocator = allocator;
-    this.allocatedBuffers = new Stack<>();
+    this.allocatedBuffers = new LinkedList<>();
 
     logger.debug(
         "constructed a {} using a backing compressor of {}",
@@ -159,13 +160,16 @@ public class AirliftBytesInputCompressor implements CompressionCodecFactory.Byte
 
   @Override
   public void release() {
-    logger.debug(
-        "will release {} allocated buffers.",
-        this.allocatedBuffers.size()
-    );
+    int bufCount  = allocatedBuffers.size();
 
-    while (!this.allocatedBuffers.isEmpty()) {
-      this.allocator.release(allocatedBuffers.pop());
+    // LIFO release order to try to reduce memory fragmentation.
+    int i = 0;
+    while (!allocatedBuffers.isEmpty()) {
+      allocator.release(allocatedBuffers.pop());
+      i++;
     }
+    assert bufCount == i;
+
+    logger.debug("released {} allocated buffers", bufCount);
   }
 }
