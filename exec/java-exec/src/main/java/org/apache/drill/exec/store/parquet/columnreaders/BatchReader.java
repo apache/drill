@@ -66,8 +66,8 @@ public abstract class BatchReader {
 
   protected void readAllFixedFieldsParallel(long recordsToRead) throws Exception {
     ArrayList<Future<Long>> futures = Lists.newArrayList();
-    for (ColumnReader<?> crs : readState.getFixedLenColumnReaders()) {
-      Future<Long> f = crs.processPagesAsync(recordsToRead);
+    for (ColumnReader<?> colReader : readState.getFixedLenColumnReaders()) {
+      Future<Long> f = colReader.processPagesAsync(recordsToRead);
       if (f != null) {
         futures.add(f);
       }

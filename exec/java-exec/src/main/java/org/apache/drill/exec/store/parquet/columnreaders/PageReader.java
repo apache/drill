@@ -770,7 +770,7 @@ class PageReader {
 
   /**
    * Provides an iterator interface that delegates to a ValuesReader on the
-   * repetition or definition levels of a Parquert v1 page.
+   * repetition or definition levels of a Parquet v1 page.
    */
   static class ValuesReaderIntIterator implements IntIterator {
     ValuesReader delegate;
