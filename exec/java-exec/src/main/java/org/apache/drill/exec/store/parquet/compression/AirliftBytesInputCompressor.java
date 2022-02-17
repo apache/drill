@@ -163,9 +163,12 @@ public class AirliftBytesInputCompressor implements CompressionCodecFactory.Byte
     int bufCount  = allocatedBuffers.size();
 
     // LIFO release order to try to reduce memory fragmentation.
+    int i = 0;
     while (!allocatedBuffers.isEmpty()) {
       allocator.release(allocatedBuffers.pop());
+      i++;
     }
+    assert bufCount == i;
 
     logger.debug("released {} allocated buffers", bufCount);
   }

@@ -60,21 +60,20 @@ public class DrillCompressionCodecFactory implements CompressionCodecFactory {
       )
   );
 
-  // pool of reusable thread-safe aircompressor compressors (parquet-mr's factory
-  // has its own)
+  // pool of reusable thread-safe aircompressor compressors (parquet-mr's factory has its own)
   private final Map<CompressionCodecName, AirliftBytesInputCompressor> airCompressors = new HashMap<>();
 
   // fallback parquet-mr compression codec factory
-  private final CompressionCodecFactory parqCodecFactory;
+  // TODO: uncomment once PARQUET-2126 is fixed.
+  // private final CompressionCodecFactory parqCodecFactory;
 
   // direct memory allocator to be used during (de)compression
   private final ByteBufferAllocator allocator;
 
-  // Start: members for working around a gzip concurrency bug c.f. DRILL-8139
+  // Start: members for working around a CodecFactory concurrency bug c.f. DRILL-8139
+  // TODO: remove once PARQUET-2126 is fixed.
   private final Deque<CompressionCodecFactory> singleUseFactories;
-
   private final Configuration config;
-
   private final int pageSize;
   // End
 
@@ -88,14 +87,9 @@ public class DrillCompressionCodecFactory implements CompressionCodecFactory {
     this.config = config;
     this.allocator = allocator;
     this.pageSize = pageSize;
-    this.parqCodecFactory = CodecFactory.createDirectCodecFactory(config, allocator, pageSize);
     this.singleUseFactories = new LinkedList<>();
-
-    logger.debug(
-        "constructed a {} using a fallback factory of {}",
-        getClass().getName(),
-        parqCodecFactory.getClass().getName()
-    );
+    // TODO: uncomment once PARQUET-2126 is fixed.
+    // this.parqCodecFactory = CodecFactory.createDirectCodecFactory(config, allocator, pageSize);
   }
 
   @Override
@@ -105,16 +99,17 @@ public class DrillCompressionCodecFactory implements CompressionCodecFactory {
           codecName,
           c -> new AirliftBytesInputCompressor(codecName, allocator)
       );
-    } else if (codecName != CompressionCodecName.SNAPPY) {
+    } else {
       // Work around PARQUET-2126: construct a new codec factory every time to
-      // avoid a concurrrency bug c.f. DRILL-8139. Remove once PARQUET-2126 is
-      // fixed.  Snappy is immune because of the thread safety in the Xerial lib.
+      // avoid a concurrrency bug c.f. DRILL-8139.  Fortunately, constructing
+      // and releasing codec factories appears to be light weight.
       CompressionCodecFactory ccf = CodecFactory.createDirectCodecFactory(config, allocator, pageSize);
       // hold onto a reference for later release()
       singleUseFactories.add(ccf);
       return ccf.getCompressor(codecName);
-    } else {
-      return parqCodecFactory.getCompressor(codecName);
+
+      // TODO: replace the above with the below PARQUET-2126 is fixed
+      // return parqCodecFactory.getDecompressor(codecName);
     }
   }
 
@@ -125,28 +120,31 @@ public class DrillCompressionCodecFactory implements CompressionCodecFactory {
           codecName,
           c -> new AirliftBytesInputCompressor(codecName, allocator)
       );
-    } else if (codecName != CompressionCodecName.SNAPPY) {
+    } else {
       // Work around PARQUET-2126: construct a new codec factory every time to
-      // avoid a concurrrency bug c.f. DRILL-8139. Remove once PARQUET-2126 is
-      // fixed.  Snappy is immune because of the thread safety in the Xerial lib.
+      // avoid a concurrrency bug c.f. DRILL-8139.  Fortunately, constructing
+      // and releasing codec factories appears to be light weight.
       CompressionCodecFactory ccf = CodecFactory.createDirectCodecFactory(config, allocator, pageSize);
       // hold onto a reference for later release()
       singleUseFactories.add(ccf);
       return ccf.getDecompressor(codecName);
-    } else {
-      return parqCodecFactory.getDecompressor(codecName);
+
+      // TODO: replace the above with the below PARQUET-2126 is fixed
+      // return parqCodecFactory.getDecompressor(codecName);
     }
   }
 
   @Override
   public synchronized void release() {
-    parqCodecFactory.release();
-    logger.debug("released {}", parqCodecFactory);
+    // TODO: uncomment once PARQUET-2126 is fixed.
+    // parqCodecFactory.release();
+    // logger.debug("released {}", parqCodecFactory);
 
     airCompressors.values().forEach(AirliftBytesInputCompressor::release);
     logger.debug("released {} aircompressors", airCompressors.size());
     airCompressors.clear();
 
+    // TODO: remove once PARQUET-2126 is fixed.
     singleUseFactories.forEach(CompressionCodecFactory::release);
     logger.debug("released {} single-use codec factories.", singleUseFactories.size());
     singleUseFactories.clear();
