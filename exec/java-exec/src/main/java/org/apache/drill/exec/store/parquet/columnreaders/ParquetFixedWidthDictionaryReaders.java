@@ -59,7 +59,6 @@ public class ParquetFixedWidthDictionaryReaders {
         for (int i = 0; i < recordsReadInThisIteration; i++) {
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger());
         }
-        advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
       } else {
         super.readField(recordsToReadInThisPass);
       }
@@ -89,7 +88,6 @@ public class ParquetFixedWidthDictionaryReaders {
         for (int i = 0; i < recordsReadInThisIteration; i++) {
           mutator.setSafe(valuesReadInCurrentPass + i, valReader.readInteger());
         }
-        advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
       } else {
         super.readField(recordsToReadInThisPass);
       }
@@ -119,7 +117,6 @@ public class ParquetFixedWidthDictionaryReaders {
           mutator.setSafe(valuesReadInCurrentPass + i, currDictValToWrite.toByteBuffer().slice(), 0,
               currDictValToWrite.length());
         }
-        advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
       } else {
         super.readField(recordsToReadInThisPass);
       }
@@ -150,7 +147,6 @@ public class ParquetFixedWidthDictionaryReaders {
         for (int i = 0; i < recordsReadInThisIteration; i++){
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readInteger());
         }
-        advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
       } else {
         super.readField(recordsToReadInThisPass);
       }
@@ -181,7 +177,6 @@ public class ParquetFixedWidthDictionaryReaders {
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, value / 1000);
         }
       }
-      advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
     }
   }
 
@@ -205,7 +200,6 @@ public class ParquetFixedWidthDictionaryReaders {
         for (int i = 0; i < recordsReadInThisIteration; i++){
           mutator.setSafe(valuesReadInCurrentPass + i,  valReader.readLong());
         }
-        advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
       } else {
         super.readField(recordsToReadInThisPass);
       }
@@ -235,7 +229,6 @@ public class ParquetFixedWidthDictionaryReaders {
         for (int i = 0; i < recordsReadInThisIteration; i++) {
           mutator.setSafe(valuesReadInCurrentPass + i, valReader.readLong());
         }
-        advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
       } else {
         super.readField(recordsToReadInThisPass);
       }
@@ -305,7 +298,6 @@ public class ParquetFixedWidthDictionaryReaders {
             }
           }
       }
-      advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
     }
 
     private void setValueBytes(int i, byte[] bytes) {
@@ -330,7 +322,6 @@ public class ParquetFixedWidthDictionaryReaders {
         for (int i = 0; i < recordsReadInThisIteration; i++) {
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readLong());
         }
-        advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
       } else {
         super.readField(recordsToReadInThisPass);
       }
@@ -361,7 +352,6 @@ public class ParquetFixedWidthDictionaryReaders {
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, value / 1000);
         }
       }
-      advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
     }
   }
 
@@ -383,7 +373,6 @@ public class ParquetFixedWidthDictionaryReaders {
           Binary binaryTimeStampValue = valReader.readBytes();
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, getDateTimeValueFromBinary(binaryTimeStampValue, true));
         }
-        advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
       } else {
         super.readField(recordsToReadInThisPass);
       }
@@ -407,7 +396,6 @@ public class ParquetFixedWidthDictionaryReaders {
         for (int i = 0; i < recordsReadInThisIteration; i++) {
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readFloat());
         }
-        advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
       } else {
         super.readField(recordsToReadInThisPass);
       }
@@ -431,7 +419,6 @@ public class ParquetFixedWidthDictionaryReaders {
         for (int i = 0; i < recordsReadInThisIteration; i++) {
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, valReader.readDouble());
         }
-        advanceWriterIndex(valueVec.getBuffer(), BITS_COUNT_IN_BYTE_DOUBLE_VALUE);
       } else {
         super.readField(recordsToReadInThisPass);
       }

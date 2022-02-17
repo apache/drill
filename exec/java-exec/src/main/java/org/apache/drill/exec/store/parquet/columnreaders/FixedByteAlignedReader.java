@@ -61,21 +61,6 @@ class FixedByteAlignedReader<V extends ValueVector> extends ColumnReader<V> {
     vectorData.writeBytes(bytebuf, (int) readStartInBytes, (int) readLength);
   }
 
-  /**
-   * Advance our writer index after reading using an external values reader.
-   * @param valueBuf buffer backing the target value vector
-   * @param bitsPerByte bits of data yielded per byte read
-   */
-  protected final void advanceWriterIndex(DrillBuf valueBuf, double bitsPerByte) {
-    // Set the write Index. The next page that gets read might be a page that does not use dictionary encoding
-    // and we will go into the else condition below. The readField method of the parent class requires the
-    // writer index to be set correctly.
-    readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-    readLength = (int) Math.ceil(readLengthInBits / bitsPerByte);
-    int writerIndex = valueBuf.writerIndex();
-    valueBuf.setIndex(0, writerIndex + (int)readLength);
-  }
-
   public static class FixedBinaryReader extends FixedByteAlignedReader<VariableWidthVector> {
     // TODO - replace this with fixed binary type in drill
     VariableWidthVector castedVector;
