@@ -80,7 +80,7 @@ import java.util.regex.Pattern;
  */
 public class SimpleHttp {
   private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
-
+  public static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
   private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?\\}");
 
   private final OkHttpClient client;
@@ -255,7 +255,7 @@ public class SimpleHttp {
       // Handle POST requests
       // Users can add either a JSON Post Body OR key/value pairs to a POST request, but not both.
       if (StringUtils.isNotEmpty(apiConfig.jsonPostBody())) {
-        RequestBody body = RequestBody.create(apiConfig.jsonPostBody(), MediaType.parse("application/json"));
+        RequestBody body = RequestBody.create(apiConfig.jsonPostBody(), JSON_MEDIA_TYPE);
         requestBuilder.post(body);
       } else {
         FormBody.Builder formBodyBuilder = buildPostBody(apiConfig.postBody());
