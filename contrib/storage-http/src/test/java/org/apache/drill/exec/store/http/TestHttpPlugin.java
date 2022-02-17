@@ -322,6 +322,7 @@ public class TestHttpPlugin extends ClusterTest {
         .addRow("live.sunrise", "http")
         .addRow("local", "http")
         .addRow("local.mockcsv", "http")
+        .addRow("local.mockjsonpost", "http")
         .addRow("local.mockpost", "http")
         .addRow("local.mockxml", "http")
         .addRow("local.nullpost", "http")
