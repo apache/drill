@@ -63,8 +63,9 @@ public class BootStrapContext implements AutoCloseable {
   private final DrillConfig config;
   private final CaseInsensitiveMap<OptionDefinition> definitions;
   private final AuthenticatorProvider authProvider;
-  private final EventLoopGroup loop;
-  private final EventLoopGroup loop2;
+  private final EventLoopGroup controlLoopGroup;
+  private final EventLoopGroup dataClientLoopGroup;
+  private final EventLoopGroup dataServerLoopGroup;
   private final MetricRegistry metrics;
   private final BufferAllocator allocator;
   private final ScanResult classpathScan;
@@ -81,8 +82,9 @@ public class BootStrapContext implements AutoCloseable {
     this.hostName = getCanonicalHostName();
     login(config);
     this.authProvider = new AuthenticatorProviderImpl(config, classpathScan);
-    this.loop = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitServer-");
-    this.loop2 = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "BitClient-");
+    this.controlLoopGroup = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "Control-");
+    this.dataClientLoopGroup = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "DataClient-");
+    this.dataServerLoopGroup = TransportCheck.createEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), "DataServer-");
     // Note that metrics are stored in a static instance
     this.metrics = DrillMetrics.getRegistry();
     this.allocator = RootAllocatorFactory.newRoot(config);
@@ -195,12 +197,16 @@ public class BootStrapContext implements AutoCloseable {
     return definitions;
   }
 
-  public EventLoopGroup getBitLoopGroup() {
-    return loop;
+  public EventLoopGroup getControlLoopGroup() {
+    return controlLoopGroup;
   }
 
-  public EventLoopGroup getBitClientLoopGroup() {
-    return loop2;
+  public EventLoopGroup getDataClientLoopGroup() {
+    return dataClientLoopGroup;
+  }
+
+  public EventLoopGroup getDataServerLoopGroup() {
+    return dataClientLoopGroup;
   }
 
   public MetricRegistry getMetrics() {
@@ -258,9 +264,9 @@ public class BootStrapContext implements AutoCloseable {
 
     try {
       AutoCloseables.close(allocator, authProvider);
-      shutdown(loop);
-      shutdown(loop2);
-
+      shutdown(controlLoopGroup);
+      shutdown(dataClientLoopGroup);
+      shutdown(dataServerLoopGroup);
     } catch (final Exception e) {
       logger.error("Error while closing", e);
     }
