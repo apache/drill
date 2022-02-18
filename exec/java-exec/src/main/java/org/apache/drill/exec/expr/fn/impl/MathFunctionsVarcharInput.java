@@ -31,6 +31,7 @@ public class MathFunctionsVarcharInput {
     }
   }
 
+  // This method may be unnecessary because the preexisting power() method accepts VARCHAR input
   @FunctionTemplate(name = "power", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class Power implements DrillSimpleFunc{
 
@@ -63,22 +64,27 @@ public class MathFunctionsVarcharInput {
     @Param VarCharHolder b;
     @Output Float8Holder out;
 
-    public void setup(){
+    @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
 
+    public void setup(){
+      mathUtils = new MathFunctionsVarcharUtils();
     }
 
     public void eval(){
       String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
-      double aDbl = Double.parseDouble(aStr);
+      Double aDbl = mathUtils.validateInput(aStr);
 
       String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
-      double bDbl = Double.parseDouble(bStr);
+      Double bDbl = mathUtils.validateInput(bStr);
 
-      out.value = aDbl % bDbl;
-
+      if (aDbl.isNaN() || bDbl.isNaN()) {
+        out.value = java.lang.Float.NaN;
+      }
+      else {
+        out.value = aDbl % bDbl;
+      }
       System.out.println("out.value: " + out.value);
     }
-
   }
 
   @FunctionTemplate(name = "abs", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
@@ -107,19 +113,26 @@ public class MathFunctionsVarcharInput {
     @Param VarCharHolder a;
     @Output Float8Holder out;
 
+    @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
+
     public void setup(){
+      mathUtils = new MathFunctionsVarcharUtils();
 
     }
 
     public void eval(){
       String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
-      double aDbl = Double.parseDouble(aStr);
 
-      out.value = Math.cbrt(aDbl);
+      Double aDbl = mathUtils.validateInput(aStr);
 
+      if (aDbl.isNaN()) {
+        out.value = java.lang.Float.NaN;
+      }
+      else {
+        out.value = Math.cbrt(aDbl);
+      }
       System.out.println("out.value: " + out.value);
     }
-
   }
 
   @FunctionTemplate(names = {"ceil", "ceiling"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)

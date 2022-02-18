@@ -15,40 +15,12 @@ import org.junit.Test;
 import static java.lang.Float.NEGATIVE_INFINITY;
 import static java.lang.Float.NaN;
 
-//import static org.apache.drill.test.BaseTestQuery.testBuilder;
-
 public class TestMathFunctionsVarcharInput extends ClusterTest {
 
   @BeforeClass
   public static void setup() throws Exception {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
     startCluster(builder);
-  }
-/*
-  @Test
-  public void testPower() throws Exception {
-    String query = "select power(2.0, 3.0) as col1 from (values (1))";
-    testBuilder()
-      .sqlQuery(query)
-      .unOrdered()
-      .baselineColumns("col1")
-      .baselineValues(8f)
-      .go();
-  }
- */
-
-  @Test
-  public void testPower() throws Exception {
-    String sql = "select power('2.0', 3.0) as pow1 from (values (1))";
-
-    QueryBuilder q = client.queryBuilder().sql(sql);
-    RowSet results = q.rowSet();
-
-    TupleMetadata expectedSchema = new SchemaBuilder().add("pow1", TypeProtos.MinorType.FLOAT8).build();
-
-    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(8.0).build();
-
-    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -66,22 +38,27 @@ public class TestMathFunctionsVarcharInput extends ClusterTest {
 
   @Test
   public void testModVarcharInput() throws Exception {
-    String sql = "select mod('8.0', '3.0') as mod1 from (values (1))";
+    String sql = "select mod('8.0', '3.0') as mod1, mod('40', '2a*') as mod2, " +
+      "mod('', '38.9') as mod3 from (values (1))";
 
     QueryBuilder q = client.queryBuilder().sql(sql);
 
     RowSet results = q.rowSet();
 
-    TupleMetadata expectedSchema = new SchemaBuilder().add("mod1", TypeProtos.MinorType.FLOAT8).build();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("mod1", TypeProtos.MinorType.FLOAT8)
+      .add("mod2", TypeProtos.MinorType.FLOAT8)
+      .add("mod3", TypeProtos.MinorType.FLOAT8)
+      .build();
 
-    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(2.0).build();
+    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(2.0, NaN, NaN).build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testAbsVarcharInput() throws Exception {
-    String sql = "select abs('-9.0') as abs1, abs('.5') as abs2, abs(34) as abs3 from (values (1))";
+    String sql = "select abs('-9.0') as abs1, abs('.5') as abs2, abs(34) as abs3, abs('asdf234') as abs4 from (values (1))";
 
     QueryBuilder q = client.queryBuilder().sql(sql);
 
@@ -91,16 +68,21 @@ public class TestMathFunctionsVarcharInput extends ClusterTest {
 
     TupleMetadata expectedSchema = new SchemaBuilder().add("abs1", TypeProtos.MinorType.FLOAT8)
       .add("abs2", TypeProtos.MinorType.FLOAT8)
-      .add("abs3", TypeProtos.MinorType.INT).build();
+      .add("abs3", TypeProtos.MinorType.INT)
+      .add("abs4", TypeProtos.MinorType.FLOAT8)
+      .build();
 
-    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(9.0, .5, 34).build();
+    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(9.0, .5, 34, 0.0).build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
   public void testCbrtVarcharInput() throws Exception {
-    String sql = "select cbrt('-27.0') as cbrt1, cbrt('125') as cbrt2, cbrt('10') as cbrt3 from (values (1))";
+    String sql = "select cbrt('-27.0') as cbrt1, cbrt('125') as cbrt2, " +
+      "cbrt('10') as cbrt3, cbrt('abc123') as cbrt4, cbrt('') as cbrt5, " +
+      "cbrt('null') as cbrt6, cbrt('  ') as cbrt7 " +
+      "from (values (1))";
 
     QueryBuilder q = client.queryBuilder().sql(sql);
 
@@ -108,9 +90,17 @@ public class TestMathFunctionsVarcharInput extends ClusterTest {
 
     //results.print();
 
-    TupleMetadata expectedSchema = new SchemaBuilder().add("cbrt1", TypeProtos.MinorType.FLOAT8).add("cbrt2", TypeProtos.MinorType.FLOAT8).add("cbrt3", TypeProtos.MinorType.FLOAT8).build();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("cbrt1", TypeProtos.MinorType.FLOAT8)
+      .add("cbrt2", TypeProtos.MinorType.FLOAT8)
+      .add("cbrt3", TypeProtos.MinorType.FLOAT8)
+      .add("cbrt4", TypeProtos.MinorType.FLOAT8)
+      .add("cbrt5", TypeProtos.MinorType.FLOAT8)
+      .add("cbrt6", TypeProtos.MinorType.FLOAT8)
+      .add("cbrt7", TypeProtos.MinorType.FLOAT8)
+      .build();
 
-    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(-3.0, 5, 2.154434690031884).build();
+    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(-3.0, 5, 2.154434690031884, NaN, NaN, NaN, NaN).build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
