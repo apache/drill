@@ -40,42 +40,91 @@ public class MathFunctionsVarcharInput {
     java.util.Random rand;
     @Output  Float8Holder out;
 
+    @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
+
     public void setup(){
-      BigInteger seedBigInt = new BigInteger(String.valueOf(seed));
-      rand = new java.util.Random(seedBigInt.intValue());
+      mathUtils = new MathFunctionsVarcharUtils();
     }
 
     public void eval(){
-      out.value = rand.nextDouble();
+      String seedStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(seed);
+      Double seedDbl = mathUtils.validateInput(seedStr);
+
+      if (seedDbl.isNaN()) {
+        out.value = java.lang.Float.NaN;
+      }
+      else {
+        BigInteger seedBigInt = new java.math.BigInteger(String.valueOf(seedDbl));
+        rand = new java.util.Random(seedBigInt.intValue());
+        out.value = rand.nextDouble();
+      }
     }
   }
+  /*
+    // The preexisting power() method accepts VARCHAR input, but this method adds a check for invalid input
+    @FunctionTemplate(name = "power", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    public static class Power implements DrillSimpleFunc{
 
-  // This method may be unnecessary because the preexisting power() method accepts VARCHAR input
-  @FunctionTemplate(name = "power", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class Power implements DrillSimpleFunc{
+      @Param VarCharHolder a;
+      @Param VarCharHolder b;
+      @Output  Float8Holder out;
 
-    @Param VarCharHolder a;
-    @Param VarCharHolder b;
-    @Output  Float8Holder out;
+      @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
 
-    public void setup(){
+      public void setup(){
+        mathUtils = new MathFunctionsVarcharUtils();
+      }
+
+      public void eval(){
+        String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
+        Double aDbl = mathUtils.validateInput(aStr);
+
+        String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
+        Double bDbl = mathUtils.validateInput(bStr);
+
+        if (aDbl.isNaN() || bDbl.isNaN()) {
+          out.value = java.lang.Float.NaN;
+        }
+        else {
+          out.value = java.lang.Math.pow(aDbl, bDbl);
+        }
+
+        System.out.println("out.value: " + out.value);
+      }
 
     }
 
-    public void eval(){
-      String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
-      double aDbl = Double.parseDouble(aStr);
+    // The preexisting power() method accepts VARCHAR input, but this method adds a check for invalid input
+    @FunctionTemplate(name = "power", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    public static class Power implements DrillSimpleFunc{
 
-      String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
-      double bDbl = Double.parseDouble(bStr);
+      @Param VarCharHolder a;
+      @Param Float8Holder b;
+      @Output  Float8Holder out;
 
-      out.value = java.lang.Math.pow(aDbl, bDbl);
+      @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
 
-      System.out.println("out.value: " + out.value);
+      public void setup(){
+        mathUtils = new MathFunctionsVarcharUtils();
+      }
+
+      public void eval(){
+        String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
+        Double aDbl = mathUtils.validateInput(aStr);
+
+        if (aDbl.isNaN()) {
+          out.value = java.lang.Float.NaN;
+        }
+        else {
+          out.value = java.lang.Math.pow(aDbl, b);
+        }
+
+        System.out.println("out.value: " + out.value);
+      }
+
     }
 
-  }
-
+   */
   @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class Mod implements DrillSimpleFunc{
 

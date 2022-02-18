@@ -43,14 +43,36 @@ public class TestMathFunctionsVarcharInput extends ClusterTest {
   }
 
   @Test
-  public void testPowerVarcharInput() throws Exception {
-    String sql = "select power('2.0', '3.0') as pow2 from (values (1))";
+  public void testRandWithSeedVarcharInput() throws Exception {
+    String sql = "select rand('567!') as rand1, rand(123) as rand2, rand('23') as rand3, rand('43.0') as rand4 from (values (1))";
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
 
-    TupleMetadata expectedSchema = new SchemaBuilder().add("pow2", TypeProtos.MinorType.FLOAT8).build();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("rand1", TypeProtos.MinorType.FLOAT8)
+      .add("rand2", TypeProtos.MinorType.FLOAT8)
+      .add("rand3", TypeProtos.MinorType.FLOAT8)
+      .add("rand4", TypeProtos.MinorType.FLOAT8)
+      .build();
 
-    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(8.0).build();
+    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(NaN, .7924, .356, NaN).build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testPowerVarcharInput() throws Exception {
+    String sql = "select power('2.0', 3) as pow1, power(2.0, '3*') as pow2, power('', '3.0') as pow3 from (values (1))";
+    QueryBuilder q = client.queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("pow1", TypeProtos.MinorType.FLOAT8)
+      .add("pow2", TypeProtos.MinorType.FLOAT8)
+      .add("pow3", TypeProtos.MinorType.FLOAT8)
+      .build();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(8.0, NaN, NaN).build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }

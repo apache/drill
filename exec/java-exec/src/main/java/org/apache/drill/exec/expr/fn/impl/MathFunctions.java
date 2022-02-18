@@ -37,16 +37,32 @@ public class MathFunctions {
   @FunctionTemplate(name = "power", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Power implements DrillSimpleFunc{
 
-    @Param Float8Holder a;
-    @Param Float8Holder b;
+    @Param VarCharHolder a;
+    @Param VarCharHolder b;
     @Output  Float8Holder out;
 
-    public void setup(){}
+    @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
 
-    public void eval(){
-      out.value = java.lang.Math.pow(a.value, b.value);
+    public void setup(){
+      mathUtils = new MathFunctionsVarcharUtils();
     }
 
+    public void eval(){
+      String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
+      Double aDbl = mathUtils.validateInput(aStr);
+
+      String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
+      Double bDbl = mathUtils.validateInput(bStr);
+
+      if (aDbl.isNaN() || bDbl.isNaN()) {
+        out.value = java.lang.Float.NaN;
+      }
+      else {
+        out.value = java.lang.Math.pow(aDbl, bDbl);
+      }
+
+      System.out.println("new method, results: " + out.value);
+    }
   }
 
   @FunctionTemplate(name = "random", isRandom = true,
