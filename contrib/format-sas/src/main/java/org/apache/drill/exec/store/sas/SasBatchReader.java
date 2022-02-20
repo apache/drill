@@ -167,10 +167,17 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     for (Column column : columns) {
       String fieldName = column.getName();
       try {
-        MinorType type = getType(firstRow[counter].getClass().getSimpleName());
-        if (type == MinorType.BIGINT && !column.getFormat().isEmpty()) {
-          logger.debug("Found possible time");
-          type = MinorType.TIME;
+        MinorType type = null;
+        if (firstRow[counter] != null) {
+          type = getType(firstRow[counter].getClass().getSimpleName());
+          if (type == MinorType.BIGINT && !column.getFormat().isEmpty()) {
+            logger.debug("Found possible time");
+            type = MinorType.TIME;
+          }
+        } else {
+          // If the first row is null
+          String columnType = column.getType().getSimpleName();
+          type = getType(columnType);
         }
         builder.addNullable(fieldName, type);
       } catch (Exception e) {
@@ -214,6 +221,7 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     switch (simpleType) {
       case "String":
         return MinorType.VARCHAR;
+      case "Numeric":
       case "Double":
         return MinorType.FLOAT8;
       case "Long":
@@ -357,7 +365,9 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     @Override
     public void load(Object[] row) {
-      writer.setString((String) row[columnIndex]);
+      if (row[columnIndex] != null) {
+        writer.setString((String) row[columnIndex]);
+      }
     }
 
     public void load (String value) {
