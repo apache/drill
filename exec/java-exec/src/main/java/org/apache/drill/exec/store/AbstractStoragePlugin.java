@@ -70,7 +70,11 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
 
   @Override
   public String getActiveUsername() {
-    return userSession.getCredentials().getUserName();
+    if (userSession.getCredentials() == null) {
+      return "anonymous";
+    } else {
+      return userSession.getCredentials().getUserName();
+    }
   }
 
   /**
