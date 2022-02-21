@@ -25,6 +25,8 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
@@ -72,6 +74,11 @@ abstract class VectorOutput {
   protected final WorkingBuffer work;
   protected JsonParser parser;
 
+  protected DateTimeFormatter isoDateTimeFormatter = new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+      .optionalStart().appendOffset("+HH:MM", "+00:00").optionalEnd()
+      .optionalStart().appendOffset("+HHMM", "+0000").optionalEnd()
+      .optionalStart().appendOffset("+HH", "Z").optionalEnd()
+      .toFormatter();
 
   public VectorOutput(WorkingBuffer work){
     this.work = work;
@@ -254,7 +261,7 @@ abstract class VectorOutput {
           // See the mongo specs and the Drill handler (in new JSON loader) :
           // 1. https://docs.mongodb.com/manual/reference/mongodb-extended-json
           // 2. org.apache.drill.exec.store.easy.json.values.UtcTimestampValueListener
-          Instant instant = Instant.parse(parser.getValueAsString());
+          Instant instant = isoDateTimeFormatter.parse(parser.getValueAsString(), Instant::from);
           long offset = ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000;
           ts.writeTimeStamp(instant.toEpochMilli() + offset);
           break;
@@ -361,7 +368,7 @@ abstract class VectorOutput {
           // See the mongo specs and the Drill handler (in new JSON loader) :
           // 1. https://docs.mongodb.com/manual/reference/mongodb-extended-json
           // 2. org.apache.drill.exec.store.easy.json.values.UtcTimestampValueListener
-          Instant instant = Instant.parse(parser.getValueAsString());
+          Instant instant = isoDateTimeFormatter.parse(parser.getValueAsString(), Instant::from);
           long offset = ZoneId.systemDefault().getRules().getOffset(instant).getTotalSeconds() * 1000;
           ts.writeTimeStamp(instant.toEpochMilli() + offset);
           break;
