@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.drill</groupId>
     <artifactId>drill-root</artifactId>
-    <version>1.20.0</version>
+    <version>1.21.0-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.drill.metastore</groupId>
