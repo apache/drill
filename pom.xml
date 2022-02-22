@@ -30,7 +30,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.20.0-SNAPSHOT</version>
+  <version>1.20.0</version>
   <packaging>pom</packaging>
 
   <name>Drill : </name>
@@ -140,14 +140,14 @@
     <iceberg.version>0.12.1</iceberg.version>
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
     <mongo.version>4.3.3</mongo.version>
-    <junit.args/>
+    <junit.args />
   </properties>
 
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/drill.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/drill.git</developerConnection>
     <url>https://github.com/apache/drill</url>
-    <tag>HEAD</tag>
+    <tag>drill-1.20.0</tag>
   </scm>
 
   <mailingLists>
