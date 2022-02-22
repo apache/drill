@@ -652,6 +652,14 @@
       <version>${testcontainers.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.github.rdblue</groupId>
+      <artifactId>brotli-codec</artifactId>
+      <version>0.1.1</version>
+      <!-- brotli-codec bundles natives for linux and darwin, amd64 only so
+      we don't ship it so as not to break startup on windows or arm -->
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <profiles>
@@ -758,40 +766,6 @@
               <artifactId>netty-all</artifactId>
             </exclusion>
           </exclusions>
-        </dependency>
-      </dependencies>
-    </profile>
-    <profile>
-      <!-- Only package a Brotli codec for Linux and Mac OS X on AMD64, see PARQUET-1975 -->
-      <id>non-win-amd64</id>
-      <activation>
-        <os>
-          <arch>amd64</arch>
-          <name>!Windows</name>
-        </os>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>com.github.rdblue</groupId>
-          <artifactId>brotli-codec</artifactId>
-          <version>${brotli-codec.version}</version>
-        </dependency>
-      </dependencies>
-    </profile>
-    <profile>
-      <!-- A duplicate of the profile above to handle os.arch=x86_64 reported on Macs -->
-      <id>non-win-x86_64</id>
-      <activation>
-        <os>
-          <arch>x86_64</arch>
-          <name>!Windows</name>
-        </os>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>com.github.rdblue</groupId>
-          <artifactId>brotli-codec</artifactId>
-          <version>${brotli-codec.version}</version>
         </dependency>
       </dependencies>
     </profile>

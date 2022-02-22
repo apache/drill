@@ -203,11 +203,11 @@ if errorlevel 1 (
   rem allow reflective access on Java 9+
   set DRILL_SHELL_JAVA_OPTS=!DRILL_SHELL_JAVA_OPTS! ^
     --add-opens java.base/java.lang=ALL-UNNAMED ^
-    --add-opens=java.base/java.util=ALL-UNNAMED ^
+    --add-opens java.base/java.util=ALL-UNNAMED ^
     --add-opens java.base/sun.nio.ch=ALL-UNNAMED ^
     --add-opens java.base/java.net=ALL-UNNAMED ^
     --add-opens java.base/java.nio=ALL-UNNAMED ^
-    --add-opens java.security.jgss/sun.security.krb5=ALL-UNNAMED ^
+    --add-opens java.security.jgss/sun.security.krb5=ALL-UNNAMED
 )
 
 set SQLLINE_CALL=sqlline.SqlLine -ac org.apache.drill.exec.client.DrillSqlLineApplication

@@ -3,7 +3,7 @@
 Hadoop Winutils native libraries are required to run Drill on Windows. The last version present in maven repository is 2.7.1 and is not updated anymore.
 That's why Winutils version matching Hadoop version used in Drill is located in distribution/src/main/resources.
 
-Current Winutils version: *3.2.1.*
+Current Winutils version: *3.2.2.*
 
 ## References
 - Official wiki: [Windows Problems](https://cwiki.apache.org/confluence/display/HADOOP2/WindowsProblems).
