@@ -136,7 +136,6 @@
     <commons.beanutils.version>1.9.4</commons.beanutils.version>
     <httpdlog-parser.version>5.7</httpdlog-parser.version>
     <yauaa.version>5.20</yauaa.version>
-    <brotli-codec.version>0.1.1</brotli-codec.version>
     <aircompressor.version>0.20</aircompressor.version>
     <iceberg.version>0.12.1</iceberg.version>
     <univocity-parsers.version>2.8.3</univocity-parsers.version>
