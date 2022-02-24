@@ -22,9 +22,11 @@ import okhttp3.Credentials;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import org.apache.commons.lang3.StringUtils;
@@ -32,7 +34,6 @@ import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
-import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
 import org.apache.drill.exec.store.http.HttpOAuthConfig;
@@ -44,6 +45,7 @@ import org.apache.drill.exec.store.http.oauth.AccessTokenInterceptor;
 import org.apache.drill.exec.store.http.oauth.AccessTokenRepository;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.jetbrains.annotations.NotNull;
+import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +81,8 @@ import java.util.regex.Pattern;
 public class SimpleHttp {
   private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
 
-  private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?\\}");
+  private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?}");
+  public static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
 
   private final OkHttpClient client;
   private final HttpSubScan scanDefn;
@@ -88,8 +91,9 @@ public class SimpleHttp {
   private final CustomErrorContext errorContext;
   private final Paginator paginator;
   private final HttpUrl url;
-  private final StoragePluginRegistry registry;
   private final PersistentTokenTable tokenTable;
+  private final Map<String,String> filters;
+  private final HttpApiConfig apiConfig;
   private String responseMessage;
   private int responseCode;
   private String responseProtocol;
@@ -99,11 +103,12 @@ public class SimpleHttp {
   public SimpleHttp(HttpSubScan scanDefn, HttpUrl url, File tempDir,
     HttpProxyConfig proxyConfig, CustomErrorContext errorContext, Paginator paginator) {
     this.scanDefn = scanDefn;
+    this.apiConfig = scanDefn.tableSpec().connectionConfig();
+    this.filters = scanDefn.filters();
     this.url = url;
     this.tempDir = tempDir;
     this.proxyConfig = proxyConfig;
     this.errorContext = errorContext;
-    this.registry = scanDefn.tableSpec().getRegistry();
     this.tokenTable = scanDefn.tableSpec().getTokenTable();
     this.paginator = paginator;
     this.client = setupHttpClient();
@@ -251,8 +256,28 @@ public class SimpleHttp {
     HttpApiConfig apiConfig = scanDefn.tableSpec().connectionConfig();
     if (apiConfig.getMethodType() == HttpMethod.POST) {
       // Handle POST requests
-      FormBody.Builder formBodyBuilder = buildPostBody(apiConfig.postBody());
-      requestBuilder.post(formBodyBuilder.build());
+      FormBody.Builder formBodyBuilder;
+
+      // If the user wants filters pushed down to the POST body, do so here.
+      if (Objects.equals(apiConfig.getPostParameterLocation(), HttpApiConfig.POST_BODY_POST_LOCATION)) {
+        formBodyBuilder = buildPostBody(filters, apiConfig.postBody());
+        requestBuilder.post(formBodyBuilder.build());
+      } else if (Objects.equals(apiConfig.getPostParameterLocation(), HttpApiConfig.JSON_BODY_POST_LOCATION)) {
+        // Add static parameters from postBody
+        JSONObject json = buildJsonPostBody(apiConfig.postBody());
+        // Now add filters
+        if (filters != null) {
+          for (Map.Entry<String, String> filter : filters.entrySet()) {
+            json.put(filter.getKey(), filter.getValue());
+          }
+        }
+
+        RequestBody requestBody = RequestBody.create(json.toJSONString(), JSON_MEDIA_TYPE);
+        requestBuilder.post(requestBody);
+      } else {
+        formBodyBuilder = buildPostBody(apiConfig.postBody());
+        requestBuilder.post(formBodyBuilder.build());
+      }
     }
 
     // Log the URL and method to aid in debugging user issues.
@@ -440,6 +465,45 @@ public class SimpleHttp {
     return formBodyBuilder;
   }
 
+  private JSONObject buildJsonPostBody(String postBody) {
+    JSONObject jsonObject = new JSONObject();
+    if (StringUtils.isEmpty(postBody)) {
+      return jsonObject;
+    }
+    final Pattern postBodyPattern = Pattern.compile("^.+=.+$");
+
+    String[] lines = postBody.split("\\r?\\n");
+    for (String line : lines) {
+
+      // If the string is in the format key=value split it,
+      // Otherwise ignore
+      if (postBodyPattern.matcher(line).find()) {
+        //Split into key/value
+        String[] parts = line.split("=");
+        jsonObject.put(parts[0], parts[1]);
+      }
+    }
+    return jsonObject;
+  }
+
+  /**
+   * This function is used to push filters down to the post body rather than the URL query string.
+   * It will also add the static parameters to the post body as well.
+   * @param filters A HashMap of the filters and values
+   * @param postBody The post body of static parameters.
+   * @return The post body builder with the filters and static parameters
+   */
+  public FormBody.Builder buildPostBody(Map<String, String> filters, String postBody) {
+    // Add static parameters
+    FormBody.Builder builder = buildPostBody(postBody);
+
+    // Now add the filters
+    for (Map.Entry<String, String> filter : filters.entrySet()) {
+      builder.add(filter.getKey(), filter.getValue());
+    }
+    return builder;
+  }
+
   /**
    * Returns the URL-decoded URL. If the URL is invalid, return the original URL.
    *
@@ -493,7 +557,7 @@ public class SimpleHttp {
    */
   public static String getDefaultParameterValue (HttpUrl url, String parameter) {
     String decodedURL = decodedURL(url);
-    Pattern paramRegex = Pattern.compile("\\{" + parameter + "=(\\w+?)\\}");
+    Pattern paramRegex = Pattern.compile("\\{" + parameter + "=(\\w+?)}");
     Matcher paramMatcher = paramRegex.matcher(decodedURL);
     if (paramMatcher.find()) {
       return paramMatcher.group(1);

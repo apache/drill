@@ -198,7 +198,8 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     baseUrl = SimpleHttp.mapURLParameters(parsedURL, subScan.filters());
 
     HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder();
-    if (apiConfig.params() != null && !apiConfig.params().isEmpty() &&
+    if (apiConfig.params() != null &&
+      !apiConfig.params().isEmpty() &&
         subScan.filters() != null) {
       addFilters(urlBuilder, apiConfig.params(), subScan.filters());
     }
@@ -218,6 +219,14 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   protected void addFilters(Builder urlBuilder, List<String> params,
       Map<String, String> filters) {
 
+    // If the request is a POST query and the user selected to push the filters to either JSON body
+    // or the post body, do not add to the query string.
+    if (subScan.tableSpec().connectionConfig().getMethodType() == HttpApiConfig.HttpMethod.POST &&
+      (subScan.tableSpec().connectionConfig().getPostParameterLocation().equalsIgnoreCase(HttpApiConfig.POST_BODY_POST_LOCATION) ||
+        subScan.tableSpec().connectionConfig().getPostParameterLocation().equalsIgnoreCase(HttpApiConfig.JSON_BODY_POST_LOCATION) )
+    ) {
+      return;
+    }
     for (String param : params) {
       String value = filters.get(param);
       if (value != null) {
