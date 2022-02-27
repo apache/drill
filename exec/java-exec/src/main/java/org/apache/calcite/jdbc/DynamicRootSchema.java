@@ -28,6 +28,7 @@ import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -58,8 +59,8 @@ public class DynamicRootSchema extends DynamicSchema {
   private final AliasRegistryProvider aliasRegistryProvider;
 
   /** Creates a root schema. */
-  DynamicRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider) {
-    super(null, new RootSchema(storages), ROOT_SCHEMA_NAME);
+  DynamicRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider, UserSession session) {
+    super(null, new RootSchema(storages), ROOT_SCHEMA_NAME, session);
     this.schemaConfig = schemaConfig;
     this.storages = storages;
     this.aliasRegistryProvider = aliasRegistryProvider;
