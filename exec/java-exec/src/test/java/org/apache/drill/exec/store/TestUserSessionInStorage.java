@@ -120,6 +120,7 @@ public class TestUserSessionInStorage extends ClusterTest {
       .build();
 
     client.queryBuilder().sql(sql).run();
+    assertNotNull(plugin.getSession());
     assertEquals(TEST_USER_2, plugin.getActiveUser());
   }
 }
