@@ -107,6 +107,7 @@ public class DynamicRootSchema extends DynamicSchema {
       SchemaPlus schemaPlus = this.plus();
       StoragePlugin plugin = storages.getPlugin(schemaName);
       if (plugin != null) {
+        plugin.establishConnection(getSession());
         plugin.registerSchemas(schemaConfig, schemaPlus);
         return;
       }
@@ -123,6 +124,7 @@ public class DynamicRootSchema extends DynamicSchema {
         SchemaPlus firstLevelSchema = schemaPlus.getSubSchema(paths.get(0));
         if (firstLevelSchema == null) {
           // register schema for this storage plugin to 'this'.
+          plugin.establishConnection(getSession());
           plugin.registerSchemas(schemaConfig, schemaPlus);
           firstLevelSchema = schemaPlus.getSubSchema(paths.get(0));
         }
