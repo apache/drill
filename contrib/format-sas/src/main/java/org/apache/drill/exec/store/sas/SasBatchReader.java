@@ -19,8 +19,10 @@
 package org.apache.drill.exec.store.sas;
 
 import com.epam.parso.Column;
+import com.epam.parso.ColumnFormat;
 import com.epam.parso.SasFileProperties;
 import com.epam.parso.SasFileReader;
+import com.epam.parso.impl.DateTimeConstants;
 import com.epam.parso.impl.SasFileReaderImpl;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
@@ -163,30 +165,28 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
   private TupleMetadata buildSchema() {
     SchemaBuilder builder = new SchemaBuilder();
     List<Column> columns = sasFileReader.getColumns();
-    int counter = 0;
     for (Column column : columns) {
-      String fieldName = column.getName();
+      String columnName = column.getName();
+      String columnType = column.getType().getSimpleName();
+      ColumnFormat columnFormat = column.getFormat();
       try {
         MinorType type = null;
-        if (firstRow[counter] != null) {
-          type = getType(firstRow[counter].getClass().getSimpleName());
-          if (type == MinorType.BIGINT && !column.getFormat().isEmpty()) {
-            logger.debug("Found possible time");
-            type = MinorType.TIME;
-          }
+        if (DateTimeConstants.TIME_FORMAT_STRINGS.contains(columnFormat.getName())) {
+          type = MinorType.TIME;
+        } else if (DateTimeConstants.DATE_FORMAT_STRINGS.containsKey(columnFormat.getName())) {
+          type = MinorType.DATE;
+        } else if (DateTimeConstants.DATETIME_FORMAT_STRINGS.containsKey(columnFormat.getName())) {
+          type = MinorType.TIMESTAMP;
         } else {
-          // If the first row is null
-          String columnType = column.getType().getSimpleName();
           type = getType(columnType);
         }
-        builder.addNullable(fieldName, type);
+        builder.addNullable(columnName, type);
       } catch (Exception e) {
         throw UserException.dataReadError()
-          .message("Error with column type: " + firstRow[counter].getClass().getSimpleName())
+          .message("Error with type of column " + columnName + "; Type: " + columnType)
           .addContext(errorContext)
           .build(logger);
       }
-      counter++;
     }
 
     return builder.buildSchema();
@@ -199,14 +199,14 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
       MinorType type = field.getType().getMinorType();
       if (type == MinorType.FLOAT8) {
         writerList.add(new DoubleSasColumnWriter(colIndex, fieldName, rowWriter));
-      } else if (type == MinorType.BIGINT) {
-        writerList.add(new BigIntSasColumnWriter(colIndex, fieldName, rowWriter));
       } else if (type == MinorType.DATE) {
         writerList.add(new DateSasColumnWriter(colIndex, fieldName, rowWriter));
       } else if (type == MinorType.TIME) {
         writerList.add(new TimeSasColumnWriter(colIndex, fieldName, rowWriter));
-      } else if (type == MinorType.VARCHAR){
+      } else if (type == MinorType.VARCHAR) {
         writerList.add(new StringSasColumnWriter(colIndex, fieldName, rowWriter));
+      } else if (type == MinorType.TIMESTAMP) {
+        writerList.add(new TimestampSasColumnWriter(colIndex, fieldName, rowWriter));
       } else {
         throw UserException.dataReadError()
           .message(fieldName + " is an unparsable data type: " + type.name() + ".  The SAS reader does not support this data type.")
@@ -221,11 +221,11 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     switch (simpleType) {
       case "String":
         return MinorType.VARCHAR;
-      case "Numeric":
       case "Double":
-        return MinorType.FLOAT8;
+      case "Number":
+      case "Numeric":
       case "Long":
-        return MinorType.BIGINT;
+        return MinorType.FLOAT8;
       case "Date":
         return MinorType.DATE;
       default:
@@ -366,7 +366,7 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
     @Override
     public void load(Object[] row) {
       if (row[columnIndex] != null) {
-        writer.setString((String) row[columnIndex]);
+        writer.setString(row[columnIndex].toString());
       }
     }
 
@@ -374,18 +374,6 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
       if (!Strings.isNullOrEmpty(value)) {
         writer.setString(value);
       }
-    }
-  }
-
-  public static class BigIntSasColumnWriter extends SasColumnWriter {
-
-    BigIntSasColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter) {
-      super(columnIndex, columnName, rowWriter.scalar(columnName));
-    }
-
-    @Override
-    public void load(Object[] row) {
-      writer.setLong((Long) row[columnIndex]);
     }
   }
 
@@ -397,8 +385,10 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     @Override
     public void load(Object[] row) {
-      LocalDate value = convertDateToLocalDate((Date)row[columnIndex]);
-      writer.setDate(value);
+      if (row[columnIndex] != null) {
+        LocalDate value = convertDateToLocalDate((Date)row[columnIndex]);
+        writer.setDate(value);
+      }
     }
 
     public void load(LocalDate date) {
@@ -408,13 +398,13 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
   public static class TimeSasColumnWriter extends SasColumnWriter {
 
-    TimeSasColumnWriter (int columnIndex, String columnName, RowSetLoader rowWriter) {
+    TimeSasColumnWriter(int columnIndex, String columnName, RowSetLoader rowWriter) {
       super(columnIndex, columnName, rowWriter.scalar(columnName));
     }
 
     @Override
     public void load(Object[] row) {
-      int seconds = ((Long)row[columnIndex]).intValue();
+      int seconds = ((Long) row[columnIndex]).intValue();
       LocalTime value = LocalTime.parse(formatSeconds(seconds));
       writer.setTime(value);
     }
@@ -453,13 +443,24 @@ public class SasBatchReader implements ManagedReader<FileScanFramework.FileSchem
 
     @Override
     public void load(Object[] row) {
-      // The SAS reader does something strange with zeros. For whatever reason, even if the
-      // field is a floating point number, the value is returned as a long.  This causes class
-      // cast exceptions.
-      if (row[columnIndex].equals(0L)) {
-        writer.setDouble(0.0);
-      } else {
-        writer.setDouble((Double) row[columnIndex]);
+      if (row[columnIndex] != null) {
+        if (row[columnIndex] instanceof Number) {
+          writer.setDouble(((Number) row[columnIndex]).doubleValue());
+        }
+      }
+    }
+  }
+
+  public static class TimestampSasColumnWriter extends SasColumnWriter {
+
+    TimestampSasColumnWriter(int columnIndex, String columnName, RowSetLoader rowWriter) {
+      super(columnIndex, columnName, rowWriter.scalar(columnName));
+    }
+
+    @Override
+    public void load(Object[] row) {
+      if (row[columnIndex] != null) {
+        writer.setTimestamp(((Date) row[columnIndex]).toInstant());
       }
     }
   }
