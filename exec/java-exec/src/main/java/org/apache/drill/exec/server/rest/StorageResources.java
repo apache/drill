@@ -232,6 +232,7 @@ public class StorageResources {
         .build();
     }
   }
+
   @POST
   @Path("/storage/{name}/update_access_token")
   @Produces(MediaType.APPLICATION_JSON)
@@ -297,7 +298,7 @@ public class StorageResources {
   }
 
   @GET
-  @Path("/storage/{name}/update_oath2_authtoken")
+  @Path("/storage/{name}/update_oauth2_authtoken")
   @Produces(MediaType.TEXT_HTML)
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
     try {

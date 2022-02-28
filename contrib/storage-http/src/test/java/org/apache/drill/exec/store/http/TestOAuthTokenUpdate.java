@@ -79,7 +79,7 @@ public class TestOAuthTokenUpdate extends ClusterTest {
       .build();
 
     HttpOAuthConfig oAuthConfig = HttpOAuthConfig.builder()
-      .callbackURL(hostname + "/update_oath2_authtoken")
+      .callbackURL(hostname + "/update_ouath2_authtoken")
       .build();
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
