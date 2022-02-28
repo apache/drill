@@ -27,6 +27,8 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.store.SubsetRemover;
+import org.apache.drill.exec.store.elasticsearch.ElasticsearchColumnConverterFactoryProvider;
+import org.apache.drill.exec.store.enumerable.ColumnConverterFactoryProvider;
 import org.apache.drill.exec.store.enumerable.plan.EnumerablePrelContext;
 
 import java.util.Collections;
@@ -75,5 +77,10 @@ public class ElasticSearchEnumerablePrelContext implements EnumerablePrelContext
   @Override
   public String getTablePath(RelNode input) {
     return null;
+  }
+
+  @Override
+  public ColumnConverterFactoryProvider factoryProvider() {
+    return ElasticsearchColumnConverterFactoryProvider.INSTANCE;
   }
 }

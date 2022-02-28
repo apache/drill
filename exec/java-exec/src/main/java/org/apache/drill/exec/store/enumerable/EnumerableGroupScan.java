@@ -39,6 +39,7 @@ public class EnumerableGroupScan extends AbstractGroupScan {
   private final List<SchemaPath> columns;
   private final double rows;
   private final TupleMetadata schema;
+  private final ColumnConverterFactoryProvider converterFactoryProvider;
 
   @JsonCreator
   public EnumerableGroupScan(
@@ -47,7 +48,8 @@ public class EnumerableGroupScan extends AbstractGroupScan {
       @JsonProperty("fieldsMap") Map<String, Integer> fieldsMap,
       @JsonProperty("rows") double rows,
       @JsonProperty("schema") TupleMetadata schema,
-      @JsonProperty("schemaPath") String schemaPath) {
+      @JsonProperty("schemaPath") String schemaPath,
+      @JsonProperty("converterFactoryProvider") ColumnConverterFactoryProvider converterFactoryProvider) {
     super("");
     this.code = code;
     this.columns = columns;
@@ -55,6 +57,7 @@ public class EnumerableGroupScan extends AbstractGroupScan {
     this.rows = rows;
     this.schema = schema;
     this.schemaPath = schemaPath;
+    this.converterFactoryProvider = converterFactoryProvider;
   }
 
   @Override
@@ -63,7 +66,7 @@ public class EnumerableGroupScan extends AbstractGroupScan {
 
   @Override
   public SubScan getSpecificScan(int minorFragmentId) {
-    return new EnumerableSubScan(code, columns, fieldsMap, schema, schemaPath);
+    return new EnumerableSubScan(code, columns, fieldsMap, schema, schemaPath, converterFactoryProvider);
   }
 
   @Override
@@ -105,6 +108,10 @@ public class EnumerableGroupScan extends AbstractGroupScan {
     return schemaPath;
   }
 
+  public ColumnConverterFactoryProvider getConverterFactoryProvider() {
+    return converterFactoryProvider;
+  }
+
   @Override
   public String getDigest() {
     return toString();
@@ -113,7 +120,7 @@ public class EnumerableGroupScan extends AbstractGroupScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new EnumerableGroupScan(code, columns, fieldsMap, rows, schema, schemaPath);
+    return new EnumerableGroupScan(code, columns, fieldsMap, rows, schema, schemaPath, converterFactoryProvider);
   }
 
   @Override
