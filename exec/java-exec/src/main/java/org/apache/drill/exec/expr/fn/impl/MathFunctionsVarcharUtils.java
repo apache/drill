@@ -22,11 +22,11 @@ under the License.
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.lang.Float.NaN;
+//import static java.lang.Float.NaN;
 
 public class MathFunctionsVarcharUtils {
 
-  public double validateInput(String input) {
+  public String validateInput(String input) {
 
     String regex = "^[-]*[0-9.]*[0-9]*+$";
     Pattern pattern = java.util.regex.Pattern.compile(regex);
@@ -36,14 +36,14 @@ public class MathFunctionsVarcharUtils {
       Matcher matcher = pattern.matcher(input);
 
       if (!input.equals("") && matcher.matches()) {
-        return Double.parseDouble(input);
+        return input;
       }
       else {
-        return NaN;
+        return null;
       }
     }
     else {
-      return NaN;
+      return null;
     }
   }
 }

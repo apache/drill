@@ -33,7 +33,7 @@ import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 public class MathFunctions {
-
+/*
   @FunctionTemplate(name = "power", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Power implements DrillSimpleFunc{
 
@@ -64,6 +64,8 @@ public class MathFunctions {
       System.out.println("new method, results: " + out.value);
     }
   }
+
+ */
 
   @FunctionTemplate(name = "random", isRandom = true,
     scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)

@@ -19,6 +19,8 @@ specific language governing permissions and limitations
 under the License.
  */
 
+//import org.apache.commons.lang.ObjectUtils;
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -26,11 +28,15 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
-import java.math.BigInteger;
+import javax.inject.Inject;
+
+//import java.math.BigInteger;
 
 public class MathFunctionsVarcharInput {
+  /*
   @FunctionTemplate(name = "rand", isRandom = true,
     scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class RandomWithSeed implements DrillSimpleFunc{
@@ -60,6 +66,8 @@ public class MathFunctionsVarcharInput {
       }
     }
   }
+
+   */
   /*
     // The preexisting power() method accepts VARCHAR input, but this method adds a check for invalid input
     @FunctionTemplate(name = "power", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
@@ -128,8 +136,59 @@ public class MathFunctionsVarcharInput {
   @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class Mod implements DrillSimpleFunc{
 
+    @Param
+    NullableVarCharHolder a;
+    @Param
+    NullableVarCharHolder b;
+    @Output
+    VarCharHolder out;
+
+    @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
+
+    @Inject
+    DrillBuf buffer;
+
+    public void setup(){
+      mathUtils = new MathFunctionsVarcharUtils();
+    }
+
+    public void eval(){
+      String resultStr = null;
+
+      String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
+      String validatedStrA = mathUtils.validateInput(aStr);
+      System.out.println("validatedStrA: " + validatedStrA);
+
+      String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
+      String validatedStrB = mathUtils.validateInput(bStr);
+      System.out.println("validatedStrB: " + validatedStrB);
+
+      if (validatedStrA != null && validatedStrB != null) {
+        Double aDbl = Double.parseDouble(validatedStrA);
+        Double bDbl = Double.parseDouble(validatedStrB);
+
+        Double result = aDbl % bDbl;
+        resultStr = result.toString();
+        System.out.println("resultStr: " + resultStr);
+      }
+      /*
+      else {
+        //out.value = -999;
+        //System.out.println("out: " + out);
+      }
+       */
+      out.buffer = buffer;
+      out.start = 0;
+      out.end = resultStr.getBytes().length;
+      buffer.setBytes(0, resultStr.getBytes());
+      System.out.println("out: " + out);
+    }
+  }
+/*
+  @FunctionTemplate(name = "abs", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  public static class Abs implements DrillSimpleFunc{
+
     @Param VarCharHolder a;
-    @Param VarCharHolder b;
     @Output Float8Holder out;
 
     @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
@@ -142,35 +201,12 @@ public class MathFunctionsVarcharInput {
       String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
       Double aDbl = mathUtils.validateInput(aStr);
 
-      String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
-      Double bDbl = mathUtils.validateInput(bStr);
-
-      if (aDbl.isNaN() || bDbl.isNaN()) {
-        out.value = java.lang.Float.NaN;
+      if (aDbl.isNaN()) {
+        out.value = Double.NaN;
       }
       else {
-        out.value = aDbl % bDbl;
+        out.value = Math.abs(aDbl);
       }
-      System.out.println("out.value: " + out.value);
-    }
-  }
-
-  @FunctionTemplate(name = "abs", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class Abs implements DrillSimpleFunc{
-
-    @Param VarCharHolder a;
-    @Output Float8Holder out;
-
-    public void setup(){
-
-    }
-
-    public void eval(){
-      String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
-      double aDbl = Double.parseDouble(aStr);
-
-      out.value = Math.abs(aDbl);
-
       System.out.println("out.value: " + out.value);
     }
   }
@@ -202,6 +238,8 @@ public class MathFunctionsVarcharInput {
       System.out.println("out.value: " + out.value);
     }
   }
+
+ */
 
   @FunctionTemplate(names = {"ceil", "ceiling"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class Ceil implements DrillSimpleFunc{
@@ -542,13 +580,14 @@ public static class Log10 implements DrillSimpleFunc{
       double aDbl = Double.parseDouble(aStr);
 
       String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
-      int bInt = Integer.parseInt(bStr);
+      double bDbl = Double.parseDouble(bStr);
 
       if (Double.isInfinite(aDbl) || Double.isNaN(aDbl)) {
         out.value = Double.NaN;
       } else {
         java.math.BigDecimal temp = new java.math.BigDecimal(aDbl);
-        out.value = temp.setScale(bInt, java.math.RoundingMode.DOWN).doubleValue();
+        // setScale() method requires the first arg to be an int
+        out.value = temp.setScale((int) bDbl, java.math.RoundingMode.DOWN).doubleValue();
       }
 
       System.out.println("out.value: " + out.value);
