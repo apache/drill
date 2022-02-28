@@ -101,7 +101,7 @@ public class TestOAuthProcess extends ClusterTest {
       .build();
 
     HttpOAuthConfig oAuthConfig = HttpOAuthConfig.builder()
-      .callbackURL(hostname + "/update_oath2_authtoken")
+      .callbackURL(hostname + "/update_oauth2_authtoken")
       .build();
 
     Map<String, HttpApiConfig> configs = new HashMap<>();
@@ -117,7 +117,7 @@ public class TestOAuthProcess extends ClusterTest {
 
   @Test
   public void testAccessToken() {
-    String url = hostname + "/update_oath2_authtoken?code=ABCDEF";
+    String url = hostname + "/update_oauth2_authtoken?code=ABCDEF";
     Request request = new Request.Builder().url(url).build();
 
     try (MockWebServer server = startServer()) {
@@ -144,7 +144,7 @@ public class TestOAuthProcess extends ClusterTest {
 
   @Test
   public void testGetDataWithAuthentication() {
-    String url = hostname + "/update_oath2_authtoken?code=ABCDEF";
+    String url = hostname + "/update_oauth2_authtoken?code=ABCDEF";
     Request request = new Request.Builder().url(url).build();
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(ACCESS_TOKEN_RESPONSE));
@@ -190,7 +190,7 @@ public class TestOAuthProcess extends ClusterTest {
 
   @Test
   public void testGetDataWithTokenRefresh() {
-    String url = hostname + "/update_oath2_authtoken?code=ABCDEF";
+    String url = hostname + "/update_oauth2_authtoken?code=ABCDEF";
     Request request = new Request.Builder().url(url).build();
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(ACCESS_TOKEN_RESPONSE));
