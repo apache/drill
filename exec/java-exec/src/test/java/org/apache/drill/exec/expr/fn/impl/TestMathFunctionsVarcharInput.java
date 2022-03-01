@@ -93,12 +93,12 @@ public class TestMathFunctionsVarcharInput extends ClusterTest {
     results.print();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("mod1", TypeProtos.MinorType.FLOAT8)
-      .addNullable("mod2", TypeProtos.MinorType.FLOAT8)
-      .addNullable("mod3", TypeProtos.MinorType.FLOAT8)
+      .addNullable("mod1", TypeProtos.MinorType.VARCHAR)
+      .addNullable("mod2", TypeProtos.MinorType.VARCHAR)
+      .addNullable("mod3", TypeProtos.MinorType.VARCHAR)
       .build();
 
-    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(2.0, null, null).build();
+    RowSet expected = client.rowSetBuilder(expectedSchema).addRow("2.0", null, null).build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }

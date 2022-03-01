@@ -141,7 +141,7 @@ public class MathFunctionsVarcharInput {
     @Param
     NullableVarCharHolder b;
     @Output
-    VarCharHolder out;
+    NullableVarCharHolder out;
 
     @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
 
@@ -153,7 +153,7 @@ public class MathFunctionsVarcharInput {
     }
 
     public void eval(){
-      String resultStr = null;
+      String resultStr = "";
 
       String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
       String validatedStrA = mathUtils.validateInput(aStr);
@@ -171,17 +171,16 @@ public class MathFunctionsVarcharInput {
         resultStr = result.toString();
         System.out.println("resultStr: " + resultStr);
       }
+      out.buffer = buffer;
+      out.start = 0;
+      out.end = resultStr.getBytes().length;
+      buffer.setBytes(0, resultStr.getBytes());
       /*
       else {
         //out.value = -999;
         //System.out.println("out: " + out);
       }
        */
-      out.buffer = buffer;
-      out.start = 0;
-      out.end = resultStr.getBytes().length;
-      buffer.setBytes(0, resultStr.getBytes());
-      System.out.println("out: " + out);
     }
   }
 /*
