@@ -427,9 +427,7 @@ public static class Log10 implements DrillSimpleFunc{
       String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
       int bInt = Integer.parseInt(bStr);
 
-      int result = (aInt << bInt);
-
-      out.value = (double) result;
+      out.value = (aInt << bInt);
 
       System.out.println("out.value: " + out.value);
     }
@@ -453,9 +451,7 @@ public static class Log10 implements DrillSimpleFunc{
       String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
       int bInt = Integer.parseInt(bStr);
 
-      int result = (aInt >> bInt);
-
-      out.value = (double) result;
+      out.value = (aInt >> bInt);
 
       System.out.println("out.value: " + out.value);
     }
