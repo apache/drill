@@ -19,8 +19,6 @@ specific language governing permissions and limitations
 under the License.
  */
 
-//import org.apache.commons.lang.ObjectUtils;
-import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -28,12 +26,9 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
-import javax.inject.Inject;
-
-//import java.math.BigInteger;
+import java.math.BigInteger;
 
 public class MathFunctionsVarcharInput {
   /*
@@ -66,8 +61,6 @@ public class MathFunctionsVarcharInput {
       }
     }
   }
-
-   */
   /*
     // The preexisting power() method accepts VARCHAR input, but this method adds a check for invalid input
     @FunctionTemplate(name = "power", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
@@ -136,51 +129,30 @@ public class MathFunctionsVarcharInput {
   @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class Mod implements DrillSimpleFunc{
 
-    @Param
-    NullableVarCharHolder a;
-    @Param
-    NullableVarCharHolder b;
-    @Output
-    NullableVarCharHolder out;
+    @Param VarCharHolder a;
+    @Param VarCharHolder b;
+    @Output Float8Holder out;
 
     @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
-
-    @Inject
-    DrillBuf buffer;
 
     public void setup(){
       mathUtils = new MathFunctionsVarcharUtils();
     }
 
     public void eval(){
-      String resultStr = "";
-
       String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
-      String validatedStrA = mathUtils.validateInput(aStr);
-      System.out.println("validatedStrA: " + validatedStrA);
+      Double aDbl = mathUtils.validateInput(aStr);
 
       String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
-      String validatedStrB = mathUtils.validateInput(bStr);
-      System.out.println("validatedStrB: " + validatedStrB);
+      Double bDbl = mathUtils.validateInput(bStr);
 
-      if (validatedStrA != null && validatedStrB != null) {
-        Double aDbl = Double.parseDouble(validatedStrA);
-        Double bDbl = Double.parseDouble(validatedStrB);
-
-        Double result = aDbl % bDbl;
-        resultStr = result.toString();
-        System.out.println("resultStr: " + resultStr);
+      if (aDbl.isNaN() || bDbl.isNaN()) {
+        out.value = java.lang.Float.NaN;
       }
-      out.buffer = buffer;
-      out.start = 0;
-      out.end = resultStr.getBytes().length;
-      buffer.setBytes(0, resultStr.getBytes());
-      /*
       else {
-        //out.value = -999;
-        //System.out.println("out: " + out);
+        out.value = aDbl % bDbl;
       }
-       */
+      System.out.println("out.value: " + out.value);
     }
   }
 /*
@@ -189,8 +161,6 @@ public class MathFunctionsVarcharInput {
 
     @Param VarCharHolder a;
     @Output Float8Holder out;
-
-    @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
 
     public void setup(){
       mathUtils = new MathFunctionsVarcharUtils();
@@ -427,7 +397,9 @@ public static class Log10 implements DrillSimpleFunc{
       String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
       int bInt = Integer.parseInt(bStr);
 
-      out.value = (aInt << bInt);
+      int result = (aInt << bInt);
+
+      out.value = (double) result;
 
       System.out.println("out.value: " + out.value);
     }
@@ -451,7 +423,9 @@ public static class Log10 implements DrillSimpleFunc{
       String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
       int bInt = Integer.parseInt(bStr);
 
-      out.value = (aInt >> bInt);
+      int result = (aInt >> bInt);
+
+      out.value = (double) result;
 
       System.out.println("out.value: " + out.value);
     }
