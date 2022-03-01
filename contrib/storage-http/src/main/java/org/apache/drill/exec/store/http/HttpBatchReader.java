@@ -223,7 +223,7 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     // or the post body, do not add to the query string.
     if (subScan.tableSpec().connectionConfig().getMethodType() == HttpApiConfig.HttpMethod.POST &&
       (subScan.tableSpec().connectionConfig().getPostParameterLocation().equalsIgnoreCase(HttpApiConfig.POST_BODY_POST_LOCATION) ||
-        subScan.tableSpec().connectionConfig().getPostParameterLocation().equalsIgnoreCase(HttpApiConfig.JSON_BODY_POST_LOCATION) )
+        subScan.tableSpec().connectionConfig().getPostParameterLocation().equalsIgnoreCase(HttpApiConfig.JSON_BODY_POST_LOCATION))
     ) {
       return;
     }

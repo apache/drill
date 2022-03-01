@@ -179,7 +179,9 @@ public class HttpApiConfig {
     return this.paginator;
   }
 
-  public String getPostParameterLocation() { return postParameterLocation; }
+  public String getPostParameterLocation() {
+    return postParameterLocation;
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -241,6 +243,27 @@ public class HttpApiConfig {
       .toString();
   }
 
+  /**
+   * Config variable to determine how POST variables are sent to the downstream API
+   */
+  public enum PostLocation {
+    /**
+     * Parameters from the query other than static parameters are pushed to
+     * the query string, as in a GET request
+     */
+    QUERY_STRING,
+    /**
+     * All POST parameters, both static and from the query, are pushed to the POST body
+     * as key/value pairs
+     */
+    POST_BODY,
+    /**
+     * All POST parameters, both static and from the query, are pushed to the POST body
+     * as a JSON object.
+     */
+    JSON_BODY
+  }
+
   public enum HttpMethod {
     /**
      * Value for HTTP GET method
@@ -278,13 +301,16 @@ public class HttpApiConfig {
         .build(logger);
     }
 
+    // Default to query string to avoid breaking changes
+    this.postParameterLocation = StringUtils.isEmpty(builder.postParameterLocation) ?
+      PostLocation.QUERY_STRING.toString() : builder.postParameterLocation.trim().toUpperCase();
+
     // Get the authentication method. Future functionality will include OAUTH2 authentication but for now
     // Accept either basic or none.  The default is none.
     this.authType = StringUtils.defaultIfEmpty(builder.authType, "none");
     this.postBody = builder.postBody;
 
-    // Default to query string to avoid breaking changes
-    this.postParameterLocation = StringUtils.defaultIfEmpty(builder.postParameterLocation.trim().toLowerCase(), QUERY_STRING_POST_LOCATION);
+
 
     this.params = CollectionUtils.isEmpty(builder.params) ? null :
       ImmutableList.copyOf(builder.params);
@@ -331,6 +357,11 @@ public class HttpApiConfig {
   @JsonIgnore
   public HttpMethod getMethodType() {
     return HttpMethod.valueOf(this.method);
+  }
+
+  @JsonIgnore
+  public PostLocation getPostLocation() {
+    return PostLocation.valueOf(this.postParameterLocation);
   }
 
   @JsonIgnore

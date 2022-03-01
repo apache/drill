@@ -36,6 +36,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
+import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
 import org.apache.drill.exec.store.http.HttpOAuthConfig;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.HttpSubScan;
@@ -259,10 +260,10 @@ public class SimpleHttp {
       FormBody.Builder formBodyBuilder;
 
       // If the user wants filters pushed down to the POST body, do so here.
-      if (Objects.equals(apiConfig.getPostParameterLocation(), HttpApiConfig.POST_BODY_POST_LOCATION)) {
+      if (apiConfig.getPostLocation() == PostLocation.POST_BODY) {
         formBodyBuilder = buildPostBody(filters, apiConfig.postBody());
         requestBuilder.post(formBodyBuilder.build());
-      } else if (Objects.equals(apiConfig.getPostParameterLocation(), HttpApiConfig.JSON_BODY_POST_LOCATION)) {
+      } else if (apiConfig.getPostLocation() == PostLocation.JSON_BODY) {
         // Add static parameters from postBody
         JSONObject json = buildJsonPostBody(apiConfig.postBody());
         // Now add filters
