@@ -137,6 +137,11 @@ postBody: "key1=value1
 key2=value2"
 ```
 
+`postBodyLocation`:  If the API uses the `POST` method, you can send parameters in several different ways:
+* `query_string`:  Parameters from the query are pushed down to the query string.  Static parameters are pushed to the post body.
+* `post_body`:  Both static and parameters from the query are pushed to the post body as key/value pairs
+* `json_body`:  Both static and parameters from the query are pushed to the post body as json.
+
 #### Headers
 
 `headers`: Often APIs will require custom headers as part of the authentication. This field allows
@@ -584,8 +589,8 @@ ORDER BY issue_count DESC
 
 ~~4. This plugin only reads JSON and CSV responses.~~
 
-5. `POST` bodies can only be in the format of key/value pairs. Some APIs accept
-    JSON based `POST` bodies but this is not currently supported.
+~~5. `POST` bodies can only be in the format of key/value pairs. Some APIs accept
+    JSON based `POST` bodies but this is not currently supported.~~
 
 6. When using `dataPath`, the returned message should a single JSON object. The field
    pointed to by the `dataPath` should contain a single JSON object or an array of objects.
