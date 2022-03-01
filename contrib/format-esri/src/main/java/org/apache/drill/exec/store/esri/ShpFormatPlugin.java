@@ -78,7 +78,7 @@ public class ShpFormatPlugin extends EasyFormatPlugin<ShpFormatConfig> {
         .extensions(pluginConfig.getExtensions())
         .fsConf(fsConf)
         .defaultName(PLUGIN_NAME)
-        .useEnhancedScan(true)
+        .scanVersion(ScanFrameworkVersion.EVF_V1)
         .supportsLimitPushdown(true)
         .build();
   }

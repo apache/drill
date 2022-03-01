@@ -53,7 +53,7 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
         .extensions(formatConfig.getExtensions())
         .fsConf(fsConf)
         .defaultName(DEFAULT_NAME)
-        .useEnhancedScan(true)
+        .scanVersion(ScanFrameworkVersion.EVF_V1)
         .supportsLimitPushdown(true)
         .build();
   }

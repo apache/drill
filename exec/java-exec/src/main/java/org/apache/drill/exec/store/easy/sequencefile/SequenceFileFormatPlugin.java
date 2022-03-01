@@ -52,7 +52,7 @@ public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileForma
         .extensions(pluginConfig.getExtensions())
         .fsConf(fsConf)
         .readerOperatorType(OPERATOR_TYPE)
-        .useEnhancedScan(true)
+        .scanVersion(ScanFrameworkVersion.EVF_V1)
         .supportsLimitPushdown(true)
         .supportsProjectPushdown(true)
         .defaultName(SequenceFileFormatConfig.NAME)
@@ -73,7 +73,6 @@ public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileForma
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
       return new SequenceFileBatchReader(config, scan);
     }
-
   }
 
   @Override

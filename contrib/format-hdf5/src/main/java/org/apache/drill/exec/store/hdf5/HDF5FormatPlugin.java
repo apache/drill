@@ -56,7 +56,7 @@ public class HDF5FormatPlugin extends EasyFormatPlugin<HDF5FormatConfig> {
         .extensions(pluginConfig.getExtensions())
         .fsConf(fsConf)
         .defaultName(DEFAULT_NAME)
-        .useEnhancedScan(true)
+        .scanVersion(ScanFrameworkVersion.EVF_V1)
         .supportsLimitPushdown(true)
         .build();
   }

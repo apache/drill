@@ -31,6 +31,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
+import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin.ScanFrameworkVersion;
 import org.apache.drill.exec.store.pcap.PcapBatchReader;
 import org.apache.drill.exec.store.pcap.decoder.PacketDecoder;
 import org.apache.drill.exec.store.pcapng.PcapngBatchReader;
@@ -63,7 +64,7 @@ public abstract class BasePcapFormatPlugin<T extends PcapFormatConfig> extends E
         .compressible(true)
         .extensions(pluginConfig.getExtensions())
         .fsConf(fsConf)
-        .useEnhancedScan(true)
+        .scanVersion(ScanFrameworkVersion.EVF_V1)
         .supportsLimitPushdown(true)
         .supportsProjectPushdown(true)
         .defaultName(PcapFormatConfig.NAME)

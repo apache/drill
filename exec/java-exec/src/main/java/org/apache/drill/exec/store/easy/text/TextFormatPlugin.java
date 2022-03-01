@@ -243,7 +243,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
         .fsConf(fsConf)
         .defaultName(PLUGIN_NAME)
         .writerOperatorType(WRITER_OPERATOR_TYPE)
-        .useEnhancedScan(true)
+        .scanVersion(ScanFrameworkVersion.EVF_V1)
         .supportsLimitPushdown(true)
         .build();
   }
@@ -346,7 +346,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     final double estimatedRowSize = settings.getOptions().getOption(ExecConstants.TEXT_ESTIMATED_ROW_SIZE);
 
     if (scan.supportsLimitPushdown() && scan.getLimit() > 0) {
-      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, (long)scan.getLimit(), 1, data);
+      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, scan.getLimit(), 1, data);
     } else {
       final double estRowCount = data / estimatedRowSize;
       return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, (long) estRowCount, 1, data);
