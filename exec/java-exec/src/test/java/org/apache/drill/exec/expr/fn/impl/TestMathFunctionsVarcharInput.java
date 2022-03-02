@@ -84,24 +84,21 @@ public class TestMathFunctionsVarcharInput extends ClusterTest {
   public void testModVarcharInput() throws Exception {
     String sql = "SELECT mod('8.0', '3') AS mod1, " +
       "mod('40', '2a*') AS mod2, " +
-      "mod('3.5abc', '38.9') AS mod3, " +
-      "mod(null, '8.0') AS mod4, " +
-      "mod(null, null) AS mod5, " +
-      "mod('8.0', null) AS mod6  " +
+      "mod('3.5abc', '38.9') AS mod3 " +
       "FROM (values (1))";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();
-
-    /*TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("mod1", TypeProtos.MinorType.FLOAT8)
-      .addNullable("mod2", TypeProtos.MinorType.FLOAT8)
-      .addNullable("mod3", TypeProtos.MinorType.FLOAT8)
+    
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("mod1", TypeProtos.MinorType.FLOAT8)
+      .add("mod2", TypeProtos.MinorType.FLOAT8)
+      .add("mod3", TypeProtos.MinorType.FLOAT8)
       .build();
 
-    RowSet expected = client.rowSetBuilder(expectedSchema).addRow(2.0, null, null).build();
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+      .addRow(2.0, 0.0, 0.0).build();
 
-    new RowSetComparison(expected).verifyAndClearAll(results);*/
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Ignore
