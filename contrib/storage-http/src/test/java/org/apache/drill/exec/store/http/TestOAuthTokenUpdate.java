@@ -19,7 +19,7 @@
 package org.apache.drill.exec.store.http;
 
 import okhttp3.Call;
-import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -32,6 +32,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
+import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TestOAuthTokenUpdate extends ClusterTest {
 
+  public static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
   private static final String CONNECTION_NAME = "localOauth";
   private static final int MOCK_SERVER_PORT = 47770;
   private static final int TIMEOUT = 30;
@@ -95,13 +97,13 @@ public class TestOAuthTokenUpdate extends ClusterTest {
 
   @Test
   public void testUpdateAccessToken() throws Exception {
-    RequestBody formBody = new FormBody.Builder()
-      .add("access_token", "access_approved")
-      .build();
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("accessToken", "access_approved");
 
+    RequestBody requestBody = RequestBody.create(jsonObject.toString(), JSON_MEDIA_TYPE);
     Request request = new Request.Builder()
       .url(hostname + "/update_access_token")
-      .post(formBody)
+      .post(requestBody)
       .build();
 
     Call call = httpClient.newCall(request);
@@ -109,18 +111,19 @@ public class TestOAuthTokenUpdate extends ClusterTest {
     assertEquals(response.code(), 200);
 
     PersistentTokenTable tokenTable = getTokenTable();
-    assertEquals(tokenTable.getAccessToken(), "access_approved");
+    assertEquals("access_approved", tokenTable.getAccessToken());
   }
 
   @Test
   public void testUpdateRefreshToken() throws Exception {
-    RequestBody formBody = new FormBody.Builder()
-      .add("refresh_token", "refresh_me")
-      .build();
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("refreshToken", "refresh_me");
+
+    RequestBody requestBody = RequestBody.create(jsonObject.toString(), JSON_MEDIA_TYPE);
 
     Request request = new Request.Builder()
       .url(hostname + "/update_refresh_token")
-      .post(formBody)
+      .post(requestBody)
       .build();
 
     Call call = httpClient.newCall(request);
@@ -134,14 +137,15 @@ public class TestOAuthTokenUpdate extends ClusterTest {
 
   @Test
   public void testUpdateAllTokens() throws Exception {
-    RequestBody formBody = new FormBody.Builder()
-      .add("access_token", "access_approved")
-      .add("refresh_token", "refresh_me")
-      .build();
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("accessToken", "access_approved");
+    jsonObject.put("refreshToken", "refresh_me");
+
+    RequestBody requestBody = RequestBody.create(jsonObject.toString(), JSON_MEDIA_TYPE);
 
     Request request = new Request.Builder()
       .url(hostname + "/update_oauth_tokens")
-      .post(formBody)
+      .post(requestBody)
       .build();
 
     Call call = httpClient.newCall(request);
