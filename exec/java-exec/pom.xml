@@ -650,14 +650,6 @@
       <version>${testcontainers.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>com.github.rdblue</groupId>
-      <artifactId>brotli-codec</artifactId>
-      <version>0.1.1</version>
-      <!-- brotli-codec bundles natives for linux and darwin, amd64 only so
-      we don't ship it so as not to break startup on windows or arm -->
-      <scope>provided</scope>
-    </dependency>
   </dependencies>
 
   <profiles>
@@ -767,8 +759,26 @@
         </dependency>
       </dependencies>
     </profile>
+    <profile>
+      <!-- Only include a Brotli codec in test scope on Linux / amd64, see PARQUET-1975 -->
+      <id>linux-amd64</id>
+      <activation>
+        <os>
+          <arch>amd64</arch>
+          <name>Linux</name>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>com.github.rdblue</groupId>
+          <artifactId>brotli-codec</artifactId>
+          <version>0.1.1</version>
+          <!-- this codec is not shipped because it breaks startup on unsupported platforms -->
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
   </profiles>
-
   <build>
     <plugins>
       <plugin>
