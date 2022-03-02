@@ -18,15 +18,24 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-//import static java.lang.Float.NaN;
-
 public class MathFunctionsVarcharUtils {
 
-  public String validateInput(String input) {
+  public static boolean isValid(String input) {
+    if (StringUtils.isEmpty(input)) {
+      return false;
+    } else {
+      input = input.trim();
+      return NumberUtils.isCreatable(input);
+    }
+  }
 
+  public static String validateInput(String input) {
     String regex = "^[-]*[0-9.]*[0-9]*+$";
     Pattern pattern = java.util.regex.Pattern.compile(regex);
     input = input.trim();

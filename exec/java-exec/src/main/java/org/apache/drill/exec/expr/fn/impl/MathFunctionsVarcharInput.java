@@ -26,9 +26,9 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-
-import java.math.BigInteger;
 
 public class MathFunctionsVarcharInput {
   /*
@@ -126,33 +126,33 @@ public class MathFunctionsVarcharInput {
     }
 
    */
-  @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class Mod implements DrillSimpleFunc{
+  @FunctionTemplate(name = "mod",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  public static class Mod implements DrillSimpleFunc {
 
-    @Param VarCharHolder a;
-    @Param VarCharHolder b;
-    @Output Float8Holder out;
+    @Param
+    VarCharHolder a;
 
-    @Workspace org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils mathUtils;
+    @Param
+    VarCharHolder b;
 
-    public void setup(){
-      mathUtils = new MathFunctionsVarcharUtils();
-    }
+    @Output
+    Float8Holder out;
+
+    public void setup() { }
 
     public void eval(){
-      String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(a);
-      Double aDbl = mathUtils.validateInput(aStr);
 
-      String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.getStringFromVarCharHolder(b);
-      Double bDbl = mathUtils.validateInput(bStr);
+      String aStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(a.start, a.end, a.buffer);
+      String bStr = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(b.start, b.end, b.buffer);
 
-      if (aDbl.isNaN() || bDbl.isNaN()) {
-        out.value = java.lang.Float.NaN;
+      if (org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils.isValid(aStr) &&
+        org.apache.drill.exec.expr.fn.impl.MathFunctionsVarcharUtils.isValid(bStr)) {
+        Double aDouble = Double.parseDouble(aStr);
+        Double bDouble = Double.parseDouble(bStr);
+        out.value = aDouble % bDouble;
       }
-      else {
-        out.value = aDbl % bDbl;
-      }
-      System.out.println("out.value: " + out.value);
     }
   }
 /*
@@ -210,7 +210,9 @@ public class MathFunctionsVarcharInput {
 
  */
 
-  @FunctionTemplate(names = {"ceil", "ceiling"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"ceil", "ceiling"},
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class Ceil implements DrillSimpleFunc{
 
     @Param VarCharHolder a;
@@ -533,8 +535,10 @@ public static class Log10 implements DrillSimpleFunc{
     }
   }
 
-  @FunctionTemplate(name = "trunc", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-  public static class Trunc implements DrillSimpleFunc{
+  @FunctionTemplate(name = "trunc",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  public static class Trunc implements DrillSimpleFunc {
 
     @Param VarCharHolder a;
     @Param VarCharHolder b;
