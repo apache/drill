@@ -107,7 +107,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <includes>
-            <include>**/TestCassandraSuit.class</include>
+            <include>**/TestCassandraSuite.class</include>
           </includes>
           <excludes>
             <exclude>**/CassandraComplexTypesTest.java</exclude>

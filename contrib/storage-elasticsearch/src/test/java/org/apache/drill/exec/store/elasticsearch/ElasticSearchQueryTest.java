@@ -53,11 +53,11 @@ public class ElasticSearchQueryTest extends ClusterTest {
 
   @BeforeClass
   public static void init() throws Exception {
-    TestElasticsearchSuit.initElasticsearch();
+    TestElasticsearchSuite.initElasticsearch();
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
-        Collections.singletonList(TestElasticsearchSuit.getAddress()), null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        Collections.singletonList(TestElasticsearchSuite.getAddress()), null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 
@@ -67,11 +67,11 @@ public class ElasticSearchQueryTest extends ClusterTest {
   @AfterClass
   public static void cleanUp() throws IOException {
     restHighLevelClient.indices().delete(new DeleteIndexRequest(indexName), RequestOptions.DEFAULT);
-    TestElasticsearchSuit.tearDownCluster();
+    TestElasticsearchSuite.tearDownCluster();
   }
 
   private static void prepareData() throws IOException {
-    restHighLevelClient = new RestHighLevelClient(RestClient.builder(HttpHost.create(TestElasticsearchSuit.getAddress())));
+    restHighLevelClient = new RestHighLevelClient(RestClient.builder(HttpHost.create(TestElasticsearchSuite.getAddress())));
 
     indexName = "employee";
     CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
@@ -96,14 +96,14 @@ public class ElasticSearchQueryTest extends ClusterTest {
     builder.field("marital_status", "S");
     builder.field("gender", "F");
     builder.field("management_role", "Senior Management");
-    builder.field("binary_filed", "Senior Management".getBytes());
-    builder.field("boolean_filed", true);
-    builder.timeField("date_filed", "2015/01/01 12:10:30");
-    builder.field("byte_filed", (byte) 123);
-    builder.field("long_filed", 123L);
-    builder.field("float_filed", 123F);
-    builder.field("short_filed", (short) 123);
-    builder.field("decimal_filed", new BigDecimal("123.45"));
+    builder.field("binary_field", "Senior Management".getBytes());
+    builder.field("boolean_field", true);
+    builder.timeField("date_field", "2015/01/01 12:10:30");
+    builder.field("byte_field", (byte) 123);
+    builder.field("long_field", 123L);
+    builder.field("float_field", 123F);
+    builder.field("short_field", (short) 123);
+    builder.field("decimal_field", new BigDecimal("123.45"));
     builder.endObject();
     IndexRequest indexRequest = new IndexRequest(indexName).source(builder);
     restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
@@ -317,8 +317,8 @@ public class ElasticSearchQueryTest extends ClusterTest {
         .baselineColumns("employee_id", "full_name", "first_name", "last_name", "position_id",
             "position_title", "store_id", "department_id", "birth_date", "hire_date", "salary",
             "supervisor_id", "education_level", "marital_status", "gender", "management_role",
-          "binary_filed", "boolean_filed", "date_filed", "byte_filed", "long_filed", "float_filed",
-          "short_filed", "decimal_filed")
+          "binary_field", "boolean_field", "date_field", "byte_field", "long_field", "float_field",
+          "short_field", "decimal_field")
         .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0, 0, "Graduate Degree", "S", "F", "Senior Management", Base64.getEncoder().encodeToString("Senior Management".getBytes()), true, "2015/01/01 12:10:30", 123, 123, 123., 123, 123.45)
         .baselineValues(2, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null)
         .baselineValues(4, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null)
@@ -359,8 +359,8 @@ public class ElasticSearchQueryTest extends ClusterTest {
         .baselineColumns("employee_id", "full_name", "first_name", "last_name", "position_id",
             "position_title", "store_id", "department_id", "birth_date", "hire_date", "salary",
             "supervisor_id", "education_level", "marital_status", "gender", "management_role",
-            "binary_filed", "boolean_filed", "date_filed", "byte_filed", "long_filed", "float_filed",
-            "short_filed", "decimal_filed")
+            "binary_field", "boolean_field", "date_field", "byte_field", "long_field", "float_field",
+            "short_field", "decimal_field")
         .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26",
             "1994-12-01 00:00:00.0", 80000.0, 0, "Graduate Degree", "S", "F", "Senior Management",
           Base64.getEncoder().encodeToString("Senior Management".getBytes()), true,
@@ -431,8 +431,8 @@ public class ElasticSearchQueryTest extends ClusterTest {
         .baselineColumns("employee_id", "full_name", "first_name", "last_name", "position_id",
             "position_title", "store_id", "department_id", "birth_date", "hire_date", "salary",
             "supervisor_id", "education_level", "marital_status", "gender", "management_role",
-          "binary_filed", "boolean_filed", "date_filed", "byte_filed", "long_filed", "float_filed",
-          "short_filed", "decimal_filed")
+          "binary_field", "boolean_field", "date_field", "byte_field", "long_field", "float_field",
+          "short_field", "decimal_field")
         .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0, 0, "Graduate Degree", "S", "F", "Senior Management", Base64.getEncoder().encodeToString("Senior Management".getBytes()), true, "2015/01/01 12:10:30", 123, 123, 123., 123, 123.45)
         .baselineValues(2, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null)
         .baselineValues(4, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null)
@@ -556,8 +556,8 @@ public class ElasticSearchQueryTest extends ClusterTest {
         .baselineColumns("employee_id", "full_name", "first_name", "last_name", "position_id",
             "position_title", "store_id", "department_id", "birth_date", "hire_date", "salary",
             "supervisor_id", "education_level", "marital_status", "gender", "management_role",
-          "binary_filed", "boolean_filed", "date_filed", "byte_filed", "long_filed", "float_filed",
-          "short_filed", "decimal_filed", "full_name0")
+          "binary_field", "boolean_field", "date_field", "byte_field", "long_field", "float_field",
+          "short_field", "decimal_field", "full_name0")
         .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0, 0, "Graduate Degree", "S", "F", "Senior Management", Base64.getEncoder().encodeToString("Senior Management".getBytes()), true, "2015/01/01 12:10:30", 123, 123, 123., 123, 123.45, 123)
         .baselineValues(2, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null, 123)
         .baselineValues(4, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null, 123)
@@ -610,8 +610,8 @@ public class ElasticSearchQueryTest extends ClusterTest {
         .baselineColumns("employee_id", "full_name", "first_name", "last_name", "position_id",
             "position_title", "store_id", "department_id", "birth_date", "hire_date", "salary",
             "supervisor_id", "education_level", "marital_status", "gender", "management_role",
-          "binary_filed", "boolean_filed", "date_filed", "byte_filed", "long_filed", "float_filed",
-          "short_filed", "decimal_filed")
+          "binary_field", "boolean_field", "date_field", "byte_field", "long_field", "float_field",
+          "short_field", "decimal_field")
         .baselineValues(1, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, LocalDate.parse("1961-08-26"),
             "1994-12-01 00:00:00.0", new BigDecimal("80000.00"), 0, "Graduate Degree", "S", "F", "Senior Management",
           Base64.getEncoder().encodeToString("Senior Management".getBytes()), true,

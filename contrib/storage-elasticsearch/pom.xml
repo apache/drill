@@ -98,7 +98,7 @@
         <configuration>
           <forkCount combine.self="override">1</forkCount>
           <includes>
-            <include>**/TestElasticsearchSuit.class</include>
+            <include>**/TestElasticsearchSuite.class</include>
           </includes>
           <excludes>
             <exclude>**/ElasticComplexTypesTest.java</exclude>

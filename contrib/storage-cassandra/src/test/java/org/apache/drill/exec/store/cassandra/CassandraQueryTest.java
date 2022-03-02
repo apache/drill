@@ -26,6 +26,7 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -44,7 +45,7 @@ public class CassandraQueryTest extends BaseCassandraTest {
             "ascii_field", "blob_field", "boolean_field", "date_field", "decimal_field", "double_field",
             "duration_field", "inet_field", "time_field", "timestamp_field", "timeuuid_field",
             "uuid_field", "varchar_field", "varint_field")
-        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management", "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123, new Period(0, 0, 0, 3, 0, 0, 0, 320688000), InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L, ByteBuffer.wrap(new byte[16]).order(ByteOrder.BIG_ENDIAN).putLong(5788618031596507621L).putLong(-5528732594182759265L).array(), ByteBuffer.wrap(new byte[16]).order(ByteOrder.BIG_ENDIAN).putLong(5788618031596507621L).putLong(-5528732594182759265L).array(), "abc", 123L)
+        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management", "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123, new Period(0, 0, 0, 3, 0, 0, 0, 320688000), InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L, getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), "abc", 123L)
         .baselineValues(2L, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
         .baselineValues(4L, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
         .baselineValues(5L, "Maya Gutierrez", "Maya", "Gutierrez", 2, "VP Country Manager", 0, 1, "1951-05-10", "1998-01-01 00:00:00.0", 35000.0f, 1, "Bachelors Degree", "M", "F", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
@@ -92,8 +93,8 @@ public class CassandraQueryTest extends BaseCassandraTest {
             "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123,
             new Period(0, 0, 0, 3, 0, 0, 0, 320688000),
             InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L,
-            ByteBuffer.wrap(new byte[16]).order(ByteOrder.BIG_ENDIAN).putLong(5788618031596507621L).putLong(-5528732594182759265L).array(),
-            ByteBuffer.wrap(new byte[16]).order(ByteOrder.BIG_ENDIAN).putLong(5788618031596507621L).putLong(-5528732594182759265L).array(),
+          getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"),
+          getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"),
             "abc", 123L)
         .go();
   }
@@ -164,7 +165,7 @@ public class CassandraQueryTest extends BaseCassandraTest {
             "ascii_field", "blob_field", "boolean_field", "date_field", "decimal_field", "double_field",
             "duration_field", "inet_field", "time_field", "timestamp_field", "timeuuid_field",
             "uuid_field", "varchar_field", "varint_field")
-        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management", "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123, new Period(0, 0, 0, 3, 0, 0, 0, 320688000), InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L, ByteBuffer.wrap(new byte[16]).order(ByteOrder.BIG_ENDIAN).putLong(5788618031596507621L).putLong(-5528732594182759265L).array(), ByteBuffer.wrap(new byte[16]).order(ByteOrder.BIG_ENDIAN).putLong(5788618031596507621L).putLong(-5528732594182759265L).array(), "abc", 123L)
+        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management", "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123, new Period(0, 0, 0, 3, 0, 0, 0, 320688000), InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L, getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), "abc", 123L)
         .baselineValues(2L, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
         .baselineValues(4L, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
         .go();
@@ -298,7 +299,7 @@ public class CassandraQueryTest extends BaseCassandraTest {
             "ascii_field", "blob_field", "boolean_field", "date_field", "decimal_field", "double_field",
             "duration_field", "inet_field", "time_field", "timestamp_field", "timeuuid_field",
             "uuid_field", "varchar_field", "varint_field", "full_name0")
-        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management", "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123, new Period(0, 0, 0, 3, 0, 0, 0, 320688000), InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L, ByteBuffer.wrap(new byte[16]).order(ByteOrder.BIG_ENDIAN).putLong(5788618031596507621L).putLong(-5528732594182759265L).array(), ByteBuffer.wrap(new byte[16]).order(ByteOrder.BIG_ENDIAN).putLong(5788618031596507621L).putLong(-5528732594182759265L).array(), "abc", 123L, 123)
+        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management", "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123, new Period(0, 0, 0, 3, 0, 0, 0, 320688000), InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L, getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), "abc", 123L, 123)
         .baselineValues(2L, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null, 123)
         .baselineValues(4L, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null, 123)
         .go();
@@ -358,9 +359,18 @@ public class CassandraQueryTest extends BaseCassandraTest {
             "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123,
             new Period(0, 0, 0, 3, 0, 0, 0, 320688000),
             InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L,
-            ByteBuffer.wrap(new byte[16]).order(ByteOrder.BIG_ENDIAN).putLong(5788618031596507621L).putLong(-5528732594182759265L).array(),
-            ByteBuffer.wrap(new byte[16]).order(ByteOrder.BIG_ENDIAN).putLong(5788618031596507621L).putLong(-5528732594182759265L).array(),
+          getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"),
+          getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"),
             "abc", 123L)
         .go();
+  }
+
+  private static byte[] getUuidBytes(String name) {
+    UUID uuid = UUID.fromString(name);
+    return ByteBuffer.wrap(new byte[16])
+      .order(ByteOrder.BIG_ENDIAN)
+      .putLong(uuid.getMostSignificantBits())
+      .putLong(uuid.getLeastSignificantBits())
+      .array();
   }
 }

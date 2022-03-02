@@ -47,11 +47,11 @@ public class ElasticInfoSchemaTest extends ClusterTest {
 
   @BeforeClass
   public static void init() throws Exception {
-    TestElasticsearchSuit.initElasticsearch();
+    TestElasticsearchSuite.initElasticsearch();
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
     ElasticsearchStorageConfig config = new ElasticsearchStorageConfig(
-        Collections.singletonList(TestElasticsearchSuit.getAddress()), null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        Collections.singletonList(TestElasticsearchSuite.getAddress()), null, null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     config.setEnabled(true);
     cluster.defineStoragePlugin("elastic", config);
 
@@ -63,11 +63,11 @@ public class ElasticInfoSchemaTest extends ClusterTest {
     for (String indexName : indexNames) {
       restHighLevelClient.indices().delete(new DeleteIndexRequest(indexName), RequestOptions.DEFAULT);
     }
-    TestElasticsearchSuit.tearDownCluster();
+    TestElasticsearchSuite.tearDownCluster();
   }
 
   private static void prepareData() throws IOException {
-    restHighLevelClient = new RestHighLevelClient(RestClient.builder(HttpHost.create(TestElasticsearchSuit.getAddress())));
+    restHighLevelClient = new RestHighLevelClient(RestClient.builder(HttpHost.create(TestElasticsearchSuite.getAddress())));
 
     String indexName = "t1";
     indexNames.add(indexName);
