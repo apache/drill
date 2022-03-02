@@ -88,7 +88,7 @@ public class TestMathFunctionsVarcharInput extends ClusterTest {
       "FROM (values (1))";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    
+
     TupleMetadata expectedSchema = new SchemaBuilder()
       .add("mod1", TypeProtos.MinorType.FLOAT8)
       .add("mod2", TypeProtos.MinorType.FLOAT8)
