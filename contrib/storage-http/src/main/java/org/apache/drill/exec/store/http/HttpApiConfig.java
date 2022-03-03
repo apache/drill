@@ -47,6 +47,10 @@ public class HttpApiConfig {
   protected static final String CSV_INPUT_FORMAT = "csv";
   protected static final String XML_INPUT_FORMAT = "xml";
 
+  public static final String POST_BODY_POST_LOCATION = "post_body";
+  public static final String QUERY_STRING_POST_LOCATION = "query_string";
+  public static final String JSON_BODY_POST_LOCATION = "json_body";
+
   @JsonProperty
   private final String url;
   /**
@@ -92,6 +96,9 @@ public class HttpApiConfig {
   private final int xmlDataLevel;
   @JsonProperty
   private final String limitQueryParam;
+  @JsonProperty
+  private final String postParameterLocation;
+
   @JsonProperty
   private final boolean errorOn400;
 
@@ -172,6 +179,10 @@ public class HttpApiConfig {
     return this.paginator;
   }
 
+  public String getPostParameterLocation() {
+    return postParameterLocation;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -191,6 +202,7 @@ public class HttpApiConfig {
       && Objects.equals(postBody, that.postBody)
       && Objects.equals(headers, that.headers)
       && Objects.equals(params, that.params)
+      && Objects.equals(postParameterLocation, that.postParameterLocation)
       && Objects.equals(dataPath, that.dataPath)
       && Objects.equals(authType, that.authType)
       && Objects.equals(inputType, that.inputType)
@@ -204,7 +216,7 @@ public class HttpApiConfig {
   public int hashCode() {
     return Objects.hash(url, requireTail, method, postBody, headers, params, dataPath,
       authType, inputType, xmlDataLevel, limitQueryParam, errorOn400, jsonOptions, verifySSLCert,
-      credentialsProvider, paginator, directCredentials);
+      credentialsProvider, paginator, directCredentials, postParameterLocation);
   }
 
   @Override
@@ -214,6 +226,7 @@ public class HttpApiConfig {
       .field("requireTail", requireTail)
       .field("method", method)
       .field("postBody", postBody)
+      .field("postParameterLocation", postParameterLocation)
       .field("headers", headers)
       .field("params", params)
       .field("dataPath", dataPath)
@@ -228,6 +241,27 @@ public class HttpApiConfig {
       .field("paginator", paginator)
       .field("directCredentials", directCredentials)
       .toString();
+  }
+
+  /**
+   * Config variable to determine how POST variables are sent to the downstream API
+   */
+  public enum PostLocation {
+    /**
+     * Parameters from the query other than static parameters are pushed to
+     * the query string, as in a GET request
+     */
+    QUERY_STRING,
+    /**
+     * All POST parameters, both static and from the query, are pushed to the POST body
+     * as key/value pairs
+     */
+    POST_BODY,
+    /**
+     * All POST parameters, both static and from the query, are pushed to the POST body
+     * as a JSON object.
+     */
+    JSON_BODY
   }
 
   public enum HttpMethod {
@@ -267,10 +301,17 @@ public class HttpApiConfig {
         .build(logger);
     }
 
+    // Default to query string to avoid breaking changes
+    this.postParameterLocation = StringUtils.isEmpty(builder.postParameterLocation) ?
+      PostLocation.QUERY_STRING.toString() : builder.postParameterLocation.trim().toUpperCase();
+
     // Get the authentication method. Future functionality will include OAUTH2 authentication but for now
     // Accept either basic or none.  The default is none.
     this.authType = StringUtils.defaultIfEmpty(builder.authType, "none");
     this.postBody = builder.postBody;
+
+
+
     this.params = CollectionUtils.isEmpty(builder.params) ? null :
       ImmutableList.copyOf(builder.params);
     this.dataPath = StringUtils.defaultIfEmpty(builder.dataPath, null);
@@ -319,6 +360,11 @@ public class HttpApiConfig {
   }
 
   @JsonIgnore
+  public PostLocation getPostLocation() {
+    return PostLocation.valueOf(this.postParameterLocation);
+  }
+
+  @JsonIgnore
   public UsernamePasswordCredentials getUsernamePasswordCredentials() {
     return new UsernamePasswordCredentials(credentialsProvider);
   }
@@ -348,6 +394,8 @@ public class HttpApiConfig {
     private String method;
 
     private String postBody;
+
+    private String postParameterLocation = QUERY_STRING_POST_LOCATION;
 
     private Map<String, String> headers;
 
@@ -432,6 +480,11 @@ public class HttpApiConfig {
 
     public HttpApiConfigBuilder postBody(String postBody) {
       this.postBody = postBody;
+      return this;
+    }
+
+    public HttpApiConfigBuilder postParameterLocation(String postParameterLocation) {
+      this.postParameterLocation = postParameterLocation;
       return this;
     }
 

@@ -183,6 +183,44 @@ public class TestHttpPlugin extends ClusterTest {
       .postBody("key1=value1\nkey2=value2")
       .build();
 
+    HttpApiConfig mockPostPushdownWithStaticParams = HttpApiConfig.builder()
+      .url("http://localhost:8091/")
+      .method("POST")
+      .headers(headers)
+      .requireTail(false)
+      .params(Arrays.asList("lat", "lng", "date"))
+      .postBody("key1=value1\nkey2=value2")
+      .postParameterLocation("post_body")
+      .build();
+
+    HttpApiConfig mockPostPushdown = HttpApiConfig.builder()
+      .url("http://localhost:8091/")
+      .method("POST")
+      .headers(headers)
+      .requireTail(false)
+      .params(Arrays.asList("lat", "lng", "date"))
+      .postParameterLocation("post_body")
+      .build();
+
+    HttpApiConfig mockJsonNullBodyPost = HttpApiConfig.builder()
+      .url("http://localhost:8091/")
+      .method("POST")
+      .headers(headers)
+      .requireTail(false)
+      .params(Arrays.asList("lat", "lng", "date"))
+      .postParameterLocation("json_body")
+      .build();
+
+    HttpApiConfig mockJsonPostConfig = HttpApiConfig.builder()
+      .url("http://localhost:8091/")
+      .method("POST")
+      .headers(headers)
+      .requireTail(false)
+      .params(Arrays.asList("lat", "lng", "date"))
+      .postParameterLocation("json_body")
+      .postBody("key1=value1\nkey2=value2")
+      .build();
+
     HttpPaginatorConfig offsetPaginatorForJson = HttpPaginatorConfig.builder()
       .limitParam("limit")
       .offsetParam("offset")
@@ -282,6 +320,10 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("mocktable", mockTable);
     configs.put("mockpost", mockPostConfig);
     configs.put("nullPost", mockPostConfigWithoutPostBody);
+    configs.put("mockJsonPost", mockJsonPostConfig);
+    configs.put("mockJsonNullBodyPost", mockJsonNullBodyPost);
+    configs.put("mockPostPushdown", mockPostPushdown);
+    configs.put("mockPostPushdownWithStaticParams", mockPostPushdownWithStaticParams);
     configs.put("mockcsv", mockCsvConfig);
     configs.put("mockxml", mockXmlConfig);
     configs.put("github", mockGithubWithParam);
@@ -1215,6 +1257,211 @@ public class TestHttpPlugin extends ClusterTest {
       assertEquals("value1", request.getHeader("header1"));
       assertEquals("value2", request.getHeader("header2"));
       assertEquals("Basic dXNlcjpwYXNz", request.getHeader("Authorization"));
+    }
+  }
+
+  @Test
+  public void testJsonPostWithMockServer() throws Exception {
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      String sql = "SELECT * FROM local.mockJsonPost";
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addMap("results")
+        .add("sunrise", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("sunset", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("solar_noon", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("day_length", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .resumeSchema()
+        .add("status", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"), "OK")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertEquals("POST", recordedRequest.getMethod());
+      String resultJsonString = recordedRequest.getBody().toString();
+      assertEquals("[text={\"key1\":\"value1\",\"key2\":\"value2\"}]", resultJsonString);
+    }
+  }
+
+  @Test
+  public void testJsonPostWithFiltersAndMockServer() throws Exception {
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      String sql = "SELECT * FROM local.mockJsonPost WHERE lat=36.7201600 AND lng=-4.4203400";
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addMap("results")
+        .add("sunrise", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("sunset", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("solar_noon", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("day_length", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .resumeSchema()
+        .add("status", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"), "OK")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertEquals("POST", recordedRequest.getMethod());
+      String resultJsonString = recordedRequest.getBody().toString();
+      assertEquals("[size=71 text={\"key1\":\"value1\",\"key2\":\"value2\",\"lng\":\"-4.4203400\",\"lat\":\"36.72…]", resultJsonString);
+    }
+  }
+
+  @Test
+  public void testJsonPostWithFiltersAndNullPostBodyMockServer() throws Exception {
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      String sql = "SELECT * FROM local.mockJsonNullBodyPost WHERE lat=36.7201600 AND lng=-4.4203400";
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addMap("results")
+        .add("sunrise", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("sunset", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("solar_noon", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("day_length", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .resumeSchema()
+        .add("status", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"), "OK")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertEquals("POST", recordedRequest.getMethod());
+      String resultJsonString = recordedRequest.getBody().toString();
+      assertEquals("[text={\"lng\":\"-4.4203400\",\"lat\":\"36.7201600\"}]", resultJsonString);
+    }
+  }
+
+  @Test
+  public void testParamsInPostBody() throws Exception {
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      String sql = "SELECT * FROM local.mockPostPushdown WHERE lat=36.7201600 AND lng=-4.4203400";
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addMap("results")
+        .add("sunrise", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("sunset", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("solar_noon", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("day_length", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .resumeSchema()
+        .add("status", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"), "OK")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertEquals("POST", recordedRequest.getMethod());
+      String resultJsonString = recordedRequest.getBody().toString();
+      assertEquals("[text=lng=-4.4203400&lat=36.7201600]", resultJsonString);
+    }
+  }
+
+  @Test
+  public void testParamsInPostBodyAndStaticParams() throws Exception {
+    try (MockWebServer server = startServer()) {
+      server.enqueue(
+        new MockResponse()
+          .setResponseCode(200)
+          .setBody(TEST_JSON_RESPONSE)
+      );
+
+      String sql = "SELECT * FROM local.mockPostPushdownWithStaticParams WHERE lat=36.7201600 AND lng=-4.4203400";
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addMap("results")
+        .add("sunrise", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("sunset", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("solar_noon", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("day_length", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("civil_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("nautical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .add("astronomical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .resumeSchema()
+        .add("status", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"), "OK")
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertEquals("POST", recordedRequest.getMethod());
+      String resultJsonString = recordedRequest.getBody().toString();
+      assertEquals("[text=key1=value1&key2=value2&lng=-4.4203400&lat=36.7201600]", resultJsonString);
     }
   }
 

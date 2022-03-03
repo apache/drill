@@ -33,6 +33,7 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
+import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
 import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
@@ -198,7 +199,8 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     baseUrl = SimpleHttp.mapURLParameters(parsedURL, subScan.filters());
 
     HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder();
-    if (apiConfig.params() != null && !apiConfig.params().isEmpty() &&
+    if (apiConfig.params() != null &&
+      !apiConfig.params().isEmpty() &&
         subScan.filters() != null) {
       addFilters(urlBuilder, apiConfig.params(), subScan.filters());
     }
@@ -218,6 +220,14 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
   protected void addFilters(Builder urlBuilder, List<String> params,
       Map<String, String> filters) {
 
+    // If the request is a POST query and the user selected to push the filters to either JSON body
+    // or the post body, do not add to the query string.
+    if (subScan.tableSpec().connectionConfig().getMethodType() == HttpApiConfig.HttpMethod.POST &&
+      (subScan.tableSpec().connectionConfig().getPostLocation() == PostLocation.POST_BODY ||
+        subScan.tableSpec().connectionConfig().getPostLocation() == PostLocation.JSON_BODY)
+    ) {
+      return;
+    }
     for (String param : params) {
       String value = filters.get(param);
       if (value != null) {
