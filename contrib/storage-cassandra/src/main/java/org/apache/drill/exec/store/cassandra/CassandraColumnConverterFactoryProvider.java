@@ -15,28 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.enumerable.plan;
+package org.apache.drill.exec.store.cassandra;
 
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.rel.RelNode;
+import org.apache.drill.exec.record.ColumnConverterFactory;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.enumerable.ColumnConverterFactoryProvider;
-import org.apache.drill.exec.store.enumerable.DefaultColumnConverterFactoryProvider;
 
-import java.util.Map;
+public class CassandraColumnConverterFactoryProvider implements ColumnConverterFactoryProvider {
+  public static final ColumnConverterFactoryProvider INSTANCE = new CassandraColumnConverterFactoryProvider();
 
-public interface EnumerablePrelContext {
-
-  String generateCode(RelOptCluster cluster, RelNode relNode);
-
-  RelNode transformNode(RelNode input);
-
-  Map<String, Integer> getFieldsMap(RelNode transformedNode);
-
-  String getPlanPrefix();
-
-  String getTablePath(RelNode input);
-
-  default ColumnConverterFactoryProvider factoryProvider() {
-    return DefaultColumnConverterFactoryProvider.INSTANCE;
+  @Override
+  public ColumnConverterFactory getFactory(TupleMetadata schema) {
+    return new CassandraColumnConverterFactory(schema);
   }
 }

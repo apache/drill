@@ -18,10 +18,15 @@
 package org.apache.drill.exec.store.cassandra;
 
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.joda.time.Period;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,21 +37,24 @@ public class CassandraQueryTest extends BaseCassandraTest {
   @Test
   public void testSelectAll() throws Exception {
     testBuilder()
-        .sqlQuery("select * from cassandra.test_keyspace.`employee`")
-        .unOrdered()
+        .sqlQuery("select * from cassandra.test_keyspace.`employee` order by employee_id")
+        .ordered()
         .baselineColumns("employee_id", "full_name", "first_name", "last_name", "position_id",
             "position_title", "store_id", "department_id", "birth_date", "hire_date", "salary",
-            "supervisor_id", "education_level", "marital_status", "gender", "management_role")
-        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management")
-        .baselineValues(2L, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "M", "M", "Senior Management")
-        .baselineValues(4L, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "S", "M", "Senior Management")
-        .baselineValues(5L, "Maya Gutierrez", "Maya", "Gutierrez", 2, "VP Country Manager", 0, 1, "1951-05-10", "1998-01-01 00:00:00.0", 35000.0f, 1, "Bachelors Degree", "M", "F", "Senior Management")
-        .baselineValues(6L, "Roberta Damstra", "Roberta", "Damstra", 3, "VP Information Systems", 0, 2, "1942-10-08", "1994-12-01 00:00:00.0", 25000.0f, 1, "Bachelors Degree", "M", "F", "Senior Management")
-        .baselineValues(7L, "Rebecca Kanagaki", "Rebecca", "Kanagaki", 4, "VP Human Resources", 0, 3, "1949-03-27", "1994-12-01 00:00:00.0", 15000.0f, 1, "Bachelors Degree", "M", "F", "Senior Management")
-        .baselineValues(8L, "Kim Brunner", "Kim", "Brunner", 11, "Store Manager", 9, 11, "1922-08-10", "1998-01-01 00:00:00.0", 10000.0f, 5, "Bachelors Degree", "S", "F", "Store Management")
-        .baselineValues(9L, "Brenda Blumberg", "Brenda", "Blumberg", 11, "Store Manager", 21, 11, "1979-06-23", "1998-01-01 00:00:00.0", 17000.0f, 5, "Graduate Degree", "M", "F", "Store Management")
-        .baselineValues(10L, "Darren Stanz", "Darren", "Stanz", 5, "VP Finance", 0, 5, "1949-08-26", "1994-12-01 00:00:00.0", 50000.0f, 1, "Partial College", "M", "M", "Senior Management")
-        .baselineValues(11L, "Jonathan Murraiin", "Jonathan", "Murraiin", 11, "Store Manager", 1, 11, "1967-06-20", "1998-01-01 00:00:00.0", 15000.0f, 5, "Graduate Degree", "S", "M", "Store Management")
+            "supervisor_id", "education_level", "marital_status", "gender", "management_role",
+            "ascii_field", "blob_field", "boolean_field", "date_field", "decimal_field", "double_field",
+            "duration_field", "inet_field", "time_field", "timestamp_field", "timeuuid_field",
+            "uuid_field", "varchar_field", "varint_field")
+        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management", "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123, new Period(0, 0, 0, 3, 0, 0, 0, 320688000), InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L, getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), "abc", 123L)
+        .baselineValues(2L, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
+        .baselineValues(4L, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
+        .baselineValues(5L, "Maya Gutierrez", "Maya", "Gutierrez", 2, "VP Country Manager", 0, 1, "1951-05-10", "1998-01-01 00:00:00.0", 35000.0f, 1, "Bachelors Degree", "M", "F", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
+        .baselineValues(6L, "Roberta Damstra", "Roberta", "Damstra", 3, "VP Information Systems", 0, 2, "1942-10-08", "1994-12-01 00:00:00.0", 25000.0f, 1, "Bachelors Degree", "M", "F", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
+        .baselineValues(7L, "Rebecca Kanagaki", "Rebecca", "Kanagaki", 4, "VP Human Resources", 0, 3, "1949-03-27", "1994-12-01 00:00:00.0", 15000.0f, 1, "Bachelors Degree", "M", "F", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
+        .baselineValues(8L, "Kim Brunner", "Kim", "Brunner", 11, "Store Manager", 9, 11, "1922-08-10", "1998-01-01 00:00:00.0", 10000.0f, 5, "Bachelors Degree", "S", "F", "Store Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
+        .baselineValues(9L, "Brenda Blumberg", "Brenda", "Blumberg", 11, "Store Manager", 21, 11, "1979-06-23", "1998-01-01 00:00:00.0", 17000.0f, 5, "Graduate Degree", "M", "F", "Store Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
+        .baselineValues(10L, "Darren Stanz", "Darren", "Stanz", 5, "VP Finance", 0, 5, "1949-08-26", "1994-12-01 00:00:00.0", 50000.0f, 1, "Partial College", "M", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
+        .baselineValues(11L, "Jonathan Murraiin", "Jonathan", "Murraiin", 11, "Store Manager", 1, 11, "1967-06-20", "1998-01-01 00:00:00.0", 15000.0f, 5, "Graduate Degree", "S", "M", "Store Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
         .go();
   }
 
@@ -76,9 +84,18 @@ public class CassandraQueryTest extends BaseCassandraTest {
         .unOrdered()
         .baselineColumns("employee_id", "full_name", "first_name", "last_name", "position_id",
             "position_title", "store_id", "department_id", "birth_date", "hire_date", "salary",
-            "supervisor_id", "education_level", "marital_status", "gender", "management_role")
+            "supervisor_id", "education_level", "marital_status", "gender", "management_role",
+            "ascii_field", "blob_field", "boolean_field", "date_field", "decimal_field", "double_field",
+            "duration_field", "inet_field", "time_field", "timestamp_field", "timeuuid_field",
+            "uuid_field", "varchar_field", "varint_field")
         .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26",
-            "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management")
+            "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management",
+            "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123,
+            new Period(0, 0, 0, 3, 0, 0, 0, 320688000),
+            InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L,
+          getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"),
+          getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"),
+            "abc", 123L)
         .go();
   }
 
@@ -144,10 +161,13 @@ public class CassandraQueryTest extends BaseCassandraTest {
         .ordered()
         .baselineColumns("employee_id", "full_name", "first_name", "last_name", "position_id",
             "position_title", "store_id", "department_id", "birth_date", "hire_date", "salary",
-            "supervisor_id", "education_level", "marital_status", "gender", "management_role")
-        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management")
-        .baselineValues(2L, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "M", "M", "Senior Management")
-        .baselineValues(4L, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "S", "M", "Senior Management")
+            "supervisor_id", "education_level", "marital_status", "gender", "management_role",
+            "ascii_field", "blob_field", "boolean_field", "date_field", "decimal_field", "double_field",
+            "duration_field", "inet_field", "time_field", "timestamp_field", "timeuuid_field",
+            "uuid_field", "varchar_field", "varint_field")
+        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management", "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123, new Period(0, 0, 0, 3, 0, 0, 0, 320688000), InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L, getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), "abc", 123L)
+        .baselineValues(2L, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
+        .baselineValues(4L, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null)
         .go();
   }
 
@@ -275,10 +295,13 @@ public class CassandraQueryTest extends BaseCassandraTest {
         .baselineColumns("full_name")
         .baselineColumns("employee_id", "full_name", "first_name", "last_name", "position_id",
             "position_title", "store_id", "department_id", "birth_date", "hire_date", "salary",
-            "supervisor_id", "education_level", "marital_status", "gender", "management_role", "full_name0")
-        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management", 123)
-        .baselineValues(2L, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "M", "M", "Senior Management", 123)
-        .baselineValues(4L, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "S", "M", "Senior Management", 123)
+            "supervisor_id", "education_level", "marital_status", "gender", "management_role",
+            "ascii_field", "blob_field", "boolean_field", "date_field", "decimal_field", "double_field",
+            "duration_field", "inet_field", "time_field", "timestamp_field", "timeuuid_field",
+            "uuid_field", "varchar_field", "varint_field", "full_name0")
+        .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, "1961-08-26", "1994-12-01 00:00:00.0", 80000.0f, 0, "Graduate Degree", "S", "F", "Senior Management", "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123, new Period(0, 0, 0, 3, 0, 0, 0, 320688000), InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L, getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"), "abc", 123L, 123)
+        .baselineValues(2L, "Derrick Whelply", "Derrick", "Whelply", 2, "VP Country Manager", 0, 1, "1915-07-03", "1994-12-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "M", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null, 123)
+        .baselineValues(4L, "Michael Spence", "Michael", "Spence", 2, "VP Country Manager", 0, 1, "1969-06-20", "1998-01-01 00:00:00.0", 40000.0f, 1, "Graduate Degree", "S", "M", "Senior Management", null, null, null, null, null, null, null, null, null, null, null, null, null, null, 123)
         .go();
   }
 
@@ -327,9 +350,27 @@ public class CassandraQueryTest extends BaseCassandraTest {
         .ordered()
         .baselineColumns("employee_id", "full_name", "first_name", "last_name", "position_id",
             "position_title", "store_id", "department_id", "birth_date", "hire_date", "salary",
-            "supervisor_id", "education_level", "marital_status", "gender", "management_role")
+            "supervisor_id", "education_level", "marital_status", "gender", "management_role",
+            "ascii_field", "blob_field", "boolean_field", "date_field", "decimal_field", "double_field",
+            "duration_field", "inet_field", "time_field", "timestamp_field", "timeuuid_field",
+            "uuid_field", "varchar_field", "varint_field")
         .baselineValues(1L, "Sheri Nowmer", "Sheri", "Nowmer", 1, "President", 0, 1, LocalDate.parse("1961-08-26"),
-            "1994-12-01 00:00:00.0", new BigDecimal("80000.00"), 0, "Graduate Degree", "S", "F", "Senior Management")
+            "1994-12-01 00:00:00.0", new BigDecimal("80000.00"), 0, "Graduate Degree", "S", "F", "Senior Management",
+            "abc", "0000000000000003", true, 15008L, BigDecimal.valueOf(123), 321.123,
+            new Period(0, 0, 0, 3, 0, 0, 0, 320688000),
+            InetAddress.getByName("8.8.8.8").getAddress(), 14700000000000L, 1296705900000L,
+          getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"),
+          getUuidBytes("50554d6e-29bb-11e5-b345-feff819cdc9f"),
+            "abc", 123L)
         .go();
+  }
+
+  private static byte[] getUuidBytes(String name) {
+    UUID uuid = UUID.fromString(name);
+    return ByteBuffer.wrap(new byte[16])
+      .order(ByteOrder.BIG_ENDIAN)
+      .putLong(uuid.getMostSignificantBits())
+      .putLong(uuid.getLeastSignificantBits())
+      .array();
   }
 }

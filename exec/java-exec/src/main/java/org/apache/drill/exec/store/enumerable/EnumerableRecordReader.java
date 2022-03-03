@@ -66,17 +66,21 @@ public class EnumerableRecordReader implements ManagedReader<SchemaNegotiator> {
 
   private final String schemaPath;
 
+  private final ColumnConverterFactoryProvider factoryProvider;
+
   private ColumnConverter converter;
 
   private Iterator<Map<String, Object>> records;
 
   private ResultSetLoader loader;
 
-  public EnumerableRecordReader(List<SchemaPath> columns, Map<String, Integer> fieldsMap, String code, String schemaPath) {
+  public EnumerableRecordReader(List<SchemaPath> columns, Map<String, Integer> fieldsMap,
+    String code, String schemaPath, ColumnConverterFactoryProvider factoryProvider) {
     this.columns = columns;
     this.fieldsMap = fieldsMap;
     this.code = code;
     this.schemaPath = schemaPath;
+    this.factoryProvider = factoryProvider;
   }
 
   @SuppressWarnings("unchecked")
@@ -140,7 +144,7 @@ public class EnumerableRecordReader implements ManagedReader<SchemaNegotiator> {
     TupleMetadata providedSchema = negotiator.providedSchema();
     loader = negotiator.build();
     setup(negotiator.context());
-    ColumnConverterFactory factory = new ColumnConverterFactory(providedSchema);
+    ColumnConverterFactory factory = factoryProvider.getFactory(providedSchema);
     converter = factory.getRootConverter(providedSchema, new TupleSchema(), loader.writer());
     return true;
   }

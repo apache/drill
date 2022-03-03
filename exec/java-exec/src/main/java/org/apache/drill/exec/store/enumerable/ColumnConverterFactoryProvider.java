@@ -15,28 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.enumerable.plan;
+package org.apache.drill.exec.store.enumerable;
 
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.rel.RelNode;
-import org.apache.drill.exec.store.enumerable.ColumnConverterFactoryProvider;
-import org.apache.drill.exec.store.enumerable.DefaultColumnConverterFactoryProvider;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.apache.drill.exec.record.ColumnConverterFactory;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 
-import java.util.Map;
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
+public interface ColumnConverterFactoryProvider {
 
-public interface EnumerablePrelContext {
-
-  String generateCode(RelOptCluster cluster, RelNode relNode);
-
-  RelNode transformNode(RelNode input);
-
-  Map<String, Integer> getFieldsMap(RelNode transformedNode);
-
-  String getPlanPrefix();
-
-  String getTablePath(RelNode input);
-
-  default ColumnConverterFactoryProvider factoryProvider() {
-    return DefaultColumnConverterFactoryProvider.INSTANCE;
-  }
+  ColumnConverterFactory getFactory(TupleMetadata schema);
 }

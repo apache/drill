@@ -219,7 +219,7 @@ public interface ColumnConverter {
       }
     }
 
-    private MinorType getScalarMinorType(Class<?> clazz) {
+    protected MinorType getScalarMinorType(Class<?> clazz) {
       if (clazz == byte.class || clazz == Byte.class) {
         return MinorType.TINYINT;
       } else if (clazz == short.class || clazz == Short.class) {

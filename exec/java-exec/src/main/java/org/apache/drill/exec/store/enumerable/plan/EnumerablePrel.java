@@ -26,6 +26,7 @@ import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.physical.LeafPrel;
@@ -34,6 +35,7 @@ import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
+import org.apache.drill.exec.store.enumerable.ColumnConverterFactoryProvider;
 import org.apache.drill.exec.store.enumerable.EnumerableGroupScan;
 
 import java.io.IOException;
@@ -54,6 +56,7 @@ public class EnumerablePrel extends AbstractRelNode implements LeafPrel {
   private final Map<String, Integer> fieldsMap;
   private final TupleMetadata schema;
   private final String planPrefix;
+  private final ColumnConverterFactoryProvider factoryProvider;
 
   public EnumerablePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, EnumerablePrelContext context) {
     super(cluster, traitSet);
@@ -77,6 +80,7 @@ public class EnumerablePrel extends AbstractRelNode implements LeafPrel {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+    factoryProvider = context.factoryProvider();
   }
 
   @Override
@@ -84,7 +88,8 @@ public class EnumerablePrel extends AbstractRelNode implements LeafPrel {
     List<SchemaPath> columns = rowType.getFieldNames().stream()
         .map(SchemaPath::getSimplePath)
         .collect(Collectors.toList());
-    EnumerableGroupScan groupScan = new EnumerableGroupScan(code, columns, fieldsMap, rows, schema, schemaPath);
+    GroupScan groupScan =
+      new EnumerableGroupScan(code, columns, fieldsMap, rows, schema, schemaPath, factoryProvider);
     return creator.addMetadata(this, groupScan);
   }
 
