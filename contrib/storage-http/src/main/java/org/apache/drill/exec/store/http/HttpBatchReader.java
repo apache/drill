@@ -33,6 +33,7 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
+import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
 import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
@@ -222,8 +223,8 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
     // If the request is a POST query and the user selected to push the filters to either JSON body
     // or the post body, do not add to the query string.
     if (subScan.tableSpec().connectionConfig().getMethodType() == HttpApiConfig.HttpMethod.POST &&
-      (subScan.tableSpec().connectionConfig().getPostParameterLocation().equalsIgnoreCase(HttpApiConfig.POST_BODY_POST_LOCATION) ||
-        subScan.tableSpec().connectionConfig().getPostParameterLocation().equalsIgnoreCase(HttpApiConfig.JSON_BODY_POST_LOCATION))
+      (subScan.tableSpec().connectionConfig().getPostLocation() == PostLocation.POST_BODY ||
+        subScan.tableSpec().connectionConfig().getPostLocation() == PostLocation.JSON_BODY)
     ) {
       return;
     }

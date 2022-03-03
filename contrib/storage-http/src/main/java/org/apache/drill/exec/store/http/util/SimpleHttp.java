@@ -93,7 +93,7 @@ public class SimpleHttp {
   private final Paginator paginator;
   private final HttpUrl url;
   private final PersistentTokenTable tokenTable;
-  private final Map<String,String> filters;
+  private final Map<String, String> filters;
   private final HttpApiConfig apiConfig;
   private String responseMessage;
   private int responseCode;
