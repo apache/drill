@@ -99,7 +99,7 @@
     <javax.validation.api>2.0.1.Final</javax.validation.api>
     <asm.version>9.2</asm.version>
     <excludedGroups />
-    <memoryMb>2500</memoryMb>
+    <memoryMb>2000</memoryMb>
     <directMemoryMb>2500</directMemoryMb>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>
