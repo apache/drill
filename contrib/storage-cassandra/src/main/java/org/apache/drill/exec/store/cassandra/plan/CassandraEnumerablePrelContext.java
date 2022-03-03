@@ -28,6 +28,8 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.store.SubsetRemover;
+import org.apache.drill.exec.store.cassandra.CassandraColumnConverterFactoryProvider;
+import org.apache.drill.exec.store.enumerable.ColumnConverterFactoryProvider;
 import org.apache.drill.exec.store.enumerable.plan.EnumerablePrelContext;
 
 import java.util.Collections;
@@ -77,5 +79,10 @@ public class CassandraEnumerablePrelContext implements EnumerablePrelContext {
     TableScan scan = Objects.requireNonNull(DrillRelOptUtil.findScan(input));
     List<String> qualifiedName = scan.getTable().getQualifiedName();
     return String.join(".", qualifiedName.subList(0, qualifiedName.size() - 1));
+  }
+
+  @Override
+  public ColumnConverterFactoryProvider factoryProvider() {
+    return CassandraColumnConverterFactoryProvider.INSTANCE;
   }
 }

@@ -32,7 +32,7 @@ import org.testcontainers.containers.CassandraContainer;
 @Category(SlowTest.class)
 @RunWith(Suite.class)
 @Suite.SuiteClasses({CassandraComplexTypesTest.class, CassandraPlanTest.class, CassandraQueryTest.class})
-public class TestCassandraSuit extends BaseTest {
+public class TestCassandraSuite extends BaseTest {
 
   protected static CassandraContainer<?> cassandra;
 
@@ -42,7 +42,7 @@ public class TestCassandraSuit extends BaseTest {
 
   @BeforeClass
   public static void initCassandra() {
-    synchronized (TestCassandraSuit.class) {
+    synchronized (TestCassandraSuite.class) {
       if (initCount.get() == 0) {
         startCassandra();
       }
@@ -57,7 +57,7 @@ public class TestCassandraSuit extends BaseTest {
 
   @AfterClass
   public static void tearDownCluster() {
-    synchronized (TestCassandraSuit.class) {
+    synchronized (TestCassandraSuite.class) {
       if (initCount.decrementAndGet() == 0 && cassandra != null) {
         cassandra.stop();
       }
