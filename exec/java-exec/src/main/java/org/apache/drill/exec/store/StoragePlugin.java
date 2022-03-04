@@ -29,6 +29,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 
@@ -44,6 +45,15 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * Initialize the storage plugin. The storage plugin will not be used until this method is called.
    */
   void start() throws IOException;
+
+  /**
+   * This function is a lifecycle function which is called after the storage plugin has been created
+   * but before registerSchemas() in the planning phase.  It makes the active user available during
+   * planning which is necessary if the plugin does not use user-impersonation and allows individual
+   * credentials.
+   * @param session The active user session
+   */
+  void establishConnection(UserSession session);
 
   /**
    * Indicates if Drill can read the table from this format.

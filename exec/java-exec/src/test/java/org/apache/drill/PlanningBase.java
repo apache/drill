@@ -107,7 +107,7 @@ public class PlanningBase extends ExecTest {
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
     final DrillOperatorTable table = new DrillOperatorTable(functionRegistry, systemOptions);
     SchemaConfig schemaConfig = SchemaConfig.newBuilder("foo", context).build();
-    SchemaPlus root = DynamicSchema.createRootSchema(registry, schemaConfig, new AliasRegistryProvider(dbContext));
+    SchemaPlus root = DynamicSchema.createRootSchema(registry, schemaConfig, new AliasRegistryProvider(dbContext), userSession);
 
     when(context.getNewDefaultSchema()).thenReturn(root);
     when(context.getLpPersistence()).thenReturn(new LogicalPlanPersistence(config, ClassPathScanner.fromPrescan(config)));

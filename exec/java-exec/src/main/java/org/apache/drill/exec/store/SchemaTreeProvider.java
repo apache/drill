@@ -24,6 +24,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ViewExpansionContext;
 import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -55,9 +56,10 @@ public class SchemaTreeProvider implements AutoCloseable {
    * Return root schema for process user.
    *
    * @param options list of options
+   * @param session The current user session
    * @return root of the schema tree
    */
-  public SchemaPlus createRootSchema(final OptionManager options) {
+  public SchemaPlus createRootSchema(final OptionManager options, UserSession session) {
     SchemaConfigInfoProvider schemaConfigInfoProvider = new SchemaConfigInfoProvider() {
 
       @Override
@@ -71,7 +73,7 @@ public class SchemaTreeProvider implements AutoCloseable {
       }
 
       @Override public SchemaPlus getRootSchema(String userName) {
-        return createRootSchema(userName, this);
+        return createRootSchema(userName, this, session);
       }
 
       @Override public String getQueryUserName() {
@@ -83,7 +85,7 @@ public class SchemaTreeProvider implements AutoCloseable {
         ImpersonationUtil.getProcessUserName(), schemaConfigInfoProvider)
         .build();
 
-    return createRootSchema(schemaConfig);
+    return createRootSchema(schemaConfig, session);
   }
 
   /**
@@ -91,12 +93,13 @@ public class SchemaTreeProvider implements AutoCloseable {
    *
    * @param userName Name of the user who is accessing the storage sources.
    * @param provider {@link SchemaConfigInfoProvider} instance
+   * @param session The current active user session
    * @return Root of the schema tree.
    */
-  public SchemaPlus createRootSchema(final String userName, final SchemaConfigInfoProvider provider) {
+  public SchemaPlus createRootSchema(final String userName, final SchemaConfigInfoProvider provider, UserSession session) {
     final String schemaUser = isImpersonationEnabled ? userName : ImpersonationUtil.getProcessUserName();
     final SchemaConfig schemaConfig = SchemaConfig.newBuilder(schemaUser, provider).build();
-    return createRootSchema(schemaConfig);
+    return createRootSchema(schemaConfig, session);
   }
 
   /**
@@ -104,9 +107,9 @@ public class SchemaTreeProvider implements AutoCloseable {
    * @param schemaConfig
    * @return Root of the schema tree.
    */
-  public SchemaPlus createRootSchema(SchemaConfig schemaConfig) {
+  public SchemaPlus createRootSchema(SchemaConfig schemaConfig, UserSession session) {
       SchemaPlus rootSchema = DynamicSchema.createRootSchema(dContext.getStorage(), schemaConfig,
-        dContext.getAliasRegistryProvider());
+        dContext.getAliasRegistryProvider(), session);
       schemaTreesToClose.add(rootSchema);
       return rootSchema;
   }

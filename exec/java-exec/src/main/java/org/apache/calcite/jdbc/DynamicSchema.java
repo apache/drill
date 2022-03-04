@@ -21,6 +21,7 @@ import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -32,8 +33,11 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
  */
 public class DynamicSchema extends SimpleCalciteSchema implements AutoCloseable {
 
-  public DynamicSchema(CalciteSchema parent, Schema schema, String name) {
+  private final UserSession session;
+
+  public DynamicSchema(CalciteSchema parent, Schema schema, String name, UserSession session) {
     super(parent, schema, name);
+    this.session = session;
   }
 
   @Override
@@ -41,14 +45,18 @@ public class DynamicSchema extends SimpleCalciteSchema implements AutoCloseable 
                                                boolean caseSensitive) {
     Schema s = schema.getSubSchema(schemaName);
     if (s != null) {
-      return new DynamicSchema(this, s, schemaName);
+      return new DynamicSchema(this, s, schemaName, session);
     }
     return getSubSchemaMap().get(schemaName);
   }
 
+  public UserSession getSession() {
+    return session;
+  }
+
   public static SchemaPlus createRootSchema(StoragePluginRegistry storages,
-      SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider) {
-    DynamicRootSchema rootSchema = new DynamicRootSchema(storages, schemaConfig, aliasRegistryProvider);
+      SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider, UserSession session) {
+    DynamicRootSchema rootSchema = new DynamicRootSchema(storages, schemaConfig, aliasRegistryProvider, session);
     return rootSchema.plus();
   }
 

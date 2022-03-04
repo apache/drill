@@ -142,7 +142,6 @@ public class Foreman implements Runnable {
     this.initiatingClient = connection;
     this.closeFuture = initiatingClient.getClosureFuture();
     closeFuture.addListener(closeListener);
-    drillbitContext.setLoggedInUser(initiatingClient.getSession().getCredentials().getUserName());
 
     // Apply AutoLimit on resultSet (Usually received via REST APIs)
     final int autoLimit = queryRequest.getAutolimitRowcount();

@@ -253,9 +253,4 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
   public static OAuthTokenCredentials getOAuthCredentials(CredentialsProvider credentialsProvider) {
     return new OAuthTokenCredentials(credentialsProvider);
   }
-
-  @Override
-  public AbstractSecuredStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
-    return null;
-  }
 }

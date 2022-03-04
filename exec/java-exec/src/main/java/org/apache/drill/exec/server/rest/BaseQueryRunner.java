@@ -31,6 +31,7 @@ import org.apache.drill.exec.proto.UserProtos.QueryResultsMode;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.SchemaTreeProvider;
@@ -46,6 +47,7 @@ public abstract class BaseQueryRunner {
   protected final WorkManager workManager;
   protected final WebUserConnection webUserConnection;
   private final OptionSet options;
+  private final UserSession session;
   protected int maxRows;
   protected QueryId queryId;
 
@@ -53,6 +55,7 @@ public abstract class BaseQueryRunner {
     this.workManager = workManager;
     this.webUserConnection = webUserConnection;
     this.options = webUserConnection.getSession().getOptions();
+    this.session = webUserConnection.getSession();
     this.maxRows = options.getInt(ExecConstants.QUERY_MAX_ROWS);
   }
 
@@ -96,7 +99,7 @@ public abstract class BaseQueryRunner {
       SessionOptionManager options = webUserConnection.getSession().getOptions();
       @SuppressWarnings("resource")
       SchemaTreeProvider schemaTreeProvider = new SchemaTreeProvider(workManager.getContext());
-      SchemaPlus rootSchema = schemaTreeProvider.createRootSchema(options);
+      SchemaPlus rootSchema = schemaTreeProvider.createRootSchema(options, session);
       webUserConnection.getSession().setDefaultSchemaPath(defaultSchema, rootSchema);
     }
   }

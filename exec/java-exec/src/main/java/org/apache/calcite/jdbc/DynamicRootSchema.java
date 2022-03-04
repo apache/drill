@@ -30,6 +30,7 @@ import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -60,8 +61,8 @@ public class DynamicRootSchema extends DynamicSchema {
   private final AliasRegistryProvider aliasRegistryProvider;
 
   /** Creates a root schema. */
-  DynamicRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider) {
-    super(null, new RootSchema(storages), ROOT_SCHEMA_NAME);
+  DynamicRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig, AliasRegistryProvider aliasRegistryProvider, UserSession session) {
+    super(null, new RootSchema(storages), ROOT_SCHEMA_NAME, session);
     this.schemaConfig = schemaConfig;
     this.storages = storages;
     this.aliasRegistryProvider = aliasRegistryProvider;
@@ -98,15 +99,6 @@ public class DynamicRootSchema extends DynamicSchema {
       .orElse(null);
   }
 
-  private void applyUsernameToConfig(String schemaName) {
-    StoragePluginConfig rawConfig = storages.getDefinedConfig(schemaName);
-    if (! (rawConfig instanceof AbstractSecuredStoragePluginConfig)) {
-      return;
-    }
-    AbstractSecuredStoragePluginConfig securedConfig = (AbstractSecuredStoragePluginConfig)rawConfig;
-    securedConfig.setActiveUser(schemaConfig.getUserName());
-  }
-
   /**
    * Loads schema factory(storage plugin) for specified {@code schemaName}
    * @param schemaName the name of the schema
@@ -115,9 +107,9 @@ public class DynamicRootSchema extends DynamicSchema {
   private void loadSchemaFactory(String schemaName, boolean caseSensitive) {
     try {
       SchemaPlus schemaPlus = this.plus();
-      applyUsernameToConfig(schemaName);
       StoragePlugin plugin = storages.getPlugin(schemaName);
       if (plugin != null) {
+        plugin.establishConnection(getSession());
         plugin.registerSchemas(schemaConfig, schemaPlus);
         return;
       }

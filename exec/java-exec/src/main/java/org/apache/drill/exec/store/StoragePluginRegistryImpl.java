@@ -571,11 +571,6 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     }
     StoragePluginConfig config = getStoredConfig(name);
 
-    // Apply the user name to the storage plugin config
-    if (config instanceof AbstractSecuredStoragePluginConfig) {
-      ((AbstractSecuredStoragePluginConfig) config).setActiveUser("Bob");
-    }
-
     if (plugin == null) {
       return refresh(name, config);
     } else {

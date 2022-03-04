@@ -30,6 +30,7 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.PlannerPhase;
 
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
@@ -43,10 +44,16 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
 
   protected final DrillbitContext context;
   private final String name;
+  private UserSession session;
 
   protected AbstractStoragePlugin(DrillbitContext inContext, String inName) {
     this.context = inContext;
     this.name = inName == null ? null : inName.toLowerCase();
+  }
+
+  @Override
+  public void establishConnection(UserSession session) {
+    this.session = session;
   }
 
   @Override
@@ -157,4 +164,15 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
     return context;
   }
 
+  public UserSession getSession() {
+    return session;
+  }
+
+  public String getActiveUser() {
+    if (session == null) {
+      return "anonymous";
+    } else {
+      return session.getCredentials().getUserName();
+    }
+  }
 }

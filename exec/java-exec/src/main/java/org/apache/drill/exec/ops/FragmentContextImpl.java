@@ -63,6 +63,7 @@ import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.QueryProfileStoreContext;
 import org.apache.drill.exec.server.options.FragmentOptionManager;
@@ -319,11 +320,11 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     SchemaConfig schemaConfig = SchemaConfig
         .newBuilder(
             isImpersonationEnabled ? contextInformation.getQueryUser() : ImpersonationUtil.getProcessUserName(),
-            new FragmentSchemaConfigInfoProvider(fragmentOptions, contextInformation.getQueryUser(), context))
+            new FragmentSchemaConfigInfoProvider(fragmentOptions, contextInformation.getQueryUser(), context, connection.getSession()))
         .setIgnoreAuthErrors(isImpersonationEnabled)
         .build();
 
-    return schemaTreeProvider.createRootSchema(schemaConfig);
+    return schemaTreeProvider.createRootSchema(schemaConfig, connection.getSession());
   }
 
   @Override
@@ -681,11 +682,16 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
 
     private final ViewExpansionContext viewExpansionContext;
 
+    private final UserSession session;
+
     private FragmentSchemaConfigInfoProvider(OptionManager optionManager,
-        String queryUser, DrillbitContext context) {
+                                             String queryUser,
+                                             DrillbitContext context,
+                                             UserSession session) {
       this.optionManager = optionManager;
       this.queryUser = queryUser;
       this.schemaTreeProvider = new SchemaTreeProvider(context);
+      this.session = session;
       viewExpansionContext = new ViewExpansionContext(context.getConfig(), this);
     }
 
@@ -696,7 +702,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
 
     @Override
     public SchemaPlus getRootSchema(String userName) {
-      return schemaTreeProvider.createRootSchema(userName, this);
+      return schemaTreeProvider.createRootSchema(userName, this, session);
     }
 
     @Override

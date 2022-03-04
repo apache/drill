@@ -164,9 +164,4 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       .field("caseInsensitiveTableNames", caseInsensitiveTableNames)
       .toString();
   }
-
-  @Override
-  public JdbcStorageConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
-    return new JdbcStorageConfig(this, credentialsProvider);
-  }
 }

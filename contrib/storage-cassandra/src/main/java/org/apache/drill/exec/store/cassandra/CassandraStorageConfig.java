@@ -106,9 +106,4 @@ public class CassandraStorageConfig extends AbstractSecuredStoragePluginConfig {
   public int hashCode() {
     return Objects.hash(host, credentialsProvider);
   }
-
-  @Override
-  public AbstractSecuredStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
-    return null;
-  }
 }

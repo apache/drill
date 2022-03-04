@@ -82,7 +82,6 @@ public class DrillbitContext implements AutoCloseable {
   private ResourceManager resourceManager;
   private final MetastoreRegistry metastoreRegistry;
   private final DrillCounters counters;
-  private String loggedInUser;
 
   public DrillbitContext(
       DrillbitEndpoint endpoint,
@@ -170,14 +169,6 @@ public class DrillbitContext implements AutoCloseable {
 
   public DrillbitEndpoint getEndpoint() {
     return endpoint;
-  }
-
-  public String getLoggedInUser() {
-    return loggedInUser;
-  }
-
-  public void setLoggedInUser(String loggedInUser) {
-    this.loggedInUser = loggedInUser;
   }
 
   public DrillConfig getConfig() {

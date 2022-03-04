@@ -31,11 +31,6 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
   protected final Boolean perUserCredentials;
   protected boolean directCredentials;
 
-  // DO NOT include activeUser in equality and hash
-  // comparisons; doing so will break the plugin registry.
-  protected String activeUser;
-
-
   public AbstractSecuredStoragePluginConfig() {
     this(PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,  true);
   }
@@ -57,13 +52,6 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
     this.credentialsProvider = credentialsProvider;
   }
 
-  // Copy Constructor to update credentials
-  public AbstractSecuredStoragePluginConfig(AbstractSecuredStoragePluginConfig that, CredentialsProvider credentialsProvider) {
-    this.perUserCredentials = that.perUserCredentials;
-    this.directCredentials = that.directCredentials;
-    this.credentialsProvider = credentialsProvider;
-  }
-
   public CredentialsProvider getCredentialsProvider() {
     if (directCredentials) {
       return null;
@@ -74,15 +62,6 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
   public boolean isPerUserCredentials() {
     return perUserCredentials != null && perUserCredentials;
   }
-
-  public void setActiveUser(String activeUser) {
-    this.activeUser = activeUser;
-  }
-
-  public String getActiveUser() {
-    return activeUser;
-  }
-
 
   @Override
   public boolean isEnabled() {
@@ -130,6 +109,4 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
       return super.isEnabled();
     }
   }
-
-  public abstract AbstractSecuredStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider);
 }
