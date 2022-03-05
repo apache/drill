@@ -150,7 +150,7 @@ public class FunctionInitializer {
       // TODO: Hack to remove annotations so Janino doesn't choke. Need to reconsider this problem...
       body = body.replaceAll("@\\w+(?:\\([^\\\\]*?\\))?", "");
       try {
-        return new Parser(new Scanner(null, new StringReader(body))).parseCompilationUnit();
+        return (CompilationUnit) new Parser(new Scanner(null, new StringReader(body))).parseAbstractCompilationUnit();
       } catch (CompileException e) {
           throw new IOException(String.format("Failure while loading class %s.", clazz.getName()), e);
       }

@@ -106,7 +106,7 @@ public class MethodGrabbingVisitor {
         try {
           // replaces return statements and stores the result into methodBodyBlock
           methodBodyBlock.addStatements(
-              returnStatementReplacer.copyBlockStatements(methodDeclarator.optionalStatements));
+              returnStatementReplacer.copyBlockStatements(methodDeclarator.statements));
         } catch (CompileException e) {
           throw new RuntimeException(e);
         }

@@ -19,11 +19,11 @@ package org.apache.drill.exec.compile;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.ClassLoaderIClassLoader;
 import org.codehaus.janino.IClassLoader;
@@ -36,7 +36,7 @@ import org.codehaus.janino.util.ClassFile;
 class JaninoClassCompiler extends AbstractClassCompiler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JaninoClassCompiler.class);
 
-  private IClassLoader compilationClassLoader;
+  private final IClassLoader compilationClassLoader;
 
   public JaninoClassCompiler(ClassLoader parentClassLoader, boolean debug) {
     super(debug);
@@ -45,7 +45,7 @@ class JaninoClassCompiler extends AbstractClassCompiler {
 
   @Override
   protected byte[][] getByteCode(final ClassNames className, final String sourceCode)
-      throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
+      throws CompileException, IOException {
     ClassFile[] classFiles = doCompile(sourceCode);
 
     byte[][] byteCodes = new byte[classFiles.length][];
@@ -60,19 +60,15 @@ class JaninoClassCompiler extends AbstractClassCompiler {
       throws CompileException, IOException, ClassNotFoundException {
 
     ClassFile[] classFiles = doCompile(sourceCode);
-    Map<String,byte[]> results = new HashMap<>();
-    for(int i = 0;  i < classFiles.length;  i++) {
-      ClassFile classFile = classFiles[i];
-      results.put(classFile.getThisClassName(), classFile.toByteArray());
-    }
-    return results;
+    return Arrays.stream(classFiles)
+      .collect(Collectors.toMap(ClassFile::getThisClassName, ClassFile::toByteArray, (a, b) -> b));
   }
 
   private ClassFile[] doCompile(final String sourceCode)
-      throws CompileException, IOException, ClassNotFoundException {
+      throws CompileException, IOException {
     StringReader reader = new StringReader(sourceCode);
-    Scanner scanner = new Scanner((String) null, reader);
-    Java.CompilationUnit compilationUnit = new Parser(scanner).parseCompilationUnit();
+    Scanner scanner = new Scanner(null, reader);
+    Java.AbstractCompilationUnit compilationUnit = new Parser(scanner).parseAbstractCompilationUnit();
     return new UnitCompiler(compilationUnit, compilationClassLoader)
                                   .compileUnit(this.debug, this.debug, this.debug);
   }
