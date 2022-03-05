@@ -38,6 +38,7 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.poi.ooxml.POIXMLProperties.CoreProperties;
+import org.apache.poi.openxml4j.opc.ZipPackage;
 import org.apache.poi.openxml4j.util.ZipInputStreamZipEntrySource;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -178,6 +179,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     final String sheetName;
     final int maxArraySize;
     final int thresholdBytesForTempFiles;
+    final boolean useTempFilePackageParts;
 
     ExcelReaderConfig(ExcelFormatPlugin plugin) {
       this.plugin = plugin;
@@ -189,6 +191,7 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       sheetName = plugin.getConfig().getSheetName();
       maxArraySize = plugin.getConfig().getMaxArraySize();
       thresholdBytesForTempFiles = plugin.getConfig().getThresholdBytesForTempFiles();
+      useTempFilePackageParts = plugin.getConfig().isUseTempFilePackageParts();
     }
   }
 
@@ -242,6 +245,10 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
       if (readerConfig.thresholdBytesForTempFiles >= 0) {
         ZipInputStreamZipEntrySource.setThresholdBytesForTempFiles(readerConfig.thresholdBytesForTempFiles);
+      }
+
+      if (readerConfig.useTempFilePackageParts) {
+        ZipPackage.setUseTempFilePackageParts(readerConfig.useTempFilePackageParts);
       }
 
       // Open streaming reader
