@@ -283,14 +283,16 @@ public class ReplacingBasicValue extends BasicValue {
     if (AssertionUtil.ASSERT_ENABLED) {
       assert associates == other.associates;
       assert flagSet == other.flagSet;
-      assert associates.containsKey(this);
-      assert associates.containsKey(other);
+      if (associates != null) {
+        assert associates.containsKey(this);
+        assert associates.containsKey(other);
 
-      // check all the other values as well
-      for(ReplacingBasicValue value : associates.keySet()) {
-        assert associates.get(value) == null; // we never use the value
-        assert value.associates == associates;
-        assert value.flagSet == flagSet;
+        // check all the other values as well
+        for(ReplacingBasicValue value : associates.keySet()) {
+          assert associates.get(value) == null; // we never use the value
+          assert value.associates == associates;
+          assert value.flagSet == flagSet;
+        }
       }
     }
   }

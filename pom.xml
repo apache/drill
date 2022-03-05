@@ -63,7 +63,7 @@
     <calcite.groupId>com.github.vvysotskyi.drill-calcite</calcite.groupId>
     <calcite.version>1.21.0-drill-r8</calcite.version>
     <avatica.version>1.17.0</avatica.version>
-    <janino.version>3.0.11</janino.version>
+    <janino.version>3.1.7</janino.version>
     <sqlline.version>1.12.0</sqlline.version>
     <jackson.version>2.13.2.20220328</jackson.version>
     <zookeeper.version>3.5.7</zookeeper.version>
