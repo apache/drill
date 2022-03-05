@@ -27,6 +27,7 @@ import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.store.excel.ExcelBatchReader.ExcelReaderConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.poi.ss.SpreadsheetVersion;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.Objects;
 public class ExcelFormatConfig implements FormatPluginConfig {
 
   // This is the theoretical maximum number of rows in an Excel spreadsheet
-  private final int MAX_ROWS = 1_048_576;
+  private final int MAX_ROWS = SpreadsheetVersion.EXCEL2007.getMaxRows();
 
   private final List<String> extensions;
   private final int headerRow;
