@@ -38,12 +38,14 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.poi.ooxml.POIXMLProperties.CoreProperties;
+import org.apache.poi.openxml4j.util.ZipInputStreamZipEntrySource;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -174,6 +176,8 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
     final int lastColumn;
     final boolean allTextMode;
     final String sheetName;
+    final int maxArraySize;
+    final int thresholdBytesForTempFiles;
 
     ExcelReaderConfig(ExcelFormatPlugin plugin) {
       this.plugin = plugin;
@@ -183,6 +187,8 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
       lastColumn = plugin.getConfig().getLastColumn();
       allTextMode = plugin.getConfig().getAllTextMode();
       sheetName = plugin.getConfig().getSheetName();
+      maxArraySize = plugin.getConfig().getMaxArraySize();
+      thresholdBytesForTempFiles = plugin.getConfig().getThresholdBytesForTempFiles();
     }
   }
 
@@ -229,6 +235,14 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private void openFile(FileScanFramework.FileSchemaNegotiator negotiator) {
     try {
       fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
+
+      if (readerConfig.maxArraySize >= 0) {
+        IOUtils.setByteArrayMaxOverride(readerConfig.maxArraySize);
+      }
+
+      if (readerConfig.thresholdBytesForTempFiles >= 0) {
+        ZipInputStreamZipEntrySource.setThresholdBytesForTempFiles(readerConfig.thresholdBytesForTempFiles);
+      }
 
       // Open streaming reader
       Workbook workbook = StreamingReader.builder()

@@ -46,6 +46,8 @@ public class ExcelFormatConfig implements FormatPluginConfig {
   private final int lastColumn;
   private final boolean allTextMode;
   private final String sheetName;
+  private final int maxArraySize;
+  private final int thresholdBytesForTempFiles;
 
   // Omitted properties take reasonable defaults
   @JsonCreator
@@ -56,7 +58,10 @@ public class ExcelFormatConfig implements FormatPluginConfig {
       @JsonProperty("firstColumn") Integer firstColumn,
       @JsonProperty("lastColumn") Integer lastColumn,
       @JsonProperty("allTextMode") Boolean allTextMode,
-      @JsonProperty("sheetName") String sheetName) {
+      @JsonProperty("sheetName") String sheetName,
+      @JsonProperty("maxArraySize") Integer maxArraySize,
+      @JsonProperty("thresholdBytesForTempFiles") Integer thresholdBytesForTempFiles
+  ) {
     this.extensions = extensions == null
         ? Collections.singletonList("xlsx")
         : ImmutableList.copyOf(extensions);
@@ -67,6 +72,8 @@ public class ExcelFormatConfig implements FormatPluginConfig {
     this.lastColumn = lastColumn == null ? 0 : lastColumn;
     this.allTextMode = allTextMode == null ? false : allTextMode;
     this.sheetName = sheetName == null ? "" : sheetName;
+    this.maxArraySize = maxArraySize == null ? -1 : maxArraySize;
+    this.thresholdBytesForTempFiles = thresholdBytesForTempFiles == null ? -1 : thresholdBytesForTempFiles;
   }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -98,6 +105,25 @@ public class ExcelFormatConfig implements FormatPluginConfig {
     return sheetName;
   }
 
+  /**
+   * See the <code>setByteArrayMaxOverride</code> in the Apache POI
+   * <a href="https://poi.apache.org/components/configuration.html">configuration</a> doc.
+   * @return max size of POI array (-1 means default limits applied)
+   */
+  public int getMaxArraySize() {
+    return maxArraySize;
+  }
+
+  /**
+   * See the <code>setThresholdBytesForTempFiles</code> in the Apache POI
+   * <a href="https://poi.apache.org/components/configuration.html">configuration</a> doc.
+   * @return size at which xlsx parts are switched to temp file backing
+   * (-1 means no temp files for this feature - POI does use temp files in some other cases)
+   */
+  public int getThresholdBytesForTempFiles() {
+    return thresholdBytesForTempFiles;
+  }
+
   public ExcelReaderConfig getReaderConfig(ExcelFormatPlugin plugin) {
     ExcelReaderConfig readerConfig = new ExcelReaderConfig(plugin);
     return readerConfig;
@@ -124,7 +150,9 @@ public class ExcelFormatConfig implements FormatPluginConfig {
       && Objects.equals(firstColumn, other.firstColumn)
       && Objects.equals(lastColumn, other.lastColumn)
       && Objects.equals(allTextMode, other.allTextMode)
-      && Objects.equals(sheetName, other.sheetName);
+      && Objects.equals(sheetName, other.sheetName)
+      && Objects.equals(maxArraySize, other.maxArraySize)
+      && Objects.equals(thresholdBytesForTempFiles, other.thresholdBytesForTempFiles);
   }
 
   @Override
@@ -137,6 +165,8 @@ public class ExcelFormatConfig implements FormatPluginConfig {
         .field("firstColumn", firstColumn)
         .field("lastColumn", lastColumn)
         .field("allTextMode", allTextMode)
+        .field("maxArraySize", maxArraySize)
+        .field("thresholdBytesForTempFiles", thresholdBytesForTempFiles)
         .toString();
   }
 }
