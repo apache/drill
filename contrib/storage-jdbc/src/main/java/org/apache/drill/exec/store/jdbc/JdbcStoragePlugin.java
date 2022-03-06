@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -47,15 +48,20 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private static final Logger logger = LoggerFactory.getLogger(JdbcStoragePlugin.class);
 
   private final JdbcStorageConfig config;
-  private final HikariDataSource dataSource;
-  private final SqlDialect dialect;
-  private final DrillJdbcConvention convention;
-  private final JdbcDialect jdbcDialect;
+  private HikariDataSource dataSource;
+  private SqlDialect dialect;
+  private DrillJdbcConvention convention;
+  private JdbcDialect jdbcDialect;
 
   public JdbcStoragePlugin(JdbcStorageConfig config, DrillbitContext context, String name) {
     super(context, name);
     this.config = config;
-    this.dataSource = initDataSource(config, context.getLoggedInUser());
+  }
+
+  @Override
+  public void establishConnection(UserSession session) {
+    this.session = session;
+    this.dataSource = initDataSource(config, getActiveUser());
     this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, dataSource);
     this.convention = new DrillJdbcConvention(dialect, name, this);
     this.jdbcDialect = JdbcDialectFactory.getJdbcDialect(this, config.getUrl());
@@ -164,12 +170,12 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       /*
       JDBC Connections from Drill require a valid connection when the plugin is created. The issue
       arises when a user has either invalid or null credentials for this storage plugin.  This will potentially
-      destabilize Drill.  The solution is to provide a default set of credentials which has enough permissions
+      destabilize Drill.  One solution is to provide a default set of credentials which has enough permissions
       so that the connection will not fail, but not enough for the user to query any data.  Drill will first
       attempt to connect using the user's credentials, and if that fails, will fall back to the default.
       If the default credentials are null, Drill will throw an exception.
        */
-      if (config.isPerUserCredentials() && StringUtils.isNotEmpty(activeUserName)) {
+      if (config.getUserImpersonation() && StringUtils.isNotEmpty(activeUserName)) {
         logger.debug("Initializing JDBC connection with username: {}", activeUserName);
         credentials = config.getUsernamePasswordCredentials(activeUserName);
         PerUserUsernamePasswordCredentials perUserCredentials = (PerUserUsernamePasswordCredentials) credentials;

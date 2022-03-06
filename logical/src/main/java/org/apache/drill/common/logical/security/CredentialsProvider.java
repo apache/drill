@@ -37,8 +37,6 @@ public interface CredentialsProvider {
    * Returns map with authentication credentials. Key is the credential name, for example {@code "username"}
    * and map value is corresponding credential value.
    */
-  Logger logger = LoggerFactory.getLogger(CredentialsProvider.class);
-
   @JsonIgnore
   Map<String, String> getCredentials();
   /**

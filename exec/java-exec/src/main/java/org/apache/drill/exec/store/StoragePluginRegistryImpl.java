@@ -771,7 +771,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         if (plugin.getValue() instanceof AbstractSecuredStoragePluginConfig) {
           // If the plugin does not have per user credentials enabled, do not add it to the list.
           AbstractSecuredStoragePluginConfig securedConfig = (AbstractSecuredStoragePluginConfig) plugin.getValue();
-          include = securedConfig.isPerUserCredentials();
+          include = securedConfig.getUserImpersonation();
         } else {
           include = false;
         }

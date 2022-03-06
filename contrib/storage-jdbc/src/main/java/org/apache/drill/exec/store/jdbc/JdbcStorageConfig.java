@@ -68,7 +68,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   }
 
   private JdbcStorageConfig(JdbcStorageConfig that, CredentialsProvider credentialsProvider) {
-    super(credentialsProvider, credentialsProvider == null, that.perUserCredentials);
+    super(credentialsProvider, credentialsProvider == null, that.userImpersonation);
     this.driver = that.driver;
     this.url = that.url;
     this.writable = that.writable;
@@ -92,7 +92,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   public String getUsername() {
     if (directCredentials) {
       return getUsernamePasswordCredentials().getUsername();
-    } else if (perUserCredentials) {
+    } else if (userImpersonation) {
       credentialsProvider.getCredentials(ImpersonationUtil.getProcessUserName());
     }
     return null;
@@ -101,7 +101,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   public String getPassword() {
     if (directCredentials) {
       return getUsernamePasswordCredentials().getPassword();
-    } else if (perUserCredentials) {
+    } else if (userImpersonation) {
       credentialsProvider.getCredentials(ImpersonationUtil.getProcessUserName());
     }
     return null;
@@ -124,7 +124,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   @JsonIgnore
   public UsernamePasswordCredentials getUsernamePasswordCredentials(String username) {
     System.out.println("Getting credentials for " + username);
-    if (perUserCredentials) {
+    if (userImpersonation) {
       return new PerUserUsernamePasswordCredentials(credentialsProvider, username);
     } else {
       return new UsernamePasswordCredentials(credentialsProvider);
@@ -163,5 +163,10 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       .field("writerBatchSize", writerBatchSize)
       .field("caseInsensitiveTableNames", caseInsensitiveTableNames)
       .toString();
+  }
+
+  @Override
+  public JdbcStorageConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new JdbcStorageConfig(this, credentialsProvider);
   }
 }

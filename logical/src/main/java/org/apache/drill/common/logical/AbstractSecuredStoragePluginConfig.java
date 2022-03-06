@@ -28,7 +28,7 @@ import java.util.Map;
 public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginConfig {
 
   protected final CredentialsProvider credentialsProvider;
-  protected final Boolean perUserCredentials;
+  protected final Boolean userImpersonation;
   protected boolean directCredentials;
 
   public AbstractSecuredStoragePluginConfig() {
@@ -38,15 +38,15 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
   public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean directCredentials) {
     this.credentialsProvider = credentialsProvider;
     this.directCredentials = directCredentials;
-    this.perUserCredentials = false;
+    this.userImpersonation = false;
   }
 
-  public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean directCredentials, boolean perUserCredentials) {
+  public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean directCredentials, boolean userImpersonation) {
     this.directCredentials = directCredentials;
     if (directCredentials) {
-      this.perUserCredentials = false;
+      this.userImpersonation = false;
     } else {
-      this.perUserCredentials = perUserCredentials;
+      this.userImpersonation = userImpersonation;
     }
     // Recreate credential provider with per user credentials
     this.credentialsProvider = credentialsProvider;
@@ -59,22 +59,29 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
     return credentialsProvider;
   }
 
-  public boolean isPerUserCredentials() {
-    return perUserCredentials != null && perUserCredentials;
+  public boolean getUserImpersonation() {
+    return userImpersonation != null && userImpersonation;
   }
+
+  // TODO Implement me
+  public boolean hasValidCredentials(String activeUser) {
+    return false;
+  }
+
+  public abstract AbstractSecuredStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider);
 
   @Override
   public boolean isEnabled() {
     /*
     This method overrides the isEnabled method of the StoragePlugin when per-user credentials are enabled.
     The issue that arises is that per-user credentials are enabled and a user_a has set up the creds, but user_b
-    has not, some plugins will not initialize which could potentially destabilize Drill.  This modification treats
-    plugins as disabled when per-user credentials are enabled AND the active user's credentials are null.
+    has not, some plugins will not initialize which could potentially destabilize Drill.  This function thus treats
+    plugins as disabled when user impersonation is enabled AND the active user's credentials are null.
 
-    Obviously, this only applies to plugins which use the AbstractSecuredPluginConfig, IE: not file based plugins, or
+    This only applies to plugins which use the AbstractSecuredPluginConfig, IE: not file based plugins, or
     HBase and a few others.  This doesn't actually disable the plugin, but when a user w/o credentials tries to access
     the plugin, either in a query or via info_schema queries, the plugin will act as if it is disabled for that user.
-     */
+    */
 
     String activeUser;
     String otherUser;
@@ -86,7 +93,7 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
       activeUser = null;
     }
 
-    if (! perUserCredentials || StringUtils.isEmpty(activeUser)) {
+    if (!userImpersonation || StringUtils.isEmpty(activeUser)) {
       return super.isEnabled();
     } else {
       /*

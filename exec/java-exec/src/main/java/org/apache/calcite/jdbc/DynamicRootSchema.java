@@ -26,8 +26,6 @@ import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
-import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.rpc.user.UserSession;

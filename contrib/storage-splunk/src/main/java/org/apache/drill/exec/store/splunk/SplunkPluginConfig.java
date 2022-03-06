@@ -137,4 +137,9 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
       .field("latestTime", latestTime)
       .toString();
   }
+
+  @Override
+  public SplunkPluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return this;
+  }
 }

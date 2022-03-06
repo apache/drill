@@ -43,8 +43,8 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 public abstract class AbstractStoragePlugin implements StoragePlugin {
 
   protected final DrillbitContext context;
-  private final String name;
-  private UserSession session;
+  protected final String name;
+  protected UserSession session;
 
   protected AbstractStoragePlugin(DrillbitContext inContext, String inName) {
     this.context = inContext;

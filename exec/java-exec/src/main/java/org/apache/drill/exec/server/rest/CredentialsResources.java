@@ -18,13 +18,10 @@
 
 package org.apache.drill.exec.server.rest;
 
-import com.google.gson.Gson;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
-import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
-import org.apache.drill.exec.server.rest.StorageResources.JsonResult;
 import org.apache.drill.exec.server.rest.StorageResources.StoragePluginModel;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
@@ -155,7 +152,7 @@ public class CredentialsResources {
 
     AbstractSecuredStoragePluginConfig config = (AbstractSecuredStoragePluginConfig)rawConfig;
 
-    if (!config.isPerUserCredentials()) {
+    if (!config.getUserImpersonation()) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
         .entity(message(pluginName + " does not support per user credentials."))
         .build();
