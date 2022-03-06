@@ -41,7 +41,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
-    <project.build.outputTimestamp>1</project.build.outputTimestamp>
+    <project.build.outputTimestamp>10</project.build.outputTimestamp>
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
     <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <junit.version>5.7.2</junit.version>
@@ -532,7 +532,6 @@
             </manifest>
             <manifestEntries>
               <Extension-Name>org.apache.drill</Extension-Name>
-              <Built-By>${user.name}</Built-By>
               <url>https://drill.apache.org/</url>
             </manifestEntries>
           </archive>
@@ -544,67 +543,6 @@
             </goals>
             <configuration>
               <skipIfEmpty>true</skipIfEmpty>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>pl.project13.maven</groupId>
-        <artifactId>git-commit-id-plugin</artifactId>
-        <version>4.0.0</version>
-        <executions>
-          <execution>
-            <id>for-source-tarball</id>
-            <goals>
-              <goal>revision</goal>
-            </goals>
-            <inherited>false</inherited>
-            <configuration>
-              <generateGitPropertiesFilename>./git.properties</generateGitPropertiesFilename>
-            </configuration>
-          </execution>
-        </executions>
-
-        <configuration>
-          <dateFormat>dd.MM.yyyy '@' HH:mm:ss z</dateFormat>
-          <verbose>false</verbose>
-          <skipPoms>false</skipPoms>
-          <generateGitPropertiesFile>true</generateGitPropertiesFile>
-          <failOnNoGitDirectory>false</failOnNoGitDirectory>
-          <gitDescribe>
-            <skip>false</skip>
-            <always>false</always>
-            <abbrev>7</abbrev>
-            <dirty>-dirty</dirty>
-            <forceLongFormat>true</forceLongFormat>
-          </gitDescribe>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <configuration>
-          <encoding>UTF-8</encoding>
-        </configuration>
-        <executions>
-          <execution>
-            <!-- copy root git.properties file to target/classes folder for every module
-                to ensure that it will be placed into jar -->
-            <phase>initialize</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-              <resources>
-                <resource>
-                  <!--suppress UnresolvedMavenProperty -->
-                  <directory>${maven.multiModuleProjectDirectory}</directory>
-                  <includes>
-                    <include>git.properties</include>
-                  </includes>
-                </resource>
-              </resources>
             </configuration>
           </execution>
         </executions>
