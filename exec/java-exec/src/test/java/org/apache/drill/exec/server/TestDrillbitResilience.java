@@ -18,7 +18,6 @@
 package org.apache.drill.exec.server;
 
 import static org.apache.drill.exec.ExecConstants.SLICE_TARGET;
-import static org.apache.drill.exec.ExecConstants.SLICE_TARGET_DEFAULT;
 import static org.apache.drill.exec.planner.physical.PlannerSettings.ENABLE_HASH_AGG_OPTION;
 import static org.apache.drill.exec.planner.physical.PlannerSettings.PARTITION_SENDER_SET_THREADS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -117,7 +116,7 @@ public class TestDrillbitResilience extends ClusterTest {
    */
   private static final int NUM_RUNS = 3;
   private static final int PROBLEMATIC_TEST_NUM_RUNS = 3;
-  private static final int TIMEOUT = 10;
+  private static final int TIMEOUT = 15;
   private final static Level CURRENT_LOG_LEVEL = Level.DEBUG;
 
   /**
@@ -619,7 +618,7 @@ public class TestDrillbitResilience extends ClusterTest {
       final long after = countAllocatedMemory();
       assertEquals(before, after, () -> String.format("We are leaking %d bytes", after - before));
     } finally {
-      client.alterSession(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
+      client.resetSession(SLICE_TARGET);
     }
   }
 
@@ -651,7 +650,7 @@ public class TestDrillbitResilience extends ClusterTest {
       assertEquals(before, after, () -> String.format("We are leaking %d bytes", after - before));
 
     } finally {
-      client.alterSession(SLICE_TARGET, Long.toString(SLICE_TARGET_DEFAULT));
+      client.resetSession(SLICE_TARGET);
     }
   }
 
@@ -809,7 +808,7 @@ public class TestDrillbitResilience extends ClusterTest {
       try {
         Thread.sleep(1000);
       } catch (InterruptedException e) {
-        logger.debug("Sleep thread interrupted. Ignore it");
+        logger.debug("Cancelling thread interrupted. Ignore it");
         // just ignore
       }
       logger.debug("Cancelling {} query started", queryId);
@@ -913,7 +912,7 @@ public class TestDrillbitResilience extends ClusterTest {
     // wait to make sure all fragments finished cleaning up
     try {
       logger.debug("Sleep thread for 2 seconds");
-      Thread.sleep(2000);
+      Thread.sleep(1500); // 1500
     } catch (InterruptedException e) {
       logger.debug("Sleep thread interrupted. Ignore it", e);
       // just ignore

@@ -100,7 +100,7 @@
     <asm.version>9.2</asm.version>
     <excludedGroups />
     <memoryMb>2500</memoryMb>
-    <directMemoryMb>2500</directMemoryMb>
+    <directMemoryMb>4500</directMemoryMb>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>
     <docker.repository>apache/drill</docker.repository>
@@ -126,7 +126,7 @@
     <commons.cli.version>1.4</commons.cli.version>
     <snakeyaml.version>1.26</snakeyaml.version>
     <commons.lang3.version>3.10</commons.lang3.version>
-    <testcontainers.version>1.16.2</testcontainers.version>
+    <testcontainers.version>1.16.3</testcontainers.version>
     <typesafe.config.version>1.0.0</typesafe.config.version>
     <commons.codec.version>1.14</commons.codec.version>
     <metadata.extractor.version>2.13.0</metadata.extractor.version>
