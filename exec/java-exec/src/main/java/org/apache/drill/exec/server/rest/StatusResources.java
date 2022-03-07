@@ -42,6 +42,8 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.Operation;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.ExecConstants;
@@ -90,6 +92,8 @@ public class StatusResources {
   @GET
   @Path(StatusResources.PATH_STATUS_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=Memory%22%2C%0A%20%20%20%20%20%20%22value%22%20%3A%208589934592%0A%20%20%20%20%7D%20%5D-,get%20%2Fstatus,-Get%20the%20status"))
+
   public Pair<String, String> getStatusJSON() {
     return new ImmutablePair<>("status", "Running!");
   }
@@ -104,6 +108,8 @@ public class StatusResources {
   @GET
   @Path(StatusResources.PATH_METRICS + "/{hostname}")
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=Running!%3C%2Fstrong%3E%0A%20%20%20%20%20%20.%20.%20.%0A%0A%20%20%20%20%20%20%3C%2Fhtml%3E-,get%20%2Fstatus%2Fmetrics,-Get%20the%20current"))
+
   public String getMetrics(@PathParam("hostname") String hostname) throws Exception {
     URL metricsURL = WebUtils.getDrillbitURL(work, request, hostname, StatusResources.PATH_METRICS);
     return WebUtils.doHTTPRequest(new HttpGet(metricsURL.toURI()), work.getContext().getConfig());
@@ -132,6 +138,8 @@ public class StatusResources {
   @Path(StatusResources.PATH_OPTIONS_JSON)
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=gets%20system%20options.-,get%20%2Foptions.json,-List%20the%20name"))
+
   public List<OptionWrapper> getSystemPublicOptionsJSON() {
     return getSystemOptionsJSONHelper(false);
   }

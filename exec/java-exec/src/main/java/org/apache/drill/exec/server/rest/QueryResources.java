@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.Operation;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -96,6 +98,9 @@ public class QueryResources {
   @Path("/query.json")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache" +
+    ".org/docs/rest-api-introduction/#:~:text=programmatically%20run%20queries.-,post%20%2Fquery.json,-Submit%20a%20query"))
+
   public StreamingOutput submitQueryJSON(QueryWrapper query) throws Exception {
 
     /*

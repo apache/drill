@@ -36,8 +36,8 @@ import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
@@ -105,6 +105,8 @@ public class DrillRoot {
   @GET
   @Path("/gracePeriod")
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "  https://drill.apache.org/docs/stopping-drill/#:~:text=draining%2C%20and%20offline.%0A%20%20%20%20%20--,grace,-%3A%20A%20period%20in"))
+
   public Map<String, Integer> getGracePeriod() {
     final DrillConfig config = work.getContext().getConfig();
     final int gracePeriod = config.getInt(ExecConstants.GRACE_PERIOD);
@@ -128,6 +130,8 @@ public class DrillRoot {
   @GET
   @Path("/queriesCount")
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/apidocs/org/apache/drill/exec/work/WorkManager.html#:~:text=waitToExit(boolean%C2%A0forcefulShutdown)-,getremainingqueries,-public%C2%A0Map%3CString"))
+
   public Response getRemainingQueries() {
     Map<String, Integer> queriesInfo = work.getRemainingQueries();
     return setResponse(queriesInfo);
@@ -137,6 +141,8 @@ public class DrillRoot {
   @Path("/gracefulShutdown")
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed(ADMIN_ROLE)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/stopping-drill/"))
+
   public Response shutdownDrillbit() throws Exception {
     String resp = "Graceful Shutdown request is triggered";
     return shutdown(resp);
@@ -146,6 +152,8 @@ public class DrillRoot {
   @Path("/gracefulShutdown/{hostname}")
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed(ADMIN_ROLE)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/stopping-drill/"))
+
   public String shutdownDrillbitByName(@PathParam("hostname") String hostname) throws Exception {
     URL shutdownURL = WebUtils.getDrillbitURL(work, request, hostname, "/gracefulShutdown");
     return WebUtils.doHTTPRequest(new HttpPost(shutdownURL.toURI()), work.getContext().getConfig());
@@ -155,6 +163,8 @@ public class DrillRoot {
   @Path("/shutdown")
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed(ADMIN_ROLE)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/stopping-drill/"))
+
   public Response shutdownForcefully() throws Exception {
     drillbit.setForcefulShutdown(true);
     String resp = "Forceful shutdown request is triggered";
@@ -165,9 +175,8 @@ public class DrillRoot {
   @Path("/quiescent")
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed(ADMIN_ROLE)
-  @Operation(summary="My summary", tags={"my tags"}, responses = {
-    @ApiResponse(description = "my description for response")
-  })
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/stopping-drill/"))
+
   public Response drillbitToQuiescentMode() throws Exception {
     drillbit.setQuiescentMode(true);
     String resp = "Request to put drillbit in Quiescent mode is triggered";
@@ -177,6 +186,8 @@ public class DrillRoot {
   @GET
   @Path("/cluster.json")
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=Gets%20metric%20information.-,get%20%2Fcluster.json,-Get%20Drillbit%20information"))
+
   public ClusterInfo getClusterInfoJSON() {
     final Collection<DrillbitInfo> drillbits = Sets.newTreeSet();
     final Collection<String> mismatchedVersions = Sets.newTreeSet();

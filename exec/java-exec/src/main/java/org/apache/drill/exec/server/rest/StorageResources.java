@@ -50,6 +50,8 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.Operation;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
@@ -136,6 +138,8 @@ public class StorageResources {
   @GET
   @Path("/storage.json")
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=storage%20plugin%20configurations.-,get%20%2Fstorage.json,-Get%20the%20list"))
+
   public List<PluginConfigWrapper> getPluginsJSON() {
     return getConfigsFor(ALL_PLUGINS);
   }
@@ -156,6 +160,8 @@ public class StorageResources {
 
   @GET
   @Path("/storage/{name}.json")
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=get%20%2Fstorage%2F%7Bname%7D.json"))
+
   @Produces(MediaType.APPLICATION_JSON)
   public Response getPluginConfig(@PathParam("name") String name) {
     try {
@@ -186,6 +192,8 @@ public class StorageResources {
   @Path("/storage/{name}/enable/{val}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=get%20%2Fstorage%2F%7Bname%7D%2Fenable%2F%7Bval%7D"))
+
   public Response enablePlugin(@PathParam("name") String name, @PathParam("val") Boolean enable) {
     try {
       storage.setEnabled(name, enable);
@@ -361,6 +369,8 @@ public class StorageResources {
   @GET
   @Path("/storage/{name}/enable/{val}")
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=get%20%2Fstorage%2F%7Bname%7D%2Fenable%2F%7Bval%7D"))
+
   @Deprecated
   public Response enablePluginViaGet(@PathParam("name") String name, @PathParam("val") Boolean enable) {
     return enablePlugin(name, enable);
@@ -391,6 +401,8 @@ public class StorageResources {
   @DELETE
   @Path("/storage/{name}.json")
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=DELETE%20%2Fstorage%2F%7Bname,storage%20plugin%20configuration."))
+
   public Response deletePlugin(@PathParam("name") String name) {
     try {
       TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
@@ -414,6 +426,8 @@ public class StorageResources {
   @Path("/storage/{name}.json")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=post%20%2Fstorage%2F%7Bname%7D.json"))
+
   public Response createOrUpdatePluginJSON(PluginConfigWrapper plugin) {
     try {
       plugin.createOrUpdateInStorage(storage);

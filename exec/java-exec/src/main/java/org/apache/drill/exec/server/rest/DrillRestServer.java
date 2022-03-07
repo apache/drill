@@ -21,12 +21,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.base.JsonMappingExceptionMapper;
 import com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.info.License;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.FileTemplateLoader;
@@ -81,12 +79,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @OpenAPIDefinition(info = @Info(
-  title = "My OpenApi Title", description = "My API Description", license = @License(name = "Apache 2.0", url = "http://some.url"),
-  contact = @Contact(url = "http://some-url.com", name = "MyName", email = "myemail@gmail.com")
-),
+  title = "Apache Drill REST API", description = "OpenAPI Specification", license = @License(name = "Apache Software Foundation (ASF)", url = "http://www.apache" +
+  ".org/licenses/LICENSE-2.0"),
+  contact = @Contact(name = "Apache Drill", url = "https://drill.apache.org/")
+))/*,
 tags = {
   @Tag(name = "My Tag 1", description = "Tag 1's Description", externalDocs = @ExternalDocumentation(description = "docs description1")),
-  @Tag(name = "My Tag 2", description = "Tag 2's Description", externalDocs = @ExternalDocumentation(description = "docs description2"))})
+  @Tag(name = "My Tag 2", description = "Tag 2's Description", externalDocs = @ExternalDocumentation(description = "docs description2"))})*/
 
 public class DrillRestServer extends ResourceConfig {
   static final Logger logger = LoggerFactory.getLogger(DrillRestServer.class);
