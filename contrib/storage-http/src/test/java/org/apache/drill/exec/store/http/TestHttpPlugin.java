@@ -52,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -128,7 +129,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("pokemon", pokemonConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-        new HttpStoragePluginConfig(false, configs, 10, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        new HttpStoragePluginConfig(false, configs, 10, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("live", mockStorageConfigWithWorkspace);
   }
@@ -240,6 +241,7 @@ public class TestHttpPlugin extends ClusterTest {
     HttpApiConfig mockPostConfigWithoutPostBody = HttpApiConfig.builder()
       .url("http://localhost:8091/")
       .method("POST")
+      .authType("basic")
       .headers(headers)
       .build();
 
@@ -332,7 +334,10 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("mockJsonAllText", mockTableWithJsonOptions);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-        new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+        new HttpStoragePluginConfig(false, configs, 2, "globaluser", "globalpass", "",
+          80, "", "", "", null, new PlainCredentialsProvider(ImmutableMap.of(
+          UsernamePasswordCredentials.USERNAME, "globaluser",
+          UsernamePasswordCredentials.PASSWORD, "globalpass")));
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
   }
@@ -785,6 +790,11 @@ public class TestHttpPlugin extends ClusterTest {
         .build();
 
       RowSetUtilities.verify(expected, results);
+
+      // Verify correct username/password from endpoint configuration
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertNotNull(recordedRequest.getHeader("Authorization"));
+      assertEquals("Basic dXNlcjpwYXNz", recordedRequest.getHeader("Authorization"));
     }
   }
 
@@ -961,6 +971,9 @@ public class TestHttpPlugin extends ClusterTest {
 
       RecordedRequest recordedRequest = server.takeRequest();
       assertEquals("POST", recordedRequest.getMethod());
+      // Verify correct username/password from global configuration
+      assertNotNull(recordedRequest.getHeader("Authorization"));
+      assertEquals("Basic Z2xvYmFsdXNlcjpnbG9iYWxwYXNz", recordedRequest.getHeader("Authorization"));
     }
   }
 
