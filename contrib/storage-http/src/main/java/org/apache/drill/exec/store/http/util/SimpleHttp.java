@@ -30,7 +30,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
