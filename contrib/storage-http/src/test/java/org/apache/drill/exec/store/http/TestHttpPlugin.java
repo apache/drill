@@ -191,7 +191,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockPostPushdownWithStaticParams = HttpApiConfig.builder()
-      .url("http://localhost:8091/")
+      .url(makeUrl("http://localhost:%d/"))
       .method("POST")
       .headers(headers)
       .requireTail(false)
@@ -201,7 +201,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockPostPushdown = HttpApiConfig.builder()
-      .url("http://localhost:8091/")
+      .url(makeUrl("http://localhost:%d/"))
       .method("POST")
       .headers(headers)
       .requireTail(false)
@@ -210,7 +210,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockJsonNullBodyPost = HttpApiConfig.builder()
-      .url("http://localhost:8091/")
+      .url(makeUrl("http://localhost:%d/"))
       .method("POST")
       .headers(headers)
       .requireTail(false)
@@ -219,7 +219,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockJsonPostConfig = HttpApiConfig.builder()
-      .url("http://localhost:8091/")
+      .url(makeUrl("http://localhost:%d/"))
       .method("POST")
       .headers(headers)
       .requireTail(false)
@@ -236,7 +236,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockJsonConfigWithPaginator = HttpApiConfig.builder()
-      .url("http://localhost:8091/json")
+      .url(makeUrl("http://localhost:%d/json"))
       .method("get")
       .headers(headers)
       .requireTail(false)
@@ -263,7 +263,7 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     HttpApiConfig mockCsvConfigWithPaginator = HttpApiConfig.builder()
-      .url("http://localhost:8091/csv")
+      .url(makeUrl("http://localhost:%d/csv"))
       .method("get")
       .paginator(offsetPaginatorForJson)
       .inputType("csv")
