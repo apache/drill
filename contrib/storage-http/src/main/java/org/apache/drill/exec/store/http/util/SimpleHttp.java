@@ -146,9 +146,10 @@ public class SimpleHttp {
       builder.authenticator(new AccessTokenAuthenticator(repository));
       builder.addInterceptor(new AccessTokenInterceptor(repository));
     } else if (apiConfig.authType().equalsIgnoreCase("basic")) {
-      // If the API uses basic authentication add the authentication code.
+      // If the API uses basic authentication add the authentication code.  Use the global credentials unless there are credentials
+      // for the specific endpoint.
       logger.debug("Adding Interceptor");
-      UsernamePasswordCredentials credentials = apiConfig.getUsernamePasswordCredentials();
+      UsernamePasswordCredentials credentials = getCredentials();
       builder.addInterceptor(new BasicAuthInterceptor(credentials.getUsername(), credentials.getPassword()));
     }
 
@@ -358,6 +359,34 @@ public class SimpleHttp {
     } else {
       return ((responseCode >= 200 && responseCode <= 299) ||
         (responseCode >= 400 && responseCode <= 499));
+    }
+  }
+
+  /**
+   * Logic to determine whether the API connection has global credentials or credentials specific for the
+   * API endpoint.
+   * @param endpointConfig The API endpoint configuration
+   * @return True if the endpoint has credentials, false if not.
+   */
+  private boolean hasEndpointCredentials(HttpApiConfig endpointConfig) {
+    UsernamePasswordCredentials credentials = endpointConfig.getUsernamePasswordCredentials();
+    if (StringUtils.isNotEmpty(credentials.getUsername()) &&
+    StringUtils.isNotEmpty(credentials.getPassword())) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * If the user has defined username/password for the specific API endpoint, pass the API endpoint credentials.
+   * Otherwise, use the global connection credentials.
+   * @return A UsernamePasswordCredentials collection with the correct username/password
+   */
+  private UsernamePasswordCredentials getCredentials() {
+    if (hasEndpointCredentials(apiConfig)) {
+      return apiConfig.getUsernamePasswordCredentials();
+    } else {
+      return scanDefn.tableSpec().config().getUsernamePasswordCredentials();
     }
   }
 

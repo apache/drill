@@ -32,6 +32,8 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
   public static final String ACCESS_TOKEN = "accessToken";
   public static final String REFRESH_TOKEN = "refreshToken";
   public static final String TOKEN_URI = "tokenURI";
+  public static final String PROXY_USERNAME = "proxyUsername";
+  public static final String PROXY_PASSWORD = "proxyPassword";
 
   private final String clientID;
   private final String clientSecret;
