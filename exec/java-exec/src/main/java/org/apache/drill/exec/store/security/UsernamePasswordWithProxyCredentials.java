@@ -30,7 +30,7 @@ public class UsernamePasswordWithProxyCredentials extends UsernamePasswordCreden
 
   public UsernamePasswordWithProxyCredentials(CredentialsProvider credentialsProvider) {
     super(credentialsProvider);
-    if (credentialsProvider == null) {
+    if (credentialsProvider == null || credentialsProvider.getCredentials() == null) {
       this.proxyUsername = null;
       this.proxyPassword = null;
     } else {
