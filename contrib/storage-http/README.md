@@ -282,6 +282,22 @@ If the `authType` is set to `basic`, `username` and `password` must be set in th
 
 `password`: The password for basic authentication.
 
+##### Global Credentials
+If you have an HTTP plugin with multiple endpoints that all use the same credentials, you can set the `authType` to `basic` and set global 
+credentials in the storage plugin configuration. 
+
+Simply add the following to the storage plugin configuration:
+```json
+ "credentialsProvider": {
+    "credentialsProviderType": "PlainCredentialsProvider",
+    "credentials": {
+      "username": "user1",
+      "password": "user1Pass"
+    }
+  }
+```
+Note that the `authType` still must be set to `basic` and that any endpoint credentials will override the global credentials.
+
 #### Limiting Results
 Some APIs support a query parameter which is used to limit the number of results returned by the API.  In this case you can set the `limitQueryParam` config variable to the query parameter name and Drill will automatically include this in your query.  For instance, if you have an API which supports a limit query parameter called `maxRecords` and you set the abovementioned config variable then execute the following query:
   
