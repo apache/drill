@@ -31,6 +31,7 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.easy.json.JSONFormatPlugin.JSONFormatConfig;
 import org.apache.drill.exec.store.easy.json.JsonProcessor.ReadState;
 import org.apache.drill.exec.store.easy.json.reader.CountingJsonReader;
 import org.apache.drill.exec.vector.BaseValueVector;
@@ -69,6 +70,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private long parseErrorCount;
   private final boolean skipMalformedJSONRecords;
   private final boolean printSkippedMalformedJSONRecordLineNumber;
+  private final JSONFormatConfig config;
   private ReadState write;
   private InputStream inputStream;
 
@@ -78,15 +80,16 @@ public class JSONRecordReader extends AbstractRecordReader {
    * @param inputPath the input path
    * @param fileSystem a Drill file system wrapper around the file system implementation
    * @param columns path names of columns/subfields to read
+   * @param config The JSONFormatConfig for the storage plugin
    * @throws OutOfMemoryException
    */
   public JSONRecordReader(FragmentContext fragmentContext, Path inputPath, DrillFileSystem fileSystem,
-      List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, inputPath, null, fileSystem, columns, false);
+      List<SchemaPath> columns, JSONFormatConfig config) throws OutOfMemoryException {
+    this(fragmentContext, inputPath, null, fileSystem, columns, false, config);
   }
 
   /**
-   * Create a new JSON Record Reader that uses a in memory materialized JSON stream.
+   * Create a new JSON Record Reader that uses an in memory materialized JSON stream.
    * @param fragmentContext the Drill fragment
    * @param embeddedContent embedded content
    * @param fileSystem a Drill file system wrapper around the file system implementation
@@ -95,7 +98,7 @@ public class JSONRecordReader extends AbstractRecordReader {
    */
   public JSONRecordReader(FragmentContext fragmentContext, JsonNode embeddedContent, DrillFileSystem fileSystem,
       List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, null, embeddedContent, fileSystem, columns, false);
+    this(fragmentContext, null, embeddedContent, fileSystem, columns, false, new JSONFormatConfig(null));
   }
 
   /**
@@ -105,11 +108,11 @@ public class JSONRecordReader extends AbstractRecordReader {
    * @throws OutOfMemoryException
    */
   public JSONRecordReader(FragmentContext fragmentContext, List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, null, null, null, columns, true);
+    this(fragmentContext, null, null, null, columns, true, new JSONFormatConfig(null));
   }
 
   private JSONRecordReader(FragmentContext fragmentContext, Path inputPath, JsonNode embeddedContent,
-      DrillFileSystem fileSystem, List<SchemaPath> columns, boolean hasInputStream) {
+      DrillFileSystem fileSystem, List<SchemaPath> columns, boolean hasInputStream, JSONFormatConfig config) {
 
     Preconditions.checkArgument(
         (inputPath == null && embeddedContent != null && !hasInputStream) ||
@@ -122,6 +125,12 @@ public class JSONRecordReader extends AbstractRecordReader {
       this.hadoopPath = inputPath;
     } else {
       this.embeddedContent = embeddedContent;
+    }
+
+    if (config == null) {
+      this.config = new JSONFormatConfig(null);
+    } else {
+      this.config = config;
     }
 
     this.fileSystem = fileSystem;

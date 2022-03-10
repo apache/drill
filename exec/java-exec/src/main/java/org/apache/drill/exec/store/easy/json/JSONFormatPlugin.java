@@ -85,7 +85,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
                                       FileWork fileWork,
                                       List<SchemaPath> columns,
                                       String userName) {
-    return new JSONRecordReader(context, fileWork.getPath(), dfs, columns);
+    return new JSONRecordReader(context, fileWork.getPath(), dfs, columns, formatConfig);
   }
 
   @Override
@@ -178,10 +178,15 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
     private static final List<String> DEFAULT_EXTS = ImmutableList.of("json");
 
     private final List<String> extensions;
+    private final Boolean allTextMode;
+    private final Boolean readNumbersAsDouble;
+    private final Boolean skipMalformedJSONRecords;
+    private final Boolean nanInf;
 
     @JsonCreator
     public JSONFormatConfig(
-        @JsonProperty("extensions") List<String> extensions) {
+        @JsonProperty("extensions") List<String> extensions,
+        @JsonProperty("allTextMode")) {
       this.extensions = extensions == null ?
           DEFAULT_EXTS : ImmutableList.copyOf(extensions);
     }
