@@ -99,14 +99,18 @@ public class StorageResources {
   HttpServletRequest request;
 
   private static final String JSON_FORMAT = "json";
+
   private static final String HOCON_FORMAT = "conf";
+
   private static final String ALL_PLUGINS = "all";
+
   private static final String ENABLED_PLUGINS = "enabled";
+
   private static final String DISABLED_PLUGINS = "disabled";
+
   private static final String OAUTH_SUCCESS_PAGE = "/rest/storage/success.html";
 
-  private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR =
-      Comparator.comparing(PluginConfigWrapper::getName);
+  private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR = Comparator.comparing(PluginConfigWrapper::getName);
 
   /**
    * Regex allows the following paths:<pre><code>
@@ -124,22 +128,15 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getConfigsFor(@PathParam("group") String pluginGroup, @PathParam("format") String format) {
     format = StringUtils.isNotEmpty(format) ? format.replace("/", "") : JSON_FORMAT;
-    return isSupported(format)
-      ? Response.ok()
-        .entity(getConfigsFor(pluginGroup).toArray())
-        .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s_storage_plugins.%s\"",
-            pluginGroup, format))
-        .build()
-      : Response.status(Response.Status.NOT_ACCEPTABLE)
-          .entity(message("Unknown \"%s\" file format for Storage Plugin config", format))
-          .build();
+    return isSupported(format) ? Response.ok().entity(getConfigsFor(pluginGroup).toArray()).header(HttpHeaders.CONTENT_DISPOSITION,
+      String.format("attachment;filename=\"%s_storage_plugins.%s\"", pluginGroup, format)).build() : Response.status(Response.Status.NOT_ACCEPTABLE)
+      .entity(message("Unknown \"%s\" file format for Storage Plugin config", format)).build();
   }
 
   @GET
   @Path("/storage.json")
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=storage%20plugin%20configurations.-,get%20%2Fstorage.json,-Get%20the%20list"))
-
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public List<PluginConfigWrapper> getPluginsJSON() {
     return getConfigsFor(ALL_PLUGINS);
   }
@@ -148,9 +145,7 @@ public class StorageResources {
   @Path("/storage")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getPlugins() {
-    List<StoragePluginModel> model = getPluginsJSON().stream()
-        .map(plugin -> new StoragePluginModel(plugin, request))
-        .collect(Collectors.toList());
+    List<StoragePluginModel> model = getPluginsJSON().stream().map(plugin -> new StoragePluginModel(plugin, request)).collect(Collectors.toList());
     // Creating an empty model with CSRF token, if there are no storage plugins
     if (model.isEmpty()) {
       model.add(new StoragePluginModel(null, request));
@@ -160,19 +155,15 @@ public class StorageResources {
 
   @GET
   @Path("/storage/{name}.json")
-  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=get%20%2Fstorage%2F%7Bname%7D.json"))
-
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response getPluginConfig(@PathParam("name") String name) {
     try {
-      return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name)))
-        .build();
+      return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name))).build();
     } catch (Exception e) {
       logger.error("Failure while trying to access storage config: {}", name, e);
 
-      return Response.status(Response.Status.NOT_FOUND)
-        .entity(message("Failure while trying to access storage config: %s", e.getMessage()))
-        .build();
+      return Response.status(Response.Status.NOT_FOUND).entity(message("Failure while trying to access storage config: %s", e.getMessage())).build();
     }
   }
 
@@ -180,33 +171,24 @@ public class StorageResources {
   @Path("/storage/{name}")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getPlugin(@PathParam("name") String name) {
-    StoragePluginModel model = new StoragePluginModel(
-      (PluginConfigWrapper) getPluginConfig(name).getEntity(),
-      request
-    );
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/update.ftl", sc,
-        model);
+    StoragePluginModel model = new StoragePluginModel((PluginConfigWrapper) getPluginConfig(name).getEntity(), request);
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/update.ftl", sc, model);
   }
 
   @POST
   @Path("/storage/{name}/enable/{val}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=get%20%2Fstorage%2F%7Bname%7D%2Fenable%2F%7Bval%7D"))
-
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response enablePlugin(@PathParam("name") String name, @PathParam("val") Boolean enable) {
     try {
       storage.setEnabled(name, enable);
       return Response.ok().entity(message("Success")).build();
     } catch (PluginNotFoundException e) {
-      return Response.status(Response.Status.NOT_FOUND)
-        .entity(message("No plugin exists with the given name: " + name))
-        .build();
+      return Response.status(Response.Status.NOT_FOUND).entity(message("No plugin exists with the given name: " + name)).build();
     } catch (PluginException e) {
-      logger.info("Error when enabling storage name: {} flag: {}",  name, enable);
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Unable to enable/disable plugin: %s", e.getMessage()))
-        .build();
+      logger.info("Error when enabling storage name: {} flag: {}", name, enable);
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(message("Unable to enable/disable plugin: %s", e.getMessage())).build();
     }
   }
 
@@ -224,20 +206,14 @@ public class StorageResources {
         // Set the access token
         tokenTable.setRefreshToken(tokens.getRefreshToken());
 
-        return Response.status(Status.OK)
-          .entity("Refresh token have been updated.")
-          .build();
+        return Response.status(Status.OK).entity("Refresh token have been updated.").build();
       } else {
         logger.error("{} is not a HTTP plugin. You can only add access tokens to HTTP plugins.", name);
-        return Response.status(Status.INTERNAL_SERVER_ERROR)
-          .entity(message("Unable to add tokens: %s", name))
-          .build();
+        return Response.status(Status.INTERNAL_SERVER_ERROR).entity(message("Unable to add tokens: %s", name)).build();
       }
     } catch (PluginException e) {
       logger.error("Error when adding tokens to {}", name);
-      return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Unable to add tokens: %s", e.getMessage()))
-        .build();
+      return Response.status(Status.INTERNAL_SERVER_ERROR).entity(message("Unable to add tokens: %s", e.getMessage())).build();
     }
   }
 
@@ -255,20 +231,14 @@ public class StorageResources {
         // Set the access token
         tokenTable.setAccessToken(tokens.getAccessToken());
 
-        return Response.status(Status.OK)
-          .entity("Access tokens have been updated.")
-          .build();
+        return Response.status(Status.OK).entity("Access tokens have been updated.").build();
       } else {
         logger.error("{} is not a HTTP plugin. You can only add access tokens to HTTP plugins.", name);
-        return Response.status(Status.INTERNAL_SERVER_ERROR)
-          .entity(message("Unable to add tokens: %s", name))
-          .build();
+        return Response.status(Status.INTERNAL_SERVER_ERROR).entity(message("Unable to add tokens: %s", name)).build();
       }
     } catch (PluginException e) {
       logger.error("Error when adding tokens to {}", name);
-      return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Unable to add tokens: %s", e.getMessage()))
-        .build();
+      return Response.status(Status.INTERNAL_SERVER_ERROR).entity(message("Unable to add tokens: %s", e.getMessage())).build();
     }
   }
 
@@ -276,8 +246,7 @@ public class StorageResources {
   @Path("/storage/{name}/update_oauth_tokens")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response updateOAuthTokens(@PathParam("name") String name,
-                                    OAuthTokenContainer tokenContainer) {
+  public Response updateOAuthTokens(@PathParam("name") String name, OAuthTokenContainer tokenContainer) {
     try {
       if (storage.getPlugin(name).getConfig() instanceof AbstractSecuredStoragePluginConfig) {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
@@ -288,20 +257,14 @@ public class StorageResources {
         tokenTable.setAccessToken(tokenContainer.getAccessToken());
         tokenTable.setRefreshToken(tokenContainer.getRefreshToken());
 
-        return Response.status(Status.OK)
-          .entity("Access tokens have been updated.")
-          .build();
+        return Response.status(Status.OK).entity("Access tokens have been updated.").build();
       } else {
         logger.error("{} is not a HTTP plugin. You can only add access tokens to HTTP plugins.", name);
-        return Response.status(Status.INTERNAL_SERVER_ERROR)
-          .entity(message("Unable to add tokens: %s", name))
-          .build();
+        return Response.status(Status.INTERNAL_SERVER_ERROR).entity(message("Unable to add tokens: %s", name)).build();
       }
     } catch (PluginException e) {
       logger.error("Error when adding tokens to {}", name);
-      return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Unable to add tokens: %s", e.getMessage()))
-        .build();
+      return Response.status(Status.INTERNAL_SERVER_ERROR).entity(message("Unable to add tokens: %s", e.getMessage())).build();
     }
   }
 
@@ -322,10 +285,7 @@ public class StorageResources {
         Map<String, String> updatedTokens = OAuthUtils.getOAuthTokens(client, accessTokenRequest);
 
         // Add to token registry
-        TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
-          .getContext()
-          .getoAuthTokenProvider()
-          .getOauthTokenRegistry();
+        TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext().getoAuthTokenProvider().getOauthTokenRegistry();
 
         // Add a token registry table if none exists
         tokenRegistry.createTokenTable(name);
@@ -340,8 +300,7 @@ public class StorageResources {
         try (InputStream inputStream = Resource.newClassPathResource(OAUTH_SUCCESS_PAGE).getInputStream()) {
           InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
           BufferedReader bufferedReader = new BufferedReader(reader);
-          successPage = bufferedReader.lines()
-            .collect(Collectors.joining("\n"));
+          successPage = bufferedReader.lines().collect(Collectors.joining("\n"));
           bufferedReader.close();
           reader.close();
         } catch (IOException e) {
@@ -351,15 +310,11 @@ public class StorageResources {
         return Response.status(Status.OK).entity(successPage).build();
       } else {
         logger.error("{} is not a HTTP plugin. You can only add auth code to HTTP plugins.", name);
-        return Response.status(Status.INTERNAL_SERVER_ERROR)
-          .entity(message("Unable to add authorization code: %s", name))
-          .build();
+        return Response.status(Status.INTERNAL_SERVER_ERROR).entity(message("Unable to add authorization code: %s", name)).build();
       }
     } catch (PluginException e) {
       logger.error("Error when adding auth token to {}", name);
-      return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Unable to add authorization code: %s", e.getMessage()))
-        .build();
+      return Response.status(Status.INTERNAL_SERVER_ERROR).entity(message("Unable to add authorization code: %s", e.getMessage())).build();
     }
   }
 
@@ -369,8 +324,7 @@ public class StorageResources {
   @GET
   @Path("/storage/{name}/enable/{val}")
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=get%20%2Fstorage%2F%7Bname%7D%2Fenable%2F%7Bval%7D"))
-
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   @Deprecated
   public Response enablePluginViaGet(@PathParam("name") String name, @PathParam("val") Boolean enable) {
     return enablePlugin(name, enable);
@@ -388,27 +342,19 @@ public class StorageResources {
   public Response exportPlugin(@PathParam("name") String name, @PathParam("format") String format) {
     format = StringUtils.isNotEmpty(format) ? format.replace("/", "") : JSON_FORMAT;
     if (!isSupported(format)) {
-      return Response.status(Response.Status.NOT_ACCEPTABLE)
-        .entity(message("Unknown \"%s\" file format for Storage Plugin config", format))
-        .build();
+      return Response.status(Response.Status.NOT_ACCEPTABLE).entity(message("Unknown \"%s\" file format for Storage Plugin config", format)).build();
     }
 
-    return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name)))
-      .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s.%s\"", name, format))
-      .build();
+    return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name))).header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s.%s\"", name, format)).build();
   }
 
   @DELETE
   @Path("/storage/{name}.json")
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=DELETE%20%2Fstorage%2F%7Bname,storage%20plugin%20configuration."))
-
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response deletePlugin(@PathParam("name") String name) {
     try {
-      TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
-        .getContext()
-        .getoAuthTokenProvider()
-        .getOauthTokenRegistry();
+      TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext().getoAuthTokenProvider().getOauthTokenRegistry();
 
       // Delete a token registry table if it exists
       tokenRegistry.deleteTokenTable(name);
@@ -416,9 +362,7 @@ public class StorageResources {
       storage.remove(name);
       return Response.ok().entity(message("Success")).build();
     } catch (PluginException e) {
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Error while deleting plugin: %s",  e.getMessage()))
-        .build();
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(message("Error while deleting plugin: %s", e.getMessage())).build();
     }
   }
 
@@ -426,17 +370,14 @@ public class StorageResources {
   @Path("/storage/{name}.json")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/#:~:text=post%20%2Fstorage%2F%7Bname%7D.json"))
-
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response createOrUpdatePluginJSON(PluginConfigWrapper plugin) {
     try {
       plugin.createOrUpdateInStorage(storage);
       return Response.ok().entity(message("Success")).build();
     } catch (PluginException e) {
       logger.error("Unable to create/ update plugin: " + plugin.getName(), e);
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Error while saving plugin: %s ", e.getMessage()))
-        .build();
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(message("Error while saving plugin: %s ", e.getMessage())).build();
     }
   }
 
@@ -452,9 +393,7 @@ public class StorageResources {
   public Response createOrUpdatePlugin(@FormParam("name") String name, @FormParam("config") String storagePluginConfig) {
     name = name.trim();
     if (name.isEmpty()) {
-      return Response.status(Response.Status.BAD_REQUEST)
-        .entity(message("A storage config name may not be empty"))
-        .build();
+      return Response.status(Response.Status.BAD_REQUEST).entity(message("A storage config name may not be empty")).build();
     }
 
     try {
@@ -462,14 +401,10 @@ public class StorageResources {
       return Response.ok().entity(message("Success")).build();
     } catch (PluginEncodingException e) {
       logger.warn("Error in JSON mapping: {}", storagePluginConfig, e);
-      return Response.status(Response.Status.BAD_REQUEST)
-        .entity(message("Invalid JSON: %s", e.getMessage()))
-        .build();
+      return Response.status(Response.Status.BAD_REQUEST).entity(message("Invalid JSON: %s", e.getMessage())).build();
     } catch (PluginException e) {
       logger.error("Error while saving plugin", e);
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(message("Error while saving plugin: %s", e.getMessage()))
-        .build();
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(message("Error while saving plugin: %s", e.getMessage())).build();
     }
   }
 
@@ -502,24 +437,20 @@ public class StorageResources {
   public List<PluginConfigWrapper> getConfigsFor(@PathParam("group") String pluginGroup) {
     PluginFilter filter;
     switch (pluginGroup.trim()) {
-    case ALL_PLUGINS:
-      filter = PluginFilter.ALL;
-      break;
-    case ENABLED_PLUGINS:
-      filter = PluginFilter.ENABLED;
-      break;
-    case DISABLED_PLUGINS:
-      filter = PluginFilter.DISABLED;
-      break;
-    default:
-      return Collections.emptyList();
+      case ALL_PLUGINS:
+        filter = PluginFilter.ALL;
+        break;
+      case ENABLED_PLUGINS:
+        filter = PluginFilter.ENABLED;
+        break;
+      case DISABLED_PLUGINS:
+        filter = PluginFilter.DISABLED;
+        break;
+      default:
+        return Collections.emptyList();
     }
     pluginGroup = StringUtils.isNotEmpty(pluginGroup) ? pluginGroup.replace("/", "") : ALL_PLUGINS;
-    return StreamSupport.stream(
-        Spliterators.spliteratorUnknownSize(storage.storedConfigs(filter).entrySet().iterator(), Spliterator.ORDERED), false)
-            .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue()))
-            .sorted(PLUGIN_COMPARATOR)
-            .collect(Collectors.toList());
+    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(storage.storedConfigs(filter).entrySet().iterator(), Spliterator.ORDERED), false).map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue())).sorted(PLUGIN_COMPARATOR).collect(Collectors.toList());
   }
 
   /**
@@ -565,7 +496,9 @@ public class StorageResources {
    */
   public static class StoragePluginModel {
     private final PluginConfigWrapper plugin;
+
     private final String type;
+
     private final String csrfToken;
 
     public StoragePluginModel(PluginConfigWrapper plugin, HttpServletRequest request) {
