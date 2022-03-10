@@ -49,7 +49,8 @@ RUN mvn -Dmaven.artifact.threads=5 -T1C clean install -DskipTests
 # Get project version and copy built binaries into /opt/drill directory
 RUN VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec) \
  && mkdir /opt/drill \
- && mv distribution/target/apache-drill-${VERSION}/apache-drill-${VERSION}/* /opt/drill
+ && mv distribution/target/apache-drill-${VERSION}/apache-drill-${VERSION}/* /opt/drill \
+ && chmod -R +r /opt/drill
 
 # Target image
 
@@ -76,7 +77,5 @@ RUN groupadd -g 999 $DRILL_USER \
 VOLUME $DATA_VOL
 
 COPY --from=build /opt/drill $DRILL_HOME
-
-RUN chmod -R +r $DRILL_HOME
 
 USER $DRILL_USER
