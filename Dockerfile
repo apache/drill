@@ -56,6 +56,9 @@ RUN VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --n
 # Set the BASE_IMAGE build arg when you invoke docker build.  
 FROM $BASE_IMAGE
 
+# Starts Drill in embedded mode and connects to Sqlline
+ENTRYPOINT $DRILL_HOME/bin/drill-embedded
+
 ENV DRILL_HOME=/opt/drill
 ENV DRILL_USER=drilluser
 ENV DRILL_USER_HOME=/var/lib/drill
@@ -64,19 +67,16 @@ ENV DATA_VOL=/data
 
 RUN mkdir $DRILL_HOME $DATA_VOL
 
-COPY --from=build /opt/drill $DRILL_HOME
-
 RUN groupadd -g 999 $DRILL_USER \
  && useradd -r -u 999 -g $DRILL_USER $DRILL_USER -m -d $DRILL_USER_HOME \
- && chown $DRILL_USER: $DATA_VOL \
- && chmod -R +r $DRILL_HOME
+ && chown $DRILL_USER: $DATA_VOL
 
 # A Docker volume where users may store persistent data, e.g. persistent Drill
 # config by specifying a Drill BOOT option of sys.store.provider.local.path: "/data".
 VOLUME $DATA_VOL
 
+COPY --from=build /opt/drill $DRILL_HOME
+
+RUN chmod -R +r $DRILL_HOME
+
 USER $DRILL_USER
-
-# Starts Drill in embedded mode and connects to Sqlline
-ENTRYPOINT $DRILL_HOME/bin/drill-embedded
-
