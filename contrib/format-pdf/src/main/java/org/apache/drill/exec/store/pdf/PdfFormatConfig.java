@@ -96,7 +96,7 @@ public class PdfFormatConfig implements FormatPluginConfig {
     }
   }
 
-  public List<String> extensions() {
+  public List<String> getExtensions() {
     return this.extensions;
   }
 

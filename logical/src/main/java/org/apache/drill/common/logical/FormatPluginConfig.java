@@ -19,6 +19,9 @@ package org.apache.drill.common.logical;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Interface for defining a Drill format plugin.
  *
@@ -34,4 +37,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 public interface FormatPluginConfig {
+  default List<String> getExtensions() {
+     return Collections.emptyList();
+   }
 }

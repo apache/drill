@@ -29,7 +29,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin.ScanFrameworkVersion;
 import org.apache.hadoop.conf.Configuration;
 
 
@@ -65,7 +64,7 @@ public class PdfFormatPlugin extends EasyFormatPlugin<PdfFormatConfig> {
       .blockSplittable(false)
       .compressible(true)
       .supportsProjectPushdown(true)
-      .extensions(pluginConfig.extensions())
+      .extensions(pluginConfig.getExtensions())
       .fsConf(fsConf)
       .defaultName(DEFAULT_NAME)
       .scanVersion(ScanFrameworkVersion.EVF_V1)

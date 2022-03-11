@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.log;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +75,7 @@ public class TestLogReaderIssue extends BaseCsvTest {
     List<LogFormatField> schema = Lists.newArrayList(
         new LogFormatField("type", "VARCHAR"),
         new LogFormatField("time", "TIMESTAMP", "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'")); // valid
-    return new LogFormatConfig(regex_issue7853, "log", null, schema);
+    return new LogFormatConfig(regex_issue7853, Collections.singletonList("log"), null, schema);
   }
 
   // DRILL-7853
@@ -82,7 +83,7 @@ public class TestLogReaderIssue extends BaseCsvTest {
     List<LogFormatField> schema = Lists.newArrayList(
         new LogFormatField("type", "VARCHAR"),
         new LogFormatField("time", "TIMESTAMP", "yyyy-MM-dd''T''HH:mm:ss.SSSSSSZ")); // invalid
-    return new LogFormatConfig(regex_issue7853, "log2", null, schema);
+    return new LogFormatConfig(regex_issue7853, Collections.singletonList("log2"), null, schema);
   }
 
   @Test

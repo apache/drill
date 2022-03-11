@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.log;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.PlanStringBuilder;
@@ -34,18 +35,18 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class LogFormatConfig implements FormatPluginConfig {
 
   private final String regex;
-  private final String extension;
+  private final List<String> extensions;
   private final int maxErrors;
   private final List<LogFormatField> schema;
 
   @JsonCreator
   public LogFormatConfig(
       @JsonProperty("regex") String regex,
-      @JsonProperty("extension") String extension,
+      @JsonProperty("extension") List<String> extensions,
       @JsonProperty("maxErrors") Integer maxErrors,
       @JsonProperty("schema") List<LogFormatField> schema) {
+    this.extensions = extensions == null ? Collections.singletonList("log") : ImmutableList.copyOf(extensions);
     this.regex = regex;
-    this.extension = extension;
     this.maxErrors = maxErrors == null ? 10 : maxErrors;
     this.schema = schema == null
         ? ImmutableList.of() : schema;
@@ -55,8 +56,8 @@ public class LogFormatConfig implements FormatPluginConfig {
     return regex;
   }
 
-  public String getExtension() {
-    return extension;
+  public List<String> getExtensions() {
+    return extensions;
   }
 
   public int getMaxErrors() {
@@ -79,12 +80,12 @@ public class LogFormatConfig implements FormatPluginConfig {
     return Objects.equal(regex, other.regex) &&
            Objects.equal(maxErrors, other.maxErrors) &&
            Objects.equal(schema, other.schema) &&
-           Objects.equal(extension, other.extension);
+           Objects.equal(extensions, other.extensions);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(regex, maxErrors, schema, extension);
+    return Objects.hashCode(regex, maxErrors, schema, extensions);
   }
 
   @JsonIgnore
@@ -129,7 +130,7 @@ public class LogFormatConfig implements FormatPluginConfig {
   public String toString() {
     return new PlanStringBuilder(this)
         .field("regex", regex)
-        .field("extension", extension)
+        .field("extension", extensions)
         .field("schema", schema)
         .field("maxErrors", maxErrors)
         .toString();

@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.log;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,7 +98,7 @@ public class TestLogReader extends ClusterTest {
     // Empty configuration: regex and columns defined in the
     // provided schema
     LogFormatConfig emptyConfig = new LogFormatConfig(
-        null, "loge", null, null);
+        null, Collections.singletonList("loge"), null, null);
     schemaOnlyDir = cluster.makeDataDir("SOnly", "loge", emptyConfig);
     tableFuncDir = cluster.makeDataDir("tf", "logf", emptyConfig);
   }
@@ -108,7 +109,7 @@ public class TestLogReader extends ClusterTest {
         new LogFormatField("month", "INT"),
         new LogFormatField("day", "INT"));
     return new LogFormatConfig(
-        DATE_ONLY_PATTERN, "log1", null, schema);
+        DATE_ONLY_PATTERN, Collections.singletonList("log1"), null, schema);
   }
 
   // Config similar to the above, but with no type info. Types
@@ -120,7 +121,7 @@ public class TestLogReader extends ClusterTest {
         new LogFormatField("month"),
         new LogFormatField("day"));
     return new LogFormatConfig(
-        DATE_ONLY_PATTERN, "logu", null, schema);
+        DATE_ONLY_PATTERN, Collections.singletonList("logu"), null, schema);
   }
 
   // Full Drill log parser definition.
@@ -140,7 +141,7 @@ public class TestLogReader extends ClusterTest {
         new LogFormatField("module"),
         new LogFormatField("message"));
     return new LogFormatConfig(
-        regex, "log1", null, schema);
+        regex, Collections.singletonList("log1"), null, schema);
   }
 
   //Set up additional configs to check the time/date formats
@@ -153,13 +154,13 @@ public class TestLogReader extends ClusterTest {
         new LogFormatField("message_type"),
         new LogFormatField("message"));
     return new LogFormatConfig(
-        regex, "log2", 3, schema);
+        regex, Collections.singletonList("log2"), 3, schema);
   }
 
   private static LogFormatConfig mySqlConfig() {
     String regex = "(\\d{6})\\s(\\d{2}:\\d{2}:\\d{2})\\s+(\\d+)\\s(\\w+)\\s+(.+)";
     return new LogFormatConfig(
-        regex, "sqllog", null, null);
+        regex, Collections.singletonList("sqllog"), null, null);
   }
 
   // Firewall log file that requires date parsing
@@ -174,7 +175,7 @@ public class TestLogReader extends ClusterTest {
         new LogFormatField("message"),
         new LogFormatField("src_ip"));
     return new LogFormatConfig(
-        regex, "ssdlog", null, schema);
+        regex, Collections.singletonList("ssdlog"), null, schema);
   }
 
   @Test

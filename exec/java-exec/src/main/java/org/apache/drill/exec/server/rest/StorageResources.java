@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Spliterator;
@@ -57,6 +58,8 @@ import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
@@ -69,6 +72,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginEncodingException
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginNotFoundException;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.http.oauth.OAuthUtils;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 import org.eclipse.jetty.util.resource.Resource;
@@ -170,6 +174,53 @@ public class StorageResources {
 
       return Response.status(Response.Status.NOT_FOUND)
         .entity(message("Failure while trying to access storage config: %s", e.getMessage()))
+        .build();
+    }
+  }
+
+  @GET
+  @Path("/storage/extension_list.json")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getAllSupportedFormats() {
+    LinkedHashSet<String> registeredExtensions = new LinkedHashSet<>();
+
+    Map<String, StoragePluginConfig> configs = storage.enabledConfigs();
+    for (StoragePluginConfig config : configs.values()) {
+      if (config instanceof FileSystemConfig) {
+        Map<String, FormatPluginConfig> formats = ((FileSystemConfig) config).getFormats();
+        for (FormatPluginConfig format : formats.values()) {
+          registeredExtensions.addAll(format.getExtensions());
+        }
+      }
+    }
+    return Response.status(Status.OK)
+      .entity(message(String.valueOf(registeredExtensions)))
+      .build();
+  }
+
+  @GET
+  @Path("/storage/{name}/extension_list.json")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getFormatList(@PathParam("name") String name) {
+    LinkedHashSet<String> registeredExtensions = new LinkedHashSet<>();
+    try {
+      if (! (storage.getPlugin(name).getConfig() instanceof FileSystemConfig)) {
+        return Response.status(Status.INTERNAL_SERVER_ERROR)
+          .entity(message(name + " is not a file system plugin."))
+          .build();
+      }
+      Map<String, FormatPluginConfig> formats = ((FileSystemConfig) storage.getPlugin(name).getConfig()).getFormats();
+      for (FormatPluginConfig formatConfig : formats.values()) {
+        registeredExtensions.addAll(formatConfig.getExtensions());
+      }
+      logger.debug("Test");
+      return Response.status(Status.OK)
+        .entity(message(String.valueOf(registeredExtensions)))
+        .build();
+    } catch (PluginException e) {
+      logger.error("Error when adding tokens to {}", name);
+      return Response.status(Status.INTERNAL_SERVER_ERROR)
+        .entity(message("Unable to access storage plugin: %s", e.getMessage()))
         .build();
     }
   }

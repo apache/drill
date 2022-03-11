@@ -87,7 +87,7 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
         .blockSplittable(false) // Should be block splitable, but logic not yet implemented.
         .compressible(true)
         .supportsProjectPushdown(true)
-        .extensions(pluginConfig.getExtension())
+        .extensions(pluginConfig.getExtensions())
         .fsConf(fsConf)
         .defaultName(PLUGIN_NAME)
         .readerOperatorType(OPERATOR_TYPE)
