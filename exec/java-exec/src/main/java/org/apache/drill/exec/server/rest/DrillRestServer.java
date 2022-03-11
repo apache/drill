@@ -21,6 +21,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.base.JsonMappingExceptionMapper;
 import com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.info.License;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.FileTemplateLoader;
@@ -31,6 +35,7 @@ import freemarker.core.HTMLOutputFormat;
 import freemarker.template.Configuration;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Promise;
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import io.netty.util.concurrent.EventExecutor;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -73,6 +78,10 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
+@OpenAPIDefinition(info = @Info(title = "Apache Drill REST API", description = "OpenAPI Specification",
+  license = @License(name = "Apache Software Foundation (ASF)", url = "http://www.apache" + ".org/licenses/LICENSE-2.0"),
+  contact = @Contact(name = "Apache Drill", url = "https://drill.apache.org/")))
+
 public class DrillRestServer extends ResourceConfig {
   static final Logger logger = LoggerFactory.getLogger(DrillRestServer.class);
 
@@ -93,7 +102,7 @@ public class DrillRestServer extends ResourceConfig {
     property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
 
     final boolean isAuthEnabled =
-        workManager.getContext().getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
+      workManager.getContext().getConfig().getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
 
     if (isAuthEnabled) {
       register(LogInLogOutResources.class);
@@ -103,7 +112,7 @@ public class DrillRestServer extends ResourceConfig {
 
     //disable moxy so it doesn't conflict with jackson.
     final String disableMoxy = PropertiesHelper.getPropertyNameForRuntime(CommonProperties.MOXY_JSON_FEATURE_DISABLE,
-        getConfiguration().getRuntimeType());
+      getConfiguration().getRuntimeType());
     property(disableMoxy, true);
 
     register(JsonParseExceptionMapper.class);
@@ -140,6 +149,8 @@ public class DrillRestServer extends ResourceConfig {
         }
       }
     });
+
+    register(OpenApiResource.class);
   }
 
   /**
@@ -189,19 +200,19 @@ public class DrillRestServer extends ResourceConfig {
 
       // User is logged in, get/set the WebSessionResources attribute
       WebSessionResources webSessionResources =
-              (WebSessionResources) session.getAttribute(WebSessionResources.class.getSimpleName());
+        (WebSessionResources) session.getAttribute(WebSessionResources.class.getSimpleName());
 
       if (webSessionResources == null) {
         // User is login in for the first time
         final DrillbitContext drillbitContext = workManager.getContext();
         final DrillConfig config = drillbitContext.getConfig();
         final UserSession drillUserSession = UserSession.Builder.newBuilder()
-                .withCredentials(UserBitShared.UserCredentials.newBuilder()
-                        .setUserName(sessionUserPrincipal.getName())
-                        .build())
-                .withOptionManager(drillbitContext.getOptionManager())
-                .setSupportComplexTypes(config.getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES))
-                .build();
+          .withCredentials(UserBitShared.UserCredentials.newBuilder()
+            .setUserName(sessionUserPrincipal.getName())
+            .build())
+          .withOptionManager(drillbitContext.getOptionManager())
+          .setSupportComplexTypes(config.getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES))
+          .build();
 
         // Only try getting remote address in first login since it's a costly operation.
         SocketAddress remoteAddress = null;
@@ -217,9 +228,9 @@ public class DrillRestServer extends ResourceConfig {
         // Create per session BufferAllocator and set it in session
         final String sessionAllocatorName = String.format("WebServer:AuthUserSession:%s", session.getId());
         final BufferAllocator sessionAllocator = workManager.getContext().getAllocator().newChildAllocator(
-                sessionAllocatorName,
-                config.getLong(ExecConstants.HTTP_SESSION_MEMORY_RESERVATION),
-                config.getLong(ExecConstants.HTTP_SESSION_MEMORY_MAXIMUM));
+            sessionAllocatorName,
+            config.getLong(ExecConstants.HTTP_SESSION_MEMORY_RESERVATION),
+            config.getLong(ExecConstants.HTTP_SESSION_MEMORY_MAXIMUM));
 
         // Create a future which is needed by Foreman only. Foreman uses this future to add a close
         // listener to known about channel close event from underlying layer. We use this future to notify Foreman
@@ -258,20 +269,20 @@ public class DrillRestServer extends ResourceConfig {
 
       // Create an allocator here for each request
       final BufferAllocator sessionAllocator = drillbitContext.getAllocator()
-              .newChildAllocator("WebServer:AnonUserSession",
-                      config.getLong(ExecConstants.HTTP_SESSION_MEMORY_RESERVATION),
-                      config.getLong(ExecConstants.HTTP_SESSION_MEMORY_MAXIMUM));
+        .newChildAllocator("WebServer:AnonUserSession",
+          config.getLong(ExecConstants.HTTP_SESSION_MEMORY_RESERVATION),
+          config.getLong(ExecConstants.HTTP_SESSION_MEMORY_MAXIMUM));
 
       final Principal sessionUserPrincipal = createSessionUserPrincipal(config, request);
 
       // Create new UserSession for each request from non-authenticated user
       final UserSession drillUserSession = UserSession.Builder.newBuilder()
-              .withCredentials(UserBitShared.UserCredentials.newBuilder()
-                      .setUserName(sessionUserPrincipal.getName())
-                      .build())
-              .withOptionManager(drillbitContext.getOptionManager())
-              .setSupportComplexTypes(drillbitContext.getConfig().getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES))
-              .build();
+          .withCredentials(UserBitShared.UserCredentials.newBuilder()
+              .setUserName(sessionUserPrincipal.getName())
+              .build())
+          .withOptionManager(drillbitContext.getOptionManager())
+          .setSupportComplexTypes(drillbitContext.getConfig().getBoolean(ExecConstants.CLIENT_SUPPORT_COMPLEX_TYPES))
+          .build();
 
       // Try to get the remote Address but set it to null in case of failure.
       SocketAddress remoteAddress = null;
@@ -291,7 +302,7 @@ public class DrillRestServer extends ResourceConfig {
       final Promise<Void> closeFuture = new DefaultPromise(executor);
 
       final WebSessionResources webSessionResources = new WebSessionResources(sessionAllocator, remoteAddress,
-          drillUserSession, closeFuture);
+        drillUserSession, closeFuture);
 
       // Create a AnonWenUserConnection for this request
       return new AnonWebUserConnection(webSessionResources);

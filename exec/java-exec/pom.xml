@@ -650,6 +650,24 @@
       <version>${testcontainers.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.github.rdblue</groupId>
+      <artifactId>brotli-codec</artifactId>
+      <version>0.1.1</version>
+      <!-- brotli-codec bundles natives for linux and darwin, amd64 only so
+      we don't ship it so as not to break startup on windows or arm -->
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-jaxrs2</artifactId>
+      <version>${swagger.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-jaxrs2-servlet-initializer-v2</artifactId>
+      <version>${swagger.version}</version>
+    </dependency>
   </dependencies>
 
   <profiles>
@@ -863,7 +881,8 @@
           <execution>
             <id>generate-fmpp</id>
             <phase>generate-sources</phase>
-            <goals><goal>generate</goal></goals>
+            <goals>
+              <goal>generate</goal></goals>
             <configuration>
               <config>${project.build.directory}/codegen/config.fmpp</config>
               <output>${project.build.directory}/generated-sources</output>
@@ -978,7 +997,6 @@
       </plugins>
     </pluginManagement>
   </build>
-
 
 
 </project>
