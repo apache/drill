@@ -18,8 +18,7 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>exec-parent</artifactId>
@@ -423,12 +422,12 @@
           <artifactId>log4j</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty</artifactId>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-all</artifactId>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.eclipse.jetty</groupId>
@@ -811,9 +810,7 @@
           <execution> <!-- copy all templates/data in the same location to compile them at once -->
             <id>copy-fmpp-resources</id>
             <phase>initialize</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
+            <goals><goal>copy-resources</goal></goals>
             <configuration>
               <outputDirectory>${project.build.directory}/codegen</outputDirectory>
               <resources>
@@ -830,8 +827,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
-          <!-- Extract parser grammar template from calcite-core.jar and put
-            it under ${project.build.directory}/codegen/templates where all freemarker templates are. -->
+        <!-- Extract parser grammar template from calcite-core.jar and put
+          it under ${project.build.directory}/codegen/templates where all freemarker templates are. -->
           <execution>
             <id>unpack-parser-template</id>
             <phase>initialize</phase>
@@ -852,8 +849,8 @@
             </configuration>
           </execution>
 
-          <!-- Extract ValueVectorTypes.tdd from drill-vector.jar and put
-            it under ${project.build.directory}/codegen/data where all freemarker data files are. -->
+        <!-- Extract ValueVectorTypes.tdd from drill-vector.jar and put
+          it under ${project.build.directory}/codegen/data where all freemarker data files are. -->
           <execution>
             <id>unpack-vector-types</id>
             <phase>initialize</phase>
@@ -885,8 +882,7 @@
             <id>generate-fmpp</id>
             <phase>generate-sources</phase>
             <goals>
-              <goal>generate</goal>
-            </goals>
+              <goal>generate</goal></goals>
             <configuration>
               <config>${project.build.directory}/codegen/config.fmpp</config>
               <output>${project.build.directory}/generated-sources</output>
@@ -903,9 +899,7 @@
           <execution>
             <id>javacc</id>
             <phase>generate-sources</phase>
-            <goals>
-              <goal>javacc</goal>
-            </goals>
+            <goals><goal>javacc</goal></goals>
             <configuration>
               <sourceDirectory>${project.build.directory}/generated-sources/</sourceDirectory>
               <includes>
@@ -914,11 +908,11 @@
               <lookAhead>2</lookAhead>
               <isStatic>false</isStatic>
               <outputDirectory>${project.build.directory}/generated-sources/</outputDirectory>
-              <!--
-                            <debugParser>true</debugParser>
-                            <debugLookAhead>true</debugLookAhead>
-                            <debugTokenManager>true</debugTokenManager>
-               -->
+<!--
+              <debugParser>true</debugParser>
+              <debugLookAhead>true</debugLookAhead>
+              <debugTokenManager>true</debugTokenManager>
+ -->
             </configuration>
           </execution>
         </executions>

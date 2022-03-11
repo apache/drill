@@ -85,9 +85,13 @@ public class QueryResources {
   @Path("/query")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getQuery() {
-    List<StorageResources.StoragePluginModel> enabledPlugins =
-      sr.getConfigsFor("enabled").stream().map(plugin -> new StorageResources.StoragePluginModel(plugin, request)).collect(Collectors.toList());
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/query.ftl", sc, new QueryPage(work, enabledPlugins, request));
+    List<StorageResources.StoragePluginModel> enabledPlugins = sr.getConfigsFor("enabled")
+      .stream()
+      .map(plugin -> new StorageResources.StoragePluginModel(plugin, request))
+      .collect(Collectors.toList());
+    return ViewableWithPermissions.create(
+        authEnabled.get(), "/rest/query/query.ftl",
+        sc, new QueryPage(work, enabledPlugins, request));
   }
 
   @POST
@@ -117,7 +121,8 @@ public class QueryResources {
     }
     return new StreamingOutput() {
       @Override
-      public void write(OutputStream output) throws IOException, WebApplicationException {
+      public void write(OutputStream output)
+        throws IOException, WebApplicationException {
         try {
           runner.sendResults(output);
         } catch (IOException e) {
@@ -133,14 +138,29 @@ public class QueryResources {
   @Path("/query")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_HTML)
-  public Viewable submitQuery(@FormParam("query") String query, @FormParam("queryType") String queryType, @FormParam("autoLimit") String autoLimit, @FormParam("userName") String userName, @FormParam("defaultSchema") String defaultSchema, Form form) throws Exception {
+  public Viewable submitQuery(@FormParam("query") String query,
+                              @FormParam("queryType") String queryType,
+                              @FormParam("autoLimit") String autoLimit,
+                              @FormParam("userName") String userName,
+                              @FormParam("defaultSchema") String defaultSchema,
+                              Form form) throws Exception {
     try {
       // Run the query and wrap the result sets in a model to be
       // transformed to HTML. This can be memory-intensive for larger
       // queries.
-      QueryWrapper wrapper = new RestQueryBuilder().query(query).queryType(queryType).rowLimit(autoLimit).userName(userName).defaultSchema(defaultSchema).sessionOptions(readOptionsFromForm(form)).build();
-      final QueryResult result = new RestQueryRunner(wrapper, work, webUserConnection).run();
-      List<Integer> rowsPerPageValues = work.getContext().getConfig().getIntList(ExecConstants.HTTP_WEB_CLIENT_RESULTSET_ROWS_PER_PAGE_VALUES);
+      QueryWrapper wrapper = new RestQueryBuilder()
+        .query(query)
+        .queryType(queryType)
+        .rowLimit(autoLimit)
+        .userName(userName)
+        .defaultSchema(defaultSchema)
+        .sessionOptions(readOptionsFromForm(form))
+        .build();
+      final QueryResult result = new RestQueryRunner(wrapper,
+          work, webUserConnection)
+        .run();
+      List<Integer> rowsPerPageValues = work.getContext().getConfig().getIntList(
+        ExecConstants.HTTP_WEB_CLIENT_RESULTSET_ROWS_PER_PAGE_VALUES);
       Collections.sort(rowsPerPageValues);
       final String rowsPerPageValuesAsStr = Joiner.on(",").join(rowsPerPageValues);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/result.ftl", sc, new TabularResult(result, rowsPerPageValuesAsStr));
@@ -161,11 +181,12 @@ public class QueryResources {
     Map<String, String> options = new HashMap<>();
     for (Map.Entry<String, List<String>> pair : form.asMap().entrySet()) {
       List<String> values = pair.getValue();
-      if (values.isEmpty()) {
-        continue;
+        if (values.isEmpty()) {
+          continue;
       }
       if (values.size() > 1) {
-        throw new BadRequestException(String.format("Multiple values given for option '%s'", pair.getKey()));
+        throw new BadRequestException(String.format(
+          "Multiple values given for option '%s'", pair.getKey()));
       }
 
       options.put(pair.getKey(), values.get(0));
@@ -178,13 +199,9 @@ public class QueryResources {
    */
   public static class QueryPage {
     private final boolean onlyImpersonationEnabled;
-
     private final boolean autoLimitEnabled;
-
     private final int defaultRowsAutoLimited;
-
     private final List<StorageResources.StoragePluginModel> enabledPlugins;
-
     private final String csrfToken;
 
     public QueryPage(WorkManager work, List<StorageResources.StoragePluginModel> enabledPlugins, HttpServletRequest request) {
@@ -223,24 +240,19 @@ public class QueryResources {
    */
   public static class TabularResult {
     private final List<String> columns;
-
     private final List<List<String>> rows;
-
     private final String queryId;
-
     private final String rowsPerPageValues;
-
     private final String queryState;
-
     private final int autoLimitedRowCount;
 
     public TabularResult(QueryResult result, String rowsPerPageValuesAsStr) {
       rowsPerPageValues = rowsPerPageValuesAsStr;
       queryId = result.getQueryId();
       final List<List<String>> rows = Lists.newArrayList();
-      for (Map<String, String> rowMap : result.rows) {
+      for (Map<String, String> rowMap:result.rows) {
         final List<String> row = Lists.newArrayList();
-        for (String col : result.columns) {
+        for (String col:result.columns) {
           row.add(rowMap.get(col));
         }
         rows.add(row);

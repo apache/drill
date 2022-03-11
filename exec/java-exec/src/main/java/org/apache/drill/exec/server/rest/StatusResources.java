@@ -67,21 +67,13 @@ public class StatusResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatusResources.class);
 
   public static final String REST_API_SUFFIX = ".json";
-
   public static final String PATH_STATUS_JSON = "/status" + REST_API_SUFFIX;
-
   public static final String PATH_STATUS = "/status";
-
   public static final String PATH_METRICS = PATH_STATUS + "/metrics";
-
   public static final String PATH_OPTIONS_JSON = "/options" + REST_API_SUFFIX;
-
   public static final String PATH_INTERNAL_OPTIONS_JSON = "/internal_options" + REST_API_SUFFIX;
-
   public static final String PATH_OPTIONS = "/options";
-
   public static final String PATH_INTERNAL_OPTIONS = "/internal_options";
-
   //Used to access current filter state in WebUI
   private static final String CURRENT_FILTER_PARAM = "filter";
 
@@ -121,10 +113,11 @@ public class StatusResources {
     return WebUtils.doHTTPRequest(new HttpGet(metricsURL.toURI()), work.getContext().getConfig());
   }
 
-  private List<OptionWrapper> getSystemOptionsJSONHelper(boolean internal) {
+  private List<OptionWrapper> getSystemOptionsJSONHelper(boolean internal)
+  {
     List<OptionWrapper> options = new LinkedList<>();
     OptionManager optionManager = work.getContext().getOptionManager();
-    OptionList optionList = internal ? optionManager.getInternalOptionList() : optionManager.getPublicOptionList();
+    OptionList optionList = internal ? optionManager.getInternalOptionList(): optionManager.getPublicOptionList();
 
     for (OptionValue option : optionList) {
       options.add(new OptionWrapper(option.name, option.getValue(), optionManager.getDefault(option.name).getValue().toString(), option.accessibleScopes, option.kind, option.scope));
@@ -165,7 +158,10 @@ public class StatusResources {
       currFilter = "";
     }
 
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/options.ftl", sc, new OptionsListing(options, fltrList, currFilter, request));
+    return ViewableWithPermissions.create(authEnabled.get(),
+      "/rest/options.ftl",
+      sc,
+      new OptionsListing(options, fltrList, currFilter, request));
   }
 
   @GET
@@ -189,8 +185,11 @@ public class StatusResources {
   @RolesAllowed(DrillUserPrincipal.ADMIN_ROLE)
   @Consumes("application/x-www-form-urlencoded")
   @Produces(MediaType.TEXT_HTML)
-  public Viewable updateSystemOption(@FormParam("name") String name, @FormParam("value") String value, @FormParam("kind") String kind) {
-    SystemOptionManager optionManager = work.getContext().getOptionManager();
+  public Viewable updateSystemOption(@FormParam("name") String name,
+                                     @FormParam("value") String value,
+                                     @FormParam("kind") String kind) {
+    SystemOptionManager optionManager = work.getContext()
+      .getOptionManager();
 
     try {
       optionManager.setLocalOption(OptionValue.Kind.valueOf(kind), name, value);
@@ -210,11 +209,8 @@ public class StatusResources {
    */
   public static class OptionsListing {
     private final List<OptionWrapper> options;
-
     private final List<String> filters;
-
     private final String dynamicFilter;
-
     private final String csrfToken;
 
     public OptionsListing(List<OptionWrapper> optList, List<String> fltrList, String currFilter, HttpServletRequest request) {
@@ -245,21 +241,19 @@ public class StatusResources {
   public static class OptionWrapper {
 
     private String name;
-
     private Object value;
-
     private String defaultValue;
-
     private OptionValue.AccessibleScopes accessibleScopes;
-
     private String kind;
-
     private String optionScope;
 
     @JsonCreator
-    public OptionWrapper(@JsonProperty("name") String name, @JsonProperty("value") Object value,
-                         @JsonProperty("defaultValue") String defaultValue, @JsonProperty("accessibleScopes") OptionValue.AccessibleScopes type,
-                         @JsonProperty("kind") Kind kind, @JsonProperty("optionScope") OptionValue.OptionScope scope) {
+    public OptionWrapper(@JsonProperty("name") String name,
+                         @JsonProperty("value") Object value,
+                         @JsonProperty("defaultValue") String defaultValue,
+                         @JsonProperty("accessibleScopes") OptionValue.AccessibleScopes type,
+                         @JsonProperty("kind") Kind kind,
+                         @JsonProperty("optionScope") OptionValue.OptionScope scope) {
       this.name = name;
       this.value = value;
       this.defaultValue = defaultValue;
@@ -299,7 +293,7 @@ public class StatusResources {
 
     @Override
     public String toString() {
-      return "OptionWrapper{" + "name='" + name + '\'' + ", value=" + value + ", default=" + defaultValue + ", accessibleScopes=" + accessibleScopes + ", kind='" + kind + '\'' + ", scope='" + optionScope + '\'' + '}';
+      return "OptionWrapper{" + "name='" + name + '\'' + ", value=" + value + ", default=" + defaultValue + ", accessibleScopes=" + accessibleScopes + ", kind='" + kind + '\'' + ", scope='" + optionScope + '\'' +'}';
     }
   }
 }

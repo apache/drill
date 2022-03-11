@@ -74,16 +74,12 @@ public class DrillRoot {
 
   @Inject
   UserAuthEnabled authEnabled;
-
   @Inject
   WorkManager work;
-
   @Inject
   SecurityContext sc;
-
   @Inject
   Drillbit drillbit;
-
   @Inject
   HttpServletRequest request;
 
@@ -145,6 +141,7 @@ public class DrillRoot {
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed(ADMIN_ROLE)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/stopping-drill/"))
+
   public Response shutdownDrillbit() throws Exception {
     String resp = "Graceful Shutdown request is triggered";
     return shutdown(resp);
@@ -155,6 +152,7 @@ public class DrillRoot {
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed(ADMIN_ROLE)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/stopping-drill/"))
+
   public String shutdownDrillbitByName(@PathParam("hostname") String hostname) throws Exception {
     URL shutdownURL = WebUtils.getDrillbitURL(work, request, hostname, "/gracefulShutdown");
     return WebUtils.doHTTPRequest(new HttpPost(shutdownURL.toURI()), work.getContext().getConfig());
@@ -165,6 +163,7 @@ public class DrillRoot {
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed(ADMIN_ROLE)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/stopping-drill/"))
+
   public Response shutdownForcefully() throws Exception {
     drillbit.setForcefulShutdown(true);
     String resp = "Forceful shutdown request is triggered";
@@ -176,6 +175,7 @@ public class DrillRoot {
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed(ADMIN_ROLE)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/stopping-drill/"))
+
   public Response drillbitToQuiescentMode() throws Exception {
     drillbit.setQuiescentMode(true);
     String resp = "Request to put drillbit in Quiescent mode is triggered";
@@ -195,7 +195,9 @@ public class DrillRoot {
     final String currentVersion = currentDrillbit.getVersion();
 
     final DrillConfig config = dbContext.getConfig();
-    final boolean userEncryptionEnabled = config.getBoolean(ExecConstants.USER_ENCRYPTION_SASL_ENABLED) || config.getBoolean(ExecConstants.USER_SSL_ENABLED);
+    final boolean userEncryptionEnabled =
+      config.getBoolean(ExecConstants.USER_ENCRYPTION_SASL_ENABLED) ||
+        config.getBoolean(ExecConstants.USER_SSL_ENABLED);
     final boolean bitEncryptionEnabled = config.getBoolean(ExecConstants.BIT_ENCRYPTION_SASL_ENABLED);
 
     OptionManager optionManager = work.getContext().getOptionManager();
@@ -203,7 +205,9 @@ public class DrillRoot {
     final boolean shouldShowAdminInfo = isUserLoggedIn && ((DrillUserPrincipal) sc.getUserPrincipal()).isAdminUser();
 
     for (DrillbitEndpoint endpoint : work.getContext().getAvailableBits()) {
-      final DrillbitInfo drillbit = new DrillbitInfo(endpoint, isDrillbitsTheSame(currentDrillbit, endpoint), currentVersion.equals(endpoint.getVersion()));
+      final DrillbitInfo drillbit = new DrillbitInfo(endpoint,
+        isDrillbitsTheSame(currentDrillbit, endpoint),
+        currentVersion.equals(endpoint.getVersion()));
       if (!drillbit.isVersionMatch()) {
         mismatchedVersions.add(drillbit.getVersion());
       }
@@ -221,10 +225,15 @@ public class DrillRoot {
       logger.debug("Admin info: user: {} user group: {} userLoggedIn {} shouldShowAdminInfo: {}",
       adminUsers, adminUserGroups, isUserLoggedIn, shouldShowAdminInfo);
 
-      return new ClusterInfo(drillbits, currentVersion, mismatchedVersions, userEncryptionEnabled, bitEncryptionEnabled, shouldShowAdminInfo, QueueInfo.build(dbContext.getResourceManager()), processUser, processUserGroups, adminUsers, adminUserGroups, authEnabled.get());
+      return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
+        userEncryptionEnabled, bitEncryptionEnabled, shouldShowAdminInfo,
+        QueueInfo.build(dbContext.getResourceManager()),
+        processUser, processUserGroups, adminUsers, adminUserGroups, authEnabled.get());
     }
 
-    return new ClusterInfo(drillbits, currentVersion, mismatchedVersions, userEncryptionEnabled, bitEncryptionEnabled, shouldShowAdminInfo, QueueInfo.build(dbContext.getResourceManager()), authEnabled.get());
+    return new ClusterInfo(drillbits, currentVersion, mismatchedVersions,
+      userEncryptionEnabled, bitEncryptionEnabled, shouldShowAdminInfo,
+      QueueInfo.build(dbContext.getResourceManager()), authEnabled.get());
   }
 
   /**
@@ -235,11 +244,19 @@ public class DrillRoot {
    * @return true if drillbit are the same
    */
   private boolean isDrillbitsTheSame(DrillbitEndpoint endpoint1, DrillbitEndpoint endpoint2) {
-    return endpoint1.getAddress().equals(endpoint2.getAddress()) && endpoint1.getControlPort() == endpoint2.getControlPort() && endpoint1.getDataPort() == endpoint2.getDataPort() && endpoint1.getUserPort() == endpoint2.getUserPort();
+    return endpoint1.getAddress().equals(endpoint2.getAddress()) &&
+      endpoint1.getControlPort() == endpoint2.getControlPort() &&
+      endpoint1.getDataPort() == endpoint2.getDataPort() &&
+      endpoint1.getUserPort() == endpoint2.getUserPort();
   }
 
   private Response setResponse(Map<String, ?> entity) {
-    return Response.ok().entity(entity).header("Access-Control-Allow-Origin", "*").header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT").header("Access-Control-Allow-Credentials", "true").allow("OPTIONS").build();
+    return Response.ok()
+      .entity(entity)
+      .header("Access-Control-Allow-Origin", "*")
+      .header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")
+      .header("Access-Control-Allow-Credentials", "true")
+      .allow("OPTIONS").build();
   }
 
   private Response shutdown(String resp) throws Exception {
@@ -307,19 +324,27 @@ public class DrillRoot {
     }
 
     public String threshold() {
-      return isEnabled() ? Double.toString(zkQueueInfo.queueThreshold) : "N/A";
+      return isEnabled()
+        ? Double.toString(zkQueueInfo.queueThreshold)
+        : "N/A";
     }
 
     public String smallQueueMemory() {
-      return isEnabled() ? toBytes(zkQueueInfo.memoryPerSmallQuery) : "N/A";
+      return isEnabled()
+        ? toBytes(zkQueueInfo.memoryPerSmallQuery)
+        : "N/A";
     }
 
     public String largeQueueMemory() {
-      return isEnabled() ? toBytes(zkQueueInfo.memoryPerLargeQuery) : "N/A";
+      return isEnabled()
+        ? toBytes(zkQueueInfo.memoryPerLargeQuery)
+        : "N/A";
     }
 
     public String totalMemory() {
-      return isEnabled() ? toBytes(zkQueueInfo.memoryPerNode) : "N/A";
+      return isEnabled()
+        ? toBytes(zkQueueInfo.memoryPerNode)
+        : "N/A";
     }
 
     private final long ONE_MB = 1024 * 1024;
@@ -337,31 +362,28 @@ public class DrillRoot {
   @JsonInclude(JsonInclude.Include.NON_ABSENT)
   public static class ClusterInfo {
     private final Collection<DrillbitInfo> drillbits;
-
     private final String currentVersion;
-
     private final Collection<String> mismatchedVersions;
-
     private final boolean userEncryptionEnabled;
-
     private final boolean bitEncryptionEnabled;
-
     private final boolean shouldShowAdminInfo;
-
     private final boolean authEnabled;
-
     private final QueueInfo queueInfo;
 
     private String adminUsers;
-
     private String adminUserGroups;
-
     private String processUser;
-
     private String processUserGroups;
 
     @JsonCreator
-    public ClusterInfo(Collection<DrillbitInfo> drillbits, String currentVersion, Collection<String> mismatchedVersions, boolean userEncryption, boolean bitEncryption, boolean shouldShowAdminInfo, QueueInfo queueInfo, boolean authEnabled) {
+    public ClusterInfo(Collection<DrillbitInfo> drillbits,
+                       String currentVersion,
+                       Collection<String> mismatchedVersions,
+                       boolean userEncryption,
+                       boolean bitEncryption,
+                       boolean shouldShowAdminInfo,
+                       QueueInfo queueInfo,
+                       boolean authEnabled) {
       this.drillbits = Sets.newTreeSet(drillbits);
       this.currentVersion = currentVersion;
       this.mismatchedVersions = Sets.newTreeSet(mismatchedVersions);
@@ -373,7 +395,18 @@ public class DrillRoot {
     }
 
     @JsonCreator
-    public ClusterInfo(Collection<DrillbitInfo> drillbits, String currentVersion, Collection<String> mismatchedVersions, boolean userEncryption, boolean bitEncryption, boolean shouldShowAdminInfo, QueueInfo queueInfo, String processUser, String processUserGroups, String adminUsers, String adminUserGroups, boolean authEnabled) {
+    public ClusterInfo(Collection<DrillbitInfo> drillbits,
+                       String currentVersion,
+                       Collection<String> mismatchedVersions,
+                       boolean userEncryption,
+                       boolean bitEncryption,
+                       boolean shouldShowAdminInfo,
+                       QueueInfo queueInfo,
+                       String processUser,
+                       String processUserGroups,
+                       String adminUsers,
+                       String adminUserGroups,
+                       boolean authEnabled) {
       this(drillbits, currentVersion, mismatchedVersions, userEncryption, bitEncryption, shouldShowAdminInfo, queueInfo, authEnabled);
       this.processUser = processUser;
       this.processUserGroups = processUserGroups;
@@ -432,21 +465,13 @@ public class DrillRoot {
 
   public static class DrillbitInfo implements Comparable<DrillbitInfo> {
     private final String address;
-
     private final String httpPort;
-
     private final String userPort;
-
     private final String controlPort;
-
     private final String dataPort;
-
     private final String version;
-
     private final boolean current;
-
     private final boolean versionMatch;
-
     private final String state;
 
     @JsonCreator
