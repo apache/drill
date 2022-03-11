@@ -180,6 +180,7 @@ public class StorageResources {
 
   @GET
   @Path("/storage/extension_list.json")
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   @Produces(MediaType.APPLICATION_JSON)
   public Response getAllSupportedFormats() {
     LinkedHashSet<String> registeredExtensions = new LinkedHashSet<>();
@@ -201,6 +202,7 @@ public class StorageResources {
   @GET
   @Path("/storage/{name}/extension_list.json")
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response getFormatList(@PathParam("name") String name) {
     LinkedHashSet<String> registeredExtensions = new LinkedHashSet<>();
     try {
