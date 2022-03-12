@@ -66,9 +66,8 @@ ENV DRILL_USER_HOME=/var/lib/drill
 ENV DRILL_LOG_DIR=$DRILL_USER_HOME/log
 ENV DATA_VOL=/data
 
-RUN mkdir $DRILL_HOME $DATA_VOL
-
-RUN groupadd -g 999 $DRILL_USER \
+RUN mkdir $DRILL_HOME $DATA_VOL \
+ && groupadd -g 999 $DRILL_USER \
  && useradd -r -u 999 -g $DRILL_USER $DRILL_USER -m -d $DRILL_USER_HOME \
  && chown $DRILL_USER: $DATA_VOL
 
