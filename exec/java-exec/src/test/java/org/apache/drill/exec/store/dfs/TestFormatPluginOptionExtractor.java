@@ -79,7 +79,7 @@ public class TestFormatPluginOptionExtractor extends BaseTest {
           assertEquals("(type: String, logFormat: String, timestampFormat: String)", d.presentParams());
           break;
         case "logRegex":
-          assertEquals(d.typeName, "(type: String, regex: String, extension: String, maxErrors: int, schema: List)", d.presentParams());
+          assertEquals(d.typeName, "(type: String, regex: String, maxErrors: int, schema: List)", d.presentParams());
           break;
         default:
           fail("add validation for format plugin type " + d.typeName);
