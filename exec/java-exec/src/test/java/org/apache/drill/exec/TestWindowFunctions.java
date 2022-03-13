@@ -29,6 +29,8 @@ import org.apache.drill.test.UserExceptionMatcher;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.hamcrest.MatcherAssert;
+import org.junit.Assert;
 
 import java.nio.file.Paths;
 
@@ -190,54 +192,53 @@ public class TestWindowFunctions extends BaseTestQuery {
 
   @Test // DRILL-3360
   public void testWindowInWindow() throws Exception {
-    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
     String query = "select rank() over(order by row_number() over(order by n_nationkey)) \n" +
-        "from cp.`tpch/nation.parquet`";
+      "from cp.`tpch/nation.parquet`";
 
-    test(query);
+    UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
+    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
   }
 
   @Test // DRILL-3280
   public void testMissingOverWithWindowClause() throws Exception {
-    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
     String query = "select rank(), cume_dist() over w \n" +
-        "from cp.`tpch/nation.parquet` \n" +
-        "window w as (partition by n_name order by n_nationkey)";
+      "from cp.`tpch/nation.parquet` \n" +
+      "window w as (partition by n_name order by n_nationkey)";
 
-    test(query);
+    UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
+    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
   }
 
   @Test // DRILL-3601
   public void testLeadMissingOver() throws Exception {
-    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
     String query = "select lead(n_nationkey) from cp.`tpch/nation.parquet`";
 
-    test(query);
+    UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
+    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
   }
 
   @Test // DRILL-3649
   public void testMissingOverWithConstant() throws Exception {
-    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
     String query = "select NTILE(1) from cp.`tpch/nation.parquet`";
 
-    test(query);
+    UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
+    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
   }
 
   @Test // DRILL-3344
   public void testWindowGroupBy() throws Exception {
-    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
     String query = "explain plan for SELECT max(n_nationkey) OVER (), n_name as col2 \n" +
         "from cp.`tpch/nation.parquet` \n" +
         "group by n_name";
 
-    test(query);
+    UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
+    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
   }
 
   @Test // DRILL-3346
   @Category(UnlikelyTest.class)
   public void testWindowGroupByOnView() throws Exception {
     try {
-      thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
       String createView = "create view testWindowGroupByOnView(a, b) as \n" +
           "select n_nationkey, n_name from cp.`tpch/nation.parquet`";
       String query = "explain plan for SELECT max(a) OVER (), b as col2 \n" +
@@ -246,7 +247,8 @@ public class TestWindowFunctions extends BaseTestQuery {
 
       test("use dfs.tmp");
       test(createView);
-      test(query);
+      UserException userException = Assert.assertThrows(UserException.class, () -> test(query));
+      MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION));
     } finally {
       test("drop view testWindowGroupByOnView");
     }

@@ -22,9 +22,12 @@ import static org.apache.drill.exec.ExecConstants.SLICE_TARGET;
 import static org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType.VALIDATION;
 
 import org.apache.drill.categories.OptionsTest;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.UserExceptionMatcher;
+import org.hamcrest.MatcherAssert;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -50,8 +53,9 @@ public class TestOptions extends BaseTestQuery {
 
   @Test
   public void checkValidationException() throws Exception {
-    thrownException.expect(new UserExceptionMatcher(VALIDATION));
-    test("ALTER session SET %s = '%s';", SLICE_TARGET, "fail");
+    String query = "ALTER session SET %s = '%s';";
+    UserException userException = Assert.assertThrows(UserException.class, () -> test(query,SLICE_TARGET, "fail"));
+    MatcherAssert.assertThat(userException, new UserExceptionMatcher(VALIDATION));
   }
 
   @Test // DRILL-3122
@@ -311,8 +315,8 @@ public class TestOptions extends BaseTestQuery {
 
   @Test
   public void unsupportedLiteralValidation() throws Exception {
-    thrownException.expect(new UserExceptionMatcher(VALIDATION,
-      "Drill doesn't support assigning literals of type"));
-    test("ALTER session SET `%s` = DATE '1995-01-01';", ENABLE_VERBOSE_ERRORS_KEY);
+    String query = "ALTER session SET `%s` = DATE '1995-01-01';";
+    UserException userException = Assert.assertThrows(UserException.class, () -> test(query,ENABLE_VERBOSE_ERRORS_KEY, "DATE '1995-01-01'"));
+    MatcherAssert.assertThat(userException, new UserExceptionMatcher(VALIDATION, "Drill doesn't support assigning literals of type"));
   }
 }

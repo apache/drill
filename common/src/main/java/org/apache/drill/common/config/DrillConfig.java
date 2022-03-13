@@ -317,7 +317,7 @@ public class DrillConfig extends NestedConfig {
   public <T> T getInstanceOf(String location, Class<T> clazz) throws DrillConfigurationException{
     final Class<T> c = getClassAt(location, clazz);
     try {
-      return c.newInstance();
+      return c.getDeclaredConstructor().newInstance();
     } catch (Exception ex) {
       throw new DrillConfigurationException(String.format("Failure while instantiating class [%s] located at '%s.", clazz.getCanonicalName(), location), ex);
     }

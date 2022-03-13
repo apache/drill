@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.impersonation;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.categories.SecurityTest;
@@ -33,7 +34,9 @@ import org.apache.drill.test.UserExceptionMatcher;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.hamcrest.MatcherAssert;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -156,22 +159,25 @@ public class TestInboundImpersonation extends BaseTestImpersonation {
 
   @Test
   public void invalidPolicy() throws Exception {
-    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION,
-        "Invalid impersonation policies."));
+    String query = "ALTER SYSTEM SET `%s`='%s'";
+    String arg = "[ invalid json ]";
+
     updateClient(UserAuthenticatorTestImpl.PROCESS_USER,
-        UserAuthenticatorTestImpl.PROCESS_USER_PASSWORD);
-    test("ALTER SYSTEM SET `%s`='%s'", ExecConstants.IMPERSONATION_POLICIES_KEY,
-        "[ invalid json ]");
+      UserAuthenticatorTestImpl.PROCESS_USER_PASSWORD);
+
+    UserException userException = Assert.assertThrows(UserException.class, () -> test(query, ExecConstants.IMPERSONATION_POLICIES_KEY, arg));
+    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION, "Invalid impersonation policies."));
   }
 
   @Test
   public void invalidProxy() throws Exception {
-    thrownException.expect(new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION,
-        "Proxy principals cannot have a wildcard entry."));
+    String query = "ALTER SYSTEM SET `%s`='%s'";
+    String arg = "[ { proxy_principals : { users: [\"*\" ] }," + "target_principals : { users : [\"" + TARGET_NAME + "\"] } } ]";
+
     updateClient(UserAuthenticatorTestImpl.PROCESS_USER,
-        UserAuthenticatorTestImpl.PROCESS_USER_PASSWORD);
-    test("ALTER SYSTEM SET `%s`='%s'", ExecConstants.IMPERSONATION_POLICIES_KEY,
-        "[ { proxy_principals : { users: [\"*\" ] },"
-            + "target_principals : { users : [\"" + TARGET_NAME + "\"] } } ]");
+      UserAuthenticatorTestImpl.PROCESS_USER_PASSWORD);
+
+    UserException userException = Assert.assertThrows(UserException.class, () -> test(query, ExecConstants.IMPERSONATION_POLICIES_KEY, arg));
+    MatcherAssert.assertThat(userException, new UserExceptionMatcher(UserBitShared.DrillPBError.ErrorType.VALIDATION, "Proxy principals cannot have a wildcard entry."));
   }
 }
