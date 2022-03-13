@@ -19,7 +19,7 @@ package org.apache.drill.common.util;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;

@@ -151,6 +151,10 @@ public class ClientFixture implements AutoCloseable {
     runSqlSilently("ALTER SYSTEM RESET `" + key + "`");
   }
 
+  public void run(String sql, Object...args)  throws Exception {
+    queryBuilder().sql(sql, args).run();
+  }
+
   /**
    * Run SQL silently (discard results).
    *
@@ -160,7 +164,7 @@ public class ClientFixture implements AutoCloseable {
    */
   public void runSqlSilently(String sql, Object... args) {
     try {
-      queryBuilder().sql(sql, args).run();
+      run(sql, args);
     } catch (Exception e) {
       // Should not fail during tests. Convert exception to unchecked
       // to simplify test code.
@@ -411,4 +415,5 @@ public class ClientFixture implements AutoCloseable {
       throw new IllegalStateException(e);
     }
   }
+
 }

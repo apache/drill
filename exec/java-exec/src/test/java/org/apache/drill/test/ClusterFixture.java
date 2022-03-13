@@ -350,6 +350,21 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       .build();
   }
 
+  /**
+   * Create a test client for a specific username and password.
+   *
+   * @param Drill username
+   * @param password Drill password
+   * @return a test client. Client will be closed when this cluster
+   * fixture closes, or can be closed early.
+   */
+  public ClientFixture client(String username, String password) {
+    return clientBuilder()
+      .property(DrillProperties.USER, username)
+      .property(DrillProperties.PASSWORD, password)
+      .build();
+  }
+
   public RestClientFixture restClientFixture() {
     if (restClientFixture == null) {
       restClientFixture = restClientBuilder().build();

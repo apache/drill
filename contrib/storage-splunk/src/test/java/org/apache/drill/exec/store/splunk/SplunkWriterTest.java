@@ -29,6 +29,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
@@ -96,6 +97,7 @@ public class SplunkWriterTest extends SplunkBaseTest {
   }
 
   @Test
+  @Ignore("Run manually because of an unpredictable delay before newly inserted data gets indexed.")
   public void testBasicCTASWithScalarDataTypes() throws Exception {
     String query = "CREATE TABLE splunk.t2 AS " +
       "SELECT CAST(1 AS INTEGER) AS int_field," +
