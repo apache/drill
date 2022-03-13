@@ -98,7 +98,12 @@ public class JSONRecordReader extends AbstractRecordReader {
    */
   public JSONRecordReader(FragmentContext fragmentContext, JsonNode embeddedContent, DrillFileSystem fileSystem,
       List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, null, embeddedContent, fileSystem, columns, false, new JSONFormatConfig(null));
+    this(fragmentContext, null, embeddedContent, fileSystem, columns, false,
+      new JSONFormatConfig(null,
+        embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR),
+        embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR)));
   }
 
   /**
@@ -108,7 +113,12 @@ public class JSONRecordReader extends AbstractRecordReader {
    * @throws OutOfMemoryException
    */
   public JSONRecordReader(FragmentContext fragmentContext, List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, null, null, null, columns, true, new JSONFormatConfig(null));
+    this(fragmentContext, null, null, null, columns, true,
+      new JSONFormatConfig(null,
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR)));
   }
 
   private JSONRecordReader(FragmentContext fragmentContext, Path inputPath, JsonNode embeddedContent,
@@ -127,8 +137,13 @@ public class JSONRecordReader extends AbstractRecordReader {
       this.embeddedContent = embeddedContent;
     }
 
+    // If the config is null, create a temporary one with the global options.
     if (config == null) {
-      this.config = new JSONFormatConfig(null);
+      this.config = new JSONFormatConfig(null,
+        embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR),
+        embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR));
     } else {
       this.config = config;
     }
@@ -136,14 +151,46 @@ public class JSONRecordReader extends AbstractRecordReader {
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
     // only enable all text mode if we aren't using embedded content mode.
-    this.enableAllTextMode = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR);
-    this.enableNanInf = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR);
+    this.enableAllTextMode = allTextMode();
+    this.enableNanInf = nanInf();
     this.enableEscapeAnyChar = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR);
-    this.readNumbersAsDouble = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR);
+    this.readNumbersAsDouble = readNumbersAsDouble();
     this.unionEnabled = embeddedContent == null && fragmentContext.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
-    this.skipMalformedJSONRecords = fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR);
+    this.skipMalformedJSONRecords = skipMalformedJSONRecords();
     this.printSkippedMalformedJSONRecordLineNumber = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG_VALIDATOR);
     setColumns(columns);
+  }
+
+  private boolean allTextMode() {
+    if (config.getAllTextMode() == null) {
+      return embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR);
+    } else {
+      return embeddedContent == null && config.getAllTextMode();
+    }
+  }
+
+  private boolean readNumbersAsDouble() {
+    if (config.getReadNumbersAsDouble() == null) {
+      return embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR);
+    } else {
+      return embeddedContent == null && config.getReadNumbersAsDouble();
+    }
+  }
+
+  private boolean skipMalformedJSONRecords() {
+    if (config.getSkipMalformedJSONRecords() == null) {
+      return fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR);
+    } else {
+      return config.getSkipMalformedJSONRecords();
+    }
+  }
+
+  private boolean nanInf() {
+    if (config.getNanInf() == null) {
+      return fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR);
+    } else {
+      return config.getNanInf();
+    }
   }
 
   @Override

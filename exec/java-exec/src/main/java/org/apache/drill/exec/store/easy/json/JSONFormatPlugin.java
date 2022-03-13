@@ -70,7 +70,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
   public JSONFormatPlugin(String name, DrillbitContext context,
       Configuration fsConf, StoragePluginConfig storageConfig) {
-    this(name, context, fsConf, storageConfig, new JSONFormatConfig(null));
+    this(name, context, fsConf, storageConfig, new JSONFormatConfig(null, null, null, null, null));
   }
 
   public JSONFormatPlugin(String name, DrillbitContext context,
@@ -186,9 +186,16 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
     @JsonCreator
     public JSONFormatConfig(
         @JsonProperty("extensions") List<String> extensions,
-        @JsonProperty("allTextMode")) {
+        @JsonProperty("allTextMode") Boolean allTextMode,
+        @JsonProperty("readNumbersAsDouble") Boolean readNumbersAsDouble,
+        @JsonProperty("skipMalformedJSONRecords") Boolean skipMalformedJSONRecords,
+        @JsonProperty("nanInf") Boolean nanInf) {
       this.extensions = extensions == null ?
           DEFAULT_EXTS : ImmutableList.copyOf(extensions);
+      this.allTextMode = allTextMode;
+      this.readNumbersAsDouble = readNumbersAsDouble;
+      this.skipMalformedJSONRecords = skipMalformedJSONRecords;
+      this.nanInf = nanInf;
     }
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -196,9 +203,29 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
       return extensions;
     }
 
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    public Boolean getAllTextMode() {
+      return allTextMode;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    public Boolean getReadNumbersAsDouble() {
+      return readNumbersAsDouble;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    public Boolean getSkipMalformedJSONRecords() {
+      return skipMalformedJSONRecords;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    public Boolean getNanInf() {
+      return nanInf;
+    }
+
     @Override
     public int hashCode() {
-      return Objects.hash(extensions);
+      return Objects.hash(extensions, allTextMode, readNumbersAsDouble, skipMalformedJSONRecords, nanInf);
     }
 
     @Override
@@ -210,14 +237,22 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
         return false;
       }
       JSONFormatConfig other = (JSONFormatConfig) obj;
-      return Objects.deepEquals(extensions, other.extensions);
+      return Objects.deepEquals(extensions, other.extensions) &&
+        Objects.equals(allTextMode, other.allTextMode) &&
+        Objects.equals(readNumbersAsDouble, other.readNumbersAsDouble) &&
+        Objects.equals(skipMalformedJSONRecords, other.skipMalformedJSONRecords) &&
+        Objects.equals(nanInf, other.nanInf);
     }
 
     @Override
     public String toString() {
       return new PlanStringBuilder(this)
-          .field("extensions", extensions)
-          .toString();
+        .field("extensions", extensions)
+        .field("allTextMode", allTextMode)
+        .field("readNumbersAsDouble", readNumbersAsDouble)
+        .field("skipMalformedRecords", skipMalformedJSONRecords)
+        .field("nanInf", nanInf)
+        .toString();
     }
   }
 
