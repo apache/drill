@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.iceberg.format;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -31,6 +32,7 @@ import java.util.Objects;
 
 @JsonTypeName(IcebergFormatPluginConfig.NAME)
 @JsonDeserialize(builder=IcebergFormatPluginConfig.IcebergFormatPluginConfigBuilder.class)
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class IcebergFormatPluginConfig implements FormatPluginConfig {
 
   public static final String NAME = "iceberg";
