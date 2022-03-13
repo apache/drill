@@ -33,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 
 public class TestFileExtensions extends ClusterTest {
-  
   private static final int TIMEOUT = 30;
   private static String hostname;
 
