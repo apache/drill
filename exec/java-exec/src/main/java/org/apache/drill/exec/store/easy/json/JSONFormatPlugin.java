@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -70,7 +71,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
   public JSONFormatPlugin(String name, DrillbitContext context,
       Configuration fsConf, StoragePluginConfig storageConfig) {
-    this(name, context, fsConf, storageConfig, new JSONFormatConfig(null, null, null, null, null));
+    this(name, context, fsConf, storageConfig, new JSONFormatConfig(null, null, null, null, null, null));
   }
 
   public JSONFormatPlugin(String name, DrillbitContext context,
@@ -181,6 +182,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
     private final Boolean allTextMode;
     private final Boolean readNumbersAsDouble;
     private final Boolean skipMalformedJSONRecords;
+    private final Boolean escapeAnyChar;
     private final Boolean nanInf;
 
     @JsonCreator
@@ -189,12 +191,14 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
         @JsonProperty("allTextMode") Boolean allTextMode,
         @JsonProperty("readNumbersAsDouble") Boolean readNumbersAsDouble,
         @JsonProperty("skipMalformedJSONRecords") Boolean skipMalformedJSONRecords,
+        @JsonProperty("escapeAnyChar") Boolean escapeAnyChar,
         @JsonProperty("nanInf") Boolean nanInf) {
       this.extensions = extensions == null ?
           DEFAULT_EXTS : ImmutableList.copyOf(extensions);
       this.allTextMode = allTextMode;
       this.readNumbersAsDouble = readNumbersAsDouble;
       this.skipMalformedJSONRecords = skipMalformedJSONRecords;
+      this.escapeAnyChar = escapeAnyChar;
       this.nanInf = nanInf;
     }
 
@@ -218,6 +222,11 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
       return skipMalformedJSONRecords;
     }
 
+    @JsonInclude(Include.NON_ABSENT)
+    public Boolean getEscapeAnyChar() {
+      return escapeAnyChar;
+    }
+
     @JsonInclude(JsonInclude.Include.NON_ABSENT)
     public Boolean getNanInf() {
       return nanInf;
@@ -225,7 +234,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
     @Override
     public int hashCode() {
-      return Objects.hash(extensions, allTextMode, readNumbersAsDouble, skipMalformedJSONRecords, nanInf);
+      return Objects.hash(extensions, allTextMode, readNumbersAsDouble, skipMalformedJSONRecords, escapeAnyChar, nanInf);
     }
 
     @Override
@@ -241,6 +250,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
         Objects.equals(allTextMode, other.allTextMode) &&
         Objects.equals(readNumbersAsDouble, other.readNumbersAsDouble) &&
         Objects.equals(skipMalformedJSONRecords, other.skipMalformedJSONRecords) &&
+        Objects.equals(escapeAnyChar, other.escapeAnyChar) &&
         Objects.equals(nanInf, other.nanInf);
     }
 
@@ -251,6 +261,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
         .field("allTextMode", allTextMode)
         .field("readNumbersAsDouble", readNumbersAsDouble)
         .field("skipMalformedRecords", skipMalformedJSONRecords)
+        .field("escapeAnyChar", escapeAnyChar)
         .field("nanInf", nanInf)
         .toString();
     }

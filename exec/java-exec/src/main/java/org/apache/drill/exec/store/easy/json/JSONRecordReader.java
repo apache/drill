@@ -81,7 +81,7 @@ public class JSONRecordReader extends AbstractRecordReader {
    * @param fileSystem a Drill file system wrapper around the file system implementation
    * @param columns path names of columns/subfields to read
    * @param config The JSONFormatConfig for the storage plugin
-   * @throws OutOfMemoryException
+   * @throws OutOfMemoryException If there is insufficient memory, Drill will throw an Out of Memory Exception
    */
   public JSONRecordReader(FragmentContext fragmentContext, Path inputPath, DrillFileSystem fileSystem,
       List<SchemaPath> columns, JSONFormatConfig config) throws OutOfMemoryException {
@@ -94,7 +94,7 @@ public class JSONRecordReader extends AbstractRecordReader {
    * @param embeddedContent embedded content
    * @param fileSystem a Drill file system wrapper around the file system implementation
    * @param columns path names of columns/subfields to read
-   * @throws OutOfMemoryException
+   * @throws OutOfMemoryException If Drill runs out of memory, OME will be thrown
    */
   public JSONRecordReader(FragmentContext fragmentContext, JsonNode embeddedContent, DrillFileSystem fileSystem,
       List<SchemaPath> columns) throws OutOfMemoryException {
@@ -103,6 +103,7 @@ public class JSONRecordReader extends AbstractRecordReader {
         embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR),
         embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR)));
   }
 
@@ -110,7 +111,7 @@ public class JSONRecordReader extends AbstractRecordReader {
    * Create a JSON Record Reader that uses an InputStream directly
    * @param fragmentContext the Drill fragment
    * @param columns path names of columns/subfields to read
-   * @throws OutOfMemoryException
+   * @throws OutOfMemoryException If there is insufficient memory, Drill will throw an Out of Memory Exception
    */
   public JSONRecordReader(FragmentContext fragmentContext, List<SchemaPath> columns) throws OutOfMemoryException {
     this(fragmentContext, null, null, null, columns, true,
@@ -118,6 +119,7 @@ public class JSONRecordReader extends AbstractRecordReader {
         fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR)));
   }
 
@@ -143,6 +145,7 @@ public class JSONRecordReader extends AbstractRecordReader {
         embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR),
         embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR));
     } else {
       this.config = config;
@@ -153,7 +156,7 @@ public class JSONRecordReader extends AbstractRecordReader {
 
     this.enableAllTextMode = allTextMode();
     this.enableNanInf = nanInf();
-    this.enableEscapeAnyChar = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR);
+    this.enableEscapeAnyChar = escapeAnyChar();
     this.readNumbersAsDouble = readNumbersAsDouble();
     this.unionEnabled = embeddedContent == null && fragmentContext.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
     this.skipMalformedJSONRecords = skipMalformedJSONRecords();
@@ -187,6 +190,14 @@ public class JSONRecordReader extends AbstractRecordReader {
       return fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR);
     } else {
       return config.getSkipMalformedJSONRecords();
+    }
+  }
+
+  private boolean escapeAnyChar() {
+    if (config.getEscapeAnyChar() == null) {
+      return fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR);
+    } else {
+      return config.getEscapeAnyChar();
     }
   }
 
