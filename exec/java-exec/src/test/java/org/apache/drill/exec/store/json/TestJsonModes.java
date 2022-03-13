@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.json;
 
 import org.apache.drill.categories.RowSetTests;
 
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -35,6 +36,8 @@ import org.junit.experimental.categories.Category;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @Category(RowSetTests.class)
 public class TestJsonModes extends ClusterTest {
@@ -96,6 +99,57 @@ public class TestJsonModes extends ClusterTest {
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testSkipInvalidRecords() throws Exception {
+    String sql = "SELECT SUM(balance) FROM cp.`jsoninput/drill4653/file.json`";
+    DirectRowSet results;
+    try {
+      client.queryBuilder().sql(sql).rowSet();
+      fail();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains("Error parsing JSON - Illegal unquoted character"));
+    }
+
+    sql = "SELECT SUM(balance) AS total FROM table(cp.`jsoninput/drill4653/file.json` (type => 'json', skipMalformedJSONRecords => True))";
+    results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("total", MinorType.FLOAT8)
+      .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(6003.9)
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testNanInf() throws Exception {
+    String sql = "SELECT * FROM cp.`jsoninput/nan_test.json`";
+    DirectRowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("nan_col", MinorType.FLOAT8)
+      .addNullable("inf_col", MinorType.FLOAT8)
+      .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(Double.NaN, Double.POSITIVE_INFINITY)
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+
+    // Now disallow NaN
+    sql = "SELECT * FROM table(cp.`jsoninput/nan_test.json` (type => 'json', nanInf => False))";
+    try {
+      client.queryBuilder().sql(sql).rowSet();
+      fail();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains("Error parsing JSON - Non-standard token 'NaN'"));
+    }
   }
 
   @Test

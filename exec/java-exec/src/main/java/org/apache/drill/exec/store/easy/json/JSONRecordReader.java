@@ -150,7 +150,7 @@ public class JSONRecordReader extends AbstractRecordReader {
 
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
-    // only enable all text mode if we aren't using embedded content mode.
+
     this.enableAllTextMode = allTextMode();
     this.enableNanInf = nanInf();
     this.enableEscapeAnyChar = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR);
@@ -161,7 +161,12 @@ public class JSONRecordReader extends AbstractRecordReader {
     setColumns(columns);
   }
 
+  /**
+   * Returns the value of the all text mode.  Values set in the format config will override global values.
+   * @return The value of allTextMode
+   */
   private boolean allTextMode() {
+    // only enable all text mode if we aren't using embedded content mode.
     if (config.getAllTextMode() == null) {
       return embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR);
     } else {
