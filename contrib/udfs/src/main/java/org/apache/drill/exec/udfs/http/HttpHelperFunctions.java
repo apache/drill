@@ -52,6 +52,9 @@ public class HttpHelperFunctions {
     public void setup() {
       jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
         .defaultSchemaPathColumns()
+        .readNumbersAsDouble(Boolean.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE))
+        .allTextMode(Boolean.getBoolean(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE))
+        .enableNanInf(Boolean.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READER_NAN_INF_NUMBERS))
         .build();
     }
 
