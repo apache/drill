@@ -79,7 +79,7 @@ public class DropboxFileSystemTest extends ClusterTest {
     Map<String, FormatPluginConfig> formats = new HashMap<>();
     List<String> jsonExtensions = new ArrayList<>();
     jsonExtensions.add("json");
-    FormatPluginConfig jsonFormatConfig = new JSONFormatConfig(jsonExtensions);
+    FormatPluginConfig jsonFormatConfig = new JSONFormatConfig(jsonExtensions, null, null, null, null, null);
 
     // CSV Format
     List<String> csvExtensions = new ArrayList<>();
