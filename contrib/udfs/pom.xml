@@ -30,6 +30,10 @@
   <artifactId>drill-udfs</artifactId>
   <name>Drill : Contrib : UDFs</name>
 
+  <properties>
+    <okhttp.version>4.9.2</okhttp.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -84,6 +88,13 @@
       <artifactId>drill-common</artifactId>
       <classifier>tests</classifier>
       <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>mockwebserver</artifactId>
+      <version>${okhttp.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
