@@ -25,7 +25,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import javax.inject.Inject;
 
@@ -40,7 +40,7 @@ public class HttpHelperFunctions {
     FieldReader[] inputReaders;
 
     @Output
-    BaseWriter.ComplexWriter outWriter;
+    ComplexWriter writer;
 
     @Inject
     DrillBuf buffer;
@@ -69,7 +69,8 @@ public class HttpHelperFunctions {
         // Make the API call
         String results = org.apache.drill.exec.util.HttpUtils.makeSimpleGetRequest(finalUrl);
 
-        /*if (in.isSet == 0) {
+        // If the result string is null or empty, return an empty map
+        if (results == null || results.length() == 0) {
           // Return empty map
           org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
           mapWriter.start();
@@ -78,14 +79,13 @@ public class HttpHelperFunctions {
         }
 
         try {
-          jsonReader.setSource(in.start, in.end, in.buffer);
+          jsonReader.setSource(results);
+          jsonReader.setIgnoreJSONParseErrors(true);  // Reduce number of errors
           jsonReader.write(writer);
           buffer = jsonReader.getWorkBuf();
         } catch (Exception e) {
           throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-        }*/
-
-
+        }
       }
     }
   }

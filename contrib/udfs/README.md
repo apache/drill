@@ -309,3 +309,10 @@ apache drill> SELECT getMapSchema(record) AS schema FROM dfs.test.`schema_test.j
 ```
 
 The function returns an empty map if the row is `null`.
+
+## HTTP Helper Functions
+This function allows a user to "join" data from URLs which return one row. 
+The function is: `http_get(<url>, ... <args>)`
+
+### Example Usage
+
