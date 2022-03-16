@@ -310,7 +310,14 @@ public class DrillRestServer extends ResourceConfig {
      * @param config drill config
      * @param request client request
      * @return session user principal
+     *
+     * @deprecated a userName property has since been added to POST /query.json.
+     * and the web UI now never sets a User-Name header. The restriction to
+     * unauthenticated Drill is also not enough for general impersonation.
+     * Choose one way to request impersonation over HTTP, this or the other.
+     * @link{org.apache.drill.exec.server.rest.QueryResources#submitQuery}
      */
+    @Deprecated
     private Principal createSessionUserPrincipal(DrillConfig config, HttpServletRequest request) {
       if (WebServer.isOnlyImpersonationEnabled(config)) {
         final String userName = request.getHeader("User-Name");
