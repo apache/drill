@@ -78,7 +78,18 @@ public class HttpHelperUtils {
     HttpStoragePlugin httpStoragePlugin = getStoragePlugin(context, plugin);
     HttpStoragePluginConfig config = httpStoragePlugin.getConfig();
 
-    return config.getConnection(endpoint);
+    HttpApiConfig endpointConfig = config.getConnection(endpoint);
+    if (endpointConfig == null) {
+      throw UserException.functionError()
+        .message("You must call this function with a valid endpoint name.")
+        .build(logger);
+    } else if (endpointConfig.inputType() != "json") {
+      throw UserException.functionError()
+        .message("Http_get only supports API endpoints which return json.")
+        .build(logger);
+    }
+
+    return endpointConfig;
   }
 
   private static HttpStoragePlugin getStoragePlugin(DrillbitContext context, String pluginName) {
@@ -87,7 +98,7 @@ public class HttpHelperUtils {
       StoragePlugin pluginInstance = storage.getPlugin(pluginName);
       if (pluginInstance == null) {
         throw UserException.functionError()
-          .message("You can only include HTTP plugins in this function.")
+          .message(pluginName + " is not a valid plugin.")
           .build(logger);
       }
 
@@ -105,6 +116,15 @@ public class HttpHelperUtils {
   }
 
 
+  /**
+   * This function makes an API call and returns a string of the parsed results. It is used in the http_get() UDF
+   * and retrieves all the configuration parameters contained in the storage plugin and endpoint configuration. The exception
+   * is pagination.  This does not support pagination.
+   * @param schemaPath The path of storage_plugin.endpoint from which the data will be retrieved
+   * @param context {@link DrillbitContext} The context from the current query
+   * @param args An optional list of parameter arguments which will be included in the URL
+   * @return A String of the results.
+   */
   public static String makeAPICall(String schemaPath, DrillbitContext context, List<String> args) {
     HttpStoragePluginConfig pluginConfig;
     HttpApiConfig endpointConfig;

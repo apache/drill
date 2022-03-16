@@ -659,3 +659,36 @@ The HTTP plugin includes four implicit fields which can be used for debugging.  
 * `_response_message`:  The response message.
 * `_response_protocol`:  The response protocol.
 * `_response_url`:  The actual URL sent to the API. 
+
+## Joining Data
+There are some situations where a user might want to join data with an API result and the pushdowns prevent that from happening.  The main situation where this happens is when 
+an API has parameters which are part of the URL AND these parameters are dynamically populated via a join. 
+
+In this case, there are two functions `http_get_url` and `http_get` which you can use to faciliate these joins. 
+
+* `http_get('<storage_plugin_name>', <params>)`:  This function accepts a storage plugin as input and an optional list of parameters to include in a URL.
+* `http_get_url(<url>, <params>)`:  This function works in the same way except that it does not pull any configuration information from existing storage plugins.
+
+### Example Queries
+Let's say that you have a storage plugin called `github` with an endpoint called `repos` which points to the url: https://github.com/orgs/{org}/repos.  It is easy enough to 
+write a query like this:
+
+```sql
+SELECT * 
+FROM github.repos
+WHERE org='apache'
+```
+However, if you had a file with organizations and wanted to join this with the API, the query would fail.  Using the functions listed above you could get this data as follows:
+
+```sql
+SELECT http_get('github.repos', `org`)
+FROM dfs.`some_data.csvh`
+```
+or
+```sql
+SELECT http_get('https://github.com/orgs/{org}/repos', `org`)
+FROM dfs.`some_data.csvh`
+```
+
+** WARNING:  This functionality will execute an HTTP Request FOR EVERY ROW IN YOUR DATA.  Use with caution. **
+

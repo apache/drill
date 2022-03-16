@@ -42,21 +42,20 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class TestHttpUDFFunctions extends ClusterTest {
 
   private static final int MOCK_SERVER_PORT = 47770;
   private static String TEST_JSON_RESPONSE;
-  private static String TEST_COMPLEX_JSON_RESPONSE;
   private static String DUMMY_URL = "http://localhost:" + MOCK_SERVER_PORT + "/";
 
 
   @BeforeClass
   public static void setup() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
-
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/simple.json"), Charsets.UTF_8).read();
-    TEST_COMPLEX_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/weather.json"), Charsets.UTF_8).read();
 
     HttpApiConfig mockGithubWithDuplicateParam = HttpApiConfig.builder()
       .url("http://localhost:47770/orgs/{org}/repos")
@@ -110,7 +109,6 @@ public class TestHttpUDFFunctions extends ClusterTest {
     }
   }
 
-
   @Test
   public void testHttpGetFromPlugin() throws Exception {
     try (MockWebServer server = startServer()) {
@@ -124,6 +122,17 @@ public class TestHttpUDFFunctions extends ClusterTest {
       RecordedRequest recordedRequest = server.takeRequest();
       assertEquals("GET", recordedRequest.getMethod());
       assertEquals("http://localhost:47770/orgs/apache/repos", recordedRequest.getRequestUrl().toString());
+    }
+  }
+
+  @Test
+  public void testHttpGetWithInvalidPlugin() {
+    try {
+      String sql = "SELECT http_get('nope.nothere', 'apache') AS result FROM (values(1))";
+      client.queryBuilder().sql(sql).run();
+      fail();
+    } catch (Exception e) {
+      assertTrue(e.getMessage().contains("FUNCTION ERROR: nope is not a valid plugin."));
     }
   }
 
