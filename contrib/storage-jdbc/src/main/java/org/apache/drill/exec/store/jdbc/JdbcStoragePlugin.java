@@ -156,8 +156,13 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       UsernamePasswordCredentials credentials = config.getUsernamePasswordCredentials();
       hikariConfig.setUsername(credentials.getUsername());
       hikariConfig.setPassword(credentials.getPassword());
-      // this serves as a hint to the driver, which *might* enable database optimizations
-      hikariConfig.setReadOnly(!config.isWritable());
+      /*
+      The following serves as a hint to the driver, which *might* enable database
+      optimizations.  Unfortunately some JDBC drivers without read-only support,
+      notably Snowflake's, fail to connect outright when this option is set even
+      though it is only a hint, so enabling it is generally problematic.
+      */
+      // hikariConfig.setReadOnly(!config.isWritable());
 
       return new HikariDataSource(hikariConfig);
     } catch (RuntimeException e) {
