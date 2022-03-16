@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.udfs.http;
+package org.apache.drill.exec.store.http.udfs;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
@@ -24,6 +24,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
@@ -31,7 +33,7 @@ import javax.inject.Inject;
 
 public class HttpHelperFunctions {
 
-  @FunctionTemplate(names = {"http_get", "httpGet"},
+  @FunctionTemplate(names = {"http_get_url", "httpGetUrl"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     isVarArg = true)
   public static class HttpGetFunction implements DrillSimpleFunc {
@@ -43,6 +45,9 @@ public class HttpHelperFunctions {
     ComplexWriter writer;
 
     @Inject
+    OptionManager options;
+
+    @Inject
     DrillBuf buffer;
 
     @Workspace
@@ -52,9 +57,9 @@ public class HttpHelperFunctions {
     public void setup() {
       jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
         .defaultSchemaPathColumns()
-        .readNumbersAsDouble(Boolean.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE))
-        .allTextMode(Boolean.getBoolean(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE))
-        .enableNanInf(Boolean.getBoolean(org.apache.drill.exec.ExecConstants.JSON_READER_NAN_INF_NUMBERS))
+        .readNumbersAsDouble(options.getOption(org.apache.drill.exec.ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE).bool_val)
+        .allTextMode(options.getOption(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE).bool_val)
+        .enableNanInf(options.getOption(org.apache.drill.exec.ExecConstants.JSON_READER_NAN_INF_NUMBERS).bool_val)
         .build();
     }
 
@@ -66,11 +71,77 @@ public class HttpHelperFunctions {
         String url = urlReader.readObject().toString();
 
         // Process Positional Arguments
-        java.util.List args = org.apache.drill.exec.udfs.http.HttpHelperUtils.buildParameterList(inputReaders);
+        java.util.List args = org.apache.drill.exec.store.http.udfs.HttpHelperUtils.buildParameterList(inputReaders);
         String finalUrl = org.apache.drill.exec.util.HttpUtils.mapPositionalParameters(url, args);
 
         // Make the API call
         String results = org.apache.drill.exec.util.HttpUtils.makeSimpleGetRequest(finalUrl);
+
+        // If the result string is null or empty, return an empty map
+        if (results == null || results.length() == 0) {
+          // Return empty map
+          org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
+          mapWriter.start();
+          mapWriter.end();
+          return;
+        }
+
+        try {
+          jsonReader.setSource(results);
+          jsonReader.setIgnoreJSONParseErrors(true);  // Reduce number of errors
+          jsonReader.write(writer);
+          buffer = jsonReader.getWorkBuf();
+        } catch (Exception e) {
+          throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
+        }
+      }
+    }
+  }
+
+
+  @FunctionTemplate(names = {"http_get", "httpGet"},
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    isVarArg = true)
+  public static class HttpGetFromStoragePluginFunction implements DrillSimpleFunc {
+
+    @Param
+    FieldReader[] inputReaders;
+
+    @Output
+    ComplexWriter writer;
+
+    @Inject
+    OptionManager options;
+
+    @Inject
+    DrillbitContext drillbitContext;
+
+    @Inject
+    DrillBuf buffer;
+
+    @Workspace
+    org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
+
+    @Override
+    public void setup() {
+      jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
+        .defaultSchemaPathColumns()
+        .readNumbersAsDouble(options.getOption(org.apache.drill.exec.ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE).bool_val)
+        .allTextMode(options.getOption(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE).bool_val)
+        .enableNanInf(options.getOption(org.apache.drill.exec.ExecConstants.JSON_READER_NAN_INF_NUMBERS).bool_val)
+        .build();
+    }
+
+    @Override
+    public void eval() {
+      if (inputReaders.length > 0) {
+        // Get the URL
+        FieldReader urlReader = inputReaders[0];
+        String pluginName = urlReader.readObject().toString();
+
+        // Process Positional Arguments
+        java.util.List args = org.apache.drill.exec.store.http.udfs.HttpHelperUtils.buildParameterList(inputReaders);
+        String results = org.apache.drill.exec.store.http.udfs.HttpHelperUtils.makeAPICall(pluginName, drillbitContext, args);
 
         // If the result string is null or empty, return an empty map
         if (results == null || results.length() == 0) {

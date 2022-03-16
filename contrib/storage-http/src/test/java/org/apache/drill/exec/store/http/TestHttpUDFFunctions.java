@@ -16,25 +16,30 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.udfs.http;
+package org.apache.drill.exec.store.http;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.exec.util.HttpUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -48,17 +53,36 @@ public class TestHttpUDFFunctions extends ClusterTest {
 
   @BeforeClass
   public static void setup() throws Exception {
-    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
-    TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/json/simple.json"), Charsets.UTF_8).read();
-    TEST_COMPLEX_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/json/weather.json"), Charsets.UTF_8).read();
-    startCluster(builder);
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+
+    TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/simple.json"), Charsets.UTF_8).read();
+    TEST_COMPLEX_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/weather.json"), Charsets.UTF_8).read();
+
+    HttpApiConfig mockGithubWithDuplicateParam = HttpApiConfig.builder()
+      .url("http://localhost:47770/orgs/{org}/repos")
+      .method("GET")
+      .params(Arrays.asList("org", "lng", "date"))
+      .dataPath("results")
+      .requireTail(false)
+      .build();
+
+    Map<String, HttpApiConfig> configs = new HashMap<>();
+    configs.put("github", mockGithubWithDuplicateParam);
+
+    HttpStoragePluginConfig mockStorageConfigWithWorkspace =
+      new HttpStoragePluginConfig(false, configs, 2, "globaluser", "globalpass", "",
+        80, "", "", "", null, new PlainCredentialsProvider(ImmutableMap.of(
+        UsernamePasswordCredentials.USERNAME, "globaluser",
+        UsernamePasswordCredentials.PASSWORD, "globalpass")));
+    mockStorageConfigWithWorkspace.setEnabled(true);
+    cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
   }
 
   @Test
   public void testHttpGetWithNoParams() throws Exception {
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE));
-      String sql = "SELECT http_get('" + DUMMY_URL + "') AS result FROM (values(1))";
+      String sql = "SELECT http_get_url('" + DUMMY_URL + "') AS result FROM (values(1))";
 
       RowSet results = client.queryBuilder().sql(sql).rowSet();
       assertEquals(1, results.rowCount());
@@ -67,6 +91,39 @@ public class TestHttpUDFFunctions extends ClusterTest {
       RecordedRequest recordedRequest = server.takeRequest();
       assertEquals("GET", recordedRequest.getMethod());
       assertEquals("http://localhost:47770/", recordedRequest.getRequestUrl().toString());
+    }
+  }
+
+  @Test
+  public void testHttpGetWithParams() throws Exception {
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE));
+      String sql = "SELECT http_get_url('" + DUMMY_URL + "{p1}/{p2}', 'param1', 'param2') AS result FROM (values(1))";
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      assertEquals(1, results.rowCount());
+      results.clear();
+
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertEquals("GET", recordedRequest.getMethod());
+      assertEquals("http://localhost:47770/param1/param2", recordedRequest.getRequestUrl().toString());
+    }
+  }
+
+
+  @Test
+  public void testHttpGetFromPlugin() throws Exception {
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE));
+      String sql = "SELECT http_get('local.github', 'apache') AS result FROM (values(1))";
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      assertEquals(1, results.rowCount());
+      results.clear();
+
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertEquals("GET", recordedRequest.getMethod());
+      assertEquals("http://localhost:47770/orgs/apache/repos", recordedRequest.getRequestUrl().toString());
     }
   }
 

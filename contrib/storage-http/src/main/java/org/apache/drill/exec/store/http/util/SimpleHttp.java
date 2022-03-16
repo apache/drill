@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.http.util;
 
+import com.typesafe.config.Config;
 import okhttp3.Cache;
 import okhttp3.Credentials;
 import okhttp3.FormBody;
@@ -30,6 +31,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -44,6 +46,7 @@ import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.oauth.AccessTokenAuthenticator;
 import org.apache.drill.exec.store.http.oauth.AccessTokenInterceptor;
 import org.apache.drill.exec.store.http.oauth.AccessTokenRepository;
+import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
@@ -55,13 +58,16 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -72,6 +78,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 /**
@@ -86,7 +93,6 @@ public class SimpleHttp {
   public static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
 
   private final OkHttpClient client;
-  private final HttpSubScan scanDefn;
   private final File tempDir;
   private final HttpProxyConfig proxyConfig;
   private final CustomErrorContext errorContext;
@@ -94,7 +100,10 @@ public class SimpleHttp {
   private final HttpUrl url;
   private final PersistentTokenTable tokenTable;
   private final Map<String, String> filters;
+  private final String connection;
+  private final HttpStoragePluginConfig pluginConfig;
   private final HttpApiConfig apiConfig;
+  private final HttpOAuthConfig oAuthConfig;
   private String responseMessage;
   private int responseCode;
   private String responseProtocol;
@@ -103,8 +112,10 @@ public class SimpleHttp {
 
   public SimpleHttp(HttpSubScan scanDefn, HttpUrl url, File tempDir,
     HttpProxyConfig proxyConfig, CustomErrorContext errorContext, Paginator paginator) {
-    this.scanDefn = scanDefn;
     this.apiConfig = scanDefn.tableSpec().connectionConfig();
+    this.pluginConfig = scanDefn.tableSpec().config();
+    this.connection = scanDefn.tableSpec().connection();
+    this.oAuthConfig = scanDefn.tableSpec().config().oAuthConfig();
     this.filters = scanDefn.filters();
     this.url = url;
     this.tempDir = tempDir;
@@ -112,6 +123,48 @@ public class SimpleHttp {
     this.errorContext = errorContext;
     this.tokenTable = scanDefn.tableSpec().getTokenTable();
     this.paginator = paginator;
+    this.client = setupHttpClient();
+  }
+
+  /**
+   * This constructor does not have an HttpSubScan and can be used outside the context of the HttpStoragePlugin.
+   * @param url The URL for an HTTP request
+   * @param tempDir Temp directory for caching
+   * @param proxyConfig Proxy configuration for making API calls
+   * @param errorContext The error context for error messages
+   * @param paginator The {@link Paginator} object for pagination.
+   * @param tokenTable The OAuth token table
+   * @param pluginConfig HttpStoragePlugin configuration.  The plugin obtains OAuth and timeout info from this config.
+   * @param endpointConfig The
+   * @param connection The name of the connection
+   * @param filters A Key/value set of filters and values
+   */
+  public SimpleHttp(HttpUrl url, File tempDir, HttpProxyConfig proxyConfig, CustomErrorContext errorContext,
+                    Paginator paginator, PersistentTokenTable tokenTable, HttpStoragePluginConfig pluginConfig,
+                    HttpApiConfig endpointConfig, String connection, Map<String, String> filters) {
+    this.url = url;
+    this.tempDir = tempDir;
+    this.proxyConfig = proxyConfig;
+
+    if (errorContext == null) {
+      this.errorContext = new EmptyErrorContext() {
+        @Override
+        public void addContext(UserException.Builder builder) {
+          super.addContext(builder);
+          builder.addContext("URL", url.toString());
+        }
+      };
+    } else {
+      this.errorContext = errorContext;
+    }
+
+    this.paginator = paginator;
+    this.tokenTable = tokenTable;
+    this.pluginConfig = pluginConfig;
+    this.apiConfig = endpointConfig;
+    this.connection = connection;
+    this.filters = filters;
+    this.oAuthConfig = pluginConfig.oAuthConfig();
     this.client = setupHttpClient();
   }
 
@@ -124,24 +177,21 @@ public class SimpleHttp {
    *
    * @return OkHttpClient configured server
    */
-  private OkHttpClient setupHttpClient() {
+  protected OkHttpClient setupHttpClient() {
     Builder builder = new OkHttpClient.Builder();
 
     // Set up the HTTP Cache.   Future possibilities include making the cache size and retention configurable but
     // right now it is on or off.  The writer will write to the Drill temp directory if it is accessible and
     // output a warning if not.
-    HttpStoragePluginConfig config = scanDefn.tableSpec().config();
-    if (config.cacheResults()) {
+    if (pluginConfig.cacheResults()) {
       setupCache(builder);
     }
-    HttpApiConfig apiConfig = scanDefn.tableSpec().connectionConfig();
     // If OAuth information is provided, we will assume that the user does not want to use
     // basic authentication
-    HttpOAuthConfig oAuthConfig = scanDefn.tableSpec().config().oAuthConfig();
     if (oAuthConfig != null) {
       // Add interceptors for OAuth2
       logger.debug("Adding OAuth2 Interceptor");
-      AccessTokenRepository repository = new AccessTokenRepository(proxyConfig, config, tokenTable);
+      AccessTokenRepository repository = new AccessTokenRepository(proxyConfig, pluginConfig, tokenTable);
 
       builder.authenticator(new AccessTokenAuthenticator(repository));
       builder.addInterceptor(new AccessTokenInterceptor(repository));
@@ -154,7 +204,7 @@ public class SimpleHttp {
     }
 
     // Set timeouts
-    int timeout = Math.max(1, config.timeout());
+    int timeout = Math.max(1, pluginConfig.timeout());
     builder.connectTimeout(timeout, TimeUnit.SECONDS);
     builder.writeTimeout(timeout, TimeUnit.SECONDS);
     builder.readTimeout(timeout, TimeUnit.SECONDS);
@@ -255,7 +305,6 @@ public class SimpleHttp {
       .url(url);
 
     // The configuration does not allow for any other request types other than POST and GET.
-    HttpApiConfig apiConfig = scanDefn.tableSpec().connectionConfig();
     if (apiConfig.getMethodType() == HttpMethod.POST) {
       // Handle POST requests
       FormBody.Builder formBodyBuilder;
@@ -284,7 +333,7 @@ public class SimpleHttp {
 
     // Log the URL and method to aid in debugging user issues.
     logger.info("Connection: {}, Method {}, URL: {}",
-      scanDefn.tableSpec().connection(),
+      connection,
       apiConfig.getMethodType().name(), url());
 
     // Add headers to request
@@ -344,6 +393,30 @@ public class SimpleHttp {
     }
   }
 
+  public String getResultsFromApiCall() {
+    InputStream inputStream = getInputStream();
+    return new BufferedReader(
+      new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+      .lines()
+      .collect(Collectors.joining("\n"));
+  }
+
+  public static HttpProxyConfig getProxySettings(HttpStoragePluginConfig config, Config drillConfig, HttpUrl url) {
+    final ProxyBuilder builder = HttpProxyConfig.builder()
+      .fromConfigForURL(drillConfig, url.toString());
+    final String proxyType = config.proxyType();
+    if (proxyType != null && !"direct".equals(proxyType)) {
+      UsernamePasswordCredentials credentials = config.getUsernamePasswordCredentials();
+      builder
+        .type(config.proxyType())
+        .host(config.proxyHost())
+        .port(config.proxyPort())
+        .username(credentials.getUsername())
+        .password(credentials.getPassword());
+    }
+    return builder.build();
+  }
+
   /**
    * This function is a replacement for the isSuccessful() function which comes
    * with okhttp3.  The issue is that in some cases, a user may not want Drill to throw
@@ -354,7 +427,7 @@ public class SimpleHttp {
    * @return True if the response code is 200-299 and possibly 400-499, false if other
    */
   private boolean isSuccessful(int responseCode) {
-    if (scanDefn.tableSpec().connectionConfig().errorOn400()) {
+    if (apiConfig.errorOn400()) {
       return responseCode >= 200 && responseCode <= 299;
     } else {
       return ((responseCode >= 200 && responseCode <= 299) ||
@@ -386,7 +459,7 @@ public class SimpleHttp {
     if (hasEndpointCredentials(apiConfig)) {
       return apiConfig.getUsernamePasswordCredentials();
     } else {
-      return scanDefn.tableSpec().config().getUsernamePasswordCredentials();
+      return pluginConfig.getUsernamePasswordCredentials();
     }
   }
 
@@ -684,19 +757,25 @@ public class SimpleHttp {
 
   public static class SimpleHttpBuilder {
     private HttpSubScan scanDefn;
-
     private HttpUrl url;
-
     private File tempDir;
-
     private HttpProxyConfig proxyConfig;
-
     private CustomErrorContext errorContext;
-
     private Paginator paginator;
+    private PersistentTokenTable tokenTable;
+    private HttpStoragePluginConfig pluginConfig;
+    private HttpApiConfig endpointConfig;
+    private HttpOAuthConfig oAuthConfig;
+    private Map<String,String> filters;
+    private String connection;
 
     public SimpleHttpBuilder scanDefn(HttpSubScan scanDefn) {
       this.scanDefn = scanDefn;
+      this.pluginConfig = scanDefn.tableSpec().config();
+      this.endpointConfig = scanDefn.tableSpec().connectionConfig();
+      this.oAuthConfig = scanDefn.tableSpec().config().oAuthConfig();
+      this.tokenTable = scanDefn.tableSpec().getTokenTable();
+      this.filters = scanDefn.filters();
       return this;
     }
 
@@ -725,8 +804,39 @@ public class SimpleHttp {
       return this;
     }
 
+    public SimpleHttpBuilder tokenTable(PersistentTokenTable tokenTable) {
+      this.tokenTable = tokenTable;
+      return this;
+    }
+
+    public SimpleHttpBuilder pluginConfig(HttpStoragePluginConfig config) {
+      this.pluginConfig = config;
+      this.oAuthConfig = config.oAuthConfig();
+      return this;
+    }
+
+    public SimpleHttpBuilder endpointConfig(HttpApiConfig endpointConfig) {
+      this.endpointConfig = endpointConfig;
+      return this;
+    }
+
+    public SimpleHttpBuilder connection(String connection) {
+      this.connection = connection;
+      return this;
+    }
+
+    public SimpleHttpBuilder filters(Map<String,String> filters) {
+      this.filters = filters;
+      return this;
+    }
+
+
     public SimpleHttp build() {
-      return new SimpleHttp(scanDefn, url, tempDir, proxyConfig, errorContext, paginator);
+      if (this.scanDefn != null) {
+        return new SimpleHttp(scanDefn, url, tempDir, proxyConfig, errorContext, paginator);
+      } else {
+        return new SimpleHttp(url, tempDir, proxyConfig, errorContext, paginator, tokenTable, pluginConfig, endpointConfig, connection, filters);
+      }
     }
   }
 }
