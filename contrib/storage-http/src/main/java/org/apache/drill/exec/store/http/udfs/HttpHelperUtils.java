@@ -145,7 +145,7 @@ public class HttpHelperUtils {
     SimpleHttp client = new SimpleHttpBuilder()
       .pluginConfig(pluginConfig)
       .endpointConfig(endpointConfig)
-      .tempDir(new File(ExecConstants.TEMP_DIRECTORIES))
+      .tempDir(new File(context.getConfig().getString(ExecConstants.DRILL_TMP_DIR)))
       .url(HttpUrl.parse(finalUrl))
       .proxyConfig(proxyConfig)
       .tokenTable(plugin.getTokenTable())
