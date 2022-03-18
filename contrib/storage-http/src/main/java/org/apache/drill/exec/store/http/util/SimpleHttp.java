@@ -36,6 +36,8 @@ import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -54,7 +56,6 @@ import org.apache.drill.exec.store.http.oauth.AccessTokenInterceptor;
 import org.apache.drill.exec.store.http.oauth.AccessTokenRepository;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -797,14 +798,14 @@ public class SimpleHttp {
    * @param inputReaders The array of FieldReaders
    * @return A List of Strings containing the values from the FieldReaders.
    */
-  public static List<String> buildParameterList(FieldReader[] inputReaders) {
+  public static List<String> buildParameterList(VarCharHolder[] inputReaders) {
     if (inputReaders == null || inputReaders.length == 0) {
       return Collections.emptyList();
     }
 
     List<String> inputArguments = new ArrayList<>();
     for (int i = 0; i < inputReaders.length; i++) {
-      inputArguments.add(inputReaders[i].readObject().toString());
+      inputArguments.add(StringFunctionHelpers.getStringFromVarCharHolder(inputReaders[i]));
     }
 
     return inputArguments;

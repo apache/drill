@@ -27,7 +27,6 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import javax.inject.Inject;
@@ -43,7 +42,7 @@ public class HttpHelperFunctions {
     VarCharHolder rawInput;
 
     @Param
-    FieldReader[] inputReaders;
+    VarCharHolder[] inputReaders;
 
     @Output
     ComplexWriter writer;
@@ -109,7 +108,7 @@ public class HttpHelperFunctions {
     VarCharHolder rawInput;
 
     @Param
-    FieldReader[] inputReaders;
+    VarCharHolder[] inputReaders;
 
     @Output
     ComplexWriter writer;
