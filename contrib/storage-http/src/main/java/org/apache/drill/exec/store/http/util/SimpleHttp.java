@@ -35,11 +35,17 @@ import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
+import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.StoragePlugin;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.http.HttpApiConfig;
 import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
 import org.apache.drill.exec.store.http.HttpApiConfig.PostLocation;
 import org.apache.drill.exec.store.http.HttpOAuthConfig;
+import org.apache.drill.exec.store.http.HttpStoragePlugin;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
 import org.apache.drill.exec.store.http.HttpSubScan;
 import org.apache.drill.exec.store.http.paginator.Paginator;
@@ -48,6 +54,7 @@ import org.apache.drill.exec.store.http.oauth.AccessTokenInterceptor;
 import org.apache.drill.exec.store.http.oauth.AccessTokenRepository;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -72,6 +79,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -88,7 +96,7 @@ import java.util.stream.Collectors;
  */
 public class SimpleHttp {
   private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
-
+  private static final int DEFAULT_TIMEOUT = 1;
   private static final Pattern URL_PARAM_REGEX = Pattern.compile("\\{(\\w+)(?:=(\\w*))?}");
   public static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
 
@@ -731,6 +739,214 @@ public class SimpleHttp {
       }
     }
     return tempUrl;
+  }
+
+
+  public static String mapPositionalParameters(String rawUrl, List<String> params) {
+    HttpUrl url = HttpUrl.parse(rawUrl);
+
+    // Validate URL
+    if (url == null) {
+      throw UserException.functionError()
+        .message("URL provided must be a valid URL. " + rawUrl + " is not valid.")
+        .build(logger);
+    }
+
+    if (!hasURLParameters(url)) {
+      return url.toString();
+    }
+
+    if (params == null) {
+      throw UserException
+        .parseError()
+        .message("API Query with URL Parameters must be populated.")
+        .build(logger);
+    }
+
+    String tempUrl = decodedURL(url);
+    int startIndex;
+    int endIndex;
+    int counter = 0;
+    while (counter < params.size()) {
+      startIndex = tempUrl.indexOf("{");
+      endIndex = tempUrl.indexOf("}");
+
+      if (startIndex == -1 || endIndex == -1) {
+        break;
+      }
+
+      StringBuffer tempUrlBuffer = new StringBuffer(tempUrl);
+      tempUrlBuffer.replace(startIndex, endIndex + 1, params.get(counter));
+      tempUrl = tempUrlBuffer.toString();
+      counter++;
+    }
+    return tempUrl;
+  }
+
+  /**
+   * Validates a URL.
+   * @param url The input URL.  Should be a string.
+   * @return True of the URL is valid, false if not.
+   */
+  public static boolean validateUrl(String url) {
+    return HttpUrl.parse(url) != null;
+  }
+
+  /**
+   * Accepts a list of input readers and converts that into an ArrayList of Strings
+   * @param inputReaders The array of FieldReaders
+   * @return A List of Strings containing the values from the FieldReaders.
+   */
+  public static List<String> buildParameterList(FieldReader[] inputReaders) {
+    if (inputReaders == null || inputReaders.length == 0) {
+      return Collections.emptyList();
+    }
+
+    List<String> inputArguments = new ArrayList<>();
+    for (int i = 0; i < inputReaders.length; i++) {
+      inputArguments.add(inputReaders[i].readObject().toString());
+    }
+
+    return inputArguments;
+  }
+
+  public static HttpStoragePluginConfig getPluginConfig(String name, DrillbitContext context) throws PluginException {
+    HttpStoragePlugin httpStoragePlugin = getStoragePlugin(context, name);
+    return httpStoragePlugin.getConfig();
+  }
+
+  public static HttpApiConfig getEndpointConfig(String name, HttpStoragePluginConfig pluginConfig) {
+    // Get the plugin name and endpoint name
+    String[] parts = name.split("\\.");
+    if (parts.length < 2) {
+      throw UserException.functionError()
+        .message("You must call this function with a connection name and endpoint.")
+        .build(logger);
+    }
+
+    String endpoint = parts[1];
+    HttpApiConfig endpointConfig = pluginConfig.getConnection(endpoint);
+    if (endpointConfig == null) {
+      throw UserException.functionError()
+        .message("You must call this function with a valid endpoint name.")
+        .build(logger);
+    } else if (endpointConfig.inputType() != "json") {
+      throw UserException.functionError()
+        .message("Http_get only supports API endpoints which return json.")
+        .build(logger);
+    }
+
+    return endpointConfig;
+  }
+
+  private static HttpStoragePlugin getStoragePlugin(DrillbitContext context, String pluginName) {
+    StoragePluginRegistry storage = context.getStorage();
+    try {
+      StoragePlugin pluginInstance = storage.getPlugin(pluginName);
+      if (pluginInstance == null) {
+        throw UserException.functionError()
+          .message(pluginName + " is not a valid plugin.")
+          .build(logger);
+      }
+
+      if (!(pluginInstance instanceof HttpStoragePlugin)) {
+        throw UserException.functionError()
+          .message("You can only include HTTP plugins in this function.")
+          .build(logger);
+      }
+      return (HttpStoragePlugin) pluginInstance;
+    } catch (PluginException e) {
+      throw UserException.functionError()
+        .message("Could not access plugin " + pluginName)
+        .build(logger);
+    }
+  }
+
+
+  /**
+   * This function makes an API call and returns a string of the parsed results. It is used in the http_get() UDF
+   * and retrieves all the configuration parameters contained in the storage plugin and endpoint configuration. The exception
+   * is pagination.  This does not support pagination.
+   * @param schemaPath The path of storage_plugin.endpoint from which the data will be retrieved
+   * @param context {@link DrillbitContext} The context from the current query
+   * @param args An optional list of parameter arguments which will be included in the URL
+   * @return A String of the results.
+   */
+  public static String makeAPICall(String schemaPath, DrillbitContext context, List<String> args) {
+    HttpStoragePluginConfig pluginConfig;
+    HttpApiConfig endpointConfig;
+
+    // Get the plugin name and endpoint name
+    String[] parts = schemaPath.split("\\.");
+    if (parts.length < 2) {
+      throw UserException.functionError()
+        .message("You must call this function with a connection name and endpoint.")
+        .build(logger);
+    }
+    String pluginName = parts[0];
+
+    HttpStoragePlugin plugin = getStoragePlugin(context, pluginName);
+
+    try {
+      pluginConfig = getPluginConfig(pluginName, context);
+      endpointConfig = getEndpointConfig(schemaPath, pluginConfig);
+    } catch (PluginException e) {
+      throw UserException.functionError()
+        .message("Could not access plugin " + pluginName)
+        .build(logger);
+    }
+
+    // Get proxy settings
+    HttpProxyConfig proxyConfig = SimpleHttp.getProxySettings(pluginConfig, context.getConfig(), endpointConfig.getHttpUrl());
+
+    // For this use case, we will replace the URL parameters here, rather than doing it in the SimpleHttp client
+    // because we are using positional mapping rather than k/v pairs for this.
+    String finalUrl;
+    if (SimpleHttp.hasURLParameters(endpointConfig.getHttpUrl())) {
+      finalUrl = SimpleHttp.mapPositionalParameters(endpointConfig.url(), args);
+    } else {
+      finalUrl = endpointConfig.url();
+    }
+
+    // Now get the client
+    SimpleHttp client = new SimpleHttpBuilder()
+      .pluginConfig(pluginConfig)
+      .endpointConfig(endpointConfig)
+      .tempDir(new File(context.getConfig().getString(ExecConstants.DRILL_TMP_DIR)))
+      .url(HttpUrl.parse(finalUrl))
+      .proxyConfig(proxyConfig)
+      .tokenTable(plugin.getTokenTable())
+      .build();
+
+    return client.getResultsFromApiCall();
+  }
+
+  public static OkHttpClient getSimpleHttpClient() {
+    return new OkHttpClient.Builder()
+      .connectTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
+      .writeTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
+      .readTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
+      .build();
+  }
+
+  public static String makeSimpleGetRequest(String url) {
+    OkHttpClient client = getSimpleHttpClient();
+    Request.Builder requestBuilder = new Request.Builder()
+      .url(url);
+
+    // Build the request object
+    Request request = requestBuilder.build();
+
+    // Execute the request
+    try {
+      Response response = client.newCall(request).execute();
+      return response.body().string();
+    } catch (IOException e) {
+      throw UserException
+        .dataReadError(e)
+        .message("HTTP request failed")
+        .build(logger);
+    }
   }
 
   /**

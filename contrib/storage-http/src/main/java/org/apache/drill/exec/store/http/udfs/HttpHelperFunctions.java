@@ -24,6 +24,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -33,10 +34,13 @@ import javax.inject.Inject;
 
 public class HttpHelperFunctions {
 
-  @FunctionTemplate(names = {"http_get_url", "httpGetUrl"},
+  @FunctionTemplate(names = {"http_get", "httpGet"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     isVarArg = true)
   public static class HttpGetFunction implements DrillSimpleFunc {
+
+    @Param
+    VarCharHolder rawInput;
 
     @Param
     FieldReader[] inputReaders;
@@ -65,44 +69,44 @@ public class HttpHelperFunctions {
 
     @Override
     public void eval() {
-      if (inputReaders.length > 0) {
-        // Get the URL
-        FieldReader urlReader = inputReaders[0];
-        String url = urlReader.readObject().toString();
+      // Get the URL
+      String url = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
 
-        // Process Positional Arguments
-        java.util.List args = org.apache.drill.exec.store.http.udfs.HttpHelperUtils.buildParameterList(inputReaders);
-        String finalUrl = org.apache.drill.exec.util.HttpUtils.mapPositionalParameters(url, args);
+      // Process Positional Arguments
+      java.util.List args = org.apache.drill.exec.store.http.util.SimpleHttp.buildParameterList(inputReaders);
+      String finalUrl = org.apache.drill.exec.store.http.util.SimpleHttp.mapPositionalParameters(url, args);
 
-        // Make the API call
-        String results = org.apache.drill.exec.util.HttpUtils.makeSimpleGetRequest(finalUrl);
+      // Make the API call
+      String results = org.apache.drill.exec.store.http.util.SimpleHttp.makeSimpleGetRequest(finalUrl);
 
-        // If the result string is null or empty, return an empty map
-        if (results == null || results.length() == 0) {
-          // Return empty map
-          org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-          mapWriter.start();
-          mapWriter.end();
-          return;
-        }
+      // If the result string is null or empty, return an empty map
+      if (results == null || results.length() == 0) {
+        // Return empty map
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
+        mapWriter.start();
+        mapWriter.end();
+        return;
+      }
 
-        try {
-          jsonReader.setSource(results);
-          jsonReader.setIgnoreJSONParseErrors(true);  // Reduce number of errors
-          jsonReader.write(writer);
-          buffer = jsonReader.getWorkBuf();
-        } catch (Exception e) {
-          throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-        }
+      try {
+        jsonReader.setSource(results);
+        jsonReader.setIgnoreJSONParseErrors(true);  // Reduce number of errors
+        jsonReader.write(writer);
+        buffer = jsonReader.getWorkBuf();
+      } catch (Exception e) {
+        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
     }
   }
 
 
-  @FunctionTemplate(names = {"http_get", "httpGet"},
+  @FunctionTemplate(names = {"http_request", "httpRequest"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
     isVarArg = true)
   public static class HttpGetFromStoragePluginFunction implements DrillSimpleFunc {
+
+    @Param(constant = true)
+    VarCharHolder rawInput;
 
     @Param
     FieldReader[] inputReaders;
@@ -134,32 +138,29 @@ public class HttpHelperFunctions {
 
     @Override
     public void eval() {
-      if (inputReaders.length > 0) {
-        // Get the URL
-        FieldReader urlReader = inputReaders[0];
-        String pluginName = urlReader.readObject().toString();
+      // Get the plugin name
+      String pluginName = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
 
-        // Process Positional Arguments
-        java.util.List args = org.apache.drill.exec.store.http.udfs.HttpHelperUtils.buildParameterList(inputReaders);
-        String results = org.apache.drill.exec.store.http.udfs.HttpHelperUtils.makeAPICall(pluginName, drillbitContext, args);
+      // Process Positional Arguments
+      java.util.List args = org.apache.drill.exec.store.http.util.SimpleHttp.buildParameterList(inputReaders);
+      String results = org.apache.drill.exec.store.http.util.SimpleHttp.makeAPICall(pluginName, drillbitContext, args);
 
-        // If the result string is null or empty, return an empty map
-        if (results == null || results.length() == 0) {
-          // Return empty map
-          org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-          mapWriter.start();
-          mapWriter.end();
-          return;
-        }
+      // If the result string is null or empty, return an empty map
+      if (results == null || results.length() == 0) {
+        // Return empty map
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
+        mapWriter.start();
+        mapWriter.end();
+        return;
+      }
 
-        try {
-          jsonReader.setSource(results);
-          jsonReader.setIgnoreJSONParseErrors(true);  // Reduce number of errors
-          jsonReader.write(writer);
-          buffer = jsonReader.getWorkBuf();
-        } catch (Exception e) {
-          throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
-        }
+      try {
+        jsonReader.setSource(results);
+        jsonReader.setIgnoreJSONParseErrors(true);  // Reduce number of errors
+        jsonReader.write(writer);
+        buffer = jsonReader.getWorkBuf();
+      } catch (Exception e) {
+        throw new org.apache.drill.common.exceptions.DrillRuntimeException("Error while converting from JSON. ", e);
       }
     }
   }

@@ -24,8 +24,8 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.store.http.util.SimpleHttp;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
-import org.apache.drill.exec.util.HttpUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
@@ -81,7 +81,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
   public void testHttpGetWithNoParams() throws Exception {
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE));
-      String sql = "SELECT http_get_url('" + DUMMY_URL + "') AS result FROM (values(1))";
+      String sql = "SELECT http_get('" + DUMMY_URL + "') AS result FROM (values(1))";
 
       RowSet results = client.queryBuilder().sql(sql).rowSet();
       assertEquals(1, results.rowCount());
@@ -97,7 +97,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
   public void testHttpGetWithParams() throws Exception {
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE));
-      String sql = "SELECT http_get_url('" + DUMMY_URL + "{p1}/{p2}', 'param1', 'param2') AS result FROM (values(1))";
+      String sql = "SELECT http_get('" + DUMMY_URL + "{p1}/{p2}', 'param1', 'param2') AS result FROM (values(1))";
 
       RowSet results = client.queryBuilder().sql(sql).rowSet();
       assertEquals(1, results.rowCount());
@@ -113,7 +113,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
   public void testHttpGetFromPlugin() throws Exception {
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE));
-      String sql = "SELECT http_get('local.github', 'apache') AS result FROM (values(1))";
+      String sql = "SELECT http_request('local.github', 'apache') AS result FROM (values(1))";
 
       RowSet results = client.queryBuilder().sql(sql).rowSet();
       assertEquals(1, results.rowCount());
@@ -128,7 +128,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
   @Test
   public void testHttpGetWithInvalidPlugin() {
     try {
-      String sql = "SELECT http_get('nope.nothere', 'apache') AS result FROM (values(1))";
+      String sql = "SELECT http_request('nope.nothere', 'apache') AS result FROM (values(1))";
       client.queryBuilder().sql(sql).run();
       fail();
     } catch (Exception e) {
@@ -143,7 +143,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
     params.add("foo");
     params.add("bar");
     params.add("baz");
-    assertEquals("http://somesite.com/foo/bar/path/baz", HttpUtils.mapPositionalParameters(url, params));
+    assertEquals("http://somesite.com/foo/bar/path/baz", SimpleHttp.mapPositionalParameters(url, params));
   }
 
   /**
