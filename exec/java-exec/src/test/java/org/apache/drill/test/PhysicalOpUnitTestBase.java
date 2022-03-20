@@ -399,7 +399,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
   public static Iterator<RecordReader> getJsonReadersFromInputFiles(DrillFileSystem fs, List<Path> inputPaths, FragmentContext fragContext, List<SchemaPath> columnsToRead) {
     List<RecordReader> readers = new ArrayList<>();
     for (Path inputPath : inputPaths) {
-      readers.add(new JSONRecordReader(fragContext, inputPath, fs, columnsToRead));
+      readers.add(new JSONRecordReader(fragContext, inputPath, fs, columnsToRead, null));
     }
     return readers.iterator();
   }

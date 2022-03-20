@@ -54,8 +54,10 @@ public class CredentialProviderUtils {
    * @param clientID The OAuth Client ID.  This is provided by the application during signup.
    * @param clientSecret The OAUth Client Secret.  This is provided by the application during signup.
    * @param tokenURI The URI from which you swap the auth code for access and refresh tokens.
-   * @param username  Optional username for proxy or other services
+   * @param username  Optional username for other services
    * @param password  Optional password for proxy or other services
+   * @param proxyUsername Optional username for a proxy server.
+   * @param proxyPassword Optional password for a proxy server.
    * @param credentialsProvider  The credential store which retains the credentials.
    * @return A credential provider with the access tokens
    */
@@ -65,6 +67,8 @@ public class CredentialProviderUtils {
     String tokenURI,
     String username,
     String password,
+    String proxyUsername,
+    String proxyPassword,
     CredentialsProvider credentialsProvider) {
 
     if (credentialsProvider != null) {
@@ -85,6 +89,12 @@ public class CredentialProviderUtils {
     }
     if (tokenURI != null) {
       mapBuilder.put(OAuthTokenCredentials.TOKEN_URI, tokenURI);
+    }
+    if (proxyUsername != null) {
+      mapBuilder.put(OAuthTokenCredentials.PROXY_USERNAME, proxyUsername);
+    }
+    if (proxyPassword != null) {
+      mapBuilder.put(OAuthTokenCredentials.PROXY_PASSWORD, proxyPassword);
     }
 
     return new PlainCredentialsProvider(mapBuilder.build());

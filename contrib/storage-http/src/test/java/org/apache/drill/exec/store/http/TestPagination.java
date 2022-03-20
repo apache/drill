@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.http;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.DrillFileUtils;
@@ -47,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class TestPagination extends ClusterTest {
   private static final int MOCK_SERVER_PORT = 8092;
@@ -113,7 +115,7 @@ public class TestPagination extends ClusterTest {
     configs.put("github", githubConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-      new HttpStoragePluginConfig(false, configs, 10, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+      new HttpStoragePluginConfig(false, configs, 10, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("live", mockStorageConfigWithWorkspace);
   }
@@ -193,7 +195,7 @@ public class TestPagination extends ClusterTest {
     configs.put("xml_paginator_url_params", mockXmlConfigWithPaginatorAndUrlParams);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
-      new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
+      new HttpStoragePluginConfig(false, configs, 2, null, null, "", 80, "", "", "", null, PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER);
     mockStorageConfigWithWorkspace.setEnabled(true);
     cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
   }
@@ -349,6 +351,10 @@ public class TestPagination extends ClusterTest {
         b.release();
       }
       assertEquals(6, count);
+
+      // Verify that there are no random headers being inserted if authorization is not defined.
+      RecordedRequest recordedRequest = server.takeRequest();
+      assertNull(recordedRequest.getHeader("Authorization"));
     }
   }
 

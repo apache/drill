@@ -282,6 +282,22 @@ If the `authType` is set to `basic`, `username` and `password` must be set in th
 
 `password`: The password for basic authentication.
 
+##### Global Credentials
+If you have an HTTP plugin with multiple endpoints that all use the same credentials, you can set the `authType` to `basic` and set global 
+credentials in the storage plugin configuration. 
+
+Simply add the following to the storage plugin configuration:
+```json
+ "credentialsProvider": {
+    "credentialsProviderType": "PlainCredentialsProvider",
+    "credentials": {
+      "username": "user1",
+      "password": "user1Pass"
+    }
+  }
+```
+Note that the `authType` still must be set to `basic` and that any endpoint credentials will override the global credentials.
+
 #### Limiting Results
 Some APIs support a query parameter which is used to limit the number of results returned by the API.  In this case you can set the `limitQueryParam` config variable to the query parameter name and Drill will automatically include this in your query.  For instance, if you have an API which supports a limit query parameter called `maxRecords` and you set the abovementioned config variable then execute the following query:
   
@@ -643,3 +659,37 @@ The HTTP plugin includes four implicit fields which can be used for debugging.  
 * `_response_message`:  The response message.
 * `_response_protocol`:  The response protocol.
 * `_response_url`:  The actual URL sent to the API. 
+
+## Joining Data
+There are some situations where a user might want to join data with an API result and the pushdowns prevent that from happening.  The main situation where this happens is when 
+an API has parameters which are part of the URL AND these parameters are dynamically populated via a join. 
+
+In this case, there are two functions `http_get_url` and `http_get` which you can use to faciliate these joins. 
+
+* `http_request('<storage_plugin_name>', <params>)`:  This function accepts a storage plugin as input and an optional list of parameters to include in a URL.
+* `http_get(<url>, <params>)`:  This function works in the same way except that it does not pull any configuration information from existing storage plugins.  The input url for 
+  the `http_get` function must be a valid URL. 
+
+### Example Queries
+Let's say that you have a storage plugin called `github` with an endpoint called `repos` which points to the url: https://github.com/orgs/{org}/repos.  It is easy enough to 
+write a query like this:
+
+```sql
+SELECT * 
+FROM github.repos
+WHERE org='apache'
+```
+However, if you had a file with organizations and wanted to join this with the API, the query would fail.  Using the functions listed above you could get this data as follows:
+
+```sql
+SELECT http_request('github.repos', `org`)
+FROM dfs.`some_data.csvh`
+```
+or
+```sql
+SELECT http_get('https://github.com/orgs/{org}/repos', `org`)
+FROM dfs.`some_data.csvh`
+```
+
+** WARNING:  This functionality will execute an HTTP Request FOR EVERY ROW IN YOUR DATA.  Use with caution. **
+

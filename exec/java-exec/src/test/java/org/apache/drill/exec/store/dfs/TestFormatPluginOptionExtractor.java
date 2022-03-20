@@ -64,7 +64,7 @@ public class TestFormatPluginOptionExtractor extends BaseTest {
           );
           break;
         case "json":
-          assertEquals(d.typeName, "(type: String)", d.presentParams());
+          assertEquals(d.typeName, "(type: String, allTextMode: Boolean, readNumbersAsDouble: Boolean, skipMalformedJSONRecords: Boolean, escapeAnyChar: Boolean, nanInf: Boolean)", d.presentParams());
           break;
         case "sequencefile":
           assertEquals(d.typeName, "(type: String)", d.presentParams());

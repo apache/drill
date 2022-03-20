@@ -23,7 +23,7 @@
   <parent>
     <artifactId>exec-parent</artifactId>
     <groupId>org.apache.drill.exec</groupId>
-    <version>1.21.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>drill-java-exec</artifactId>
   <name>Drill : Exec : Java Execution Engine</name>
@@ -658,6 +658,16 @@
       we don't ship it so as not to break startup on windows or arm -->
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-jaxrs2</artifactId>
+      <version>${swagger.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-jaxrs2-servlet-initializer-v2</artifactId>
+      <version>${swagger.version}</version>
+    </dependency>
   </dependencies>
 
   <profiles>
@@ -767,8 +777,26 @@
         </dependency>
       </dependencies>
     </profile>
+    <profile>
+      <!-- Only include a Brotli codec in test scope on Linux / amd64, see PARQUET-1975 -->
+      <id>linux-amd64</id>
+      <activation>
+        <os>
+          <arch>amd64</arch>
+          <name>Linux</name>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>com.github.rdblue</groupId>
+          <artifactId>brotli-codec</artifactId>
+          <version>0.1.1</version>
+          <!-- this codec is not shipped because it breaks startup on unsupported platforms -->
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
   </profiles>
-
   <build>
     <plugins>
       <plugin>
@@ -853,7 +881,8 @@
           <execution>
             <id>generate-fmpp</id>
             <phase>generate-sources</phase>
-            <goals><goal>generate</goal></goals>
+            <goals>
+              <goal>generate</goal></goals>
             <configuration>
               <config>${project.build.directory}/codegen/config.fmpp</config>
               <output>${project.build.directory}/generated-sources</output>
@@ -968,7 +997,6 @@
       </plugins>
     </pluginManagement>
   </build>
-
 
 
 </project>
