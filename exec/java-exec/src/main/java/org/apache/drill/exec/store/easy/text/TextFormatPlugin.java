@@ -110,10 +110,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatConfig> {
     }
   }
 
-  public TextFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
-     this(name, context, fsConf, storageConfig, new TextFormatConfig());
-  }
-
   public TextFormatPlugin(String name, DrillbitContext context,
       Configuration fsConf, StoragePluginConfig config,
       TextFormatConfig formatPluginConfig) {

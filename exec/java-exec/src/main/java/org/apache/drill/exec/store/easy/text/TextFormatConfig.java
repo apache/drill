@@ -61,17 +61,13 @@ public class TextFormatConfig implements FormatPluginConfig {
       @JsonProperty("extractHeader") Boolean extractHeader) {
     this.extensions = extensions == null ?
         ImmutableList.of() : ImmutableList.copyOf(extensions);
-    this.lineDelimiter = lineDelimiter == null ? "\n" : lineDelimiter;
+    this.lineDelimiter = Strings.isNullOrEmpty(lineDelimiter) ? "\n" : lineDelimiter;
     this.fieldDelimiter = Strings.isNullOrEmpty(fieldDelimiter) ? ',' : fieldDelimiter.charAt(0);
     this.quote = Strings.isNullOrEmpty(quote) ? '"' : quote.charAt(0);
     this.escape = Strings.isNullOrEmpty(escape) ? '"' : escape.charAt(0);
     this.comment = Strings.isNullOrEmpty(comment) ? '#' : comment.charAt(0);
     this.skipFirstLine = skipFirstLine == null ? false : skipFirstLine;
     this.extractHeader = extractHeader == null ? false : extractHeader;
-  }
-
-  public TextFormatConfig() {
-    this(null, null, null, null, null, null, null, null);
   }
 
   public List<String> getExtensions() { return extensions; }
