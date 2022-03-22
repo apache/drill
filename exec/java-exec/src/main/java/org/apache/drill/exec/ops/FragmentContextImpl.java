@@ -342,6 +342,11 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   }
 
   @Override
+  public DrillbitContext getDrillbitContext() {
+    return context;
+  }
+
+  @Override
   public DrillbitEndpoint getForemanEndpoint() {
     return fragment.getForeman();
   }

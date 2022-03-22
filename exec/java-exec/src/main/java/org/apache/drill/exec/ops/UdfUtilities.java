@@ -20,6 +20,7 @@ package org.apache.drill.exec.ops;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
@@ -42,6 +43,7 @@ public interface UdfUtilities {
           .put(ContextInformation.class, "getContextInformation")
           .put(OptionManager.class, "getOptions")
           .put(BufferManager.class, "getManagedBufferManager")
+          .put(DrillbitContext.class, "getDrillbitContext")
           .build();
 
 
@@ -88,6 +90,13 @@ public interface UdfUtilities {
    * @return - an object for exploring partitions of all available schemas
    */
   PartitionExplorer getPartitionExplorer();
+
+  /**
+   * The Drillbit context allows UDFs to view storage information and other pieces
+   * of information about the running system.  See the http_get implementation for details.
+   * @return - an object for accessing drillbit information such as storage configs.
+   */
+  DrillbitContext getDrillbitContext();
 
   /**
    * Works with value holders cache which holds constant value and its wrapper by type.

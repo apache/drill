@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.Operation;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -59,7 +61,7 @@ import java.util.stream.Collectors;
 @Path("/")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
 public class QueryResources {
-   private static final Logger logger = LoggerFactory.getLogger(QueryResources.class);
+  private static final Logger logger = LoggerFactory.getLogger(QueryResources.class);
 
   @Inject
   UserAuthEnabled authEnabled;
@@ -96,6 +98,7 @@ public class QueryResources {
   @Path("/query.json")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public StreamingOutput submitQueryJSON(QueryWrapper query) throws Exception {
 
     /*
@@ -119,7 +122,7 @@ public class QueryResources {
     return new StreamingOutput() {
       @Override
       public void write(OutputStream output)
-          throws IOException, WebApplicationException {
+        throws IOException, WebApplicationException {
         try {
           runner.sendResults(output);
         } catch (IOException e) {
@@ -146,18 +149,18 @@ public class QueryResources {
       // transformed to HTML. This can be memory-intensive for larger
       // queries.
       QueryWrapper wrapper = new RestQueryBuilder()
-          .query(query)
-          .queryType(queryType)
-          .rowLimit(autoLimit)
-          .userName(userName)
-          .defaultSchema(defaultSchema)
-          .sessionOptions(readOptionsFromForm(form))
-          .build();
+        .query(query)
+        .queryType(queryType)
+        .rowLimit(autoLimit)
+        .userName(userName)
+        .defaultSchema(defaultSchema)
+        .sessionOptions(readOptionsFromForm(form))
+        .build();
       final QueryResult result = new RestQueryRunner(wrapper,
-              work, webUserConnection)
+          work, webUserConnection)
         .run();
       List<Integer> rowsPerPageValues = work.getContext().getConfig().getIntList(
-          ExecConstants.HTTP_WEB_CLIENT_RESULTSET_ROWS_PER_PAGE_VALUES);
+        ExecConstants.HTTP_WEB_CLIENT_RESULTSET_ROWS_PER_PAGE_VALUES);
       Collections.sort(rowsPerPageValues);
       final String rowsPerPageValuesAsStr = Joiner.on(",").join(rowsPerPageValues);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/result.ftl", sc, new TabularResult(result, rowsPerPageValuesAsStr));
@@ -178,12 +181,12 @@ public class QueryResources {
     Map<String, String> options = new HashMap<>();
     for (Map.Entry<String, List<String>> pair : form.asMap().entrySet()) {
       List<String> values = pair.getValue();
-       if (values.isEmpty()) {
-        continue;
+        if (values.isEmpty()) {
+          continue;
       }
       if (values.size() > 1) {
         throw new BadRequestException(String.format(
-            "Multiple values given for option '%s'", pair.getKey()));
+          "Multiple values given for option '%s'", pair.getKey()));
       }
 
       options.put(pair.getKey(), values.get(0));
