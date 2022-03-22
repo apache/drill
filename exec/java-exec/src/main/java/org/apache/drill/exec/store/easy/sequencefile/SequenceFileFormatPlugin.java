@@ -17,16 +17,15 @@
  */
 package org.apache.drill.exec.store.easy.sequencefile;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader.EarlyEofException;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileScanLifecycleBuilder;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.hadoop.conf.Configuration;
@@ -52,7 +51,7 @@ public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileForma
         .extensions(pluginConfig.getExtensions())
         .fsConf(fsConf)
         .readerOperatorType(OPERATOR_TYPE)
-        .scanVersion(ScanFrameworkVersion.EVF_V1)
+        .scanVersion(ScanFrameworkVersion.EVF_V2)
         .supportsLimitPushdown(true)
         .supportsProjectPushdown(true)
         .defaultName(SequenceFileFormatConfig.NAME)
@@ -70,24 +69,14 @@ public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileForma
     }
 
     @Override
-    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new SequenceFileBatchReader(config, scan);
+    public ManagedReader newReader(FileSchemaNegotiator negotiator) throws EarlyEofException {
+      return new SequenceFileBatchReader(config, scan, negotiator);
     }
   }
 
   @Override
-  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options)
-      throws ExecutionSetupException {
-    return new SequenceFileBatchReader(formatConfig, scan);
-  }
-
-  @Override
-  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) throws ExecutionSetupException {
-    FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new SequenceFileReaderFactory(formatConfig, scan));
-
-    initScanBuilder(builder, scan);
+  protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
     builder.nullType(Types.optional(MinorType.VARCHAR));
-    return builder;
+    builder.readerFactory(new SequenceFileReaderFactory(formatConfig, scan));
   }
 }

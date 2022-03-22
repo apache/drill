@@ -117,6 +117,8 @@ public class RdbmsMetastore implements Metastore {
   private void initTables(DataSource dataSource) {
     try (Connection connection = dataSource.getConnection()) {
       JdbcConnection jdbcConnection = new JdbcConnection(connection);
+      // TODO It is recommended to use the new function if the following issue is resolved.
+      // https://github.com/liquibase/liquibase/issues/2349
       Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(jdbcConnection);
       ClassLoaderResourceAccessor resourceAccessor = new ClassLoaderResourceAccessor();
       try (Liquibase liquibase = new Liquibase(LIQUIBASE_CHANGELOG_FILE, resourceAccessor, database)) {

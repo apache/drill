@@ -305,6 +305,11 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   }
 
   @Override
+  public DrillbitContext getDrillbitContext() {
+    return drillbitContext;
+  }
+
+  @Override
   public PartitionExplorer getPartitionExplorer() {
     return new PartitionExplorerImpl(getRootSchema());
   }

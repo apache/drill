@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -29,8 +30,11 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.easy.json.JSONFormatPlugin.JSONFormatConfig;
 import org.apache.drill.exec.store.easy.json.JsonProcessor.ReadState;
 import org.apache.drill.exec.store.easy.json.reader.CountingJsonReader;
 import org.apache.drill.exec.vector.BaseValueVector;
@@ -49,6 +53,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private static final Logger logger = LoggerFactory.getLogger(JSONRecordReader.class);
 
   public static final long DEFAULT_ROWS_PER_BATCH = BaseValueVector.INITIAL_VALUE_ALLOCATION;
+  private static final OptionScope MIN_SCOPE = OptionScope.SESSION;
 
   private VectorContainerWriter writer;
 
@@ -69,6 +74,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private long parseErrorCount;
   private final boolean skipMalformedJSONRecords;
   private final boolean printSkippedMalformedJSONRecordLineNumber;
+  private final JSONFormatConfig config;
   private ReadState write;
   private InputStream inputStream;
 
@@ -78,38 +84,51 @@ public class JSONRecordReader extends AbstractRecordReader {
    * @param inputPath the input path
    * @param fileSystem a Drill file system wrapper around the file system implementation
    * @param columns path names of columns/subfields to read
-   * @throws OutOfMemoryException
+   * @param config The JSONFormatConfig for the storage plugin
+   * @throws OutOfMemoryException If there is insufficient memory, Drill will throw an Out of Memory Exception
    */
   public JSONRecordReader(FragmentContext fragmentContext, Path inputPath, DrillFileSystem fileSystem,
-      List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, inputPath, null, fileSystem, columns, false);
+      List<SchemaPath> columns, JSONFormatConfig config) throws OutOfMemoryException {
+    this(fragmentContext, inputPath, null, fileSystem, columns, false, config);
   }
 
   /**
-   * Create a new JSON Record Reader that uses a in memory materialized JSON stream.
+   * Create a new JSON Record Reader that uses an in memory materialized JSON stream.
    * @param fragmentContext the Drill fragment
    * @param embeddedContent embedded content
    * @param fileSystem a Drill file system wrapper around the file system implementation
    * @param columns path names of columns/subfields to read
-   * @throws OutOfMemoryException
+   * @throws OutOfMemoryException If Drill runs out of memory, OME will be thrown
    */
   public JSONRecordReader(FragmentContext fragmentContext, JsonNode embeddedContent, DrillFileSystem fileSystem,
       List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, null, embeddedContent, fileSystem, columns, false);
+    this(fragmentContext, null, embeddedContent, fileSystem, columns, false,
+      new JSONFormatConfig(null,
+        embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR),
+        embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR)));
   }
 
   /**
    * Create a JSON Record Reader that uses an InputStream directly
    * @param fragmentContext the Drill fragment
    * @param columns path names of columns/subfields to read
-   * @throws OutOfMemoryException
+   * @throws OutOfMemoryException If there is insufficient memory, Drill will throw an Out of Memory Exception
    */
   public JSONRecordReader(FragmentContext fragmentContext, List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, null, null, null, columns, true);
+    this(fragmentContext, null, null, null, columns, true,
+      new JSONFormatConfig(null,
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR)));
   }
 
   private JSONRecordReader(FragmentContext fragmentContext, Path inputPath, JsonNode embeddedContent,
-      DrillFileSystem fileSystem, List<SchemaPath> columns, boolean hasInputStream) {
+      DrillFileSystem fileSystem, List<SchemaPath> columns, boolean hasInputStream, JSONFormatConfig config) {
 
     Preconditions.checkArgument(
         (inputPath == null && embeddedContent != null && !hasInputStream) ||
@@ -118,23 +137,89 @@ public class JSONRecordReader extends AbstractRecordReader {
       "One of inputPath, inputStream or embeddedContent must be set but not all."
         );
 
+    OptionManager contextOpts = fragmentContext.getOptions();
+
     if (inputPath != null) {
       this.hadoopPath = inputPath;
     } else {
       this.embeddedContent = embeddedContent;
     }
 
+    // If the config is null, create a temporary one with the global options.
+    if (config == null) {
+      this.config = new JSONFormatConfig(null,
+        embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR),
+        embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR));
+    } else {
+      this.config = config;
+    }
+
     this.fileSystem = fileSystem;
     this.fragmentContext = fragmentContext;
-    // only enable all text mode if we aren't using embedded content mode.
-    this.enableAllTextMode = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ALL_TEXT_MODE_VALIDATOR);
-    this.enableNanInf = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR);
-    this.enableEscapeAnyChar = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR);
-    this.readNumbersAsDouble = embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR);
+
+    this.enableAllTextMode = allTextMode(contextOpts);
+    this.enableNanInf = nanInf(contextOpts);
+    this.enableEscapeAnyChar = escapeAnyChar(contextOpts);
+    this.readNumbersAsDouble = readNumbersAsDouble(contextOpts);
     this.unionEnabled = embeddedContent == null && fragmentContext.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
-    this.skipMalformedJSONRecords = fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR);
+    this.skipMalformedJSONRecords = skipMalformedJSONRecords(contextOpts);
     this.printSkippedMalformedJSONRecordLineNumber = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG_VALIDATOR);
     setColumns(columns);
+  }
+
+  /**
+   * Returns the value of the all text mode.  Values set in the format config will override global values.
+   * @return The value of allTextMode
+   */
+  private boolean allTextMode(OptionManager contextOpts) {
+    // only enable all text mode if we aren't using embedded content mode.
+    boolean allTextMode = (Boolean) ObjectUtils.firstNonNull(
+      contextOpts.getOption(ExecConstants.JSON_ALL_TEXT_MODE).getValueMinScope(MIN_SCOPE),
+      config.getAllTextMode(),
+      contextOpts.getBoolean(ExecConstants.JSON_ALL_TEXT_MODE)
+    );
+
+    return embeddedContent == null && allTextMode;
+  }
+
+  private boolean readNumbersAsDouble(OptionManager contextOpts) {
+    boolean numbersAsDouble = (Boolean) ObjectUtils.firstNonNull(
+      contextOpts.getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE).getValueMinScope(MIN_SCOPE),
+      config.getReadNumbersAsDouble(),
+      contextOpts.getBoolean(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE)
+    );
+
+    return embeddedContent == null && numbersAsDouble;
+  }
+
+  private boolean skipMalformedJSONRecords(OptionManager contextOpts) {
+    boolean skipMalformedRecords = (Boolean) ObjectUtils.firstNonNull(
+      contextOpts.getOption(ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG).getValueMinScope(MIN_SCOPE),
+      config.getSkipMalformedJSONRecords(),
+      contextOpts.getBoolean(ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG)
+    );
+    return embeddedContent == null && skipMalformedRecords;
+  }
+
+  private boolean escapeAnyChar(OptionManager contextOpts) {
+    boolean allowNaN = (Boolean) ObjectUtils.firstNonNull(
+      contextOpts.getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR).getValueMinScope(MIN_SCOPE),
+      config.getEscapeAnyChar(),
+      contextOpts.getBoolean(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR)
+    );
+    return embeddedContent == null && allowNaN;
+  }
+
+  private boolean nanInf(OptionManager contextOpts) {
+    boolean allowNaN = (Boolean) ObjectUtils.firstNonNull(
+      contextOpts.getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS).getValueMinScope(MIN_SCOPE),
+      config.getNanInf(),
+      contextOpts.getBoolean(ExecConstants.JSON_READER_NAN_INF_NUMBERS)
+    );
+    return embeddedContent == null && allowNaN;
   }
 
   @Override

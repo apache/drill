@@ -42,6 +42,8 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.Operation;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.ExecConstants;
@@ -90,6 +92,7 @@ public class StatusResources {
   @GET
   @Path(StatusResources.PATH_STATUS_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Pair<String, String> getStatusJSON() {
     return new ImmutablePair<>("status", "Running!");
   }
@@ -104,6 +107,7 @@ public class StatusResources {
   @GET
   @Path(StatusResources.PATH_METRICS + "/{hostname}")
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public String getMetrics(@PathParam("hostname") String hostname) throws Exception {
     URL metricsURL = WebUtils.getDrillbitURL(work, request, hostname, StatusResources.PATH_METRICS);
     return WebUtils.doHTTPRequest(new HttpGet(metricsURL.toURI()), work.getContext().getConfig());
@@ -122,7 +126,7 @@ public class StatusResources {
     Collections.sort(options, new Comparator<OptionWrapper>() {
       @Override
       public int compare(OptionWrapper o1, OptionWrapper o2) {
-         return o1.name.compareTo(o2.name);
+        return o1.name.compareTo(o2.name);
       }
     });
     return options;
@@ -132,6 +136,7 @@ public class StatusResources {
   @Path(StatusResources.PATH_OPTIONS_JSON)
   @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public List<OptionWrapper> getSystemPublicOptionsJSON() {
     return getSystemOptionsJSONHelper(false);
   }
@@ -181,8 +186,8 @@ public class StatusResources {
   @Consumes("application/x-www-form-urlencoded")
   @Produces(MediaType.TEXT_HTML)
   public Viewable updateSystemOption(@FormParam("name") String name,
-                                   @FormParam("value") String value,
-                                   @FormParam("kind") String kind) {
+                                     @FormParam("value") String value,
+                                     @FormParam("kind") String kind) {
     SystemOptionManager optionManager = work.getContext()
       .getOptionManager();
 
