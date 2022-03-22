@@ -40,19 +40,19 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-@JsonTypeName(FixedwidthFormatPlugin.DEFAULT_NAME)
+@JsonTypeName(FixedWidthFormatPlugin.DEFAULT_NAME)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-public class FixedwidthFormatConfig implements FormatPluginConfig {
-  private static final Logger logger = LoggerFactory.getLogger(FixedwidthFormatConfig.class);
+public class FixedWidthFormatConfig implements FormatPluginConfig {
+  private static final Logger logger = LoggerFactory.getLogger(FixedWidthFormatConfig.class);
   private final List<String> extensions;
-  private final List<FixedwidthFieldConfig> fields;
+  private final List<FixedWidthFieldConfig> fields;
   private final List<TypeProtos.MinorType> validDataTypes = Arrays.asList(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
     TypeProtos.MinorType.DATE, TypeProtos.MinorType.TIME, TypeProtos.MinorType.TIMESTAMP, TypeProtos.MinorType.FLOAT4,
     TypeProtos.MinorType.FLOAT8, TypeProtos.MinorType.BIGINT, TypeProtos.MinorType.VARDECIMAL);
 
   @JsonCreator
-  public FixedwidthFormatConfig(@JsonProperty("extensions") List<String> extensions,
-                                @JsonProperty("fields") List<FixedwidthFieldConfig> fields) {
+  public FixedWidthFormatConfig(@JsonProperty("extensions") List<String> extensions,
+                                @JsonProperty("fields") List<FixedWidthFieldConfig> fields) {
     this.extensions = extensions == null ? Collections.singletonList("fwf") : ImmutableList.copyOf(extensions);
     Collections.sort(fields);
     this.fields = fields;
@@ -65,7 +65,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
     return extensions;
   }
 
-  public List<FixedwidthFieldConfig> getFields() {
+  public List<FixedWidthFieldConfig> getFields() {
     return fields;
   }
 
@@ -82,7 +82,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    FixedwidthFormatConfig other = (FixedwidthFormatConfig) obj;
+    FixedWidthFormatConfig other = (FixedWidthFormatConfig) obj;
     return Objects.equals(extensions, other.extensions)
             && Objects.equals(fields, other.fields);
   }
@@ -108,7 +108,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
       return result;
     }
 
-    for (FixedwidthFieldConfig field : fields) {
+    for (FixedWidthFieldConfig field : fields) {
       result.add(field.getName());
     }
     return result;
@@ -121,7 +121,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
       return result;
     }
 
-    for (FixedwidthFieldConfig field : fields) {
+    for (FixedWidthFieldConfig field : fields) {
       result.add(field.getIndex());
     }
     return result;
@@ -134,7 +134,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
       return result;
     }
 
-    for (FixedwidthFieldConfig field : fields) {
+    for (FixedWidthFieldConfig field : fields) {
       result.add(field.getWidth());
     }
     return result;
@@ -147,7 +147,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
       return result;
     }
 
-    for (FixedwidthFieldConfig field : fields) {
+    for (FixedWidthFieldConfig field : fields) {
       result.add(field.getType());
     }
     return result;
@@ -155,7 +155,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
 
   @JsonIgnore
   public void setFieldTypes(int i) {
-    for (FixedwidthFieldConfig field : fields) {
+    for (FixedWidthFieldConfig field : fields) {
       if (field.getIndex() == i) {
         field.setType();
       }
@@ -178,28 +178,28 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
         throw UserException
           .validationError()
           .message("Blank field name detected.")
-          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .addContext("Plugin", FixedWidthFormatPlugin.DEFAULT_NAME)
           .build(logger);
       }
       if (name.length() > 1024) {
         throw UserException
           .validationError()
           .message("Exceeds maximum length of 1024 characters: " + name.substring(0, 1024))
-          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .addContext("Plugin", FixedWidthFormatPlugin.DEFAULT_NAME)
           .build(logger);
       }
       if (!Pattern.matches("[a-zA-Z]\\w*", name)) {
         throw UserException
           .validationError()
           .message("Column Name '" + name + "' is not valid. Must contain letters, numbers, and underscores only.")
-          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .addContext("Plugin", FixedWidthFormatPlugin.DEFAULT_NAME)
           .build(logger);
       }
       if (uniqueNames.contains(name)){
         throw UserException
           .validationError()
           .message("Duplicate column name: " + name)
-          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .addContext("Plugin", FixedWidthFormatPlugin.DEFAULT_NAME)
           .build(logger);
       }
       uniqueNames.add(name);
@@ -211,14 +211,14 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
         throw UserException
           .validationError()
           .message("Invalid index for field '" + fieldNames.get(i) + "' at index: " + fieldIndices.get(i) + ". Index must be > 0.")
-          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .addContext("Plugin", FixedWidthFormatPlugin.DEFAULT_NAME)
           .build(logger);
       }
       else if (fieldIndices.get(i) <= prevIndexAndWidth) {
         throw UserException
           .validationError()
           .message("Overlapping fields: " + fieldNames.get(i-1) + " and " + fieldNames.get(i))
-          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .addContext("Plugin", FixedWidthFormatPlugin.DEFAULT_NAME)
           .build(logger);
       }
 
@@ -227,7 +227,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
           throw UserException
             .validationError()
             .message("Width for field '" + fieldNames.get(i) + "' is invalid. Widths must be greater than 0.")
-            .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+            .addContext("Plugin", FixedWidthFormatPlugin.DEFAULT_NAME)
             .build(logger);
       }
         prevIndexAndWidth = fieldIndices.get(i) + fieldWidths.get(i);
@@ -240,7 +240,7 @@ public class FixedwidthFormatConfig implements FormatPluginConfig {
         throw UserException
           .validationError()
           .message("Field type " + fieldTypes.get(i) + " is not valid. Please check for typos and ensure the required data type is included in the Fixed Width Format Plugin.")
-          .addContext("Plugin", FixedwidthFormatPlugin.DEFAULT_NAME)
+          .addContext("Plugin", FixedWidthFormatPlugin.DEFAULT_NAME)
           .build(logger);
       }
     }

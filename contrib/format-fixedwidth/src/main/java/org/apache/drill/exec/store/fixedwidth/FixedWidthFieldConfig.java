@@ -30,7 +30,7 @@ import java.util.Objects;
 
 @JsonTypeName("fixedwidthReaderFieldDescription")
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-public class FixedwidthFieldConfig implements Comparable<FixedwidthFieldConfig> {
+public class FixedWidthFieldConfig implements Comparable<FixedWidthFieldConfig> {
 
   private final String name;
   private final int index;
@@ -38,7 +38,7 @@ public class FixedwidthFieldConfig implements Comparable<FixedwidthFieldConfig> 
   private TypeProtos.MinorType type;
   private final String dateTimeFormat;
 
-  public FixedwidthFieldConfig(@JsonProperty("name") String name,
+  public FixedWidthFieldConfig(@JsonProperty("name") String name,
                                @JsonProperty("index") int index,
                                @JsonProperty("width") int width,
                                @JsonProperty("type") TypeProtos.MinorType type) {
@@ -46,7 +46,7 @@ public class FixedwidthFieldConfig implements Comparable<FixedwidthFieldConfig> 
   }
 
   @JsonCreator
-  public FixedwidthFieldConfig(@JsonProperty("name") String name,
+  public FixedWidthFieldConfig(@JsonProperty("name") String name,
                                @JsonProperty("index") int index,
                                @JsonProperty("width") int width,
                                @JsonProperty("type") TypeProtos.MinorType type,
@@ -85,7 +85,7 @@ public class FixedwidthFieldConfig implements Comparable<FixedwidthFieldConfig> 
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    FixedwidthFieldConfig other = (FixedwidthFieldConfig) obj;
+    FixedWidthFieldConfig other = (FixedWidthFieldConfig) obj;
     return Objects.equals(name, other.name)
       && Objects.equals(index, other.index)
       && Objects.equals(width, other.width)
@@ -105,7 +105,7 @@ public class FixedwidthFieldConfig implements Comparable<FixedwidthFieldConfig> 
   }
 
   @Override
-  public int compareTo(FixedwidthFieldConfig o) {
-    return new Integer(this.getIndex()).compareTo(o.getIndex());
+  public int compareTo(FixedWidthFieldConfig o) {
+    return Integer.compare(this.getIndex(), o.getIndex());
   }
 }
