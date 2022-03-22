@@ -80,6 +80,15 @@ public class TextFormatConfig implements FormatPluginConfig {
   @JsonProperty("extractHeader")
   public boolean isHeaderExtractionEnabled() { return extractHeader; }
 
+  /**
+   * Used for JSON serialization to handle \u0000 value which
+   * Jackson converts to a null string.
+   */
+  @JsonProperty("fieldDelimiter")
+  public String firldDeliterString() {
+    return Character.toString(fieldDelimiter);
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(extensions, lineDelimiter, fieldDelimiter,
