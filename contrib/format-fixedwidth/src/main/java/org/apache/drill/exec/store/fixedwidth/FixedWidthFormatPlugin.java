@@ -21,46 +21,48 @@ package org.apache.drill.exec.store.fixedwidth;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader.EarlyEofException;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileScanLifecycleBuilder;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
+import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin.ScanFrameworkVersion;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
+
 import org.apache.hadoop.conf.Configuration;
 
 
-public class FixedwidthFormatPlugin extends EasyFormatPlugin<FixedwidthFormatConfig> {
+public class FixedWidthFormatPlugin extends EasyFormatPlugin<FixedWidthFormatConfig> {
 
   protected static final String DEFAULT_NAME = "fixedwidth";
 
-  private static class FixedwidthReaderFactory extends FileReaderFactory {
+  private static class FixedWidthReaderFactory extends FileReaderFactory {
 
-    private final FixedwidthFormatConfig config;
+    private final FixedWidthFormatConfig config;
     private final int maxRecords;
 
-    public FixedwidthReaderFactory(FixedwidthFormatConfig config, int maxRecords) {
+    public FixedWidthReaderFactory(FixedWidthFormatConfig config, int maxRecords) {
       this.config = config;
       this.maxRecords = maxRecords;
     }
 
     @Override
-    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new FixedwidthBatchReader(config, maxRecords);
+    public ManagedReader newReader(FileSchemaNegotiator negotiator) throws EarlyEofException {
+      return new FixedWidthBatchReader(negotiator, config, maxRecords);
     }
   }
 
-  public FixedwidthFormatPlugin(String name,
+  public FixedWidthFormatPlugin(String name,
                                 DrillbitContext context,
                                 Configuration fsConf,
                                 StoragePluginConfig storageConfig,
-                                FixedwidthFormatConfig formatConfig) {
+                                FixedWidthFormatConfig formatConfig) {
     super(name, easyConfig(fsConf, formatConfig), context, storageConfig, formatConfig);
   }
 
-  private static EasyFormatConfig easyConfig(Configuration fsConf, FixedwidthFormatConfig pluginConfig) {
+  private static EasyFormatConfig easyConfig(Configuration fsConf, FixedWidthFormatConfig pluginConfig) {
     return EasyFormatConfig.builder()
       .readable(true)
       .writable(false)
@@ -70,23 +72,16 @@ public class FixedwidthFormatPlugin extends EasyFormatPlugin<FixedwidthFormatCon
       .extensions(pluginConfig.getExtensions())
       .fsConf(fsConf)
       .defaultName(DEFAULT_NAME)
-      .useEnhancedScan(true)
+//      .useEnhancedScan(true)
+      .scanVersion(ScanFrameworkVersion.EVF_V2)
       .supportsLimitPushdown(true)
       .build();
   }
 
   @Override
-  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
-    EasySubScan scan, OptionManager options) {
-    return new FixedwidthBatchReader(getConfig(), scan.getMaxRecords());
+  protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    builder.readerFactory(new FixedWidthReaderFactory(formatConfig, scan.getMaxRecords()));
   }
 
-  @Override
-  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
-    FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new FixedwidthReaderFactory(getConfig(), scan.getMaxRecords()));
-    initScanBuilder(builder, scan);
-    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
-    return builder;
-  }
 }
