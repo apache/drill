@@ -13,10 +13,9 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.hadoop.mapred.FileSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.epam.parso.impl;
 
 import java.io.BufferedReader;
-import java.io.IOException;
+//import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
@@ -51,9 +50,9 @@ public class FixedWidthBatchReader implements ManagedReader {
   }
 
   private ResultSetLoader open(FileSchemaNegotiator negotiator) {
-    this.split = (FileSplit) negotiator.split();
+//    this.split = (FileSplit) negotiator.split();
     this.errorContext = negotiator.parentErrorContext();
-    openFile(negotiator);
+//    openFile(negotiator);
 
     try {
       negotiator.tableSchema(buildSchema(), true);
@@ -70,20 +69,20 @@ public class FixedWidthBatchReader implements ManagedReader {
     return this.loader;
   }
 
-  private void openFile(FileSchemaNegotiator negotiator) {
-    try {
-      this.fsStream = negotiator.file().fileSystem().openPossiblyCompressedStream(this.split.getPath());
-      sasFileReader = new SasFileReaderImpl(this.fsStream);
-      firstRow = sasFileReader.readNext();
-    } catch (IOException e) {
-      throw UserException
-        .dataReadError(e)
-        .message("Unable to open Fixed Width File %s", this.split.getPath())
-        .addContext(e.getMessage())
-        .addContext(this.errorContext)
-        .build(FixedWidthBatchReader.logger);
-    }
-  }
+//  private void openFile(FileSchemaNegotiator negotiator) {
+//    try {
+//      this.fsStream = negotiator.file().fileSystem().openPossiblyCompressedStream(this.split.getPath());
+//      sasFileReader = new SasFileReaderImpl(this.fsStream);
+//      firstRow = sasFileReader.readNext();
+//    } catch (IOException e) {
+//      throw UserException
+//        .dataReadError(e)
+//        .message("Unable to open Fixed Width File %s", this.split.getPath())
+//        .addContext(e.getMessage())
+//        .addContext(this.errorContext)
+//        .build(FixedWidthBatchReader.logger);
+//    }
+//  }
 
   private TupleMetadata buildSchema() {
     SchemaBuilder builder = new SchemaBuilder();
