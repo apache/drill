@@ -115,7 +115,7 @@ public class TestCsvWithHeaders extends BaseCsvTest {
    * <p>
    * Prior research revealed that most DB engines can handle a null
    * empty result set: no schema, no rows. For example:
-   * <br><tt>SELECT * FROM VALUES ();</tt><br>
+   * <br>{@code SELECT * FROM VALUES ()}<br>
    * The implementation tested here follows that pattern.
    *
    * @see TestCsvWithoutHeaders#testEmptyFile()
@@ -127,7 +127,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     assertNull(rowSet);
 
     // Try again with COUNT(*)
-
     long count = client.queryBuilder().sql(COUNT_STAR, EMPTY_FILE).singletonLong();
     assertEquals(0, count);
   }
@@ -343,7 +342,7 @@ public class TestCsvWithHeaders extends BaseCsvTest {
   }
 
   /**
-   * V3 allows the use of partition columns, even for a non-partitioned file.
+   * Drill allows the use of partition columns, even for a non-partitioned file.
    * The columns are null of type Nullable VARCHAR. This is area of Drill
    * is a bit murky: it seems reasonable to support partition columns consistently
    * rather than conditionally based on the structure of the input.
@@ -603,8 +602,8 @@ public class TestCsvWithHeaders extends BaseCsvTest {
       client.queryBuilder().sql(sql, COLUMNS_FILE_NAME).run();
     } catch (UserRemoteException e) {
       assertTrue(e.getMessage().contains(
-          "VALIDATION ERROR: Unexpected `columns`[x]; columns array not enabled"));
-      assertTrue(e.getMessage().contains("Format plugin: text"));
+          "VALIDATION ERROR: Unexpected `columns`[x]; file has headers or schema"));
+      assertTrue(e.getMessage().contains("Format plugin type: text"));
       assertTrue(e.getMessage().contains("Plugin config name: csv"));
       assertTrue(e.getMessage().contains("Extract headers: true"));
       assertTrue(e.getMessage().contains("Skip first line: false"));
@@ -639,8 +638,8 @@ public class TestCsvWithHeaders extends BaseCsvTest {
       // Note: this error is caught before reading any tables,
       // so no table information is available.
       assertTrue(e.getMessage().contains(
-          "VALIDATION ERROR: Unexpected `columns`[x]; columns array not enabled"));
-      assertTrue(e.getMessage().contains("Format plugin: text"));
+          "VALIDATION ERROR: Unexpected `columns`[x]; file has headers or schema"));
+      assertTrue(e.getMessage().contains("Format plugin type: text"));
       assertTrue(e.getMessage().contains("Plugin config name: csv"));
       assertTrue(e.getMessage().contains("Extract headers: true"));
       assertTrue(e.getMessage().contains("Skip first line: false"));
@@ -683,6 +682,33 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .build();
     RowSetUtilities.verify(expected, actual);
+  }
+
+  /**
+   * Test the LIMIT operation. No way to verify here that pushdown worked,
+   * do that by setting a breakpoint.
+   */
+  @Test
+  public void testLimit() throws IOException {
+    String fileName = buildBiggishFile();
+    {
+      String stmt = makeStatement(fileName) + " LIMIT 10";
+      RowSet actual = client.queryBuilder().sql(stmt).rowSet();
+      assertEquals(10, actual.rowCount());
+      RowSetReader reader = actual.reader();
+      reader.next();
+      assertEquals("1", reader.scalar("id").getString());
+      actual.clear();
+    }
+    {
+      String stmt = makeStatement(fileName) + " LIMIT 10 OFFSET 20";
+      RowSet actual = client.queryBuilder().sql(stmt).rowSet();
+      assertEquals(10, actual.rowCount());
+      RowSetReader reader = actual.reader();
+      reader.next();
+      assertEquals("21", reader.scalar("id").getString());
+      actual.clear();
+    }
   }
 
   private String makeStatement(String fileName) {

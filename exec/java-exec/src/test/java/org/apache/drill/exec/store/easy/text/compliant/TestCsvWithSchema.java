@@ -101,6 +101,62 @@ public class TestCsvWithSchema extends BaseCsvTest {
   }
 
   /**
+   * An empty file with a schema is valid. Although there is no header line,
+   * we've provided a schema so we know about at least those columns.
+   * In the no-schema case, we return no batches at all. In the with-schema
+   * case, we return an empty batch with schema.
+   * <p>
+   * The analogy is:
+   * <br>{@code SELECT * FROM foo WHERE 1 = 0}<br>
+   * The implementation tested here follows that pattern.
+   * @throws Exception
+   *
+   * @see TestCsvWithoutHeaders#testEmptyFile()
+   * @see TestCsvWithHeaders#testEmptyFile()
+   */
+  @Test
+  public void testEmptyFile() throws Exception {
+    String tablePath = buildTable("empty", new String[] {});
+    try {
+      enableSchemaSupport();
+      String schemaSql = "create schema (a VARCHAR) " +
+          "for table " + tablePath;
+      run(schemaSql);
+      String sql = "SELECT * FROM " + tablePath;
+      RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .addNullable("a", MinorType.VARCHAR)
+          .buildSchema();
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+          .build();
+      RowSetUtilities.verify(expected, actual);
+    } finally {
+      resetSchemaSupport();
+    }
+  }
+
+  @Test
+  public void testEmptyFileInline() throws Exception {
+    String tablePath = buildTable("empty", new String[] {});
+    try {
+      enableSchemaSupport();
+      String sql = "SELECT * FROM TABLE(" + tablePath +
+          "(schema=>'inline=(`a` VARCHAR)'))";
+      RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .addNullable("a", MinorType.VARCHAR)
+          .buildSchema();
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+          .build();
+      RowSetUtilities.verify(expected, actual);
+    } finally {
+      resetSchemaSupport();
+    }
+  }
+
+  /**
    * Test the simplest possible case: a table with one file:
    * <ul>
    * <li>Column in projection, table, and schema</li>
@@ -120,6 +176,36 @@ public class TestCsvWithSchema extends BaseCsvTest {
           "for table " + tablePath;
       run(schemaSql);
       String sql = "SELECT `intcol`, `datecol`, `str`, `dub`, `extra`, `missing` FROM " + tablePath;
+      RowSet actual = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("intcol", MinorType.INT)      // Has a schema
+          .add("datecol", MinorType.DATE)    // Has a schema
+          .add("str", MinorType.VARCHAR)     // No schema, retains type
+          .add("dub", MinorType.FLOAT8)      // Has a schema
+          .add("extra", MinorType.BIGINT)    // No data, has default value
+          .add("missing", MinorType.VARCHAR) // No data, no schema, default type
+          .buildSchema();
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+          .addRow(10, LocalDate.of(2019, 3, 20), "it works!", 1234.5D, 20L, "")
+          .build();
+      RowSetUtilities.verify(expected, actual);
+    } finally {
+      resetSchemaSupport();
+    }
+  }
+
+  @Test
+  public void testBasicInlineSchema() throws Exception {
+    String tablePath = buildTable("basic2", basicFileContents);
+
+    try {
+      enableSchemaSupport();
+      String sql =
+          "SELECT `intcol`, `datecol`, `str`, `dub`, `extra`, `missing`\n" +
+          " FROM TABLE(" + tablePath +
+          " (schema=>'inline=(intcol int not null, datecol date not null, " +
+          "     `dub` double not null, `extra` bigint not null default ''20'')'))";
       RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
@@ -1024,7 +1110,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
           "col_int integer not null default '10', " +
           "col_bigint bigint not null default '10', " +
           "col_double double not null default '10.5', " +
-          "col_float float not null default '10.5f', " +
+          "col_float float not null default '10.5', " +
           "col_var varchar not null default 'foo', " +
           "col_boolean boolean not null default '1', " +
           "col_interval interval not null default 'P10D', " +
@@ -1053,7 +1139,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
       LocalDate ld = LocalDate.of(2019, 3, 28);
       Instant ts = LocalDateTime.of(ld, lt).toInstant(ZoneOffset.UTC);
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow(10, 10L, 10.5, 10.5f, "foo", true, new Period(0).plusDays(10),
+          .addRow(10, 10L, 10.5, 10.5D, "foo", true, new Period(0).plusDays(10),
               lt, ld, ts, "1")
           .build();
       RowSetUtilities.verify(expected, actual);
