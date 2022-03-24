@@ -19,6 +19,7 @@ package org.apache.drill.exec.store;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.ops.ViewExpansionContext;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.server.options.OptionValue;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -79,6 +80,10 @@ public class SchemaConfig {
     return userName;
   }
 
+  public UserCredentials getQueryUserCredentials() {
+    return provider.getQueryUserCredentials();
+  }
+
   /**
    * @return Should ignore if authorization errors are reported while {@link SchemaPlus}
    * instances interact with the underlying storage.
@@ -104,6 +109,8 @@ public class SchemaConfig {
     SchemaPlus getRootSchema(String userName);
 
     String getQueryUserName();
+
+    UserCredentials getQueryUserCredentials();
 
     OptionValue getOption(String optionKey);
   }

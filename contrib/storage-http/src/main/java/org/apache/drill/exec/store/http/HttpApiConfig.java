@@ -113,7 +113,7 @@ public class HttpApiConfig {
   @JsonProperty
   private final HttpPaginatorConfig paginator;
 
-  protected boolean directCredentials;
+  protected boolean inlineCredentials;
 
   public static HttpApiConfigBuilder builder() {
     return new HttpApiConfigBuilder();
@@ -196,7 +196,7 @@ public class HttpApiConfig {
       && xmlDataLevel == that.xmlDataLevel
       && errorOn400 == that.errorOn400
       && verifySSLCert == that.verifySSLCert
-      && directCredentials == that.directCredentials
+      && inlineCredentials == that.inlineCredentials
       && Objects.equals(url, that.url)
       && Objects.equals(method, that.method)
       && Objects.equals(postBody, that.postBody)
@@ -216,7 +216,7 @@ public class HttpApiConfig {
   public int hashCode() {
     return Objects.hash(url, requireTail, method, postBody, headers, params, dataPath,
       authType, inputType, xmlDataLevel, limitQueryParam, errorOn400, jsonOptions, verifySSLCert,
-      credentialsProvider, paginator, directCredentials, postParameterLocation);
+      credentialsProvider, paginator, inlineCredentials, postParameterLocation);
   }
 
   @Override
@@ -239,7 +239,7 @@ public class HttpApiConfig {
       .field("verifySSLCert", verifySSLCert)
       .field("credentialsProvider", credentialsProvider)
       .field("paginator", paginator)
-      .field("directCredentials", directCredentials)
+      .field("inlineCredentials", inlineCredentials)
       .toString();
   }
 
@@ -327,7 +327,7 @@ public class HttpApiConfig {
     this.xmlDataLevel = Math.max(1, builder.xmlDataLevel);
     this.errorOn400 = builder.errorOn400;
     this.credentialsProvider = CredentialProviderUtils.getCredentialsProvider(builder.userName, builder.password, builder.credentialsProvider);
-    this.directCredentials = builder.credentialsProvider == null;
+    this.inlineCredentials = builder.credentialsProvider == null;
 
     this.limitQueryParam = builder.limitQueryParam;
     this.paginator = builder.paginator;
@@ -335,7 +335,7 @@ public class HttpApiConfig {
 
   @JsonProperty
   public String userName() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getUsername();
     }
     return null;
@@ -343,7 +343,7 @@ public class HttpApiConfig {
 
   @JsonProperty
   public String password() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getPassword();
     }
     return null;
@@ -371,7 +371,7 @@ public class HttpApiConfig {
 
   @JsonProperty
   public CredentialsProvider credentialsProvider() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return null;
     }
     return credentialsProvider;
@@ -417,7 +417,7 @@ public class HttpApiConfig {
 
     private HttpPaginatorConfig paginator;
 
-    private boolean directCredentials;
+    private boolean inlineCredentials;
 
     public HttpApiConfig build() {
       return new HttpApiConfig(this);
@@ -538,8 +538,8 @@ public class HttpApiConfig {
       return this;
     }
 
-    public HttpApiConfigBuilder directCredentials(boolean directCredentials) {
-      this.directCredentials = directCredentials;
+    public HttpApiConfigBuilder inlineCredentials(boolean inlineCredentials) {
+      this.inlineCredentials = inlineCredentials;
       return this;
     }
   }

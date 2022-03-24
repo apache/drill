@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.jdbc;
 
 import java.util.Properties;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -30,11 +31,14 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialectFactoryImpl;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig.AuthMode;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,31 +50,45 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private static final Logger logger = LoggerFactory.getLogger(JdbcStoragePlugin.class);
 
   private final JdbcStorageConfig config;
-  private final HikariDataSource dataSource;
-  private final SqlDialect dialect;
-  private final DrillJdbcConvention convention;
-  private final JdbcDialect jdbcDialect;
+  // DataSources keyed on userName
+  private final Map<String, HikariDataSource> dataSources = new ConcurrentHashMap<>();
 
   public JdbcStoragePlugin(JdbcStorageConfig config, DrillbitContext context, String name) {
     super(context, name);
     this.config = config;
-    this.dataSource = initDataSource(config);
-    this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, dataSource);
-    this.convention = new DrillJdbcConvention(dialect, name, this);
-    this.jdbcDialect = JdbcDialectFactory.getJdbcDialect(this, config.getUrl());
   }
 
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
-    this.jdbcDialect.registerSchemas(config, parent);
+    DataSource dataSource = getDataSource(config.getQueryUserCredentials());
+    SqlDialect dialect = getDialect(dataSource);
+    getJdbcDialect(dialect).registerSchemas(config, parent);
   }
 
-  public JdbcDialect getJdbcDialect() {
-    return jdbcDialect;
+  public DataSource getDataSource(UserCredentials userCredentials) {
+    String connUserName = config.authMode == AuthMode.SHARED_USER
+      ? ImpersonationUtil.getProcessUserName()
+      : userCredentials.getUserName();
+
+    return dataSources.computeIfAbsent(
+      connUserName,
+      ds -> initDataSource(this.config, userCredentials)
+    );
   }
 
-  public DrillJdbcConvention getConvention() {
-    return convention;
+  public SqlDialect getDialect(DataSource dataSource) {
+    return JdbcSchema.createDialect(
+      SqlDialectFactoryImpl.INSTANCE,
+      dataSource
+    );
+  }
+
+  public JdbcDialect getJdbcDialect(SqlDialect dialect) {
+    return JdbcDialectFactory.getJdbcDialect(this, dialect);
+  }
+
+  public DrillJdbcConvention getConvention(SqlDialect dialect) {
+    return JdbcConventionFactory.getJdbcConvention(this, dialect);
   }
 
   @Override
@@ -88,22 +106,16 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     return config.isWritable();
   }
 
-  public DataSource getDataSource() {
-    return dataSource;
-  }
-
-  public SqlDialect getDialect() {
-    return dialect;
-  }
-
   @Override
   public Set<RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext context) {
-    return convention.getRules();
+    UserCredentials userCreds = context.getContextInformation().getQueryUserCredentials();
+    DataSource dataSource = getDataSource(userCreds);
+    return getConvention(getDialect(dataSource)).getRules();
   }
 
   @Override
-  public void close() {
-    AutoCloseables.closeSilently(dataSource);
+  public void close() throws Exception {
+    AutoCloseables.close(dataSources.values());
   }
 
   /**
@@ -118,7 +130,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
    * @throws UserException if unable to configure Hikari data source
    */
   @VisibleForTesting
-  static HikariDataSource initDataSource(JdbcStorageConfig config) {
+  static HikariDataSource initDataSource(JdbcStorageConfig config, UserCredentials userCredentials) {
     try {
       Properties properties = new Properties();
 
@@ -127,8 +139,8 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       systems with connections which mostly remain idle.  A data source that is present in N
       storage configs replicated over P drillbits with a HikariCP minimumIdle value of Q will
       have N×P×Q connections made to it eagerly.
-        The trade off of lazier connections is increased latency should there be a spike in user
-      queries involving a JDBC data source.  When comparing the defaults that follow with e.g. the
+        The trade off of lazier connections is increased latency after periods of inactivity in
+      which the pool has emptied.  When comparing the defaults that follow with e.g. the
       HikariCP defaults, bear in mind that the context here is OLAP, not OLTP.  It is normal
       for queries to run for a long time and to be separated by long intermissions. Users who
       prefer eager to lazy connections remain free to overwrite the following defaults in their
@@ -153,9 +165,10 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
       hikariConfig.setDriverClassName(config.getDriver());
       hikariConfig.setJdbcUrl(config.getUrl());
-      UsernamePasswordCredentials credentials = config.getUsernamePasswordCredentials();
+      UsernamePasswordCredentials credentials = config.getJdbcCredentials(userCredentials);
       hikariConfig.setUsername(credentials.getUsername());
       hikariConfig.setPassword(credentials.getPassword());
+
       /*
       The following serves as a hint to the driver, which *might* enable database
       optimizations.  Unfortunately some JDBC drivers without read-only support,

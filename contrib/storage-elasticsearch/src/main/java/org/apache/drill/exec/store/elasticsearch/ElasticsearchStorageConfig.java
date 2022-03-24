@@ -57,14 +57,14 @@ public class ElasticsearchStorageConfig extends AbstractSecuredStoragePluginConf
   }
 
   public String getUsername() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getUsername();
     }
     return null;
   }
 
   public String getPassword() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getPassword();
     }
     return null;

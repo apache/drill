@@ -68,7 +68,7 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
 
   @JsonProperty("username")
   public String getUsername() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getUsername();
     }
     return null;
@@ -76,7 +76,7 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
 
   @JsonProperty("password")
   public String getPassword() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getPassword();
     }
     return null;

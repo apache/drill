@@ -37,6 +37,7 @@ import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -146,12 +147,23 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     return plannerSettings;
   }
 
-  public UserSession getSession() { return session; }
+  @Override
+  public UserCredentials getQueryUserCredentials() {
+    return session.getCredentials();
+  }
 
   @Override
-  public BufferAllocator getAllocator() { return allocator; }
+  public BufferAllocator getAllocator() {
+    return allocator;
+  }
 
-  public QueryId getQueryId( ) { return queryId; }
+  public UserSession getSession() {
+    return session;
+  }
+
+  public QueryId getQueryId() {
+    return queryId;
+  }
 
   /**
    * Return reference to default schema instance in a schema tree. Each {@link org.apache.calcite.schema.SchemaPlus}

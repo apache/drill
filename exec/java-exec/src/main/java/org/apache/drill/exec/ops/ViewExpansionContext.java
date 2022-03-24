@@ -23,6 +23,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 
 import com.carrotsearch.hppc.ObjectIntHashMap;
@@ -74,7 +75,7 @@ public class ViewExpansionContext {
 
   private final SchemaConfigInfoProvider schemaConfigInfoProvider;
   private final int maxChainedUserHops;
-  private final String queryUser;
+  private final UserCredentials queryUserCredentials;
   private final ObjectIntHashMap<String> userTokens = new ObjectIntHashMap<>();
   private final boolean impersonationEnabled;
 
@@ -85,7 +86,7 @@ public class ViewExpansionContext {
   public ViewExpansionContext(DrillConfig config, SchemaConfigInfoProvider schemaConfigInfoProvider) {
     this.schemaConfigInfoProvider = schemaConfigInfoProvider;
     this.maxChainedUserHops = config.getInt(IMPERSONATION_MAX_CHAINED_USER_HOPS);
-    this.queryUser = schemaConfigInfoProvider.getQueryUserName();
+    this.queryUserCredentials = schemaConfigInfoProvider.getQueryUserCredentials();
     this.impersonationEnabled = config.getBoolean(ExecConstants.IMPERSONATION_ENABLED);
   }
 
@@ -103,7 +104,7 @@ public class ViewExpansionContext {
    */
   public ViewExpansionToken reserveViewExpansionToken(String viewOwner) {
     int totalTokens = 1;
-    if (!viewOwner.equals(queryUser)) {
+    if (!viewOwner.equals(queryUserCredentials.getUserName())) {
       // We want to track the tokens only if the "viewOwner" is not same as the "queryUser".
       if (userTokens.containsKey(viewOwner)) {
         // If the user already exists, we don't need to validate the limit on maximum user hops in chained impersonation
@@ -131,7 +132,7 @@ public class ViewExpansionContext {
   private void releaseViewExpansionToken(ViewExpansionToken token) {
     final String viewOwner = token.viewOwner;
 
-    if (viewOwner.equals(queryUser)) {
+    if (viewOwner.equals(queryUserCredentials.getUserName())) {
       // If the token owner and queryUser are same, no need to track the token release.
       return;
     }

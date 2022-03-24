@@ -78,7 +78,7 @@ public class PhoenixStoragePluginConfig extends AbstractSecuredStoragePluginConf
 
   @JsonProperty("userName")
   public String getUsername() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getUsername();
     }
     return null;
@@ -87,7 +87,7 @@ public class PhoenixStoragePluginConfig extends AbstractSecuredStoragePluginConf
   @JsonIgnore
   @JsonProperty("password")
   public String getPassword() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getPassword();
     }
     return null;

@@ -28,14 +28,20 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonTypeName(JdbcStorageConfig.NAME)
 @JsonFilter("passwordFilter")
 public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
+
+  private static final Logger logger = LoggerFactory.getLogger(JdbcStorageConfig.class);
 
   public static final String NAME = "jdbc";
   public static final int DEFAULT_MAX_WRITER_BATCH_SIZE = 10000;
@@ -57,14 +63,19 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       @JsonProperty("writable") boolean writable,
       @JsonProperty("sourceParameters") Map<String, Object> sourceParameters,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
+      @JsonProperty("authMode") String authMode,
       @JsonProperty("writerBatchSize") int writerBatchSize) {
-    super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider), credentialsProvider == null);
+    super(
+      CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
+      credentialsProvider == null,
+      authMode != null ? AuthMode.valueOf(authMode.toUpperCase()) : AuthMode.SHARED_USER
+    );
     this.driver = driver;
     this.url = url;
     this.writable = writable;
     this.caseInsensitiveTableNames = caseInsensitiveTableNames;
     this.sourceParameters = sourceParameters == null ? Collections.emptyMap() : sourceParameters;
-    this.writerBatchSize = writerBatchSize == 0 ? writerBatchSize = DEFAULT_MAX_WRITER_BATCH_SIZE : writerBatchSize;
+    this.writerBatchSize = writerBatchSize == 0 ? DEFAULT_MAX_WRITER_BATCH_SIZE : writerBatchSize;
   }
 
   public String getDriver() {
@@ -79,20 +90,6 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
 
   public int getWriterBatchSize() { return writerBatchSize; }
 
-  public String getUsername() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getUsername();
-    }
-    return null;
-  }
-
-  public String getPassword() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getPassword();
-    }
-    return null;
-  }
-
   @JsonProperty("caseInsensitiveTableNames")
   public boolean areTableNamesCaseInsensitive() {
     return caseInsensitiveTableNames;
@@ -103,8 +100,18 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   }
 
   @JsonIgnore
-  public UsernamePasswordCredentials getUsernamePasswordCredentials() {
-    return new UsernamePasswordCredentials(credentialsProvider);
+  public UsernamePasswordCredentials getJdbcCredentials(UserCredentials userCredentials) {
+    switch (authMode) {
+      case SHARED_USER:
+        return new UsernamePasswordCredentials(credentialsProvider);
+      case USER_TRANSLATION:
+        //TODO: replace me with a lookup against a credential store with per-user credentials support.
+        return new UsernamePasswordCredentials(credentialsProvider);
+      default:
+        throw UserException.connectionError()
+          .message("This storage plugin does not support auth mode: %s", authMode)
+          .build(logger);
+    }
   }
 
   @Override

@@ -17,16 +17,23 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseJdbcDialect;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class JdbcDialectFactory {
   public static final String JDBC_CLICKHOUSE_PREFIX = "jdbc:clickhouse";
 
-  public static JdbcDialect getJdbcDialect(JdbcStoragePlugin plugin, String url) {
-    if (url.startsWith(JDBC_CLICKHOUSE_PREFIX)) {
-      return new ClickhouseJdbcDialect(plugin);
-    } else {
-      return new DefaultJdbcDialect(plugin);
-    }
+  private static final Map<SqlDialect, JdbcDialect> POOL = new ConcurrentHashMap<>();
+
+  public static JdbcDialect getJdbcDialect(JdbcStoragePlugin plugin, SqlDialect dialect) {
+    return POOL.computeIfAbsent(
+      dialect,
+      jd -> plugin.getConfig().getUrl().startsWith(JDBC_CLICKHOUSE_PREFIX)
+        ? new ClickhouseJdbcDialect(plugin, dialect)
+        : new DefaultJdbcDialect(plugin, dialect)
+    );
   }
 }

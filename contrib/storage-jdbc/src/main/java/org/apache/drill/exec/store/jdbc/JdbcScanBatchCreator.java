@@ -27,10 +27,10 @@ import org.apache.drill.exec.physical.impl.scan.framework.BasicScanFactory;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ScanFrameworkBuilder;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.Collections;
@@ -44,7 +44,7 @@ public class JdbcScanBatchCreator implements BatchCreator<JdbcSubScan> {
     Preconditions.checkArgument(children.isEmpty());
 
     try {
-      ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan);
+      ScanFrameworkBuilder builder = createBuilder(context, subScan);
       return builder.buildScanOperator(context, subScan);
     } catch (UserException e) {
       // Rethrow user exceptions directly
@@ -55,14 +55,15 @@ public class JdbcScanBatchCreator implements BatchCreator<JdbcSubScan> {
     }
   }
 
-  private ScanFrameworkBuilder createBuilder(OptionManager options, JdbcSubScan subScan) {
-    JdbcStorageConfig config = subScan.getConfig();
+  private ScanFrameworkBuilder createBuilder(ExecutorFragmentContext context, JdbcSubScan subScan) {
     ScanFrameworkBuilder builder = new ScanFrameworkBuilder();
     builder.projection(subScan.getColumns());
     builder.setUserName(subScan.getUserName());
     JdbcStoragePlugin plugin = subScan.getPlugin();
-    List<ManagedReader<SchemaNegotiator>> readers =
-      Collections.singletonList(new JdbcBatchReader(plugin.getDataSource(), subScan.getSql(), subScan.getColumns()));
+    UserCredentials queryUserCreds = context.getContextInformation().getQueryUserCredentials();
+    List<ManagedReader<SchemaNegotiator>> readers = Collections.singletonList(
+      new JdbcBatchReader(plugin.getDataSource(queryUserCreds), subScan.getSql(), subScan.getColumns())
+    );
 
     ManagedScanFramework.ReaderFactory readerFactory = new BasicScanFactory(readers.iterator());
     builder.setReaderFactory(readerFactory);

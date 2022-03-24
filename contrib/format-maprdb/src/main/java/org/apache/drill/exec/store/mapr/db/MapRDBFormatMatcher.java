@@ -101,8 +101,12 @@ public class MapRDBFormatMatcher extends TableFormatMatcher {
       String tableName = mapRDBFormatPlugin.getTableName(selection);
       TableProperties props = mapRDBFormatPlugin.getMaprFS().getTableProperties(new Path(tableName));
       if (props.getAttr().getJson()) {
-        return new DynamicDrillTable(fsPlugin, storageEngineName, schemaConfig.getUserName(),
-            new FormatSelection(mapRDBFormatPlugin.getConfig(), selection));
+        return new DynamicDrillTable(
+          fsPlugin,
+          storageEngineName,
+          schemaConfig.getQueryUserCredentials().getUserName(),
+          new FormatSelection(mapRDBFormatPlugin.getConfig(), selection)
+        );
       } else {
         FormatSelection formatSelection = new FormatSelection(mapRDBFormatPlugin.getConfig(), selection);
         return new MapRDBBinaryTable(storageEngineName, fsPlugin, mapRDBFormatPlugin, formatSelection);

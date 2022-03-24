@@ -15,26 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store;
+package org.apache.drill.exec.store.jdbc;
 
-import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.sql.SqlDialect;
 
-import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Storage plugins implements this interface to register the schemas they provide.
- */
-public interface SchemaFactory {
+public class JdbcConventionFactory {
 
-  String DEFAULT_WS_NAME = "default";
+  private static final Map<SqlDialect, DrillJdbcConvention> POOL = new ConcurrentHashMap<>();
 
-  /**
-   * Register the schemas provided by this SchemaFactory implementation under the given parent schema.
-   *
-   * @param schemaConfig Configuration for schema objects.
-   * @param parent Reference to parent schema.
-   * @param context Contextual data pertaining to the query being planned.
-   * @throws IOException in case of error during schema registration
-   */
-  void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException;
+  public static DrillJdbcConvention getJdbcConvention(JdbcStoragePlugin plugin, SqlDialect dialect) {
+    return POOL.computeIfAbsent(
+      dialect,
+      djc -> new DrillJdbcConvention(dialect, plugin.getName(), plugin)
+    );
+  }
 }

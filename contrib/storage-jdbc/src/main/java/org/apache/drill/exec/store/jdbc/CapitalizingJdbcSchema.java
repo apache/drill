@@ -145,7 +145,8 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
     String tableWithSchema = CreateTableStmtBuilder.buildCompleteTableName(tableName, catalog, schema);
     String dropTableQuery = String.format("DROP TABLE %s", tableWithSchema);
-    dropTableQuery = JdbcDDLQueryUtils.cleanDDLQuery(dropTableQuery, plugin.getDialect());
+    SqlDialect dialect = plugin.getDialect(inner.getDataSource());
+    dropTableQuery = JdbcDDLQueryUtils.cleanDDLQuery(dropTableQuery, dialect);
 
     try (Connection conn = inner.getDataSource().getConnection();
          Statement stmt = conn.createStatement()) {

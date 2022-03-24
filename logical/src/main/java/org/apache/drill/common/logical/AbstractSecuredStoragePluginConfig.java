@@ -23,21 +23,43 @@ import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginConfig {
 
   protected final CredentialsProvider credentialsProvider;
-  protected boolean directCredentials;
+  protected boolean inlineCredentials;
+  public final AuthMode authMode;
 
   public AbstractSecuredStoragePluginConfig() {
-    this(PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,  true);
+    this(PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,  true, AuthMode.SHARED_USER);
   }
 
-  public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean directCredentials) {
+  public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean inlineCredentials) {
+    this(credentialsProvider, inlineCredentials, AuthMode.SHARED_USER);
+  }
+
+  public AbstractSecuredStoragePluginConfig(
+    CredentialsProvider credentialsProvider,
+    boolean inlineCredentials,
+    AuthMode authMode
+  ) {
     this.credentialsProvider = credentialsProvider;
-    this.directCredentials = directCredentials;
+    this.inlineCredentials = inlineCredentials;
+    this.authMode = authMode;
   }
 
   public CredentialsProvider getCredentialsProvider() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return null;
     }
     return credentialsProvider;
+  }
+
+  public enum AuthMode {
+    // Connects with either the Drill process user or a shared user with stored credentials.
+    // Default.  Unaffected by user impersonation in Drill.
+    SHARED_USER,
+    // As above but, in combination with the storage, then impersonates the query user.
+    // Only useful when Drill user impersonation is active.
+    USER_IMPERSONATION,
+    // Connects with stored credentials looked up for (translated from) the query user.
+    // Only useful when Drill user impersonation is active.
+    USER_TRANSLATION
   }
 }

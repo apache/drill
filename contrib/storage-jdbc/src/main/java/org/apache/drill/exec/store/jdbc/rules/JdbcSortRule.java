@@ -42,7 +42,7 @@ public class JdbcSortRule extends DrillJdbcRuleBase.DrillJdbcSortRule {
       // So do not push down only the limit with both OFFSET and FETCH but without ORDER BY.
       return sort.offset == null
         || !sort.getCollation().getFieldCollations().isEmpty()
-        || !(convention.getPlugin().getDialect() instanceof MssqlSqlDialect);
+        || !(convention.dialect instanceof MssqlSqlDialect);
     }
     return false;
   }

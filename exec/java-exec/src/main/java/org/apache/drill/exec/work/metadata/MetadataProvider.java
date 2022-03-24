@@ -602,6 +602,10 @@ public class MetadataProvider {
       public String getQueryUserName() {
         return session.getCredentials().getUserName();
       }
+
+      @Override UserCredentials getQueryUserCredentials() {
+        return session.getCredentials();
+      }
     };
   }
 

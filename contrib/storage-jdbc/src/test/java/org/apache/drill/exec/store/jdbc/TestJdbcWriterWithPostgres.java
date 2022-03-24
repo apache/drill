@@ -76,14 +76,14 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
     JdbcStorageConfig jdbcStorageConfig =
       new JdbcStorageConfig("org.postgresql.Driver",
         jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
-        true, true,null, null, 10000);
+        true, true, null, null, "shared_user", 10000);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("pg", jdbcStorageConfig);
 
     JdbcStorageConfig unWritableJdbcStorageConfig =
       new JdbcStorageConfig("org.postgresql.Driver",
         jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
-        true, false,null, null, 10000);
+        true, false, null, null, "shared_user", 10000);
     unWritableJdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("pg_unwritable", unWritableJdbcStorageConfig);
 

@@ -23,6 +23,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.WriterRecordBatch;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -33,7 +34,13 @@ public class JdbcWriterBatchCreator implements BatchCreator<JdbcWriter> {
     throws ExecutionSetupException {
     assert children != null && children.size() == 1;
 
+    UserCredentials userCreds = context.getContextInformation().getQueryUserCredentials();
+
     return new WriterRecordBatch(config, children.iterator().next(), context,
-      new JdbcRecordWriter (config.getPlugin().getDataSource(), null, config.getTableName(), config));
+      new JdbcRecordWriter(
+        config.getPlugin().getDataSource(userCreds),
+        null,
+        config.getTableName(),config)
+    );
   }
 }

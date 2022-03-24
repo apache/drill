@@ -214,7 +214,7 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
 
   @JsonProperty("username")
   public String username() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getUsername();
     }
     return null;
@@ -222,7 +222,7 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
 
   @JsonProperty("password")
   public String password() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getPassword();
     }
     return null;
@@ -230,7 +230,7 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
 
   @JsonProperty("proxyUsername")
   public String proxyUsername() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getProxyUsername();
     }
     return null;
@@ -238,7 +238,7 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
 
   @JsonProperty("proxyPassword")
   public String proxyPassword() {
-    if (directCredentials) {
+    if (inlineCredentials) {
       return getUsernamePasswordCredentials().getProxyPassword();
     }
     return null;
