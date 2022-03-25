@@ -30,6 +30,7 @@ function runCmd(){
     echo " ----------------- $1 " >> ${DRILL_RELEASE_OUTFILE}
     echo " ----------------- "  >> ${DRILL_RELEASE_OUTFILE}
     shift
+    echo "Will execute $@"
     # run the command, send output to out file
     "$@" >> ${DRILL_RELEASE_OUTFILE} 2>&1
     if [ $? -ne 0 ]; then
@@ -42,11 +43,12 @@ function runCmd(){
 }
 
 function copyFiles(){
-    rm -rf ${LOCAL_RELEASE_STAGING_DIR}
-    mkdir -p ${LOCAL_RELEASE_STAGING_DIR}/${DRILL_RELEASE_VERSION}
-    cp ${DRILL_SRC}/target/apache-drill-${DRILL_RELEASE_VERSION}-src.tar.gz* ${LOCAL_RELEASE_STAGING_DIR}/${DRILL_RELEASE_VERSION}/ && \
-    cp ${DRILL_SRC}/target/apache-drill-${DRILL_RELEASE_VERSION}-src.zip* ${LOCAL_RELEASE_STAGING_DIR}/${DRILL_RELEASE_VERSION}/ && \
-    cp ${DRILL_SRC}/distribution/target/apache-drill-${DRILL_RELEASE_VERSION}.tar.gz* ${LOCAL_RELEASE_STAGING_DIR}/${DRILL_RELEASE_VERSION}/
+		target_dir=${APACHE_DIST_WORKING_COPY}/${DRILL_RELEASE_VERSION}-rc${RELEASE_ATTEMPT}
+    rm -rf $target_dir
+    mkdir -p $target_dir
+    cp ${DRILL_SRC}/target/apache-drill-${DRILL_RELEASE_VERSION}-src.tar.gz* $target_dir/ && \
+    cp ${DRILL_SRC}/target/apache-drill-${DRILL_RELEASE_VERSION}-src.zip* $target_dir/ && \
+    cp ${DRILL_SRC}/distribution/target/apache-drill-${DRILL_RELEASE_VERSION}.tar.gz* $target_dir/
 
 }
 
@@ -69,12 +71,17 @@ function createDirectoryIfAbsent() {
 
 function readInputAndSetup(){
 
+    read -p "JAVA_HOME of the JDK 8 to use for the release : " JAVA_HOME
+    export JAVA_HOME
+
     read -p "Drill Working Directory : " WORK_DIR
     createDirectoryIfAbsent "${WORK_DIR}"
 
-    read -p "Drill Release Version (eg. 1.4.0) : " DRILL_RELEASE_VERSION
+    read -p "Build profile (e.g. hadoop-2, blank for default) : " BUILD_PROFILE
 
-    read -p "Drill Development Version (eg. 1.5.0-SNAPSHOT) : " DRILL_DEV_VERSION
+    read -p "Drill Release Version (e.g. 1.4.0, 1.20.0-hadoop2) : " DRILL_RELEASE_VERSION
+
+    read -p "Drill Development Version (e.g. 1.5.0-SNAPSHOT) : " DRILL_DEV_VERSION
 
     read -p "Release Commit SHA : " RELEASE_COMMIT_SHA
 
@@ -83,8 +90,7 @@ function readInputAndSetup(){
 
     read -p "Staging (personal) repo : " MY_REPO
 
-    read -p "Local release staging directory : " LOCAL_RELEASE_STAGING_DIR
-    createDirectoryIfAbsent "${LOCAL_RELEASE_STAGING_DIR}"
+    read -p "Svn working copy of dist.apache.org/repos/dist/dev/drill : " APACHE_DIST_WORKING_COPY
 
     read -p "Apache login : " APACHE_LOGIN
 
@@ -94,17 +100,20 @@ function readInputAndSetup(){
 
     DRILL_RELEASE_OUTFILE="${DRILL_RELEASE_OUTDIR}/drill_release.out.txt"
     DRILL_SRC=${WORK_DIR}/drill-release
+    [ -z "$BUILD_PROFILE" ] || BUILD_PROFILE="-P$BUILD_PROFILE"
 
     echo ""
     echo "-----------------"
+    echo "JAVA_HOME : " ${JAVA_HOME}
     echo "Drill Working Directory : " ${WORK_DIR}
     echo "Drill Src Directory : " ${DRILL_SRC}
+    echo "Build profile mvn arg: " ${BUILD_PROFILE}
     echo "Drill Release Version : " ${DRILL_RELEASE_VERSION}
     echo "Drill Development Version : " ${DRILL_DEV_VERSION}
     echo "Release Commit SHA : " ${RELEASE_COMMIT_SHA}
     echo "Write output to : " ${DRILL_RELEASE_OUTFILE}
     echo "Staging (personal) repo : " ${MY_REPO}
-    echo "Local release staging dir : " ${LOCAL_RELEASE_STAGING_DIR}
+    echo "Svn working copy of dist.apache.org/repos/dist dir : " ${APACHE_DIST_WORKING_COPY}
 
     touch ${DRILL_RELEASE_OUTFILE}
 }
@@ -142,43 +151,45 @@ runCmd "Cloning the repo" cloneRepo
 runCmd "Checking the build" mvn install -DskipTests
 
 export MAVEN_OPTS=-Xmx2g
-runCmd "Clearing release history" mvn release:clean -Papache-release -DpushChanges=false -DskipTests
+runCmd "Clearing release history" mvn release:clean \
+  -Papache-release \
+  -DpushChanges=false \
+  -DskipTests
 
 export MAVEN_OPTS='-Xmx4g -XX:MaxPermSize=512m'
-runCmd "Preparing the release " mvn -X release:prepare -Papache-release -DpushChanges=false -DskipTests -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}  -DskipTests=true -Dmaven.javadoc.skip=false" -DreleaseVersion=${DRILL_RELEASE_VERSION} -DdevelopmentVersion=${DRILL_DEV_VERSION} -Dtag=drill-${DRILL_RELEASE_VERSION}
+runCmd "Preparing the release " mvn -X release:prepare \
+  -Papache-release \
+  -DpushChanges=false \
+  -DdevelopmentVersion=${DRILL_DEV_VERSION} \
+  -DreleaseVersion=${DRILL_RELEASE_VERSION} \
+  -Dtag=drill-${DRILL_RELEASE_VERSION} \
+  -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests -Dmaven.javadoc.skip=false ${BUILD_PROFILE}"
 
 runCmd "Pushing to private repo ${MY_REPO}" git push ${MY_REPO} drill-${DRILL_RELEASE_VERSION}
 
-runCmd "Performing the release to ${MY_REPO}" mvn release:perform -DconnectionUrl=scm:git:${MY_REPO} -DskipTests -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests=true -DconnectionUrl=scm:git:${MY_REPO}"
+runCmd "Performing the release to ${MY_REPO}" mvn release:perform \
+  -DconnectionUrl=scm:git:${MY_REPO} \
+  -DlocalCheckout=true \
+  -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests ${BUILD_PROFILE}"
 
 runCmd "Checking out release commit" git checkout drill-${DRILL_RELEASE_VERSION}
 
 # Remove surrounding quotes
 tempGPG_PASSPHRASE="${GPG_PASSPHRASE%\"}"
 tempGPG_PASSPHRASE="${tempGPG_PASSPHRASE#\"}"
-runCmd "Deploying ..." mvn deploy -Papache-release -DskipTests -Dgpg.passphrase="${tempGPG_PASSPHRASE}"
-
-runCmd "Copying" copyFiles
+runCmd "Deploying ..." mvn deploy \
+  -Papache-release \
+  -DskipTests \
+  -Dgpg.passphrase="${tempGPG_PASSPHRASE}"
 
 runCmd "Verifying artifacts are signed correctly" ${CHKSMDIR}/checksum.sh ${DRILL_SRC}/distribution/target/apache-drill-${DRILL_RELEASE_VERSION}.tar.gz
 pause
 
-runCmd "Copy release files to home.apache.org" sftp ${APACHE_LOGIN}@home.apache.org <<EOF
-  mkdir public_html
-  cd public_html
-  mkdir drill
-  cd drill
-  mkdir releases
-  cd releases
-  mkdir ${DRILL_RELEASE_VERSION}
-  cd ${DRILL_RELEASE_VERSION}
-  mkdir rc${RELEASE_ATTEMPT}
-  cd rc${RELEASE_ATTEMPT}
-  put ${LOCAL_RELEASE_STAGING_DIR}/${DRILL_RELEASE_VERSION}/* .
-  bye
-EOF
+runCmd "Copying release files to your working copy of dist.apache.org/repos/dist/dev/drill" copyFiles
 
 echo "Go to the Apache maven staging repo and close the new jar release"
+echo "and go to ${APACHE_DIST_WORKING_COPY} and svn add/commit the new"
+echo "release candidate after checking the pending changes there."
 pause
 
 echo "Start the vote \(good luck\)\n"
