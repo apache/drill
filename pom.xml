@@ -129,7 +129,6 @@
     <testcontainers.version>1.16.3</testcontainers.version>
     <typesafe.config.version>1.0.0</typesafe.config.version>
     <commons.codec.version>1.14</commons.codec.version>
-    <metadata.extractor.version>2.13.0</metadata.extractor.version>
     <xalan.version>2.7.2</xalan.version>
     <xerces.version>2.12.2</xerces.version>
     <commons.configuration.version>1.10</commons.configuration.version>
@@ -2043,11 +2042,6 @@
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
         <version>${snakeyaml.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.drewnoakes</groupId>
-        <artifactId>metadata-extractor</artifactId>
-        <version>${metadata.extractor.version}</version>
       </dependency>
       <dependency>
         <groupId>xerces</groupId>
