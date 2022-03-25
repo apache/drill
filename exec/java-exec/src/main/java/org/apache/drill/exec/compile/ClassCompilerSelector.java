@@ -49,7 +49,7 @@ import org.codehaus.commons.compiler.CompileException;
  * generated Java code to the log file prior to compilation. This option
  * adds line numbers to the logged code.</dd>
  * <dt>exec.java_compiler_janino_maxsize</dt>
- * <dd>The maximum size of code that the Janio compiler can handle. Larger code is
+ * <dd>The maximum size of code that the Janino compiler can handle. Larger code is
  * handled by the JDK compiler. Defaults to 256K.</dd>
  * </dl>
  * <h4>Configuration Options</h4>
