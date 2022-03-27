@@ -42,7 +42,7 @@ public class SslContextFactoryConfiguratorTest extends ClusterTest {
   public static void setUpClass() throws Exception {
     ClusterFixtureBuilder fixtureBuilder = ClusterFixture.builder(dirTestWatcher)
         // imitate proper ssl config for embedded web
-        .configProperty(ExecConstants.SSL_PROTOCOL, "TLSv1.2")
+        .configProperty(ExecConstants.SSL_PROTOCOL, "TLSv1.3")
         .configProperty(ExecConstants.HTTP_ENABLE_SSL, true)
         .configProperty(ExecConstants.HTTP_TRUSTSTORE_PATH, "/tmp/ssl/cacerts.jks")
         .configProperty(ExecConstants.HTTP_TRUSTSTORE_PASSWORD, "passphrase")

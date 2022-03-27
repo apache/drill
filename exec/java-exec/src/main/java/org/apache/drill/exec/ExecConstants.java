@@ -197,7 +197,7 @@ public final class ExecConstants {
       new OptionDescription("Linearly reduces partition sender buffer row count after this number of receivers. Default is 0 (disabled). (Since Drill 1.18)"));
 
   public static final String SSL_PROVIDER = "drill.exec.ssl.provider"; // valid values are "JDK", "OPENSSL" // default JDK
-  public static final String SSL_PROTOCOL = "drill.exec.ssl.protocol"; // valid values are SSL, SSLV2, SSLV3, TLS, TLSV1, TLSv1.1, TLSv1.2(default)
+  public static final String SSL_PROTOCOL = "drill.exec.ssl.protocol"; // valid values are SSL, SSLV2, SSLV3, TLS, TLSV1, TLSv1.1, TLSv1.2, TLSv1.3(default)
   public static final String SSL_KEYSTORE_TYPE = "drill.exec.ssl.keyStoreType";
   public static final String SSL_KEYSTORE_PATH = "drill.exec.ssl.keyStorePath";     // path to keystore. default : $JRE_HOME/lib/security/keystore.jks
   public static final String SSL_KEYSTORE_PASSWORD = "drill.exec.ssl.keyStorePassword"; // default: changeit
