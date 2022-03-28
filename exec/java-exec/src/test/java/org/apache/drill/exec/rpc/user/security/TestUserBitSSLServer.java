@@ -52,7 +52,7 @@ public class TestUserBitSSLServer extends BaseTestQuery {
         .withValue(ExecConstants.SSL_KEYSTORE_PATH, ConfigValueFactory.fromAnyRef(ksPath))
         .withValue(ExecConstants.SSL_KEYSTORE_PASSWORD, ConfigValueFactory.fromAnyRef("drill123"))
         .withValue(ExecConstants.SSL_KEY_PASSWORD, ConfigValueFactory.fromAnyRef("drill123"))
-        .withValue(ExecConstants.SSL_PROTOCOL, ConfigValueFactory.fromAnyRef("TLSv1.2")));
+        .withValue(ExecConstants.SSL_PROTOCOL, ConfigValueFactory.fromAnyRef("TLSv1.3")));
     initProps = new Properties();
     initProps.setProperty(DrillProperties.ENABLE_TLS, "true");
     initProps.setProperty(DrillProperties.TRUSTSTORE_PATH, tsPath);

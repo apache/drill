@@ -94,7 +94,6 @@ public class SslContextFactoryConfigurator {
       }
     }
     sslFactory.setIncludeProtocols(sslConf.getProtocol());
-    logger.info("Web server configured to use TLS protocol '{}'", sslConf.getProtocol());
     if (config.hasPath(ExecConstants.HTTP_JETTY_SSL_CONTEXT_FACTORY_OPTIONS_PREFIX)) {
       setStringIfPresent(ExecConstants.HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_CERT_ALIAS, sslFactory::setCertAlias);
       setStringIfPresent(ExecConstants.HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_CRL_PATH, sslFactory::setCrlPath);
@@ -126,6 +125,7 @@ public class SslContextFactoryConfigurator {
       setBooleanIfPresent(ExecConstants.HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_VALIDATE_PEER_CERTS, sslFactory::setValidatePeerCerts);
       setBooleanIfPresent(ExecConstants.HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_WANT_CLIENT_AUTH, sslFactory::setWantClientAuth);
     }
+    logger.info("Web server configured to use TLS protocol '{}'", String.join(", ", sslFactory.getIncludeProtocols()));
   }
 
   private void setStringArrayIfPresent(String optKey, Consumer<String[]> optSet) {
