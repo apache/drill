@@ -490,6 +490,13 @@ public class StorageResources {
       }
     }
 
+    public String getCleanType() {
+      String pluginName = type.replace("Config", "");
+      pluginName = pluginName.replace("Plugin", "");
+      pluginName = pluginName.replace("Storage", "");
+      return pluginName;
+    }
+
     public String getType() {
       return type;
     }

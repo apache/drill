@@ -60,7 +60,7 @@
               <#if pluginModel.getPlugin()?? && pluginModel.getPlugin().enabled() == true>
                 <tr>
                   <td style="border:none;">
-                    <img src="/static/img/storage_logos/${pluginModel.getType()}.png" height=50 width=50 />
+                    <img src="/static/img/storage_logos/${pluginModel.getCleanType()}.png" alt="${pluginModel.getCleanType()}" height=40 width=40 />
                   </td>
                   <td style="border:none; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
                     ${pluginModel.getPlugin().getName()}
@@ -92,7 +92,7 @@
               <#if pluginModel.getPlugin()?? && pluginModel.getPlugin().enabled() == false>
                 <tr>
                   <td style="border:none;">
-                    <img src="/static/img/storage_logos/${pluginModel.getType()}.png" height=50 width=50 />
+                    <img src="/static/img/storage_logos/${pluginModel.getCleanType()}.png" alt="${pluginModel.getCleanType()}" height=40 width=40 />
                   </td>
                   <td style="border:none; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
                     ${pluginModel.getPlugin().getName()}
