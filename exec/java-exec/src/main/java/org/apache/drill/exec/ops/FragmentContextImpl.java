@@ -710,7 +710,8 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
       return queryUserCredentials.getUserName();
     }
 
-    @Override UserCredentials getQueryUserCredentials() {
+    @Override
+    public UserCredentials getQueryUserCredentials() {
       return queryUserCredentials;
     }
 
