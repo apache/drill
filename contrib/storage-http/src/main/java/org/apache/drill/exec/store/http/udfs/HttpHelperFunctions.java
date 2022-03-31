@@ -24,6 +24,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -42,7 +43,7 @@ public class HttpHelperFunctions {
     VarCharHolder rawInput;
 
     @Param
-    VarCharHolder[] inputReaders;
+    NullableVarCharHolder[] inputReaders;
 
     @Output
     ComplexWriter writer;
@@ -73,6 +74,16 @@ public class HttpHelperFunctions {
 
       // Process Positional Arguments
       java.util.List args = org.apache.drill.exec.store.http.util.SimpleHttp.buildParameterList(inputReaders);
+      // If the arg list is null, indicating at least one null arg, return an empty map
+      // as an approximation of null-if-null handling.
+      if (args == null) {
+        // Return empty map
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
+        mapWriter.start();
+        mapWriter.end();
+        return;
+      }
+
       String finalUrl = org.apache.drill.exec.store.http.util.SimpleHttp.mapPositionalParameters(url, args);
 
       // Make the API call
@@ -108,7 +119,7 @@ public class HttpHelperFunctions {
     VarCharHolder rawInput;
 
     @Param
-    VarCharHolder[] inputReaders;
+    NullableVarCharHolder[] inputReaders;
 
     @Output
     ComplexWriter writer;
@@ -125,6 +136,12 @@ public class HttpHelperFunctions {
     @Workspace
     org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader;
 
+    @Workspace
+    org.apache.drill.exec.store.http.HttpStoragePlugin plugin;
+
+    @Workspace
+    org.apache.drill.exec.store.http.HttpApiConfig endpointConfig;
+
     @Override
     public void setup() {
       jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader.Builder(buffer)
@@ -133,16 +150,47 @@ public class HttpHelperFunctions {
         .allTextMode(options.getOption(org.apache.drill.exec.ExecConstants.JSON_ALL_TEXT_MODE).bool_val)
         .enableNanInf(options.getOption(org.apache.drill.exec.ExecConstants.JSON_READER_NAN_INF_NUMBERS).bool_val)
         .build();
+
+      String schemaPath = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
+      // Get the plugin name and endpoint name
+      String[] parts = schemaPath.split("\\.");
+      if (parts.length < 2) {
+        throw new org.apache.drill.common.exceptions.DrillRuntimeException(
+          "You must call this function with a connection name and endpoint."
+        );
+      }
+      String pluginName = parts[0], endpointName = parts[1];
+
+      plugin = org.apache.drill.exec.store.http.util.SimpleHttp.getStoragePlugin(
+        drillbitContext,
+        pluginName
+      );
+      endpointConfig = org.apache.drill.exec.store.http.util.SimpleHttp.getEndpointConfig(
+        endpointName,
+        plugin.getConfig()
+      );
     }
 
     @Override
     public void eval() {
-      // Get the plugin name
-      String pluginName = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(rawInput.start, rawInput.end, rawInput.buffer);
-
       // Process Positional Arguments
       java.util.List args = org.apache.drill.exec.store.http.util.SimpleHttp.buildParameterList(inputReaders);
-      String results = org.apache.drill.exec.store.http.util.SimpleHttp.makeAPICall(pluginName, drillbitContext, args);
+      // If the arg list is null, indicating at least one null arg, return an empty map
+      // as an approximation of null-if-null handling.
+      if (args == null) {
+        // Return empty map
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
+        mapWriter.start();
+        mapWriter.end();
+        return;
+      }
+
+      String results = org.apache.drill.exec.store.http.util.SimpleHttp.makeAPICall(
+        plugin,
+        endpointConfig,
+        drillbitContext,
+        args
+      );
 
       // If the result string is null or empty, return an empty map
       if (results == null || results.length() == 0) {

@@ -37,7 +37,7 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -796,36 +796,36 @@ public class SimpleHttp {
   /**
    * Accepts a list of input readers and converts that into an ArrayList of Strings
    * @param inputReaders The array of FieldReaders
-   * @return A List of Strings containing the values from the FieldReaders.
+   * @return A List of Strings containing the values from the FieldReaders or null
+   * to indicate that at least one null is present in the arguments.
    */
-  public static List<String> buildParameterList(VarCharHolder[] inputReaders) {
+  public static List<String> buildParameterList(NullableVarCharHolder[] inputReaders) {
     if (inputReaders == null || inputReaders.length == 0) {
+      // no args provided
       return Collections.emptyList();
     }
 
     List<String> inputArguments = new ArrayList<>();
     for (int i = 0; i < inputReaders.length; i++) {
+      if (inputReaders[i].buffer == null) {
+        // at least one null arg provided
+        return null;
+      }
+
       inputArguments.add(StringFunctionHelpers.getStringFromVarCharHolder(inputReaders[i]));
     }
 
     return inputArguments;
   }
 
+/*
   public static HttpStoragePluginConfig getPluginConfig(String name, DrillbitContext context) throws PluginException {
     HttpStoragePlugin httpStoragePlugin = getStoragePlugin(context, name);
     return httpStoragePlugin.getConfig();
   }
+*/
 
-  public static HttpApiConfig getEndpointConfig(String name, HttpStoragePluginConfig pluginConfig) {
-    // Get the plugin name and endpoint name
-    String[] parts = name.split("\\.");
-    if (parts.length < 2) {
-      throw UserException.functionError()
-        .message("You must call this function with a connection name and endpoint.")
-        .build(logger);
-    }
-
-    String endpoint = parts[1];
+  public static HttpApiConfig getEndpointConfig(String endpoint, HttpStoragePluginConfig pluginConfig) {
     HttpApiConfig endpointConfig = pluginConfig.getConnection(endpoint);
     if (endpointConfig == null) {
       throw UserException.functionError()
@@ -840,7 +840,7 @@ public class SimpleHttp {
     return endpointConfig;
   }
 
-  private static HttpStoragePlugin getStoragePlugin(DrillbitContext context, String pluginName) {
+  public static HttpStoragePlugin getStoragePlugin(DrillbitContext context, String pluginName) {
     StoragePluginRegistry storage = context.getStorage();
     try {
       StoragePlugin pluginInstance = storage.getPlugin(pluginName);
@@ -873,29 +873,14 @@ public class SimpleHttp {
    * @param args An optional list of parameter arguments which will be included in the URL
    * @return A String of the results.
    */
-  public static String makeAPICall(String schemaPath, DrillbitContext context, List<String> args) {
+  public static String makeAPICall(
+    HttpStoragePlugin plugin,
+    HttpApiConfig endpointConfig,
+    DrillbitContext context,
+    List<String> args
+  ) {
     HttpStoragePluginConfig pluginConfig;
-    HttpApiConfig endpointConfig;
-
-    // Get the plugin name and endpoint name
-    String[] parts = schemaPath.split("\\.");
-    if (parts.length < 2) {
-      throw UserException.functionError()
-        .message("You must call this function with a connection name and endpoint.")
-        .build(logger);
-    }
-    String pluginName = parts[0];
-
-    HttpStoragePlugin plugin = getStoragePlugin(context, pluginName);
-
-    try {
-      pluginConfig = getPluginConfig(pluginName, context);
-      endpointConfig = getEndpointConfig(schemaPath, pluginConfig);
-    } catch (PluginException e) {
-      throw UserException.functionError()
-        .message("Could not access plugin " + pluginName)
-        .build(logger);
-    }
+    pluginConfig = plugin.getConfig();
 
     // Get proxy settings
     HttpProxyConfig proxyConfig = SimpleHttp.getProxySettings(pluginConfig, context.getConfig(), endpointConfig.getHttpUrl());
