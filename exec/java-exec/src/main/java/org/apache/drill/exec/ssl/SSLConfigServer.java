@@ -306,7 +306,8 @@ public class SSLConfigServer extends SSLConfig {
 
   @Override
   public int getHandshakeTimeout() {
-    // TODO: why do we hard code this when we provide {@link ExecConstants.SSL_HANDSHAKE_TIMEOUT}?
+    // TODO: (DRILL-8183) why do we hard code this when we provide
+    // {@link ExecConstants.SSL_HANDSHAKE_TIMEOUT}?
     // A value of 0 is interpreted by Netty as "no timeout".
     return 0;
   }

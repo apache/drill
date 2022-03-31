@@ -868,7 +868,8 @@ public class SimpleHttp {
    * This function makes an API call and returns a string of the parsed results. It is used in the http_get() UDF
    * and retrieves all the configuration parameters contained in the storage plugin and endpoint configuration. The exception
    * is pagination.  This does not support pagination.
-   * @param schemaPath The path of storage_plugin.endpoint from which the data will be retrieved
+   * @param plugin The HTTP storage plugin upon which the API call is based.
+   * @param endpointConfig The configuration of the API endpoint upon which the API call is based.
    * @param context {@link DrillbitContext} The context from the current query
    * @param args An optional list of parameter arguments which will be included in the URL
    * @return A String of the results.
