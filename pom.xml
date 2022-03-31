@@ -65,7 +65,7 @@
     <avatica.version>1.17.0</avatica.version>
     <janino.version>3.0.11</janino.version>
     <sqlline.version>1.12.0</sqlline.version>
-    <jackson.version>2.13.2.20220324</jackson.version>
+    <jackson.version>2.13.2.20220328</jackson.version>
     <zookeeper.version>3.5.7</zookeeper.version>
     <mapr.release.version>6.1.0-mapr</mapr.release.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
@@ -81,7 +81,7 @@
     <logback.version>1.2.9</logback.version>
     <mockito.version>3.11.2</mockito.version>
     <!--
-      Currently Hive storage plugin only supports Apache Hive 3.1.2 or vendor specific variants of the
+      Currently, Hive storage plugin only supports Apache Hive 3.1.2 or vendor specific variants of the
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated,
       for example parquet-hadoop-bundle and derby dependencies.
     -->
