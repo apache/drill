@@ -60,6 +60,15 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
     this.allowDiskUse = allowDiskUse;
   }
 
+  private MongoStoragePluginConfig(MongoStoragePluginConfig that, CredentialsProvider credentialsProvider) {
+    super(getCredentialsProvider(credentialsProvider), credentialsProvider == null, that.authMode);
+    this.connection = that.connection;
+    this.clientURI = that.clientURI;
+    this.pluginOptimizations = that.pluginOptimizations;
+    this.batchSize = that.batchSize;
+    this.allowDiskUse = that.allowDiskUse;
+  }
+
   public MongoPluginOptimizations getPluginOptimizations() {
     return pluginOptimizations;
   }
@@ -101,6 +110,11 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
   @Override
   public int hashCode() {
     return Objects.hash(connection);
+  }
+
+  @Override
+  public MongoStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new MongoStoragePluginConfig(this, credentialsProvider);
   }
 
   public static class MongoPluginOptimizations {

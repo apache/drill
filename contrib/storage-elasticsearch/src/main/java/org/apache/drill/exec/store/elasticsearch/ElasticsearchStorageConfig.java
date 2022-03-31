@@ -102,4 +102,9 @@ public class ElasticsearchStorageConfig extends AbstractSecuredStoragePluginConf
   public int hashCode() {
     return Objects.hash(hosts, credentialsProvider);
   }
+
+  @Override
+  public AbstractSecuredStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return this;
+  }
 }

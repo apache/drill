@@ -110,6 +110,17 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
     }
   }
 
+  private HttpStoragePluginConfig(HttpStoragePluginConfig that, CredentialsProvider credentialsProvider) {
+    super(credentialsProvider, credentialsProvider == null, that.authMode);
+    this.cacheResults = that.cacheResults;
+    this.connections = that.connections;
+    this.timeout = that.timeout;
+    this.proxyHost = that.proxyHost;
+    this.proxyPort = that.proxyPort;
+    this.proxyType = that.proxyType;
+    this.oAuthConfig = that.oAuthConfig;
+  }
+
   /**
    * Clone constructor used for updating OAuth tokens
    * @param that The current HTTP Plugin Config
@@ -275,5 +286,10 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
   @JsonIgnore
   public static OAuthTokenCredentials getOAuthCredentials(CredentialsProvider credentialsProvider) {
     return new OAuthTokenCredentials(credentialsProvider);
+  }
+
+  @Override
+  public HttpStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new HttpStoragePluginConfig(this, credentialsProvider);
   }
 }

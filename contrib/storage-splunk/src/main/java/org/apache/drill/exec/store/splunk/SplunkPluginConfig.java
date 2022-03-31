@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 
@@ -59,6 +60,15 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
     this.earliestTime = earliestTime;
     this.latestTime = latestTime == null ? "now" : latestTime;
     this.reconnectRetries = reconnectRetries;
+  }
+
+  private SplunkPluginConfig(SplunkPluginConfig that, CredentialsProvider credentialsProvider) {
+    super(getCredentialsProvider(credentialsProvider), credentialsProvider == null, that.authMode);
+    this.hostname = that.hostname;
+    this.port = that.port;
+    this.earliestTime = that.earliestTime;
+    this.latestTime = that.latestTime;
+    this.reconnectRetries = that.reconnectRetries;
   }
 
   @JsonIgnore
@@ -107,6 +117,10 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
     return reconnectRetries != null ? reconnectRetries : DISABLED_RECONNECT_RETRIES;
   }
 
+  private static CredentialsProvider getCredentialsProvider(CredentialsProvider credentialsProvider) {
+    return credentialsProvider != null ? credentialsProvider : PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
+  }
+
   @Override
   public boolean equals(Object that) {
     if (this == that) {
@@ -136,5 +150,10 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
       .field("earliestTime", earliestTime)
       .field("latestTime", latestTime)
       .toString();
+  }
+
+  @Override
+  public SplunkPluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new SplunkPluginConfig(this, credentialsProvider);
   }
 }

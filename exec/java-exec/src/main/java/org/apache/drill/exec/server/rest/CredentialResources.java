@@ -166,9 +166,12 @@ public class CredentialResources {
     // Since the config classes are not accessible from java-exec, we have to serialize them,
     // replace the credential provider with the updated one, and update the storage plugin registry
     AbstractSecuredStoragePluginConfig newConfig = config.updateCredentialProvider(credentialProvider);
+    newConfig.setEnabled(config.isEnabled());
 
     try {
       storage.validatedPut(pluginName, newConfig);
+      // Force re-caching
+      storage.setEnabled(pluginName, newConfig.isEnabled());
     } catch (PluginException e) {
       logger.error("Error while saving plugin", e);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -176,7 +179,6 @@ public class CredentialResources {
         .build();
     }
 
-    System.out.println("Finished update");
     return Response.ok().entity(message("Success")).build();
   }
 
