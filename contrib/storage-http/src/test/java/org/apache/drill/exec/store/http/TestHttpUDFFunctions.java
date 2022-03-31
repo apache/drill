@@ -47,9 +47,9 @@ import static org.junit.Assert.fail;
 
 public class TestHttpUDFFunctions extends ClusterTest {
 
-  private static final int MOCK_SERVER_PORT = 47770;
+  private static final int MOCK_SERVER_PORT = 47771;
   private static String TEST_JSON_RESPONSE;
-  private static String DUMMY_URL = "http://localhost:" + MOCK_SERVER_PORT + "/";
+  private static String DUMMY_URL = "http://localhost:" + MOCK_SERVER_PORT;
 
 
   @BeforeClass
@@ -58,7 +58,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/simple.json"), Charsets.UTF_8).read();
 
     HttpApiConfig mockGithubWithDuplicateParam = HttpApiConfig.builder()
-      .url("http://localhost:47770/orgs/{org}/repos")
+      .url(String.format("%s/orgs/{org}/repos", DUMMY_URL))
       .method("GET")
       .params(Arrays.asList("org", "lng", "date"))
       .dataPath("results")
@@ -89,7 +89,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
 
       RecordedRequest recordedRequest = server.takeRequest();
       assertEquals("GET", recordedRequest.getMethod());
-      assertEquals("http://localhost:47770/", recordedRequest.getRequestUrl().toString());
+      assertEquals(String.format("%s/", DUMMY_URL), recordedRequest.getRequestUrl().toString());
     }
   }
 
@@ -97,7 +97,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
   public void testHttpGetWithParams() throws Exception {
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_JSON_RESPONSE));
-      String sql = "SELECT http_get('" + DUMMY_URL + "{p1}/{p2}', 'param1', 'param2') AS result FROM (values(1))";
+      String sql = "SELECT http_get('" + DUMMY_URL + "/{p1}/{p2}', 'param1', 'param2') AS result FROM (values(1))";
 
       RowSet results = client.queryBuilder().sql(sql).rowSet();
       assertEquals(1, results.rowCount());
@@ -105,7 +105,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
 
       RecordedRequest recordedRequest = server.takeRequest();
       assertEquals("GET", recordedRequest.getMethod());
-      assertEquals("http://localhost:47770/param1/param2", recordedRequest.getRequestUrl().toString());
+      assertEquals(String.format("%s/param1/param2", DUMMY_URL), recordedRequest.getRequestUrl().toString());
     }
   }
 
@@ -121,7 +121,7 @@ public class TestHttpUDFFunctions extends ClusterTest {
 
       RecordedRequest recordedRequest = server.takeRequest();
       assertEquals("GET", recordedRequest.getMethod());
-      assertEquals("http://localhost:47770/orgs/apache/repos", recordedRequest.getRequestUrl().toString());
+      assertEquals(String.format("%s/orgs/apache/repos", DUMMY_URL), recordedRequest.getRequestUrl().toString());
     }
   }
 
@@ -134,6 +134,22 @@ public class TestHttpUDFFunctions extends ClusterTest {
     } catch (Exception e) {
       assertTrue(e.getMessage().contains("FUNCTION ERROR: nope is not a valid plugin."));
     }
+  }
+
+  @Test
+  public void testNullParam() throws Exception {
+    // any null parameter results in an empty map
+    String sql = "SELECT http_get('" + DUMMY_URL + "/{p1}/{p2}', 'param1', null) AS result FROM (values(1))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(1, results.rowCount());
+    assertEquals(0, results.container().getLast().getField().getChildCount());
+    results.clear();
+
+    sql = "SELECT http_request('local.github', null) AS result FROM (values(1))";
+    results = client.queryBuilder().sql(sql).rowSet();
+    assertEquals(1, results.rowCount());
+    assertEquals(0, results.container().getLast().getField().getChildCount());
+    results.clear();
   }
 
   @Test

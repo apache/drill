@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.jdbc;
 
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -134,16 +135,16 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       storage config.
       */
 
-      // maximum amount of time that a connection is allowed to sit idle in the pool, 0 = forever
-      properties.setProperty("dataSource.idleTimeout", String.format("%d000", 1*60*60)); // 1 hour
-      // how frequently HikariCP will attempt to keep a connection alive, 0 = disabled
-      properties.setProperty("dataSource.keepaliveTime", String.format("%d000", 0));
-      // maximum lifetime of a connection in the pool, 0 = forever
-      properties.setProperty("dataSource.maxLifetime", String.format("%d000", 6*60*60)); // 6 hours
-      // minimum number of idle connections that HikariCP tries to maintain in the pool, 0 = none
-      properties.setProperty("dataSource.minimumIdle", "0");
+      // maximum amount of time that a connection is allowed to sit idle in the pool, 0 ⇒ forever
+      properties.setProperty("idleTimeout", String.valueOf(TimeUnit.HOURS.toMillis(2)));
+      // how frequently HikariCP will attempt to keep a connection alive, 0 ⇒ disabled
+      properties.setProperty("keepaliveTime", String.valueOf(TimeUnit.MINUTES.toMillis(5)));
+      // maximum lifetime of a connection in the pool, 0 ⇒ forever
+      properties.setProperty("maxLifetime", String.valueOf(TimeUnit.HOURS.toMillis(12)));
+      // minimum number of idle connections that HikariCP tries to maintain in the pool, 0 ⇒ none
+      properties.setProperty("minimumIdle", "0");
       // maximum size that the pool is allowed to reach, including both idle and in-use connections
-      properties.setProperty("dataSource.maximumPoolSize", "10");
+      properties.setProperty("maximumPoolSize", "10");
 
       // apply any HikariCP parameters the user may have set, overwriting defaults
       properties.putAll(config.getSourceParameters());
