@@ -78,6 +78,22 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
     this.writerBatchSize = writerBatchSize == 0 ? DEFAULT_MAX_WRITER_BATCH_SIZE : writerBatchSize;
   }
 
+
+  private JdbcStorageConfig(JdbcStorageConfig that, CredentialsProvider credentialsProvider) {
+    super(credentialsProvider, credentialsProvider == null, that.authMode);
+    this.driver = that.driver;
+    this.url = that.url;
+    this.writable = that.writable;
+    this.caseInsensitiveTableNames = that.caseInsensitiveTableNames;
+    this.sourceParameters = that.sourceParameters;
+    this.writerBatchSize = that.writerBatchSize;
+  }
+
+  @Override
+  public JdbcStorageConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new JdbcStorageConfig(this, credentialsProvider);
+  }
+
   public String getDriver() {
     return driver;
   }
@@ -105,8 +121,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       case SHARED_USER:
         return new UsernamePasswordCredentials(credentialsProvider);
       case USER_TRANSLATION:
-        //TODO: replace me with a lookup against a credential store with per-user credentials support.
-        return new UsernamePasswordCredentials(credentialsProvider);
+        return new UsernamePasswordCredentials(credentialsProvider, userCredentials.getUserName());
       default:
         throw UserException.connectionError()
           .message("This storage plugin does not support auth mode: %s", authMode)

@@ -217,7 +217,7 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
    */
   Map<String, StoragePluginConfig> storedConfigs();
 
-  enum PluginFilter { ALL, ENABLED, DISABLED };
+  enum PluginFilter { ALL, ENABLED, DISABLED, HAS_USER_CREDS };
 
   /**
    * Return a possibly-filtered set of plugins from the persistent

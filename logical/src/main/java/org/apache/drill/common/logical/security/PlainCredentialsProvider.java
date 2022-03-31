@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -35,19 +36,65 @@ import java.util.Objects;
 public class PlainCredentialsProvider implements CredentialsProvider {
   private static final Logger logger = LoggerFactory.getLogger(PlainCredentialsProvider.class);
   public static final CredentialsProvider EMPTY_CREDENTIALS_PROVIDER =
-      new PlainCredentialsProvider(Collections.emptyMap());
+    new PlainCredentialsProvider(Collections.emptyMap());
 
   private final Map<String, String> credentials;
+  private final Map<String, Map<String, String>> userCredentials;
 
   @JsonCreator
   public PlainCredentialsProvider(@JsonProperty("credentials") Map<String, String> credentials) {
     this.credentials = credentials;
+    this.userCredentials = new HashMap<>();
+  }
+
+  public PlainCredentialsProvider(String username, Map<String, String> credentials) {
+    this(credentials);
+    userCredentials.put(username,credentials);
   }
 
   @Override
   @JsonIgnore(false)
   public Map<String, String> getCredentials() {
     return credentials;
+  }
+
+  /**
+   * Returns the credentials for a given active user.  If that user does not have credentials,
+   * the function will add an entry for that user with keys username, password which are both null.
+   * @param activeUser A String of the currently logged in user
+   * @return A Map of the active user's credentials
+   */
+  @Override
+  public Map<String, String> getCredentials(String activeUser) {
+    logger.debug("Getting creds for {}", activeUser);
+    if (activeUser == null) {
+      Map<String, String> tempMap = new HashMap<>();
+      tempMap.put("username", null);
+      tempMap.put("password", null);
+      return tempMap;
+    } else if (! userCredentials.containsKey(activeUser)) {
+      // If the user doesn't have anything, create a new entry for them and add it to the per-user table
+      Map<String, String> tempMap = new HashMap<>();
+      tempMap.put("username", null);
+      tempMap.put("password", null);
+      userCredentials.put(activeUser, tempMap);
+    }
+    return userCredentials.get(activeUser);
+  }
+
+  @Override
+  public void setUserCredentials(String username, String password, String activeUser) {
+    Map<String, String> userCredentials;
+    if (this.userCredentials.containsKey(activeUser)) {
+      userCredentials = this.userCredentials.get(activeUser);
+      userCredentials.put("username", username);
+      userCredentials.put("password", password);
+    } else {
+      userCredentials = new HashMap<>();
+      userCredentials.put("username", username);
+      userCredentials.put("password", password);
+      this.userCredentials.put(activeUser, userCredentials);
+    }
   }
 
   @Override
@@ -59,11 +106,17 @@ public class PlainCredentialsProvider implements CredentialsProvider {
       return false;
     }
     PlainCredentialsProvider that = (PlainCredentialsProvider) o;
-    return Objects.equals(credentials, that.credentials);
+    return Objects.equals(credentials, that.credentials) &&
+      Objects.equals(userCredentials, that.userCredentials);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(credentials);
+    return Objects.hash(credentials, userCredentials);
+  }
+
+  @Override
+  public String toString() {
+    return credentials + " " + userCredentials;
   }
 }

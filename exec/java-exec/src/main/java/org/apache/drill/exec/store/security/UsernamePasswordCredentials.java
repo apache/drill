@@ -18,11 +18,14 @@
 package org.apache.drill.exec.store.security;
 
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class UsernamePasswordCredentials {
+  private static final Logger logger = LoggerFactory.getLogger(UsernamePasswordCredentials.class);
   public static final String USERNAME = "username";
   public static final String PASSWORD = "password";
 
@@ -38,6 +41,20 @@ public class UsernamePasswordCredentials {
       this.username = credentials.get(USERNAME);
       this.password = credentials.get(PASSWORD);
     }
+  }
+
+  /**
+   * This constructor is used for per-user credentials when the active user is known.
+   * @param credentialsProvider The credentials provider.  Will only work for Plain and Vault credentials
+   *                            provider.
+   * @param activeUser The logged in userID
+   */
+  public UsernamePasswordCredentials(CredentialsProvider credentialsProvider, String activeUser) {
+    logger.debug("Getting credentials for {}", activeUser);
+    Map<String, String> credentials = credentialsProvider.getCredentials(activeUser);
+
+    this.username = credentials.get(USERNAME);
+    this.password = credentials.get(PASSWORD);
   }
 
   public String getUsername() {

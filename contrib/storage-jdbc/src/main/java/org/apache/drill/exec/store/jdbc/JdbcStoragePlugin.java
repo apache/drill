@@ -165,9 +165,12 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
       hikariConfig.setDriverClassName(config.getDriver());
       hikariConfig.setJdbcUrl(config.getUrl());
+
+      logger.debug("Initializing JDBC connection without username");
       UsernamePasswordCredentials credentials = config.getJdbcCredentials(userCredentials);
       hikariConfig.setUsername(credentials.getUsername());
       hikariConfig.setPassword(credentials.getPassword());
+
 
       /*
       The following serves as a hint to the driver, which *might* enable database

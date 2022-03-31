@@ -67,6 +67,9 @@
             <ul class="nav navbar-nav mr-auto">
               <li class="nav-item"><a class="nav-link" href="/query">Query</a></li>
               <li class="nav-item"><a class="nav-link" href="/profiles">Profiles</a></li>
+              <#if showCredentials == true>
+              <li class="nav-item"><a class="nav-link" href="/credentials">Credentials</a></li>
+              </#if>
               <#if showStorage == true>
               <li class="nav-item"><a class="nav-link" href="/storage">Storage</a></li>
               </#if>

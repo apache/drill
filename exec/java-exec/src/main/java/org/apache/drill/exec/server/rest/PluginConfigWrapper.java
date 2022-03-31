@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
@@ -29,19 +31,25 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.exec.store.security.PerUserUsernamePasswordCredentials;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @XmlRootElement
 public class PluginConfigWrapper {
-
+  private static final Logger logger = LoggerFactory.getLogger(PluginConfigWrapper.class);
   private final String name;
   private final StoragePluginConfig config;
+  private final SecurityContext sc;
 
   @JsonCreator
   public PluginConfigWrapper(@JsonProperty("name") String name,
-      @JsonProperty("config") StoragePluginConfig config) {
+                             @JsonProperty("config") StoragePluginConfig config,
+                             @JacksonInject SecurityContext sc) {
     this.name = name;
     this.config = config;
+    this.sc = sc;
   }
 
   public String getName() { return name; }
@@ -50,6 +58,41 @@ public class PluginConfigWrapper {
 
   public boolean enabled() {
     return config.isEnabled();
+  }
+
+  @JsonIgnore
+  public String getUserName() {
+    String username = "";
+    String activeUser;
+    if (config instanceof AbstractSecuredStoragePluginConfig) {
+      logger.debug("Getting username");
+      AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
+      CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+      activeUser = sc.getUserPrincipal().getName();
+      PerUserUsernamePasswordCredentials credentials = new PerUserUsernamePasswordCredentials(credentialsProvider, activeUser);
+      username = credentials.getUsername();
+      if (StringUtils.isEmpty(username)) {
+        username = "";
+      }
+    }
+    return username;
+  }
+
+  @JsonIgnore
+  public String getPassword() {
+    String password = "";
+    String activeUser;
+    if (config instanceof AbstractSecuredStoragePluginConfig) {
+      AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
+      CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
+      activeUser = sc.getUserPrincipal().getName();
+      PerUserUsernamePasswordCredentials credentials = new PerUserUsernamePasswordCredentials(credentialsProvider, activeUser);
+      password = credentials.getPassword();
+      if (StringUtils.isEmpty(password)) {
+        password = "";
+      }
+    }
+    return password;
   }
 
   public void createOrUpdateInStorage(StoragePluginRegistry storage) throws PluginException {

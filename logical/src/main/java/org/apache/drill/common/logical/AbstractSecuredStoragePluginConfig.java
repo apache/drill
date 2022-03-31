@@ -44,6 +44,12 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
     this.authMode = authMode;
   }
 
+  public abstract AbstractSecuredStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider);
+
+  public AuthMode getAuthMode() {
+    return authMode;
+  }
+
   public CredentialsProvider getCredentialsProvider() {
     if (inlineCredentials) {
       return null;
@@ -52,14 +58,20 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
   }
 
   public enum AuthMode {
-    // Connects with either the Drill process user or a shared user with stored credentials.
-    // Default.  Unaffected by user impersonation in Drill.
+    /**
+     * Connects with either the Drill process user or a shared user with stored credentials.
+     * Default.  Unaffected by user impersonation in Drill.
+     */
     SHARED_USER,
-    // As above but, in combination with the storage, then impersonates the query user.
-    // Only useful when Drill user impersonation is active.
+    /**
+     * As above but, in combination with the storage, then impersonates the query user.
+     * Only useful when Drill user impersonation is active.
+     */
     USER_IMPERSONATION,
-    // Connects with stored credentials looked up for (translated from) the query user.
-    // Only useful when Drill user impersonation is active.
+    /**
+     * Connects with stored credentials looked up for (translated from) the query user.
+     * Only useful when Drill user impersonation is active.
+     */
     USER_TRANSLATION
   }
 }
