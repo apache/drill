@@ -700,7 +700,7 @@ public class TypeCastRules {
         (rules.get(to) != null && rules.get(to).contains(from));
   }
 
-  public static DataMode getLeastRestrictiveDataMode(List<DataMode> dataModes) {
+  public static DataMode getLeastRestrictiveDataMode(DataMode... dataModes) {
     boolean hasOptional = false;
     for(DataMode dataMode : dataModes) {
       switch (dataMode) {
@@ -708,6 +708,7 @@ public class TypeCastRules {
           return dataMode;
         case OPTIONAL:
           hasOptional = true;
+        default:
       }
     }
 
@@ -718,20 +719,14 @@ public class TypeCastRules {
     }
   }
 
-  /*
-   * Function checks if casting is allowed from the 'from' -> 'to' minor type. If its allowed
-   * we also check if the precedence map allows such a cast and return true if both cases are satisfied
-   */
-  public static MinorType getLeastRestrictiveType(List<MinorType> types) {
-    assert types.size() >= 2;
-    MinorType result = types.get(0);
+  public static MinorType getLeastRestrictiveType(MinorType... types) {
+    MinorType result = types[0];
     if (result == MinorType.UNION) {
       return result;
     }
-    int resultPrec = ResolverTypePrecedence.precedenceMap.get(result);
 
-    for (int i = 1; i < types.size(); i++) {
-      MinorType next = types.get(i);
+    for (int i = 1; i < types.length; i++) {
+      MinorType next = types[i];
       if (next == MinorType.UNION) {
         return next;
       }
@@ -740,14 +735,13 @@ public class TypeCastRules {
         continue;
       }
 
-      int nextPrec = ResolverTypePrecedence.precedenceMap.get(next);
+      float resultCastCost = ResolverTypePrecedence.computeCost(next, result);
+      float nextCastCost = ResolverTypePrecedence.computeCost(result, next);
 
-      if (isCastable(next, result) && resultPrec >= nextPrec) {
-        // result is the least restrictive between the two args; nothing to do continue
+      if (isCastable(next, result) && resultCastCost <= nextCastCost && resultCastCost < Float.POSITIVE_INFINITY) {
         continue;
-      } else if(isCastable(result, next) && nextPrec >= resultPrec) {
+      } else if (isCastable(result, next) && nextCastCost <= resultCastCost && nextCastCost < Float.POSITIVE_INFINITY) {
         result = next;
-        resultPrec = nextPrec;
       } else {
         return null;
       }
@@ -756,27 +750,27 @@ public class TypeCastRules {
     return result;
   }
 
-  private static final int DATAMODE_CAST_COST = 1;
-  private static final int VARARG_COST = Integer.MAX_VALUE / 2;
+  // cost of changing mode from required to optional
+  private static final float DATAMODE_CHANGE_COST = 1f;
+  // cost of casting to a field reader
+  private static final float FIELD_READER_COST = 10f;
+  // cost of matching a vararg function
+  private static final float VARARG_COST = 10f;
 
   /**
-   * Decide whether it's legal to do implicit cast. -1 : not allowed for
-   * implicit cast > 0: cost associated with implicit cast. ==0: params are
-   * exactly same type of arg. No need of implicit.
+   * Decide whether it's legal to do implicit cast.
+   * @returns
+   *      0: param types equal arg types, no casting needed.
+   * (0,+∞): the cost of implicit casting.
+   *     +∞: implicit casting is not allowed.
    */
-  public static int getCost(List<MajorType> argumentTypes, DrillFuncHolder holder) {
-    int cost = 0;
+  public static float getCost(List<MajorType> argumentTypes, DrillFuncHolder holder) {
+    // Running sum of casting cost.
+    float totalCost = 0;
 
     if (argumentTypes.size() != holder.getParamCount() && !holder.isVarArg()) {
-      return -1;
+      return Float.POSITIVE_INFINITY;
     }
-
-    // Indicates whether we used secondary cast rules
-    boolean secondaryCast = false;
-
-    // number of arguments that could implicitly casts using precedence map or
-    // didn't require casting at all
-    int nCasts = 0;
 
     /*
      * If we are determining function holder for decimal data type, we need to
@@ -792,7 +786,7 @@ public class TypeCastRules {
 
       if (DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision() <
           holder.getReturnType(logicalExpressions).getPrecision()) {
-        return -1;
+        return Float.POSITIVE_INFINITY;
       }
     }
 
@@ -804,74 +798,32 @@ public class TypeCastRules {
       //@Param FieldReader will match any type
       if (holder.isFieldReader(i)) {
 //        if (Types.isComplex(call.args.get(i).getMajorType()) ||Types.isRepeated(call.args.get(i).getMajorType()) )
-        // add the max cost when encountered with a field reader considering
+        // add a weighted cost when we encounter a field reader considering
         // that it is the most expensive factor contributing to the cost.
-        cost += ResolverTypePrecedence.MAX_IMPLICIT_CAST_COST;
+        totalCost += FIELD_READER_COST;
         continue;
       }
 
       if (!TypeCastRules.isCastableWithNullHandling(argType, paramType, holder.getNullHandling())) {
-        return -1;
+        // one uncastable argument is enough to kill the party
+        return Float.POSITIVE_INFINITY;
       }
 
-      Integer paramVal = ResolverTypePrecedence.precedenceMap.get(paramType
-          .getMinorType());
-      Integer argVal = ResolverTypePrecedence.precedenceMap.get(argType
-          .getMinorType());
+      float castCost = ResolverTypePrecedence.computeCost(
+        argType.getMinorType(),
+        paramType.getMinorType()
+      );
 
-      if (paramVal == null) {
-        throw new RuntimeException(String.format(
-            "Precedence for type %s is not defined", paramType.getMinorType().name()));
+      if (castCost == Float.POSITIVE_INFINITY) {
+        // A single uncastable argument is enough to kill the party
+        return Float.POSITIVE_INFINITY;
       }
 
-      if (argVal == null) {
-        throw new RuntimeException(String.format(
-            "Precedence for type %s is not defined", argType.getMinorType().name()));
-      }
+      totalCost += castCost;
+      totalCost += holder.getNullHandling() == NullHandling.INTERNAL && paramType.getMode() != argType.getMode()
+        ? DATAMODE_CHANGE_COST
+        : 0;
 
-      if (paramVal - argVal < 0) {
-
-        /* Precedence rules do not allow to implicit cast, however check
-         * if the secondary rules allow us to cast
-         */
-        Set<MinorType> rules;
-        if ((rules = (ResolverTypePrecedence.secondaryImplicitCastRules.get(paramType.getMinorType()))) != null
-            && rules.contains(argType.getMinorType())) {
-          secondaryCast = true;
-        } else {
-          return -1;
-        }
-      }
-      // Check null vs non-null, using same logic as that in Types.softEqual()
-      // Only when the function uses NULL_IF_NULL, nullable and non-nullable are interchangeable.
-      // Otherwise, the function implementation is not a match.
-      if (argType.getMode() != paramType.getMode()) {
-        // TODO - this does not seem to do what it is intended to
-//        if (!((holder.getNullHandling() == NullHandling.NULL_IF_NULL) &&
-//            (argType.getMode() == DataMode.OPTIONAL ||
-//             argType.getMode() == DataMode.REQUIRED ||
-//             paramType.getMode() == DataMode.OPTIONAL ||
-//             paramType.getMode() == DataMode.REQUIRED )))
-//          return -1;
-        // if the function is designed to take optional with custom null handling, and a required
-        // is being passed, increase the cost to account for a null check
-        // this allows for a non-nullable implementation to be preferred
-        if (holder.getNullHandling() == NullHandling.INTERNAL) {
-          // a function that expects required output, but nullable was provided
-          if (paramType.getMode() == DataMode.REQUIRED && argType.getMode() == DataMode.OPTIONAL) {
-            return -1;
-          } else if (paramType.getMode() == DataMode.OPTIONAL && argType.getMode() == DataMode.REQUIRED) {
-            cost+= DATAMODE_CAST_COST;
-          }
-        }
-      }
-
-      int castCost;
-
-      if ((castCost = (paramVal - argVal)) >= 0) {
-        nCasts++;
-        cost += castCost;
-      }
     }
 
     if (holder.isVarArg()) {
@@ -883,30 +835,16 @@ public class TypeCastRules {
             && holder.getParamMajorType(varArgIndex).getMode() != argumentTypes.get(i).getMode()) {
           // prohibit using vararg functions for types with different nullability
           // if function accepts required arguments, but provided optional
-          return -1;
+          return Float.POSITIVE_INFINITY;
         }
       }
 
       // increase cost for var arg functions to prioritize regular ones
-      Integer additionalCost = ResolverTypePrecedence.precedenceMap.get(holder.getParamMajorType(varArgIndex).getMinorType());
-      cost += additionalCost != null ? additionalCost : VARARG_COST;
-      cost += holder.getParamMajorType(varArgIndex).getMode() == DataMode.REQUIRED ? 0 : 1;
+      totalCost += VARARG_COST;
+      totalCost += holder.getParamMajorType(varArgIndex).getMode() == DataMode.REQUIRED ? 0 : 1;
     }
 
-    if (secondaryCast) {
-      // We have a secondary cast for one or more of the arguments, determine the cost associated
-      int secondaryCastCost =  Integer.MAX_VALUE - 1;
-
-      // Subtract maximum possible implicit costs from the secondary cast cost
-      secondaryCastCost -= (nCasts * (ResolverTypePrecedence.MAX_IMPLICIT_CAST_COST + DATAMODE_CAST_COST));
-
-      // Add cost of implicitly casting the rest of the arguments that didn't use secondary casting
-      secondaryCastCost += cost;
-
-      return secondaryCastCost;
-    }
-
-    return cost;
+    return totalCost;
   }
 
   /*
@@ -934,5 +872,4 @@ public class TypeCastRules {
         return false;
     }
   }
-
 }

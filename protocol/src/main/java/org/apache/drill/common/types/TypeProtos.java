@@ -118,7 +118,7 @@ public final class TypeProtos {
     DECIMAL38SPARSE(10),
     /**
      * <pre>
-     *  signed decimal with two digit precision
+     *  signed decimal with two digit scale
      * </pre>
      *
      * <code>MONEY = 11;</code>

@@ -456,26 +456,26 @@ public class TypeInferenceUtils {
       // This order of checks is caused by the order of types in ResolverTypePrecedence.precedenceMap
       final RelDataType operandType = opBinding.getOperandType(0);
       final TypeProtos.MinorType inputMinorType = getDrillTypeFromCalciteType(operandType);
-      if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.BIGINT))
+      if (TypeCastRules.getLeastRestrictiveType(inputMinorType, TypeProtos.MinorType.BIGINT)
           == TypeProtos.MinorType.BIGINT) {
         return createCalciteTypeWithNullability(
             factory,
             SqlTypeName.BIGINT,
             isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT4))
+      } else if (TypeCastRules.getLeastRestrictiveType(inputMinorType, TypeProtos.MinorType.FLOAT4)
           == TypeProtos.MinorType.FLOAT4) {
         return createCalciteTypeWithNullability(
             factory,
             SqlTypeName.DOUBLE,
             isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.VARDECIMAL))
+      } else if (TypeCastRules.getLeastRestrictiveType(inputMinorType, TypeProtos.MinorType.VARDECIMAL)
           == TypeProtos.MinorType.VARDECIMAL) {
         RelDataType sqlType = factory.createSqlType(SqlTypeName.DECIMAL,
           DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
           Math.min(operandType.getScale(),
             DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()));
         return factory.createTypeWithNullability(sqlType, isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT8))
+      } else if (TypeCastRules.getLeastRestrictiveType(inputMinorType, TypeProtos.MinorType.FLOAT8)
           == TypeProtos.MinorType.FLOAT8) {
         return createCalciteTypeWithNullability(
             factory,
@@ -861,20 +861,20 @@ public class TypeInferenceUtils {
       // This order of checks is caused by the order of types in ResolverTypePrecedence.precedenceMap
       final RelDataType operandType = opBinding.getOperandType(0);
       final TypeProtos.MinorType inputMinorType = getDrillTypeFromCalciteType(operandType);
-      if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT4))
+      if (TypeCastRules.getLeastRestrictiveType(inputMinorType, TypeProtos.MinorType.FLOAT4)
           == TypeProtos.MinorType.FLOAT4) {
         return createCalciteTypeWithNullability(
             factory,
             SqlTypeName.DOUBLE,
             isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.VARDECIMAL))
+      } else if (TypeCastRules.getLeastRestrictiveType(inputMinorType, TypeProtos.MinorType.VARDECIMAL)
           == TypeProtos.MinorType.VARDECIMAL) {
         RelDataType sqlType = factory.createSqlType(SqlTypeName.DECIMAL,
             DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision(),
             Math.min(Math.max(6, operandType.getScale()),
                 DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()));
         return factory.createTypeWithNullability(sqlType, isNullable);
-      } else if (TypeCastRules.getLeastRestrictiveType(Lists.newArrayList(inputMinorType, TypeProtos.MinorType.FLOAT8))
+      } else if (TypeCastRules.getLeastRestrictiveType(inputMinorType, TypeProtos.MinorType.FLOAT8)
           == TypeProtos.MinorType.FLOAT8) {
         return createCalciteTypeWithNullability(
             factory,

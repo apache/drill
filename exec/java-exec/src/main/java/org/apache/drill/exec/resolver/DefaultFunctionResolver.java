@@ -24,7 +24,6 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
-import org.apache.drill.exec.util.AssertionUtil;
 
 public class DefaultFunctionResolver implements FunctionResolver {
 
@@ -33,8 +32,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
   @Override
   public DrillFuncHolder getBestMatch(List<DrillFuncHolder> methods, FunctionCall call) {
 
-    int bestcost = Integer.MAX_VALUE;
-    int currcost = Integer.MAX_VALUE;
+    float bestcost = Float.POSITIVE_INFINITY, currcost = Float.POSITIVE_INFINITY;
     DrillFuncHolder bestmatch = null;
     final List<DrillFuncHolder> bestMatchAlternatives = new LinkedList<>();
     List<TypeProtos.MajorType> argumentTypes = call.args().stream()
@@ -43,8 +41,8 @@ public class DefaultFunctionResolver implements FunctionResolver {
     for (DrillFuncHolder h : methods) {
       currcost = TypeCastRules.getCost(argumentTypes, h);
 
-      // if cost is lower than 0, func implementation is not matched, either w/ or w/o implicit casts
-      if (currcost  < 0 ) {
+      // if cost is +∞, func implementation is not matched, either w/ or w/o implicit casts
+      if (currcost == Float.POSITIVE_INFINITY ) {
         continue;
       }
 
@@ -58,27 +56,20 @@ public class DefaultFunctionResolver implements FunctionResolver {
       }
     }
 
-    if (bestcost < 0) {
+    if (bestcost == Float.POSITIVE_INFINITY) {
       //did not find a matched func implementation, either w/ or w/o implicit casts
       //TODO: raise exception here?
       return null;
-    } else {
-      if (AssertionUtil.isAssertionsEnabled() && bestMatchAlternatives.size() > 0) {
-        /*
-         * There are other alternatives to the best match function which could have been selected
-         * Log the possible functions and the chose implementation and raise an exception
-         */
-        logger.error("Chosen function impl: " + bestmatch.toString());
-
-        // printing the possible matches
-        logger.error("Printing all the possible functions that could have matched: ");
-        for (DrillFuncHolder holder: bestMatchAlternatives) {
-          logger.error(holder.toString());
-        }
-
-        throw new AssertionError("Multiple functions with best cost found");
-      }
-      return bestmatch;
     }
+    if (bestMatchAlternatives.size() > 0) {
+      logger.info("Multiple functions with best cost found, chosing {}", bestmatch);
+
+      // printing the possible matches
+      logger.debug("Printing all the possible functions that could have matched: ");
+      for (DrillFuncHolder holder : bestMatchAlternatives) {
+        logger.debug(holder.toString());
+      }
+    }
+    return bestmatch;
   }
 }

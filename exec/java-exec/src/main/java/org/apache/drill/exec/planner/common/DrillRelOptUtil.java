@@ -56,7 +56,6 @@ import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -67,7 +66,6 @@ import org.apache.drill.exec.resolver.TypeCastRules;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,10 +116,10 @@ public abstract class DrillRelOptUtil {
         }
 
         // Check if Drill implicit casting can resolve the incompatibility
-        List<TypeProtos.MinorType> types = Lists.newArrayListWithCapacity(2);
-        types.add(Types.getMinorTypeFromName(type1.getSqlTypeName().getName()));
-        types.add(Types.getMinorTypeFromName(type2.getSqlTypeName().getName()));
-        return TypeCastRules.getLeastRestrictiveType(types) != null;
+        return TypeCastRules.getLeastRestrictiveType(
+          Types.getMinorTypeFromName(type1.getSqlTypeName().getName()),
+          Types.getMinorTypeFromName(type2.getSqlTypeName().getName())
+        ) != null;
       }
     }
     return true;

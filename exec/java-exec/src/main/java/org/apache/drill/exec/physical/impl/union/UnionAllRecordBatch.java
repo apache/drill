@@ -60,7 +60,6 @@ import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -302,10 +301,10 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
           builder.setMinorType(leftField.getType().getMinorType());
           builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
         } else {
-          List<TypeProtos.MinorType> types = Lists.newLinkedList();
-          types.add(leftField.getType().getMinorType());
-          types.add(rightField.getType().getMinorType());
-          TypeProtos.MinorType outputMinorType = TypeCastRules.getLeastRestrictiveType(types);
+          TypeProtos.MinorType outputMinorType = TypeCastRules.getLeastRestrictiveType(
+            leftField.getType().getMinorType(),
+            rightField.getType().getMinorType()
+          );
           if (outputMinorType == null) {
             throw new DrillRuntimeException("Type mismatch between " + leftField.getType().getMinorType().toString() +
                 " on the left side and " + rightField.getType().getMinorType().toString() +
@@ -315,10 +314,10 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
         }
 
         // The output data mode should be as flexible as the more flexible one from the two input tables
-        List<TypeProtos.DataMode> dataModes = Lists.newLinkedList();
-        dataModes.add(leftField.getType().getMode());
-        dataModes.add(rightField.getType().getMode());
-        builder.setMode(TypeCastRules.getLeastRestrictiveDataMode(dataModes));
+        builder.setMode(TypeCastRules.getLeastRestrictiveDataMode(
+          leftField.getType().getMode(),
+          rightField.getType().getMode()
+        ));
 
         container.addOrGet(MaterializedField.create(leftField.getName(), builder.build()), callBack);
       }

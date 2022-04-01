@@ -67,7 +67,10 @@ public class DrillCalciteSqlBetweenOperatorWrapper extends SqlBetweenOperator im
       types.add(inMinorType);
     }
 
-    final boolean isCompatible = TypeCastRules.getLeastRestrictiveType(types) != null;
+    final boolean isCompatible = TypeCastRules.getLeastRestrictiveType(
+      types.toArray(new TypeProtos.MinorType[0])
+    ) != null;
+
     if (!isCompatible && throwOnFailure) {
       throw callBinding.newValidationSignatureError();
     }
