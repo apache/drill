@@ -18,34 +18,31 @@
 
 package org.apache.drill.exec.store.xml;
 
+import java.io.InputStream;
+
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
-
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.hadoop.mapred.FileSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
 
-
-public class XMLBatchReader implements ManagedReader<FileSchemaNegotiator> {
+public class XMLBatchReader implements ManagedReader {
 
   private static final Logger logger = LoggerFactory.getLogger(XMLBatchReader.class);
 
-  private FileSplit split;
-  private RowSetLoader rootRowWriter;
-  private CustomErrorContext errorContext;
+  private final FileDescrip file;
+  private final RowSetLoader rootRowWriter;
+  private final CustomErrorContext errorContext;
 
   private XMLReader reader;
-  private final int maxRecords;
   private final int dataLevel;
-
 
   static class XMLReaderConfig {
     final XMLFormatPlugin plugin;
@@ -57,20 +54,15 @@ public class XMLBatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
   }
 
-  public XMLBatchReader(XMLReaderConfig readerConfig, EasySubScan scan) {
-    this.maxRecords = scan.getMaxRecords();
-    this.dataLevel = readerConfig.dataLevel;
-  }
-
-  @Override
-  public boolean open(FileSchemaNegotiator negotiator) {
-    split = negotiator.split();
-    ResultSetLoader loader = negotiator.build();
+  public XMLBatchReader(XMLReaderConfig readerConfig, EasySubScan scan, FileSchemaNegotiator negotiator) {
     errorContext = negotiator.parentErrorContext();
+    dataLevel = readerConfig.dataLevel;
+    file = negotiator.file();
+
+    ResultSetLoader loader = negotiator.build();
     rootRowWriter = loader.writer();
 
-    openFile(negotiator);
-    return true;
+    openFile();
   }
 
   @Override
@@ -80,18 +72,18 @@ public class XMLBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   @Override
   public void close() {
-    reader.close();
+    AutoCloseables.closeSilently(reader);
   }
 
-  private void openFile(FileScanFramework.FileSchemaNegotiator negotiator) {
+  private void openFile() {
     try {
-      InputStream fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
-      reader = new XMLReader(fsStream, dataLevel, maxRecords);
+      InputStream fsStream = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
+      reader = new XMLReader(fsStream, dataLevel);
       reader.open(rootRowWriter, errorContext);
     } catch (Exception e) {
       throw UserException
         .dataReadError(e)
-        .message(String.format("Failed to open input file: %s", split.getPath().toString()))
+        .message(String.format("Failed to open input file: %s", file.split().getPath().toString()))
         .addContext(errorContext)
         .addContext(e.getMessage())
         .build(logger);
