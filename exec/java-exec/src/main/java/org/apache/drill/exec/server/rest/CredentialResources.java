@@ -18,6 +18,8 @@
 
 package org.apache.drill.exec.server.rest;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.Operation;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -82,6 +84,7 @@ public class CredentialResources {
   @GET
   @Path("/credentials")
   @Produces(MediaType.TEXT_HTML)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Viewable getPlugins() {
     List<StoragePluginModel> model = getPluginsJSON().stream()
       .map(plugin -> new StoragePluginModel(plugin, request, sc))
@@ -103,6 +106,7 @@ public class CredentialResources {
   @GET
   @Path("/credentials{group: (/[^/]+?)*}-plugins.json")
   @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public List<PluginConfigWrapper> getConfigsFor(@PathParam("group") String pluginGroup) {
     PluginFilter filter;
     switch (pluginGroup.trim()) {
@@ -132,7 +136,8 @@ public class CredentialResources {
   @Path("/credentials/update_credentials")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response createOrUpdatePlugin(@FormParam("plugin") String pluginName,
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
+  public Response createOrUpdateCredentials(@FormParam("plugin") String pluginName,
                                        @FormParam("username") String username,
                                        @FormParam("password") String password) {
     String activeUser = sc.getUserPrincipal().getName();
@@ -181,6 +186,63 @@ public class CredentialResources {
 
     return Response.ok().entity(message("Success")).build();
   }
+
+  @POST
+  @Path("/credentials/{pluginName}/update_credentials.json")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
+  public Response createOrUpdatePlugin(@PathParam("pluginName") String pluginName, UsernamePasswordContainer credentials) {
+    String activeUser = sc.getUserPrincipal().getName();
+    pluginName = pluginName.trim();
+
+    if (pluginName.isEmpty()) {
+      return Response.status(Response.Status.BAD_REQUEST)
+        .entity(message("A storage config name may not be empty"))
+        .build();
+    }
+
+    // Get the config
+    StoragePluginConfig rawConfig = storage.getStoredConfig(pluginName);
+    if (!(rawConfig instanceof AbstractSecuredStoragePluginConfig)) {
+      return Response.status(Status.INTERNAL_SERVER_ERROR)
+        .entity(message(pluginName + " does not support user translation."))
+        .build();
+    }
+
+    AbstractSecuredStoragePluginConfig config = (AbstractSecuredStoragePluginConfig)rawConfig;
+
+    if (config.getAuthMode() != AuthMode.USER_TRANSLATION) {
+      return Response.status(Status.INTERNAL_SERVER_ERROR)
+        .entity(message(pluginName + " does not have user translation enabled."))
+        .build();
+    }
+
+    // Get the credential provider
+    CredentialsProvider credentialProvider = config.getCredentialsProvider();
+    credentialProvider.setUserCredentials(credentials.getUsername(), credentials.getPassword(), activeUser);
+
+    // Since the config classes are not accessible from java-exec, we have to serialize them,
+    // replace the credential provider with the updated one, and update the storage plugin registry
+    AbstractSecuredStoragePluginConfig newConfig = config.updateCredentialProvider(credentialProvider);
+    newConfig.setEnabled(config.isEnabled());
+
+    try {
+      storage.validatedPut(pluginName, newConfig);
+      // Force re-caching
+      storage.setEnabled(pluginName, newConfig.isEnabled());
+    } catch (PluginException e) {
+      logger.error("Error while saving plugin", e);
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+        .entity(message("Error while updating plugin credentials: %s", e.getMessage()))
+        .build();
+    }
+
+    return Response.status(Status.OK)
+      .entity("Credentials have been updated.")
+      .build();
+  }
+
 
   private JsonResult message(String message, Object... args) {
     return new JsonResult(String.format(message, args));

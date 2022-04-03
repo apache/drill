@@ -68,7 +68,8 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
                                  @JsonProperty("proxyUsername") String proxyUsername,
                                  @JsonProperty("proxyPassword") String proxyPassword,
                                  @JsonProperty("oAuthConfig") HttpOAuthConfig oAuthConfig,
-                                 @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider
+                                 @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
+                                 @JsonProperty("authMode") String authMode
                                  ) {
     super(CredentialProviderUtils.getCredentialsProvider(
         getClientID(new OAuthTokenCredentials(credentialsProvider)),
@@ -79,7 +80,8 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
         normalize(proxyUsername),
         normalize(proxyPassword),
         credentialsProvider),
-        credentialsProvider == null);
+        credentialsProvider == null, authMode != null ?
+        AuthMode.valueOf(authMode.toUpperCase()) : AuthMode.SHARED_USER);
     this.cacheResults = cacheResults != null && cacheResults;
 
     this.connections = CaseInsensitiveMap.newHashMap();
@@ -157,7 +159,7 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
       getUsernamePasswordCredentials().getUsername(),
       getUsernamePasswordCredentials().getPassword(),
         proxyHost, proxyPort, proxyType, getUsernamePasswordCredentials().getProxyUsername(),
-      getUsernamePasswordCredentials().getProxyPassword(), oAuthConfig, credentialsProvider);
+      getUsernamePasswordCredentials().getProxyPassword(), oAuthConfig, credentialsProvider, authMode.name());
   }
 
   private Map<String, HttpApiConfig> configFor(String connectionName) {
@@ -175,12 +177,13 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
     }
     HttpStoragePluginConfig thatConfig = (HttpStoragePluginConfig) that;
     return Objects.equals(connections, thatConfig.connections) &&
-           Objects.equals(cacheResults, thatConfig.cacheResults) &&
-           Objects.equals(proxyHost, thatConfig.proxyHost) &&
-           Objects.equals(proxyPort, thatConfig.proxyPort) &&
-           Objects.equals(proxyType, thatConfig.proxyType) &&
-           Objects.equals(oAuthConfig, thatConfig.oAuthConfig) &&
-           Objects.equals(credentialsProvider, thatConfig.credentialsProvider);
+      Objects.equals(cacheResults, thatConfig.cacheResults) &&
+      Objects.equals(proxyHost, thatConfig.proxyHost) &&
+      Objects.equals(proxyPort, thatConfig.proxyPort) &&
+      Objects.equals(proxyType, thatConfig.proxyType) &&
+      Objects.equals(oAuthConfig, thatConfig.oAuthConfig) &&
+      Objects.equals(credentialsProvider, thatConfig.credentialsProvider) &&
+      Objects.equals(authMode, thatConfig.authMode);
   }
 
   @Override
@@ -194,13 +197,14 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
       .field("credentialsProvider", credentialsProvider)
       .field("oauthConfig", oAuthConfig)
       .field("proxyType", proxyType)
+      .field("authMode", authMode)
       .toString();
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(connections, cacheResults, timeout,
-        proxyHost, proxyPort, proxyType, oAuthConfig, credentialsProvider);
+        proxyHost, proxyPort, proxyType, oAuthConfig, credentialsProvider, authMode);
   }
 
   @JsonProperty("cacheResults")
@@ -281,6 +285,11 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
   @JsonIgnore
   public UsernamePasswordWithProxyCredentials getUsernamePasswordCredentials() {
     return new UsernamePasswordWithProxyCredentials(credentialsProvider);
+  }
+
+  @JsonIgnore
+  public UsernamePasswordWithProxyCredentials getUsernamePasswordCredentials(String username) {
+    return new UsernamePasswordWithProxyCredentials(credentialsProvider, username);
   }
 
   @JsonIgnore

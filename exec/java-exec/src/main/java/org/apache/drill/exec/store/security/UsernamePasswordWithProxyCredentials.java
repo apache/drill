@@ -40,6 +40,19 @@ public class UsernamePasswordWithProxyCredentials extends UsernamePasswordCreden
     }
   }
 
+  public UsernamePasswordWithProxyCredentials(CredentialsProvider credentialsProvider, String username) {
+    super(credentialsProvider, username);
+    if (credentialsProvider == null || credentialsProvider.getCredentials(username) == null) {
+      this.proxyUsername = null;
+      this.proxyPassword = null;
+    } else {
+      Map<String, String> credentials = credentialsProvider.getCredentials(username) == null ? new HashMap<>() : credentialsProvider.getCredentials(username);
+      this.proxyUsername = credentials.get(OAuthTokenCredentials.PROXY_USERNAME);
+      this.proxyPassword = credentials.get(OAuthTokenCredentials.PROXY_PASSWORD);
+    }
+  }
+
+
   public String getProxyUsername() {
     return proxyUsername;
   }

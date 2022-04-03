@@ -49,7 +49,8 @@ public class PlainCredentialsProvider implements CredentialsProvider {
   }
 
   public PlainCredentialsProvider(String username, Map<String, String> credentials) {
-    this(credentials);
+    this.credentials = new HashMap<>();
+    this.userCredentials = new HashMap<>();
     userCredentials.put(username,credentials);
   }
 
