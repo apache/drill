@@ -91,13 +91,11 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
  *     are passed to both.</li>
  * </ul>
  */
-
 public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
 
   /**
    * Object representation of an array writer.
    */
-
   public static class ArrayObjectWriter extends AbstractObjectWriter {
 
     protected final AbstractArrayWriter arrayWriter;
@@ -130,7 +128,6 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
    * Keeps track of the current offset in terms of value positions.
    * Forwards overflow events to the base index.
    */
-
   public class ArrayElementWriterIndex implements ColumnWriterIndex {
 
     private int elementIndex;
