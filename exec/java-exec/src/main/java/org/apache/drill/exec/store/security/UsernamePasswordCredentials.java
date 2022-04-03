@@ -51,10 +51,14 @@ public class UsernamePasswordCredentials {
    */
   public UsernamePasswordCredentials(CredentialsProvider credentialsProvider, String activeUser) {
     logger.debug("Getting credentials for {}", activeUser);
-    Map<String, String> credentials = credentialsProvider.getCredentials(activeUser);
-
-    this.username = credentials.get(USERNAME);
-    this.password = credentials.get(PASSWORD);
+    if (credentialsProvider == null) {
+      this.username = null;
+      this.password = null;
+    } else {
+      Map<String, String> credentials = credentialsProvider.getCredentials(activeUser);
+      this.username = credentials.get(USERNAME);
+      this.password = credentials.get(PASSWORD);
+    }
   }
 
   public String getUsername() {

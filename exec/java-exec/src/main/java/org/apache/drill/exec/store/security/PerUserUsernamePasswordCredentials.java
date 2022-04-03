@@ -28,15 +28,17 @@ public class PerUserUsernamePasswordCredentials extends UsernamePasswordCredenti
 
   private final String defaultUsername;
   private final String defaultPassword;
-  private final String activeUser;
 
   public PerUserUsernamePasswordCredentials(CredentialsProvider credentialsProvider, String activeUser) {
     super(credentialsProvider, activeUser);
-    this.activeUser = activeUser;
-    Map<String, String> credentials = credentialsProvider.getCredentials();
-
-    this.defaultUsername = credentials.get(DEFAULT_USERNAME);
-    this.defaultPassword = credentials.get(DEFAULT_PASSWORD);
+    if (credentialsProvider == null) {
+      this.defaultUsername = null;
+      this.defaultPassword = null;
+    } else {
+      Map<String, String> credentials = credentialsProvider.getCredentials();
+      this.defaultUsername = credentials.get(DEFAULT_USERNAME);
+      this.defaultPassword = credentials.get(DEFAULT_PASSWORD);
+    }
   }
 
   public String getDefaultUsername() {

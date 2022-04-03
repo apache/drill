@@ -155,7 +155,7 @@ public class CredentialResources {
 
     if (config.getAuthMode() != AuthMode.USER_TRANSLATION) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message(pluginName + " does not support per user credentials."))
+        .entity(message(pluginName + " does not support per user translation."))
         .build();
     }
 

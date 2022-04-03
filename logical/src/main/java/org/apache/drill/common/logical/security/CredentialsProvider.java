@@ -64,4 +64,18 @@ public interface CredentialsProvider {
       .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
       .build(logger);
   }
+
+  @JsonIgnore
+  default boolean hasValidUsername(String activeUser) {
+    throw UserException.unsupportedError()
+      .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
+      .build(logger);
+  }
+
+  @JsonIgnore
+  default boolean hasValidPassword(String activeUser) {
+    throw UserException.unsupportedError()
+      .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
+      .build(logger);
+  }
 }

@@ -20,6 +20,7 @@ package org.apache.drill.common.logical.security;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,6 +96,18 @@ public class PlainCredentialsProvider implements CredentialsProvider {
       userCredentials.put("password", password);
       this.userCredentials.put(activeUser, userCredentials);
     }
+  }
+
+  @Override
+  public boolean hasValidUsername(String username) {
+    Map<String, String> creds = getCredentials(username);
+    return StringUtils.isEmpty(creds.get("username"));
+  }
+
+  @Override
+  public boolean hasValidPassword(String username) {
+    Map<String, String> creds = getCredentials(username);
+    return StringUtils.isEmpty(creds.get("password"));
   }
 
   @Override

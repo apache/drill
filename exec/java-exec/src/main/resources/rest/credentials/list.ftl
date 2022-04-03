@@ -21,11 +21,10 @@
 <#include "*/generic.ftl">
 <#macro page_head>
   <script src="/static/js/jquery.form.js"></script>
-
   <!-- Ace Libraries for Syntax Formatting -->
   <script src="/static/js/ace-code-editor/ace.js" type="text/javascript" charset="utf-8"></script>
   <script src="/static/js/ace-code-editor/theme-eclipse.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/static/js/credentialServerMessage.js"></script>
+  <script src="/static/js/credentialsServerMessage.js"></script>
 </#macro>
 
 <#macro page_body>
