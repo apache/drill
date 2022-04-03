@@ -96,7 +96,7 @@ public class HttpXMLBatchReader extends HttpBatchReader {
     inStream = http.getInputStream();
     // Initialize the XMLReader the reader
     try {
-      xmlReader = new XMLReader(inStream, dataLevel, maxRecords);
+      xmlReader = new XMLReader(inStream, dataLevel);
       resultLoader = negotiator.build();
 
       if (implicitColumnsAreProjected()) {
