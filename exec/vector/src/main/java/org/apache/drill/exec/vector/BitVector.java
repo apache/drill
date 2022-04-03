@@ -44,7 +44,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   /**
    * Width of each fixed-width value.
    */
-
   public static final int VALUE_WIDTH = 1;
 
   /**
@@ -53,7 +52,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
    * enforced when the vector is used to hold values in a repeated
    * vector.
    */
-
   public static final int MAX_CAPACITY = MAX_BUFFER_SIZE / VALUE_WIDTH;
 
   /**
@@ -62,7 +60,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
    * the maximum item count. This is the limit enforced when the
    * vector is used to hold required or nullable values.
    */
-
   public static final int MAX_COUNT = Math.min(MAX_ROW_COUNT, MAX_CAPACITY);
 
   /**
@@ -70,7 +67,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
    * values that either fit in the maximum overall vector size, or that
    * is no larger than the maximum vector item count.
    */
-
   public static final int NET_MAX_SIZE = VALUE_WIDTH * MAX_COUNT;
 
   private final FieldReader reader = new BitReaderImpl(BitVector.this);

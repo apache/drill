@@ -73,7 +73,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * result set loader presents the full table schema to the reader,
  * but actually writes only the projected columns. Suppose we
  * have:<pre><code>
- * SELECT t3, C, B, t1,, A ...
+ * SELECT t3, C, B, t1, A ...
  * </code></pre>
  * Then the abbreviated table schema looks like this:<pre><code>
  * [ 1 | 3 ]</code></pre>
@@ -93,6 +93,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * be cleared by the caller.</li>
  * <li>For implicit and null columns, the output vector is identical
  * to the input vector.</li>
+ * </ul>
  */
 public class OutputBatchBuilder {
 
@@ -150,10 +151,11 @@ public class OutputBatchBuilder {
    * a separate implementation.
    */
   private static class MapBuilder {
-    ColumnMetadata outputCol;
-    TupleMetadata mapSchema;
-    List<MapSource> sourceMaps;
-    Object memberSources[];
+    private final ColumnMetadata outputCol;
+    private final TupleMetadata mapSchema;
+    private final List<MapSource> sourceMaps;
+    private final Object memberSources[];
+    private final List<MapVector> mapVectors = new ArrayList<>();
 
     private MapBuilder(ColumnMetadata outputCol, List<MapSource> sourceMaps) {
       this.outputCol = outputCol;
@@ -207,7 +209,9 @@ public class OutputBatchBuilder {
         }
         mapVector.putChild(outputCol.name(), outputVector);
       }
-
+      if (mapVector instanceof MapVector) {
+        mapVectors.add((MapVector) mapVector);
+      }
       return mapVector;
     }
 
@@ -221,7 +225,10 @@ public class OutputBatchBuilder {
                   .metadata(source.offset).tupleSchema(),
                 (AbstractMapVector) getMember(source)));
       }
-      return new MapBuilder(outputCol, childMaps).build(allocator);
+      MapBuilder builder = new MapBuilder(outputCol, childMaps);
+      ValueVector vector = builder.build(allocator);
+      mapVectors.addAll(builder.mapVectors);
+      return vector;
     }
 
     public ValueVector getMember(VectorSource source) {
@@ -260,7 +267,12 @@ public class OutputBatchBuilder {
       int outputIndex = outputSchema.index(col.name());
       Preconditions.checkState(outputIndex >= 0);
       VectorSource vectorSource = new VectorSource(source, i);
-      if (col.isMap()) {
+
+      // If the column is a regular map, then projection may select
+      // some but not all columns. If the columns is a map array, then
+      // SQL projection cannot identify which columns are wanted. Include
+      // the entire map.
+      if (col.isMap() && !col.isArray()) {
         if (vectorSources[outputIndex] == null) {
           vectorSources[outputIndex] = new ArrayList<VectorSource>();
         }
@@ -283,14 +295,8 @@ public class OutputBatchBuilder {
     for (int i = 0; i < outputSchema.size(); i++) {
       ColumnMetadata outputCol = outputSchema.metadata(i);
       ValueVector outputVector;
-      if (outputCol.isMap()) {
+      if (outputCol.isMap() && !outputCol.isArray()) {
         outputVector = buildTopMap(outputCol, (List<VectorSource>) vectorSources[i]);
-
-        // Map vectors are a nuisance: they carry their own value could which
-        // must be set separately from the underling data vectors.
-        if (outputVector instanceof MapVector) {
-          mapVectors.add((MapVector) outputVector);
-        }
       } else {
         outputVector = getVector((VectorSource) vectorSources[i]);
       }
@@ -308,7 +314,12 @@ public class OutputBatchBuilder {
               sources.get(source.source).schema.metadata(source.offset).tupleSchema(),
               (AbstractMapVector) getVector(source)));
     }
-    return new MapBuilder(outputCol, sourceMaps).build(outputContainer.getAllocator());
+    MapBuilder builder = new MapBuilder(outputCol, sourceMaps);
+    ValueVector vector = builder.build(outputContainer.getAllocator());
+    // Map vectors are a nuisance: they carry their own value count which
+    // must be set separately from the underling data vectors.
+    mapVectors.addAll(builder.mapVectors);
+    return vector;
   }
 
   public ValueVector getVector(VectorSource source) {

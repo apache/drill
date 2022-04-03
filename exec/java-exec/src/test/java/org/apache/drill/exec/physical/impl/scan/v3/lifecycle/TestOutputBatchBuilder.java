@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.scan.v3.lifecycle;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 
 import java.util.Arrays;
@@ -269,5 +270,58 @@ public class TestOutputBatchBuilder extends SubOperatorTest {
     VectorContainer output = builder.outputContainer();
 
     RowSetUtilities.verify(expected, fixture.wrap(output));
+  }
+
+  @Test
+  public void testMapArray() {
+    final TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .addMapArray("m")
+          .add("x", MinorType.INT)
+          .add("y", MinorType.VARCHAR)
+          .resumeSchema()
+        .buildSchema();
+
+    final VectorContainer input = fixture.rowSetBuilder(schema)
+        .addRow("barney", mapArray(mapValue(1, "betty"), mapValue(2, "bambam")))
+        .addRow("fred", mapArray(mapValue(1, "wilma"), mapValue(2, "pebbles")))
+        .build()
+        .container();
+
+    final OutputBatchBuilder builder = new OutputBatchBuilder(schema,
+        Collections.singletonList(new BatchSource(schema, input)),
+        fixture.allocator());
+    builder.load(input.getRecordCount());
+    VectorContainer output = builder.outputContainer();
+
+    RowSetUtilities.verify(fixture.wrap(input), fixture.wrap(output));
+  }
+
+  @Test
+  public void testNestedMap() {
+    final TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .addMap("m")
+          .add("x", MinorType.INT)
+          .addMap("y")
+            .add("p", MinorType.INT)
+            .add("q", MinorType.VARCHAR)
+            .resumeMap()
+          .resumeSchema()
+        .buildSchema();
+
+    final VectorContainer input = fixture.rowSetBuilder(schema)
+        .addRow("barney", mapValue(1, mapValue(10, "betty")))
+        .addRow("fred", mapValue(2, mapValue(20, "wilma")))
+        .build()
+        .container();
+
+    final OutputBatchBuilder builder = new OutputBatchBuilder(schema,
+        Collections.singletonList(new BatchSource(schema, input)),
+        fixture.allocator());
+    builder.load(input.getRecordCount());
+    VectorContainer output = builder.outputContainer();
+
+    RowSetUtilities.verify(fixture.wrap(input), fixture.wrap(output));
   }
 }
