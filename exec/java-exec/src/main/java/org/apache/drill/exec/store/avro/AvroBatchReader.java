@@ -26,6 +26,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.mapred.FsInput;
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
@@ -50,7 +51,7 @@ public class AvroBatchReader implements ManagedReader {
 
   private final Path filePath;
   private final long endPosition;
-  private DataFileReader<GenericRecord> reader;
+  private final DataFileReader<GenericRecord> reader;
   private final RowSetLoader loader;
   private final ColumnConverter converter;
   private final CustomErrorContext errorContext;
@@ -112,7 +113,10 @@ public class AvroBatchReader implements ManagedReader {
     } catch (IOException e) {
       logger.trace("Unable to obtain Avro reader position: {}", e.getMessage(), e);
     }
-    return String.format("AvroBatchReader [ File = %s, Position = %d ]", filePath, currentPosition);
+    return new PlanStringBuilder(this)
+        .unquotedField("File", filePath.toString())
+        .unquotedField("Position", String.valueOf(currentPosition))
+        .toString();
   }
 
   /**
