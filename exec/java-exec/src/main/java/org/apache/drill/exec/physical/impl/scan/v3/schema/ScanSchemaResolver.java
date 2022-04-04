@@ -189,7 +189,7 @@ public class ScanSchemaResolver {
     switch (mode) {
       case FIRST_READER_SCHEMA:
       case READER_SCHEMA:
-        if (schema.projectionType() != ProjectionType.ALL) {
+        if (schema.projectionType() != ProjectionType.ALL && !col.isArray()) {
           throw new IllegalStateException(
               "Reader should not have projected an unprojected column: " + col.name());
         }
