@@ -49,6 +49,7 @@ import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -224,20 +225,18 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
     return response.code() == 200;
   }
 
-
   @Test
-  public void testWithUser() throws Exception {
+  public void testUnrelatedQueryWithUser() throws Exception {
+    // This test verifies that a query with a user that does NOT have credentials
+    // for a plugin using user translation will still execute.
     ClientFixture client = cluster.clientBuilder()
       .property(DrillProperties.USER, TEST_USER_1)
       .property(DrillProperties.PASSWORD, TEST_USER_1_PASSWORD)
       .build();
 
-    // Add credentials to
-
-    // Run a query
-    // Make sure a query runs
     String sql = "SHOW FILES IN dfs";
-    client.queryBuilder().sql(sql).run();
+    QuerySummary result = client.queryBuilder().sql(sql).run();
+    assertTrue(result.succeeded());
   }
 
   /**
