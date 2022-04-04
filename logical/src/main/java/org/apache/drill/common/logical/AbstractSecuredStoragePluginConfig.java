@@ -22,8 +22,6 @@ import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
 public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginConfig {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractSecuredStoragePluginConfig.class);

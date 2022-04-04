@@ -271,8 +271,9 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
 
     @Override
     public List<Cookie> loadForRequest(HttpUrl url) {
-      if (cookies != null)
+      if (cookies != null) {
         return cookies;
+      }
       return new ArrayList<>();
     }
   }
