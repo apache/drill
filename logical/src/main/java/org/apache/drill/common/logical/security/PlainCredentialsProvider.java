@@ -60,6 +60,12 @@ public class PlainCredentialsProvider implements CredentialsProvider {
     return credentials;
   }
 
+  @JsonProperty("userCredentials")
+  @JsonIgnore(false)
+  public Map<String, Map<String, String>> getUserCredentials() {
+    return userCredentials;
+  }
+
   /**
    * Returns the credentials for a given active user.  If that user does not have credentials,
    * the function will add an entry for that user with keys username, password which are both null.

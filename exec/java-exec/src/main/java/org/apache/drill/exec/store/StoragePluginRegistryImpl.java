@@ -771,7 +771,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         if (plugin.getValue() instanceof AbstractSecuredStoragePluginConfig) {
           // If the plugin does not have user translation enabled, do not add it to the list.
           AbstractSecuredStoragePluginConfig securedConfig = (AbstractSecuredStoragePluginConfig) plugin.getValue();
-          include = (securedConfig.getAuthMode() == AuthMode.USER_TRANSLATION);
+          include = (securedConfig.getAuthMode() == AuthMode.USER_TRANSLATION) && plugin.getValue().isEnabled();
         } else {
           include = false;
         }
