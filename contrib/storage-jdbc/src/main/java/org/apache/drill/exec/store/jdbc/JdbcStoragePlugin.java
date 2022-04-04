@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.jdbc;
 import java.util.Properties;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import com.zaxxer.hikari.HikariConfig;
