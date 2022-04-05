@@ -165,7 +165,7 @@ public class TestPluginRegistry extends BaseTest {
       assertNotSame(plugin1, plugin2);
       assertTrue(plugin2 instanceof FileSystemPlugin);
       FileSystemPlugin fsStorage = (FileSystemPlugin) plugin2;
-      assertSame(pConfig2, fsStorage.getConfig());
+      assertSame(pConfig2, fsStorage.getJdbcStorageConfig());
       assertSame(plugin2, registry.getPluginByConfig(pConfig2));
 
       // Cannot create/update a plugin with null or blank name
@@ -322,7 +322,7 @@ public class TestPluginRegistry extends BaseTest {
       pConfig5.setEnabled(true);
       registry.put(MY_PLUGIN_NAME, pConfig5);
       assertSame(plugin, registry.getPlugin(MY_PLUGIN_NAME));
-      assertTrue(plugin.getConfig().isEnabled());
+      assertTrue(plugin.getJdbcStorageConfig().isEnabled());
     }
   }
 
@@ -353,7 +353,7 @@ public class TestPluginRegistry extends BaseTest {
       assertNotSame(plugin1, plugin2);
       assertTrue(plugin2 instanceof FileSystemPlugin);
       FileSystemPlugin fsStorage = (FileSystemPlugin) plugin2;
-      assertSame(pConfig2, fsStorage.getConfig());
+      assertSame(pConfig2, fsStorage.getJdbcStorageConfig());
       assertSame(plugin2, registry.getPluginByConfig(pConfig2));
 
       // Suppose a query was planned with plugin1 and now starts
@@ -484,7 +484,7 @@ public class TestPluginRegistry extends BaseTest {
       FileSystemConfig pConfig1c = myConfig1();
       registry.put(MY_PLUGIN_NAME, pConfig1c);
       assertEquals(pConfig1c, registry.getDefinedConfig(MY_PLUGIN_NAME));
-      assertEquals(pConfig1c, registry.getPlugin(MY_PLUGIN_NAME).getConfig());
+      assertEquals(pConfig1c, registry.getPlugin(MY_PLUGIN_NAME).getJdbcStorageConfig());
 
       // Odd case. Some thread refers to the config while not in
       // the store which forces an instance which later reappears.
@@ -503,7 +503,7 @@ public class TestPluginRegistry extends BaseTest {
       // Which goes into the ephemeral cache.
       FileSystemConfig pConfig2c = myConfig1();
       StoragePlugin plugin2 = registry.getPluginByConfig(pConfig2c);
-      assertEquals(pConfig2c, plugin2.getConfig());
+      assertEquals(pConfig2c, plugin2.getJdbcStorageConfig());
 
       // Put the original config into the persistent store and local cache.
       // Should not dredge up the ephemeral version to reuse since that
@@ -513,7 +513,7 @@ public class TestPluginRegistry extends BaseTest {
       // known above, the two-instance situation is the least bad option.
       FileSystemConfig pConfig2d = myConfig1();
       registry.put("myplugin2", pConfig2d);
-      assertEquals(pConfig2d, registry.getPlugin("myplugin2").getConfig());
+      assertEquals(pConfig2d, registry.getPlugin("myplugin2").getJdbcStorageConfig());
     }
   }
 
@@ -543,19 +543,19 @@ public class TestPluginRegistry extends BaseTest {
       assertTrue(registry2.storedConfigs().containsKey(MY_PLUGIN_KEY));
       StoragePlugin plugin2 = registry2.getPlugin(MY_PLUGIN_NAME);
       assertNotNull(plugin2);
-      assertEquals(pConfig1, plugin2.getConfig());
+      assertEquals(pConfig1, plugin2.getJdbcStorageConfig());
 
       // Change in Drillbit 1
       FileSystemConfig pConfig3 = myConfig2();
       registry1.put(MY_PLUGIN_NAME, pConfig3);
       plugin1 = registry1.getPlugin(MY_PLUGIN_NAME);
-      assertEquals(pConfig3, plugin1.getConfig());
+      assertEquals(pConfig3, plugin1.getJdbcStorageConfig());
 
       // Change should appear in Drillbit 2
       assertTrue(registry2.storedConfigs().containsValue(pConfig3));
       plugin2 = registry2.getPlugin(MY_PLUGIN_NAME);
       assertNotNull(plugin2);
-      assertEquals(pConfig3, plugin1.getConfig());
+      assertEquals(pConfig3, plugin1.getJdbcStorageConfig());
 
       // Delete in Drillbit 2
       registry2.remove(MY_PLUGIN_NAME);
@@ -697,7 +697,7 @@ public class TestPluginRegistry extends BaseTest {
       json = registry.encode(goodConfig);
       registry.putJson("test", json);
       assertTrue(registry.availablePlugins().contains("test"));
-      assertEquals(goodConfig, registry.getPlugin("test").getConfig());
+      assertEquals(goodConfig, registry.getPlugin("test").getJdbcStorageConfig());
 
       // Replace with a disabled bad plugin
       badConfig = new StoragePluginFixtureConfig("crash-ctor");

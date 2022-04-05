@@ -125,7 +125,7 @@ public class BaseTestImpersonation extends PlanTestBase {
     // Create a HDFS based storage plugin based on local storage plugin and add it to plugin registry (connection string
     // for mini dfs is varies for each run).
     StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    FileSystemConfig lfsPluginConfig = (FileSystemConfig) pluginRegistry.getPlugin("dfs").getConfig();
+    FileSystemConfig lfsPluginConfig = (FileSystemConfig) pluginRegistry.getPlugin("dfs").getJdbcStorageConfig();
 
     String connection = dfsConf.get(FileSystem.FS_DEFAULT_NAME_KEY);
     createAndAddWorkspace("tmp", "/tmp", (short) 0777, processUser, processUser, workspaces);

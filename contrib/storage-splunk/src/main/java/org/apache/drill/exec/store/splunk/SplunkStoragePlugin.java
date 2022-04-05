@@ -46,7 +46,7 @@ public class SplunkStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public SplunkPluginConfig getConfig() {
+  public SplunkPluginConfig getJdbcStorageConfig() {
     return config;
   }
 

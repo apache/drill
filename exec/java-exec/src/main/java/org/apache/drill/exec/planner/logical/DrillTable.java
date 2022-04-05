@@ -84,7 +84,7 @@ public abstract class DrillTable implements Table {
 
     this.tableType = tableType;
 
-    this.storageEngineConfig = plugin.getConfig();
+    this.storageEngineConfig = plugin.getJdbcStorageConfig();
     this.storageEngineName = storageEngineName;
     this.userName = userName;
     this.metadataProviderManager = metadataProviderManager;

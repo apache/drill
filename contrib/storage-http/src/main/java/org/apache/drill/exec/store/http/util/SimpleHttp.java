@@ -903,7 +903,7 @@ public class SimpleHttp {
     List<String> args
   ) {
     HttpStoragePluginConfig pluginConfig;
-    pluginConfig = plugin.getConfig();
+    pluginConfig = plugin.getJdbcStorageConfig();
 
     // Get proxy settings
     HttpProxyConfig proxyConfig = SimpleHttp.getProxySettings(pluginConfig, context.getConfig(), endpointConfig.getHttpUrl());

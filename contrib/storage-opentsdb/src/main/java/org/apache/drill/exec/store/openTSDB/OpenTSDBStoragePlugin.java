@@ -50,7 +50,7 @@ public class OpenTSDBStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public OpenTSDBStoragePluginConfig getConfig() {
+  public OpenTSDBStoragePluginConfig getJdbcStorageConfig() {
     return engineConfig;
   }
 

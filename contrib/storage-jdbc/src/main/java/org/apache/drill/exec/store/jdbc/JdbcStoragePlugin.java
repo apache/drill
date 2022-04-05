@@ -33,6 +33,7 @@ import org.apache.calcite.sql.SqlDialectFactoryImpl;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig.AuthMode;
+import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -50,13 +51,13 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcStoragePlugin.class);
 
-  private final JdbcStorageConfig config;
+  private final JdbcStorageConfig jdbcStorageConfig;
   // DataSources keyed on userName
   private final Map<String, HikariDataSource> dataSources = new ConcurrentHashMap<>();
 
-  public JdbcStoragePlugin(JdbcStorageConfig config, DrillbitContext context, String name) {
+  public JdbcStoragePlugin(JdbcStorageConfig jdbcStorageConfig, DrillbitContext context, String name) {
     super(context, name);
-    this.config = config;
+    this.jdbcStorageConfig = jdbcStorageConfig;
   }
 
   @Override
@@ -66,14 +67,29 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     getJdbcDialect(dialect).registerSchemas(config, parent);
   }
 
+  @Override
+  public boolean hasValidCredentials(String username) {
+    if (jdbcStorageConfig.getAuthMode() != AuthMode.USER_TRANSLATION) {
+      return true;
+    }
+
+    CredentialsProvider credentialsProvider = jdbcStorageConfig.getCredentialsProvider();
+    // If user translation is enabled, the config must define a credentials provider.
+    if (credentialsProvider == null) {
+      return false;
+    } else {
+      return credentialsProvider.hasValidUsername(username) && credentialsProvider.hasValidPassword(username);
+    }
+  }
+
   public DataSource getDataSource(UserCredentials userCredentials) {
-    String connUserName = config.authMode == AuthMode.SHARED_USER
+    String connUserName = jdbcStorageConfig.authMode == AuthMode.SHARED_USER
       ? ImpersonationUtil.getProcessUserName()
       : userCredentials.getUserName();
 
     return dataSources.computeIfAbsent(
       connUserName,
-      ds -> initDataSource(this.config, userCredentials)
+      ds -> initDataSource(this.jdbcStorageConfig, userCredentials)
     );
   }
 
@@ -93,8 +109,8 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public JdbcStorageConfig getConfig() {
-    return config;
+  public JdbcStorageConfig getJdbcStorageConfig() {
+    return jdbcStorageConfig;
   }
 
   @Override
@@ -104,7 +120,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public boolean supportsWrite() {
-    return config.isWritable();
+    return jdbcStorageConfig.isWritable();
   }
 
   @Override

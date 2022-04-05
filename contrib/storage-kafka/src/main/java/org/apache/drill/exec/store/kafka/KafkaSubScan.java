@@ -87,7 +87,7 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
 
   @JsonProperty
   public KafkaStoragePluginConfig getKafkaStoragePluginConfig() {
-    return kafkaStoragePlugin.getConfig();
+    return kafkaStoragePlugin.getJdbcStorageConfig();
   }
 
   @JsonProperty

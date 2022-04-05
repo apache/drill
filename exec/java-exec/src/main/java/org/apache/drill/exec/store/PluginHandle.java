@@ -113,7 +113,7 @@ public class PluginHandle {
 
   public PluginHandle(StoragePlugin plugin, ConnectorHandle connector, PluginType type) {
     this.name = plugin.getName();
-    this.config = plugin.getConfig();
+    this.config = plugin.getJdbcStorageConfig();
     this.connector = connector;
     this.plugin = plugin;
     this.type = type;

@@ -50,6 +50,11 @@ public abstract class AbstractStoragePlugin implements StoragePlugin {
   }
 
   @Override
+  public boolean hasValidCredentials(String username) {
+    return true;
+  }
+
+  @Override
   public boolean supportsRead() {
     return false;
   }

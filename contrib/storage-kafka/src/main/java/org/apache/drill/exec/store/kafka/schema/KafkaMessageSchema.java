@@ -73,7 +73,7 @@ public class KafkaMessageSchema extends AbstractSchema {
     if (tableNames == null) {
       KafkaConsumer<?, ?> kafkaConsumer = null;
       try {
-        kafkaConsumer = new KafkaConsumer<>(plugin.getConfig().getKafkaConsumerProps());
+        kafkaConsumer = new KafkaConsumer<>(plugin.getJdbcStorageConfig().getKafkaConsumerProps());
         tableNames = kafkaConsumer.listTopics().keySet();
       } catch (Exception e) {
         logger.warn("Failure while loading table names for database '{}': {}", getName(), e.getMessage(), e.getCause());

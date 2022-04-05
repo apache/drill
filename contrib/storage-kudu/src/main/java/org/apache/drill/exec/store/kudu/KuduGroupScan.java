@@ -242,7 +242,7 @@ public class KuduGroupScan extends AbstractGroupScan {
 
   @JsonProperty
   public KuduStoragePluginConfig getKuduStoragePluginConfig() {
-    return kuduStoragePlugin.getConfig();
+    return kuduStoragePlugin.getJdbcStorageConfig();
   }
 
   @Override

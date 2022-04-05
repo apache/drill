@@ -63,7 +63,7 @@ public class JsonMessageReader implements MessageReader {
     this.negotiator = negotiator;
     this.resultSetLoader = negotiator.build();
     this.readOptions = readOptions;
-    this.kafkaConsumerProps = plugin.getConfig().getKafkaConsumerProps();
+    this.kafkaConsumerProps = plugin.getJdbcStorageConfig().getKafkaConsumerProps();
   }
 
   @Override
@@ -129,7 +129,7 @@ public class JsonMessageReader implements MessageReader {
 
   @Override
   public KafkaConsumer<byte[], byte[]> getConsumer(KafkaStoragePlugin plugin) {
-    return new KafkaConsumer<>(plugin.getConfig().getKafkaConsumerProps(),
+    return new KafkaConsumer<>(plugin.getJdbcStorageConfig().getKafkaConsumerProps(),
       new ByteArrayDeserializer(), new ByteArrayDeserializer());
   }
 

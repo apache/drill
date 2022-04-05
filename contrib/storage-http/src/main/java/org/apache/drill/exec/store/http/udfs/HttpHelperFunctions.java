@@ -167,7 +167,7 @@ public class HttpHelperFunctions {
       );
       endpointConfig = org.apache.drill.exec.store.http.util.SimpleHttp.getEndpointConfig(
         endpointName,
-        plugin.getConfig()
+        plugin.getJdbcStorageConfig()
       );
     }
 

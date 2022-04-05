@@ -136,7 +136,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public MongoStoragePluginConfig getConfig() {
+  public MongoStoragePluginConfig getJdbcStorageConfig() {
     return mongoConfig;
   }
 

@@ -203,7 +203,7 @@ public class DruidGroupScan extends AbstractGroupScan {
         ScanStats.GroupScanProperty.NO_EXACT_ROW_COUNT,
         recordCount,
         1,
-        recordCount * storagePlugin.getConfig().getAverageRowSizeBytes());
+        recordCount * storagePlugin.getJdbcStorageConfig().getAverageRowSizeBytes());
   }
 
   @Override

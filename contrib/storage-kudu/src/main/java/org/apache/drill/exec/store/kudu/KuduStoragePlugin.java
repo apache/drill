@@ -75,7 +75,7 @@ public class KuduStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public KuduStoragePluginConfig getConfig() {
+  public KuduStoragePluginConfig getJdbcStorageConfig() {
     return engineConfig;
   }
 }

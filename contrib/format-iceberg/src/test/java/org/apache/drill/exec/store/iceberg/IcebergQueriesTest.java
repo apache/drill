@@ -85,7 +85,7 @@ public class IcebergQueriesTest extends ClusterTest {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
     StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
-    FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(DFS_PLUGIN_NAME).getConfig();
+    FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(DFS_PLUGIN_NAME).getJdbcStorageConfig();
     Map<String, FormatPluginConfig> formats = new HashMap<>(pluginConfig.getFormats());
     formats.put("iceberg", IcebergFormatPluginConfig.builder().build());
     FileSystemConfig newPluginConfig = new FileSystemConfig(

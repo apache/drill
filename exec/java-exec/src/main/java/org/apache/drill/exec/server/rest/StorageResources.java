@@ -213,7 +213,7 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateRefreshToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
     try {
-      if (storage.getPlugin(name).getConfig() instanceof AbstractSecuredStoragePluginConfig) {
+      if (storage.getPlugin(name).getJdbcStorageConfig() instanceof AbstractSecuredStoragePluginConfig) {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
         PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry().getTokenTable(name);
@@ -244,7 +244,7 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateAccessToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
     try {
-      if (storage.getPlugin(name).getConfig() instanceof AbstractSecuredStoragePluginConfig) {
+      if (storage.getPlugin(name).getJdbcStorageConfig() instanceof AbstractSecuredStoragePluginConfig) {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
         PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry().getTokenTable(name);
@@ -276,7 +276,7 @@ public class StorageResources {
   public Response updateOAuthTokens(@PathParam("name") String name,
                                     OAuthTokenContainer tokenContainer) {
     try {
-      if (storage.getPlugin(name).getConfig() instanceof AbstractSecuredStoragePluginConfig) {
+      if (storage.getPlugin(name).getJdbcStorageConfig() instanceof AbstractSecuredStoragePluginConfig) {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
         PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry().getTokenTable(name);
@@ -307,8 +307,8 @@ public class StorageResources {
   @Produces(MediaType.TEXT_HTML)
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
     try {
-      if (storage.getPlugin(name).getConfig() instanceof AbstractSecuredStoragePluginConfig) {
-        AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) storage.getPlugin(name).getConfig();
+      if (storage.getPlugin(name).getJdbcStorageConfig() instanceof AbstractSecuredStoragePluginConfig) {
+        AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) storage.getPlugin(name).getJdbcStorageConfig();
         CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
         String callbackURL = this.request.getRequestURL().toString();
 

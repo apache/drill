@@ -105,7 +105,7 @@ public class DynamicRootSchema extends DynamicSchema {
     try {
       SchemaPlus schemaPlus = this.plus();
       StoragePlugin plugin = storages.getPlugin(schemaName);
-      if (plugin != null) {
+      if (plugin != null && plugin.hasValidCredentials(schemaConfig.getQueryUserCredentials().getUserName())) {
         plugin.registerSchemas(schemaConfig, schemaPlus);
         return;
       }

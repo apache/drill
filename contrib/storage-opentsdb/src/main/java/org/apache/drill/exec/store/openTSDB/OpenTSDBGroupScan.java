@@ -66,7 +66,7 @@ public class OpenTSDBGroupScan extends AbstractGroupScan {
                            OpenTSDBScanSpec scanSpec, List<SchemaPath> columns) {
     super((String) null);
     this.storagePlugin = storagePlugin;
-    this.storagePluginConfig = storagePlugin.getConfig();
+    this.storagePluginConfig = storagePlugin.getJdbcStorageConfig();
     this.openTSDBScanSpec = scanSpec;
     this.columns = columns == null || columns.size() == 0 ? ALL_COLUMNS : columns;
   }

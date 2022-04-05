@@ -68,7 +68,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public StoragePluginConfig getConfig() {
+  public StoragePluginConfig getJdbcStorageConfig() {
     return this.config;
   }
 

@@ -97,7 +97,7 @@ public class DescribeSchemaHandler extends DefaultSqlHandler {
     }
 
     try {
-      Map configMap = mapper.convertValue(storagePlugin.getConfig(), Map.class);
+      Map configMap = mapper.convertValue(storagePlugin.getJdbcStorageConfig(), Map.class);
       if (storagePlugin instanceof FileSystemPlugin) {
         transformWorkspaces(drillSchema.getSchemaPath(), configMap);
       }

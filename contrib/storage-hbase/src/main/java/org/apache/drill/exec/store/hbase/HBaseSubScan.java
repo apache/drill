@@ -75,7 +75,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
 
   @JsonProperty
   public HBaseStoragePluginConfig getHbaseStoragePluginConfig() {
-    return hbaseStoragePlugin.getConfig();
+    return hbaseStoragePlugin.getJdbcStorageConfig();
   }
 
   @JsonProperty

@@ -52,7 +52,7 @@ public class KafkaStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public KafkaStoragePluginConfig getConfig() {
+  public KafkaStoragePluginConfig getJdbcStorageConfig() {
     return this.config;
   }
 

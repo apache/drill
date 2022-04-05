@@ -70,7 +70,7 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
       } else {
         // Register the table
         return registerTable(name, new DynamicDrillTable(plugin, plugin.getName(),
-          new SplunkScanSpec(plugin.getName(), name, plugin.getConfig())));
+          new SplunkScanSpec(plugin.getName(), name, plugin.getJdbcStorageConfig())));
       }
     }
 
@@ -97,10 +97,10 @@ public class SplunkSchemaFactory extends AbstractSchemaFactory {
     private void registerIndexes() {
       // Add default "spl" table to index list.
       registerTable(SPL_TABLE_NAME, new DynamicDrillTable(plugin, plugin.getName(),
-        new SplunkScanSpec(plugin.getName(), SPL_TABLE_NAME, plugin.getConfig())));
+        new SplunkScanSpec(plugin.getName(), SPL_TABLE_NAME, plugin.getJdbcStorageConfig())));
 
       // Retrieve and add all other Splunk indexes
-      SplunkPluginConfig config = plugin.getConfig();
+      SplunkPluginConfig config = plugin.getJdbcStorageConfig();
       SplunkConnection connection = new SplunkConnection(config);
       connection.connect();
 

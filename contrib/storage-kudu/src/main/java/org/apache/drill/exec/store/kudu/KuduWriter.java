@@ -70,7 +70,7 @@ public class KuduWriter extends AbstractWriter {
   }
 
   public StoragePluginConfig getStorage() {
-    return plugin.getConfig();
+    return plugin.getJdbcStorageConfig();
   }
 
   @JsonIgnore

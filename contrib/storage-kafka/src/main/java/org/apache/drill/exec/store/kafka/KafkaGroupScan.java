@@ -172,7 +172,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
 
     KafkaConsumer<?, ?> kafkaConsumer = null;
     try {
-      kafkaConsumer = new KafkaConsumer<>(kafkaStoragePlugin.getConfig().getKafkaConsumerProps(),
+      kafkaConsumer = new KafkaConsumer<>(kafkaStoragePlugin.getJdbcStorageConfig().getKafkaConsumerProps(),
         new ByteArrayDeserializer(), new ByteArrayDeserializer());
       if (!kafkaConsumer.listTopics().containsKey(topicName)) {
         throw UserException.dataReadError()
@@ -338,7 +338,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
 
   @JsonProperty
   public KafkaStoragePluginConfig getKafkaStoragePluginConfig() {
-    return kafkaStoragePlugin.getConfig();
+    return kafkaStoragePlugin.getJdbcStorageConfig();
   }
 
   @Override

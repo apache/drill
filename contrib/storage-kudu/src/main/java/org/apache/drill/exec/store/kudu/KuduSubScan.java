@@ -68,7 +68,7 @@ public class KuduSubScan extends AbstractBase implements SubScan {
   }
 
   public KuduStoragePluginConfig getKuduStoragePluginConfig() {
-    return kuduStoragePlugin.getConfig();
+    return kuduStoragePlugin.getJdbcStorageConfig();
   }
 
   public List<KuduSubScanSpec> getTabletScanSpecList() {

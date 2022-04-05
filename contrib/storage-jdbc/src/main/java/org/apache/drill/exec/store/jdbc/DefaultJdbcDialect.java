@@ -48,7 +48,7 @@ public class DefaultJdbcDialect implements JdbcDialect {
       dataSource,
       dialect,
       convention,
-      !plugin.getConfig().areTableNamesCaseInsensitive()
+      !plugin.getJdbcStorageConfig().areTableNamesCaseInsensitive()
     );
     SchemaPlus holder = parent.add(plugin.getName(), schema);
     schema.setHolder(holder);

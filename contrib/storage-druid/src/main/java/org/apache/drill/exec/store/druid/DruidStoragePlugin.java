@@ -84,7 +84,7 @@ public class DruidStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public DruidStoragePluginConfig getConfig() {
+  public DruidStoragePluginConfig getJdbcStorageConfig() {
     return pluginConfig;
   }
 

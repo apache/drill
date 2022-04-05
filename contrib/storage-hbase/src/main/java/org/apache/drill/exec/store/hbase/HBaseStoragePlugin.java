@@ -70,7 +70,7 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public HBaseStoragePluginConfig getConfig() {
+  public HBaseStoragePluginConfig getJdbcStorageConfig() {
     return storeConfig;
   }
 

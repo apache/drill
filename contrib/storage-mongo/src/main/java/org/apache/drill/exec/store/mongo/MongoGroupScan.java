@@ -124,7 +124,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
       MongoScanSpec scanSpec, List<SchemaPath> columns, boolean useAggregate) {
     super(userName);
     this.storagePlugin = storagePlugin;
-    this.storagePluginConfig = storagePlugin.getConfig();
+    this.storagePluginConfig = storagePlugin.getJdbcStorageConfig();
     this.scanSpec = scanSpec;
     this.columns = columns;
     this.useAggregate = useAggregate;

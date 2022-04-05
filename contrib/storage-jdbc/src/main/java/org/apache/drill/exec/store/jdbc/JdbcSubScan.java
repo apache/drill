@@ -74,7 +74,7 @@ public class JdbcSubScan extends AbstractSubScan {
   }
 
   public JdbcStorageConfig getConfig() {
-    return plugin.getConfig();
+    return plugin.getJdbcStorageConfig();
   }
 
   @JsonIgnore

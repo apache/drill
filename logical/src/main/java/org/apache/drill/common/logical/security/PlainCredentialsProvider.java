@@ -19,6 +19,8 @@ package org.apache.drill.common.logical.security;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -62,6 +64,7 @@ public class PlainCredentialsProvider implements CredentialsProvider {
 
   @JsonProperty("userCredentials")
   @JsonIgnore(false)
+  @JsonInclude(Include.NON_NULL)
   public Map<String, Map<String, String>> getUserCredentials() {
     return userCredentials;
   }
@@ -108,13 +111,13 @@ public class PlainCredentialsProvider implements CredentialsProvider {
   @Override
   public boolean hasValidUsername(String username) {
     Map<String, String> creds = getCredentials(username);
-    return StringUtils.isEmpty(creds.get("username"));
+    return StringUtils.isNotEmpty(creds.get("username"));
   }
 
   @Override
   public boolean hasValidPassword(String username) {
     Map<String, String> creds = getCredentials(username);
-    return StringUtils.isEmpty(creds.get("password"));
+    return StringUtils.isNotEmpty(creds.get("password"));
   }
 
   @Override

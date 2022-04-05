@@ -123,7 +123,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
 
   @JsonProperty
   public HiveStoragePluginConfig getHiveStoragePluginConfig() {
-    return hiveStoragePlugin.getConfig();
+    return hiveStoragePlugin.getJdbcStorageConfig();
   }
 
   @JsonProperty

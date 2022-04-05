@@ -64,7 +64,7 @@ public class TestPluginsMap extends BasePluginRegistryTest {
     StoragePluginFixture fixture = (StoragePluginFixture) plugin;
     assertTrue(entry.hasInstance());
     assertEquals(entry.name(), fixture.getName());
-    assertSame(entry.config(), fixture.getConfig());
+    assertSame(entry.config(), fixture.getJdbcStorageConfig());
     assertEquals(0, fixture.closeCount());
 
     // Close the plugin
@@ -365,7 +365,7 @@ public class TestPluginsMap extends BasePluginRegistryTest {
       // Request to remove by name and config fails
       // as above.
 
-      assertNull(map.remove(sysPlugin.getName(), sysPlugin.getConfig()));
+      assertNull(map.remove(sysPlugin.getName(), sysPlugin.getJdbcStorageConfig()));
       assertSame(sysEntry, map.get(sysPlugin.getName()));
 
       // Close does close intrinsic plugins, but no way to check

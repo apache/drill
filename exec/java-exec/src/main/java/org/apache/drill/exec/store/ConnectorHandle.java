@@ -50,7 +50,7 @@ public class ConnectorHandle {
 
   private ConnectorHandle(ConnectorLocator locator, StoragePlugin plugin) {
     this.locator = locator;
-    this.configClass = plugin.getConfig().getClass();
+    this.configClass = plugin.getJdbcStorageConfig().getClass();
     this.isIntrinsic = true;
   }
 

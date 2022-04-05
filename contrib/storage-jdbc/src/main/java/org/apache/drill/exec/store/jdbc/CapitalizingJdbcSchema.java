@@ -112,7 +112,7 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
   @Override
   public CreateTableEntry createNewTable(String tableName, List<String> partitionColumns, StorageStrategy strategy) {
-    if (! plugin.getConfig().isWritable()) {
+    if (! plugin.getJdbcStorageConfig().isWritable()) {
       throw UserException
         .dataWriteError()
         .message(plugin.getName() + " is not writable.")
@@ -136,7 +136,7 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
   @Override
   public void dropTable(String tableName) {
-    if (! plugin.getConfig().isWritable()) {
+    if (! plugin.getJdbcStorageConfig().isWritable()) {
       throw UserException
         .dataWriteError()
         .message(plugin.getName() + " is not writable.")
@@ -169,7 +169,7 @@ public class CapitalizingJdbcSchema extends AbstractSchema {
 
   @Override
   public boolean isMutable() {
-    return plugin.getConfig().isWritable();
+    return plugin.getJdbcStorageConfig().isWritable();
   }
 
   @Override

@@ -55,12 +55,14 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    */
   boolean supportsWrite();
 
+  boolean hasValidCredentials(String username);
+
   /**
    * Method returns a Jackson serializable object that extends a StoragePluginConfig.
    *
    * @return an extension of StoragePluginConfig
   */
-  StoragePluginConfig getConfig();
+  StoragePluginConfig getJdbcStorageConfig();
 
   /**
    * An implementation of this method will return one or more specialized rules that Drill query

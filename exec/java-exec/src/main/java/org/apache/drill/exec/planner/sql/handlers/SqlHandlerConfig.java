@@ -53,6 +53,9 @@ public class SqlHandlerConfig {
       StoragePlugin plugin = k.getValue();
       if (verifyPlugin(plugin)) {
         plugins.add(plugin);
+      } else {
+        // Remove plugins with invalid credentials
+        plugins.remove(plugin);
       }
     }
     return phase.getRules(context, plugins);
@@ -60,7 +63,7 @@ public class SqlHandlerConfig {
 
   private boolean verifyPlugin(StoragePlugin plugin) {
     // First see if the plugin uses the AbstractSecuredPluginConfig or not
-    StoragePluginConfig rawConfig = plugin.getConfig();
+    StoragePluginConfig rawConfig = plugin.getJdbcStorageConfig();
     if (! (rawConfig instanceof AbstractSecuredStoragePluginConfig)) {
       return true;
     }
