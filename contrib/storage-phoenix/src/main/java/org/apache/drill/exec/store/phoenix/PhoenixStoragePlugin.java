@@ -78,7 +78,7 @@ public class PhoenixStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public StoragePluginConfig getJdbcStorageConfig() {
+  public StoragePluginConfig getConfig() {
     return config;
   }
 

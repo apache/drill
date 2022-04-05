@@ -275,7 +275,7 @@ public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
 
   @JsonProperty("storage")
   public StoragePluginConfig getStorageConfig() {
-    return storagePlugin.getJdbcStorageConfig();
+    return storagePlugin.getConfig();
   }
 
   @JsonIgnore

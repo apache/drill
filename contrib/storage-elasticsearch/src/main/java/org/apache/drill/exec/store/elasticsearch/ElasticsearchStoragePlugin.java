@@ -48,7 +48,7 @@ public class ElasticsearchStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public ElasticsearchStorageConfig getJdbcStorageConfig() {
+  public ElasticsearchStorageConfig getConfig() {
     return config;
   }
 

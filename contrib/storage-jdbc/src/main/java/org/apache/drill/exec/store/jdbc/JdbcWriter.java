@@ -75,7 +75,7 @@ public class JdbcWriter extends AbstractWriter {
   }
 
   public StoragePluginConfig getStorage() {
-    return plugin.getJdbcStorageConfig();
+    return plugin.getConfig();
   }
 
   @JsonIgnore

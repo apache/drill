@@ -258,7 +258,7 @@ public class HiveTestFixture {
               (HiveStoragePlugin) pluginRegistry.getPlugin(pluginName),
               String.format("Hive storage plugin with name '%s' doesn't exist.", pluginName));
 
-          HiveStoragePluginConfig newPluginConfig = storagePlugin.getJdbcStorageConfig();
+          HiveStoragePluginConfig newPluginConfig = storagePlugin.getConfig();
           newPluginConfig.getConfigProps().putAll(configOverride);
           pluginRegistry.put(pluginName, newPluginConfig);
         }

@@ -89,7 +89,7 @@ public class PhoenixSubScan extends AbstractBase implements SubScan {
 
   @JsonProperty("config")
   public StoragePluginConfig getConfig() {
-    return plugin.getJdbcStorageConfig();
+    return plugin.getConfig();
   }
 
   @Override
@@ -118,7 +118,7 @@ public class PhoenixSubScan extends AbstractBase implements SubScan {
       .field("sql", sql)
       .field("columns", columns)
       .field("scanSpec", scanSpec)
-      .field("config", plugin.getJdbcStorageConfig())
+      .field("config", plugin.getConfig())
       .toString();
   }
 }

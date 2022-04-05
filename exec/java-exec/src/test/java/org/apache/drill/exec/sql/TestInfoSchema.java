@@ -475,7 +475,7 @@ public class TestInfoSchema extends BaseTestQuery {
     // check some stable properties values
     assertEquals("file", configMap.get("type"));
 
-    FileSystemConfig testConfig = (FileSystemConfig) bits[0].getContext().getStorage().getPlugin("dfs").getJdbcStorageConfig();
+    FileSystemConfig testConfig = (FileSystemConfig) bits[0].getContext().getStorage().getPlugin("dfs").getConfig();
     String tmpSchemaLocation = testConfig.getWorkspaces().get("tmp").getLocation();
     assertEquals(tmpSchemaLocation, configMap.get("location"));
 

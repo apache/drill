@@ -84,7 +84,7 @@ public class HiveDrillNativeParquetRowGroupScan extends AbstractParquetRowGroupS
                                             TupleMetadata schema) {
     super(userName, rowGroupReadEntries, columns, readerConfig, filter,null, schema);
     this.hiveStoragePlugin = Preconditions.checkNotNull(hiveStoragePlugin, "Could not find format config for the given configuration");
-    this.hiveStoragePluginConfig = hiveStoragePlugin.getJdbcStorageConfig();
+    this.hiveStoragePluginConfig = hiveStoragePlugin.getConfig();
     this.hivePartitionHolder = hivePartitionHolder;
     this.confProperties = confProperties;
   }

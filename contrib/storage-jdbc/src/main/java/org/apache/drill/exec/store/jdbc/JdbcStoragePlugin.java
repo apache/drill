@@ -109,7 +109,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public JdbcStorageConfig getJdbcStorageConfig() {
+  public JdbcStorageConfig getConfig() {
     return jdbcStorageConfig;
   }
 

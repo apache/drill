@@ -68,7 +68,7 @@ public class HttpAPIConnectionSchema extends AbstractSchema {
       // Register a new table
       return registerTable(tableName, new DynamicDrillTable(plugin, plugin.getName(),
         new HttpScanSpec(plugin.getName(), name, tableName,
-              plugin.getJdbcStorageConfig().copyForPlan(name), plugin.getTokenTable(), activeUserName, plugin.getRegistry())));
+              plugin.getConfig().copyForPlan(name), plugin.getTokenTable(), activeUserName, plugin.getRegistry())));
     }
   }
 

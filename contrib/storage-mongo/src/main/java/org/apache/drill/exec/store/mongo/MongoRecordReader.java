@@ -198,7 +198,7 @@ public class MongoRecordReader extends AbstractRecordReader {
         if (!fields.isEmpty()) {
           operations.add(Aggregates.project(fields));
         }
-        if (plugin.getJdbcStorageConfig().allowDiskUse()) {
+        if (plugin.getConfig().allowDiskUse()) {
           projection = collection.aggregate(operations).allowDiskUse(true);
         } else {
           projection = collection.aggregate(operations);
@@ -206,7 +206,7 @@ public class MongoRecordReader extends AbstractRecordReader {
       } else {
         projection = collection.find(filters).projection(fields);
       }
-      cursor = projection.batchSize(plugin.getJdbcStorageConfig().getBatchSize()).iterator();
+      cursor = projection.batchSize(plugin.getConfig().getBatchSize()).iterator();
     }
 
     writer.allocate();

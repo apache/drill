@@ -78,7 +78,7 @@ public class MockStorageEngine extends AbstractStoragePlugin {
   }
 
   @Override
-  public StoragePluginConfig getJdbcStorageConfig() {
+  public StoragePluginConfig getConfig() {
     return configuration;
   }
 

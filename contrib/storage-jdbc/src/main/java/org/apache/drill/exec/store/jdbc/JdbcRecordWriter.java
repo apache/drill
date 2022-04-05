@@ -257,7 +257,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
     firstRecord = false;
     insertQueryBuilder.append(")");
 
-    if (recordCount >= config.getPlugin().getJdbcStorageConfig().getWriterBatchSize()) {
+    if (recordCount >= config.getPlugin().getConfig().getWriterBatchSize()) {
       // Execute the insert query
       String insertQuery = insertQueryBuilder.toString();
       executeInsert(insertQuery);

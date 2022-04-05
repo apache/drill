@@ -61,7 +61,7 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public StoragePluginConfig getJdbcStorageConfig() {
+  public StoragePluginConfig getConfig() {
     return config;
   }
 

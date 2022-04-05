@@ -99,7 +99,7 @@ public class SystemPluginLocator implements ConnectorLocator {
         logger.debug("Storage plugin name {} is not defined. Skipping plugin initialization.", annotatedClass.getClassName());
         continue;
       }
-      storagePlugin.getJdbcStorageConfig().setEnabled(true);
+      storagePlugin.getConfig().setEnabled(true);
       plugins.put(name, storagePlugin);
       return;
     }
@@ -155,7 +155,7 @@ public class SystemPluginLocator implements ConnectorLocator {
     // Not very efficient, but this method is generally for testing
     // and their are only a few system plugins. Not worth adding a map.
     for (StoragePlugin plugin : plugins.values()) {
-      if (configClass.isInstance(plugin.getJdbcStorageConfig())) {
+      if (configClass.isInstance(plugin.getConfig())) {
         return plugin.getClass();
       }
     }

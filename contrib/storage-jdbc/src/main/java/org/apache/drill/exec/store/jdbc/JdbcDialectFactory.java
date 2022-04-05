@@ -31,7 +31,7 @@ public class JdbcDialectFactory {
   public static JdbcDialect getJdbcDialect(JdbcStoragePlugin plugin, SqlDialect dialect) {
     return POOL.computeIfAbsent(
       dialect,
-      jd -> plugin.getJdbcStorageConfig().getUrl().startsWith(JDBC_CLICKHOUSE_PREFIX)
+      jd -> plugin.getConfig().getUrl().startsWith(JDBC_CLICKHOUSE_PREFIX)
         ? new ClickhouseJdbcDialect(plugin, dialect)
         : new DefaultJdbcDialect(plugin, dialect)
     );

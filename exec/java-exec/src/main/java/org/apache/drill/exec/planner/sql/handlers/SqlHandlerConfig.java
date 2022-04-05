@@ -63,7 +63,7 @@ public class SqlHandlerConfig {
 
   private boolean verifyPlugin(StoragePlugin plugin) {
     // First see if the plugin uses the AbstractSecuredPluginConfig or not
-    StoragePluginConfig rawConfig = plugin.getJdbcStorageConfig();
+    StoragePluginConfig rawConfig = plugin.getConfig();
     if (! (rawConfig instanceof AbstractSecuredStoragePluginConfig)) {
       return true;
     }

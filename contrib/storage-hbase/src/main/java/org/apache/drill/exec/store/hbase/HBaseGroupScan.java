@@ -112,7 +112,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
       List<SchemaPath> columns) {
     super(userName);
     this.storagePlugin = storagePlugin;
-    this.storagePluginConfig = storagePlugin.getJdbcStorageConfig();
+    this.storagePluginConfig = storagePlugin.getConfig();
     this.hbaseScanSpec = scanSpec;
     this.columns = columns == null ? ALL_COLUMNS : columns;
     init();

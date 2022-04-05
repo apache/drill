@@ -118,7 +118,7 @@ public class PhoenixGroupScan extends AbstractGroupScan {
 
   @JsonProperty("config")
   public StoragePluginConfig config() {
-    return plugin.getJdbcStorageConfig();
+    return plugin.getConfig();
   }
 
   @Override
@@ -152,7 +152,7 @@ public class PhoenixGroupScan extends AbstractGroupScan {
   @Override
   public int hashCode() {
     if (hashCode == 0) {
-      hashCode = Objects.hash(sql, columns, scanSpec, plugin.getJdbcStorageConfig());
+      hashCode = Objects.hash(sql, columns, scanSpec, plugin.getConfig());
     }
     return hashCode;
   }
@@ -169,7 +169,7 @@ public class PhoenixGroupScan extends AbstractGroupScan {
     return Objects.equals(sql, groupScan.sql())
         && Objects.equals(columns, groupScan.columns())
         && Objects.equals(scanSpec, groupScan.scanSpec())
-        && Objects.equals(plugin.getJdbcStorageConfig(), groupScan.config());
+        && Objects.equals(plugin.getConfig(), groupScan.config());
   }
 
   @Override
@@ -178,7 +178,7 @@ public class PhoenixGroupScan extends AbstractGroupScan {
       .field("sql", sql)
       .field("columns", columns)
       .field("scanSpec", scanSpec)
-      .field("config", plugin.getJdbcStorageConfig())
+      .field("config", plugin.getConfig())
       .toString();
   }
 }

@@ -38,7 +38,7 @@ public class ElasticsearchDrillSchemaFactory extends AbstractSchemaFactory {
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws JsonProcessingException {
     ElasticsearchDrillSchema schema = new ElasticsearchDrillSchema(getName(), plugin,
-        delegate.create(parent, getName(), plugin.getJdbcStorageConfig().toConfigMap()));
+        delegate.create(parent, getName(), plugin.getConfig().toConfigMap()));
     parent.add(getName(), schema);
   }
 }

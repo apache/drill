@@ -50,7 +50,7 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public CassandraStorageConfig getJdbcStorageConfig() {
+  public CassandraStorageConfig getConfig() {
     return config;
   }
 

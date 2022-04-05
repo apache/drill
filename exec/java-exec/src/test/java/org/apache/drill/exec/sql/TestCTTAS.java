@@ -55,7 +55,7 @@ public class TestCTTAS extends BaseTestQuery {
   public static void init() throws Exception {
     File tmp2 = dirTestWatcher.makeSubDir(Paths.get("tmp2"));
     StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(DFS_PLUGIN_NAME).getJdbcStorageConfig();
+    FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(DFS_PLUGIN_NAME).getConfig();
 
     Map<String, WorkspaceConfig> newWorkspaces = new HashMap<>();
     Optional.ofNullable(pluginConfig.getWorkspaces())

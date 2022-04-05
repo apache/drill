@@ -582,7 +582,7 @@ public class WorkspaceSchemaFactory {
       }
 
       return new FileSystemCreateTableEntry(
-          (FileSystemConfig) plugin.getJdbcStorageConfig(),
+          (FileSystemConfig) plugin.getConfig(),
           formatPlugin,
           config.getLocation() + Path.SEPARATOR + tableName,
           partitionColumns,

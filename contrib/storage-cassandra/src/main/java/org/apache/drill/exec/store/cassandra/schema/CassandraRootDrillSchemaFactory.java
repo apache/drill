@@ -39,7 +39,7 @@ public class CassandraRootDrillSchemaFactory extends AbstractSchemaFactory {
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     Schema schema = new CassandraRootDrillSchema(getName(), plugin,
-        calciteSchemaFactory, parent, getName(), plugin.getJdbcStorageConfig().toConfigMap());
+        calciteSchemaFactory, parent, getName(), plugin.getConfig().toConfigMap());
     parent.add(getName(), schema);
   }
 }

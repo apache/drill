@@ -56,7 +56,7 @@ public class AvroMessageReader implements MessageReader {
 
   @Override
   public void init(SchemaNegotiator negotiator, ReadOptions readOptions, KafkaStoragePlugin plugin) {
-    Properties kafkaConsumerProps = plugin.getJdbcStorageConfig().getKafkaConsumerProps();
+    Properties kafkaConsumerProps = plugin.getConfig().getKafkaConsumerProps();
     Map<String, Object> propertiesMap = kafkaConsumerProps.entrySet().stream()
         .collect(Collectors.toMap(e -> e.getKey().toString(), Map.Entry::getValue));
     deserializer = new KafkaAvroDeserializer(null, propertiesMap);
@@ -112,7 +112,7 @@ public class AvroMessageReader implements MessageReader {
 
   @Override
   public KafkaConsumer<byte[], byte[]> getConsumer(KafkaStoragePlugin plugin) {
-    return new KafkaConsumer<>(plugin.getJdbcStorageConfig().getKafkaConsumerProps(),
+    return new KafkaConsumer<>(plugin.getConfig().getKafkaConsumerProps(),
         new ByteArrayDeserializer(), new ByteArrayDeserializer());
   }
 

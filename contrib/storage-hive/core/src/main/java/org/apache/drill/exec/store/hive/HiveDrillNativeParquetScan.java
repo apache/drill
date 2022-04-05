@@ -140,7 +140,7 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
 
   @JsonProperty
   public HiveStoragePluginConfig getHiveStoragePluginConfig() {
-    return hiveStoragePlugin.getJdbcStorageConfig();
+    return hiveStoragePlugin.getConfig();
   }
 
   @JsonProperty

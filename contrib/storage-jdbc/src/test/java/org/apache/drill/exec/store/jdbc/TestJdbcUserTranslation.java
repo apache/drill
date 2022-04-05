@@ -138,7 +138,7 @@ public class TestJdbcUserTranslation extends ClusterTest {
       .build();
 
     // Add the credentials to the user
-    JdbcStorageConfig pluginConfig = (JdbcStorageConfig) cluster.storageRegistry().getPlugin(PLUGIN_NAME).getJdbcStorageConfig();
+    JdbcStorageConfig pluginConfig = (JdbcStorageConfig) cluster.storageRegistry().getPlugin(PLUGIN_NAME).getConfig();
     PlainCredentialsProvider credentialProvider = (PlainCredentialsProvider) pluginConfig.getCredentialsProvider();
     credentialProvider.setUserCredentials("mysqlUser", "mysqlPass", TEST_USER_1);
     pluginConfig.updateCredentialProvider(credentialProvider);
@@ -177,7 +177,7 @@ public class TestJdbcUserTranslation extends ClusterTest {
       .build();
 
     // Add the credentials to the user
-    JdbcStorageConfig pluginConfig = (JdbcStorageConfig) cluster.storageRegistry().getPlugin(PLUGIN_NAME).getJdbcStorageConfig();
+    JdbcStorageConfig pluginConfig = (JdbcStorageConfig) cluster.storageRegistry().getPlugin(PLUGIN_NAME).getConfig();
     PlainCredentialsProvider credentialProvider = (PlainCredentialsProvider) pluginConfig.getCredentialsProvider();
     credentialProvider.setUserCredentials("mysqlUser", "mysqlPass", TEST_USER_1);
     pluginConfig.updateCredentialProvider(credentialProvider);

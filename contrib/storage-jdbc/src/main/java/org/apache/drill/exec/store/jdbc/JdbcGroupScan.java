@@ -99,11 +99,11 @@ public class JdbcGroupScan extends AbstractGroupScan {
 
   @Override
   public String getDigest() {
-    return sql + plugin.getJdbcStorageConfig();
+    return sql + plugin.getConfig();
   }
 
   public StoragePluginConfig getConfig() {
-    return plugin.getJdbcStorageConfig();
+    return plugin.getConfig();
   }
 
   @Override

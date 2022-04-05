@@ -134,7 +134,7 @@ public class BasePluginRegistryTest extends BaseTest {
     }
 
     @Override
-    public StoragePluginConfig getJdbcStorageConfig() {
+    public StoragePluginConfig getConfig() {
       return config;
     }
 

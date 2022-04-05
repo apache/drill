@@ -119,7 +119,7 @@ public class HiveScan extends AbstractGroupScan {
 
   @JsonProperty
   public HiveStoragePluginConfig getHiveStoragePluginConfig() {
-    return hiveStoragePlugin.getJdbcStorageConfig();
+    return hiveStoragePlugin.getConfig();
   }
 
   @Override

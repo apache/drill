@@ -44,7 +44,7 @@ public class TestDisabledPlugin extends ClusterTest {
   public static void setup() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
     pluginRegistry = cluster.drillbit().getContext().getStorage();
-    pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(CP_PLUGIN_NAME).getJdbcStorageConfig();
+    pluginConfig = (FileSystemConfig) pluginRegistry.getPlugin(CP_PLUGIN_NAME).getConfig();
     pluginConfig.setEnabled(false);
     pluginRegistry.put(CP_PLUGIN_NAME, pluginConfig);
   }

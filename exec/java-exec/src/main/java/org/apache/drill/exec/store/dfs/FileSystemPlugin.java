@@ -203,7 +203,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public StoragePluginConfig getJdbcStorageConfig() {
+  public StoragePluginConfig getConfig() {
     return config;
   }
 

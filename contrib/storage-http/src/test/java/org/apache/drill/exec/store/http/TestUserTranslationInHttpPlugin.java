@@ -147,7 +147,7 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
     // First verify that the user has no credentials
     StoragePluginRegistry registry = cluster.storageRegistry();
     StoragePlugin plugin = registry.getPlugin("local");
-    PlainCredentialsProvider credentialsProvider = (PlainCredentialsProvider)((AbstractSecuredStoragePluginConfig)plugin.getJdbcStorageConfig()).getCredentialsProvider();
+    PlainCredentialsProvider credentialsProvider = (PlainCredentialsProvider)((AbstractSecuredStoragePluginConfig)plugin.getConfig()).getCredentialsProvider();
     Map<String, String> credentials = credentialsProvider.getCredentials(TEST_USER_1);
     assertNotNull(credentials);
     assertNull(credentials.get("username"));

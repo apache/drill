@@ -62,7 +62,7 @@ public class HttpStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public HttpStoragePluginConfig getJdbcStorageConfig() {
+  public HttpStoragePluginConfig getConfig() {
     return config;
   }
 

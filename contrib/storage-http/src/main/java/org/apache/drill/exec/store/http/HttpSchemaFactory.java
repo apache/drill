@@ -63,7 +63,7 @@ public class HttpSchemaFactory extends AbstractSchemaFactory {
       super(Collections.emptyList(), plugin.getName());
       this.activeUserName = activeUserName;
       this.plugin = plugin;
-      for (Entry<String, HttpApiConfig> entry : plugin.getJdbcStorageConfig().connections().entrySet()) {
+      for (Entry<String, HttpApiConfig> entry : plugin.getConfig().connections().entrySet()) {
         String configName = entry.getKey();
         HttpApiConfig config = entry.getValue();
         if (config.requireTail()) {
@@ -106,7 +106,7 @@ public class HttpSchemaFactory extends AbstractSchemaFactory {
         // Register a new table
         return registerTable(name, new DynamicDrillTable(plugin, plugin.getName(),
             new HttpScanSpec(plugin.getName(), name, null,
-                plugin.getJdbcStorageConfig().copyForPlan(name), plugin.getTokenTable(), activeUserName, plugin.getRegistry())));
+                plugin.getConfig().copyForPlan(name), plugin.getTokenTable(), activeUserName, plugin.getRegistry())));
       } else {
         return null; // Unknown table
       }

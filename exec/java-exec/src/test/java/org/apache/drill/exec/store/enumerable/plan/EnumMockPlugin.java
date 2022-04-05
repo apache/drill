@@ -65,7 +65,7 @@ public class EnumMockPlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public StoragePluginConfig getJdbcStorageConfig() {
+  public StoragePluginConfig getConfig() {
     return config;
   }
 
