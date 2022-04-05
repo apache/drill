@@ -26,6 +26,9 @@ import org.apache.calcite.util.BuiltInMethod;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig.AuthMode;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -105,11 +108,23 @@ public class DynamicRootSchema extends DynamicSchema {
     try {
       SchemaPlus schemaPlus = this.plus();
       StoragePlugin plugin = storages.getPlugin(schemaName);
-      if (plugin != null && plugin.hasValidCredentials(schemaConfig.getQueryUserCredentials().getUserName())) {
-        plugin.registerSchemas(schemaConfig, schemaPlus);
-        return;
-      }
+      StoragePluginConfig pluginConfig = storages.getStoredConfig(schemaName);
 
+      // This logic avoids NPEs in the cases where User Translation is not enabled.
+      if (pluginConfig instanceof AbstractSecuredStoragePluginConfig &&
+        ((AbstractSecuredStoragePluginConfig) pluginConfig).getAuthMode() == AuthMode.USER_TRANSLATION) {
+        String username = schemaConfig.getQueryUserCredentials().getUserName();
+
+        if (plugin != null && plugin.hasValidCredentials(username)) {
+          plugin.registerSchemas(schemaConfig, schemaPlus);
+          return;
+        }
+      } else {
+        if (plugin != null) {
+          plugin.registerSchemas(schemaConfig, schemaPlus);
+          return;
+        }
+      }
       // Could not find the plugin of schemaName. The schemaName could be `dfs.tmp`, a 2nd level schema under 'dfs'
       List<String> paths = SchemaUtilites.getSchemaPathAsList(schemaName);
       if (paths.size() == 2) {

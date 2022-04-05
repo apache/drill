@@ -50,7 +50,7 @@ public class TestJdbcUserTranslation extends ClusterTest {
 
     startCluster(builder);
 
-
+    String jdbcUrl = "";
     PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(new HashMap<>());
 
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,

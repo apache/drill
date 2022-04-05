@@ -73,13 +73,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-/**
- * Tests the UserSession getting down to the storage plugins.  Makes sure
- * the correct UserSession is going to the correct plugin.
- */
 public class TestUserTranslationInHttpPlugin extends ClusterTest {
 
-  private static final int MOCK_SERVER_PORT = 47770;
+  private static final int MOCK_SERVER_PORT = 47775;
 
   private static final int TIMEOUT = 30;
   private final OkHttpClient httpClient = new OkHttpClient.Builder()
