@@ -33,7 +33,6 @@ public interface SchemaFactory {
    *
    * @param schemaConfig Configuration for schema objects.
    * @param parent Reference to parent schema.
-   * @param context Contextual data pertaining to the query being planned.
    * @throws IOException in case of error during schema registration
    */
   void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException;

@@ -468,7 +468,7 @@ public class StorageResources {
   }
 
   private JsonResult message(String message, Object... args) {
-    return new JsonResult(String.format(message, args));
+    return new JsonResult(String.format(message, args));  // lgtm [java/tainted-format-string]
   }
 
   private boolean isSupported(String format) {
