@@ -28,6 +28,7 @@ import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -38,6 +39,7 @@ import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorT
 import static org.junit.Assert.assertTrue;
 
 @Category(JdbcStorageTest.class)
+@Ignore
 public class TestJdbcUserTranslation extends ClusterTest {
 
   @BeforeClass
@@ -51,6 +53,7 @@ public class TestJdbcUserTranslation extends ClusterTest {
     startCluster(builder);
 
     String jdbcUrl = "";
+
     PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(new HashMap<>());
 
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,

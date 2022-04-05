@@ -96,12 +96,11 @@ public class CredentialsProviderSerDeTest extends ClusterTest {
     String serialized = mapper.writerFor(CredentialsProvider.class).writeValueAsString(credentialsProvider);
 
     String expected =
-        "{\n" +
+      "{\n" +
         "  \"credentialsProviderType\" : \"PlainCredentialsProvider\",\n" +
-        "  \"credentials\" : {\n" +
-        "    \"username\" : \"myLogin\",\n" +
-        "    \"password\" : \"myPass\"\n" +
-        "  }\n" +
+        "  \"credentials\" : {\n" + "    \"username\" : \"myLogin\",\n" +
+        "    \"password\" : \"myPass\"\n" + "  },\n" +
+        "  \"userCredentials\" : { }\n" +
         "}";
 
     assertEquals(expected, serialized);
