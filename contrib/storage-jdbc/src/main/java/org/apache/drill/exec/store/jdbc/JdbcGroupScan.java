@@ -49,16 +49,17 @@ public class JdbcGroupScan extends AbstractGroupScan {
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("config") StoragePluginConfig config,
       @JsonProperty("rows") double rows,
+      @JsonProperty("username") String username,
       @JacksonInject StoragePluginRegistry plugins) throws ExecutionSetupException {
-    super("");
+    super(username);
     this.sql = sql;
     this.columns = columns;
     this.plugin = plugins.resolve(config, JdbcStoragePlugin.class);
     this.rows = rows;
   }
 
-  JdbcGroupScan(String sql, List<SchemaPath> columns, JdbcStoragePlugin plugin, double rows) {
-    super("");
+  JdbcGroupScan(String sql, List<SchemaPath> columns, JdbcStoragePlugin plugin, double rows, String username) {
+    super(username);
     this.sql = sql;
     this.columns = columns;
     this.plugin = plugin;
@@ -108,6 +109,6 @@ public class JdbcGroupScan extends AbstractGroupScan {
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    return new JdbcGroupScan(sql, columns, plugin, rows);
+    return new JdbcGroupScan(sql, columns, plugin, rows, userName);
   }
 }

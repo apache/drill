@@ -55,10 +55,12 @@ public class DrillJdbcConvention extends JdbcConvention {
 
   private final ImmutableSet<RelOptRule> rules;
   private final JdbcStoragePlugin plugin;
+  private final String username;
 
-  DrillJdbcConvention(SqlDialect dialect, String name, JdbcStoragePlugin plugin) {
+  DrillJdbcConvention(SqlDialect dialect, String name, JdbcStoragePlugin plugin, String username) {
     super(dialect, ConstantUntypedNull.INSTANCE, name);
     this.plugin = plugin;
+    this.username = username;
     List<RelOptRule> calciteJdbcRules = JdbcRules.rules(this, DrillRelFactories.LOGICAL_BUILDER).stream()
         .filter(rule -> !EXCLUDED_CALCITE_RULES.contains(rule.getClass()))
         .collect(Collectors.toList());
@@ -69,7 +71,7 @@ public class DrillJdbcConvention extends JdbcConvention {
 
     ImmutableSet.Builder<RelOptRule> builder = ImmutableSet.<RelOptRule>builder()
       .addAll(calciteJdbcRules)
-      .add(new JdbcIntermediatePrelConverterRule(this))
+      .add(new JdbcIntermediatePrelConverterRule(this, username))
       .add(new VertexDrelConverterRule(this))
       .add(RuleInstance.FILTER_SET_OP_TRANSPOSE_RULE)
       .add(RuleInstance.PROJECT_REMOVE_RULE);

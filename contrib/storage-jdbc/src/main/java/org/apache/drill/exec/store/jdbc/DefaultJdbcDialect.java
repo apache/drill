@@ -41,7 +41,7 @@ public class DefaultJdbcDialect implements JdbcDialect {
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
     DataSource dataSource = plugin.getDataSource(config.getQueryUserCredentials());
-    DrillJdbcConvention convention = plugin.getConvention(dialect);
+    DrillJdbcConvention convention = plugin.getConvention(dialect, config.getQueryUserCredentials().getUserName());
 
     JdbcCatalogSchema schema = new JdbcCatalogSchema(
       plugin.getName(),

@@ -231,6 +231,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   public void testPhysicalPlanSubmission() throws Exception {
     String query = "select * from mysql.`drill_mysql_test`.person";
     String plan = queryBuilder().sql(query).explainJson();
+    System.out.println(plan);
     assertEquals(4, queryBuilder().physical(plan).run().recordCount());
   }
 

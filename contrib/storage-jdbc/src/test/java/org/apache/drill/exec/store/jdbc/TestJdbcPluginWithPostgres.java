@@ -162,6 +162,7 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
   public void testPhysicalPlanSubmission() throws Exception {
     String query = "select * from pg.`public`.person";
     String plan = queryBuilder().sql(query).explainJson();
+    System.out.println(plan);
     assertEquals(4, queryBuilder().physical(plan).run().recordCount());
   }
 

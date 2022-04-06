@@ -443,7 +443,8 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [pg_unwritable.public] is immutable."));
+      System.out.println(e.getMessage());
+      assertTrue(e.getMessage().contains("pg_unwritable.public"));
     }
   }
 }

@@ -44,7 +44,7 @@ public class ClickhouseJdbcDialect implements JdbcDialect {
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
     DataSource dataSource = plugin.getDataSource(config.getQueryUserCredentials());
-    DrillJdbcConvention convention = plugin.getConvention(dialect);
+    DrillJdbcConvention convention = plugin.getConvention(dialect, config.getQueryUserCredentials().getUserName());
 
     ClickhouseCatalogSchema schema = new ClickhouseCatalogSchema(
       plugin.getName(),

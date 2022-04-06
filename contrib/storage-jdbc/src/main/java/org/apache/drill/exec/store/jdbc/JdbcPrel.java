@@ -43,10 +43,12 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
   private final String sql;
   private final double rows;
   private final DrillJdbcConvention convention;
+  private final String username;
 
-  public JdbcPrel(RelOptCluster cluster, RelTraitSet traitSet, JdbcIntermediatePrel prel) {
+  public JdbcPrel(RelOptCluster cluster, RelTraitSet traitSet, JdbcIntermediatePrel prel, String username) {
     super(cluster, traitSet);
     final RelNode input = prel.getInput();
+    this.username = username;
     rows = input.estimateRowCount(cluster.getMetadataQuery());
     convention = (DrillJdbcConvention) input.getTraitSet().getTrait(ConventionTraitDef.INSTANCE);
     JdbcDialect jdbcDialect = convention.getPlugin().getJdbcDialect(convention.dialect);
@@ -72,7 +74,7 @@ public class JdbcPrel extends AbstractRelNode implements Prel {
     for (String col : rowType.getFieldNames()) {
       columns.add(SchemaPath.getSimplePath(col));
     }
-    JdbcGroupScan output = new JdbcGroupScan(sql, columns, convention.getPlugin(), rows);
+    JdbcGroupScan output = new JdbcGroupScan(sql, columns, convention.getPlugin(), rows, username);
     return creator.addMetadata(this, output);
   }
 

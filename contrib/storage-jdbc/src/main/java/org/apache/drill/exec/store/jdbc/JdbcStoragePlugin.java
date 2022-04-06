@@ -104,8 +104,8 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     return JdbcDialectFactory.getJdbcDialect(this, dialect);
   }
 
-  public DrillJdbcConvention getConvention(SqlDialect dialect) {
-    return JdbcConventionFactory.getJdbcConvention(this, dialect);
+  public DrillJdbcConvention getConvention(SqlDialect dialect, String username) {
+    return JdbcConventionFactory.getJdbcConvention(this, dialect, username);
   }
 
   @Override
@@ -127,7 +127,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   public Set<RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext context) {
     UserCredentials userCreds = context.getContextInformation().getQueryUserCredentials();
     DataSource dataSource = getDataSource(userCreds);
-    return getConvention(getDialect(dataSource)).getRules();
+    return getConvention(getDialect(dataSource), context.getContextInformation().getQueryUserCredentials().getUserName()).getRules();
   }
 
   @Override

@@ -26,10 +26,10 @@ public class JdbcConventionFactory {
 
   private static final Map<SqlDialect, DrillJdbcConvention> POOL = new ConcurrentHashMap<>();
 
-  public static DrillJdbcConvention getJdbcConvention(JdbcStoragePlugin plugin, SqlDialect dialect) {
+  public static DrillJdbcConvention getJdbcConvention(JdbcStoragePlugin plugin, SqlDialect dialect, String username) {
     return POOL.computeIfAbsent(
       dialect,
-      djc -> new DrillJdbcConvention(dialect, plugin.getName(), plugin)
+      djc -> new DrillJdbcConvention(dialect, plugin.getName(), plugin, username)
     );
   }
 }
