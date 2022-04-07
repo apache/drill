@@ -33,7 +33,6 @@ import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
-import org.apache.drill.exec.store.security.PerUserUsernamePasswordCredentials;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,7 +126,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       case SHARED_USER:
         return new UsernamePasswordCredentials(credentialsProvider);
       case USER_TRANSLATION:
-        return new PerUserUsernamePasswordCredentials(credentialsProvider, userCredentials.getUserName());
+        return new UsernamePasswordCredentials(credentialsProvider, userCredentials.getUserName());
       default:
         throw UserException.connectionError()
           .message("This storage plugin does not support auth mode: %s", authMode)

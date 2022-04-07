@@ -31,7 +31,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.exec.store.security.PerUserUsernamePasswordCredentials;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.exec.store.security.oauth.OAuthTokenCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +69,7 @@ public class PluginConfigWrapper {
       AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
       CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
       activeUser = sc.getUserPrincipal().getName();
-      PerUserUsernamePasswordCredentials credentials = new PerUserUsernamePasswordCredentials(credentialsProvider, activeUser);
+      UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(credentialsProvider, activeUser);
       username = credentials.getUsername();
       if (StringUtils.isEmpty(username)) {
         username = "";
@@ -86,7 +86,7 @@ public class PluginConfigWrapper {
       AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) config;
       CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
       activeUser = sc.getUserPrincipal().getName();
-      PerUserUsernamePasswordCredentials credentials = new PerUserUsernamePasswordCredentials(credentialsProvider, activeUser);
+      UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(credentialsProvider, activeUser);
       password = credentials.getPassword();
       if (StringUtils.isEmpty(password)) {
         password = "";
