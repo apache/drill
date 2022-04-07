@@ -831,7 +831,7 @@ public class SimpleHttp {
       throw UserException.functionError()
         .message("You must call this function with a valid endpoint name.")
         .build(logger);
-    } else if (endpointConfig.inputType() != "json") {
+    } else if (! endpointConfig.inputType().contentEquals("json")) {
       throw UserException.functionError()
         .message("Http_get only supports API endpoints which return json.")
         .build(logger);
