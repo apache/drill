@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import java.util.List;
+import java.util.Objects;
 
 @JsonTypeName("jdbc-sub-scan")
 public class JdbcSubScan extends AbstractSubScan {
@@ -46,15 +47,16 @@ public class JdbcSubScan extends AbstractSubScan {
       @JsonProperty("sql") String sql,
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("config") StoragePluginConfig config,
+      @JsonProperty("username") String username,
       @JacksonInject StoragePluginRegistry plugins) throws ExecutionSetupException {
-    super("");
+    super(username);
     this.sql = sql;
     this.columns = columns;
     this.plugin = plugins.resolve(config, JdbcStoragePlugin.class);
   }
 
-  JdbcSubScan(String sql, List<SchemaPath> columns, JdbcStoragePlugin plugin) {
-    super("");
+  JdbcSubScan(String sql, List<SchemaPath> columns, JdbcStoragePlugin plugin, String username) {
+    super(username);
     this.sql = sql;
     this.columns = columns;
     this.plugin = plugin;
@@ -88,5 +90,23 @@ public class JdbcSubScan extends AbstractSubScan {
       .field("sql", sql)
       .field("columns", columns)
       .toString();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(sql, columns);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    JdbcSubScan other = (JdbcSubScan) obj;
+    return Objects.equals(sql, other.sql)
+      && Objects.equals(columns, other.columns);
   }
 }

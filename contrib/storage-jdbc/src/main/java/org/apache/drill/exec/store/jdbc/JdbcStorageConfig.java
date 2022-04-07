@@ -117,6 +117,11 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   }
 
   @JsonIgnore
+  public UsernamePasswordCredentials getSharedCredentials() {
+    return new UsernamePasswordCredentials(credentialsProvider);
+  }
+
+  @JsonIgnore
   public UsernamePasswordCredentials getJdbcCredentials(UserCredentials userCredentials) {
     switch (authMode) {
       case SHARED_USER:

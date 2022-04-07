@@ -72,7 +72,7 @@ public class JdbcGroupScan extends AbstractGroupScan {
 
   @Override
   public SubScan getSpecificScan(int minorFragmentId) {
-    return new JdbcSubScan(sql, columns, plugin);
+    return new JdbcSubScan(sql, columns, plugin, getUserName());
   }
 
   @Override

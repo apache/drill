@@ -83,9 +83,19 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   }
 
   public DataSource getDataSource(UserCredentials userCredentials) {
-    String connUserName = jdbcStorageConfig.authMode == AuthMode.SHARED_USER
-      ? ImpersonationUtil.getProcessUserName()
-      : userCredentials.getUserName();
+    String connUserName;
+    switch (jdbcStorageConfig.getAuthMode()) {
+      case SHARED_USER:
+        connUserName = jdbcStorageConfig.getSharedCredentials().getUsername();
+        break;
+      case USER_TRANSLATION:
+        connUserName = userCredentials.getUserName();
+        break;
+      default:
+        throw UserException.unsupportedError()
+          .message("JDBC Storage Plugins only support Shared User or User Translation modes.")
+          .build(logger);
+    }
 
     return dataSources.computeIfAbsent(
       connUserName,

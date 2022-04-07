@@ -66,6 +66,7 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
   private static final String DOCKER_IMAGE_MARIADB = "mariadb:10.6.0";
   private static final Logger logger = LoggerFactory.getLogger(TestJdbcWriterWithMySQL.class);
   private static JdbcDatabaseContainer<?> jdbcContainer;
+
   @BeforeClass
   public static void initMysql() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
