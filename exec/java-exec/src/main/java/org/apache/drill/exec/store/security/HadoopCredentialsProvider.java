@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.security;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.hadoop.conf.Configuration;
 
@@ -64,13 +63,6 @@ public class HadoopCredentialsProvider implements CredentialsProvider {
     });
 
     return credentials;
-  }
-
-  @Override
-  public Map<String, Map<String, String>> getUserCredentials() {
-    throw UserException.unsupportedError()
-      .message("Hadoop Credentials Provider does not support user translation.  Use user impersonation instead.")
-      .build(logger);
   }
 
   public Map<String, String> getPropertyNames() {

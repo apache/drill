@@ -50,6 +50,15 @@ public class PlainCredentialsProvider implements CredentialsProvider {
     this.userCredentials = new HashMap<>();
   }
 
+  @JsonCreator
+  public PlainCredentialsProvider(
+    @JsonProperty("credentials") Map<String, String> credentials,
+    @JsonProperty("userCredentials") Map<String, Map<String, String>> userCredentials
+  ) {
+    this.credentials = credentials;
+    this.userCredentials = userCredentials;
+  }
+
   public PlainCredentialsProvider(String username, Map<String, String> credentials) {
     this.credentials = new HashMap<>();
     this.userCredentials = new HashMap<>();
@@ -62,8 +71,6 @@ public class PlainCredentialsProvider implements CredentialsProvider {
     return credentials;
   }
 
-  @JsonProperty("userCredentials")
-  @JsonIgnore(false)
   @JsonInclude(Include.NON_NULL)
   public Map<String, Map<String, String>> getUserCredentials() {
     return userCredentials;

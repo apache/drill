@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.security;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 
 import java.util.HashMap;
@@ -46,13 +45,6 @@ public class EnvCredentialsProvider implements CredentialsProvider {
     envVariables.forEach((key, value) -> credentials.put(key, System.getenv(value)));
 
     return credentials;
-  }
-
-  @Override
-  public Map<String, Map<String, String>> getUserCredentials() {
-    throw UserException.unsupportedError()
-      .message("Environment Credentials Provider does not support user translation.")
-      .build(logger);
   }
 
   public Map<String, String> getEnvVariables() {

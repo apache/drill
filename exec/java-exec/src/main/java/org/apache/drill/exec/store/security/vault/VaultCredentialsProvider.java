@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.OptBoolean;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 
 import java.util.HashMap;
@@ -89,14 +88,6 @@ public class VaultCredentialsProvider implements CredentialsProvider {
     });
 
     return credentials;
-  }
-
-  @Override
-  public Map<String, Map<String, String>> getUserCredentials() {
-    // TODO Implement me
-    throw UserException.unsupportedError()
-      .message("Vault credential provider does not yet support user translation.")
-      .build(logger);
   }
 
   public String getSecretPath() {
