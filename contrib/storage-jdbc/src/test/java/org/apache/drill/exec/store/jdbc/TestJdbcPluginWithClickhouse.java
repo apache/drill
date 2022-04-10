@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
@@ -36,6 +37,8 @@ import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -66,10 +69,16 @@ public class TestJdbcPluginWithClickhouse extends ClusterTest {
       .withInitScript("clickhouse-test-data.sql");
     jdbcContainer.start();
 
+    Map<String, String> credentials = new HashMap<>();
+    credentials.put("username", jdbcContainer.getUsername());
+    credentials.put("password", jdbcContainer.getPassword());
+    PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(credentials);
+
+
     JdbcStorageConfig jdbcStorageConfig =
       new JdbcStorageConfig("ru.yandex.clickhouse.ClickHouseDriver",
-        jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), null,
-        true, false, null, null, "shared_user", 0);
+        jdbcContainer.getJdbcUrl(), null, null,
+        true, false, null, credentialsProvider, "shared_user", 0);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("clickhouse", jdbcStorageConfig);
   }

@@ -53,13 +53,6 @@ public interface CredentialsProvider {
   }
 
   @JsonIgnore
-  default Map<String, String> getGlobalCredentials() {
-    throw UserException.unsupportedError()
-      .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
-      .build(logger);
-  }
-
-  @JsonIgnore
   default void setUserCredentials(String username, String password, String activeUser) {
     throw UserException.unsupportedError()
       .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")

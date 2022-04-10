@@ -17,6 +17,8 @@
  */
 package org.apache.drill.common.logical;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.slf4j.Logger;
@@ -25,9 +27,9 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginConfig {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractSecuredStoragePluginConfig.class);
-  protected final CredentialsProvider credentialsProvider;
   protected boolean inlineCredentials;
   public final AuthMode authMode;
+  protected final CredentialsProvider credentialsProvider;
 
   public AbstractSecuredStoragePluginConfig() {
     this(PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,  true, AuthMode.SHARED_USER);
@@ -58,7 +60,6 @@ public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginCo
     logger.debug("Enabled status");
     return super.isEnabled();
   }
-
 
   public CredentialsProvider getCredentialsProvider() {
     if (inlineCredentials) {

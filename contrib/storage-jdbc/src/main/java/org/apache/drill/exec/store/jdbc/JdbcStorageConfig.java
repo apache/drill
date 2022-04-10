@@ -49,7 +49,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   private final String driver;
   private final String url;
   private final boolean caseInsensitiveTableNames;
-  private final boolean writable;
+  private final Boolean writable;
   private final Map<String, Object> sourceParameters;
   private final int writerBatchSize;
 
@@ -60,7 +60,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       @JsonProperty("username") String username,
       @JsonProperty("password") String password,
       @JsonProperty("caseInsensitiveTableNames") boolean caseInsensitiveTableNames,
-      @JsonProperty("writable") boolean writable,
+      @JsonProperty("writable") Boolean writable,
       @JsonProperty("sourceParameters") Map<String, Object> sourceParameters,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
       @JsonProperty("authMode") String authMode,
@@ -102,7 +102,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
     return url;
   }
 
-  public boolean isWritable() { return writable; }
+  public Boolean isWritable() { return writable; }
 
   public int getWriterBatchSize() { return writerBatchSize; }
 
@@ -164,7 +164,9 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       .field("url", url)
       .field("writable", writable)
       .field("writerBatchSize", writerBatchSize)
+      .field("sourceParameters", sourceParameters)
       .field("caseInsensitiveTableNames", caseInsensitiveTableNames)
+      .field("credentialProvider", credentialsProvider)
       .toString();
   }
 }

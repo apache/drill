@@ -203,8 +203,12 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       optimizations.  Unfortunately some JDBC drivers without read-only support,
       notably Snowflake's, fail to connect outright when this option is set even
       though it is only a hint, so enabling it is generally problematic.
+
+      The solution is to leave that option as null.
       */
-      // hikariConfig.setReadOnly(!config.isWritable());
+      if (config.isWritable() != null) {
+        hikariConfig.setReadOnly(!config.isWritable());
+      }
 
       return new HikariDataSource(hikariConfig);
     } catch (RuntimeException e) {

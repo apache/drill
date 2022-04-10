@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
@@ -39,6 +40,8 @@ import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.utility.DockerImageName;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -82,9 +85,15 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
       ScriptUtils.runInitScript(databaseDelegate, "mysql-test-data-linux.sql");
     }
 
+    Map<String, String> credentials = new HashMap<>();
+    credentials.put("username", jdbcContainer.getUsername());
+    credentials.put("password", jdbcContainer.getPassword());
+    PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(credentials);
+
+
     String jdbcUrl = jdbcContainer.getJdbcUrl();
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-            jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, false, null, null, "shared_user", 10000);
+            null, null, false, false, null, credentialsProvider, "shared_user", 10000);
     jdbcStorageConfig.setEnabled(true);
 
     cluster.defineStoragePlugin("mysql", jdbcStorageConfig);
@@ -92,7 +101,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
     if (osName.startsWith("linux")) {
       // adds storage plugin with case insensitive table names
       JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-              jdbcContainer.getUsername(), jdbcContainer.getPassword(), true, false, null, null, "shared_user", 10000);
+              null, null, true, false, null, credentialsProvider, "shared_user", 10000);
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
       cluster.defineStoragePlugin("mysqlCaseInsensitive", jdbcCaseSensitiveStorageConfig);
     }
@@ -231,7 +240,6 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   public void testPhysicalPlanSubmission() throws Exception {
     String query = "select * from mysql.`drill_mysql_test`.person";
     String plan = queryBuilder().sql(query).explainJson();
-    System.out.println(plan);
     assertEquals(4, queryBuilder().physical(plan).run().recordCount());
   }
 

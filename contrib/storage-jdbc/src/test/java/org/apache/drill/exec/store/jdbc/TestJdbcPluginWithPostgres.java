@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -36,6 +37,8 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
@@ -64,10 +67,15 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
       .withInitScript("postgres-test-data.sql");
     jdbcContainer.start();
 
+    Map<String, String> credentials = new HashMap<>();
+    credentials.put("username", jdbcContainer.getUsername());
+    credentials.put("password", jdbcContainer.getPassword());
+    PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(credentials);
+
     JdbcStorageConfig jdbcStorageConfig =
       new JdbcStorageConfig("org.postgresql.Driver",
-        jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
-        true, false, null, null, "shared_user", 100000);
+        jdbcContainer.getJdbcUrl(), null, null,
+        true, false, null, credentialsProvider, "shared_user", 100000);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("pg", jdbcStorageConfig);
   }
@@ -162,7 +170,6 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
   public void testPhysicalPlanSubmission() throws Exception {
     String query = "select * from pg.`public`.person";
     String plan = queryBuilder().sql(query).explainJson();
-    System.out.println(plan);
     assertEquals(4, queryBuilder().physical(plan).run().recordCount());
   }
 

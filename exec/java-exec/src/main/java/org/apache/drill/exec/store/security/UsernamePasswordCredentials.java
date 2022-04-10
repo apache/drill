@@ -17,12 +17,14 @@
  */
 package org.apache.drill.exec.store.security;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class UsernamePasswordCredentials {
   private static final Logger logger = LoggerFactory.getLogger(UsernamePasswordCredentials.class);
@@ -67,5 +69,31 @@ public class UsernamePasswordCredentials {
 
   public String getPassword() {
     return password;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(username, password);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    UsernamePasswordCredentials that = (UsernamePasswordCredentials) o;
+    return Objects.equals(username, that.password) &&
+      Objects.equals(password, that.password);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("username", username)
+      .maskedField("password", password)
+      .toString();
   }
 }

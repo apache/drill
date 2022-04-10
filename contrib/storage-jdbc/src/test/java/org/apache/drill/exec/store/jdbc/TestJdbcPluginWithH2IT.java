@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.jdbc;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.drill.categories.JdbcStorageTest;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
@@ -69,10 +70,16 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
          FileReader fileReader = new FileReader(scriptFile.getFile())) {
       RunScript.execute(connection, fileReader);
     }
+
+    Map<String, String> credentials = new HashMap<>();
+    credentials.put("username", "root");
+    credentials.put("password", "root");
+    PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(credentials);
+
     Map<String, Object> sourceParameters =  new HashMap<>();
     sourceParameters.put("minimumIdle", 1);
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("org.h2.Driver", connString,
-        "root", "root", true, false, sourceParameters, null, "shared_user", 10000);
+        null, null, true, false, sourceParameters, credentialsProvider, "shared_user", 10000);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("h2", jdbcStorageConfig);
     cluster.defineStoragePlugin("h2o", jdbcStorageConfig);
