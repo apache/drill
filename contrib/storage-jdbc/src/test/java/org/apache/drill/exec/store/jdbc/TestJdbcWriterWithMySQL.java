@@ -447,6 +447,7 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
+      System.out.println(e.getMessage());
       assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [mysql_no_write.drill_mysql_test] is immutable."));
     }
 
@@ -455,6 +456,7 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
       queryBuilder().sql(query).run();
       fail();
     } catch (UserRemoteException e) {
+      System.out.println(e.getMessage());
       assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [mysql_no_write.drill_mysql_test] is immutable."));
     }
   }
