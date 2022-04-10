@@ -450,7 +450,10 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
       System.out.println(e.getMessage());
       assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [mysql_no_write.drill_mysql_test] is immutable."));
     }
+  }
 
+  @Test
+  public void testUnwritableConnectionWithoutIfNotExists() throws Exception {
     try {
       String query = "CREATE TABLE mysql_no_write.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
       queryBuilder().sql(query).run();
