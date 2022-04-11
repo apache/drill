@@ -32,6 +32,8 @@ import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.physical.PrelUtil;
+import org.apache.drill.exec.store.StoragePlugin;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.iceberg.IcebergGroupScan;
 import org.apache.drill.exec.store.plan.AbstractPluginImplementor;
 import org.apache.drill.exec.store.plan.rel.PluginFilterRel;
@@ -132,6 +134,11 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
   @Override
   public boolean artificialLimit() {
     return true;
+  }
+
+  @Override
+  protected Class<? extends StoragePlugin> supportedPlugin() {
+    return FileSystemPlugin.class;
   }
 
   @Override
