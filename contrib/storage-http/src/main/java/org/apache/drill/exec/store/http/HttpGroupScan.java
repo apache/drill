@@ -58,9 +58,9 @@ public class HttpGroupScan extends AbstractGroupScan {
    * Creates a new group scan from the storage plugin.
    */
   public HttpGroupScan (HttpScanSpec scanSpec) {
-    super(scanSpec.activeUserName());
+    super(scanSpec.queryUserName());
     this.httpScanSpec = scanSpec;
-    this.username = scanSpec.activeUserName();
+    this.username = scanSpec.queryUserName();
     this.columns = ALL_COLUMNS;
     this.filters = null;
     this.filterSelectivity = 0.0;
@@ -149,10 +149,10 @@ public class HttpGroupScan extends AbstractGroupScan {
     @JsonProperty("filterSelectivity") double selectivity,
     @JsonProperty("maxRecords") int maxRecords
   ) {
-    super(httpScanSpec.activeUserName());
+    super(httpScanSpec.queryUserName());
     this.columns = columns;
     this.httpScanSpec = httpScanSpec;
-    this.username = httpScanSpec.activeUserName();
+    this.username = httpScanSpec.queryUserName();
     this.filters = filters;
     this.filterSelectivity = selectivity;
     this.scanStats = computeScanStats();

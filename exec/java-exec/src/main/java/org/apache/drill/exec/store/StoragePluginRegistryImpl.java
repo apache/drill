@@ -33,8 +33,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig.AuthMode;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
@@ -765,16 +764,9 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
       case DISABLED:
         include = !plugin.getValue().isEnabled();
         break;
-      case HAS_USER_CREDS:
-        // Only plugins that extend the AbstractSecuredStorageConfig class can have
-        // user creds, so check that first.
-        if (plugin.getValue() instanceof AbstractSecuredStoragePluginConfig) {
-          // If the plugin does not have user translation enabled, do not add it to the list.
-          AbstractSecuredStoragePluginConfig securedConfig = (AbstractSecuredStoragePluginConfig) plugin.getValue();
-          include = (securedConfig.getAuthMode() == AuthMode.USER_TRANSLATION) && plugin.getValue().isEnabled();
-        } else {
-          include = false;
-        }
+      case TRANSLATES_USERS:
+        include = plugin.getValue().getAuthMode() == AuthMode.USER_TRANSLATION
+          && plugin.getValue().isEnabled();
         break;
       default:
         include = true;

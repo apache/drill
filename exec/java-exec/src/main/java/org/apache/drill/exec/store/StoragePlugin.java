@@ -56,14 +56,6 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
   boolean supportsWrite();
 
   /**
-   * Method verifies if a user has valid credentials.  This method is only relevant
-   * if the plugin uses USER TRANSLATION mode.
-   * @param username The active user name
-   * @return True if the user has valid credentials, false if not
-   */
-  boolean hasValidCredentials(String username);
-
-  /**
    * Method returns a Jackson serializable object that extends a StoragePluginConfig.
    *
    * @return an extension of StoragePluginConfig

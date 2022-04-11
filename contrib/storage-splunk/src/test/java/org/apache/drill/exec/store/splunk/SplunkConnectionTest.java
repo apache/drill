@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.splunk;
 import com.splunk.EntityCollection;
 import com.splunk.Index;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -50,7 +51,8 @@ public class SplunkConnectionTest extends SplunkBaseTest {
               SPLUNK_STORAGE_PLUGIN_CONFIG.getEarliestTime(),
               SPLUNK_STORAGE_PLUGIN_CONFIG.getLatestTime(),
               null,
-              SPLUNK_STORAGE_PLUGIN_CONFIG.getReconnectRetries()
+              SPLUNK_STORAGE_PLUGIN_CONFIG.getReconnectRetries(),
+              StoragePluginConfig.AuthMode.SHARED_USER.name()
       );
       SplunkConnection sc = new SplunkConnection(invalidSplunkConfig);
       sc.connect();

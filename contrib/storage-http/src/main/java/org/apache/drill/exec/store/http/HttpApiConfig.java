@@ -30,6 +30,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.exec.store.security.UsernamePasswordWithProxyCredentials;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonDeserialize(builder = HttpApiConfig.HttpApiConfigBuilder.class)
@@ -113,7 +115,7 @@ public class HttpApiConfig {
   @JsonProperty
   private final HttpPaginatorConfig paginator;
 
-  protected boolean inlineCredentials;
+  protected boolean directCredentials;
 
   public static HttpApiConfigBuilder builder() {
     return new HttpApiConfigBuilder();
@@ -196,7 +198,7 @@ public class HttpApiConfig {
       && xmlDataLevel == that.xmlDataLevel
       && errorOn400 == that.errorOn400
       && verifySSLCert == that.verifySSLCert
-      && inlineCredentials == that.inlineCredentials
+      && directCredentials == that.directCredentials
       && Objects.equals(url, that.url)
       && Objects.equals(method, that.method)
       && Objects.equals(postBody, that.postBody)
@@ -216,7 +218,7 @@ public class HttpApiConfig {
   public int hashCode() {
     return Objects.hash(url, requireTail, method, postBody, headers, params, dataPath,
       authType, inputType, xmlDataLevel, limitQueryParam, errorOn400, jsonOptions, verifySSLCert,
-      credentialsProvider, paginator, inlineCredentials, postParameterLocation);
+      credentialsProvider, paginator, directCredentials, postParameterLocation);
   }
 
   @Override
@@ -239,7 +241,7 @@ public class HttpApiConfig {
       .field("verifySSLCert", verifySSLCert)
       .field("credentialsProvider", credentialsProvider)
       .field("paginator", paginator)
-      .field("inlineCredentials", inlineCredentials)
+      .field("directCredentials", directCredentials)
       .toString();
   }
 
@@ -327,7 +329,7 @@ public class HttpApiConfig {
     this.xmlDataLevel = Math.max(1, builder.xmlDataLevel);
     this.errorOn400 = builder.errorOn400;
     this.credentialsProvider = CredentialProviderUtils.getCredentialsProvider(builder.userName, builder.password, builder.credentialsProvider);
-    this.inlineCredentials = builder.credentialsProvider == null;
+    this.directCredentials = builder.credentialsProvider == null;
 
     this.limitQueryParam = builder.limitQueryParam;
     this.paginator = builder.paginator;
@@ -335,18 +337,22 @@ public class HttpApiConfig {
 
   @JsonProperty
   public String userName() {
-    if (inlineCredentials) {
-      return getUsernamePasswordCredentials().getUsername();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordCredentials::getUsername)
+      .orElse(null);
   }
 
   @JsonProperty
   public String password() {
-    if (inlineCredentials) {
-      return getUsernamePasswordCredentials().getPassword();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordCredentials::getPassword)
+      .orElse(null);
   }
 
   @JsonIgnore
@@ -365,13 +371,23 @@ public class HttpApiConfig {
   }
 
   @JsonIgnore
-  public UsernamePasswordCredentials getUsernamePasswordCredentials() {
-    return new UsernamePasswordCredentials(credentialsProvider);
+  public Optional<UsernamePasswordWithProxyCredentials> getUsernamePasswordCredentials() {
+    return new UsernamePasswordWithProxyCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .build();
+  }
+
+  @JsonIgnore
+  public Optional<UsernamePasswordWithProxyCredentials> getUsernamePasswordCredentials(String username) {
+    return new UsernamePasswordWithProxyCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .setQueryUser(username)
+      .build();
   }
 
   @JsonProperty
   public CredentialsProvider credentialsProvider() {
-    if (inlineCredentials) {
+    if (directCredentials) {
       return null;
     }
     return credentialsProvider;
@@ -417,7 +433,7 @@ public class HttpApiConfig {
 
     private HttpPaginatorConfig paginator;
 
-    private boolean inlineCredentials;
+    private boolean directCredentials;
 
     public HttpApiConfig build() {
       return new HttpApiConfig(this);
@@ -538,8 +554,8 @@ public class HttpApiConfig {
       return this;
     }
 
-    public HttpApiConfigBuilder inlineCredentials(boolean inlineCredentials) {
-      this.inlineCredentials = inlineCredentials;
+    public HttpApiConfigBuilder directCredentials(boolean directCredentials) {
+      this.directCredentials = directCredentials;
       return this;
     }
   }

@@ -21,10 +21,6 @@ import java.util.Collection;
 import java.util.Map.Entry;
 
 import org.apache.calcite.tools.RuleSet;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig.AuthMode;
-import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
@@ -50,39 +46,9 @@ public class SqlHandlerConfig {
   public RuleSet getRules(PlannerPhase phase) {
     Collection<StoragePlugin> plugins = Lists.newArrayList();
     for (Entry<String, StoragePlugin> k : context.getStorage()) {
-      StoragePlugin plugin = k.getValue();
-      if (verifyPlugin(plugin)) {
-        plugins.add(plugin);
-      } else {
-        // Remove plugins with invalid credentials
-        plugins.remove(plugin);
-      }
+      plugins.add(k.getValue());
     }
     return phase.getRules(context, plugins);
-  }
-
-  private boolean verifyPlugin(StoragePlugin plugin) {
-    // First see if the plugin uses the AbstractSecuredPluginConfig or not
-    StoragePluginConfig rawConfig = plugin.getConfig();
-    if (! (rawConfig instanceof AbstractSecuredStoragePluginConfig)) {
-      return true;
-    }
-
-    // Next, we need to see whether user translation is activated.  If not, we're ok
-    AbstractSecuredStoragePluginConfig securedConfig = (AbstractSecuredStoragePluginConfig) rawConfig;
-    if (securedConfig.getAuthMode() != AuthMode.USER_TRANSLATION) {
-      return true;
-    }
-
-    // At this point, we know that user translation is on and we need to verify that the plugin in question
-    // has valid credentials, and by that, we simply mean that they are not null.
-    CredentialsProvider provider = securedConfig.getCredentialsProvider();
-    if (provider == null) {
-      // In this case, if there is no credential provider, the plugin is not configured properly and should be ignored.
-      return false;
-    } else {
-      return provider.hasValidUsername(context.getQueryUserName()) && provider.hasValidPassword(context.getQueryUserName());
-    }
   }
 
   public SqlConverter getConverter() {

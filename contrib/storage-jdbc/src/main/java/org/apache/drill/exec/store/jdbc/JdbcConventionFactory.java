@@ -24,10 +24,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class JdbcConventionFactory {
 
-  private static final Map<SqlDialect, DrillJdbcConvention> POOL = new ConcurrentHashMap<>();
+  private final Map<SqlDialect, DrillJdbcConvention> CACHE = new ConcurrentHashMap<>();
 
-  public static DrillJdbcConvention getJdbcConvention(JdbcStoragePlugin plugin, SqlDialect dialect, String username) {
-    return POOL.computeIfAbsent(
+  public DrillJdbcConvention getJdbcConvention(JdbcStoragePlugin plugin, SqlDialect dialect, String username) {
+    return CACHE.computeIfAbsent(
       dialect,
       djc -> new DrillJdbcConvention(dialect, plugin.getName(), plugin, username)
     );

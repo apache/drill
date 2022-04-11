@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.jdbc;
 
 import java.util.Properties;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -32,8 +33,6 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialectFactoryImpl;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig.AuthMode;
-import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -41,6 +40,7 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,58 +48,55 @@ import javax.sql.DataSource;
 
 public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
-  private static final Logger logger = LoggerFactory.getLogger(JdbcStoragePlugin.class);
+  static final Logger logger = LoggerFactory.getLogger(JdbcStoragePlugin.class);
 
   private final JdbcStorageConfig jdbcStorageConfig;
-  // DataSources keyed on userName
+  private final JdbcDialectFactory dialectFactory;
+  private final JdbcConventionFactory conventionFactory;
+  // DataSources for this storage config keyed on JDBC username
   private final Map<String, HikariDataSource> dataSources = new ConcurrentHashMap<>();
 
   public JdbcStoragePlugin(JdbcStorageConfig jdbcStorageConfig, DrillbitContext context, String name) {
     super(context, name);
     this.jdbcStorageConfig = jdbcStorageConfig;
+    this.dialectFactory = new JdbcDialectFactory();
+    this.conventionFactory = new JdbcConventionFactory();
   }
 
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
-    DataSource dataSource = getDataSource(config.getQueryUserCredentials());
-    SqlDialect dialect = getDialect(dataSource);
+    UserCredentials userCreds = config.getQueryUserCredentials();
+    Optional<DataSource> dataSource = getDataSource(userCreds);
+    if (!dataSource.isPresent()) {
+      logger.debug(
+        "No schemas will be registered in {} for query user {}.",
+        getName(),
+        config.getUserName()
+      );
+      return;
+    }
+
+    SqlDialect dialect = getDialect(dataSource.get());
     getJdbcDialect(dialect).registerSchemas(config, parent);
   }
 
-  @Override
-  public boolean hasValidCredentials(String username) {
-    if (jdbcStorageConfig.getAuthMode() != AuthMode.USER_TRANSLATION) {
-      return true;
+  public Optional<DataSource> getDataSource(UserCredentials userCredentials) {
+    Optional<UsernamePasswordCredentials> jdbcCreds = jdbcStorageConfig.getUsernamePasswordCredentials(userCredentials);
+
+    if (!jdbcCreds.isPresent()) {
+      logger.debug(
+        "There are no {} mode credentials in {} for query user {}",
+        jdbcStorageConfig.getAuthMode(),
+        getName(),
+        userCredentials.getUserName()
+      );
+      return Optional.<DataSource>empty();
     }
 
-    CredentialsProvider credentialsProvider = jdbcStorageConfig.getCredentialsProvider();
-    // If user translation is enabled, the config must define a credentials provider.
-    if (credentialsProvider == null) {
-      return false;
-    } else {
-      return credentialsProvider.hasValidUsername(username) && credentialsProvider.hasValidPassword(username);
-    }
-  }
-
-  public DataSource getDataSource(UserCredentials userCredentials) {
-    String connUserName;
-    switch (jdbcStorageConfig.getAuthMode()) {
-      case SHARED_USER:
-        connUserName = jdbcStorageConfig.getSharedCredentials().getUsername();
-        break;
-      case USER_TRANSLATION:
-        connUserName = userCredentials.getUserName();
-        break;
-      default:
-        throw UserException.unsupportedError()
-          .message("JDBC Storage Plugins only support Shared User or User Translation modes.")
-          .build(logger);
-    }
-
-    return dataSources.computeIfAbsent(
-      connUserName,
-      ds -> initDataSource(this.jdbcStorageConfig, userCredentials)
-    );
+    return Optional.of(dataSources.computeIfAbsent(
+      jdbcCreds.get().getUsername(),
+      ds -> initDataSource(this.jdbcStorageConfig, jdbcCreds.get())
+    ));
   }
 
   public SqlDialect getDialect(DataSource dataSource) {
@@ -110,11 +107,11 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   }
 
   public JdbcDialect getJdbcDialect(SqlDialect dialect) {
-    return JdbcDialectFactory.getJdbcDialect(this, dialect);
+    return dialectFactory.getJdbcDialect(this, dialect);
   }
 
   public DrillJdbcConvention getConvention(SqlDialect dialect, String username) {
-    return JdbcConventionFactory.getJdbcConvention(this, dialect, username);
+    return conventionFactory.getJdbcConvention(this, dialect, username);
   }
 
   @Override
@@ -135,8 +132,13 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   @Override
   public Set<RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext context) {
     UserCredentials userCreds = context.getContextInformation().getQueryUserCredentials();
-    DataSource dataSource = getDataSource(userCreds);
-    return getConvention(getDialect(dataSource), context.getContextInformation().getQueryUserCredentials().getUserName()).getRules();
+    Optional<DataSource> dataSource = getDataSource(userCreds);
+
+    if (!dataSource.isPresent()) {
+      return ImmutableSet.of();
+    }
+
+    return getConvention( getDialect(dataSource.get()), userCreds.getUserName() ).getRules();
   }
 
   @Override
@@ -156,7 +158,10 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
    * @throws UserException if unable to configure Hikari data source
    */
   @VisibleForTesting
-  static HikariDataSource initDataSource(JdbcStorageConfig config, UserCredentials userCredentials) {
+  static HikariDataSource initDataSource(
+    JdbcStorageConfig config,
+    UsernamePasswordCredentials jdbcCredentials
+  ) {
     try {
       Properties properties = new Properties();
 
@@ -192,11 +197,10 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       hikariConfig.setDriverClassName(config.getDriver());
       hikariConfig.setJdbcUrl(config.getUrl());
 
-      logger.debug("Initializing JDBC connection without username");
-      UsernamePasswordCredentials credentials = config.getJdbcCredentials(userCredentials);
-      hikariConfig.setUsername(credentials.getUsername());
-      hikariConfig.setPassword(credentials.getPassword());
-
+      if (jdbcCredentials != null) {
+        hikariConfig.setUsername(jdbcCredentials.getUsername());
+        hikariConfig.setPassword(jdbcCredentials.getPassword());
+      }
 
       /*
       The following serves as a hint to the driver, which *might* enable database

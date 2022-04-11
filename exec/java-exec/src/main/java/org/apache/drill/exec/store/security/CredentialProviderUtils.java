@@ -35,13 +35,13 @@ public class CredentialProviderUtils {
     if (credentialsProvider != null) {
       return credentialsProvider;
     }
+    if (username == null) {
+      return PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
+    }
+
     ImmutableMap.Builder<String, String> mapBuilder = ImmutableMap.builder();
-    if (username != null) {
-      mapBuilder.put(UsernamePasswordCredentials.USERNAME, username);
-    }
-    if (password != null) {
-      mapBuilder.put(UsernamePasswordCredentials.PASSWORD, password);
-    }
+    mapBuilder.put(UsernamePasswordCredentials.USERNAME, username);
+    mapBuilder.put(UsernamePasswordCredentials.PASSWORD, password);
     return new PlainCredentialsProvider(mapBuilder.build());
   }
 

@@ -36,6 +36,8 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.List;
 
+import javax.sql.DataSource;
+
 public class JdbcScanBatchCreator implements BatchCreator<JdbcSubScan> {
 
   @Override
@@ -60,9 +62,16 @@ public class JdbcScanBatchCreator implements BatchCreator<JdbcSubScan> {
     builder.projection(subScan.getColumns());
     builder.setUserName(subScan.getUserName());
     JdbcStoragePlugin plugin = subScan.getPlugin();
-    UserCredentials queryUserCreds = context.getContextInformation().getQueryUserCredentials();
+    UserCredentials userCreds = context.getContextInformation().getQueryUserCredentials();
+    DataSource ds = plugin.getDataSource(userCreds)
+      .orElseThrow(() -> UserException.permissionError().message(
+        "Query user %s could obtain a connection to %s, missing credentials?",
+        userCreds.getUserName(),
+        plugin.getName()
+      ).build(JdbcStoragePlugin.logger));
+
     List<ManagedReader<SchemaNegotiator>> readers = Collections.singletonList(
-      new JdbcBatchReader(plugin.getDataSource(queryUserCreds), subScan.getSql(), subScan.getColumns())
+      new JdbcBatchReader(ds, subScan.getSql(), subScan.getColumns())
     );
 
     ManagedScanFramework.ReaderFactory readerFactory = new BasicScanFactory(readers.iterator());

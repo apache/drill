@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
@@ -86,11 +87,11 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
     Map<String, Object> sourceParameters =  new HashMap<>();
     sourceParameters.put("minimumIdle", 1);
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("org.h2.Driver", connString,
-      "root", "root", true, true, sourceParameters, credentialsProvider, "shared_user", 10000);
+      "root", "root", true, true, sourceParameters, credentialsProvider, AuthMode.SHARED_USER.name(), 10000);
     jdbcStorageConfig.setEnabled(true);
 
     JdbcStorageConfig jdbcStorageConfigNoWrite = new JdbcStorageConfig("org.h2.Driver", connString,
-      "root", "root", true, false, sourceParameters, credentialsProvider, "shared_user", 10000);
+      "root", "root", true, false, sourceParameters, credentialsProvider, AuthMode.SHARED_USER.name(), 10000);
     jdbcStorageConfig.setEnabled(true);
     jdbcStorageConfigNoWrite.setEnabled(true);
 

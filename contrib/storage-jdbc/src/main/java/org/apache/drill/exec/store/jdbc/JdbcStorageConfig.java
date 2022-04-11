@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.jdbc;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -29,17 +30,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @JsonTypeName(JdbcStorageConfig.NAME)
 @JsonFilter("passwordFilter")
-public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
+public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcStorageConfig.class);
 
@@ -68,7 +70,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
     super(
       CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
       credentialsProvider == null,
-      authMode != null ? AuthMode.valueOf(authMode.toUpperCase()) : AuthMode.SHARED_USER
+      AuthMode.parseOrDefault(authMode)
     );
     this.driver = driver;
     this.url = url;
@@ -87,6 +89,27 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
     this.caseInsensitiveTableNames = that.caseInsensitiveTableNames;
     this.sourceParameters = that.sourceParameters;
     this.writerBatchSize = that.writerBatchSize;
+  }
+
+  @JsonProperty("userName")
+  public String getUsername() {
+    if (!directCredentials) {
+      return null;
+    }
+    return getUsernamePasswordCredentials(null)
+      .map(UsernamePasswordCredentials::getUsername)
+      .orElse(null);
+  }
+
+  @JsonIgnore
+  @JsonProperty("password")
+  public String getPassword() {
+    if (!directCredentials) {
+      return null;
+    }
+    return getUsernamePasswordCredentials(null)
+      .map(UsernamePasswordCredentials::getPassword)
+      .orElse(null);
   }
 
   @Override
@@ -116,17 +139,21 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   }
 
   @JsonIgnore
-  public UsernamePasswordCredentials getSharedCredentials() {
-    return new UsernamePasswordCredentials(credentialsProvider);
-  }
-
-  @JsonIgnore
-  public UsernamePasswordCredentials getJdbcCredentials(UserCredentials userCredentials) {
+  public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials(UserCredentials userCredentials) {
     switch (authMode) {
       case SHARED_USER:
-        return new UsernamePasswordCredentials(credentialsProvider);
+        return new UsernamePasswordCredentials.Builder()
+          .setCredentialsProvider(credentialsProvider)
+          .build();
       case USER_TRANSLATION:
-        return new UsernamePasswordCredentials(credentialsProvider, userCredentials.getUserName());
+        Preconditions.checkNotNull(
+          userCredentials,
+          "A drill query user is required for user translation auth mode."
+        );
+        return new UsernamePasswordCredentials.Builder()
+          .setCredentialsProvider(credentialsProvider)
+          .setQueryUser(userCredentials.getUserName())
+          .build();
       default:
         throw UserException.connectionError()
           .message("This storage plugin does not support auth mode: %s", authMode)

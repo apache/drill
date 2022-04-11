@@ -22,8 +22,8 @@ import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class OAuthTokenCredentials extends UsernamePasswordCredentials {
 
@@ -38,27 +38,71 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
   private final String clientID;
   private final String clientSecret;
   private final String tokenURI;
-  private PersistentTokenTable tokenTable;
+  private Optional<PersistentTokenTable> tokenTable;
 
-  public OAuthTokenCredentials(CredentialsProvider credentialsProvider) {
-   super(credentialsProvider);
-   if (credentialsProvider == null) {
-     this.clientID = null;
-     this.clientSecret = null;
-     this.tokenURI = null;
-   } else {
-     Map<String, String> credentials = credentialsProvider.getCredentials() == null
-       ? new HashMap<>() : credentialsProvider.getCredentials();
+  /**
+   * While a builder may seem like overkill for a class that is little more than small struct,
+   * it allows us to wrap new instances in an Optional while using contructors does not.
+   */
+  public static class Builder {
+    private CredentialsProvider credentialsProvider;
+    private String queryUser;
+    private PersistentTokenTable tokenTable;
 
-     this.clientID = credentials.getOrDefault(CLIENT_ID, null);
-     this.clientSecret = credentials.getOrDefault(CLIENT_SECRET, null);
-     this.tokenURI = credentials.getOrDefault(TOKEN_URI, null);
-   }
+    public Builder setCredentialsProvider(CredentialsProvider credentialsProvider) {
+      this.credentialsProvider = credentialsProvider;
+      return this;
+    }
+
+    public Builder setQueryUser(String queryUser) {
+      this.queryUser = queryUser;
+      return this;
+    }
+
+    public Builder setTokenTable(PersistentTokenTable tokenTable) {
+      this.tokenTable = tokenTable;
+      return this;
+    }
+
+    public Optional<OAuthTokenCredentials> build() {
+      if (credentialsProvider == null) {
+        return Optional.empty();
+      }
+
+      Map<String, String> credentials = queryUser != null
+        ? credentialsProvider.getCredentials(queryUser)
+        : credentialsProvider.getCredentials();
+
+      if (credentials.size() == 0) {
+        return Optional.empty();
+      }
+
+      return Optional.of(
+        new OAuthTokenCredentials(
+          credentials.get(USERNAME),
+          credentials.get(PASSWORD),
+          credentials.get(CLIENT_ID),
+          credentials.get(CLIENT_SECRET),
+          credentials.get(TOKEN_URI),
+          tokenTable
+        )
+      );
+    }
   }
 
-  public OAuthTokenCredentials(CredentialsProvider credentialsProvider, PersistentTokenTable tokenTable) {
-    this(credentialsProvider);
-    this.tokenTable = tokenTable;
+  public OAuthTokenCredentials(
+    String username,
+    String password,
+    String clientID,
+    String clientSecret,
+    String tokenURI,
+    PersistentTokenTable tokenTable
+  ) {
+    super(username, password);
+    this.clientID = clientID;
+    this.clientSecret = clientSecret;
+    this.tokenURI = tokenURI;
+    this.tokenTable = Optional.ofNullable(tokenTable);
   }
 
   public String getClientID() {
@@ -70,17 +114,11 @@ public class OAuthTokenCredentials extends UsernamePasswordCredentials {
   }
 
   public String getAccessToken() {
-    if (tokenTable == null) {
-      return null;
-    }
-    return tokenTable.getAccessToken();
+    return tokenTable.map(PersistentTokenTable::getAccessToken).orElse(null);
   }
 
   public String getRefreshToken() {
-    if (tokenTable == null) {
-      return null;
-    }
-    return tokenTable.getRefreshToken();
+    return tokenTable.map(PersistentTokenTable::getRefreshToken).orElse(null);
   }
 
   public String getTokenUri() {

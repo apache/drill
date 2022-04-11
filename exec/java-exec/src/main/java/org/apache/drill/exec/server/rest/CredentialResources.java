@@ -20,8 +20,8 @@ package org.apache.drill.exec.server.rest;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig.AuthMode;
+import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
@@ -67,7 +67,7 @@ public class CredentialResources {
   private static final String ALL_PLUGINS = "all";
   private static final String ENABLED_PLUGINS = "enabled";
   private static final String DISABLED_PLUGINS = "disabled";
-  private static final String HAS_USER_CREDS = "has_user_creds";
+  private static final String TRANSLATES_USERS = "translates_users";
 
   @Inject
   UserAuthEnabled authEnabled;
@@ -100,7 +100,7 @@ public class CredentialResources {
   @Path("/credentials.json")
   @Produces(MediaType.APPLICATION_JSON)
   public List<PluginConfigWrapper> getPluginsJSON() {
-    return getConfigsFor(HAS_USER_CREDS);
+    return getConfigsFor(TRANSLATES_USERS);
   }
 
   @GET
@@ -119,8 +119,8 @@ public class CredentialResources {
       case DISABLED_PLUGINS:
         filter = PluginFilter.DISABLED;
         break;
-      case HAS_USER_CREDS:
-        filter = PluginFilter.HAS_USER_CREDS;
+      case TRANSLATES_USERS:
+        filter = PluginFilter.TRANSLATES_USERS;
         break;
       default:
         return Collections.emptyList();
@@ -140,7 +140,7 @@ public class CredentialResources {
   public Response createOrUpdateCredentials(@FormParam("plugin") String pluginName,
                                        @FormParam("username") String username,
                                        @FormParam("password") String password) {
-    String activeUser = sc.getUserPrincipal().getName();
+    String queryUser = sc.getUserPrincipal().getName();
     pluginName = pluginName.trim();
     if (pluginName.isEmpty()) {
       return Response.status(Response.Status.BAD_REQUEST)
@@ -150,13 +150,13 @@ public class CredentialResources {
 
     // Get the config
     StoragePluginConfig rawConfig = storage.getStoredConfig(pluginName);
-    if (!(rawConfig instanceof AbstractSecuredStoragePluginConfig)) {
+    if (!(rawConfig instanceof CredentialedStoragePluginConfig)) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
         .entity(message(pluginName + " does not support per user credentials."))
         .build();
     }
 
-    AbstractSecuredStoragePluginConfig config = (AbstractSecuredStoragePluginConfig)rawConfig;
+    CredentialedStoragePluginConfig config = (CredentialedStoragePluginConfig)rawConfig;
 
     if (config.getAuthMode() != AuthMode.USER_TRANSLATION) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
@@ -166,11 +166,11 @@ public class CredentialResources {
 
     // Get the credential provider
     CredentialsProvider credentialProvider = config.getCredentialsProvider();
-    credentialProvider.setUserCredentials(username, password, activeUser);
+    credentialProvider.setUserCredentials(username, password, queryUser);
 
     // Since the config classes are not accessible from java-exec, we have to serialize them,
     // replace the credential provider with the updated one, and update the storage plugin registry
-    AbstractSecuredStoragePluginConfig newConfig = config.updateCredentialProvider(credentialProvider);
+    CredentialedStoragePluginConfig newConfig = config.updateCredentialProvider(credentialProvider);
     newConfig.setEnabled(config.isEnabled());
 
     try {
@@ -193,7 +193,7 @@ public class CredentialResources {
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response createOrUpdatePlugin(@PathParam("pluginName") String pluginName, UsernamePasswordContainer credentials) {
-    String activeUser = sc.getUserPrincipal().getName();
+    String queryUser = sc.getUserPrincipal().getName();
     pluginName = pluginName.trim();
 
     if (pluginName.isEmpty()) {
@@ -202,15 +202,13 @@ public class CredentialResources {
         .build();
     }
 
-    // Get the config
-    StoragePluginConfig rawConfig = storage.getStoredConfig(pluginName);
-    if (!(rawConfig instanceof AbstractSecuredStoragePluginConfig)) {
+    StoragePluginConfig config = storage.getStoredConfig(pluginName);
+
+    if (!(config instanceof CredentialedStoragePluginConfig)) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
         .entity(message(pluginName + " does not support user translation."))
         .build();
     }
-
-    AbstractSecuredStoragePluginConfig config = (AbstractSecuredStoragePluginConfig)rawConfig;
 
     if (config.getAuthMode() != AuthMode.USER_TRANSLATION) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
@@ -218,14 +216,14 @@ public class CredentialResources {
         .build();
     }
 
-    // Get the credential provider
-    CredentialsProvider credentialProvider = config.getCredentialsProvider();
-    credentialProvider.setUserCredentials(credentials.getUsername(), credentials.getPassword(), activeUser);
+    CredentialedStoragePluginConfig credsConfig = (CredentialedStoragePluginConfig)config;
+    CredentialsProvider credentialProvider = credsConfig.getCredentialsProvider();
+    credentialProvider.setUserCredentials(credentials.getUsername(), credentials.getPassword(), queryUser);
 
     // Since the config classes are not accessible from java-exec, we have to serialize them,
     // replace the credential provider with the updated one, and update the storage plugin registry
-    AbstractSecuredStoragePluginConfig newConfig = config.updateCredentialProvider(credentialProvider);
-    newConfig.setEnabled(config.isEnabled());
+    CredentialedStoragePluginConfig newConfig = credsConfig.updateCredentialProvider(credentialProvider);
+    newConfig.setEnabled(credsConfig.isEnabled());
 
     try {
       storage.validatedPut(pluginName, newConfig);

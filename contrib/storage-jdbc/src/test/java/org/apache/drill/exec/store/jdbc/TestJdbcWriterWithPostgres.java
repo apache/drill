@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
@@ -86,14 +87,14 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
     JdbcStorageConfig jdbcStorageConfig =
       new JdbcStorageConfig("org.postgresql.Driver",
         jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
-        true, true, sourceParameters, null, "shared_user", 10000);
+        true, true, sourceParameters, null, AuthMode.SHARED_USER.name(), 10000);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("pg", jdbcStorageConfig);
 
     JdbcStorageConfig unWritableJdbcStorageConfig =
       new JdbcStorageConfig("org.postgresql.Driver",
         jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
-        true, false, sourceParameters, null, "shared_user", 10000);
+        true, false, sourceParameters, null, AuthMode.SHARED_USER.name(), 10000);
     unWritableJdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("pg_unwritable", unWritableJdbcStorageConfig);
 

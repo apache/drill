@@ -34,8 +34,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.net.util.Base64;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig.AuthMode;
+import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.ExecConstants;
@@ -147,7 +147,7 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
     // First verify that the user has no credentials
     StoragePluginRegistry registry = cluster.storageRegistry();
     StoragePlugin plugin = registry.getPlugin("local");
-    PlainCredentialsProvider credentialsProvider = (PlainCredentialsProvider)((AbstractSecuredStoragePluginConfig)plugin.getConfig()).getCredentialsProvider();
+    PlainCredentialsProvider credentialsProvider = (PlainCredentialsProvider)((CredentialedStoragePluginConfig)plugin.getConfig()).getCredentialsProvider();
     Map<String, String> credentials = credentialsProvider.getCredentials(TEST_USER_1);
     assertNotNull(credentials);
     assertNull(credentials.get("username"));

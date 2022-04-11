@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.lang3.StringUtils;
+
 import org.apache.drill.common.PlanStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Implementation of {@link CredentialsProvider} that holds credentials provided by user.
@@ -54,8 +55,8 @@ public class PlainCredentialsProvider implements CredentialsProvider {
     @JsonProperty("credentials") Map<String, String> credentials,
     @JsonProperty("userCredentials") Map<String, Map<String, String>> userCredentials
   ) {
-    this.credentials = credentials;
-    this.userCredentials = userCredentials;
+    this.credentials = Optional.ofNullable(credentials).orElse(new HashMap<>());
+    this.userCredentials = Optional.ofNullable(userCredentials).orElse(new HashMap<>());
   }
 
   @JsonIgnore
@@ -67,64 +68,41 @@ public class PlainCredentialsProvider implements CredentialsProvider {
 
   @Override
   @JsonIgnore(false)
-  public Map<String, String> getCredentials() {
+  @JsonProperty("credentials") public Map<String, String> getCredentials() {
     return credentials;
   }
 
+  @JsonProperty("userCredentials")
   @JsonInclude(Include.NON_NULL)
   public Map<String, Map<String, String>> getUserCredentials() {
     return userCredentials;
   }
 
   /**
-   * Returns the credentials for a given active user.  If that user does not have credentials,
+   * Returns the credentials for a given query user.  If that user does not have credentials,
    * the function will add an entry for that user with keys username, password which are both null.
-   * @param activeUser A String of the currently logged in user
+   * @param queryUser A String of the currently logged in user
    * @return A Map of the active user's credentials
    */
   @Override
-  public Map<String, String> getCredentials(String activeUser) {
-    logger.debug("Getting creds for {}", activeUser);
-    if (activeUser == null) {
-      Map<String, String> tempMap = new HashMap<>();
-      tempMap.put("username", null);
-      tempMap.put("password", null);
-      return tempMap;
-    } else if (! userCredentials.containsKey(activeUser)) {
-      // If the user doesn't have anything, create a new entry for them and add it to the per-user table
-      Map<String, String> tempMap = new HashMap<>();
-      tempMap.put("username", null);
-      tempMap.put("password", null);
-      userCredentials.put(activeUser, tempMap);
-    }
-    return userCredentials.get(activeUser);
+  public Map<String, String> getCredentials(String queryUser) {
+    assert queryUser != null;
+    logger.debug("Getting credentials for query user {}", queryUser);
+
+    return userCredentials.getOrDefault(queryUser, new HashMap<>());
   }
 
   @Override
-  public void setUserCredentials(String username, String password, String activeUser) {
-    Map<String, String> userCredentials;
-    if (this.userCredentials.containsKey(activeUser)) {
-      userCredentials = this.userCredentials.get(activeUser);
-      userCredentials.put("username", username);
-      userCredentials.put("password", password);
-    } else {
-      userCredentials = new HashMap<>();
-      userCredentials.put("username", username);
-      userCredentials.put("password", password);
-      this.userCredentials.put(activeUser, userCredentials);
-    }
-  }
+  public void setUserCredentials(String username, String password, String queryUser) {
+    assert queryUser != null;
+    logger.debug("Setting credentials for query user {}", queryUser);
 
-  @Override
-  public boolean hasValidUsername(String username) {
-    Map<String, String> creds = getCredentials(username);
-    return StringUtils.isNotEmpty(creds.get("username"));
-  }
-
-  @Override
-  public boolean hasValidPassword(String username) {
-    Map<String, String> creds = getCredentials(username);
-    return StringUtils.isNotEmpty(creds.get("password"));
+    Map<String, String> creds = userCredentials.computeIfAbsent(
+      queryUser,
+      c -> new HashMap<String, String>()
+    );
+    creds.put("username", username);
+    creds.put("password", password);
   }
 
   @Override

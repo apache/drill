@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.jdbc;
 
 import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
@@ -78,7 +79,7 @@ public class TestJdbcPluginWithClickhouse extends ClusterTest {
     JdbcStorageConfig jdbcStorageConfig =
       new JdbcStorageConfig("ru.yandex.clickhouse.ClickHouseDriver",
         jdbcContainer.getJdbcUrl(), null, null,
-        true, false, null, credentialsProvider, "shared_user", 0);
+        true, false, null, credentialsProvider, AuthMode.SHARED_USER.name(), 0);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("clickhouse", jdbcStorageConfig);
   }

@@ -26,6 +26,7 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SubsetRemover;
 
+import java.util.Optional;
 import javax.sql.DataSource;
 
 public class DefaultJdbcDialect implements JdbcDialect {
@@ -40,12 +41,17 @@ public class DefaultJdbcDialect implements JdbcDialect {
 
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
-    DataSource dataSource = plugin.getDataSource(config.getQueryUserCredentials());
+    Optional<DataSource> dataSource = plugin.getDataSource(config.getQueryUserCredentials());
+
+    if (!dataSource.isPresent()) {
+      return;
+    }
+
     DrillJdbcConvention convention = plugin.getConvention(dialect, config.getQueryUserCredentials().getUserName());
 
     JdbcCatalogSchema schema = new JdbcCatalogSchema(
       plugin.getName(),
-      dataSource,
+      dataSource.get(),
       dialect,
       convention,
       !plugin.getConfig().areTableNamesCaseInsensitive()

@@ -48,28 +48,14 @@ public interface CredentialsProvider {
   @JsonIgnore
   default Map<String, String> getCredentials(String username) {
     throw UserException.unsupportedError()
-      .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
+      .message("%s does not support per-user credentials.", getClass())
       .build(logger);
   }
 
   @JsonIgnore
-  default void setUserCredentials(String username, String password, String activeUser) {
+  default void setUserCredentials(String username, String password, String queryUser) {
     throw UserException.unsupportedError()
-      .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
-      .build(logger);
-  }
-
-  @JsonIgnore
-  default boolean hasValidUsername(String activeUser) {
-    throw UserException.unsupportedError()
-      .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
-      .build(logger);
-  }
-
-  @JsonIgnore
-  default boolean hasValidPassword(String activeUser) {
-    throw UserException.unsupportedError()
-      .message("Only PlainCredentialProvider and VaultCredentialProvider support per-user credentials.")
+      .message("%s does not support per-user credentials.", getClass())
       .build(logger);
   }
 }

@@ -26,10 +26,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class JdbcDialectFactory {
   public static final String JDBC_CLICKHOUSE_PREFIX = "jdbc:clickhouse";
 
-  private static final Map<SqlDialect, JdbcDialect> POOL = new ConcurrentHashMap<>();
+  private final Map<SqlDialect, JdbcDialect> CACHE = new ConcurrentHashMap<>();
 
-  public static JdbcDialect getJdbcDialect(JdbcStoragePlugin plugin, SqlDialect dialect) {
-    return POOL.computeIfAbsent(
+  public JdbcDialect getJdbcDialect(JdbcStoragePlugin plugin, SqlDialect dialect) {
+    return CACHE.computeIfAbsent(
       dialect,
       jd -> plugin.getConfig().getUrl().startsWith(JDBC_CLICKHOUSE_PREFIX)
         ? new ClickhouseJdbcDialect(plugin, dialect)

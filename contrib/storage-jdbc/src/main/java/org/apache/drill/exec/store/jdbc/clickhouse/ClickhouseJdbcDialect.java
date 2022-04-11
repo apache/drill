@@ -23,11 +23,14 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SubsetRemover;
 import org.apache.drill.exec.store.jdbc.DrillJdbcConvention;
 import org.apache.drill.exec.store.jdbc.JdbcDialect;
 import org.apache.drill.exec.store.jdbc.JdbcStoragePlugin;
+
+import java.util.Optional;
 
 import javax.sql.DataSource;
 
@@ -43,12 +46,16 @@ public class ClickhouseJdbcDialect implements JdbcDialect {
 
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
-    DataSource dataSource = plugin.getDataSource(config.getQueryUserCredentials());
+    UserCredentials userCreds = config.getQueryUserCredentials();
+    Optional<DataSource> dataSource = plugin.getDataSource(userCreds);
+    if (!dataSource.isPresent()) {
+      return;
+    }
     DrillJdbcConvention convention = plugin.getConvention(dialect, config.getQueryUserCredentials().getUserName());
 
     ClickhouseCatalogSchema schema = new ClickhouseCatalogSchema(
       plugin.getName(),
-      dataSource,
+      dataSource.get(),
       dialect,
       convention
     );

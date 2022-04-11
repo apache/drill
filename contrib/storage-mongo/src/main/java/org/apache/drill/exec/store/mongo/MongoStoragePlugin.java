@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -104,13 +105,13 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   private String addCredentialsFromCredentialsProvider(String connection, String name) {
     ConnectionString parsed = new ConnectionString(connection);
     if (parsed.getCredential() == null) {
-      UsernamePasswordCredentials credentials = getUsernamePasswordCredentials(name);
+      Optional<UsernamePasswordCredentials> credentials = getUsernamePasswordCredentials(name);
       try {
         // The default connection has the name "mongo" but multiple connections can be added;
         // each will need their own credentials.
-        if (credentials.getUsername() != null && credentials.getPassword() != null) {
-          String username = URLEncoder.encode(credentials.getUsername(), "UTF-8");
-          String password = URLEncoder.encode(credentials.getPassword(), "UTF-8");
+        if (credentials.isPresent()) {
+          String username = URLEncoder.encode(credentials.get().getUsername(), "UTF-8");
+          String password = URLEncoder.encode(credentials.get().getPassword(), "UTF-8");
           return connection.replaceFirst("://",
               String.format("://%s:%s@", username, password));
         }
@@ -121,7 +122,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
     return connection;
   }
 
-  private UsernamePasswordCredentials getUsernamePasswordCredentials(String name) {
+  private Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials(String name) {
     CredentialsProvider credentialsProvider = mongoConfig.getCredentialsProvider();
     // for the case if empty credentials, tries to obtain credentials using HadoopCredentialsProvider
     if (credentialsProvider == null || credentialsProvider == PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER) {
@@ -132,7 +133,9 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
               UsernamePasswordCredentials.PASSWORD,
               DrillMongoConstants.STORE_CONFIG_PREFIX + name + DrillMongoConstants.PASSWORD_CONFIG_SUFFIX));
     }
-    return new UsernamePasswordCredentials(credentialsProvider);
+    return new UsernamePasswordCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider).
+      build();
   }
 
   @Override

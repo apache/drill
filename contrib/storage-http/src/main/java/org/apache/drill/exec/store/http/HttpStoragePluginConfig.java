@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.http;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.map.CaseInsensitiveMap;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -36,11 +36,12 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 
 @JsonTypeName(HttpStoragePluginConfig.NAME)
-public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig {
+public class HttpStoragePluginConfig extends CredentialedStoragePluginConfig {
   private static final Logger logger = LoggerFactory.getLogger(HttpStoragePluginConfig.class);
   public static final String NAME = "http";
 
@@ -72,16 +73,17 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
                                  @JsonProperty("authMode") String authMode
                                  ) {
     super(CredentialProviderUtils.getCredentialsProvider(
-        getClientID(new OAuthTokenCredentials(credentialsProvider)),
-        getClientSecret(new OAuthTokenCredentials(credentialsProvider)),
-        getTokenURL(new OAuthTokenCredentials(credentialsProvider)),
+        null,
+        null,
+        null,
         normalize(username),
         normalize(password),
         normalize(proxyUsername),
         normalize(proxyPassword),
         credentialsProvider),
-        credentialsProvider == null, authMode != null ?
-        AuthMode.valueOf(authMode.toUpperCase()) : AuthMode.SHARED_USER);
+        credentialsProvider == null,
+        AuthMode.parseOrDefault(authMode)
+    );
     this.cacheResults = cacheResults != null && cacheResults;
 
     this.connections = CaseInsensitiveMap.newHashMap();
@@ -154,12 +156,22 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
    * The copy is used in the query plan to avoid including unnecessary information.
    */
   public HttpStoragePluginConfig copyForPlan(String connectionName) {
+    Optional<UsernamePasswordWithProxyCredentials> creds = getUsernamePasswordCredentials();
     return new HttpStoragePluginConfig(
-        cacheResults, configFor(connectionName), timeout,
-      getUsernamePasswordCredentials().getUsername(),
-      getUsernamePasswordCredentials().getPassword(),
-        proxyHost, proxyPort, proxyType, getUsernamePasswordCredentials().getProxyUsername(),
-      getUsernamePasswordCredentials().getProxyPassword(), oAuthConfig, credentialsProvider, authMode.name());
+      cacheResults,
+      configFor(connectionName),
+      timeout,
+      username(),
+      password(),
+      proxyHost,
+      proxyPort,
+      proxyType,
+      proxyUsername(),
+      proxyPassword(),
+      oAuthConfig,
+      credentialsProvider,
+      authMode.name()
+    );
   }
 
   private Map<String, HttpApiConfig> configFor(String connectionName) {
@@ -216,7 +228,7 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
   @JsonProperty("timeout")
   public int timeout() { return timeout;}
 
-  @JsonProperty("proxyHost")
+   @JsonProperty("proxyHost")
   public String proxyHost() { return proxyHost; }
 
   @JsonProperty("proxyPort")
@@ -229,34 +241,42 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
 
   @JsonProperty("username")
   public String username() {
-    if (inlineCredentials) {
-      return getUsernamePasswordCredentials().getUsername();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordWithProxyCredentials::getUsername)
+      .orElse(null);
   }
 
   @JsonProperty("password")
   public String password() {
-    if (inlineCredentials) {
-      return getUsernamePasswordCredentials().getPassword();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordWithProxyCredentials::getPassword)
+      .orElse(null);
   }
 
   @JsonProperty("proxyUsername")
   public String proxyUsername() {
-    if (inlineCredentials) {
-      return getUsernamePasswordCredentials().getProxyUsername();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordWithProxyCredentials::getProxyUsername)
+      .orElse(null);
   }
 
   @JsonProperty("proxyPassword")
   public String proxyPassword() {
-    if (inlineCredentials) {
-      return getUsernamePasswordCredentials().getProxyPassword();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordWithProxyCredentials::getProxyPassword)
+      .orElse(null);
   }
 
   @JsonIgnore
@@ -283,18 +303,25 @@ public class HttpStoragePluginConfig extends AbstractSecuredStoragePluginConfig 
   }
 
   @JsonIgnore
-  public UsernamePasswordWithProxyCredentials getUsernamePasswordCredentials() {
-    return new UsernamePasswordWithProxyCredentials(credentialsProvider);
+  public Optional<UsernamePasswordWithProxyCredentials> getUsernamePasswordCredentials() {
+    return new UsernamePasswordWithProxyCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .build();
   }
 
   @JsonIgnore
-  public UsernamePasswordWithProxyCredentials getUsernamePasswordCredentials(String username) {
-    return new UsernamePasswordWithProxyCredentials(credentialsProvider, username);
+  public Optional<UsernamePasswordWithProxyCredentials> getUsernamePasswordCredentials(String username) {
+    return new UsernamePasswordWithProxyCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .setQueryUser(username)
+      .build();
   }
 
   @JsonIgnore
-  public static OAuthTokenCredentials getOAuthCredentials(CredentialsProvider credentialsProvider) {
-    return new OAuthTokenCredentials(credentialsProvider);
+  public static Optional<OAuthTokenCredentials> getOAuthCredentials(CredentialsProvider credentialsProvider) {
+    return new OAuthTokenCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .build();
   }
 
   @Override

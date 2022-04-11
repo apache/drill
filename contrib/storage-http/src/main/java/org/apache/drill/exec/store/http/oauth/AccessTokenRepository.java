@@ -59,7 +59,10 @@ public class AccessTokenRepository {
     accessToken = tokenTable.getAccessToken();
     refreshToken = tokenTable.getRefreshToken();
 
-    this.credentials = new OAuthTokenCredentials(credentialsProvider, tokenTable);
+    this.credentials = new OAuthTokenCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .setTokenTable(tokenTable)
+      .build().get();
 
     // Add proxy info
     SimpleHttp.addProxyInfo(builder, proxyConfig);
