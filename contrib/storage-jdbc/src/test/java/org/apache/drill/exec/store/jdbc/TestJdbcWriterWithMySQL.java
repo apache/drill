@@ -49,7 +49,10 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -99,16 +102,23 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
       ScriptUtils.runInitScript(databaseDelegate, "mysql-test-data-linux.sql");
     }
 
+    Map<String, Object> sourceParameters =  new HashMap<>();
+    sourceParameters.put("maximumPoolSize", "1");
+    sourceParameters.put("idleTimeout", String.valueOf(TimeUnit.SECONDS.toMillis(5)));
+    sourceParameters.put("keepaliveTime", String.valueOf(TimeUnit.SECONDS.toMillis(5)));
+    sourceParameters.put("maxLifetime", String.valueOf(TimeUnit.SECONDS.toMillis(20)));
+    sourceParameters.put("minimumIdle", "0");
+
     String jdbcUrl = jdbcContainer.getJdbcUrl();
     logger.debug("JDBC URL: {}", jdbcUrl);
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, true, null, null, "shared_user", 10000);
+      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, true, sourceParameters, null, "shared_user", 10000);
     jdbcStorageConfig.setEnabled(true);
 
     cluster.defineStoragePlugin("mysql", jdbcStorageConfig);
 
     JdbcStorageConfig jdbcStorageConfigNoWrite = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, false, null, null, "shared_user", 10000);
+      jdbcContainer.getUsername(), jdbcContainer.getPassword(), false, false, sourceParameters, null, "shared_user", 10000);
     jdbcStorageConfigNoWrite.setEnabled(true);
 
     cluster.defineStoragePlugin("mysql_no_write", jdbcStorageConfigNoWrite);
@@ -116,7 +126,7 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
     if (osName.startsWith("linux")) {
       // adds storage plugin with case insensitive table names
       JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver", jdbcUrl,
-        jdbcContainer.getUsername(), jdbcContainer.getPassword(), true, true, null, null, "shared_user", 10000);
+        jdbcContainer.getUsername(), jdbcContainer.getPassword(), true, true, sourceParameters, null, "shared_user", 10000);
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
       cluster.defineStoragePlugin("mysqlCaseInsensitive", jdbcCaseSensitiveStorageConfig);
     }
@@ -441,30 +451,6 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
   }
 
   @Test
-  public void testUnwritableConnection() throws Exception {
-    try {
-      String query = "CREATE TABLE IF NOT EXISTS mysql_no_write.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
-      queryBuilder().sql(query).run();
-      fail();
-    } catch (UserRemoteException e) {
-      System.out.println(e.getMessage());
-      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [mysql_no_write.drill_mysql_test] is immutable."));
-    }
-  }
-
-  @Test
-  public void testUnwritableConnectionWithoutIfNotExists() throws Exception {
-    try {
-      String query = "CREATE TABLE mysql_no_write.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
-      queryBuilder().sql(query).run();
-      fail();
-    } catch (UserRemoteException e) {
-      System.out.println(e.getMessage());
-      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [mysql_no_write.drill_mysql_test] is immutable."));
-    }
-  }
-
-  @Test
   public void testWithLargeFile() throws Exception {
     String query = "CREATE TABLE mysql.`drill_mysql_test`.test (id,first_name,last_name,email,gender,ip_address) AS " +
       "SELECT id,first_name,last_name,email,gender,ip_address FROM cp.`csv/large_csv.csvh`";
@@ -513,6 +499,32 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
     boolean deletedFile = JdbcTestUtils.deleteCsvFile(String.valueOf(generatedFile));
     if (!deletedFile) {
       fail();
+    }
+  }
+
+  @Test
+  @Ignore
+  public void testUnwritableConnection() throws Exception {
+    try {
+      String query = "CREATE TABLE IF NOT EXISTS mysql_no_write.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      queryBuilder().sql(query).run();
+      fail();
+    } catch (UserRemoteException e) {
+      System.out.println(e.getMessage());
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [mysql_no_write.drill_mysql_test] is immutable."));
+    }
+  }
+
+  @Test
+  @Ignore
+  public void testUnwritableConnectionWithoutIfNotExists() throws Exception {
+    try {
+      String query = "CREATE TABLE mysql_no_write.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      queryBuilder().sql(query).run();
+      fail();
+    } catch (UserRemoteException e) {
+      System.out.println(e.getMessage());
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [mysql_no_write.drill_mysql_test] is immutable."));
     }
   }
 

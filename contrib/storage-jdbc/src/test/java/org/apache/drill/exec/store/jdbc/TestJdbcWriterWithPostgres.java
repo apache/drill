@@ -45,7 +45,10 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -73,17 +76,24 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
       .withInitScript("postgres-test-data.sql");
     jdbcContainer.start();
 
+    Map<String, Object> sourceParameters =  new HashMap<>();
+    sourceParameters.put("maximumPoolSize", "16");
+    sourceParameters.put("idleTimeout", String.valueOf(TimeUnit.SECONDS.toMillis(5)));
+    sourceParameters.put("keepaliveTime", String.valueOf(TimeUnit.SECONDS.toMillis(5)));
+    sourceParameters.put("maxLifetime", String.valueOf(TimeUnit.SECONDS.toMillis(20)));
+    sourceParameters.put("minimumIdle", "0");
+
     JdbcStorageConfig jdbcStorageConfig =
       new JdbcStorageConfig("org.postgresql.Driver",
         jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
-        true, true, null, null, "shared_user", 10000);
+        true, true, sourceParameters, null, "shared_user", 10000);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("pg", jdbcStorageConfig);
 
     JdbcStorageConfig unWritableJdbcStorageConfig =
       new JdbcStorageConfig("org.postgresql.Driver",
         jdbcContainer.getJdbcUrl(), jdbcContainer.getUsername(), jdbcContainer.getPassword(),
-        true, false, null, null, "shared_user", 10000);
+        true, false, sourceParameters, null, "shared_user", 10000);
     unWritableJdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("pg_unwritable", unWritableJdbcStorageConfig);
 
@@ -93,6 +103,32 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
   public static void stopPostgres() {
     if (jdbcContainer != null) {
       jdbcContainer.stop();
+    }
+  }
+
+  @Test
+  @Ignore
+  public void testUnwritableConnectionWithIfNotExists() throws Exception {
+    try {
+      String query = "CREATE TABLE IF NOT EXISTS pg_unwritable.public.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      queryBuilder().sql(query).run();
+      fail();
+    } catch (UserRemoteException e) {
+      System.out.println(e.getMessage());
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [pg_unwritable.public] is immutable."));
+    }
+  }
+
+  @Test
+  @Ignore
+  public void testUnwritableConnection() throws Exception {
+    try {
+      String query = "CREATE TABLE pg_unwritable.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
+      queryBuilder().sql(query).run();
+      fail();
+    } catch (UserRemoteException e) {
+      System.out.println(e.getMessage());
+      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [pg_unwritable.public] is immutable."));
     }
   }
 
@@ -425,26 +461,6 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
       fail();
     } catch (UserRemoteException e) {
       assertTrue(e.getMessage().contains("DATA_WRITE ERROR: Drill does not yet support writing arrays to JDBC. `repeated_field` is an array."));
-    }
-  }
-
-  @Test
-  public void testUnwritableConnection() throws Exception {
-    try {
-      String query = "CREATE TABLE IF NOT EXISTS pg_unwritable.public.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
-      queryBuilder().sql(query).run();
-      fail();
-    } catch (UserRemoteException e) {
-      assertTrue(e.getMessage().contains("VALIDATION ERROR: Unable to create or drop objects. Schema [pg_unwritable.public] is immutable."));
-    }
-
-    try {
-      String query = "CREATE TABLE pg_unwritable.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
-      queryBuilder().sql(query).run();
-      fail();
-    } catch (UserRemoteException e) {
-      System.out.println(e.getMessage());
-      assertTrue(e.getMessage().contains("pg_unwritable.public"));
     }
   }
 }

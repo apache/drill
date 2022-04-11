@@ -123,7 +123,8 @@ public class CredentialsProviderSerDeTest extends ClusterTest {
         "  \"credentials\" : {\n" +
         "    \"username\" : \"myLogin\",\n" +
         "    \"password\" : \"myPass\"\n" +
-        "  }\n" +
+        "  }, \n" +
+        "  \"userCredentials\" : { }\n" +
         "}";
 
     CredentialsProvider deserialized = mapper.readerFor(CredentialsProvider.class).readValue(serialized);

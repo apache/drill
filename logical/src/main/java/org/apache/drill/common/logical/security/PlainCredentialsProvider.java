@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.PlanStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,6 +147,9 @@ public class PlainCredentialsProvider implements CredentialsProvider {
 
   @Override
   public String toString() {
-    return credentials + " " + userCredentials;
+    return new PlanStringBuilder(this)
+      .field("credentials", credentials)
+      .field("userCredentials", userCredentials)
+      .toString();
   }
 }
