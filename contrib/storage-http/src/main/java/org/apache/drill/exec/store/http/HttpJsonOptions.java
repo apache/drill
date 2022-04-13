@@ -20,7 +20,9 @@ package org.apache.drill.exec.store.http;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
@@ -31,16 +33,16 @@ import java.util.Objects;
 @JsonDeserialize(builder = HttpJsonOptions.HttpJsonOptionsBuilder.class)
 public class HttpJsonOptions {
 
-  @JsonInclude
+  @JsonProperty
   private final Boolean allowNanInf;
 
-  @JsonInclude
+  @JsonProperty
   private final Boolean allTextMode;
 
-  @JsonInclude
+  @JsonProperty
   private final Boolean readNumbersAsDouble;
 
-  @JsonInclude
+  @JsonProperty
   private final Boolean enableEscapeAnyChar;
 
   HttpJsonOptions(HttpJsonOptionsBuilder builder) {
@@ -72,18 +74,22 @@ public class HttpJsonOptions {
     return options;
   }
 
+  @JsonProperty("allowNanInf")
   public Boolean allowNanInf() {
     return this.allowNanInf;
   }
 
+  @JsonProperty("allTextMode")
   public Boolean allTextMode() {
     return this.allTextMode;
   }
 
+  @JsonProperty("readNumbersAsDouble")
   public Boolean readNumbersAsDouble() {
     return this.readNumbersAsDouble;
   }
 
+  @JsonProperty("enableEscapeAnyChar")
   public Boolean enableEscapeAnyChar() {
     return this.enableEscapeAnyChar;
   }
@@ -118,6 +124,7 @@ public class HttpJsonOptions {
       .toString();
   }
 
+  @JsonPOJOBuilder(withPrefix = "")
   public static class HttpJsonOptionsBuilder {
     private Boolean allowNanInf;
 
