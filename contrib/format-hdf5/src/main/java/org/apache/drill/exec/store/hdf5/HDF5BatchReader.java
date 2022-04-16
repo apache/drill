@@ -18,10 +18,8 @@
 
 package org.apache.drill.exec.store.hdf5;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -125,8 +123,6 @@ public class HDF5BatchReader implements ManagedReader {
 
   private final HdfFile hdfFile;
 
-  private final BufferedReader reader;
-
   private final RowSetLoader rowWriter;
 
   private final WriterSpec writerSpec;
@@ -180,25 +176,20 @@ public class HDF5BatchReader implements ManagedReader {
     fileName = file.split().getPath().getName();
 
     { // Opens an HDF5 file
-      InputStream in = null;
-      try {
+      try (InputStream in = file.fileSystem().openPossiblyCompressedStream(file.split().getPath())) {
         /*
          * As a possible future improvement, the jhdf reader has the ability to read hdf5 files from
          * a byte array or byte buffer. This implementation is better in that it does not require creating
          * a temporary file which must be deleted later.  However, it could result in memory issues in the
          * event of large files.
          */
-        in = file.fileSystem().openPossiblyCompressedStream(file.split().getPath());
         hdfFile = HdfFile.fromInputStream(in);
-        reader = new BufferedReader(new InputStreamReader(in));
       } catch (IOException e) {
         throw UserException
           .dataReadError(e)
           .message("Failed to open input file: %s", file.split().getPath())
           .addContext(errorContext)
           .build(logger);
-      } finally {
-        AutoCloseables.closeSilently(in);
       }
     }
 
@@ -223,9 +214,9 @@ public class HDF5BatchReader implements ManagedReader {
         negotiator.tableSchema(builder.buildSchema(), false);
 
         loader = negotiator.build();
-        dimensions = new int[0];
         rowWriter = loader.writer();
 
+        dimensions = null;
         writerSpec = null;
         pathWriter = rowWriter.scalar(PATH_COLUMN_NAME);
         dataTypeWriter = rowWriter.scalar(DATA_TYPE_COLUMN_NAME);
@@ -392,10 +383,11 @@ public class HDF5BatchReader implements ManagedReader {
 
   @Override
   public void close() {
-    AutoCloseables.closeSilently(hdfFile, reader);
+    AutoCloseables.closeSilently(hdfFile);
     /*
-     * The current implementation of the HDF5 reader creates a temp file which needs to be removed
-     * when the batch reader is closed. A possible future functionality might be to used to.
+     * The current implementation of the HDF5 reader creates a temp file,
+     * these files are deleted only before application exits.
+     * The temporary file needs to be removed when the batch reader is closed.
      */
     boolean result = hdfFile.getFile().delete();
     if (!result) {
