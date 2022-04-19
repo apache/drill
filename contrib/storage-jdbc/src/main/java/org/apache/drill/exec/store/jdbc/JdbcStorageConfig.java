@@ -152,7 +152,7 @@ public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
         );
         return new UsernamePasswordCredentials.Builder()
           .setCredentialsProvider(credentialsProvider)
-          .setQueryUser(userCredentials.getUserName())
+          .setQueryUser(userCredentials.getUserName()) // lgtm [java/dereferenced-value-may-be-null]
           .build();
       default:
         throw UserException.connectionError()
