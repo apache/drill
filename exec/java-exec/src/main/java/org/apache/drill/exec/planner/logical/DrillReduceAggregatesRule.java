@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.drill.exec.planner.sql.DrillCalciteSqlSumEmptyIsZeroAggFunctionWrapper;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -340,7 +341,8 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             sumType,
             sumType.isNullable() || nGroups == 0);
     SqlAggFunction sumAgg =
-        new DrillCalciteSqlAggFunctionWrapper(new SqlSumEmptyIsZeroAggFunction(), sumType);
+        new DrillCalciteSqlSumEmptyIsZeroAggFunctionWrapper(
+          new SqlSumEmptyIsZeroAggFunction(), sumType);
     AggregateCall sumCall = AggregateCall.create(sumAgg, oldCall.isDistinct(),
         oldCall.isApproximate(), oldCall.getArgList(), -1, sumType, null);
     final SqlCountAggFunction countAgg = (SqlCountAggFunction) SqlStdOperatorTable.COUNT;
@@ -437,7 +439,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
           typeFactory.createTypeWithNullability(
               oldCall.getType(), argType.isNullable());
     }
-    sumZeroAgg = new DrillCalciteSqlAggFunctionWrapper(
+    sumZeroAgg = new DrillCalciteSqlSumEmptyIsZeroAggFunctionWrapper(
         new SqlSumEmptyIsZeroAggFunction(), sumType);
     AggregateCall sumZeroCall = AggregateCall.create(sumZeroAgg, oldCall.isDistinct(),
         oldCall.isApproximate(), oldCall.getArgList(), -1, sumType, null);
@@ -713,7 +715,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
           final RelDataType argType = oldAggregateCall.getType();
           final RelDataType sumType = oldAggRel.getCluster().getTypeFactory()
               .createTypeWithNullability(argType, argType.isNullable());
-          final SqlAggFunction sumZeroAgg = new DrillCalciteSqlAggFunctionWrapper(
+          final SqlAggFunction sumZeroAgg = new DrillCalciteSqlSumEmptyIsZeroAggFunctionWrapper(
               new SqlSumEmptyIsZeroAggFunction(), sumType);
           AggregateCall sumZeroCall =
               AggregateCall.create(
@@ -775,7 +777,7 @@ public class DrillReduceAggregatesRule extends RelOptRule {
             final RelDataType argType = rexWinAggCall.getType();
             final RelDataType sumType = oldWinRel.getCluster().getTypeFactory()
                 .createTypeWithNullability(argType, argType.isNullable());
-            final SqlAggFunction sumZeroAgg = new DrillCalciteSqlAggFunctionWrapper(
+            final SqlAggFunction sumZeroAgg = new DrillCalciteSqlSumEmptyIsZeroAggFunctionWrapper(
                 new SqlSumEmptyIsZeroAggFunction(), sumType);
             final Window.RexWinAggCall sumZeroCall =
                 new Window.RexWinAggCall(

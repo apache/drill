@@ -313,4 +313,16 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
       .exclude("Limit\\(")
       .match();
   }
+
+  @Test // DRILL-8013
+  public void testAvgFunction() throws Exception {
+    String query = "select avg(person_id) `avg` from pg.`public`.person";
+
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .baselineColumns("avg")
+      .baselineValues(2.75)
+      .go();
+  }
 }
