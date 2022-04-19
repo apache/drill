@@ -194,25 +194,24 @@ public class CredentialResources {
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response createOrUpdatePlugin(@PathParam("pluginName") String pluginName, UsernamePasswordContainer credentials) {
     String queryUser = sc.getUserPrincipal().getName();
-    pluginName = pluginName.trim();
-
+    String cleanPluginName;
     if (pluginName.isEmpty()) {
       return Response.status(Response.Status.BAD_REQUEST)
         .entity(message("A storage config name may not be empty"))
         .build();
     }
-
-    StoragePluginConfig config = storage.getStoredConfig(pluginName);
+    cleanPluginName = pluginName.trim();
+    StoragePluginConfig config = storage.getStoredConfig(cleanPluginName);
 
     if (!(config instanceof CredentialedStoragePluginConfig)) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message(pluginName + " does not support user translation."))
+        .entity(message(cleanPluginName + " does not support user translation."))
         .build();
     }
 
     if (config.getAuthMode() != AuthMode.USER_TRANSLATION) {
       return Response.status(Status.INTERNAL_SERVER_ERROR)
-        .entity(message(pluginName + " does not have user translation enabled."))
+        .entity(message(cleanPluginName + " does not have user translation enabled."))
         .build();
     }
 
@@ -226,9 +225,9 @@ public class CredentialResources {
     newConfig.setEnabled(credsConfig.isEnabled());
 
     try {
-      storage.validatedPut(pluginName, newConfig);
+      storage.validatedPut(cleanPluginName, newConfig);
       // Force re-caching
-      storage.setEnabled(pluginName, newConfig.isEnabled());
+      storage.setEnabled(cleanPluginName, newConfig.isEnabled());
     } catch (PluginException e) {
       logger.error("Error while saving plugin", e);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
