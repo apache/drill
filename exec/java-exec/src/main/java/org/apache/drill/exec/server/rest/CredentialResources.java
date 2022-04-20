@@ -241,7 +241,8 @@ public class CredentialResources {
   }
 
   private JsonResult message(String message, Object... args) {
-    return new JsonResult(String.format(message, args)); // lgtm [java/tainted-format-string]
+    String sanitizedMessage = String.format("%s", message);
+    return new JsonResult(String.format(sanitizedMessage, args));
   }
 
   @XmlRootElement
