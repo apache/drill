@@ -108,7 +108,6 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
   }
 
   @Test
-  @Ignore
   public void testUnwritableConnectionWithIfNotExists() throws Exception {
     try {
       String query = "CREATE TABLE IF NOT EXISTS pg_unwritable.public.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
@@ -121,7 +120,6 @@ public class TestJdbcWriterWithPostgres extends ClusterTest {
   }
 
   @Test
-  @Ignore
   public void testUnwritableConnection() throws Exception {
     try {
       String query = "CREATE TABLE pg_unwritable.`public`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";

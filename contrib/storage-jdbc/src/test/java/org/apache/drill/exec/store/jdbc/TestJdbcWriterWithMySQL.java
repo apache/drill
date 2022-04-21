@@ -504,7 +504,6 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
   }
 
   @Test
-  @Ignore
   public void testUnwritableConnection() throws Exception {
     try {
       String query = "CREATE TABLE IF NOT EXISTS mysql_no_write.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";
@@ -517,7 +516,6 @@ public class TestJdbcWriterWithMySQL extends ClusterTest {
   }
 
   @Test
-  @Ignore
   public void testUnwritableConnectionWithoutIfNotExists() throws Exception {
     try {
       String query = "CREATE TABLE mysql_no_write.`drill_mysql_test`.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";

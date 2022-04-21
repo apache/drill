@@ -445,7 +445,6 @@ public class TestJdbcWriterWithH2 extends ClusterTest {
   }
 
   @Test
-  @Ignore
   public void testUnwritableConnection() throws Exception {
     try {
       String query = "CREATE TABLE IF NOT EXISTS h2_unwritable.tmp.`test_table` (ID, NAME) AS SELECT * FROM (VALUES(1,2), (3,4))";

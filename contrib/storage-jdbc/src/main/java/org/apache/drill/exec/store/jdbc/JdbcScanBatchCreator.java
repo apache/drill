@@ -65,7 +65,7 @@ public class JdbcScanBatchCreator implements BatchCreator<JdbcSubScan> {
     UserCredentials userCreds = context.getContextInformation().getQueryUserCredentials();
     DataSource ds = plugin.getDataSource(userCreds)
       .orElseThrow(() -> UserException.permissionError().message(
-        "Query user %s could obtain a connection to %s, missing credentials?",
+        "Query user %s could not obtain a connection to %s, missing credentials?",
         userCreds.getUserName(),
         plugin.getName()
       ).build(JdbcStoragePlugin.logger));
