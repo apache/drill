@@ -894,10 +894,15 @@ public class StringFunctions{
 
     @Override
     public void eval() {
-      out.buffer = buffer;
       out.start = out.end = 0;
       int fromL = from.end - from.start;
       int textL = text.end - text.start;
+      if (buffer.capacity() < textL) {
+        // We realloc buffer, if actual length is more than previously applied.
+        out.buffer = buffer.reallocIfNeeded(textL);
+      } else {
+        out.buffer = buffer;
+      }
 
       if (fromL > 0 && fromL <= textL) {
         //If "from" is not empty and it's length is no longer than text's length
