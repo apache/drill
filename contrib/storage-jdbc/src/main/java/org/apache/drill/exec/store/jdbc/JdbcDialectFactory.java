@@ -20,8 +20,10 @@ package org.apache.drill.exec.store.jdbc;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseJdbcDialect;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+
+import java.time.Duration;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -29,9 +31,11 @@ import java.util.concurrent.ExecutionException;
 public class JdbcDialectFactory {
   public static final String JDBC_CLICKHOUSE_PREFIX = "jdbc:clickhouse";
   public static final int CACHE_SIZE = 100;
+  public static final Duration CACHE_TTL = Duration.ofHours(1);
 
   private final Cache<SqlDialect, JdbcDialect> cache = CacheBuilder.newBuilder()
       .maximumSize(CACHE_SIZE)
+      .expireAfterAccess(CACHE_TTL)
       .build();
 
   public JdbcDialect getJdbcDialect(JdbcStoragePlugin plugin, SqlDialect dialect) {

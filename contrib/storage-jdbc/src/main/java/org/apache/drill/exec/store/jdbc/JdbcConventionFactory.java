@@ -18,18 +18,22 @@
 package org.apache.drill.exec.store.jdbc;
 
 import org.apache.calcite.sql.SqlDialect;
-import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+
+import java.time.Duration;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 public class JdbcConventionFactory {
   public static final int CACHE_SIZE = 100;
+  public static final Duration CACHE_TTL = Duration.ofHours(1);
 
   private final Cache<SqlDialect, DrillJdbcConvention> cache = CacheBuilder.newBuilder()
       .maximumSize(CACHE_SIZE)
+      .expireAfterAccess(CACHE_TTL)
       .build();
 
   public DrillJdbcConvention getJdbcConvention(
@@ -44,7 +48,7 @@ public class JdbcConventionFactory {
         }
       });
     } catch (ExecutionException ex) {
-      throw new DrillRuntimeException("Cannot load the requested JdbcDialect", ex);
+      throw new DrillRuntimeException("Cannot load the requested DrillJdbcConvention", ex);
     }
   }
 }
