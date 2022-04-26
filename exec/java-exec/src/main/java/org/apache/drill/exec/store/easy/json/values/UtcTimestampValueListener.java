@@ -26,6 +26,8 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 import com.fasterxml.jackson.core.JsonToken;
 
+import static org.apache.drill.common.util.DrillDateTimeFormatter.ISO_DATETIME_FORMATTER;
+
 /**
  * Per the <a href="https://docs.mongodb.com/manual/reference/mongodb-extended-json-v1/#bson.data_date">
  * V1 docs</a>:
@@ -59,7 +61,7 @@ public class UtcTimestampValueListener extends ScalarListener {
         break;
       case VALUE_STRING:
         try {
-          instant = Instant.parse(tokenizer.stringValue());
+          instant = ISO_DATETIME_FORMATTER.parse(tokenizer.stringValue(), Instant::from);
         } catch (Exception e) {
           throw loader.dataConversionError(schema(), "date", tokenizer.stringValue());
         }
@@ -67,6 +69,6 @@ public class UtcTimestampValueListener extends ScalarListener {
       default:
         throw tokenizer.invalidValue(token);
     }
-    writer.setLong(instant.toEpochMilli() + LOCAL_ZONE_ID.getRules().getOffset(instant).getTotalSeconds() * 1000);
+    writer.setLong(instant.toEpochMilli() + LOCAL_ZONE_ID.getRules().getOffset(instant).getTotalSeconds() * 1000L);
   }
 }
