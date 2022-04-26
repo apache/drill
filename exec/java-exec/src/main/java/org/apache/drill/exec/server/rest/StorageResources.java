@@ -490,6 +490,20 @@ public class StorageResources {
       }
     }
 
+    /**
+     * Returns the path for the image used in the list view.
+     * @return
+     */
+    public String getImagePath() {
+      if (getCleanType().contentEquals("FileSystem")) {
+        return "/static/img/storage_logos/FileSystem.png";
+      }
+
+      // If the plugin is in contrib, get the full path
+      String path = plugin.getConfig().getClass().getResource("/storage_logos/" + getCleanType() + ".png").getPath();
+      return path;
+    }
+
     public String getCleanType() {
       String pluginName = type.replace("Config", "");
       pluginName = pluginName.replace("Plugin", "");
