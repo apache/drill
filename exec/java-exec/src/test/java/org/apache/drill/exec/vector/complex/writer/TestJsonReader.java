@@ -862,4 +862,56 @@ public class TestJsonReader extends BaseTestQuery {
         )
         .go();
   }
+
+  @Test
+  public void drill_4503() throws Exception {
+    try {
+      String dfs_temp = getDfsTestTmpSchemaLocation();
+      File table_dir = new File(dfs_temp, "drill_4503");
+      table_dir.mkdir();
+      BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "mostlynulls.json")));
+      // Create an entire batch of {non-null-value, null} rows
+      for (int i = 0 ; i < 4096; i++) {
+        os.write("{\"a\": 5, \"b\": null}".getBytes());
+      }
+      // Add a row with {int, string} values
+      os.write("{\"a\": 5, \"b\": \"Hello World\"}".getBytes());
+      os.flush();
+      os.close();
+
+      String query1 = "select a, b, count(*) as cnt from dfs_test.tmp.drill_4503 t group by a, b";
+      // only 1 row with non-null value of b
+      String query2 = "select count(*) as cnt from dfs_test.tmp.drill_4503 t where b is not null";
+      String query3 = "select max(a) as x, max(b) as y from dfs_test.tmp.drill_4503 t";
+
+      testBuilder()
+        .sqlQuery(query1)
+        .ordered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .baselineColumns("a", "b", "cnt")
+        .baselineValues("5", null, 4096L)
+        .baselineValues("5", "Hello World", 1L)
+        .go();
+
+      testBuilder()
+        .sqlQuery(query2)
+        .ordered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .baselineColumns("cnt")
+        .baselineValues(1L)
+        .go();
+
+      testBuilder()
+        .sqlQuery(query3)
+        .ordered()
+        .optionSettingQueriesForTestQuery("alter session set `store.json.all_text_mode` = true")
+        .baselineColumns("x", "y")
+        .baselineValues("5", "Hello World")
+        .go();
+
+    } finally {
+      testNoResult("alter session set `store.json.all_text_mode` = false");
+    }
+  }
+
 }
