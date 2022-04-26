@@ -138,6 +138,13 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
           .jsonOptions()
           .getJsonOptions(negotiator.queryOptions());
         jsonBuilder.options(jsonOptions);
+
+        // Add provided schema if populated
+        if (subScan.tableSpec().connectionConfig().jsonOptions().providedSchema() != null &&
+          subScan.tableSpec().connectionConfig().jsonOptions().providedSchema().size() > 0) {
+          jsonBuilder.providedSchema(subScan.tableSpec().connectionConfig().jsonOptions().buildSchema());
+        }
+
       } else {
         jsonBuilder.standardOptions(negotiator.queryOptions());
       }

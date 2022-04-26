@@ -824,13 +824,6 @@ public class SimpleHttp {
     return inputArguments;
   }
 
-/*
-  public static HttpStoragePluginConfig getPluginConfig(String name, DrillbitContext context) throws PluginException {
-    HttpStoragePlugin httpStoragePlugin = getStoragePlugin(context, name);
-    return httpStoragePlugin.getConfig();
-  }
-*/
-
   public static HttpApiConfig getEndpointConfig(String endpoint, HttpStoragePluginConfig pluginConfig) {
     HttpApiConfig endpointConfig = pluginConfig.getConnection(endpoint);
     if (endpointConfig == null) {
