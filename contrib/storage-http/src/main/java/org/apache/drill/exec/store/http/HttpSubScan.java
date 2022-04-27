@@ -51,7 +51,7 @@ public class HttpSubScan extends AbstractBase implements SubScan {
     @JsonProperty("filters") Map<String, String> filters,
     @JsonProperty("maxRecords") int maxRecords
     ) {
-    super("user-if-needed");
+    super(tableSpec.queryUserName());
     this.tableSpec = tableSpec;
     this.columns = columns;
     this.filters = filters;

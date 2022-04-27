@@ -23,15 +23,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 
 import java.util.Objects;
+import java.util.Optional;
 
 @JsonTypeName(SplunkPluginConfig.NAME)
-public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
+public class SplunkPluginConfig extends CredentialedStoragePluginConfig {
 
   public static final String NAME = "splunk";
   public static final int DISABLED_RECONNECT_RETRIES = 1;
@@ -51,7 +53,8 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
                             @JsonProperty("earliestTime") String earliestTime,
                             @JsonProperty("latestTime") String latestTime,
                             @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
-                            @JsonProperty("reconnectRetries") Integer reconnectRetries) {
+                            @JsonProperty("reconnectRetries") Integer reconnectRetries,
+                            @JsonProperty("authMode") String authMode) {
     super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
         credentialsProvider == null);
     this.hostname = hostname;
@@ -61,25 +64,40 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
     this.reconnectRetries = reconnectRetries;
   }
 
+  private SplunkPluginConfig(SplunkPluginConfig that, CredentialsProvider credentialsProvider) {
+    super(getCredentialsProvider(credentialsProvider), credentialsProvider == null, that.authMode);
+    this.hostname = that.hostname;
+    this.port = that.port;
+    this.earliestTime = that.earliestTime;
+    this.latestTime = that.latestTime;
+    this.reconnectRetries = that.reconnectRetries;
+  }
+
   @JsonIgnore
-  public UsernamePasswordCredentials getUsernamePasswordCredentials() {
-    return new UsernamePasswordCredentials(credentialsProvider);
+  public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials() {
+    return new UsernamePasswordCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .build();
   }
 
   @JsonProperty("username")
   public String getUsername() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getUsername();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordCredentials::getUsername)
+      .orElse(null);
   }
 
   @JsonProperty("password")
   public String getPassword() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getPassword();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordCredentials::getPassword)
+      .orElse(null);
   }
 
   @JsonProperty("hostname")
@@ -105,6 +123,10 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
   @JsonProperty("reconnectRetries")
   public int getReconnectRetries() {
     return reconnectRetries != null ? reconnectRetries : DISABLED_RECONNECT_RETRIES;
+  }
+
+  private static CredentialsProvider getCredentialsProvider(CredentialsProvider credentialsProvider) {
+    return credentialsProvider != null ? credentialsProvider : PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER;
   }
 
   @Override
@@ -136,5 +158,10 @@ public class SplunkPluginConfig extends AbstractSecuredStoragePluginConfig {
       .field("earliestTime", earliestTime)
       .field("latestTime", latestTime)
       .toString();
+  }
+
+  @Override
+  public SplunkPluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new SplunkPluginConfig(this, credentialsProvider);
   }
 }

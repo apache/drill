@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.ViewExpansionContext;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.calcite.jdbc.DynamicSchema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -76,6 +77,12 @@ public class SchemaTreeProvider implements AutoCloseable {
 
       @Override public String getQueryUserName() {
         return ImpersonationUtil.getProcessUserName();
+      }
+
+      @Override public UserCredentials getQueryUserCredentials() {
+        return UserCredentials.newBuilder()
+          .setUserName(ImpersonationUtil.getProcessUserName())
+          .build();
       }
     };
 

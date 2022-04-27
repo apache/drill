@@ -19,7 +19,9 @@ package org.apache.drill.exec.store.jdbc;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.BaseTest;
 import org.junit.Before;
@@ -53,8 +55,8 @@ public class TestDataSource extends BaseTest {
   @Test
   public void testInitWithoutUserAndPassword() {
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, null, null, false, false, null, null, 1000);
-    try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config)) {
+      DRIVER, url, null, null, false, false, null, null, AuthMode.SHARED_USER.name(), 1000);
+    try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config, null)) {
       assertEquals(DRIVER, dataSource.getDriverClassName());
       assertEquals(url, dataSource.getJdbcUrl());
       assertNull(dataSource.getUsername());
@@ -65,8 +67,9 @@ public class TestDataSource extends BaseTest {
   @Test
   public void testInitWithUserAndPassword() {
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, false, null, null, 1000);
-    try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config)) {
+      DRIVER, url, "user", "password", false, false, null, null, AuthMode.SHARED_USER.name(), 1000);
+    UsernamePasswordCredentials jdbcCreds = config.getUsernamePasswordCredentials(null).get();
+    try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config, jdbcCreds)) {
       assertEquals("user", dataSource.getUsername());
       assertEquals("password", dataSource.getPassword());
     }
@@ -80,14 +83,17 @@ public class TestDataSource extends BaseTest {
     sourceParameters.put("connectionTestQuery", "select * from information_schema.collations");
     sourceParameters.put("dataSource.cachePrepStmts", true);
     sourceParameters.put("dataSource.prepStmtCacheSize", 250);
+    sourceParameters.put("dataSource.minimumIdle", 0);
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, false, sourceParameters, null, 1000);
-    try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config)) {
+      DRIVER, url, "user", "password", false, false, sourceParameters, null, AuthMode.SHARED_USER.name(), 1000);
+    UsernamePasswordCredentials jdbcCreds = config.getUsernamePasswordCredentials(null).get();
+    try (HikariDataSource dataSource = JdbcStoragePlugin.initDataSource(config, jdbcCreds)) {
       assertEquals(5, dataSource.getMinimumIdle());
       assertFalse(dataSource.isAutoCommit());
       assertEquals("select * from information_schema.collations", dataSource.getConnectionTestQuery());
       assertEquals(true, dataSource.getDataSourceProperties().get("cachePrepStmts"));
       assertEquals(250, dataSource.getDataSourceProperties().get("prepStmtCacheSize"));
+      assertEquals(0, dataSource.getDataSourceProperties().get("minimumIdle"));
     }
   }
 
@@ -96,12 +102,13 @@ public class TestDataSource extends BaseTest {
     Map<String, Object> sourceParameters = new HashMap<>();
     sourceParameters.put("abc", "abc");
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, false, sourceParameters, null, 1000);
+      DRIVER, url, "user", "password", false,  false, sourceParameters, null, AuthMode.SHARED_USER.name(), 1000);
+    UsernamePasswordCredentials jdbcCreds = config.getUsernamePasswordCredentials(null).get();
 
     thrown.expect(UserException.class);
     thrown.expectMessage(UserBitShared.DrillPBError.ErrorType.CONNECTION.name());
-
-    JdbcStoragePlugin.initDataSource(config);
+    // Drill query user credentials are ignored and may be null for the shared user auth mode.
+    JdbcStoragePlugin.initDataSource(config, jdbcCreds);
   }
 
   @Test
@@ -109,11 +116,12 @@ public class TestDataSource extends BaseTest {
     Map<String, Object> sourceParameters = new HashMap<>();
     sourceParameters.put("minimumIdle", "abc");
     JdbcStorageConfig config = new JdbcStorageConfig(
-      DRIVER, url, "user", "password", false, false, sourceParameters, null, 1000);
+      DRIVER, url, "user", "password", false, false, sourceParameters, null, AuthMode.SHARED_USER.name(), 1000);
+    UsernamePasswordCredentials jdbcCreds = config.getUsernamePasswordCredentials(null).get();
 
     thrown.expect(UserException.class);
     thrown.expectMessage(UserBitShared.DrillPBError.ErrorType.CONNECTION.name());
-
-    JdbcStoragePlugin.initDataSource(config);
+    // Drill query user credentials are ignored and may be null for the shared user auth mode.
+    JdbcStoragePlugin.initDataSource(config, jdbcCreds);
   }
 }

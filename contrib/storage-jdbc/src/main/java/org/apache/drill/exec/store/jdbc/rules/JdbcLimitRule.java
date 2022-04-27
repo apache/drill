@@ -44,7 +44,7 @@ public class JdbcLimitRule extends DrillJdbcRuleBase.DrillJdbcLimitRule {
     DrillLimitRelBase limit = (DrillLimitRelBase) rel;
     if (limit.getOffset() == null
       || !limit.getTraitSet().contains(RelCollations.EMPTY)
-      || !(convention.getPlugin().getDialect() instanceof MssqlSqlDialect)) {
+      || !(convention.dialect instanceof MssqlSqlDialect)) {
       return super.convert(limit);
     } else {
       // MS SQL doesn't support either OFFSET or FETCH without ORDER BY.

@@ -22,13 +22,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public abstract class StoragePluginConfig {
 
   // DO NOT include enabled status in equality and hash
   // comparisons; doing so will break the plugin registry.
-  private Boolean enabled;
+  protected Boolean enabled;
+
+  protected AuthMode authMode;
 
   /**
    * Check for enabled status of the plugin
@@ -41,6 +45,14 @@ public abstract class StoragePluginConfig {
 
   public void setEnabled(Boolean enabled) {
     this.enabled = enabled;
+  }
+
+  public AuthMode getAuthMode() {
+    return authMode;
+  }
+
+  public void setAuthMode(AuthMode authMode) {
+    this.authMode = authMode;
   }
 
   /**
@@ -61,5 +73,40 @@ public abstract class StoragePluginConfig {
 
   public String getValue(String key) {
     return null;
+  }
+
+  /**
+   * The standardised authentication modes that storage plugins may offer.
+   */
+  public enum AuthMode {
+    /**
+     * Default. Connects using the identity of the Drill cluster (OS user or
+     * service principal) if the external storage is aware of said identity,
+     * otherwise connects without authentication. Unaffected by the Drill
+     * query user's identity.
+     */
+    DRILL_PROCESS,
+    /**
+     * Connects using a single set of shared credentials stored in some
+     * credential provider.  Unaffected by the Drill query user's identity.
+     */
+    SHARED_USER,
+    /**
+     * Depending on the plugin, connects using one of the two modes above then
+     * instructs the external storage to set the identity on the connection
+     * to that of the Drill query user.  User identity in the external system
+     * will match the Drill query user's identity.
+     */
+    USER_IMPERSONATION,
+    /**
+     * Connects with stored credentials looked up for (translated from)
+     * the Drill query user.  User identity in the external system will be
+     * a function of the Drill query user's identity (1-1 or *-1) .
+     */
+    USER_TRANSLATION;
+
+    public static AuthMode parseOrDefault(String authMode) {
+      return !Strings.isNullOrEmpty(authMode) ? AuthMode.valueOf(authMode.toUpperCase()) : DRILL_PROCESS;
+    }
   }
 }

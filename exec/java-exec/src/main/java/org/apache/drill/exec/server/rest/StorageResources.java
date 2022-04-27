@@ -56,7 +56,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
@@ -148,11 +148,11 @@ public class StorageResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getPlugins() {
     List<StoragePluginModel> model = getPluginsJSON().stream()
-      .map(plugin -> new StoragePluginModel(plugin, request))
+      .map(plugin -> new StoragePluginModel(plugin, request, sc))
       .collect(Collectors.toList());
     // Creating an empty model with CSRF token, if there are no storage plugins
     if (model.isEmpty()) {
-      model.add(new StoragePluginModel(null, request));
+      model.add(new StoragePluginModel(null, request, sc));
     }
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/list.ftl", sc, model);
   }
@@ -163,7 +163,7 @@ public class StorageResources {
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response getPluginConfig(@PathParam("name") String name) {
     try {
-      return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name)))
+      return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name), sc))
         .build();
     } catch (Exception e) {
       logger.error("Failure while trying to access storage config: {}", name, e);
@@ -180,7 +180,7 @@ public class StorageResources {
   public Viewable getPlugin(@PathParam("name") String name) {
     StoragePluginModel model = new StoragePluginModel(
       (PluginConfigWrapper) getPluginConfig(name).getEntity(),
-      request
+      request, sc
     );
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/update.ftl", sc,
       model);
@@ -213,7 +213,7 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateRefreshToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
     try {
-      if (storage.getPlugin(name).getConfig() instanceof AbstractSecuredStoragePluginConfig) {
+      if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
         PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry().getTokenTable(name);
@@ -244,7 +244,7 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateAccessToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
     try {
-      if (storage.getPlugin(name).getConfig() instanceof AbstractSecuredStoragePluginConfig) {
+      if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
         PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry().getTokenTable(name);
@@ -276,7 +276,7 @@ public class StorageResources {
   public Response updateOAuthTokens(@PathParam("name") String name,
                                     OAuthTokenContainer tokenContainer) {
     try {
-      if (storage.getPlugin(name).getConfig() instanceof AbstractSecuredStoragePluginConfig) {
+      if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
         DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
         OAuthTokenProvider tokenProvider = context.getoAuthTokenProvider();
         PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry().getTokenTable(name);
@@ -307,8 +307,8 @@ public class StorageResources {
   @Produces(MediaType.TEXT_HTML)
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
     try {
-      if (storage.getPlugin(name).getConfig() instanceof AbstractSecuredStoragePluginConfig) {
-        AbstractSecuredStoragePluginConfig securedStoragePluginConfig = (AbstractSecuredStoragePluginConfig) storage.getPlugin(name).getConfig();
+      if (storage.getPlugin(name).getConfig() instanceof CredentialedStoragePluginConfig) {
+        CredentialedStoragePluginConfig securedStoragePluginConfig = (CredentialedStoragePluginConfig) storage.getPlugin(name).getConfig();
         CredentialsProvider credentialsProvider = securedStoragePluginConfig.getCredentialsProvider();
         String callbackURL = this.request.getRequestURL().toString();
 
@@ -389,7 +389,7 @@ public class StorageResources {
         .build();
     }
 
-    return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name)))
+    return Response.ok(new PluginConfigWrapper(name, storage.getStoredConfig(name), sc))
       .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s.%s\"", name, format))
       .build();
   }
@@ -468,7 +468,7 @@ public class StorageResources {
   }
 
   private JsonResult message(String message, Object... args) {
-    return new JsonResult(String.format(message, args));
+    return new JsonResult(String.format(message, args));  // lgtm [java/tainted-format-string]
   }
 
   private boolean isSupported(String format) {
@@ -511,7 +511,7 @@ public class StorageResources {
     pluginGroup = StringUtils.isNotEmpty(pluginGroup) ? pluginGroup.replace("/", "") : ALL_PLUGINS;
     return StreamSupport.stream(
       Spliterators.spliteratorUnknownSize(storage.storedConfigs(filter).entrySet().iterator(), Spliterator.ORDERED), false)
-        .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue()))
+        .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue(), sc))
         .sorted(PLUGIN_COMPARATOR)
         .collect(Collectors.toList());
   }
@@ -561,8 +561,9 @@ public class StorageResources {
     private final PluginConfigWrapper plugin;
     private final String type;
     private final String csrfToken;
+    private final SecurityContext securityContext;
 
-    public StoragePluginModel(PluginConfigWrapper plugin, HttpServletRequest request) {
+    public StoragePluginModel(PluginConfigWrapper plugin, HttpServletRequest request, SecurityContext sc) {
       this.plugin = plugin;
 
       if (plugin != null) {
@@ -571,6 +572,11 @@ public class StorageResources {
         this.type = "Unknown";
       }
       csrfToken = WebUtils.getCsrfTokenFromHttpRequest(request);
+      this.securityContext = sc;
+    }
+
+    public String getActiveUser() {
+      return securityContext.getUserPrincipal().getName();
     }
 
     public String getType() {

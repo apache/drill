@@ -23,30 +23,48 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SubsetRemover;
+import org.apache.drill.exec.store.jdbc.DrillJdbcConvention;
 import org.apache.drill.exec.store.jdbc.JdbcDialect;
 import org.apache.drill.exec.store.jdbc.JdbcStoragePlugin;
+
+import java.util.Optional;
+
+import javax.sql.DataSource;
 
 public class ClickhouseJdbcDialect implements JdbcDialect {
 
   private final JdbcStoragePlugin plugin;
+  private final SqlDialect dialect;
 
-  public ClickhouseJdbcDialect(JdbcStoragePlugin plugin) {
+  public ClickhouseJdbcDialect(JdbcStoragePlugin plugin, SqlDialect dialect) {
     this.plugin = plugin;
+    this.dialect = dialect;
   }
 
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
-    ClickhouseCatalogSchema schema = new ClickhouseCatalogSchema(plugin.getName(),
-      plugin.getDataSource(), plugin.getDialect(), plugin.getConvention());
+    UserCredentials userCreds = config.getQueryUserCredentials();
+    Optional<DataSource> dataSource = plugin.getDataSource(userCreds);
+    if (!dataSource.isPresent()) {
+      return;
+    }
+    DrillJdbcConvention convention = plugin.getConvention(dialect, config.getQueryUserCredentials().getUserName());
+
+    ClickhouseCatalogSchema schema = new ClickhouseCatalogSchema(
+      plugin.getName(),
+      dataSource.get(),
+      dialect,
+      convention
+    );
     SchemaPlus holder = parent.add(plugin.getName(), schema);
     schema.setHolder(holder);
   }
 
   @Override
   public String generateSql(RelOptCluster cluster, RelNode input) {
-    final SqlDialect dialect = plugin.getDialect();
     final JdbcImplementor jdbcImplementor = new ClickhouseJdbcImplementor(dialect,
       (JavaTypeFactory) cluster.getTypeFactory());
     final JdbcImplementor.Result result = jdbcImplementor.visitChild(0,

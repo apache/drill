@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.mongodb.ConnectionString;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 
@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JsonTypeName(MongoStoragePluginConfig.NAME)
-public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig {
+public class MongoStoragePluginConfig extends CredentialedStoragePluginConfig {
 
   public static final String NAME = "mongo";
 
@@ -58,6 +58,15 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
     this.pluginOptimizations = ObjectUtils.defaultIfNull(pluginOptimizations, new MongoPluginOptimizations());
     this.batchSize = batchSize != null ? batchSize : 100;
     this.allowDiskUse = allowDiskUse;
+  }
+
+  private MongoStoragePluginConfig(MongoStoragePluginConfig that, CredentialsProvider credentialsProvider) {
+    super(getCredentialsProvider(credentialsProvider), credentialsProvider == null, that.authMode);
+    this.connection = that.connection;
+    this.clientURI = that.clientURI;
+    this.pluginOptimizations = that.pluginOptimizations;
+    this.batchSize = that.batchSize;
+    this.allowDiskUse = that.allowDiskUse;
   }
 
   public MongoPluginOptimizations getPluginOptimizations() {
@@ -101,6 +110,11 @@ public class MongoStoragePluginConfig extends AbstractSecuredStoragePluginConfig
   @Override
   public int hashCode() {
     return Objects.hash(connection);
+  }
+
+  @Override
+  public MongoStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new MongoStoragePluginConfig(this, credentialsProvider);
   }
 
   public static class MongoPluginOptimizations {

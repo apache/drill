@@ -34,12 +34,14 @@ public class HttpAPIConnectionSchema extends AbstractSchema {
 
   private final HttpStoragePlugin plugin;
   private final Map<String, DynamicDrillTable> activeTables = CaseInsensitiveMap.newHashMap();
+  private final String queryUserName;
 
   public HttpAPIConnectionSchema(HttpSchema parent,
                                  String name,
-                                 HttpStoragePlugin plugin) {
+                                 HttpStoragePlugin plugin, String queryUserName) {
     super(parent.getSchemaPath(), name);
     this.plugin = plugin;
+    this.queryUserName = queryUserName;
   }
 
   @Override
@@ -63,11 +65,10 @@ public class HttpAPIConnectionSchema extends AbstractSchema {
       // Return the found table
       return table;
     } else {
-
       // Register a new table
       return registerTable(tableName, new DynamicDrillTable(plugin, plugin.getName(),
         new HttpScanSpec(plugin.getName(), name, tableName,
-              plugin.getConfig().copyForPlan(name), plugin.getTokenTable(), plugin.getRegistry())));
+              plugin.getConfig().copyForPlan(name), plugin.getTokenTable(), queryUserName, plugin.getRegistry())));
     }
   }
 

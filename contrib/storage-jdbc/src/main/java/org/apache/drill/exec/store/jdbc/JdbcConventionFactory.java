@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.jdbc;
 
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.store.jdbc.clickhouse.ClickhouseJdbcDialect;
 import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 
@@ -28,28 +27,28 @@ import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
-public class JdbcDialectFactory {
-  public static final String JDBC_CLICKHOUSE_PREFIX = "jdbc:clickhouse";
+public class JdbcConventionFactory {
   public static final int CACHE_SIZE = 100;
   public static final Duration CACHE_TTL = Duration.ofHours(1);
 
-  private final Cache<SqlDialect, JdbcDialect> cache = CacheBuilder.newBuilder()
+  private final Cache<SqlDialect, DrillJdbcConvention> cache = CacheBuilder.newBuilder()
       .maximumSize(CACHE_SIZE)
       .expireAfterAccess(CACHE_TTL)
       .build();
 
-  public JdbcDialect getJdbcDialect(JdbcStoragePlugin plugin, SqlDialect dialect) {
+  public DrillJdbcConvention getJdbcConvention(
+      JdbcStoragePlugin plugin,
+      SqlDialect dialect,
+      String username) {
     try {
-      return cache.get(dialect, new Callable<JdbcDialect>() {
+      return cache.get(dialect, new Callable<DrillJdbcConvention>() {
         @Override
-        public JdbcDialect call() {
-          return plugin.getConfig().getUrl().startsWith(JDBC_CLICKHOUSE_PREFIX)
-              ? new ClickhouseJdbcDialect(plugin, dialect)
-              : new DefaultJdbcDialect(plugin, dialect);
+        public DrillJdbcConvention call() {
+          return new DrillJdbcConvention(dialect, plugin.getName(), plugin, username);
         }
       });
     } catch (ExecutionException ex) {
-      throw new DrillRuntimeException("Cannot load the requested JdbcDialect", ex);
+      throw new DrillRuntimeException("Cannot load the requested DrillJdbcConvention", ex);
     }
   }
 }

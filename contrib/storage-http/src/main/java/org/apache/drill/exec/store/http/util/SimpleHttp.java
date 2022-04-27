@@ -32,6 +32,7 @@ import okhttp3.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -55,7 +56,7 @@ import org.apache.drill.exec.store.http.oauth.AccessTokenAuthenticator;
 import org.apache.drill.exec.store.http.oauth.AccessTokenInterceptor;
 import org.apache.drill.exec.store.http.oauth.AccessTokenRepository;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
-import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.exec.store.security.UsernamePasswordWithProxyCredentials;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -84,6 +85,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -117,6 +119,7 @@ public class SimpleHttp {
   private int responseCode;
   private String responseProtocol;
   private String responseURL;
+  private String username;
 
 
   public SimpleHttp(HttpSubScan scanDefn, HttpUrl url, File tempDir,
@@ -125,6 +128,7 @@ public class SimpleHttp {
     this.pluginConfig = scanDefn.tableSpec().config();
     this.connection = scanDefn.tableSpec().connection();
     this.oAuthConfig = scanDefn.tableSpec().config().oAuthConfig();
+    this.username = scanDefn.getUserName();
     this.filters = scanDefn.filters();
     this.url = url;
     this.tempDir = tempDir;
@@ -208,8 +212,19 @@ public class SimpleHttp {
       // If the API uses basic authentication add the authentication code.  Use the global credentials unless there are credentials
       // for the specific endpoint.
       logger.debug("Adding Interceptor");
-      UsernamePasswordCredentials credentials = getCredentials();
-      builder.addInterceptor(new BasicAuthInterceptor(credentials.getUsername(), credentials.getPassword()));
+      Optional<UsernamePasswordWithProxyCredentials> credentials;
+      if (pluginConfig.getAuthMode() == AuthMode.USER_TRANSLATION) {
+        credentials = getCredentials(username);
+        if (!credentials.isPresent() || StringUtils.isEmpty(credentials.get().getUsername()) || StringUtils.isEmpty(credentials.get().getPassword())) {
+          throw UserException.connectionError()
+            .message("You do not have valid credentials for this API.  Please provide your credentials.")
+            .addContext(errorContext)
+            .build(logger);
+        }
+      } else {
+        credentials = getCredentials();
+      }
+      builder.addInterceptor(new BasicAuthInterceptor(credentials.get().getUsername(), credentials.get().getPassword()));
     }
 
     // Set timeouts
@@ -415,13 +430,17 @@ public class SimpleHttp {
       .fromConfigForURL(drillConfig, url.toString());
     final String proxyType = config.proxyType();
     if (proxyType != null && !"direct".equals(proxyType)) {
-      UsernamePasswordCredentials credentials = config.getUsernamePasswordCredentials();
       builder
         .type(config.proxyType())
         .host(config.proxyHost())
-        .port(config.proxyPort())
-        .username(credentials.getUsername())
-        .password(credentials.getPassword());
+        .port(config.proxyPort());
+
+      Optional<UsernamePasswordWithProxyCredentials> credentials = config.getUsernamePasswordCredentials();
+
+      if (credentials.isPresent()) {
+        builder.username(credentials.get().getUsername())
+          .password(credentials.get().getPassword());
+      }
     }
     return builder.build();
   }
@@ -445,31 +464,18 @@ public class SimpleHttp {
   }
 
   /**
-   * Logic to determine whether the API connection has global credentials or credentials specific for the
-   * API endpoint.
-   * @param endpointConfig The API endpoint configuration
-   * @return True if the endpoint has credentials, false if not.
-   */
-  private boolean hasEndpointCredentials(HttpApiConfig endpointConfig) {
-    UsernamePasswordCredentials credentials = endpointConfig.getUsernamePasswordCredentials();
-    if (StringUtils.isNotEmpty(credentials.getUsername()) &&
-    StringUtils.isNotEmpty(credentials.getPassword())) {
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * If the user has defined username/password for the specific API endpoint, pass the API endpoint credentials.
    * Otherwise, use the global connection credentials.
    * @return A UsernamePasswordCredentials collection with the correct username/password
    */
-  private UsernamePasswordCredentials getCredentials() {
-    if (hasEndpointCredentials(apiConfig)) {
-      return apiConfig.getUsernamePasswordCredentials();
-    } else {
-      return pluginConfig.getUsernamePasswordCredentials();
-    }
+  private Optional<UsernamePasswordWithProxyCredentials> getCredentials() {
+    Optional<UsernamePasswordWithProxyCredentials> apiCreds = apiConfig.getUsernamePasswordCredentials();
+    return apiCreds.isPresent() ? apiCreds : pluginConfig.getUsernamePasswordCredentials();
+  }
+
+  private Optional<UsernamePasswordWithProxyCredentials> getCredentials(String queryUser) {
+    Optional<UsernamePasswordWithProxyCredentials> apiCreds = apiConfig.getUsernamePasswordCredentials();
+    return apiCreds.isPresent() ? apiCreds : pluginConfig.getUsernamePasswordCredentials(queryUser);
   }
 
   /**
@@ -971,6 +977,7 @@ public class SimpleHttp {
     private HttpOAuthConfig oAuthConfig;
     private Map<String,String> filters;
     private String connection;
+    private String username;
 
     public SimpleHttpBuilder scanDefn(HttpSubScan scanDefn) {
       this.scanDefn = scanDefn;
@@ -979,6 +986,7 @@ public class SimpleHttp {
       this.oAuthConfig = scanDefn.tableSpec().config().oAuthConfig();
       this.tokenTable = scanDefn.tableSpec().getTokenTable();
       this.filters = scanDefn.filters();
+      this.username = scanDefn.getUserName();
       return this;
     }
 
@@ -989,6 +997,11 @@ public class SimpleHttp {
 
     public SimpleHttpBuilder tempDir(File tempDir) {
       this.tempDir = tempDir;
+      return this;
+    }
+
+    public SimpleHttpBuilder username(String username) {
+      this.username = username;
       return this;
     }
 

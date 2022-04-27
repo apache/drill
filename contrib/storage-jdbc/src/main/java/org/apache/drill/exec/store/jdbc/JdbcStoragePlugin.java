@@ -18,7 +18,10 @@
 package org.apache.drill.exec.store.jdbc;
 
 import java.util.Properties;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -31,11 +34,13 @@ import org.apache.calcite.sql.SqlDialectFactoryImpl;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,39 +48,75 @@ import javax.sql.DataSource;
 
 public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
-  private static final Logger logger = LoggerFactory.getLogger(JdbcStoragePlugin.class);
+  static final Logger logger = LoggerFactory.getLogger(JdbcStoragePlugin.class);
 
-  private final JdbcStorageConfig config;
-  private final HikariDataSource dataSource;
-  private final SqlDialect dialect;
-  private final DrillJdbcConvention convention;
-  private final JdbcDialect jdbcDialect;
+  private final JdbcStorageConfig jdbcStorageConfig;
+  private final JdbcDialectFactory dialectFactory;
+  private final JdbcConventionFactory conventionFactory;
+  // DataSources for this storage config keyed on JDBC username
+  private final Map<String, HikariDataSource> dataSources = new ConcurrentHashMap<>();
 
-  public JdbcStoragePlugin(JdbcStorageConfig config, DrillbitContext context, String name) {
+  public JdbcStoragePlugin(JdbcStorageConfig jdbcStorageConfig, DrillbitContext context, String name) {
     super(context, name);
-    this.config = config;
-    this.dataSource = initDataSource(config);
-    this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, dataSource);
-    this.convention = new DrillJdbcConvention(dialect, name, this);
-    this.jdbcDialect = JdbcDialectFactory.getJdbcDialect(this, config.getUrl());
+    this.jdbcStorageConfig = jdbcStorageConfig;
+    this.dialectFactory = new JdbcDialectFactory();
+    this.conventionFactory = new JdbcConventionFactory();
   }
 
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
-    this.jdbcDialect.registerSchemas(config, parent);
+    UserCredentials userCreds = config.getQueryUserCredentials();
+    Optional<DataSource> dataSource = getDataSource(userCreds);
+    if (!dataSource.isPresent()) {
+      logger.debug(
+        "No schemas will be registered in {} for query user {}.",
+        getName(),
+        config.getUserName()
+      );
+      return;
+    }
+
+    SqlDialect dialect = getDialect(dataSource.get());
+    getJdbcDialect(dialect).registerSchemas(config, parent);
   }
 
-  public JdbcDialect getJdbcDialect() {
-    return jdbcDialect;
+  public Optional<DataSource> getDataSource(UserCredentials userCredentials) {
+    Optional<UsernamePasswordCredentials> jdbcCreds = jdbcStorageConfig.getUsernamePasswordCredentials(userCredentials);
+
+    if (!jdbcCreds.isPresent()) {
+      logger.debug(
+        "There are no {} mode credentials in {} for query user {}",
+        jdbcStorageConfig.getAuthMode(),
+        getName(),
+        userCredentials.getUserName()
+      );
+      return Optional.<DataSource>empty();
+    }
+
+    return Optional.of(dataSources.computeIfAbsent(
+      jdbcCreds.get().getUsername(),
+      ds -> initDataSource(this.jdbcStorageConfig, jdbcCreds.get())
+    ));
   }
 
-  public DrillJdbcConvention getConvention() {
-    return convention;
+  public SqlDialect getDialect(DataSource dataSource) {
+    return JdbcSchema.createDialect(
+      SqlDialectFactoryImpl.INSTANCE,
+      dataSource
+    );
+  }
+
+  public JdbcDialect getJdbcDialect(SqlDialect dialect) {
+    return dialectFactory.getJdbcDialect(this, dialect);
+  }
+
+  public DrillJdbcConvention getConvention(SqlDialect dialect, String username) {
+    return conventionFactory.getJdbcConvention(this, dialect, username);
   }
 
   @Override
   public JdbcStorageConfig getConfig() {
-    return config;
+    return jdbcStorageConfig;
   }
 
   @Override
@@ -85,25 +126,24 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public boolean supportsWrite() {
-    return config.isWritable();
-  }
-
-  public DataSource getDataSource() {
-    return dataSource;
-  }
-
-  public SqlDialect getDialect() {
-    return dialect;
+    return jdbcStorageConfig.isWritable();
   }
 
   @Override
   public Set<RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext context) {
-    return convention.getRules();
+    UserCredentials userCreds = context.getContextInformation().getQueryUserCredentials();
+    Optional<DataSource> dataSource = getDataSource(userCreds);
+
+    if (!dataSource.isPresent()) {
+      return ImmutableSet.of();
+    }
+
+    return getConvention( getDialect(dataSource.get()), userCreds.getUserName() ).getRules();
   }
 
   @Override
-  public void close() {
-    AutoCloseables.closeSilently(dataSource);
+  public void close() throws Exception {
+    AutoCloseables.close(dataSources.values());
   }
 
   /**
@@ -118,7 +158,10 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
    * @throws UserException if unable to configure Hikari data source
    */
   @VisibleForTesting
-  static HikariDataSource initDataSource(JdbcStorageConfig config) {
+  static HikariDataSource initDataSource(
+    JdbcStorageConfig config,
+    UsernamePasswordCredentials jdbcCredentials
+  ) {
     try {
       Properties properties = new Properties();
 
@@ -127,8 +170,8 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
       systems with connections which mostly remain idle.  A data source that is present in N
       storage configs replicated over P drillbits with a HikariCP minimumIdle value of Q will
       have N×P×Q connections made to it eagerly.
-        The trade off of lazier connections is increased latency should there be a spike in user
-      queries involving a JDBC data source.  When comparing the defaults that follow with e.g. the
+        The trade off of lazier connections is increased latency after periods of inactivity in
+      which the pool has emptied.  When comparing the defaults that follow with e.g. the
       HikariCP defaults, bear in mind that the context here is OLAP, not OLTP.  It is normal
       for queries to run for a long time and to be separated by long intermissions. Users who
       prefer eager to lazy connections remain free to overwrite the following defaults in their
@@ -153,11 +196,23 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
       hikariConfig.setDriverClassName(config.getDriver());
       hikariConfig.setJdbcUrl(config.getUrl());
-      UsernamePasswordCredentials credentials = config.getUsernamePasswordCredentials();
-      hikariConfig.setUsername(credentials.getUsername());
-      hikariConfig.setPassword(credentials.getPassword());
-      // this serves as a hint to the driver, which *might* enable database optimizations
-      hikariConfig.setReadOnly(!config.isWritable());
+
+      if (jdbcCredentials != null) {
+        hikariConfig.setUsername(jdbcCredentials.getUsername());
+        hikariConfig.setPassword(jdbcCredentials.getPassword());
+      }
+
+      /*
+      The following serves as a hint to the driver, which *might* enable database
+      optimizations.  Unfortunately some JDBC drivers without read-only support,
+      notably Snowflake's, fail to connect outright when this option is set even
+      though it is only a hint, so enabling it is generally problematic.
+
+      The solution is to leave that option as null.
+      */
+      if (config.isWritable() != null) {
+        hikariConfig.setReadOnly(!config.isWritable());
+      }
 
       return new HikariDataSource(hikariConfig);
     } catch (RuntimeException e) {

@@ -44,7 +44,7 @@ public class HttpSchemaFactory extends AbstractSchemaFactory {
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
-    HttpSchema schema = new HttpSchema(plugin);
+    HttpSchema schema = new HttpSchema(plugin, schemaConfig.getUserName());
     logger.debug("Registering {} {}", schema.getName(), schema.toString());
 
     SchemaPlus schemaPlus = parent.add(getName(), schema);
@@ -57,15 +57,17 @@ public class HttpSchemaFactory extends AbstractSchemaFactory {
     private final Map<String, HttpAPIConnectionSchema> subSchemas = CaseInsensitiveMap.newHashMap();
     private final Map<String, HttpApiConfig> tables = CaseInsensitiveMap.newHashMap();
     private final Map<String, DynamicDrillTable> activeTables = CaseInsensitiveMap.newHashMap();
+    private final String queryUserName;
 
-    public HttpSchema(HttpStoragePlugin plugin) {
+    public HttpSchema(HttpStoragePlugin plugin, String queryUserName) {
       super(Collections.emptyList(), plugin.getName());
+      this.queryUserName = queryUserName;
       this.plugin = plugin;
       for (Entry<String, HttpApiConfig> entry : plugin.getConfig().connections().entrySet()) {
         String configName = entry.getKey();
         HttpApiConfig config = entry.getValue();
         if (config.requireTail()) {
-          subSchemas.put(configName, new HttpAPIConnectionSchema(this, configName, plugin));
+          subSchemas.put(configName, new HttpAPIConnectionSchema(this, configName, plugin, queryUserName));
         } else {
           tables.put(configName, config);
         }
@@ -104,7 +106,7 @@ public class HttpSchemaFactory extends AbstractSchemaFactory {
         // Register a new table
         return registerTable(name, new DynamicDrillTable(plugin, plugin.getName(),
             new HttpScanSpec(plugin.getName(), name, null,
-                plugin.getConfig().copyForPlan(name), plugin.getTokenTable(), plugin.getRegistry())));
+                plugin.getConfig().copyForPlan(name), plugin.getTokenTable(), queryUserName, plugin.getRegistry())));
       } else {
         return null; // Unknown table
       }

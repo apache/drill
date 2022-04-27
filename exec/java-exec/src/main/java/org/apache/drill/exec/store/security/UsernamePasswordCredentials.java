@@ -17,27 +17,63 @@
  */
 package org.apache.drill.exec.store.security;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.security.CredentialsProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 public class UsernamePasswordCredentials {
+  private static final Logger logger = LoggerFactory.getLogger(UsernamePasswordCredentials.class);
   public static final String USERNAME = "username";
   public static final String PASSWORD = "password";
 
   private final String username;
   private final String password;
 
-  public UsernamePasswordCredentials(CredentialsProvider credentialsProvider) {
-    if (credentialsProvider == null) {
-      this.username = null;
-      this.password = null;
-    } else {
-      Map<String, String> credentials = credentialsProvider.getCredentials() == null ? new HashMap<>() : credentialsProvider.getCredentials();
-      this.username = credentials.get(USERNAME);
-      this.password = credentials.get(PASSWORD);
+  /**
+   * While a builder may seem like overkill for a class that is little more than small struct,
+   * it allows us to wrap new instances in an Optional while using contructors does not.
+   */
+  public static class Builder {
+    private CredentialsProvider credentialsProvider;
+    private String queryUser;
+
+    public Builder setCredentialsProvider(CredentialsProvider credentialsProvider) {
+      this.credentialsProvider = credentialsProvider;
+      return this;
     }
+
+    public Builder setQueryUser(String queryUser) {
+      this.queryUser = queryUser;
+      return this;
+    }
+
+    public Optional<UsernamePasswordCredentials> build() {
+      if (credentialsProvider == null) {
+        return Optional.empty();
+      }
+
+      Map<String, String> credentials = queryUser != null
+        ? credentialsProvider.getCredentials(queryUser)
+        : credentialsProvider.getCredentials();
+
+      if (credentials.size() == 0) {
+        return Optional.empty();
+      }
+
+      return Optional.of(
+        new UsernamePasswordCredentials(credentials.get(USERNAME), credentials.get(PASSWORD))
+      );
+    }
+  }
+
+  public UsernamePasswordCredentials(String username, String password) {
+    this.username = username;
+    this.password = password;
   }
 
   public String getUsername() {
@@ -46,5 +82,31 @@ public class UsernamePasswordCredentials {
 
   public String getPassword() {
     return password;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(username, password);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    UsernamePasswordCredentials that = (UsernamePasswordCredentials) o;
+    return Objects.equals(username, that.password) &&
+      Objects.equals(password, that.password);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("username", username)
+      .maskedField("password", password)
+      .toString();
   }
 }

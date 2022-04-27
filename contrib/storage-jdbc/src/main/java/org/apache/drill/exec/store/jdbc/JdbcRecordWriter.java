@@ -120,7 +120,7 @@ public class JdbcRecordWriter extends AbstractRecordWriter {
   public JdbcRecordWriter(DataSource source, OperatorContext context, String name, JdbcWriter config) {
     this.tableName = JdbcDDLQueryUtils.addBackTicksToTable(name);
     this.rowList = new ArrayList<>();
-    this.dialect = config.getPlugin().getDialect();
+    this.dialect = config.getPlugin().getDialect(source);
     this.config = config;
     this.rawTableName = name;
     this.fields = new ArrayList<>();

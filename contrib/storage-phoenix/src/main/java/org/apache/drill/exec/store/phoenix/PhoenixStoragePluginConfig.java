@@ -20,10 +20,11 @@ package org.apache.drill.exec.store.phoenix;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.PlanStringBuilder;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
@@ -34,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName(PhoenixStoragePluginConfig.NAME)
-public class PhoenixStoragePluginConfig extends AbstractSecuredStoragePluginConfig {
+public class PhoenixStoragePluginConfig extends CredentialedStoragePluginConfig {
 
   public static final String NAME = "phoenix";
   public static final String THIN_DRIVER_CLASS = "org.apache.phoenix.queryserver.client.Driver";
@@ -62,8 +63,10 @@ public class PhoenixStoragePluginConfig extends AbstractSecuredStoragePluginConf
   }
 
   @JsonIgnore
-  public UsernamePasswordCredentials getUsernamePasswordCredentials() {
-    return new UsernamePasswordCredentials(credentialsProvider);
+  public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials() {
+    return new UsernamePasswordCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .build();
   }
 
   @JsonProperty("host")
@@ -78,19 +81,23 @@ public class PhoenixStoragePluginConfig extends AbstractSecuredStoragePluginConf
 
   @JsonProperty("userName")
   public String getUsername() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getUsername();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordCredentials::getUsername)
+      .orElse(null);
   }
 
   @JsonIgnore
   @JsonProperty("password")
   public String getPassword() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getPassword();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordCredentials::getPassword)
+      .orElse(null);
   }
 
   @JsonProperty("jdbcURL")
@@ -139,5 +146,10 @@ public class PhoenixStoragePluginConfig extends AbstractSecuredStoragePluginConf
         .field("jdbcURL", jdbcURL)
         .field("props", props)
         .toString();
+  }
+
+  @Override
+  public PhoenixStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return this;
   }
 }

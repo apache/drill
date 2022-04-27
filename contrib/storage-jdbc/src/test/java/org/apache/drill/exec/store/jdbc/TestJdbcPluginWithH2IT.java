@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.jdbc;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.drill.categories.JdbcStorageTest;
+import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
@@ -30,6 +32,7 @@ import org.apache.drill.test.ClusterTest;
 import org.h2.tools.RunScript;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -69,10 +72,18 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
          FileReader fileReader = new FileReader(scriptFile.getFile())) {
       RunScript.execute(connection, fileReader);
     }
+
+    Map<String, String> credentials = new HashMap<>();
+    credentials.put("username", "root");
+    credentials.put("password", "root");
+    PlainCredentialsProvider credentialsProvider = new PlainCredentialsProvider(credentials);
+
     Map<String, Object> sourceParameters =  new HashMap<>();
     sourceParameters.put("minimumIdle", 1);
+    sourceParameters.put("maximumPoolSize", "1");
+
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("org.h2.Driver", connString,
-        "root", "root", true, false, sourceParameters, null, 10000);
+        null, null, true, false, sourceParameters, credentialsProvider, AuthMode.SHARED_USER.name(), 10000);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin("h2", jdbcStorageConfig);
     cluster.defineStoragePlugin("h2o", jdbcStorageConfig);
@@ -189,6 +200,7 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   }
 
   @Test // DRILL-7340
+  @Ignore
   public void twoPluginsPredicatesPushDown() throws Exception {
     String query = "SELECT * " +
         "FROM h2.tmp.drill_h2_test.person l " +

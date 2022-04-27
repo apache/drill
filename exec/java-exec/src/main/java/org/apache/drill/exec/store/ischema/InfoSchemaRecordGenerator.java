@@ -73,6 +73,9 @@ public abstract class InfoSchemaRecordGenerator<S> {
    * @param visitedPaths set used to ensure same path won't be visited twice
    */
   private void scanSchemaImpl(String schemaPath, SchemaPlus schema, Set<String> visitedPaths) {
+    if (schema == null) {
+      return;
+    }
     Set<String> subSchemaNames = schema.getParentSchema() == null
       ? schema.unwrap(DynamicRootSchema.class).schema.getSubSchemaNames()
       : schema.getSubSchemaNames();

@@ -30,6 +30,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.exec.store.security.UsernamePasswordWithProxyCredentials;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonDeserialize(builder = HttpApiConfig.HttpApiConfigBuilder.class)
@@ -335,18 +337,22 @@ public class HttpApiConfig {
 
   @JsonProperty
   public String userName() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getUsername();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordCredentials::getUsername)
+      .orElse(null);
   }
 
   @JsonProperty
   public String password() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getPassword();
+    if (!directCredentials) {
+      return null;
     }
-    return null;
+    return getUsernamePasswordCredentials()
+      .map(UsernamePasswordCredentials::getPassword)
+      .orElse(null);
   }
 
   @JsonIgnore
@@ -365,8 +371,18 @@ public class HttpApiConfig {
   }
 
   @JsonIgnore
-  public UsernamePasswordCredentials getUsernamePasswordCredentials() {
-    return new UsernamePasswordCredentials(credentialsProvider);
+  public Optional<UsernamePasswordWithProxyCredentials> getUsernamePasswordCredentials() {
+    return new UsernamePasswordWithProxyCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .build();
+  }
+
+  @JsonIgnore
+  public Optional<UsernamePasswordWithProxyCredentials> getUsernamePasswordCredentials(String username) {
+    return new UsernamePasswordWithProxyCredentials.Builder()
+      .setCredentialsProvider(credentialsProvider)
+      .setQueryUser(username)
+      .build();
   }
 
   @JsonProperty

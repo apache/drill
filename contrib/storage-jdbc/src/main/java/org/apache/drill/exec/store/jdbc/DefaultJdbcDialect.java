@@ -26,25 +26,42 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SubsetRemover;
 
-public class DefaultJdbcDialect implements JdbcDialect {
-  private final JdbcStoragePlugin plugin;
+import java.util.Optional;
+import javax.sql.DataSource;
 
-  public DefaultJdbcDialect(JdbcStoragePlugin plugin) {
+public class DefaultJdbcDialect implements JdbcDialect {
+
+  private final JdbcStoragePlugin plugin;
+  private final SqlDialect dialect;
+
+  public DefaultJdbcDialect(JdbcStoragePlugin plugin, SqlDialect dialect) {
     this.plugin = plugin;
+    this.dialect = dialect;
   }
 
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
-      JdbcCatalogSchema schema = new JdbcCatalogSchema(plugin.getName(),
-        plugin.getDataSource(), plugin.getDialect(), plugin.getConvention(),
-        !plugin.getConfig().areTableNamesCaseInsensitive());
-      SchemaPlus holder = parent.add(plugin.getName(), schema);
-      schema.setHolder(holder);
+    Optional<DataSource> dataSource = plugin.getDataSource(config.getQueryUserCredentials());
+
+    if (!dataSource.isPresent()) {
+      return;
+    }
+
+    DrillJdbcConvention convention = plugin.getConvention(dialect, config.getQueryUserCredentials().getUserName());
+
+    JdbcCatalogSchema schema = new JdbcCatalogSchema(
+      plugin.getName(),
+      dataSource.get(),
+      dialect,
+      convention,
+      !plugin.getConfig().areTableNamesCaseInsensitive()
+    );
+    SchemaPlus holder = parent.add(plugin.getName(), schema);
+    schema.setHolder(holder);
   }
 
   @Override
   public String generateSql(RelOptCluster cluster, RelNode input) {
-    final SqlDialect dialect = plugin.getDialect();
     final JdbcImplementor jdbcImplementor = new JdbcImplementor(dialect,
         (JavaTypeFactory) cluster.getTypeFactory());
     final JdbcImplementor.Result result = jdbcImplementor.visitChild(0,

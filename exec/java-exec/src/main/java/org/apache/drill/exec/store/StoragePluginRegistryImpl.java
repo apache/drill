@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
@@ -107,7 +108,7 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
  * make sure that the cache ends up agreeing with the persistent store
  * as it was at some point in time.
  * <p>
- * The {@link PluginsMap} class provides in-memory synchronization of the
+ * The {@link StoragePluginMap} class provides in-memory synchronization of the
  * name and config maps. Careful coding is needed when handling refresh
  * since another thread could make the same changes.
  * <p>
@@ -141,7 +142,7 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
  * <h4>Caveats</h4>
  *
  * The main problem with synchronization at present is that plugins
- * provide a {@link close()} method that, if used, could render the
+ * provide a {@code close()} method that, if used, could render the
  * plugin unusable. Suppose a Cassandra plugin, say, maintains a connection
  * to a server used across multiple queries and threads. Any change to
  * the config immediately calls {@code close()} on the plugin, even though
@@ -762,6 +763,10 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         break;
       case DISABLED:
         include = !plugin.getValue().isEnabled();
+        break;
+      case TRANSLATES_USERS:
+        include = plugin.getValue().getAuthMode() == AuthMode.USER_TRANSLATION
+          && plugin.getValue().isEnabled();
         break;
       default:
         include = true;

@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.jdbc;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,14 +29,21 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
-import org.apache.drill.common.logical.AbstractSecuredStoragePluginConfig;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.logical.CredentialedStoragePluginConfig;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.store.security.CredentialProviderUtils;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonTypeName(JdbcStorageConfig.NAME)
 @JsonFilter("passwordFilter")
-public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
+public class JdbcStorageConfig extends CredentialedStoragePluginConfig {
+
+  private static final Logger logger = LoggerFactory.getLogger(JdbcStorageConfig.class);
 
   public static final String NAME = "jdbc";
   public static final int DEFAULT_MAX_WRITER_BATCH_SIZE = 10000;
@@ -43,7 +51,7 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   private final String driver;
   private final String url;
   private final boolean caseInsensitiveTableNames;
-  private final boolean writable;
+  private final Boolean writable;
   private final Map<String, Object> sourceParameters;
   private final int writerBatchSize;
 
@@ -54,17 +62,59 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       @JsonProperty("username") String username,
       @JsonProperty("password") String password,
       @JsonProperty("caseInsensitiveTableNames") boolean caseInsensitiveTableNames,
-      @JsonProperty("writable") boolean writable,
+      @JsonProperty("writable") Boolean writable,
       @JsonProperty("sourceParameters") Map<String, Object> sourceParameters,
       @JsonProperty("credentialsProvider") CredentialsProvider credentialsProvider,
+      @JsonProperty("authMode") String authMode,
       @JsonProperty("writerBatchSize") int writerBatchSize) {
-    super(CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider), credentialsProvider == null);
+    super(
+      CredentialProviderUtils.getCredentialsProvider(username, password, credentialsProvider),
+      credentialsProvider == null,
+      AuthMode.parseOrDefault(authMode)
+    );
     this.driver = driver;
     this.url = url;
     this.writable = writable;
     this.caseInsensitiveTableNames = caseInsensitiveTableNames;
     this.sourceParameters = sourceParameters == null ? Collections.emptyMap() : sourceParameters;
-    this.writerBatchSize = writerBatchSize == 0 ? writerBatchSize = DEFAULT_MAX_WRITER_BATCH_SIZE : writerBatchSize;
+    this.writerBatchSize = writerBatchSize == 0 ? DEFAULT_MAX_WRITER_BATCH_SIZE : writerBatchSize;
+  }
+
+
+  private JdbcStorageConfig(JdbcStorageConfig that, CredentialsProvider credentialsProvider) {
+    super(credentialsProvider, credentialsProvider == null, that.authMode);
+    this.driver = that.driver;
+    this.url = that.url;
+    this.writable = that.writable;
+    this.caseInsensitiveTableNames = that.caseInsensitiveTableNames;
+    this.sourceParameters = that.sourceParameters;
+    this.writerBatchSize = that.writerBatchSize;
+  }
+
+  @JsonProperty("userName")
+  public String getUsername() {
+    if (!directCredentials) {
+      return null;
+    }
+    return getUsernamePasswordCredentials(null)
+      .map(UsernamePasswordCredentials::getUsername)
+      .orElse(null);
+  }
+
+  @JsonIgnore
+  @JsonProperty("password")
+  public String getPassword() {
+    if (!directCredentials) {
+      return null;
+    }
+    return getUsernamePasswordCredentials(null)
+      .map(UsernamePasswordCredentials::getPassword)
+      .orElse(null);
+  }
+
+  @Override
+  public JdbcStorageConfig updateCredentialProvider(CredentialsProvider credentialsProvider) {
+    return new JdbcStorageConfig(this, credentialsProvider);
   }
 
   public String getDriver() {
@@ -75,23 +125,9 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
     return url;
   }
 
-  public boolean isWritable() { return writable; }
+  public Boolean isWritable() { return writable; }
 
   public int getWriterBatchSize() { return writerBatchSize; }
-
-  public String getUsername() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getUsername();
-    }
-    return null;
-  }
-
-  public String getPassword() {
-    if (directCredentials) {
-      return getUsernamePasswordCredentials().getPassword();
-    }
-    return null;
-  }
 
   @JsonProperty("caseInsensitiveTableNames")
   public boolean areTableNamesCaseInsensitive() {
@@ -103,8 +139,26 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
   }
 
   @JsonIgnore
-  public UsernamePasswordCredentials getUsernamePasswordCredentials() {
-    return new UsernamePasswordCredentials(credentialsProvider);
+  public Optional<UsernamePasswordCredentials> getUsernamePasswordCredentials(UserCredentials userCredentials) {
+    switch (authMode) {
+      case SHARED_USER:
+        return new UsernamePasswordCredentials.Builder()
+          .setCredentialsProvider(credentialsProvider)
+          .build();
+      case USER_TRANSLATION:
+        Preconditions.checkNotNull(
+          userCredentials,
+          "A drill query user is required for user translation auth mode."
+        );
+        return new UsernamePasswordCredentials.Builder()
+          .setCredentialsProvider(credentialsProvider)
+          .setQueryUser(userCredentials.getUserName()) // lgtm [java/dereferenced-value-may-be-null]
+          .build();
+      default:
+        throw UserException.connectionError()
+          .message("This storage plugin does not support auth mode: %s", authMode)
+          .build(logger);
+    }
   }
 
   @Override
@@ -137,7 +191,9 @@ public class JdbcStorageConfig extends AbstractSecuredStoragePluginConfig {
       .field("url", url)
       .field("writable", writable)
       .field("writerBatchSize", writerBatchSize)
+      .field("sourceParameters", sourceParameters)
       .field("caseInsensitiveTableNames", caseInsensitiveTableNames)
+      .field("credentialProvider", credentialsProvider)
       .toString();
   }
 }

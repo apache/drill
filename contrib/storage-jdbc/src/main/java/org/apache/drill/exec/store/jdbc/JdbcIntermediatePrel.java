@@ -35,9 +35,11 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
  * before execution can happen.
  */
 public class JdbcIntermediatePrel extends SinglePrel implements PrelFinalizable {
+  private final String username;
 
-  public JdbcIntermediatePrel(RelOptCluster cluster, RelTraitSet traits, RelNode child) {
+  public JdbcIntermediatePrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, String username) {
     super(cluster, traits, child);
+    this.username = username;
   }
 
   @Override
@@ -47,7 +49,7 @@ public class JdbcIntermediatePrel extends SinglePrel implements PrelFinalizable 
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new JdbcIntermediatePrel(getCluster(), traitSet, getInput());
+    return new JdbcIntermediatePrel(getCluster(), traitSet, getInput(), username);
   }
 
   @Override
@@ -62,7 +64,7 @@ public class JdbcIntermediatePrel extends SinglePrel implements PrelFinalizable 
 
   @Override
   public Prel finalizeRel() {
-    return new JdbcPrel(getCluster(), getTraitSet(), this);
+    return new JdbcPrel(getCluster(), getTraitSet(), this, username);
   }
 
   @Override

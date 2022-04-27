@@ -19,19 +19,43 @@ package org.apache.drill.common.logical;
 
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class AbstractSecuredStoragePluginConfig extends StoragePluginConfig {
+public abstract class CredentialedStoragePluginConfig extends StoragePluginConfig {
 
-  protected final CredentialsProvider credentialsProvider;
+  private static final Logger logger = LoggerFactory.getLogger(CredentialedStoragePluginConfig.class);
   protected boolean directCredentials;
+  protected final CredentialsProvider credentialsProvider;
 
-  public AbstractSecuredStoragePluginConfig() {
+  public CredentialedStoragePluginConfig() {
     this(PlainCredentialsProvider.EMPTY_CREDENTIALS_PROVIDER,  true);
   }
 
-  public AbstractSecuredStoragePluginConfig(CredentialsProvider credentialsProvider, boolean directCredentials) {
+  public CredentialedStoragePluginConfig(
+    CredentialsProvider credentialsProvider,
+    boolean directCredentials
+  ) {
+    // Default auth mode for credentialed storage plugins is shared user.
+    this(credentialsProvider, directCredentials, AuthMode.SHARED_USER);
+  }
+
+  public CredentialedStoragePluginConfig(
+    CredentialsProvider credentialsProvider,
+    boolean directCredentials,
+    AuthMode authMode
+  ) {
     this.credentialsProvider = credentialsProvider;
     this.directCredentials = directCredentials;
+    this.authMode = authMode;
+  }
+
+  public abstract CredentialedStoragePluginConfig updateCredentialProvider(CredentialsProvider credentialsProvider);
+
+  @Override
+  public boolean isEnabled() {
+    logger.debug("Enabled status");
+    return super.isEnabled();
   }
 
   public CredentialsProvider getCredentialsProvider() {

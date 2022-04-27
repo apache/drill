@@ -38,8 +38,8 @@ import org.apache.drill.exec.store.http.paginator.Paginator;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig;
 import org.apache.drill.exec.store.http.util.HttpProxyConfig.ProxyBuilder;
 import org.apache.drill.exec.store.http.util.SimpleHttp;
-import org.apache.drill.exec.store.security.UsernamePasswordCredentials;
 import org.apache.drill.exec.store.ImplicitColumnUtils.ImplicitColumns;
+import org.apache.drill.exec.store.security.UsernamePasswordWithProxyCredentials;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
 
@@ -242,13 +243,15 @@ public class HttpBatchReader implements ManagedReader<SchemaNegotiator> {
         .fromConfigForURL(drillConfig, url.toString());
     final String proxyType = config.proxyType();
     if (proxyType != null && !"direct".equals(proxyType)) {
-      UsernamePasswordCredentials credentials = config.getUsernamePasswordCredentials();
       builder
         .type(config.proxyType())
         .host(config.proxyHost())
-        .port(config.proxyPort())
-        .username(credentials.getUsername())
-        .password(credentials.getPassword());
+        .port(config.proxyPort());
+
+      Optional<UsernamePasswordWithProxyCredentials> credentials = config.getUsernamePasswordCredentials();
+      if (credentials.isPresent()) {
+        builder.username(credentials.get().getUsername()).password(credentials.get().getPassword());
+      }
     }
     return builder.build();
   }
