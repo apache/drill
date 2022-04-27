@@ -74,6 +74,7 @@ public class TestHttpPlugin extends ClusterTest {
   // build machine.
   private static final int MOCK_SERVER_PORT = 44332;
   private static String TEST_JSON_RESPONSE;
+  private static String TEST_MALFORMED_JSON_RESPONSE;
   private static String TEST_CSV_RESPONSE;
   private static String TEST_XML_RESPONSE;
   private static String TEST_JSON_RESPONSE_WITH_DATATYPES;
@@ -87,6 +88,7 @@ public class TestHttpPlugin extends ClusterTest {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.json"), Charsets.UTF_8).read();
+    TEST_MALFORMED_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/malformed.json"), Charsets.UTF_8).read();
     TEST_CSV_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.csv"), Charsets.UTF_8).read();
     TEST_XML_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.xml"), Charsets.UTF_8).read();
     TEST_JSON_RESPONSE_WITH_DATATYPES = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response2.json"), Charsets.UTF_8).read();
@@ -245,6 +247,17 @@ public class TestHttpPlugin extends ClusterTest {
       .inputType("json")
       .build();
 
+    HttpApiConfig mockJsonWithMalformedData = HttpApiConfig.builder()
+      .url(makeUrl("http://localhost:%d/json"))
+      .method("get")
+      .requireTail(false)
+      .jsonOptions(new HttpJsonOptions.HttpJsonOptionsBuilder()
+        .skipMalformedRecords(true)
+        .build())
+      .inputType("json")
+      .build();
+
+
     HttpApiConfig mockPostConfigWithoutPostBody = HttpApiConfig.builder()
       .url(makeUrl("http://localhost:%d/"))
       .method("POST")
@@ -339,6 +352,7 @@ public class TestHttpPlugin extends ClusterTest {
     configs.put("github2", mockGithubWithDuplicateParam);
     configs.put("github3", mockGithubWithParamInQuery);
     configs.put("mockJsonAllText", mockTableWithJsonOptions);
+    configs.put("malformedJson", mockJsonWithMalformedData);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
         new HttpStoragePluginConfig(false, configs, 2, "globaluser", "globalpass", "",
@@ -537,7 +551,30 @@ public class TestHttpPlugin extends ClusterTest {
 
       RowSetUtilities.verify(expected, results);
     } catch (Exception e) {
-      System.out.println(e.getMessage());
+      fail();
+    }
+  }
+
+  @Test
+  public void simpleTestWithMalformedJson() {
+    String sql = "SELECT * FROM local.malformedJson";
+
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_MALFORMED_JSON_RESPONSE));
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("a", MinorType.BIGINT)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1)
+        .addRow(5)
+        .addRow(6)
+        .build();
+
+      RowSetUtilities.verify(expected, results);
+    } catch (Exception e) {
       fail();
     }
   }
