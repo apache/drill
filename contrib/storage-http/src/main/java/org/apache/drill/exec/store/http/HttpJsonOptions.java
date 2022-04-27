@@ -28,7 +28,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.MapBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.metadata.UnionBuilder;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderOptions;
 import org.apache.drill.exec.store.http.providedSchema.HttpField;
@@ -57,7 +56,6 @@ public class HttpJsonOptions {
 
   @JsonProperty
   private final Boolean skipMalformedDocument;
-
 
   @JsonProperty
   private final List<HttpField> providedSchema;
@@ -91,12 +89,13 @@ public class HttpJsonOptions {
     if (enableEscapeAnyChar != null) {
       options.enableEscapeAnyChar = enableEscapeAnyChar;
     }
-    if (skipMalformedDocument != null) {
-      options.skipMalformedDocument = skipMalformedDocument;
-    }
     if (skipMalformedRecords != null) {
       options.skipMalformedRecords = skipMalformedRecords;
     }
+    if (skipMalformedDocument != null) {
+      options.skipMalformedDocument = skipMalformedDocument;
+    }
+
     return options;
   }
 
@@ -117,18 +116,19 @@ public class HttpJsonOptions {
           addField(innerMapBuilder, innerField);
         }
         innerMapBuilder.resumeSchema();
-      } /*else if (field.getDrillType() == MinorType.UNION) {
-        UnionBuilder innerUnionBuilder = schemaBuilder.addUnion(field.getFieldName());
-        for (HttpField innerField : field.getFields()) {
-          addField(innerUnionBuilder, innerField);
-        }
-        innerUnionBuilder.resumeSchema();
-      }*/
+      }
+    } else if (field.getDrillType() == MinorType.UNION) {
+      schemaBuilder.addUnion(field.getFieldName());
     } else {
       schemaBuilder.addNullable(field.getFieldName(), field.getDrillType());
     }
   }
 
+  /**
+   * Creates fields within a Map
+   * @param builder A {@link MapBuilder} builder to the outer map.
+   * @param field A {@link HttpField} field to be inserted into the map.
+   */
   private void addField(MapBuilder builder, HttpField field) {
     if (isCompoundField(field.getDrillType())) {
       if (field.getDrillType() == MinorType.MAP) {
@@ -142,30 +142,6 @@ public class HttpJsonOptions {
       builder.addNullable(field.getFieldName(), field.getDrillType());
     }
   }
-
-  /*
-  private void addField(UnionBuilder builder, HttpField field) {
-    if (isCompoundField(field.getDrillType())) {
-      if (field.getDrillType() == MinorType.MAP) {
-        MapBuilder innerMapBuilder = builder.addMap();
-        for (HttpField innerField : field.getFields()) {
-          addField(innerMapBuilder, innerField);
-        } else if (field.getDrillType() == MinorType.UNION) {
-          UnionBuilder innerUnionBuilder = builder.addUnion();
-          for (HttpField innerField : field.getFields()) {
-            addField(innerUnionBuilder, innerField);
-          }
-          innerUnionBuilder.resumeSchema();
-        }
-        innerUnionBuilder.resumeUnion();
-      }
-    } else {
-      TupleMetadata columnMetadata = new SchemaBuilder()
-        .addNullable(field.getFieldName(), field.getDrillType())
-        .build();
-      builder.addColumn(columnMetadata.metadata(0));
-    }
-  }*/
 
   public static boolean isCompoundField(MinorType type) {
     return type == MinorType.MAP || type == MinorType.UNION || type == MinorType.DICT || type == MinorType.LIST;
@@ -254,6 +230,10 @@ public class HttpJsonOptions {
     private Boolean skipMalformedDocument;
 
     private List<HttpField> providedSchema;
+
+    private Boolean skipMalformedRecords;
+
+    private Boolean skipMalformedDocument;
 
     public HttpJsonOptionsBuilder allowNanInf(Boolean allowNanInf) {
       this.allowNanInf = allowNanInf;

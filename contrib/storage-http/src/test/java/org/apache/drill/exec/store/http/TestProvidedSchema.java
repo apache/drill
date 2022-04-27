@@ -49,6 +49,7 @@ public class TestProvidedSchema extends ClusterTest {
   private static final int MOCK_SERVER_PORT = 47777;
 
   private static String TEST_JSON_PAGE1;
+  private static String TEST_SCHEMA_CHANGE1;
   private static String TEST_JSON_PAGE2;
   private static String TEST_JSON_PAGE3;
 
@@ -57,6 +58,7 @@ public class TestProvidedSchema extends ClusterTest {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
     TEST_JSON_PAGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p1.json"), Charsets.UTF_8).read();
+    TEST_SCHEMA_CHANGE1 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/schema_change_1.json"), Charsets.UTF_8).read();
     TEST_JSON_PAGE2 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p2.json"), Charsets.UTF_8).read();
     TEST_JSON_PAGE3 = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/p3.json"), Charsets.UTF_8).read();
 
@@ -83,8 +85,30 @@ public class TestProvidedSchema extends ClusterTest {
       .inputType("json")
       .build();
 
+    List<HttpField> mapSchema = new ArrayList<>();
+    mapSchema.add(new HttpField("field1", "VARCHAR"));
+    List<HttpField> innerMap = new ArrayList<>();
+    innerMap.add(new HttpField("nested_value1", "varchar"));
+    innerMap.add(new HttpField("nested_value2", "varchar"));
+    mapSchema.add(new HttpField("field2", "MAP", innerMap));
+
+    HttpJsonOptions jsonOptionsSchemaChange = new HttpJsonOptions.HttpJsonOptionsBuilder()
+      .providedSchema(mapSchema)
+      .skipMalformedRecords(true)
+      .skipMalformedDocument(true)
+      .build();
+
+    HttpApiConfig schemaChange = HttpApiConfig.builder()
+      .url("http://localhost:47777/json")
+      .method("get")
+      .jsonOptions(jsonOptionsSchemaChange)
+      .requireTail(false)
+      .inputType("json")
+      .build();
+
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("basicJson", basicJson);
+    configs.put("schemaChange", schemaChange);
 
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
@@ -112,6 +136,29 @@ public class TestProvidedSchema extends ClusterTest {
         .build();
 
       RowSetUtilities.verify(expected, results);
+    }
+  }
+
+  @Test
+  public void testSchemaChangeWithProvidedSchema() throws Exception {
+    String sql = "SELECT * FROM `local`.`schemaChange`";
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_SCHEMA_CHANGE1));
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      results.print();
+
+      /*TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("col_1", MinorType.FLOAT8)
+        .addNullable("col_2", MinorType.FLOAT8)
+        .addNullable("col_3", MinorType.FLOAT8)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1.0, 2.0, 3.0)
+        .addRow(4.0, 5.0, 6.0)
+        .build();
+
+      RowSetUtilities.verify(expected, results);*/
     }
   }
 

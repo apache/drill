@@ -60,7 +60,7 @@ public class TestSchemaBuilderForProvidedSchema {
   public void testSingleMapSchema() {
     List<HttpField> outer = new ArrayList<>();
     List<HttpField> innerFields = generateFieldList();
-    outer.add(new HttpField("outer_map", "map", null, innerFields));
+    outer.add(new HttpField("outer_map", "map", innerFields));
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(outer)
@@ -91,8 +91,8 @@ public class TestSchemaBuilderForProvidedSchema {
     List<HttpField> middle = generateFieldList();
 
     List<HttpField> innerFields = generateFieldList();
-    middle.add(new HttpField("inner_map", "map", null, innerFields));
-    outer.add(new HttpField("outer_map", "map", null, middle));
+    middle.add(new HttpField("inner_map", "map", innerFields));
+    outer.add(new HttpField("outer_map", "map", middle));
 
     HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(outer)
@@ -128,7 +128,6 @@ public class TestSchemaBuilderForProvidedSchema {
     assertTrue(expectedSchema.isEquivalent(schema));
   }
 
-
   private List<HttpField> generateFieldList() {
     List<HttpField> fields = new ArrayList<>();
     fields.add(new HttpField("bigint_col", "bigint"));
@@ -143,6 +142,4 @@ public class TestSchemaBuilderForProvidedSchema {
 
     return fields;
   }
-
-
 }

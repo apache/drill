@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.http.providedSchema;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
@@ -41,18 +42,19 @@ public class HttpField {
   private static final Logger logger = LoggerFactory.getLogger(HttpField.class);
   private final String fieldName;
   private final String fieldType;
-  private final String format;
   private final List<HttpField> fields;
 
   public HttpField(String fieldName, String fieldType) {
-    this(fieldName, fieldType, null, Collections.EMPTY_LIST);
+    this(fieldName, fieldType, Collections.emptyList());
   }
 
   @JsonCreator
-  public HttpField(String fieldName, String fieldType, String format, List<HttpField> fields) {
+  public HttpField(
+    @JsonProperty("fieldName") String fieldName,
+    @JsonProperty("fieldType") String fieldType,
+    @JsonProperty("fields") List<HttpField> fields) {
     this.fieldName = fieldName;
     this.fieldType = fieldType;
-    this.format = format;
     this.fields = fields;
   }
 
@@ -105,8 +107,6 @@ public class HttpField {
     }
   }
 
-  public String getFormat() { return format; }
-
   @Override
   public boolean equals(Object o) {
     if (o == null || ! (o instanceof LogFormatField)) {
@@ -115,13 +115,12 @@ public class HttpField {
     HttpField other = (HttpField) o;
     return fieldName.equals(other.fieldName) &&
       Objects.equals(fieldType, other.fieldType) &&
-      Objects.equals(format, other.format) &&
       Objects.equals(fields, other.fields);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(fieldName, fieldType, format, fields);
+    return Objects.hash(fieldName, fieldType, fields);
   }
 
   @Override
@@ -129,7 +128,7 @@ public class HttpField {
     return new PlanStringBuilder(this)
       .field("fieldName", fieldName)
       .field("fieldType", fieldType)
-      .field("format", format)
+      .field("fields", fields)
       .toString();
   }
 }
