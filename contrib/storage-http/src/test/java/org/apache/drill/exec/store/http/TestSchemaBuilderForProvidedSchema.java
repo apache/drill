@@ -128,6 +128,29 @@ public class TestSchemaBuilderForProvidedSchema {
     assertTrue(expectedSchema.isEquivalent(schema));
   }
 
+  @Test
+  public void testProvidedSchemaWithUnion() {
+
+    List<HttpField> unionFields = new ArrayList<>();
+    unionFields.add(new HttpField("nested_value1", "varchar"));
+    unionFields.add(new HttpField("nested_value2", "varchar"));
+
+    List<HttpField> mapField = new ArrayList<>();
+    mapField.add(new HttpField("field2", "map", unionFields));
+
+    List<HttpField> fields = new ArrayList<>();
+    fields.add(new HttpField("field1", "varchar"));
+    fields.add(new HttpField("field2", "union", mapField));
+
+    HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
+      .providedSchema(fields)
+      .build();
+
+    TupleMetadata schema = jsonOptions.buildSchema();
+    System.out.println(schema);
+
+  }
+
   private List<HttpField> generateFieldList() {
     List<HttpField> fields = new ArrayList<>();
     fields.add(new HttpField("bigint_col", "bigint"));

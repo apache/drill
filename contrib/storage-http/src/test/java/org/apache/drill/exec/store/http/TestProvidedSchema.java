@@ -95,7 +95,6 @@ public class TestProvidedSchema extends ClusterTest {
     HttpJsonOptions jsonOptionsSchemaChange = new HttpJsonOptions.HttpJsonOptionsBuilder()
       .providedSchema(mapSchema)
       .skipMalformedRecords(true)
-      .skipMalformedDocument(true)
       .build();
 
     HttpApiConfig schemaChange = HttpApiConfig.builder()
@@ -106,9 +105,36 @@ public class TestProvidedSchema extends ClusterTest {
       .inputType("json")
       .build();
 
+
+    List<HttpField> nestedFields = new ArrayList<>();
+    nestedFields.add(new HttpField("nested_value1", "varchar"));
+    nestedFields.add(new HttpField("nested_value2", "varchar"));
+
+    List<HttpField> innerMapSchema = new ArrayList<>();
+    innerMapSchema.add(new HttpField("field2", "map", nestedFields));
+
+    List<HttpField> unionSchema = new ArrayList<>();
+    unionSchema.add(new HttpField("field1", "varchar"));
+    unionSchema.add(new HttpField("field2", "union", innerMapSchema));
+
+    HttpJsonOptions unionJsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
+      .providedSchema(unionSchema)
+      .skipMalformedRecords(true)
+      .build();
+
+    HttpApiConfig unionApi = HttpApiConfig.builder()
+      .url("http://localhost:47777/json")
+      .method("get")
+      .jsonOptions(unionJsonOptions)
+      .requireTail(false)
+      .inputType("json")
+      .build();
+
+
     Map<String, HttpApiConfig> configs = new HashMap<>();
     configs.put("basicJson", basicJson);
     configs.put("schemaChange", schemaChange);
+    configs.put("union", unionApi);
 
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace =
@@ -142,6 +168,29 @@ public class TestProvidedSchema extends ClusterTest {
   @Test
   public void testSchemaChangeWithProvidedSchema() throws Exception {
     String sql = "SELECT * FROM `local`.`schemaChange`";
+    try (MockWebServer server = startServer()) {
+      server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_SCHEMA_CHANGE1));
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      results.print();
+
+      /*TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("col_1", MinorType.FLOAT8)
+        .addNullable("col_2", MinorType.FLOAT8)
+        .addNullable("col_3", MinorType.FLOAT8)
+        .build();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow(1.0, 2.0, 3.0)
+        .addRow(4.0, 5.0, 6.0)
+        .build();
+
+      RowSetUtilities.verify(expected, results);*/
+    }
+  }
+
+  @Test
+  public void testSchemaChangeWithUnion() throws Exception {
+    String sql = "SELECT * FROM `local`.`union`";
     try (MockWebServer server = startServer()) {
       server.enqueue(new MockResponse().setResponseCode(200).setBody(TEST_SCHEMA_CHANGE1));
       RowSet results = client.queryBuilder().sql(sql).rowSet();
