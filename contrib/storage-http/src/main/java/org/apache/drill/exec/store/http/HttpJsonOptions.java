@@ -45,11 +45,20 @@ public class HttpJsonOptions {
   @JsonProperty
   private final Boolean enableEscapeAnyChar;
 
+  @JsonProperty
+  private final Boolean skipMalformedRecords;
+
+  @JsonProperty
+  private final Boolean skipMalformedDocument;
+
+
   HttpJsonOptions(HttpJsonOptionsBuilder builder) {
     this.allowNanInf = builder.allowNanInf;
     this.allTextMode = builder.allTextMode;
     this.readNumbersAsDouble = builder.readNumbersAsDouble;
     this.enableEscapeAnyChar = builder.enableEscapeAnyChar;
+    this.skipMalformedRecords = builder.skipMalformedRecords;
+    this.skipMalformedDocument = builder.skipMalformedDocument;
   }
 
   public static HttpJsonOptionsBuilder builder() {
@@ -70,6 +79,12 @@ public class HttpJsonOptions {
     }
     if (enableEscapeAnyChar != null) {
       options.enableEscapeAnyChar = enableEscapeAnyChar;
+    }
+    if (skipMalformedDocument != null) {
+      options.skipMalformedDocument = skipMalformedDocument;
+    }
+    if (skipMalformedRecords != null) {
+      options.skipMalformedRecords = skipMalformedRecords;
     }
     return options;
   }
@@ -94,6 +109,16 @@ public class HttpJsonOptions {
     return this.enableEscapeAnyChar;
   }
 
+  @JsonProperty("skipMalformedRecords")
+  public Boolean skipMalformedRecords() {
+    return this.skipMalformedRecords;
+  }
+
+  @JsonProperty("skipMalformedDocument")
+  public Boolean skipMalformedDocument() {
+    return this.skipMalformedDocument;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -106,12 +131,13 @@ public class HttpJsonOptions {
     return Objects.equals(allowNanInf, that.allowNanInf)
       && Objects.equals(allTextMode, that.allTextMode)
       && Objects.equals(readNumbersAsDouble, that.readNumbersAsDouble)
-      && Objects.equals(enableEscapeAnyChar, that.enableEscapeAnyChar);
+      && Objects.equals(enableEscapeAnyChar, that.enableEscapeAnyChar)
+      && Objects.equals(skipMalformedRecords, that.skipMalformedRecords);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(allowNanInf, allTextMode, readNumbersAsDouble, enableEscapeAnyChar);
+    return Objects.hash(allowNanInf, allTextMode, readNumbersAsDouble, enableEscapeAnyChar, skipMalformedRecords, skipMalformedDocument);
   }
 
   @Override
@@ -121,6 +147,8 @@ public class HttpJsonOptions {
       .field("allTextMode", allTextMode)
       .field("readNumbersAsDouble", readNumbersAsDouble)
       .field("enableEscapeAnyChar", enableEscapeAnyChar)
+      .field("skipMalformedRecords", skipMalformedRecords)
+      .field("skipMalformedDocument", skipMalformedDocument)
       .toString();
   }
 
@@ -133,6 +161,10 @@ public class HttpJsonOptions {
     private Boolean readNumbersAsDouble;
 
     private Boolean enableEscapeAnyChar;
+
+    private Boolean skipMalformedRecords;
+
+    private Boolean skipMalformedDocument;
 
     public HttpJsonOptionsBuilder allowNanInf(Boolean allowNanInf) {
       this.allowNanInf = allowNanInf;
@@ -151,6 +183,16 @@ public class HttpJsonOptions {
 
     public HttpJsonOptionsBuilder enableEscapeAnyChar(Boolean enableEscapeAnyChar) {
       this.enableEscapeAnyChar = enableEscapeAnyChar;
+      return this;
+    }
+
+    public HttpJsonOptionsBuilder skipMalformedRecords(Boolean skipMalformedRecords) {
+      this.skipMalformedRecords = skipMalformedRecords;
+      return this;
+    }
+
+    public HttpJsonOptionsBuilder skipMalformedDocument(Boolean skipMalformedDocument) {
+      this.skipMalformedDocument = skipMalformedDocument;
       return this;
     }
 

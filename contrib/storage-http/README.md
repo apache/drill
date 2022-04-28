@@ -260,6 +260,8 @@ allows you to configure these options individually per connection and override t
   throw schema change exceptions. In addition to `allTextMode`, you can make Drill less sensitive by setting the `readNumbersAsDouble` to `true` which causes Drill to read all 
   numeric fields in JSON data as `double` data type rather than trying to distinguish between ints and doubles.
 * `enableEscapeAnyChar`:  Allows a user to escape any character with a \
+* `skipMalformedRecords`:  Allows Drill to skip malformed records and recover without throwing exceptions.
+* `skipMalformedDocument`:  Allows Drill to skip entire malformed documents without throwing errors.
 
 All of these can be set by adding the `jsonOptions` to your connection configuration as shown below:
 
