@@ -162,7 +162,6 @@ public class TestSchemaBuilderForProvidedSchema {
       .build();
 
     TupleMetadata schema = jsonOptions.buildSchema();
-    System.out.println(schema.jsonString());
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addMap("outer_map")
         .addNullable("int_field", MinorType.BIGINT)
