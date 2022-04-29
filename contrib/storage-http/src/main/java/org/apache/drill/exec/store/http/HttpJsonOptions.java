@@ -160,20 +160,26 @@ public class HttpJsonOptions {
   }
 
   /**
-   * Creates fields within a Map
+   * Creates fields within a Map.  This is recursive so that it should support as many levels as Drill supports.
    * @param builder A {@link MapBuilder} builder to the outer map.
    * @param field A {@link HttpField} field to be inserted into the map.
    */
   private void addFieldToMap(MapBuilder builder, HttpField field) {
     if (field.isComplex()) {
       if (field.getDrillType() == MinorType.MAP) {
-        MapBuilder innerMapBuilder = builder.addMap(field.getFieldName());
+        MapBuilder innerMapBuilder;
+        if (field.isArray()) {
+          innerMapBuilder = builder.addMapArray(field.getFieldName());
+        } else {
+          innerMapBuilder = builder.addMap(field.getFieldName());
+        }
         for (HttpField innerField : field.getFields()) {
           addFieldToMap(innerMapBuilder, innerField);
         }
         innerMapBuilder.resumeMap();
       }
     } else if (field.isArray()) {
+      // Case for simple arrays
       builder.addArray(field.getFieldName(), field.getDrillType());
     } else {
       // Case for simple scalar columns

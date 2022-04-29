@@ -162,10 +162,40 @@ public class TestSchemaBuilderForProvidedSchema {
       .build();
 
     TupleMetadata schema = jsonOptions.buildSchema();
+    System.out.println(schema.jsonString());
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addMap("outer_map")
         .addNullable("int_field", MinorType.BIGINT)
         .addArray("int_array", MinorType.BIGINT)
+      .resumeSchema()
+      .build();
+
+    assertTrue(expectedSchema.isEquivalent(schema));
+  }
+
+  @Test
+  public void testArrayOfMaps() {
+    List<HttpField> outer = new ArrayList<>();
+    List<HttpField> innerFields = generateFieldList();
+    outer.add(new HttpField("outer_map", "map", innerFields, true, new HashMap<>()));
+
+    HttpJsonOptions jsonOptions = new HttpJsonOptions.HttpJsonOptionsBuilder()
+      .providedSchema(outer)
+      .build();
+
+    TupleMetadata schema = jsonOptions.buildSchema();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addMapArray("outer_map")
+        .addNullable("bigint_col", MinorType.BIGINT)
+        .addNullable("boolean_col", MinorType.BIT)
+        .addNullable("date_col", MinorType.DATE)
+        .addNullable("double_col", MinorType.FLOAT8)
+        .addNullable("interval_col", MinorType.INTERVAL)
+        .addNullable("int_col", MinorType.BIGINT)
+        .addNullable("timestamp_col", MinorType.TIMESTAMP)
+        .addNullable("time_col", MinorType.TIME)
+        .addNullable("varchar_col", MinorType.VARCHAR)
       .resumeSchema()
       .build();
 
